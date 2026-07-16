@@ -5,7 +5,7 @@ from hypothesis import given
 
 import unxt as u
 
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 
 @given(cxst.distances())

@@ -32,19 +32,19 @@ def test_main_package_uses_vcs_source() -> None:
 def test_workspace_packages_use_package_specific_git_describe_match() -> None:
     """Workspace packages use git describe with package match patterns."""
     package_patterns = {
-        "coordinax.api": Path("packages/coordinax.api/pyproject.toml"),
-        "coordinax.astro": Path("packages/coordinax.astro/pyproject.toml"),
-        "coordinax.hypothesis": Path("packages/coordinax.hypothesis/pyproject.toml"),
-        "coordinax.interop.astropy": Path(
-            "packages/coordinax.interop.astropy/pyproject.toml"
+        "coordinaxs.api": Path("packages/coordinaxs.api/pyproject.toml"),
+        "coordinaxs.astro": Path("packages/coordinaxs.astro/pyproject.toml"),
+        "coordinaxs.hypothesis": Path("packages/coordinaxs.hypothesis/pyproject.toml"),
+        "coordinaxs.interop.astropy": Path(
+            "packages/coordinaxs.interop.astropy/pyproject.toml"
         ),
     }
 
     expected_patterns = {
-        "coordinax.api": "coordinax-api-v*",
-        "coordinax.astro": "coordinax-astro-v*",
-        "coordinax.hypothesis": "coordinax-hypothesis-v*",
-        "coordinax.interop.astropy": "coordinax-interop-astropy-v*",
+        "coordinaxs.api": "coordinaxs-api-v*",
+        "coordinaxs.astro": "coordinaxs-astro-v*",
+        "coordinaxs.hypothesis": "coordinaxs-hypothesis-v*",
+        "coordinaxs.interop.astropy": "coordinaxs-interop-astropy-v*",
     }
 
     for package, path in package_patterns.items():

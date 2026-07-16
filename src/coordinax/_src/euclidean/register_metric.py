@@ -22,7 +22,7 @@ import plum
 
 import unxt as u
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from .manifold import EuclideanManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
 from coordinax._src.charts.d1 import Cart1D, Radial1D
@@ -79,7 +79,7 @@ def metric_representation(
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
     >>> from coordinax._src.metric.matrix import DenseMetric
 
     >>> from coordinax._src.charts.d3 import LonCosLatSpherical3D
@@ -113,7 +113,7 @@ def metric_representation(
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> metric_representation(cxm.R3, cxc.cart3d)
@@ -148,7 +148,7 @@ def metric_matrix(
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     Cart1D:
@@ -187,7 +187,7 @@ def metric_matrix(
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
 
     >>> at = {"q": jnp.array([1.0, 2.0, 3.0])}
     >>> metric_matrix(cxm.R3, at, cxc.cartnd).diagonal
@@ -217,7 +217,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     Dimensionless:
@@ -252,7 +252,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     Dimensionless ``r``:
@@ -291,7 +291,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> at = {"rho": u.Q(3.0, "m"), "phi": u.Angle(0.0, "rad"), "z": u.Q(1.0, "m")}
@@ -324,7 +324,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> at = {
@@ -366,7 +366,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> at = {
@@ -407,7 +407,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> at = {
@@ -449,7 +449,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DenseMetric
     >>> from coordinax._src.charts.d3 import LonCosLatSpherical3D
 

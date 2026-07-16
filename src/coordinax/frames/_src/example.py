@@ -9,10 +9,10 @@ import plum
 
 import unxt as u
 
-import coordinax.api.frames as cxfapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinaxs.api.frames as cxfapi
 from .base import AbstractReferenceFrame
 
 
@@ -159,7 +159,7 @@ class Bob(AbstractReferenceFrame):
     Applying the same transform to a component dictionary (``cdict``) also
     works:
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> d = cx.cdict(u.Q([0.0, 0.0, 0.0], "km"))
     >>> op(None, d)
     {'x': Q(100000., 'km'), 'y': Q(10000., 'km'), 'z': Q(0., 'km')}
@@ -199,7 +199,7 @@ def frame_transition(from_frame: Alice, to_frame: Alex, /) -> cxfm.Composed:
     """Transform from Alice's frame to Alex's frame.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> op = cxf.frame_transition(cxf.alice, cxf.alex)
     >>> print(op)
     Composed(( Translate(...), Rotate(...) ))
@@ -230,7 +230,7 @@ def frame_transition(from_frame: Alice, to_frame: Bob, /) -> cxfm.Composed:
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> alice = cxf.Alice()
@@ -257,7 +257,7 @@ def frame_transition(
     """Transform back.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> cxf.frame_transition(cxf.alex, cxf.alice)
     Composed(( Rotate(...), Translate(...) ))

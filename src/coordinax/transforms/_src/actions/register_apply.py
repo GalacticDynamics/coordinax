@@ -10,9 +10,9 @@ import plum
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
-import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .custom_types import CDict
 from coordinax.internal import QMatrix, pack_nonuniform_unit, pack_uniform_unit
@@ -164,7 +164,7 @@ def act(
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> op = cx.Rotate.from_euler("z", u.Q(90, "deg"))
     >>> x = jnp.asarray([1.0, 0.0, 0.0])

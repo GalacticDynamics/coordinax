@@ -11,7 +11,7 @@ For design philosophy, practical patterns, and worked examples, see [Working Wit
 ## Quick Start
 
 ```python
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import unxt as u

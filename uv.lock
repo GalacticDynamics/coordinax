@@ -11,11 +11,11 @@ resolution-markers = [
 [manifest]
 members = [
     "coordinax",
-    "coordinax-api",
-    "coordinax-astro",
-    "coordinax-curveframes",
-    "coordinax-hypothesis",
-    "coordinax-interop-astropy",
+    "coordinaxs-api",
+    "coordinaxs-astro",
+    "coordinaxs-curveframes",
+    "coordinaxs-hypothesis",
+    "coordinaxs-interop-astropy",
 ]
 constraints = [
     { name = "numpy", specifier = "<2.4.0" },
@@ -418,7 +418,7 @@ source = { editable = "." }
 dependencies = [
     { name = "astropy" },
     { name = "beartype" },
-    { name = "coordinax-api" },
+    { name = "coordinaxs-api" },
     { name = "dataclassish", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "dataclassish", version = "0.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "equinox" },
@@ -438,23 +438,23 @@ dependencies = [
 
 [package.optional-dependencies]
 astro = [
-    { name = "coordinax-astro" },
+    { name = "coordinaxs-astro" },
 ]
 benchmark = [
     { name = "pytest-benchmark" },
 ]
 curveframes = [
-    { name = "coordinax-curveframes" },
+    { name = "coordinaxs-curveframes" },
 ]
 interop-astropy = [
-    { name = "coordinax-interop-astropy" },
+    { name = "coordinaxs-interop-astropy" },
 ]
 workspace = [
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-curveframes" },
-    { name = "coordinax-hypothesis" },
-    { name = "coordinax-interop-astropy" },
+    { name = "coordinaxs-api" },
+    { name = "coordinaxs-astro" },
+    { name = "coordinaxs-curveframes" },
+    { name = "coordinaxs-hypothesis" },
+    { name = "coordinaxs-interop-astropy" },
 ]
 
 [package.dev-dependencies]
@@ -463,8 +463,8 @@ build = [
 ]
 dev = [
     { name = "build" },
-    { name = "coordinax-curveframes" },
-    { name = "coordinax-hypothesis" },
+    { name = "coordinaxs-curveframes" },
+    { name = "coordinaxs-hypothesis" },
     { name = "cz-conventional-gitmoji" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "ipykernel" },
@@ -534,8 +534,8 @@ nox = [
     { name = "nox-uv" },
 ]
 test = [
-    { name = "coordinax-curveframes" },
-    { name = "coordinax-hypothesis" },
+    { name = "coordinaxs-curveframes" },
+    { name = "coordinaxs-hypothesis" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "jaxmore" },
     { name = "pytest" },
@@ -546,8 +546,8 @@ test = [
     { name = "sybil", extra = ["pytest"] },
 ]
 test-all = [
-    { name = "coordinax-curveframes" },
-    { name = "coordinax-hypothesis" },
+    { name = "coordinaxs-curveframes" },
+    { name = "coordinaxs-hypothesis" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "jaxmore" },
     { name = "pytest" },
@@ -562,15 +562,15 @@ test-all = [
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
     { name = "beartype", specifier = ">=0.21.0" },
-    { name = "coordinax-api", editable = "packages/coordinax.api" },
-    { name = "coordinax-api", marker = "extra == 'workspace'", editable = "packages/coordinax.api" },
-    { name = "coordinax-astro", marker = "extra == 'astro'", editable = "packages/coordinax.astro" },
-    { name = "coordinax-astro", marker = "extra == 'workspace'", editable = "packages/coordinax.astro" },
-    { name = "coordinax-curveframes", marker = "extra == 'curveframes'", editable = "packages/coordinax.curveframes" },
-    { name = "coordinax-curveframes", marker = "extra == 'workspace'", editable = "packages/coordinax.curveframes" },
-    { name = "coordinax-hypothesis", marker = "extra == 'workspace'", editable = "packages/coordinax.hypothesis" },
-    { name = "coordinax-interop-astropy", marker = "extra == 'interop-astropy'", editable = "packages/coordinax.interop.astropy" },
-    { name = "coordinax-interop-astropy", marker = "extra == 'workspace'", editable = "packages/coordinax.interop.astropy" },
+    { name = "coordinaxs-api", editable = "packages/coordinaxs.api" },
+    { name = "coordinaxs-api", marker = "extra == 'workspace'", editable = "packages/coordinaxs.api" },
+    { name = "coordinaxs-astro", marker = "extra == 'astro'", editable = "packages/coordinaxs.astro" },
+    { name = "coordinaxs-astro", marker = "extra == 'workspace'", editable = "packages/coordinaxs.astro" },
+    { name = "coordinaxs-curveframes", marker = "extra == 'curveframes'", editable = "packages/coordinaxs.curveframes" },
+    { name = "coordinaxs-curveframes", marker = "extra == 'workspace'", editable = "packages/coordinaxs.curveframes" },
+    { name = "coordinaxs-hypothesis", marker = "extra == 'workspace'", editable = "packages/coordinaxs.hypothesis" },
+    { name = "coordinaxs-interop-astropy", marker = "extra == 'interop-astropy'", editable = "packages/coordinaxs.interop.astropy" },
+    { name = "coordinaxs-interop-astropy", marker = "extra == 'workspace'", editable = "packages/coordinaxs.interop.astropy" },
     { name = "dataclassish", marker = "python_full_version == '3.11.*'", specifier = ">=0.8.0,<0.9.0" },
     { name = "dataclassish", marker = "python_full_version >= '3.12'", specifier = ">=0.9.0" },
     { name = "equinox", specifier = ">=0.13.8" },
@@ -595,8 +595,8 @@ provides-extras = ["astro", "benchmark", "curveframes", "interop-astropy", "work
 build = [{ name = "build", specifier = ">=1.3.0" }]
 dev = [
     { name = "build", specifier = ">=1.3.0" },
-    { name = "coordinax-curveframes", editable = "packages/coordinax.curveframes" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax.hypothesis" },
+    { name = "coordinaxs-curveframes", editable = "packages/coordinaxs.curveframes" },
+    { name = "coordinaxs-hypothesis", editable = "packages/coordinaxs.hypothesis" },
     { name = "cz-conventional-gitmoji", specifier = ">=0.6.1" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "ipykernel", specifier = ">=7.1.0" },
@@ -663,8 +663,8 @@ nox = [
     { name = "nox-uv", specifier = ">=0.6.3" },
 ]
 test = [
-    { name = "coordinax-curveframes", editable = "packages/coordinax.curveframes" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax.hypothesis" },
+    { name = "coordinaxs-curveframes", editable = "packages/coordinaxs.curveframes" },
+    { name = "coordinaxs-hypothesis", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "jaxmore", specifier = ">=0.2.0" },
     { name = "pytest", specifier = ">=8.3.3" },
@@ -675,8 +675,8 @@ test = [
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
 ]
 test-all = [
-    { name = "coordinax-curveframes", editable = "packages/coordinax.curveframes" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax.hypothesis" },
+    { name = "coordinaxs-curveframes", editable = "packages/coordinaxs.curveframes" },
+    { name = "coordinaxs-hypothesis", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "jaxmore", specifier = ">=0.2.0" },
     { name = "pytest", specifier = ">=8.3.3" },
@@ -688,8 +688,8 @@ test-all = [
 ]
 
 [[package]]
-name = "coordinax-api"
-source = { editable = "packages/coordinax.api" }
+name = "coordinaxs-api"
+source = { editable = "packages/coordinaxs.api" }
 dependencies = [
     { name = "plum" },
 ]
@@ -701,8 +701,8 @@ requires-dist = [
 ]
 
 [[package]]
-name = "coordinax-astro"
-source = { editable = "packages/coordinax.astro" }
+name = "coordinaxs-astro"
+source = { editable = "packages/coordinaxs.astro" }
 dependencies = [
     { name = "coordinax" },
     { name = "optional-dependencies" },
@@ -722,8 +722,8 @@ requires-dist = [
 provides-extras = ["astropy"]
 
 [[package]]
-name = "coordinax-curveframes"
-source = { editable = "packages/coordinax.curveframes" }
+name = "coordinaxs-curveframes"
+source = { editable = "packages/coordinaxs.curveframes" }
 dependencies = [
     { name = "coordinax" },
 ]
@@ -732,8 +732,8 @@ dependencies = [
 requires-dist = [{ name = "coordinax", editable = "." }]
 
 [[package]]
-name = "coordinax-hypothesis"
-source = { editable = "packages/coordinax.hypothesis" }
+name = "coordinaxs-hypothesis"
+source = { editable = "packages/coordinaxs.hypothesis" }
 dependencies = [
     { name = "coordinax" },
     { name = "hypothesis" },
@@ -748,13 +748,13 @@ requires-dist = [
 ]
 
 [[package]]
-name = "coordinax-interop-astropy"
-source = { editable = "packages/coordinax.interop.astropy" }
+name = "coordinaxs-interop-astropy"
+source = { editable = "packages/coordinaxs.interop.astropy" }
 dependencies = [
     { name = "astropy" },
     { name = "coordinax" },
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
+    { name = "coordinaxs-api" },
+    { name = "coordinaxs-astro" },
     { name = "jaxtyping" },
     { name = "plum" },
     { name = "unxt" },
@@ -771,8 +771,8 @@ test = [
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
     { name = "coordinax", editable = "." },
-    { name = "coordinax-api", editable = "packages/coordinax.api" },
-    { name = "coordinax-astro", editable = "packages/coordinax.astro" },
+    { name = "coordinaxs-api", editable = "packages/coordinaxs.api" },
+    { name = "coordinaxs-astro", editable = "packages/coordinaxs.astro" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "plum", marker = "python_full_version < '3.14'", specifier = ">=2.8.0" },
     { name = "plum", marker = "python_full_version >= '3.14'", specifier = ">=2.9.0" },

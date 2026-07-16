@@ -24,8 +24,8 @@ from .charts import MinkowskiCT
 from .manifold import MinkowskiManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
 from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
-from coordinax.api.manifolds import metric_matrix, metric_representation
 from coordinax.internal import QMatrix, UnitsMatrix
+from coordinaxs.api.manifolds import metric_matrix, metric_representation
 
 # =====================================================================
 # metric_representation
@@ -40,7 +40,7 @@ def metric_representation(
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
     >>> from coordinax._src.metric.matrix import DenseMetric
 
     >>> M = cxm.MinkowskiManifold()
@@ -60,7 +60,7 @@ def metric_representation(
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> M = cxm.MinkowskiManifold()
@@ -89,7 +89,7 @@ def metric_matrix(
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     >>> M = cxm.MinkowskiManifold()
@@ -120,7 +120,7 @@ def metric_matrix(
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     Canonical chart uses the specific dispatch above, not this fallback:

@@ -4,7 +4,7 @@ import pytest
 
 import coordinax.frames as cxf
 
-cxastro = pytest.importorskip("coordinax.astro")
+cxastro = pytest.importorskip("coordinaxs.astro")
 
 
 def test_astro_icrs_is_exposed_in_coordinax_frames() -> None:

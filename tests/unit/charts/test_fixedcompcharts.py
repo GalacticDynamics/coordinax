@@ -4,7 +4,7 @@ import hypothesis.strategies as st
 from hypothesis import given, settings
 
 import coordinax.charts as cxc
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 # =============================================================================
 # AbstractFixedComponentsChart

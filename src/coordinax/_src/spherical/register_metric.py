@@ -57,7 +57,7 @@ def metric_matrix(
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DiagonalMetric
 
     $S^2$ at the equator $\theta = \pi/2$:

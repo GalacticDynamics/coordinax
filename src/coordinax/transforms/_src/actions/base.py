@@ -32,7 +32,7 @@ import wadler_lindig as wl
 import unxt as u
 from dataclassish import field_items, flags
 
-import coordinax.api.transforms as cxfmapi
+import coordinaxs.api.transforms as cxfmapi
 from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
@@ -67,7 +67,7 @@ class AbstractTransform(eqx.Module):
     def __call__(self, tau: Any, x: Any = None, /, **kw: Any) -> Any:
         """Apply the operator to the arguments.
 
-        This method calls `coordinax.api.frames.act` to apply the operator.
+        This method calls `coordinaxs.api.frames.act` to apply the operator.
         If `x` is not provided, `tau` will be passed as `None` to the `act`
 
         """
@@ -180,7 +180,7 @@ class AbstractTransform(eqx.Module):
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> op = cxfm.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> print(op)
@@ -283,7 +283,7 @@ def from_(cls: type[AbstractTransform], obj: AbstractTransform, /) -> AbstractTr
 
     Examples
     --------
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     If the object is the same type, it should return the object itself.
 
@@ -381,7 +381,7 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
 
@@ -463,7 +463,7 @@ def is_time_dependent(op: Any, /) -> bool:
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
 

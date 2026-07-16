@@ -1,7 +1,7 @@
 """Concrete fallback dispatch rules for metric_matrix and metric_representation.
 
 The dispatch function objects are defined (as abstract) in
-:mod:`coordinax.api.manifolds`.  This module registers the concrete fallback
+:mod:`coordinaxs.api.manifolds`.  This module registers the concrete fallback
 rules that apply to any :class:`~coordinax._src.base.AbstractManifold` /
 :class:`~coordinax._src.base.AbstractChart` pair not covered by a more specific
 rule registered in a ``register_metric.py`` module.
@@ -63,7 +63,7 @@ def metric_representation(
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
     >>> from coordinax._src.metric.matrix import DenseMetric
     >>> from coordinax._src.charts.d3 import LonCosLatSpherical3D
 

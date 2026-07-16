@@ -14,8 +14,8 @@ import numpy as np
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
-import coordinax.main as cx
 import coordinax.representations as cxr
 
 usys = u.unitsystems.si
@@ -30,7 +30,7 @@ class TestTangentMapExistence:
         assert callable(cxr.tangent_map)
 
     def test_importable_from_main(self) -> None:
-        """tangent_map is in coordinax.main."""
+        """tangent_map is in coordinax."""
         assert hasattr(cx, "tangent_map")
 
 

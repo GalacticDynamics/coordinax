@@ -13,11 +13,11 @@ import dataclassish
 import quaxed.numpy as jnp
 import unxt.quantity as uq
 
-import coordinax.api.representations as cxrapi
-import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinaxs.api.representations as cxrapi
+import coordinaxs.api.transforms as cxfmapi
 from .bundle import Coordinate
 from .point import Point
 from .tangent import Tangent
@@ -36,7 +36,7 @@ def cconvert(
     """Convert a point from one chart to another.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 1, 1], "m")
     >>> print(vec)
@@ -67,7 +67,7 @@ def cconvert(
     """Convert a vector from one chart to another.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 1, 1], "m")
     >>> sph_vec = cx.cconvert(vec, cx.cart3d, cx.sph3d)
@@ -93,7 +93,7 @@ def pt_map(
     """Convert a point from one chart to another.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
 
     >>> vec = cx.Point.from_([1, 1, 1], "m")
@@ -125,7 +125,7 @@ def pt_map(
     """Convert a vector from one chart to another.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
 
     >>> vec = cx.Point.from_([1, 1, 1], "m")
@@ -150,7 +150,7 @@ def pt_map(
 def cdict(obj: Point, /) -> CDict:
     """Extract component dictionary from a Point.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import unxt as u
     >>> vec = cx.Point.from_(u.Q([1, 2, 3], "m"))
     >>> d = cx.cdict(vec)
@@ -165,7 +165,7 @@ def cdict(obj: Point, /) -> CDict:
 def cdict(obj: Tangent, /) -> CDict:
     """Extract component dictionary from a Tangent.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -199,7 +199,7 @@ def cconvert(
     (whose ``.data`` is used) or a raw ``CDict``.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -252,7 +252,7 @@ def cconvert(
     """Convert a tangent Tangent from one chart to another (explicit from-chart).
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -295,7 +295,7 @@ def change_basis(
     ``CDict``.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -356,7 +356,7 @@ def change_basis(
     not used.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.representations as cxr
 
     >>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
@@ -388,7 +388,7 @@ def add(lhs: Point, rhs: Point, /) -> Point:
 
     The result keeps the ``lhs`` chart and representation.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> v1 = cx.Point.from_([1, 2, 3], "m")
     >>> v2 = cx.Point.from_([4, 5, 6], "m")
     >>> print(cxr.add(v1, v2))
@@ -417,7 +417,7 @@ def subtract(lhs: Point, rhs: Point, /) -> Point:
 
     The result keeps the ``lhs`` chart and representation.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> v1 = cx.Point.from_([4, 5, 6], "m")
     >>> v2 = cx.Point.from_([1, 2, 3], "m")
     >>> print(cxr.subtract(v1, v2))
@@ -447,7 +447,7 @@ def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     must share the same representation (chart + basis + semantic).
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -484,7 +484,7 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     operands must share the same representation (chart + basis + semantic).
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -537,7 +537,7 @@ def act(
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
@@ -583,7 +583,7 @@ def act(op: cxfm.AbstractTransform, tau: Any, x: Point, /, **kw: Any) -> Point:
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
     >>> op = cx.Rotate(Rz)
@@ -609,7 +609,7 @@ def act(
 ) -> Coordinate:
     """Act a frame transform on a Coordinate (point + all fibres).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
@@ -782,7 +782,7 @@ def _replace_coordinate(coord: Coordinate, /, **kwargs: Any) -> Coordinate:
     Unknown keys are rejected with a ``TypeError``.
 
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> point = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
@@ -838,7 +838,7 @@ def cconvert(
 
     Delegates to {meth}`Coordinate.cconvert`.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
 
     >>> pt = cx.Point.from_([1.0, 0.0, 0.0], "m")

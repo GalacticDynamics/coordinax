@@ -1,14 +1,14 @@
 [
   {
-    "path": "packages/coordinax.astro",
+    "path": "packages/coordinaxs.astro",
     "nox-key": "astro"
   },
   {
-    "path": "packages/coordinax.hypothesis",
+    "path": "packages/coordinaxs.hypothesis",
     "nox-key": "hypothesis"
   },
   {
-    "path": "packages/coordinax.curveframes",
+    "path": "packages/coordinaxs.curveframes",
     "nox-key": "curveframes"
   }
 ]

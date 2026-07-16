@@ -20,10 +20,10 @@ This is especially important for charts, frames, manifolds, embeddings, vector s
 This repository is a UV workspace with one main package and several workspace packages:
 
 - `src/coordinax/`: main package
-- `packages/coordinax.api/`: abstract dispatch API
-- `packages/coordinax.astro/`: astronomy-specific frames and transforms
-- `packages/coordinax.hypothesis/`: Hypothesis strategies used throughout the test suite
-- `packages/coordinax.interop.astropy/`: optional Astropy interoperability
+- `packages/coordinaxs.api/`: abstract dispatch API
+- `packages/coordinaxs.astro/`: astronomy-specific frames and transforms
+- `packages/coordinaxs.hypothesis/`: Hypothesis strategies used throughout the test suite
+- `packages/coordinaxs.interop.astropy/`: optional Astropy interoperability
 
 The root test and docs trees exercise the whole workspace, so even a small change in one package can surface in root docs or shared tests.
 
@@ -86,18 +86,18 @@ The authoritative session definitions live in the repository root `noxfile.py`. 
 
 - `uv run nox -s precommit`: runs all prek/pre-commit hooks.
 - `uv run nox -s "pylint(package='coordinax')"`: run Pylint for the main package.
-- `uv run nox -s "pylint(package='api')"`: run Pylint for `coordinax.api`.
-- `uv run nox -s "pylint(package='astro')"`: run Pylint for `coordinax.astro`.
-- `uv run nox -s "pylint(package='hypothesis')"`: run Pylint for `coordinax.hypothesis`.
-- `uv run nox -s "ty(package='coordinax')"`: run `ty check` on the main package plus `coordinax.api`.
+- `uv run nox -s "pylint(package='api')"`: run Pylint for `coordinaxs.api`.
+- `uv run nox -s "pylint(package='astro')"`: run Pylint for `coordinaxs.astro`.
+- `uv run nox -s "pylint(package='hypothesis')"`: run Pylint for `coordinaxs.hypothesis`.
+- `uv run nox -s "ty(package='coordinax')"`: run `ty check` on the main package plus `coordinaxs.api`.
 - `uv run nox -s "ty(package='api')"`, `uv run nox -s "ty(package='astro')"`, `uv run nox -s "ty(package='hypothesis')"`: run `ty check` for a specific workspace package.
 
 ### Testing
 
 - `uv run nox -s "pytest(package='coordinax')"`: test the root package paths: `README.md`, `docs`, `src/`, and `tests/`.
-- `uv run nox -s "pytest(package='api')"`: test `packages/coordinax.api/`.
-- `uv run nox -s "pytest(package='astro')"`: test `packages/coordinax.astro/`.
-- `uv run nox -s "pytest(package='hypothesis')"`: test `packages/coordinax.hypothesis/`.
+- `uv run nox -s "pytest(package='api')"`: test `packages/coordinaxs.api/`.
+- `uv run nox -s "pytest(package='astro')"`: test `packages/coordinaxs.astro/`.
+- `uv run nox -s "pytest(package='hypothesis')"`: test `packages/coordinaxs.hypothesis/`.
 
 Pass additional `pytest` arguments after `--`. For example:
 
@@ -127,7 +127,7 @@ The test suite combines ordinary unit and integration tests with documentation t
 - Package-specific work should also run that package's own tests under `packages/<name>/`.
 - Documentation code blocks are part of the test surface, so doc updates should be validated with the test or docs sessions.
 
-Prefer property-based tests when you are checking mathematical laws, invariants, or compatibility with JAX transformations. When relevant, use strategies from `coordinax.hypothesis` rather than hand-rolled examples.
+Prefer property-based tests when you are checking mathematical laws, invariants, or compatibility with JAX transformations. When relevant, use strategies from `coordinaxs.hypothesis` rather than hand-rolled examples.
 
 Changes to JAX-facing behavior should be tested with the same assumptions the project uses elsewhere:
 
@@ -165,7 +165,7 @@ In practice:
 - keep cross-package semantics consistent with the root [spec.md](spec.md)
 - run the package-local `pytest` session and any affected root sessions
 
-For example, work in `coordinax.hypothesis` often needs both package-local tests and root tests that consume those strategies.
+For example, work in `coordinaxs.hypothesis` often needs both package-local tests and root tests that consume those strategies.
 
 ## Pre-PR Checklist
 

@@ -14,8 +14,8 @@ from hypothesis import given, settings, strategies as st
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
-import coordinax.main as cx
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinax.vectors as cxv

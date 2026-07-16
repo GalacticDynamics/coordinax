@@ -3,10 +3,10 @@
 This workspace contains five packages that can be released:
 
 - `coordinax` - the main package
-- `coordinax.api` - abstract dispatch API
-- `coordinax.astro` - astronomy-specific reference frames
-- `coordinax.hypothesis` - hypothesis testing strategies
-- `coordinax.interop.astropy` - Astropy interoperability package
+- `coordinaxs.api` - abstract dispatch API
+- `coordinaxs.astro` - astronomy-specific reference frames
+- `coordinaxs.hypothesis` - hypothesis testing strategies
+- `coordinaxs.interop.astropy` - Astropy interoperability package
 
 All releases are automated via GitHub Actions.
 
@@ -36,11 +36,11 @@ git push origin v0.24.0
 Use package tag: `PACKAGE-vX.Y.Z` where `Z > 0` (for example, `coordinax-api-v0.24.1`)
 
 ```bash
-# Create and push package-specific tag (example: coordinax.api)
-git tag coordinax-api-v0.24.1 -m "Release coordinax.api 0.24.1 bug-fix"
+# Create and push package-specific tag (example: coordinaxs.api)
+git tag coordinax-api-v0.24.1 -m "Release coordinaxs.api 0.24.1 bug-fix"
 git push origin coordinax-api-v0.24.1
 
-# CD automatically builds and publishes only coordinax.api
+# CD automatically builds and publishes only coordinaxs.api
 ```
 
 ### Tag Format Rules
@@ -72,10 +72,10 @@ Invalid:
 All packages use `hatch-vcs` with package-specific tag matching:
 
 - `coordinax` matches `coordinax-v*`
-- `coordinax.api` matches `coordinax-api-v*`
-- `coordinax.astro` matches `coordinax-astro-v*`
-- `coordinax.hypothesis` matches `coordinax-hypothesis-v*`
-- `coordinax.interop.astropy` matches `coordinax-interop-astropy-v*`
+- `coordinaxs.api` matches `coordinax-api-v*`
+- `coordinaxs.astro` matches `coordinax-astro-v*`
+- `coordinaxs.hypothesis` matches `coordinax-hypothesis-v*`
+- `coordinaxs.interop.astropy` matches `coordinax-interop-astropy-v*`
 
 ### How Releases Work
 
@@ -131,14 +131,14 @@ Expected automation:
 ### Scenario 2: Bug-fix Release (Single Package)
 
 ```bash
-git tag coordinax-api-vX.Y.Z -m "Release coordinax.api X.Y.Z bug-fix"
+git tag coordinax-api-vX.Y.Z -m "Release coordinaxs.api X.Y.Z bug-fix"
 git push origin coordinax-api-vX.Y.Z
 ```
 
 Expected automation:
 
-1. `cd-coordinax.api` runs.
-2. Only `coordinax.api` is built and published.
+1. `cd-coordinaxs.api` runs.
+2. Only `coordinaxs.api` is built and published.
 
 ### GitHub Release (Optional)
 
@@ -162,13 +162,13 @@ For package-specific releases:
 
 ```bash
 # Check version detection for a package
-cd packages/coordinax.api
+cd packages/coordinaxs.api
 hatch version
 
 # Local test tag example (do not push)
 cd ../..
 git tag coordinax-api-v0.0.0 -m "Test tag"
-cd packages/coordinax.api && hatch version
+cd packages/coordinaxs.api && hatch version
 cd ../..
 git tag -d coordinax-api-v0.0.0
 ```

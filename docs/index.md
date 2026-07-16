@@ -9,11 +9,11 @@ sd_hide_title: true
 :hidden:
 :caption: 📦 Packages
 
-coordinax.api <packages/coordinax.api/index.md>
+coordinaxs.api <packages/coordinaxs.api/index.md>
 coordinax <self>
-coordinax.astro <packages/coordinax.astro/index.md>
-coordinax.hypothesis <packages/coordinax.hypothesis/index.md>
-coordinax.interop.astropy <packages/coordinax.interop.astropy/index.md>
+coordinaxs.astro <packages/coordinaxs.astro/index.md>
+coordinaxs.hypothesis <packages/coordinaxs.hypothesis/index.md>
+coordinaxs.interop.astropy <packages/coordinaxs.interop.astropy/index.md>
 ```
 
 ```{toctree}
@@ -29,7 +29,7 @@ guides/vectors.md
 guides/tangents.md
 guides/frames.md
 guides/transforms.md
-packages/coordinax.hypothesis/testing-guide
+packages/coordinaxs.hypothesis/testing-guide
 Performance <guides/perf.ipynb>
 ```
 
@@ -47,11 +47,11 @@ tutorials/*
 :hidden:
 :caption: 📘 API Reference
 
-coordinax.api <packages/coordinax.api/api>
+coordinaxs.api <packages/coordinaxs.api/api>
 coordinax <api/index.md>
-coordinax.astro <packages/coordinax.astro/api>
-coordinax.hypothesis <packages/coordinax.hypothesis/api>
-coordinax.interop.astropy <packages/coordinax.interop.astropy/api>
+coordinaxs.astro <packages/coordinaxs.astro/api>
+coordinaxs.hypothesis <packages/coordinaxs.hypothesis/api>
+coordinaxs.interop.astropy <packages/coordinaxs.interop.astropy/api>
 ```
 
 ```{toctree}
@@ -138,19 +138,14 @@ The `coordinax` package has powerful tools for representing, using, and transfor
 - specific {class}`~unxt.quantity.Quantity` subclasses like {class}`~coordinax.angles.Angle` and {class}`~coordinax.distances.Distance`
 - and more!
 
-This functionality is organized into submodules available under the top-level `coordinax` namespace. You can import them directly, or for many objects use the `coordinax.main` namespace to access them.
+This functionality is organized into submodules available under the top-level `coordinax` namespace. You can import them directly, or for many objects use the `coordinax` namespace to access them.
 
 <!-- invisible-code-block: python
 import coordinax.angles
-import coordinax.api
-import coordinax.astro
-import coordinax.curveframes
 import coordinax.charts
 import coordinax.distances
 import coordinax.frames
-import coordinax.hypothesis
-import coordinax.interop
-import coordinax.main
+import coordinax
 import coordinax.manifolds
 import coordinax.representations
 import coordinax.vectors
@@ -163,12 +158,12 @@ import coordinax.vectors
 >>> sorted(name.removeprefix("coordinax.")
 ...        for name in sys.modules
 ...        if name.startswith("coordinax.") and name.count(".") == 1)[1:]
-['angles', 'api', 'astro', 'charts', 'curveframes', 'distances', 'frames', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'transforms', 'vectors']
+['angles', 'charts', 'distances', 'frames', 'internal', 'manifolds', 'representations', 'transforms', 'vectors']
 ```
 
 We recommend importing as needed:
 
-- `coordinax.main` as `cx` : probably everything you need!
+- `coordinax` as `cx` : probably everything you need!
 - `coordinax.angles` as `cxa` : further angle-specific functionality.
 - `coordinax.distances` as `cxd` : further distance-specific functionality.
 - `coordinax.charts` as `cxc` : chart-specific functionality.
@@ -178,9 +173,9 @@ We recommend importing as needed:
 - `coordinax.transforms` as `cxt` : transform-specific functionality.
 - `coordinax.vectors` as `cxv` : vector-specific functionality.
 
-- `coordinax.astro` as `cxastro` : astronomy-specific functionality. Note that this package is an optional extra, so you may need to install it separately.
-- `coordinax.hypothesis` as `cxst` : property-based testing strategies for `coordinax`. Note that this package is an optional extra, so you may need to install it separately.
-- `coordinax.interop.astropy` as `cxapy` : interoperability with `astropy`. Note that this package is an optional extra, so you may need to install it separately.
+- `coordinaxs.astro` as `cxastro` : astronomy-specific functionality. Note that this package is an optional extra, so you may need to install it separately.
+- `coordinaxs.hypothesis` as `cxst` : property-based testing strategies for `coordinax`. Note that this package is an optional extra, so you may need to install it separately.
+- `coordinaxs.interop.astropy` as `cxapy` : interoperability with `astropy`. Note that this package is an optional extra, so you may need to install it separately.
 
 ### Angles and Distances
 
@@ -189,7 +184,7 @@ We recommend importing as needed:
 Let's start with angles, which are represented by the {class}`~coordinax.angles.Angle` class. This class enforces that the inputted units have angular dimensions and provides some other useful utilities for working with angles. For example, the resulting {class}`~coordinax.angles.Angle` (a re-export of `unxt.Angle`) object can be wrapped to a specific range to conform to a branch cut (e.g., 0 to $2\pi$ or $-180^\circ$ to $180^\circ$).
 
 ```{code-block} python
->>> import coordinax.main as cx
+>>> import coordinax as cx
 >>> import unxt as u
 
 >>> a = cx.Angle(370, "deg")
@@ -208,10 +203,10 @@ Similarly, the {class}`~coordinax.distances.Distance` class represents distances
 Distance(10, 'kpc')
 ```
 
-but other distance-like objects can be represented with the {class}`~coordinax.astro.Parallax` and {class}`~coordinax.astro.DistanceModulus` classes. These classes check that the units have distance dimensions, and they provide useful properties for converting between different distance representations.
+but other distance-like objects can be represented with the {class}`~coordinaxs.astro.Parallax` and {class}`~coordinaxs.astro.DistanceModulus` classes. These classes check that the units have distance dimensions, and they provide useful properties for converting between different distance representations.
 
 ```{code-block} python
->>> import coordinax.astro as cxastro
+>>> import coordinaxs.astro as cxastro
 >>> import plum
 
 >>> plum.convert(d, cxastro.Parallax)

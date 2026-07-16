@@ -82,17 +82,20 @@ with install_import_hook("coordinax.transforms"):
         ProperOrthochronousLorentzGroup,
         SpecialOrthogonalGroup,
     )
-    from coordinax.api.transforms import act, compose, prolong, pushforward, simplify
+    from coordinaxs.api.transforms import act, compose, prolong, pushforward, simplify
 
 
-_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinax.transforms"
+# Extension point: distributions may register transform symbols under the
+# ``coordinaxs.transforms`` entry-point group. No in-tree distribution
+# currently registers here; the consumer is kept live for downstream packages.
+_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinaxs.transforms"
 _OPTIONAL_TRANSFORM_EXPORTS_STATE: dict[str, bool] = {"loading": False}
 
 
 def _load_optional_transform_exports() -> None:
     """Load optional transform symbols.
 
-    ``coordinax.transforms`` entry-point group.
+    ``coordinaxs.transforms`` entry-point group.
     """
     if _OPTIONAL_TRANSFORM_EXPORTS_STATE["loading"]:
         return

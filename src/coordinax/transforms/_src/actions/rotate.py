@@ -67,7 +67,7 @@ class Rotate(AbstractLinearTransform):
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.transforms as cxfm
     >>> import wadler_lindig as wl
 
@@ -167,7 +167,7 @@ class Rotate(AbstractLinearTransform):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
         >>> op.R.round(2)
@@ -191,7 +191,7 @@ class Rotate(AbstractLinearTransform):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cxfm.Rotate(Rz)
@@ -225,7 +225,7 @@ class Rotate(AbstractLinearTransform):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cxfm.Rotate(Rz)
@@ -249,7 +249,7 @@ class Rotate(AbstractLinearTransform):
         --------
         >>> import quaxed.numpy as jnp
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         Two rotations can be combined:
 
@@ -384,7 +384,7 @@ def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
 
     >>> import jax.numpy as jnp
     >>> from jax.scipy.spatial.transform import Rotation
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> R = Rotation.from_euler("z", 90, degrees=True)
     >>> op = cxfm.Rotate.from_(R)
@@ -405,7 +405,7 @@ def simplify(op: Rotate, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     """Simplify the Galilean rotation operator.
 
     >>> import quaxed.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     An operator with a non-identity rotation matrix is not simplified:
 

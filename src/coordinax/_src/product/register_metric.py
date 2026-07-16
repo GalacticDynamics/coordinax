@@ -19,8 +19,8 @@ import unxt as u
 from .chart import AbstractCartesianProductChart
 from .manifold import CartesianProductManifold
 from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
-from coordinax.api.manifolds import metric_matrix, metric_representation
 from coordinax.internal import QMatrix, UnitsMatrix
+from coordinaxs.api.manifolds import metric_matrix, metric_representation
 
 # =====================================================================
 # Private helpers
@@ -57,7 +57,7 @@ def metric_representation(
     conservative declaration.
 
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
     >>> from coordinax._src.metric.matrix import DenseMetric
 
     >>> M = cxm.CartesianProductManifold(
@@ -88,7 +88,7 @@ def metric_matrix(
 
     >>> import jax.numpy as jnp
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DenseMetric
 
     Two-factor Euclidean product (R² x R¹):

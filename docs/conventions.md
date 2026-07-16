@@ -126,7 +126,7 @@ See [Glossary: Functional API, OOP API, Module Organization](glossary.md).
 - **Example**:
 
   ```python
-  import coordinax.main as cx
+  import coordinax as cx
   import coordinax.charts as cxc
   import unxt as u
 
@@ -183,7 +183,7 @@ Plum selects implementation based on runtime types of **all** arguments (not jus
 When working with a dispatched function, use the `.methods` attribute to see all registered implementations:
 
 ```python
-from coordinax.main import Distance
+from coordinax import Distance
 
 print(Distance.from_.methods)
 ```

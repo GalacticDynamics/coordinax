@@ -13,9 +13,9 @@ import plum
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
 from .base import is_time_dependent, materialize_transform
 from .composed import Composed
@@ -80,7 +80,7 @@ class Translate(AbstractAdd):
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.transforms as cxfm
     >>> import wadler_lindig as wl
 

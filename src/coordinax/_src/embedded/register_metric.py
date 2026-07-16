@@ -23,17 +23,17 @@ import plum
 import quaxed.numpy as qnp
 import unxt as u
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
 from coordinax._src.metric.matrix import DenseMetric
-from coordinax.api.manifolds import metric_matrix
 from coordinax.internal import (
     QMatrix,
     UnitsMatrix,
     cdict_units,
     pack_nonuniform_unit,
 )
+from coordinaxs.api.manifolds import metric_matrix
 
 DMLS = u.unit("")
 
@@ -52,7 +52,7 @@ def metric_representation(
     >>> import unxt as u
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
-    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinaxs.api.manifolds import metric_representation
 
     >>> M = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.S2, ambient=cxm.R3,
@@ -106,7 +106,7 @@ def metric_matrix(
     >>> import unxt as u
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
     >>> from coordinax._src.metric.matrix import DenseMetric
 
     Unit sphere — values should be the identity:

@@ -9,8 +9,8 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
-import coordinax.main as cx
 import coordinax.representations as cxr
 
 # ---------------------------------------------------------------------------

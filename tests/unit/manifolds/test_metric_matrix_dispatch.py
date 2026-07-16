@@ -13,9 +13,9 @@ import pytest
 
 import unxt as u
 
-import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
+import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.metric.matrix import DiagonalMetric
 
 # ---------------------------------------------------------------------------

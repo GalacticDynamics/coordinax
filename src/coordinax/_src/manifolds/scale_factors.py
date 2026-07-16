@@ -1,4 +1,4 @@
-"""Dispatch implementations for :func:`coordinax.api.manifolds.scale_factors`."""
+"""Dispatch implementations for :func:`coordinaxs.api.manifolds.scale_factors`."""
 
 __all__: tuple[str, ...] = ()
 
@@ -12,8 +12,8 @@ import plum
 import quaxed.numpy as qnp
 import unxt as u
 
-import coordinax.api.charts as cxcapi
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.embedded.metric import PullbackMetric

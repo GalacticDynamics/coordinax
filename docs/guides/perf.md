@@ -54,7 +54,7 @@ import quax
 from jaxmore import vmap
 import unxt as u
 
-import coordinax.main as cx
+import coordinax as cx
 ```
 
 We'll define this function now:

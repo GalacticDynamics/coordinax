@@ -11,10 +11,10 @@ import unxt_hypothesis as ust
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
-import coordinax.hypothesis.vectors as cxvst
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
+import coordinaxs.hypothesis.vectors as cxvst
 
 
 def _as_array(x: object, unit: str) -> np.ndarray:

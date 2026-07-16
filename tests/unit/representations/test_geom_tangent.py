@@ -4,7 +4,7 @@ __all__: tuple[str, ...] = ()
 
 import jax
 
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.representations as cxr
 
 
@@ -51,6 +51,6 @@ class TestTangentGeometry:
         assert result == cxr.tangent_geom
 
     def test_exported_from_main(self) -> None:
-        """TangentGeometry and tangent_geom are exported from coordinax.main."""
+        """TangentGeometry and tangent_geom are exported from coordinax."""
         assert hasattr(cx, "TangentGeometry")
         assert hasattr(cx, "tangent_geom")

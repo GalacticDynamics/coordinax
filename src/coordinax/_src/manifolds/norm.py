@@ -1,4 +1,4 @@
-"""Dispatch implementations for `coordinax.api.manifolds.norm`."""
+"""Dispatch implementations for `coordinaxs.api.manifolds.norm`."""
 
 __all__: tuple[str, ...] = ()
 
@@ -11,8 +11,8 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import is_any_quantity
 
-import coordinax.api.charts as cxcapi
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.charts import Cart0D, Cart1D, Cart2D, Cart3D, CartND
 from coordinax._src.custom_types import CDict, OptUSys

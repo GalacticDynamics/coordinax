@@ -24,7 +24,7 @@ class AbstractDistance(u.AbstractQuantity):
         >>> d.distance is d
         True
 
-        >>> import coordinax.astro as cxastro
+        >>> import coordinaxs.astro as cxastro
         >>> cxastro.DistanceModulus(10, "mag").distance
         Distance(1000., 'pc')
 

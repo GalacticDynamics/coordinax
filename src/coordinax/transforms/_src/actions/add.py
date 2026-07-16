@@ -19,9 +19,9 @@ import unxt as u
 from dataclassish import field_items
 from unxt.quantity import AllowValue, is_any_quantity
 
-import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .composed import Composed
 from .custom_types import CDict
@@ -167,7 +167,7 @@ class AbstractAdd(AbstractTransform):
 def from_(cls: type[AbstractAdd], obj: AbstractAdd, /) -> AbstractAdd:
     """Construct a AbstractAdd from another AbstractAdd.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> shift1 = cxfm.Translate.from_([1, 2, 3], "km")
     >>> cxfm.Translate.from_(shift1) is shift1
     True

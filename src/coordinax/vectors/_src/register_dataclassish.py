@@ -18,7 +18,7 @@ def replace(obj: Point, /, **kwargs: Any) -> Point:
 
     >>> import dataclassish
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 2, 3], "m")
     >>> print(vec)

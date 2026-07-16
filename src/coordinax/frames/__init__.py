@@ -91,15 +91,15 @@ with install_import_hook("coordinax.frames"):
         bob,
         noframe,
     )
-    from coordinax.api.frames import frame_transition
+    from coordinaxs.api.frames import frame_transition
 
 
-_FRAME_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinax.frames"
+_FRAME_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinaxs.frames"
 _OPTIONAL_FRAME_EXPORTS_STATE: dict[str, bool] = {"loading": False}
 
 
 def _load_optional_frame_exports() -> None:
-    """Load optional frame symbols from the ``coordinax.frames`` entry-point group."""
+    """Load optional frame symbols from the ``coordinaxs.frames`` entry-point group."""
     # Guard against recursive entry-point loading during import-time cycles.
     if _OPTIONAL_FRAME_EXPORTS_STATE["loading"]:
         return

@@ -7,8 +7,8 @@ from typing import Final, cast
 
 import plum
 
-import coordinax.api.charts as cxcapi
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys

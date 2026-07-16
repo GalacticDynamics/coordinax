@@ -7,8 +7,8 @@ from typing import Any, Final, cast
 
 import plum
 
-import coordinax.api.charts as cxcapi
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
 from .chart import AbstractSphericalTwoSphere
 from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold

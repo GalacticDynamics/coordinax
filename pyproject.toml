@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
   "astropy>=7.0.0",
   "beartype>=0.21.0",
-  "coordinax.api",
+  "coordinaxs.api",
   "dataclassish>=0.8.0,<0.9.0; python_version == '3.11'",
   "dataclassish>=0.9.0; python_version >= '3.12'",
   "equinox>=0.13.8",
@@ -49,16 +49,16 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
-astro = ["coordinax.astro"]
+astro = ["coordinaxs.astro"]
 benchmark = ["pytest-benchmark>=5.2.3"]
-curveframes = ["coordinax.curveframes"]
-interop-astropy = ["coordinax.interop.astropy"]
+curveframes = ["coordinaxs.curveframes"]
+interop-astropy = ["coordinaxs.interop.astropy"]
 workspace = [
-  "coordinax.api",
-  "coordinax.astro",
-  "coordinax.curveframes",
-  "coordinax.hypothesis",
-  "coordinax.interop.astropy",
+  "coordinaxs.api",
+  "coordinaxs.astro",
+  "coordinaxs.curveframes",
+  "coordinaxs.hypothesis",
+  "coordinaxs.interop.astropy",
 ]
 
 [project.urls]
@@ -106,8 +106,8 @@ ide = ["ipykernel>=7.1.0", "jaxmore>=0.2.0"]
 lint = ["prek>=0.4.0", "pylint>=3.3.2", "ty>=0.0.19"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
-  "coordinax.curveframes",
-  "coordinax.hypothesis",
+  "coordinaxs.curveframes",
+  "coordinaxs.hypothesis",
   "hypothesis[numpy]>=6.151.6",
   "jaxmore>=0.2.0",
   "pytest>=8.3.3",
@@ -170,7 +170,7 @@ name = "cz_gitmoji"
 
 
 [tool.coverage]
-run.source = ["coordinax"]
+run.source = ["coordinax", "coordinaxs"]
 
 [tool.coverage.report]
 exclude_also = [
@@ -197,13 +197,14 @@ enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 explicit_package_bases = true
 files = [
   "src/coordinax",
-  "packages/coordinax.api/src/coordinax/api",
-  "packages/coordinax.astro/src/coordinax/astro",
-  "packages/coordinax.curveframes/src/coordinax/curveframes",
-  "packages/coordinax.hypothesis/src/coordinax/hypothesis",
-  "packages/coordinax.interop.astropy/src/coordinax/interop/astropy",
+  "packages/coordinaxs.api/src/coordinaxs/api",
+  "packages/coordinaxs.astro/src/coordinaxs/astro",
+  "packages/coordinaxs.astro/src/coordinaxs/hypothesis/astro",
+  "packages/coordinaxs.curveframes/src/coordinaxs/curveframes",
+  "packages/coordinaxs.hypothesis/src/coordinaxs/hypothesis",
+  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy",
 ]
-mypy_path = "src:packages/coordinax.api/src:packages/coordinax.astro/src:packages/coordinax.curveframes/src:packages/coordinax.hypothesis/src:packages/coordinax.interop.astropy/src"
+mypy_path = "src:packages/coordinaxs.api/src:packages/coordinaxs.astro/src:packages/coordinaxs.curveframes/src:packages/coordinaxs.hypothesis/src:packages/coordinaxs.interop.astropy/src"
 namespace_packages = true
 python_version = "3.11"
 strict = true
@@ -214,7 +215,7 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 disallow_incomplete_defs = true
 disallow_untyped_defs    = true
-module                   = "coordinax.*"
+module                   = ["coordinax.*", "coordinaxs.*"]
 
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
@@ -226,6 +227,7 @@ module = [
   "hypothesis.*",
   "jax.*",
   "coordinax.*",
+  "coordinaxs.*",
   "jaxtyping.*",
   "numpy.*",
   "quax.*",
@@ -310,14 +312,14 @@ norecursedirs = [
 pythonpath = ["tests"] # for importable test utility modules
 testpaths = [
   "README.md",
-  "packages/coordinax.api/",
+  "packages/coordinaxs.api/",
   "src/",
   "docs/",
   "tests/",
-  "packages/coordinax.astro",
-  "packages/coordinax.curveframes",
-  "packages/coordinax.hypothesis/",
-  "packages/coordinax.interop.astropy/",
+  "packages/coordinaxs.astro",
+  "packages/coordinaxs.curveframes",
+  "packages/coordinaxs.hypothesis/",
+  "packages/coordinaxs.interop.astropy/",
 ]
 xfail_strict = true
 
@@ -327,11 +329,11 @@ JAX_ENABLE_X64                        = "1"
 
 [tool.ty]
 environment.extra-paths = [
-  "packages/coordinax.api/src",
-  "packages/coordinax.astro/src",
-  "packages/coordinax.curveframes/src",
-  "packages/coordinax.hypothesis/src",
-  "packages/coordinax.interop.astropy/src",
+  "packages/coordinaxs.api/src",
+  "packages/coordinaxs.astro/src",
+  "packages/coordinaxs.curveframes/src",
+  "packages/coordinaxs.hypothesis/src",
+  "packages/coordinaxs.interop.astropy/src",
 ]
 
 [tool.ty.src]
@@ -347,7 +349,16 @@ exclude = [
 ]
 
 [tool.ruff]
-namespace-packages = ["src/coordinax"]
+namespace-packages = [
+  "packages/coordinaxs.api/src/coordinaxs",
+  "packages/coordinaxs.astro/src/coordinaxs",
+  "packages/coordinaxs.astro/src/coordinaxs/hypothesis",
+  "packages/coordinaxs.curveframes/src/coordinaxs",
+  "packages/coordinaxs.hypothesis/src/coordinaxs",
+  "packages/coordinaxs.hypothesis/src/coordinaxs/hypothesis",
+  "packages/coordinaxs.interop.astropy/src/coordinaxs",
+  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop",
+]
 
 [tool.ruff.lint]
 extend-select = ["ALL"]
@@ -408,35 +419,35 @@ ignore = [
 "scripts/**" = ["INP001"]
 
 [tool.ruff.lint.flake8-import-conventions.aliases]
-"coordinax.angles"                     = "cxa"
-"coordinax.api"                        = "cxapi"
-"coordinax.astro"                      = "cxastro"
-"coordinax.charts"                     = "cxc"
-"coordinax.curveframes"                = "cxfc"
-"coordinax.distances"                  = "cxd"
-"coordinax.frames"                     = "cxf"
-"coordinax.hypothesis.angles"          = "cxast"
-"coordinax.hypothesis.astro"           = "cxastrost"
-"coordinax.hypothesis.charts"          = "cxcst"
-"coordinax.hypothesis.curveframes"     = "cxfcst"
-"coordinax.hypothesis.distances"       = "cxdst"
-"coordinax.hypothesis.frames"          = "cxfst"
-"coordinax.hypothesis.main"            = "cxst"
-"coordinax.hypothesis.manifolds"       = "cxmst"
-"coordinax.hypothesis.representations" = "cxrst"
-"coordinax.hypothesis.transforms"      = "cxfmst"
-"coordinax.hypothesis.vectors"         = "cxvst"
-"coordinax.internal"                   = "cxi"
-"coordinax.main"                       = "cx"
-"coordinax.manifolds"                  = "cxm"
-"coordinax.representations"            = "cxr"
-"coordinax.transforms"                 = "cxfm"
-"coordinax.vectors"                    = "cxv"
-equinox                                = "eqx"
-functools                              = "ft"
-"jax.extend.core"                      = "jexc"
-"jax.tree_util"                        = "jtu"
-unxt                                   = "u"
+"coordinax"                             = "cx"
+"coordinax.angles"                      = "cxa"
+"coordinax.charts"                      = "cxc"
+"coordinax.distances"                   = "cxd"
+"coordinax.frames"                      = "cxf"
+"coordinax.internal"                    = "cxi"
+"coordinax.manifolds"                   = "cxm"
+"coordinax.representations"             = "cxr"
+"coordinax.transforms"                  = "cxfm"
+"coordinax.vectors"                     = "cxv"
+"coordinaxs.api"                        = "cxapi"
+"coordinaxs.astro"                      = "cxastro"
+"coordinaxs.curveframes"                = "cxfc"
+"coordinaxs.hypothesis.angles"          = "cxast"
+"coordinaxs.hypothesis.astro"           = "cxastrost"
+"coordinaxs.hypothesis.charts"          = "cxcst"
+"coordinaxs.hypothesis.curveframes"     = "cxfcst"
+"coordinaxs.hypothesis.distances"       = "cxdst"
+"coordinaxs.hypothesis.frames"          = "cxfst"
+"coordinaxs.hypothesis.main"            = "cxst"
+"coordinaxs.hypothesis.manifolds"       = "cxmst"
+"coordinaxs.hypothesis.representations" = "cxrst"
+"coordinaxs.hypothesis.transforms"      = "cxfmst"
+"coordinaxs.hypothesis.vectors"         = "cxvst"
+equinox                                 = "eqx"
+functools                               = "ft"
+"jax.extend.core"                       = "jexc"
+"jax.tree_util"                         = "jtu"
+unxt                                    = "u"
 
 
 [tool.ruff.lint.isort]
@@ -449,7 +460,7 @@ known-first-party = [
   "unxt_hypothesis",
   "xmmutablemap",
 ]
-known-local-folder = ["coordinax"]
+known-local-folder = ["coordinax", "coordinaxs"]
 section-order = [
   "future",
   "standard-library",
@@ -489,11 +500,11 @@ constraint-dependencies = [
 ]
 
 [tool.uv.sources]
-"coordinax.api"             = { workspace = true }
-"coordinax.astro"           = { workspace = true }
-"coordinax.curveframes"     = { workspace = true }
-"coordinax.hypothesis"      = { workspace = true }
-"coordinax.interop.astropy" = { workspace = true }
+"coordinaxs.api"             = { workspace = true }
+"coordinaxs.astro"           = { workspace = true }
+"coordinaxs.curveframes"     = { workspace = true }
+"coordinaxs.hypothesis"      = { workspace = true }
+"coordinaxs.interop.astropy" = { workspace = true }
 
 [tool.uv.workspace]
 members = ["packages/*"]

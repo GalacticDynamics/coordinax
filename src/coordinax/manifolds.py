@@ -130,8 +130,8 @@ with install_import_hook("coordinax.manifolds"):
         TwoSphereIn3D,
         embedded_twosphere,
     )
-    from coordinax.api.charts import pt_map
-    from coordinax.api.manifolds import (
+    from coordinaxs.api.charts import pt_map
+    from coordinaxs.api.manifolds import (
         angle_between,
         guess_manifold,
         metric_matrix,

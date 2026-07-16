@@ -100,7 +100,7 @@ class Tangent(
 
     Construct a **coordinate-basis velocity** in Cartesian 3D:
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -222,7 +222,7 @@ def _vectorform_pdoc(
 def from_(cls: type[Tangent], obj: Tangent, /) -> Tangent:
     """Construct a Tangent from another Tangent (identity / fast path).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -252,7 +252,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from data, chart, basis, and semantic.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -279,7 +279,7 @@ def from_(
     ``TypeError`` if the representation's geometry kind is not
     ``TangentGeometry``.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -310,7 +310,7 @@ def from_(
 def from_(cls: type[Tangent], obj: Any, chart: cxc.AbstractChart, /) -> Tangent:
     """Construct a Tangent from data and chart (rep inferred from data).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
@@ -329,7 +329,7 @@ def from_(cls: type[Tangent], obj: Any, chart: cxc.AbstractChart, /) -> Tangent:
 def from_(cls: type[Tangent], obj: Any, /) -> Tangent:
     """Construct a Tangent from data alone (chart and rep inferred).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import unxt as u
 
     >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
@@ -354,7 +354,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from an array and unit (chart inferred).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> v = cx.Tangent.from_([1.0, 2.0, 3.0], "m/s")
     >>> isinstance(v, cx.Tangent)
@@ -374,7 +374,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from an array, unit, and chart.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
 
     >>> v = cx.Tangent.from_([1.0, 2.0, 3.0], "m/s", cxc.cart3d)
@@ -396,7 +396,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from an array, unit, chart, and Representation.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -420,7 +420,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from an array, unit, chart, Representation, and frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import coordinax.frames as cxf
@@ -450,7 +450,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from array, unit, chart, basis, and semantic.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -478,7 +478,7 @@ def from_(
 
     The Quantity is converted to the given unit before construction.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -505,7 +505,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from another Tangent, replacing its frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import coordinax.frames as cxf
@@ -529,7 +529,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from data with a frame (chart and rep inferred).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
     >>> import unxt as u
 
@@ -553,7 +553,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from data, chart, and frame (basis/semantic inferred).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.frames as cxf
     >>> import unxt as u
@@ -580,7 +580,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from data, chart, basis, semantic, and frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import coordinax.frames as cxf
@@ -606,7 +606,7 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from an array, unit, and frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> v = cx.Tangent.from_([1.0, 2.0, 3.0], "m/s", cxf.alice)

@@ -9,8 +9,8 @@ import pytest
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
-import coordinax.main as cx
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 from coordinax.internal import QMatrix, UnitsMatrix

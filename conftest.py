@@ -44,16 +44,18 @@ settings.register_profile("thorough", max_examples=500)
 
 ModuleRoot = tuple[pathlib.Path, tuple[str, ...]]
 COORDINAX_NAMESPACE: tuple[str, ...] = ("coordinax",)
+COORDINAXS_NAMESPACE: tuple[str, ...] = ("coordinaxs",)
 
 CX_WORKSPACE_ROOT = pathlib.Path(__file__).parent
 CX_PACKAGES_ROOT = CX_WORKSPACE_ROOT / "packages"
 
 
 def _discover_module_roots() -> tuple[ModuleRoot, ...]:
-    """Discover all workspace ``src/coordinax`` roots.
+    """Discover all workspace source-tree roots and their canonical namespaces.
 
-    Every source tree rooted at ``*/src/coordinax`` maps to the same canonical
-    Python namespace prefix ``coordinax``.
+    The core distribution ships ``src/coordinax`` (namespace ``coordinax``);
+    every workspace sub-package ships ``src/coordinaxs`` (the shared PEP 420
+    ``coordinaxs`` namespace).
     """
     roots: list[ModuleRoot] = []
 
@@ -63,9 +65,9 @@ def _discover_module_roots() -> tuple[ModuleRoot, ...]:
 
     if CX_PACKAGES_ROOT.exists():
         for package_dir in sorted(CX_PACKAGES_ROOT.iterdir()):
-            package_root = package_dir / "src" / "coordinax"
+            package_root = package_dir / "src" / "coordinaxs"
             if package_root.exists():
-                roots.append((package_root, COORDINAX_NAMESPACE))
+                roots.append((package_root, COORDINAXS_NAMESPACE))
 
     return tuple(roots)
 
@@ -76,29 +78,36 @@ RESOLVED_MODULE_ROOTS: tuple[ModuleRoot, ...] = tuple(
 )
 
 
-def _discover_package_roots() -> tuple[pathlib.Path, ...]:
-    """Discover all workspace ``src`` roots containing the ``coordinax`` namespace."""
-    roots: list[pathlib.Path] = []
+PackageRoot = tuple[pathlib.Path, str]
+
+
+def _discover_package_roots() -> tuple[PackageRoot, ...]:
+    """Discover workspace ``src`` roots paired with their namespace directory.
+
+    The core ``src`` holds the ``coordinax`` namespace; each sub-package ``src``
+    holds the ``coordinaxs`` namespace.
+    """
+    roots: list[PackageRoot] = []
 
     main_src_root = CX_WORKSPACE_ROOT / "src"
     if (main_src_root / "coordinax").exists():
-        roots.append(main_src_root.resolve())
+        roots.append((main_src_root.resolve(), "coordinax"))
 
     if CX_PACKAGES_ROOT.exists():
         for package_dir in sorted(CX_PACKAGES_ROOT.iterdir()):
             src_root = package_dir / "src"
-            if (src_root / "coordinax").exists():
-                roots.append(src_root.resolve())
+            if (src_root / "coordinaxs").exists():
+                roots.append((src_root.resolve(), "coordinaxs"))
 
     # Preserve order but deduplicate.
-    unique_roots: list[pathlib.Path] = []
+    unique_roots: list[PackageRoot] = []
     for root in roots:
         if root not in unique_roots:
             unique_roots.append(root)
     return tuple(unique_roots)
 
 
-RESOLVED_PACKAGE_ROOTS: tuple[pathlib.Path, ...] = _discover_package_roots()
+RESOLVED_PACKAGE_ROOTS: tuple[PackageRoot, ...] = _discover_package_roots()
 
 
 _ORIG_RESOLVE_PACKAGE_PATH = pytest_pathlib.resolve_package_path
@@ -108,13 +117,13 @@ _ORIG_RESOLVE_PKG_ROOT_AND_MODULE = pytest_pathlib.resolve_pkg_root_and_module_n
 def _resolve_package_path_with_namespace(path: pathlib.Path) -> pathlib.Path | None:
     """Resolve package path with PEP 420 workspace roots as namespace packages.
 
-    This ensures files under ``*/src/coordinax`` are collected/imported with the
-    canonical ``coordinax.*`` module path instead of short aliases such as
-    ``charts.*``.
+    This ensures files under ``*/src/coordinax`` and ``*/src/coordinaxs`` are
+    collected/imported with the canonical ``coordinax.*`` / ``coordinaxs.*``
+    module path instead of short aliases such as ``charts.*``.
     """
     resolved = path.resolve()
-    for root in RESOLVED_PACKAGE_ROOTS:
-        if resolved.is_relative_to(root / "coordinax"):
+    for root, namespace_dir in RESOLVED_PACKAGE_ROOTS:
+        if resolved.is_relative_to(root / namespace_dir):
             return root
     return _ORIG_RESOLVE_PACKAGE_PATH(path)
 
@@ -127,8 +136,8 @@ def _resolve_pkg_root_and_module_name_with_namespace(
 ) -> tuple[pathlib.Path, str]:
     """Resolve canonical package root and module name for workspace namespace files."""
     resolved = path.resolve()
-    for root in RESOLVED_PACKAGE_ROOTS:
-        namespace_root = root / "coordinax"
+    for root, namespace_dir in RESOLVED_PACKAGE_ROOTS:
+        namespace_root = root / namespace_dir
         if resolved.is_relative_to(namespace_root):
             module_name = pytest_pathlib.compute_module_name(root, resolved)
             if module_name:
@@ -193,16 +202,20 @@ def _preload_coordinax_namespace() -> None:
     non-canonical names.
     """
     module_names = (
-        "coordinax.api",
-        "coordinax.api.charts",
-        "coordinax.api.frames",
-        "coordinax.api.manifolds",
-        "coordinax.api.representations",
-        "coordinax.astro",
+        # `coordinax` must load first: as a regular package its __init__
+        # bootstraps `coordinaxs.interop.astropy`, which needs a fully
+        # initialized `coordinaxs.astro`. Importing astro before coordinax
+        # would re-enter that bootstrap mid-astro-init and skip interop.
+        "coordinax",
+        "coordinaxs.api",
+        "coordinaxs.api.charts",
+        "coordinaxs.api.frames",
+        "coordinaxs.api.manifolds",
+        "coordinaxs.api.representations",
+        "coordinaxs.astro",
         "coordinax.charts",
         "coordinax.frames",
-        "coordinax.hypothesis",
-        "coordinax.main",
+        "coordinaxs.hypothesis",
         "coordinax.manifolds",
         "coordinax.representations",
         "coordinax.vectors",

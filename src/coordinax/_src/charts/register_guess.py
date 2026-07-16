@@ -9,8 +9,8 @@ import plum
 
 import unxt as u
 
-import coordinax.api.charts as cxcapi
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
 from .d1 import cart1d
 from .d2 import cart2d
 from .d3 import cart3d

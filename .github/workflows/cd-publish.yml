@@ -12,10 +12,10 @@ on:
   workflow_run:
     workflows:
       - "CD - coordinax"
-      - "CD - coordinax.api"
-      - "CD - coordinax.astro"
-      - "CD - coordinax.hypothesis"
-      - "CD - coordinax.interop.astropy"
+      - "CD - coordinaxs.api"
+      - "CD - coordinaxs.astro"
+      - "CD - coordinaxs.hypothesis"
+      - "CD - coordinaxs.interop.astropy"
     types:
       - completed
 
@@ -49,17 +49,17 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            // Triggering workflow is named "CD - <package-name>" (e.g. "CD - coordinax.api").
+            // Triggering workflow is named "CD - <package-name>" (e.g. "CD - coordinaxs.api").
             const workflowName = context.payload.workflow_run.name;
             const packageName = workflowName.replace(/^CD - /, "");
 
-            // Metadata artifact uses dashes: release-metadata-coordinax-api
+            // Metadata artifact uses dashes: release-metadata-coordinaxs-api
             const metadataArtifact = "release-metadata-" + packageName.replace(/\./g, "-");
 
-            // Packages artifact keeps original dots: Packages-coordinax.api
+            // Packages artifact keeps original dots: Packages-coordinaxs.api
             const packagesArtifact = "Packages-" + packageName;
 
-            // tag prefix also uses dashes: coordinax-api-v*
+            // tag prefix also uses dashes: coordinaxs-api-v*
             const tagPrefix = packageName.replace(/\./g, "-");
 
             core.setOutput("package_name", packageName);
@@ -132,7 +132,7 @@ jobs:
 
             // Determine which publish operations to perform.
             const hasTag = typeof package_tag === "string" && package_tag.length > 0;
-            // Build regex dynamically: tagPrefix is e.g. "coordinax-api", so tag must be "coordinax-api-vX.Y.Z"
+            // Build regex dynamically: tagPrefix is e.g. "coordinaxs-api", so tag must be "coordinaxs-api-vX.Y.Z"
             const tagRegex = new RegExp(`^${tagPrefix}-v\\d+\\.\\d+\\.\\d+$`);
             const isValidTag = hasTag && tagRegex.test(package_tag);
             if (hasTag && !isValidTag) {

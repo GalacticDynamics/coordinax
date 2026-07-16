@@ -17,7 +17,7 @@ import jax.tree_util as jtu
 import plum
 import wadler_lindig as wl
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from .manifold import CartesianProductManifold
 from coordinax._src.base import (
     MISSING,

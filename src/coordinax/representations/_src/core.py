@@ -11,8 +11,8 @@ import plum
 import quaxed.numpy as jnp
 import unxt.quantity as uq
 
-import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
+import coordinaxs.api.representations as cxrapi
 from .custom_types import CDict, OptUSys
 from .geom import PointGeometry, TangentGeometry
 from .rep import Representation

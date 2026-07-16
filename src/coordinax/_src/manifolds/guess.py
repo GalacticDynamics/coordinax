@@ -6,7 +6,7 @@ from typing import cast
 
 import plum
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart, AbstractManifold
 from coordinax._src.charts.d0 import Cart0D
 from coordinax._src.charts.d1 import Cart1D, Radial1D

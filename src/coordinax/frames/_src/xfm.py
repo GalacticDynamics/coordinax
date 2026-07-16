@@ -10,8 +10,8 @@ from typing_extensions import TypeVar
 
 import plum
 
-import coordinax.api.frames as cxfapi
 import coordinax.transforms as cxfm
+import coordinaxs.api.frames as cxfapi
 from .base import AbstractReferenceFrame
 from coordinax.transforms import AbstractTransform
 
@@ -41,7 +41,7 @@ class AbstractTransformedReferenceFrame(AbstractReferenceFrame, Generic[FrameT])
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.astro import ICRS
+    >>> from coordinaxs.astro import ICRS
 
     >>> R = cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
     >>> frame = cxf.TransformedReferenceFrame(ICRS(), R)
@@ -97,7 +97,7 @@ class TransformedReferenceFrame(AbstractTransformedReferenceFrame[FrameT]):
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.astro import ICRS
+    >>> from coordinaxs.astro import ICRS
 
     >>> R = cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
     >>> frame = cxf.TransformedReferenceFrame(ICRS(), R)
@@ -139,7 +139,7 @@ def frame_transition(
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.astro import ICRS
+    >>> from coordinaxs.astro import ICRS
 
     >>> R = cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
     >>> frame = cxf.TransformedReferenceFrame(ICRS(), R)
@@ -170,7 +170,7 @@ def frame_transition(
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.astro import ICRS
+    >>> from coordinaxs.astro import ICRS
 
     >>> R = cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
     >>> frame = cxf.TransformedReferenceFrame(ICRS(), R)
@@ -206,7 +206,7 @@ def frame_transition(
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.astro import ICRS
+    >>> from coordinaxs.astro import ICRS
 
     >>> R = cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
     >>> frame1 = cxf.TransformedReferenceFrame(ICRS(), R)

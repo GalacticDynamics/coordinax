@@ -4,8 +4,8 @@ __all__: tuple[str, ...] = ()
 
 from hypothesis import given
 
-import coordinax.hypothesis.representations as cxrst
 import coordinax.representations as cxr
+import coordinaxs.hypothesis.representations as cxrst
 
 # ===================================================================
 

@@ -20,7 +20,7 @@ The {class}`~coordinax.angles.Angle` class is a re-export of {class}`~unxt.Angle
 You can create an {class}`~coordinax.angles.Angle` just like a {class}`~unxt.quantity.Quantity`, by specifying a value and a unit with angular dimensions:
 
 ```{code-block} python
->>> import coordinax.main as cx
+>>> import coordinax as cx
 >>> a = cx.Angle(45, "deg")
 >>> a
 Angle(45, 'deg')
@@ -89,7 +89,7 @@ Angle(10, 'deg')
 
 ## Working with `Distance` Objects
 
-The {class}`~coordinax.distances.Distance` class in {mod}`coordinax.distances` is a specialized quantity for representing physical distances, with enforced dimensionality and convenient conversions to and from other distance-like representations. Related classes, {class}`~coordinax.astro.Parallax` and {class}`~coordinax.astro.DistanceModulus`, are also provided for common astronomical use cases.
+The {class}`~coordinax.distances.Distance` class in {mod}`coordinax.distances` is a specialized quantity for representing physical distances, with enforced dimensionality and convenient conversions to and from other distance-like representations. Related classes, {class}`~coordinaxs.astro.Parallax` and {class}`~coordinaxs.astro.DistanceModulus`, are also provided for common astronomical use cases.
 
 ### Creating Distance Objects
 
@@ -103,10 +103,10 @@ Distance(10, 'kpc')
 
 ### Creating Parallax and DistanceModulus Objects
 
-{class}`~coordinax.astro.Parallax` and {class}`~coordinax.astro.DistanceModulus` are alternative representations of distance:
+{class}`~coordinaxs.astro.Parallax` and {class}`~coordinaxs.astro.DistanceModulus` are alternative representations of distance:
 
 ```{code-block} python
->>> import coordinax.astro as cxastro
+>>> import coordinaxs.astro as cxastro
 >>> p = cxastro.Parallax(0.1, "mas")
 >>> p
 Parallax(0.1, 'mas')
@@ -128,7 +128,7 @@ Distance(10., 'kpc')
 Distance(10., 'kpc')
 ```
 
-All these classes enforce that their units are appropriate for their physical meaning (e.g., {class}`~coordinax.distances.Distance` must have length units, {class}`~coordinax.astro.Parallax` must have angular units, and {class}`~coordinax.astro.DistanceModulus` must have magnitude units).
+All these classes enforce that their units are appropriate for their physical meaning (e.g., {class}`~coordinax.distances.Distance` must have length units, {class}`~coordinaxs.astro.Parallax` must have angular units, and {class}`~coordinaxs.astro.DistanceModulus` must have magnitude units).
 
 ---
 

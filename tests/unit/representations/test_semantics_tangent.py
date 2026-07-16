@@ -10,7 +10,7 @@ import jax
 import jax.tree_util as jtu
 import pytest
 
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.representations as cxr
 from coordinax.representations._src.semantics import _TANGENT_TIME_ORDER_LADDER
 
@@ -97,7 +97,7 @@ class TestDisplacement:
         assert result == cxr.dpl
 
     def test_exported_from_main(self) -> None:
-        """Displacement and dpl exported from coordinax.main."""
+        """Displacement and dpl exported from coordinax."""
         assert hasattr(cx, "Displacement")
         assert hasattr(cx, "dpl")
         assert hasattr(cx, "AbstractTangentSemanticKind")
@@ -142,7 +142,7 @@ class TestVelocity:
         assert result == cxr.vel
 
     def test_exported_from_main(self) -> None:
-        """Velocity and vel exported from coordinax.main."""
+        """Velocity and vel exported from coordinax."""
         assert hasattr(cx, "Velocity")
         assert hasattr(cx, "vel")
 
@@ -182,7 +182,7 @@ class TestAcceleration:
         assert result == cxr.acc
 
     def test_exported_from_main(self) -> None:
-        """Acceleration and acc exported from coordinax.main."""
+        """Acceleration and acc exported from coordinax."""
         assert hasattr(cx, "Acceleration")
         assert hasattr(cx, "acc")
 

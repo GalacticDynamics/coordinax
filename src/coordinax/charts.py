@@ -227,7 +227,7 @@ with install_import_hook("coordinax.charts"):
         sph1,
         sph2,
     )
-    from coordinax.api.charts import cartesian_chart, cdict, guess_chart, pt_map
+    from coordinaxs.api.charts import cartesian_chart, cdict, guess_chart, pt_map
 
 
 del install_import_hook

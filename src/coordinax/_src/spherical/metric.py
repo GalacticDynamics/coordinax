@@ -29,7 +29,7 @@ class RoundMetric(AbstractDiagonalMetricField):
     Examples
     --------
     >>> import jax.numpy as jnp
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 

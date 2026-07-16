@@ -8,7 +8,7 @@ from typing import Any
 
 import jax
 
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.custom_types import OptUSys
 
 

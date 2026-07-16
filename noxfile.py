@@ -49,10 +49,10 @@ class PackageEnum(_StrEnumWithPaths):
         return f"{self.value!r}"
 
     coordinax = ("coordinax", ("README.md", "docs", "src/", "tests/"))
-    api = ("api", ("packages/coordinax.api/",))
-    astro = ("astro", ("packages/coordinax.astro/",))
-    curveframes = ("curveframes", ("packages/coordinax.curveframes/",))
-    hypothesis = ("hypothesis", ("packages/coordinax.hypothesis/",))
+    api = ("api", ("packages/coordinaxs.api/",))
+    astro = ("astro", ("packages/coordinaxs.astro/",))
+    curveframes = ("curveframes", ("packages/coordinaxs.curveframes/",))
+    hypothesis = ("hypothesis", ("packages/coordinaxs.hypothesis/",))
 
 
 # =============================================================================
@@ -105,7 +105,7 @@ def pylint(s: nox.Session, /, package: PackageEnum) -> None:
 def ty(s: nox.Session, /, package: PackageEnum) -> None:
     """Run ty."""
     package_paths = (
-        ("src/coordinax", "packages/coordinax.api/")
+        ("src/coordinax", "packages/coordinaxs.api/")
         if package == PackageEnum.coordinax
         else tuple(package.paths)
     )

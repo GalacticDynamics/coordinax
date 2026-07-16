@@ -11,7 +11,7 @@ import plum
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict
 from coordinax.internal import QMatrix, UnitsMatrix
@@ -24,7 +24,7 @@ from coordinax.internal import QMatrix, UnitsMatrix
 def cdict(obj: CDict, /) -> CDict:
     """Return a dictionary as-is.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> d = {"x": 1.0, "y": 2.0}
     >>> cx.cdict(d)
     {'x': 1.0, 'y': 2.0}
@@ -58,7 +58,7 @@ def cdict(obj: u.AbstractQuantity, /) -> CDict:
     dimension. The appropriate Cartesian chart is determined from the last
     dimension of the quantity.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import unxt as u
     >>> q = u.Q([1.0, 2.0, 3.0], "m")
     >>> cx.cdict(q)
@@ -210,7 +210,7 @@ def cdict(obj: ArrayLike, keys: tuple[str, ...], /) -> CDict:
 
     Examples
     --------
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
     >>> cx.cdict(arr, ('x', 'y', 'z'))
@@ -232,7 +232,7 @@ def cdict(obj: ArrayLike, keys: tuple[str, ...], /) -> CDict:
 def cdict(obj: ArrayLike, chart: AbstractChart, /) -> CDict:
     """Extract component dictionary from an array.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
     >>> cx.cdict(arr, cx.cart3d)
@@ -252,7 +252,7 @@ def cdict(
 ) -> CDict:
     """Extract component dictionary from an array.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
     >>> cx.cdict(arr, "m", ('x', 'y', 'z'))
@@ -273,7 +273,7 @@ def cdict(
 ) -> CDict:
     """Extract component dictionary from an array.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
     >>> cx.cdict(arr, "m", cx.cart3d)
@@ -315,7 +315,7 @@ def cdict(obj: ArrayLike, usys: u.AbstractUnitSystem, chart: AbstractChart, /) -
 
     Examples
     --------
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import unxt as u
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])

@@ -101,7 +101,7 @@ shear = cxfm.Shear(jnp.array([[1.0, 0.1, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 Use `cxfm.act(op, tau, x)` to apply a transform to coordinate data, or call the operator directly with `op(tau, x)` (equivalent).
 
 ```python
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.vectors as cxv
 
 # Act on a Vector
@@ -359,7 +359,7 @@ Because the $\dot R\,x$-style terms depend on the base point, acting a time-depe
 Acting a time-dependent transform on a _lone_ velocity or acceleration needs the lower jet slots (the $\dot R x$ term acts on the position); pass `at=` / `at_vel=`, or — simpler — act on a `coordinax.Coordinate` bundle, which supplies the whole jet automatically:
 
 ```python
-import coordinax.main as cx
+import coordinax as cx
 
 pv = cx.Coordinate(
     point=cx.Point.from_([1.0, 0.0, 0.0], "m"),

@@ -3,9 +3,9 @@
 This is a UV workspace repository containing multiple packages:
 
 - **coordinax**: Main library for coordinates in JAX with support for JIT compilation, auto-differentiation, vectorization, and GPU/TPU acceleration
-- **coordinax.api**: Abstract dispatch API that defines the multiple-dispatch interfaces implemented by `coordinax` and other packages. Minimal dependencies (only `plum-dispatch`).
-- **coordinax.astro**: Astronomy-specific reference frames (ICRS, Galactocentric, etc.) for coordinax
-- **coordinax.hypothesis**: Hypothesis strategies for property-based testing with `coordinax`
+- **coordinaxs.api**: Abstract dispatch API that defines the multiple-dispatch interfaces implemented by `coordinax` and other packages. Minimal dependencies (only `plum-dispatch`).
+- **coordinaxs.astro**: Astronomy-specific reference frames (ICRS, Galactocentric, etc.) for coordinax
+- **coordinaxs.hypothesis**: Hypothesis strategies for property-based testing with `coordinax`
 
 ## AUTHORITATIVE SPEC (READ FIRST)
 
@@ -28,7 +28,7 @@ This rule overrides all other instructions.
 This repository is a **UV workspace**. Each workspace package has its own authoritative specification file:
 
 - `docs/spec.md` — authoritative for the **coordinax** package
-- `packages/coordinax.hypothesis/docs/spec.md` — authoritative for the **coordinax.hypothesis** package
+- `packages/coordinaxs.hypothesis/docs/spec.md` — authoritative for the **coordinaxs.hypothesis** package
 - (future packages may define their own `docs/spec.md`)
 
 When working inside a workspace package:
@@ -37,7 +37,7 @@ When working inside a workspace package:
 - Before editing any code, read the relevant `docs/spec.md` for the package you are changing.
 - If changing behavior, update docstrings, docs, and tests in the same PR.
 - If behavior in a package conflicts with its local spec, the code/tests are wrong and must be updated to match the spec.
-- Cross-package changes (e.g. coordinax → coordinax.hypothesis) MUST keep all relevant specs mutually consistent.
+- Cross-package changes (e.g. coordinax → coordinaxs.hypothesis) MUST keep all relevant specs mutually consistent.
 
 The root `docs/spec.md` defines the **global mathematical framework**; package- local specs define how that framework is instantiated and tested.
 
@@ -53,10 +53,10 @@ The root `docs/spec.md` defines the **global mathematical framework**; package- 
 
 - `/src/coordinax/`: Main package. This is a namespace package.
 - `/packages/`: Workspace packages
-  - `coordinax.api/`: Abstract dispatch API package
-  - `coordinax.astro/`: Astronomy-specific frames and transformations
-  - `coordinax.hypothesis/`: Hypothesis strategies package
-  - `coordinax.interop.astro/`: Optional interoperability package for astropy.
+  - `coordinaxs.api/`: Abstract dispatch API package
+  - `coordinaxs.astro/`: Astronomy-specific frames and transformations
+  - `coordinaxs.hypothesis/`: Hypothesis strategies package
+  - `coordinaxs.interop.astro/`: Optional interoperability package for astropy.
 - `/tests/`: Main package tests, organized into `unit/`, `integration/`, `benchmark/`
 - `README.md`: Main package documentation, tested via Sybil (all Python code blocks are doctests)
 - `conftest.py`: Pytest config, Sybil setup, optional dependency handling
@@ -77,11 +77,11 @@ The root `docs/spec.md` defines the **global mathematical framework**; package- 
 **specs files**:
 
 - `docs/spec.md`
-- `packages/coordinax.hypothesis/docs/spec.md`
+- `packages/coordinaxs.hypothesis/docs/spec.md`
 
 Instructions:
 
-- **ALWAYS** read the specs files -- `docs/spec.md` and `packages/coordinax.hypothesis/docs/spec.md` -- **before** implementing or changing any chart, metric, frame, embedding code, representation semantics, or conversion rules (`*transform`), and before editing related docs/tests.
+- **ALWAYS** read the specs files -- `docs/spec.md` and `packages/coordinaxs.hypothesis/docs/spec.md` -- **before** implementing or changing any chart, metric, frame, embedding code, representation semantics, or conversion rules (`*transform`), and before editing related docs/tests.
 - If code behavior and specs file disagree, update code/docstrings/tests to match the specs file.
 - Any new public API must be documented in the specs files and preferably referenced from the user guides.
 
@@ -93,7 +93,7 @@ Instructions:
 - Any new transform or representation must include:
   - spec-compliance checklist items (in PR description or doc),
   - concise doctest-like examples where appropriate,
-  - property-based tests (prefer `coordinax.hypothesis`).
+  - property-based tests (prefer `coordinaxs.hypothesis`).
 
 - Never "patch around" a failing spec-driven test. Fix the implementation.
 
@@ -565,10 +565,10 @@ result = jnp.sqrt(d)  # Uses registered sqrt_p rule
 ### Property-Based Testing with Hypothesis
 
 - **Prefer Hypothesis tests over single-example tests** when testing properties or invariants
-- Use `coordinax.hypothesis` strategies for generating test data:
-  - `coordinax.hypothesis.main.angles()` for angles
-  - `coordinax.hypothesis.main.parallaxes()` for parallaxes
-  - `coordinax.hypothesis.main.distances()` for distances
+- Use `coordinaxs.hypothesis` strategies for generating test data:
+  - `coordinaxs.hypothesis.main.angles()` for angles
+  - `coordinaxs.hypothesis.main.parallaxes()` for parallaxes
+  - `coordinaxs.hypothesis.main.distances()` for distances
 - Hypothesis is ideal for testing:
   - Mathematical properties (e.g., `x + 0 == x`, `transform(inverse_transform(x)) ≈ x`)
   - Type preservation (e.g., operations return correct type)
@@ -617,13 +617,13 @@ result = jnp.sqrt(d)  # Uses registered sqrt_p rule
 
 Optional interop groups:
 
-- `astro`: Astronomy-specific frames (installs `coordinax.astro`)
+- `astro`: Astronomy-specific frames (installs `coordinaxs.astro`)
 
 Install with: `uv add coordinax --extra astro`
 
 ## Workspace Packages
 
-This repository uses a UV workspace structure with multiple packages (e.g., `coordinax`, `coordinax.api`, `coordinax.astro`, `coordinax.hypothesis`). When creating new workspace packages, use this versioning setup pattern:
+This repository uses a UV workspace structure with multiple packages (e.g., `coordinax`, `coordinaxs.api`, `coordinaxs.astro`, `coordinaxs.hypothesis`). When creating new workspace packages, use this versioning setup pattern:
 
 ```toml
 [build-system]
@@ -661,7 +661,7 @@ version_tuple = {version_tuple!r}
 coordinax = { workspace = true }
 ```
 
-Replace `<package-name>` with the actual package name (e.g., `coordinax-hypothesis-v*`) and `<package_name>` with the Python module name (e.g., `coordinax.hypothesis`). This enables automatic versioning from git tags.
+Replace `<package-name>` with the actual package name (e.g., `coordinaxs-hypothesis-v*`) and `<package_name>` with the Python module name (e.g., `coordinaxs.hypothesis`). This enables automatic versioning from git tags.
 
 ## Agent Checklist (MANDATORY)
 
@@ -672,6 +672,6 @@ Before submitting changes, verify:
 - [ ] Roles obey affine vs tangent semantics
 - [ ] All new behavior is tested
 - [ ] Tests pass under `jax.jit` and `jax.vmap`
-- [ ] `coordinax.hypothesis` updated if semantics changed
+- [ ] `coordinaxs.hypothesis` updated if semantics changed
 
 If any box is unchecked, do not submit.

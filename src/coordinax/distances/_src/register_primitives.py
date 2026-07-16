@@ -184,7 +184,7 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> jnp.sqrt(q)
     BareQuantity(3., 'm(1/2)')
 
-    >>> from coordinax.astro import Parallax
+    >>> from coordinaxs.astro import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
     BareQuantity(3., 'mas(1/2)')

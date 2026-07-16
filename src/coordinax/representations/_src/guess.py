@@ -8,8 +8,8 @@ import plum
 
 import unxt as u
 
-import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
+import coordinaxs.api.representations as cxrapi
 from .basis import AbstractBasis, coord_basis, no_basis
 from .constants import (
     ACCELERATION,

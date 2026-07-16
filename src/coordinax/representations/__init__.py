@@ -175,7 +175,7 @@ with install_import_hook("coordinax.representations"):
         tangent_map,
         vel,
     )
-    from coordinax.api.representations import (
+    from coordinaxs.api.representations import (
         add,
         cconvert,
         guess_basis_kind,

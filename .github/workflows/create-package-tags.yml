@@ -52,10 +52,10 @@ jobs:
             echo ""
             echo "For bug-fix releases (X.Y.Z where Z > 0) or pre-releases, use package-specific tags:"
             echo "  - coordinax-v${VERSION}"
-            echo "  - coordinax-api-v${VERSION}"
-            echo "  - coordinax-astro-v${VERSION}"
-            echo "  - coordinax-hypothesis-v${VERSION}"
-            echo "  - coordinax-interop-astropy-v${VERSION}"
+            echo "  - coordinaxs-api-v${VERSION}"
+            echo "  - coordinaxs-astro-v${VERSION}"
+            echo "  - coordinaxs-hypothesis-v${VERSION}"
+            echo "  - coordinaxs-interop-astropy-v${VERSION}"
             exit 1
           fi
 
@@ -81,10 +81,10 @@ jobs:
           # Define package tags to create
           PACKAGES=(
             "coordinax"
-            "coordinax-api"
-            "coordinax-astro"
-            "coordinax-hypothesis"
-            "coordinax-interop-astropy"
+            "coordinaxs-api"
+            "coordinaxs-astro"
+            "coordinaxs-hypothesis"
+            "coordinaxs-interop-astropy"
           )
           TAGS_TO_PUSH=()
 
@@ -127,16 +127,16 @@ jobs:
               if [ "$PACKAGE" = "coordinax" ]; then
                 COORDINAX_TAG_CREATED="true"
               fi
-              if [ "$PACKAGE" = "coordinax-api" ]; then
+              if [ "$PACKAGE" = "coordinaxs-api" ]; then
                 COORDINAX_API_TAG_CREATED="true"
               fi
-              if [ "$PACKAGE" = "coordinax-astro" ]; then
+              if [ "$PACKAGE" = "coordinaxs-astro" ]; then
                 COORDINAX_ASTRO_TAG_CREATED="true"
               fi
-              if [ "$PACKAGE" = "coordinax-hypothesis" ]; then
+              if [ "$PACKAGE" = "coordinaxs-hypothesis" ]; then
                 COORDINAX_HYPOTHESIS_TAG_CREATED="true"
               fi
-              if [ "$PACKAGE" = "coordinax-interop-astropy" ]; then
+              if [ "$PACKAGE" = "coordinaxs-interop-astropy" ]; then
                 COORDINAX_INTEROP_ASTROPY_TAG_CREATED="true"
               fi
             fi
@@ -152,20 +152,20 @@ jobs:
             echo "coordinax_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
             echo "trigger_coordinax_api_cd=false" >> "$GITHUB_OUTPUT"
-            echo "coordinax_api_tag=coordinax-api-v${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "coordinax_api_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_api_tag=coordinaxs-api-v${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_api_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
             echo "trigger_coordinax_astro_cd=false" >> "$GITHUB_OUTPUT"
-            echo "coordinax_astro_tag=coordinax-astro-v${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "coordinax_astro_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_astro_tag=coordinaxs-astro-v${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_astro_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
             echo "trigger_coordinax_hypothesis_cd=false" >> "$GITHUB_OUTPUT"
-            echo "coordinax_hypothesis_tag=coordinax-hypothesis-v${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "coordinax_hypothesis_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_hypothesis_tag=coordinaxs-hypothesis-v${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_hypothesis_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
             echo "trigger_coordinax_interop_astropy_cd=false" >> "$GITHUB_OUTPUT"
-            echo "coordinax_interop_astropy_tag=coordinax-interop-astropy-v${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "coordinax_interop_astropy_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_interop_astropy_tag=coordinaxs-interop-astropy-v${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_interop_astropy_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -179,20 +179,20 @@ jobs:
           echo "coordinax_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
           echo "trigger_coordinax_api_cd=${COORDINAX_API_TAG_CREATED}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_api_tag=coordinax-api-v${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_api_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_api_tag=coordinaxs-api-v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_api_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
           echo "trigger_coordinax_astro_cd=${COORDINAX_ASTRO_TAG_CREATED}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_astro_tag=coordinax-astro-v${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_astro_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_astro_tag=coordinaxs-astro-v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_astro_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
           echo "trigger_coordinax_hypothesis_cd=${COORDINAX_HYPOTHESIS_TAG_CREATED}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_hypothesis_tag=coordinax-hypothesis-v${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_hypothesis_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_hypothesis_tag=coordinaxs-hypothesis-v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_hypothesis_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
           echo "trigger_coordinax_interop_astropy_cd=${COORDINAX_INTEROP_ASTROPY_TAG_CREATED}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_interop_astropy_tag=coordinax-interop-astropy-v${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "coordinax_interop_astropy_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_interop_astropy_tag=coordinaxs-interop-astropy-v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_interop_astropy_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Trigger CD - coordinax for auto-created coordinax tag
         if: |
@@ -207,54 +207,54 @@ jobs:
           tag_sha: ${{ steps.create_tags.outputs.coordinax_tag_sha }}
           trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_cd }}
 
-      - name: Trigger CD - coordinax.api for auto-created coordinax-api tag
+      - name: Trigger CD - coordinaxs.api for auto-created coordinaxs-api tag
         if: |
           steps.create_tags.outputs.trigger_coordinax_api_cd == 'true' ||
-          (steps.create_tags.outputs.coordinax_api_tag != '' &&
+          (steps.create_tags.outputs.coordinaxs_api_tag != '' &&
           steps.create_tags.outputs.trigger_coordinax_api_cd == 'false')
         uses: ./.github/actions/dispatch-package-cd
         with:
-          workflow_id: cd-coordinax-api.yml
-          workflow_name: CD - coordinax.api
-          tag_ref: ${{ steps.create_tags.outputs.coordinax_api_tag }}
-          tag_sha: ${{ steps.create_tags.outputs.coordinax_api_tag_sha }}
+          workflow_id: cd-coordinaxs-api.yml
+          workflow_name: CD - coordinaxs.api
+          tag_ref: ${{ steps.create_tags.outputs.coordinaxs_api_tag }}
+          tag_sha: ${{ steps.create_tags.outputs.coordinaxs_api_tag_sha }}
           trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_api_cd }}
 
-      - name: Trigger CD - coordinax.astro for auto-created coordinax-astro tag
+      - name: Trigger CD - coordinaxs.astro for auto-created coordinaxs-astro tag
         if: |
           steps.create_tags.outputs.trigger_coordinax_astro_cd == 'true' ||
-          (steps.create_tags.outputs.coordinax_astro_tag != '' &&
+          (steps.create_tags.outputs.coordinaxs_astro_tag != '' &&
           steps.create_tags.outputs.trigger_coordinax_astro_cd == 'false')
         uses: ./.github/actions/dispatch-package-cd
         with:
-          workflow_id: cd-coordinax-astro.yml
-          workflow_name: CD - coordinax.astro
-          tag_ref: ${{ steps.create_tags.outputs.coordinax_astro_tag }}
-          tag_sha: ${{ steps.create_tags.outputs.coordinax_astro_tag_sha }}
+          workflow_id: cd-coordinaxs-astro.yml
+          workflow_name: CD - coordinaxs.astro
+          tag_ref: ${{ steps.create_tags.outputs.coordinaxs_astro_tag }}
+          tag_sha: ${{ steps.create_tags.outputs.coordinaxs_astro_tag_sha }}
           trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_astro_cd }}
 
-      - name: Trigger CD - coordinax.hypothesis for auto-created coordinax-hypothesis tag
+      - name: Trigger CD - coordinaxs.hypothesis for auto-created coordinaxs-hypothesis tag
         if: |
           steps.create_tags.outputs.trigger_coordinax_hypothesis_cd == 'true' ||
-          (steps.create_tags.outputs.coordinax_hypothesis_tag != '' &&
+          (steps.create_tags.outputs.coordinaxs_hypothesis_tag != '' &&
           steps.create_tags.outputs.trigger_coordinax_hypothesis_cd == 'false')
         uses: ./.github/actions/dispatch-package-cd
         with:
-          workflow_id: cd-coordinax-hypothesis.yml
-          workflow_name: CD - coordinax.hypothesis
-          tag_ref: ${{ steps.create_tags.outputs.coordinax_hypothesis_tag }}
-          tag_sha: ${{ steps.create_tags.outputs.coordinax_hypothesis_tag_sha }}
+          workflow_id: cd-coordinaxs-hypothesis.yml
+          workflow_name: CD - coordinaxs.hypothesis
+          tag_ref: ${{ steps.create_tags.outputs.coordinaxs_hypothesis_tag }}
+          tag_sha: ${{ steps.create_tags.outputs.coordinaxs_hypothesis_tag_sha }}
           trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_hypothesis_cd }}
 
-      - name: Trigger CD - coordinax.interop.astropy for auto-created coordinax-interop-astropy tag
+      - name: Trigger CD - coordinaxs.interop.astropy for auto-created coordinaxs-interop-astropy tag
         if: |
           steps.create_tags.outputs.trigger_coordinax_interop_astropy_cd == 'true' ||
-          (steps.create_tags.outputs.coordinax_interop_astropy_tag != '' &&
+          (steps.create_tags.outputs.coordinaxs_interop_astropy_tag != '' &&
           steps.create_tags.outputs.trigger_coordinax_interop_astropy_cd == 'false')
         uses: ./.github/actions/dispatch-package-cd
         with:
-          workflow_id: cd-coordinax-interop-astropy.yml
-          workflow_name: CD - coordinax.interop.astropy
-          tag_ref: ${{ steps.create_tags.outputs.coordinax_interop_astropy_tag }}
-          tag_sha: ${{ steps.create_tags.outputs.coordinax_interop_astropy_tag_sha }}
+          workflow_id: cd-coordinaxs-interop-astropy.yml
+          workflow_name: CD - coordinaxs.interop.astropy
+          tag_ref: ${{ steps.create_tags.outputs.coordinaxs_interop_astropy_tag }}
+          tag_sha: ${{ steps.create_tags.outputs.coordinaxs_interop_astropy_tag_sha }}
           trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_interop_astropy_cd }}

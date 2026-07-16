@@ -14,7 +14,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from .d0 import Cart0D
 from .d1 import Cart1D, Radial1D, Time1D
 from .d2 import Cart2D, Polar2D
@@ -767,7 +767,7 @@ def pt_map(
 ) -> CDict:
     """Cart3D -> Cylindrical3D.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import unxt as u
 
     >>> p = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(5.0, "m")}

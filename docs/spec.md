@@ -958,7 +958,7 @@ These transformations preserve affine structure but not necessarily the Minkowsk
 
 This package collects all the most-commonly used parts of `coordinax` into a single convenient location.
 
-It should be imported as `import coordinax.main as cx`
+It should be imported as `import coordinax as cx`
 
 A non-exhaustive table of exported objects are:
 
@@ -984,7 +984,7 @@ These names are importable and supported for inter-package use, but they are **n
 Semi-public API:
 
 - `QMatrix`: heterogeneous 1-D or 2-D quantity container with a per-element unit structure
-- `UnitsMatrix`: immutable, hashable wrapper around a numpy object array of `AbstractUnit` elements, aligned with a `QMatrix`; supports tuple-style indexing, iteration, and `to_tuple()`/`to_string()`. **Not** a subclass of `astropy.StructuredUnit`; bidirectional converters to/from `astropy.StructuredUnit` live in `coordinax.interop.astropy`.
+- `UnitsMatrix`: immutable, hashable wrapper around a numpy object array of `AbstractUnit` elements, aligned with a `QMatrix`; supports tuple-style indexing, iteration, and `to_tuple()`/`to_string()`. **Not** a subclass of `astropy.StructuredUnit`; bidirectional converters to/from `astropy.StructuredUnit` live in `coordinaxs.interop.astropy`.
 - `cdict_units`: extract per-component units from a coordinate dictionary
 - `pack_uniform_unit`: stack component data into an array using a shared unit
 - `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
@@ -2415,7 +2415,7 @@ Separating semantics from geometry provides two advantages:
 
     ```pycon
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -2517,7 +2517,7 @@ Separating semantics from geometry provides two advantages:
 
     ```pycon
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -2973,7 +2973,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     The metric matrix is obtained via the dispatch function, not via a method on the metric field object:
 
     ```python
-    import coordinax.api.manifolds as cxmapi
+    import coordinaxs.api.manifolds as cxmapi
 
     g = cxmapi.metric_matrix(manifold, point, chart)  # → DiagonalMetric or DenseMetric
     ```
@@ -3097,7 +3097,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     ```pycon
     >>> import jax.numpy as jnp
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
@@ -3336,7 +3336,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> m = cxm.FlatMetric(3)
     >>> m.signature
     (1, 1, 1)
@@ -3476,7 +3476,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> m = cxm.RoundMetric(2)
     >>> m.signature
     (1, 1)
@@ -3633,7 +3633,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> m = cxm.MinkowskiMetric()
     >>> m.signature
     (-1, 1, 1, 1)
@@ -3963,7 +3963,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ...     "S2.phi": u.Angle(0.0, "rad"),
     ...     "R1.x": u.Q(1.0, "m"),
     ... }
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> g = cxmapi.metric_matrix(M, at, chart)
     >>> g.to_dense().matrix.value.shape
     (3, 3)
@@ -4181,7 +4181,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> embed_map = cxm.TwoSphereIn3D(radius=u.Q(1.0, "km"))
     >>> M_emb = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.S2,
@@ -4938,7 +4938,7 @@ A **reference frame** is an abstract label used to identify a coordinate descrip
     >>> type(op).__name__
     'Composed'
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import unxt as u
     >>> d = cx.cdict(u.Q([0.0, 0.0, 0.0], "km"))
     >>> op(None, d)

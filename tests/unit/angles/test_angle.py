@@ -2,7 +2,7 @@
 
 Covers construction, unit conversion, wrapping, arithmetic, and JAX
 compatibility. Property-based tests use hypothesis strategies from
-``coordinax.hypothesis``.
+``coordinaxs.hypothesis``.
 """
 
 __all__: tuple[str, ...] = ()
@@ -17,7 +17,7 @@ import unxt as u
 from unxt.quantity import AbstractAngle
 
 import coordinax.angles as cxa
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 # ---------------------------------------------------------------------------
 # Reusable hypothesis strategies

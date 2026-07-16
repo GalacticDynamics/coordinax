@@ -5,8 +5,8 @@ __all__: tuple[str, ...] = ()
 from hypothesis import given
 
 import coordinax.charts as cxc
-import coordinax.hypothesis.main as cxst
 import coordinax.manifolds as cxm
+import coordinaxs.hypothesis.main as cxst
 
 
 @given(atlas=cxst.atlases())

@@ -25,7 +25,7 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.distances as cxd
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 # ---------------------------------------------------------------------------
 # Reusable hypothesis strategies

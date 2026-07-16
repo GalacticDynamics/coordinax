@@ -149,7 +149,7 @@ class AbstractVector(
     Concrete instances are created through `coordinax.vectors.Point`:
 
     >>> import coordinax.vectors as cxv  # AbstractVector not in main
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cxv.Point.from_([1, 2, 3], "m")
     >>> print(vec)
@@ -221,7 +221,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> vec = cx.Point.from_([1, 2, 3], "m")
         >>> print(vec)
@@ -242,7 +242,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> vec = cx.Point.from_([1, 2, 3], "m").cconvert(cx.sph3d)
         >>> print(vec)
@@ -270,7 +270,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> vec = cx.Point.from_([1, 2, 3], "km")
         >>> print(vec.uconvert({"length": "km"}))
@@ -295,7 +295,7 @@ class AbstractVector(
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> usys = u.unitsystem("m", "s", "kg", "rad")
 
@@ -320,7 +320,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> vec = cx.Point.from_([1, 2, 3], "m")
 
         >>> try: vec.materialise()
@@ -349,7 +349,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> vec = cx.Point.from_([3, 4], "m")
         >>> ns = vec.__array_namespace__()
         >>> ns
@@ -413,7 +413,7 @@ class AbstractVector(
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         We can't set an item in a vector:
 
@@ -440,7 +440,7 @@ class AbstractVector(
         --------
         >>> import quaxed.numpy as jnp
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         We can cast a vector to a new dtype:
 
@@ -465,7 +465,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> vec = cx.Point.from_([1, 2, 3], "m")
         >>> print(vec.copy())
@@ -518,7 +518,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> vec = cx.Point.from_([1, 2, 3], "m")
         >>> try:
         ...     hash(vec)
@@ -587,7 +587,7 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> import coordinax.frames as cxf
 
         >>> p = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)

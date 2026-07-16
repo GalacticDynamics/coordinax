@@ -5,7 +5,7 @@ from plum import convert, promote
 
 import unxt as u
 
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 
 @given(cxst.angles())

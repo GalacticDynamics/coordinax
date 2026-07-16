@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 
 PACKAGE_NAMES: tuple[str, ...] = (
     "coordinax",
-    "coordinax.api",
-    "coordinax.astro",
-    "coordinax.hypothesis",
-    "coordinax.interop.astropy",
+    "coordinaxs.api",
+    "coordinaxs.astro",
+    "coordinaxs.hypothesis",
+    "coordinaxs.interop.astropy",
 )
 
 # Maps git tag prefixes (dash-separated) to Python package names (dot-separated)
-# e.g., "coordinax-api" -> "coordinax.api"
+# e.g., "coordinaxs-api" -> "coordinaxs.api"
 TAG_PREFIX_TO_PACKAGE: dict[str, str] = {
     name.replace(".", "-"): name for name in PACKAGE_NAMES
 }
@@ -86,8 +86,8 @@ def validate_tag_for_package(tag: str, package: str | None = None) -> tuple[bool
 
     tag_package, major, minor, patch = parsed
 
-    # Convert tag prefix (e.g., "coordinax-api") to canonical package name
-    # (e.g., "coordinax.api")
+    # Convert tag prefix (e.g., "coordinaxs-api") to canonical package name
+    # (e.g., "coordinaxs.api")
     tag_package_name = (
         TAG_PREFIX_TO_PACKAGE.get(tag_package, tag_package) if tag_package else ""
     )

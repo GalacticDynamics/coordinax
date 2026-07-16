@@ -23,7 +23,7 @@ from hypothesis import given, strategies as st
 import unxt_hypothesis as ust
 
 import coordinax.charts as cxc
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 from .conftest import SHAPE_CART_MAP, xps
 
 Shape: TypeAlias = tuple[int, ...]

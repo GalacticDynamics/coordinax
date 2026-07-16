@@ -31,7 +31,7 @@ def broadcast_in_dim_p_absvec(operand: Point, /, *, shape: Shape, **kw: Any) -> 
     """Broadcast in a dimension.
 
     >>> import quaxed.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> q = cx.Point.from_([1, 2, 3], "m")
     >>> print(q)
@@ -54,7 +54,7 @@ def convert_element_type_p_absvec(operand: Point, /, **kw: Any) -> Point:
     """Convert the element type of a quantity.
 
     >>> import quaxed.lax as qlax
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 2, 3], "m")
     >>> vec["x"].dtype
@@ -129,7 +129,7 @@ def add_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
     chart.  For Cartesian charts the addition is direct.
 
     >>> import quaxed.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> v1 = cx.Point.from_([1, 2, 3], "m")
     >>> v2 = cx.Point.from_([4, 5, 6], "m")
@@ -152,7 +152,7 @@ def sub_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
     The result keeps the ``lhs`` chart and representation.
 
     >>> import quaxed.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     Same-chart subtraction:
 
@@ -212,7 +212,7 @@ def broadcast_in_dim_p_tangent(
     """Broadcast a Tangent to a new shape.
 
     >>> import quaxed.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -237,7 +237,7 @@ def convert_element_type_p_tangent(operand: Tangent, /, **kw: Any) -> Tangent:
     """Convert the element type of all components in a Tangent.
 
     >>> import quaxed.lax as qlax
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -272,7 +272,7 @@ def neg_p_tangent(operand: Tangent, /) -> Tangent:
     Tangent spaces are vector spaces so negation is always component-wise,
     regardless of chart.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -294,7 +294,7 @@ def neg_p_tangent(operand: Tangent, /) -> Tangent:
 def add_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
     """Component-wise addition of two Tangent vectors.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -318,7 +318,7 @@ def add_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
 def sub_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
     """Component-wise subtraction of two Tangent vectors.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u
@@ -382,7 +382,7 @@ def broadcast_in_dim_p_coordinate(
 
     >>> import quaxed.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -420,7 +420,7 @@ def convert_element_type_p_coordinate(operand: Coordinate, /, **kw: Any) -> Coor
 
     >>> import quaxed.lax as qlax
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -456,7 +456,7 @@ def eq_p_coordinates(lhs: Coordinate, rhs: Coordinate, /) -> Bool[Array, "..."]:
     Returns True only if the base point and every named tangent fibre are
     component-wise equal.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import unxt as u

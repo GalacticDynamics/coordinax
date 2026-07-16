@@ -1,7 +1,7 @@
 """Unit tests for coordinax.distances.Distance.
 
 Covers construction, unit conversion, arithmetic, and JAX compatibility.
-Property-based tests use hypothesis strategies from ``coordinax.hypothesis``.
+Property-based tests use hypothesis strategies from ``coordinaxs.hypothesis``.
 
 Key behavioral contracts:
 * Distance is non-negative by default (``check_negative=True``).
@@ -24,7 +24,7 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.distances as cxd
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 # ---------------------------------------------------------------------------
 # Reusable hypothesis strategies

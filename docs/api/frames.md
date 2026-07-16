@@ -31,7 +31,7 @@ For detailed semantics and use cases of each group, see [Working With Frames](..
 ```python
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
-import coordinax.main as cx
+import coordinax as cx
 
 # Create transformation between frames
 transform = cxf.frame_transition(cxf.alice, cxf.alex)

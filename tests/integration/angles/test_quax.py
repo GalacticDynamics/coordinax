@@ -25,7 +25,7 @@ import unxt as u
 from unxt.quantity import AbstractAngle
 
 import coordinax.angles as cxa
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 # ---------------------------------------------------------------------------
 # Reusable hypothesis strategies

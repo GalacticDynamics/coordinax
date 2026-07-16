@@ -21,7 +21,7 @@ def pt_project(
 
     Examples
     --------
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
 

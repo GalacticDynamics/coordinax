@@ -31,7 +31,7 @@ class AstropyRepresentationAPIMixin:
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> import coordinax.charts as cxc
 
         Transforming a Position:

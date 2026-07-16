@@ -36,7 +36,7 @@ class MinkowskiMetric(AbstractDiagonalMetricField):
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_matrix
+    >>> from coordinaxs.api.manifolds import metric_matrix
 
     Canonical Cartesian spacetime chart:
 

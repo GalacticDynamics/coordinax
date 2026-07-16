@@ -28,7 +28,7 @@ class ToUnitsOptions(Enum):
     `Point.uconvert` with `consistent`:
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_({"x": u.Q(1, "m"), "y": u.Q(2, "km")}, cx.cart2d)
     >>> print(vec.uconvert(cx.ToUnitsOptions.consistent))
@@ -46,7 +46,7 @@ def uconvert(usys: u.AbstractUnitSystem, vec: Point, /) -> Point:
     """Convert the point to the given units.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> usys = u.unitsystem("m", "s", "kg", "rad")
 
@@ -67,7 +67,7 @@ def uconvert(
     """Convert the point to the given units.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     We can convert a point to the given units:
 
@@ -97,7 +97,7 @@ def uconvert(units: Mapping[str, Any], vec: Point, /) -> Point:
     """Convert the point to the given units.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     We can convert a point to the given units:
 
@@ -137,7 +137,7 @@ def uconvert(flag: Literal[ToUnitsOptions.consistent], vec: Point, /) -> Point:
     quantity.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     We can convert a point to the given units:
 
@@ -173,7 +173,7 @@ def uconvert(usys: str, vec: Point, /) -> Point:
     """Convert the Point to the given units system.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> usys = "galactic"
     >>> vector = cx.Point.from_([1, 2, 3], "m")
@@ -195,7 +195,7 @@ def point_to_q(obj: Point, /) -> u.AbstractQuantity:
     """`coordinax.Point` -> `unxt.Quantity`.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> from plum import convert
 
     >>> vec = cx.Point.from_([1, 2, 3], "km")

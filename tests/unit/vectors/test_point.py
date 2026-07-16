@@ -5,9 +5,9 @@ __all__: tuple[str, ...] = ()
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.frames as cxf
-import coordinax.main as cx
 import coordinax.transforms as cxfm
 
 

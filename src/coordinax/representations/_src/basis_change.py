@@ -13,10 +13,10 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import BareQuantity, is_any_quantity
 
-import coordinax.api.manifolds as cxmapi
-import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
+import coordinaxs.api.manifolds as cxmapi
+import coordinaxs.api.representations as cxrapi
 from .basis import (
     AbstractBasis,
     AbstractLinearBasis,

@@ -7,8 +7,8 @@ import pytest
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.frames as cxf
-import coordinax.main as cx
 import coordinax.transforms as cxfm
 from coordinax.internal import QMatrix
 

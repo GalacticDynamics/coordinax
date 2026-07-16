@@ -29,7 +29,7 @@ A **reference frame** (e.g., `Alice()`, `Alex()`) records the observer perspecti
 If you have not yet read [Working With Charts](./charts.md), do so first. Charts define coordinate systems; `Point` expresses data in those systems.
 
 ```python
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.charts as cxc
 import unxt as u
 

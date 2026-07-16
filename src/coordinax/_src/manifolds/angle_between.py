@@ -1,4 +1,4 @@
-"""Dispatch implementations for :func:`coordinax.api.manifolds.angle_between`."""
+"""Dispatch implementations for :func:`coordinaxs.api.manifolds.angle_between`."""
 
 __all__: tuple[str, ...] = ()
 
@@ -12,7 +12,7 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.angles as cxa
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.metric.matrix import DenseMetric

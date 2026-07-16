@@ -51,7 +51,7 @@ import plum
 import quaxed.numpy as qnp
 import unxt as u
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from .d2 import Cart2D, Polar2D
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys

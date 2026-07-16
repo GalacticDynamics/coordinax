@@ -40,20 +40,20 @@ class TestParseVersionTag:
             0,
             0,
         )
-        assert validate_tag.parse_version_tag("coordinax-api-v2.3.4") == (
-            "coordinax-api",
+        assert validate_tag.parse_version_tag("coordinaxs-api-v2.3.4") == (
+            "coordinaxs-api",
             2,
             3,
             4,
         )
-        assert validate_tag.parse_version_tag("coordinax-astro-v0.5.2") == (
-            "coordinax-astro",
+        assert validate_tag.parse_version_tag("coordinaxs-astro-v0.5.2") == (
+            "coordinaxs-astro",
             0,
             5,
             2,
         )
-        assert validate_tag.parse_version_tag("coordinax-interop-astropy-v1.2.3") == (
-            "coordinax-interop-astropy",
+        assert validate_tag.parse_version_tag("coordinaxs-interop-astropy-v1.2.3") == (
+            "coordinaxs-interop-astropy",
             1,
             2,
             3,
@@ -145,7 +145,7 @@ class TestValidateTagForPackage:
         assert is_valid is True
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "v0.23.10", "coordinax.api"
+            "v0.23.10", "coordinaxs.api"
         )
         assert is_valid is True
 
@@ -178,7 +178,7 @@ class TestValidateTagForPackage:
         assert "package-specific tags" in error
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "v1.0.0", "coordinax.api"
+            "v1.0.0", "coordinaxs.api"
         )
         assert is_valid is False
 
@@ -202,14 +202,14 @@ class TestValidateTagForPackage:
     def test_package_specific_tag_wrong_package(self, validate_tag):
         """Reject tag when package doesn't match."""
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-api-v0.24.0", "coordinax"
+            "coordinaxs-api-v0.24.0", "coordinax"
         )
         assert is_valid is False
-        assert "This tag is for package 'coordinax.api'" in error
+        assert "This tag is for package 'coordinaxs.api'" in error
         assert "but this workflow is for package 'coordinax'" in error
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-v0.24.0", "coordinax.api"
+            "coordinax-v0.24.0", "coordinaxs.api"
         )
         assert is_valid is False
         assert "This tag is for package 'coordinax'" in error
@@ -240,7 +240,7 @@ class TestValidateTagForPackage:
             assert is_valid is True
             assert error == ""
 
-        # Test for coordinax-api-v1.0.0 with v1.0.0 coordinator
+        # Test for coordinaxs-api-v1.0.0 with v1.0.0 coordinator
         mock_result_2 = MagicMock()
         mock_result_2.returncode = 0
         mock_result_2.stdout = "v1.0.0\n"  # Different coordinator tag
@@ -248,7 +248,7 @@ class TestValidateTagForPackage:
 
         with patch("subprocess.run", return_value=mock_result_2):
             is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-api-v1.0.0", "coordinax.api"
+                "coordinaxs-api-v1.0.0", "coordinaxs.api"
             )
             assert is_valid is True
 
@@ -292,12 +292,12 @@ class TestValidateTagForPackage:
         assert error == ""
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-api-v1.5.3", "coordinax.api"
+            "coordinaxs-api-v1.5.3", "coordinaxs.api"
         )
         assert is_valid is True
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-astro-v2.0.99", "coordinax.astro"
+            "coordinaxs-astro-v2.0.99", "coordinaxs.astro"
         )
         assert is_valid is True
 
@@ -329,10 +329,10 @@ class TestValidateTagForPackage:
 
             # Should fail for wrong package
             is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-api-v0.24.0", None
+                "coordinaxs-api-v0.24.0", None
             )
             assert is_valid is False
-            assert "This tag is for package 'coordinax.api'" in error
+            assert "This tag is for package 'coordinaxs.api'" in error
             assert "but this workflow is for package 'coordinax'" in error
 
     # All supported packages
@@ -346,10 +346,10 @@ class TestValidateTagForPackage:
 
         packages = [
             "coordinax",
-            "coordinax.api",
-            "coordinax.astro",
-            "coordinax.hypothesis",
-            "coordinax.interop.astropy",
+            "coordinaxs.api",
+            "coordinaxs.astro",
+            "coordinaxs.hypothesis",
+            "coordinaxs.interop.astropy",
         ]
 
         with patch("subprocess.run", return_value=mock_result):
@@ -476,10 +476,10 @@ class TestIntegration:
             # Test different packages with .0 tags
             for package in [
                 "coordinax",
-                "coordinax.api",
-                "coordinax.astro",
-                "coordinax.hypothesis",
-                "coordinax.interop.astropy",
+                "coordinaxs.api",
+                "coordinaxs.astro",
+                "coordinaxs.hypothesis",
+                "coordinaxs.interop.astropy",
             ]:
                 tag_prefix = package.replace(".", "-")
                 is_valid, error = validate_tag.validate_tag_for_package(

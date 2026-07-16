@@ -9,8 +9,8 @@ from typing_extensions import override
 import jax
 import plum
 
-import coordinax.api.charts as cxcapi
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from .manifold import EmbeddedManifold
 from coordinax._src.base import (

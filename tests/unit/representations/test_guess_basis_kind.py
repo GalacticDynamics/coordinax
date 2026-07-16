@@ -7,8 +7,8 @@ from hypothesis import given
 
 import unxt as u
 
-import coordinax.hypothesis.representations as cxrst
 import coordinax.representations as cxr
+import coordinaxs.hypothesis.representations as cxrst
 
 # ===================================================================
 # Identity dispatch

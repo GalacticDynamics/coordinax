@@ -307,7 +307,7 @@ Relate two frames via a transformation:
 transform_alice_to_alex = cxf.frame_transition(alice, alex)
 
 # This is a transform operator that can be applied
-import coordinax.main as cx
+import coordinax as cx
 
 v_in_alice = cx.Point.from_([1, 2, 3], "m", cxc.cart3d)
 v_in_alex = cxfm.act(transform_alice_to_alex, None, v_in_alice)
@@ -334,11 +334,11 @@ Define domain-specific reference frames by subclassing:
 #         ...
 ```
 
-For astronomical applications, `coordinax.astro` provides pre-built frames:
+For astronomical applications, `coordinaxs.astro` provides pre-built frames:
 
 ```python
-# (If coordinax.astro is installed)
-import coordinax.astro as cxastro
+# (If coordinaxs.astro is installed)
+import coordinaxs.astro as cxastro
 
 icrs = cxastro.ICRS()  # Celestial reference frame
 galactocentric = cxastro.Galactocentric()
@@ -352,7 +352,7 @@ xform = cxf.frame_transition(icrs, galactocentric)
 A `Coordinate` is a `Vector` attached to a reference frame. This is often the most direct way to express "this data is measured by this observer":
 
 ```python
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.frames as cxf
 
 coord = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
@@ -365,7 +365,7 @@ print(coord.chart)  # Cart3D(M=Rn(3))
 Use `to_frame()` when you want to apply the operator associated with changing observers. In the active convention, this moves the represented point data into the target frame.
 
 ```python
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.frames as cxf
 
 coord_alice = cx.Point.from_([1, 2, 3], "m", cxf.alice)
@@ -404,7 +404,7 @@ Here's a complete example: **observe a rotating planet from an inertial frame**.
 
 ```python
 import coordinax.frames as cxf
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.transforms as cxfm
 import jax.numpy as jnp
@@ -444,7 +444,7 @@ print(position_rotating.data)  # Different coordinates, same point
 #
 # import jax
 # import coordinax.frames as cxf
-# import coordinax.main as cx
+# import coordinax as cx
 #
 # @jax.jit
 # def batch_transform_points(frame1, frame2, vectors):

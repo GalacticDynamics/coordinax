@@ -123,7 +123,7 @@ class Coordinate(AbstractVector):
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
@@ -281,7 +281,7 @@ class Coordinate(AbstractVector):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> import coordinax.charts as cxc
         >>> import coordinax.representations as cxr
 
@@ -309,7 +309,7 @@ class Coordinate(AbstractVector):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> import coordinax.charts as cxc
         >>> import coordinax.representations as cxr
 
@@ -370,7 +370,7 @@ class Coordinate(AbstractVector):
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> import coordinax.charts as cxc
         >>> import unxt as u
         >>> import coordinax.representations as cxr
@@ -421,7 +421,7 @@ class Coordinate(AbstractVector):
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
         >>> pv = cx.Coordinate(point=cx.Point.from_([1.0, 2.0, 3.0], "m"))
         >>> pv.shape
         ()
@@ -446,7 +446,7 @@ class Coordinate(AbstractVector):
 
         Examples
         --------
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> point = cx.Point.from_([1.0, 2.0, 3.0], "m")
         >>> pv = cx.Coordinate(point=point)
@@ -484,7 +484,7 @@ class Coordinate(AbstractVector):
         --------
         >>> import unxt as u
         >>> import wadler_lindig as wl
-        >>> import coordinax.main as cx
+        >>> import coordinax as cx
 
         >>> point = cx.Point.from_([1.0, 0.0, 0.0], "m")
         >>> vel = cx.Tangent.from_(
@@ -550,7 +550,7 @@ class Coordinate(AbstractVector):
 def from_(cls: type[Coordinate], pv: Coordinate, /) -> Coordinate:
     """Identity: return the same Coordinate unchanged.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> pv = cx.Coordinate(point=cx.Point.from_([1.0, 2.0, 3.0], "m"))
     >>> cx.Coordinate.from_(pv) is pv
     True
@@ -563,7 +563,7 @@ def from_(cls: type[Coordinate], pv: Coordinate, /) -> Coordinate:
 def from_(cls: type[Coordinate], p: Point, /) -> Coordinate:
     """Wrap a single ``Point`` as a point-only bundle (no field vectors).
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> p = cx.Point.from_([1.0, 2.0, 3.0], "m")
     >>> pv = cx.Coordinate.from_(p)
     >>> pv.point is p
@@ -587,7 +587,7 @@ def from_(
     ``point`` keyword argument takes precedence if both are supplied.
 
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 

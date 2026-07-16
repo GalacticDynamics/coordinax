@@ -57,7 +57,7 @@ The most common combinations are available as ready-made singletons:
 Name every component and supply the representation directly:
 
 ```{code-block} python
->>> import coordinax.main as cx
+>>> import coordinax as cx
 >>> import coordinax.charts as cxc
 >>> import coordinax.representations as cxr
 >>> import unxt as u

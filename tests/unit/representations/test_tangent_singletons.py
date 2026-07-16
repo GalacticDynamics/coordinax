@@ -2,7 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.representations as cxr
 
 
@@ -31,7 +31,7 @@ class TestCoordDisp:
         assert cxr.coord_disp == expected
 
     def test_exported_from_main(self) -> None:
-        """coord_disp exported from coordinax.main."""
+        """coord_disp exported from coordinax."""
         assert hasattr(cx, "coord_disp")
 
 

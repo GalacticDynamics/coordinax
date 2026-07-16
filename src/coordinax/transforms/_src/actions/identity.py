@@ -18,7 +18,7 @@ class Identity(AbstractTransform):
 
     Examples
     --------
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.transforms as cxfm
     >>> import unxt as u
 

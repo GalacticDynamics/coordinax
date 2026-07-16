@@ -11,7 +11,7 @@ import wadler_lindig as wl
 
 from dataclassish import field_items
 
-import coordinax.api.frames as cxfmapi
+import coordinaxs.api.frames as cxfmapi
 from coordinax.transforms import AbstractTransform
 
 
@@ -142,7 +142,7 @@ def from_(
     >>> cxf.AbstractReferenceFrame.from_(cxf.alice) is cxf.alice
     True
 
-    >>> import coordinax.astro as cxastro
+    >>> import coordinaxs.astro as cxastro
     >>> try:
     ...     cxastro.Galactocentric.from_(cxf.alice)
     ... except TypeError as e:

@@ -11,7 +11,7 @@ from hypothesis import given
 import unxt as u
 
 import coordinax.charts as cxc
-import coordinax.hypothesis.main as cxst
+import coordinaxs.hypothesis.main as cxst
 
 # =============================================================================
 # cartesian_chart

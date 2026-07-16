@@ -28,7 +28,7 @@ more metadata. This tutorial covers the **bottom level** — plain arrays.
 ## Setup
 
 ```{code-block} python
->>> import coordinax.main as cx
+>>> import coordinax as cx
 >>> import coordinax.charts as cxc
 >>> import coordinax.frames as cxf
 >>> import coordinax.representations as cxr

@@ -10,7 +10,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue, is_any_quantity
 
-import coordinax.api.charts as cxcapi
+import coordinaxs.api.charts as cxcapi
 from .metric import FlatMetric
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys

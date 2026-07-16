@@ -12,7 +12,7 @@ import wadler_lindig as wl
 import dataclassish
 
 import coordinax.angles as cxa
-import coordinax.api.manifolds as cxmapi
+import coordinaxs.api.manifolds as cxmapi
 from .atlas import AbstractAtlas
 from .metric import AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys

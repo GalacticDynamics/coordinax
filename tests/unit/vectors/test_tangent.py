@@ -10,9 +10,9 @@ import pytest
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.frames as cxf
-import coordinax.main as cx
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 from coordinax.internal import CDict
@@ -709,7 +709,7 @@ class TestChangeBasisPointToDisplacement:
         assert disp.rep == cxr.phys_disp
 
     def test_accessible_from_main(self):
-        """change_basis is accessible via coordinax.main."""
+        """change_basis is accessible via coordinax."""
         pt = self._make_point()
         disp = cx.change_basis(pt, cxr.coord_basis)
         assert isinstance(disp, cx.Tangent)

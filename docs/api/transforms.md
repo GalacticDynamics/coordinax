@@ -11,7 +11,7 @@ The `coordinax.transforms` module (commonly imported as `cxfm`) provides transfo
 ```python
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
-import coordinax.main as cx
+import coordinax as cx
 import unxt as u
 
 op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))

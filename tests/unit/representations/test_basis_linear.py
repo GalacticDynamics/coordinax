@@ -4,7 +4,7 @@ __all__: tuple[str, ...] = ()
 
 import jax
 
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.representations as cxr
 
 
@@ -67,7 +67,7 @@ class TestCoordinateBasis:
         assert result == cxr.coord_basis
 
     def test_exported_from_main(self) -> None:
-        """CoordinateBasis and coord_basis exported from coordinax.main."""
+        """CoordinateBasis and coord_basis exported from coordinax."""
         assert hasattr(cx, "CoordinateBasis")
         assert hasattr(cx, "coord_basis")
         assert hasattr(cx, "AbstractLinearBasis")
@@ -104,6 +104,6 @@ class TestPhysicalBasis:
         assert result == cxr.phys_basis
 
     def test_exported_from_main(self) -> None:
-        """PhysicalBasis and phys_basis exported from coordinax.main."""
+        """PhysicalBasis and phys_basis exported from coordinax."""
         assert hasattr(cx, "PhysicalBasis")
         assert hasattr(cx, "phys_basis")

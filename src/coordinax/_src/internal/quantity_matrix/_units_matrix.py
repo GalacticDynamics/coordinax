@@ -87,7 +87,7 @@ class UnitsMatrix:
     The class supports tuple-style indexing, iteration, `to_tuple()`, and
     `to_string()`. It is **not** a subclass of `astropy.units.StructuredUnit`;
     bidirectional converters to/from ``StructuredUnit`` are provided in
-    ``coordinax.interop.astropy``.
+    ``coordinaxs.interop.astropy``.
 
     Hashability is achieved via ``hash(self.to_tuple())``, so the underlying
     ``AbstractUnit`` objects must themselves be hashable (they are).

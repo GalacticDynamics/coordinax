@@ -25,9 +25,9 @@ from plum import NotFoundLookupError
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.frames as cxf
-import coordinax.main as cx
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .conftest import (

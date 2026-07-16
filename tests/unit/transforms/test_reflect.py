@@ -9,7 +9,7 @@ import numpy as np
 
 import unxt as u
 
-import coordinax.main as cx
+import coordinax as cx
 import coordinax.transforms as cxfm
 from .conftest import EXPECTED_IDENTITY, EXPECTED_REFLECT
 

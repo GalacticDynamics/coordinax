@@ -59,7 +59,7 @@ class AbstractGeometry(metaclass=abc.ABCMeta):
 
     Examples
     --------
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     Construct the point geometry object directly:
 

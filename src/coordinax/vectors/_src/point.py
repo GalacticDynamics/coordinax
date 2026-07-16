@@ -106,7 +106,7 @@ class Point(
     --------
     Construct a **point** in Cartesian 3D and convert to spherical:
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import unxt as u
     >>> cart = cx.Point.from_({"x": u.Q(1, "m"), "y": u.Q(1, "m"), "z": u.Q(1, "m")},
@@ -223,7 +223,7 @@ class Point(
 def from_(cls: type[Point], obj: Point, /) -> Point:
     """Construct a point from another point.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> vec1 = cx.Point.from_([1, 2, 3], "m")
     >>> vec2 = cx.Point.from_(vec1)
     >>> print(vec2)
@@ -248,7 +248,7 @@ def from_(
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> vec = cx.Point.from_(xs, cx.cart3d, cx.point)
@@ -276,7 +276,7 @@ def from_(cls: type[Point], obj: Any, chart: cxc.AbstractChart, /) -> Point:
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> vec = cx.Point.from_(xs, cx.cart3d)
@@ -309,7 +309,7 @@ def from_(cls: type[Point], obj: Any, rep: cxr.Representation, /) -> Point:
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> vec = cx.Point.from_(xs, cx.point)
@@ -346,7 +346,7 @@ def from_(cls: type[Point], obj: Any, /) -> Any:
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> vec = cx.Point.from_(xs)
@@ -382,7 +382,7 @@ def from_(
     components as the last dimension.
 
     >>> import jax.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 2, 3], "meter")
     >>> print(vec)
@@ -411,7 +411,7 @@ def from_(
     """Construct a vector from an array, unit, and chart.
 
     >>> import jax.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 2, 3], "m", cx.cart3d)
     >>> print(vec)
@@ -441,7 +441,7 @@ def from_(
     """Construct a vector from an array, unit, chart, and rep.
 
     >>> import jax.numpy as jnp
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
 
     >>> vec = cx.Point.from_([1, 2, 3], "m", cx.cart3d, cx.point)
     >>> print(vec)
@@ -472,7 +472,7 @@ def from_(
 ) -> Point:
     """Construct a point from another point, replacing its frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> p = cx.Point.from_([1, 0, 0], "km")
@@ -498,7 +498,7 @@ def from_(
 ) -> Point:
     """Construct a point from any object with a frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
     >>> import unxt as u
 
@@ -524,7 +524,7 @@ def from_(
 ) -> Point:
     """Construct a point from an object, chart, and frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -552,7 +552,7 @@ def from_(
 ) -> Point:
     """Construct a point from an object, chart, representation, and frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
@@ -582,7 +582,7 @@ def from_(
 ) -> Point:
     """Construct a point from an array, unit, and frame.
 
-    >>> import coordinax.main as cx
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> p = cx.Point.from_([1, 0, 0], "km", cxf.alice)

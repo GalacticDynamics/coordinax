@@ -108,7 +108,7 @@ class PullbackMetric(AbstractMetricField):
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinaxs.api.manifolds as cxmapi
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
