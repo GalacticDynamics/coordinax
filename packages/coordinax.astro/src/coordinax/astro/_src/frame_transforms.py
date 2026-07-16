@@ -50,10 +50,16 @@ def frame_transition(
     >>> op
     Composed((
       Rotate(f64[3,3](jax)),
+      Translate(
+          {...},
+          chart=Cart3D(M=Rn(3))
+      ),
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
-      Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel )
+      Translate(
+          {...},
+          chart=Cart3D(M=Rn(3)),
+          semantic_kind=vel
+      )
     ))
 
     """  # noqa: E501
@@ -186,14 +192,27 @@ def frame_transition(
     >>> frame_op2 = cxf.frame_transition(gcf_frame, gcf_frame2)
     >>> frame_op2
     Composed((
-      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel ),
+      Translate(
+          {...},
+          chart=Cart3D(M=Rn(3)),
+          semantic_kind=vel
+      ),
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
+      Translate(
+          {...},
+          chart=Cart3D(M=Rn(3))
+      ),
       Rotate(f64[3,3](jax)),
+      Translate(
+          {...},
+          chart=Cart3D(M=Rn(3))
+      ),
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
-      Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel )
+      Translate(
+          {...},
+          chart=Cart3D(M=Rn(3)),
+          semantic_kind=vel
+      )
     ))
 
     """
