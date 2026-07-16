@@ -15,7 +15,6 @@ from jaxtyping import Array, ArrayLike
 from typing import Any, cast
 
 import equinox as eqx
-import jax.tree as jtu
 import plum
 
 import quaxed.numpy as jnp
@@ -228,7 +227,7 @@ def act(
         return cast("CDict", out)
 
     mapped_parts = tuple(
-        _maybe(f, p, **jtu.map(lambda seq, i=i: seq[i], ats))
+        _maybe(f, p, **{k: splits[i] for k, splits in ats.items()})
         for i, (f, p) in enumerate(zip(chart.factors, parts, strict=True))
     )
     return chart.merge_components(mapped_parts)

@@ -20,7 +20,7 @@ from unxt import AbstractQuantity as AbcQ
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
-from .base import AbstractTransform, materialize_transform
+from .base import AbstractTransform
 from .custom_types import CDict, OptUSys
 from .identity import identity
 from .linear import AbstractLinearTransform
@@ -498,8 +498,7 @@ def _rotate_pushforward_cdict(
 
     """
     cart = chart.cartesian
-    op_eval = materialize_transform(op, tau)
-    R = op_eval._matrix(cart)
+    R = op._matrix(cart, tau)
 
     if chart is cart:
         # Cartesian chart: Jacobian is the identity — simple linear map.
