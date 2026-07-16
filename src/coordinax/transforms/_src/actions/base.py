@@ -2,7 +2,6 @@
 
 __all__ = (
     "AbstractTransform",
-    "is_jit_safe",
     "is_time_dependent",
     "materialize_transform",
 )
@@ -498,30 +497,3 @@ def is_time_dependent(op: Any, /) -> bool:
     # this rule match `materialize_transform`'s eqx.partition(callable).
     params = [getattr(op, field.name) for field in dataclasses.fields(op)]
     return any(callable(leaf) for leaf in jtu.leaves(params))
-
-
-@plum.dispatch
-def is_jit_safe(op: AbstractTransform, /) -> bool:
-    r"""Whether the default ``simplify(op)`` avoids value inspection.
-
-    `simplify` collapses operators to `Identity` by inspecting their values (an
-    identity matrix, a zero translation) with ``jnp.allclose``, which raises
-    under ``jax.jit``. This predicate reports whether the default ``simplify``
-    of ``op`` (``approx=True``) is value-free and so safe to call while tracing;
-    when it returns `False`, use ``simplify(op, approx=False)`` for a value-free
-    (jit-safe) pass. Only structural operators (`Identity`, and `Composed`
-    thereof) are value-free by default.
-
-    >>> import unxt as u
-    >>> import coordinax.transforms as cxfm
-
-    >>> cxfm.is_jit_safe(cxfm.Identity())
-    True
-
-    A rotation's simplify inspects its matrix, so it is not value-free:
-
-    >>> cxfm.is_jit_safe(cxfm.Rotate.from_euler("z", u.Q(90, "deg")))
-    False
-
-    """
-    return False

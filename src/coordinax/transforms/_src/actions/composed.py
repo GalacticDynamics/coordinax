@@ -446,7 +446,7 @@ def simplify(op: Composed, /, *, approx: bool = True, **kw: Any) -> AbstractTran
     With ``approx=True`` (default) the value-inspecting per-operator collapses
     run too (an identity rotation matrix, a zero translation). With
     ``approx=False`` only value-free structural simplification is done, which is
-    safe to call inside ``jax.jit`` (see `is_jit_safe`).
+    always safe to call inside ``jax.jit``.
 
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
@@ -510,9 +510,3 @@ def _merge(a: AbstractTransform, b: AbstractTransform, /) -> AbstractTransform |
     AbstractAdd). ``a`` is applied before ``b``.
     """
     return None
-
-
-@plum.dispatch
-def is_jit_safe(op: Composed, /) -> bool:
-    """Return True iff every sub-operator's default simplify is value-free."""
-    return all(is_jit_safe(o) for o in op.transforms)

@@ -99,7 +99,7 @@ def test_time_dependent_rotations_do_not_merge() -> None:
 
 
 # ===================================================================
-# Trace-safety: approx flag + is_jit_safe
+# Trace-safety: the approx flag
 
 
 def test_approx_false_merges_but_skips_identity_collapse() -> None:
@@ -113,7 +113,7 @@ def test_approx_false_merges_but_skips_identity_collapse() -> None:
     np.testing.assert_allclose(np.asarray(out.R), np.eye(3), atol=1e-6)
 
 
-def test_approx_false_is_jit_safe() -> None:
+def test_approx_false_works_under_jit() -> None:
     R = cxfm.Rotate.from_euler("z", u.Q(30, "deg"))
     pipe = cxfm.Composed((R, R.inverse))
     out = jax.jit(lambda op: cxfm.simplify(op, approx=False))(pipe)
@@ -123,22 +123,3 @@ def test_approx_false_is_jit_safe() -> None:
 def test_default_simplify_is_not_jit_safe() -> None:
     with pytest.raises(jax.errors.TracerBoolConversionError):
         jax.jit(lambda op: cxfm.simplify(op))(cxfm.Rotate(jnp.eye(3)))
-
-
-@pytest.mark.parametrize(
-    ("op_factory", "expected"),
-    [
-        (lambda: cxfm.Identity(), True),
-        (lambda: cxfm.Rotate.from_euler("z", u.Q(90, "deg")), False),
-        (lambda: cxfm.Translate.from_([1, 2, 3], "km"), False),
-        (lambda: cxfm.Composed((cxfm.Identity(), cxfm.Identity())), True),
-        (
-            lambda: cxfm.Composed(
-                (cxfm.Rotate.from_euler("z", u.Q(90, "deg")), cxfm.Identity())
-            ),
-            False,
-        ),
-    ],
-)
-def test_is_jit_safe(op_factory, expected) -> None:
-    assert cxfm.is_jit_safe(op_factory()) is expected
