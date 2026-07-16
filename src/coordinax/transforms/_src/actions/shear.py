@@ -77,8 +77,12 @@ def from_(cls: type[Shear], obj: ArrayLike, /) -> Shear:
 
 
 @plum.dispatch
-def simplify(op: Shear, /, **kw: Any) -> AbstractTransform:
-    """Simplify a shear transform to identity when matrix is identity."""
-    if jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw):
+def simplify(op: Shear, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
+    """Simplify a shear transform to identity when matrix is identity.
+
+    The identity-matrix check inspects values, so it is skipped when
+    ``approx=False``.
+    """
+    if approx and jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw):
         return identity
     return op

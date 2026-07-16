@@ -121,6 +121,12 @@ def simplify(op: Identity, /, **__: Any) -> Identity:
     return op
 
 
+@plum.dispatch
+def is_jit_safe(op: Identity, /) -> bool:
+    """Identity simplifies structurally (no value inspection), so it is safe."""
+    return True
+
+
 # ===================================================================
 # `act` dispatches
 

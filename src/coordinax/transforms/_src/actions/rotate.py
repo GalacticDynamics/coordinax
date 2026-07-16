@@ -401,7 +401,7 @@ def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
 
 
 @plum.dispatch
-def simplify(op: Rotate, /, **kw: Any) -> AbstractTransform:
+def simplify(op: Rotate, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
     """Simplify the Galilean rotation operator.
 
     >>> import quaxed.numpy as jnp
@@ -429,9 +429,21 @@ def simplify(op: Rotate, /, **kw: Any) -> AbstractTransform:
     Identity()
 
     """
-    if not callable(op.R) and jnp.allclose(op.R, jnp.eye(3), **kw):
+    if approx and not callable(op.R) and jnp.allclose(op.R, jnp.eye(3), **kw):
         return identity
     return op
+
+
+@plum.dispatch
+def _merge(a: Rotate, b: Rotate, /) -> AbstractTransform | None:
+    """Merge two adjacent rotations (``a`` applied first) into one.
+
+    Static rotations combine as ``a @ b``; a time-dependent (callable) matrix on
+    either side is left un-merged.
+    """
+    if callable(a.R) or callable(b.R):
+        return None
+    return a @ b
 
 
 # ============================================================================

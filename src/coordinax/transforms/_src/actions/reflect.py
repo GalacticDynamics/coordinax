@@ -111,8 +111,12 @@ def from_(cls: type[Reflect], obj: ArrayLike, /) -> Reflect:
 
 
 @plum.dispatch
-def simplify(op: Reflect, /, **kw: Any) -> AbstractTransform:
-    """Simplify a reflection, collapsing the identity matrix when present."""
-    if jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw):
+def simplify(op: Reflect, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
+    """Simplify a reflection, collapsing the identity matrix when present.
+
+    The identity-matrix check inspects values, so it is skipped when
+    ``approx=False``.
+    """
+    if approx and jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw):
         return identity
     return op

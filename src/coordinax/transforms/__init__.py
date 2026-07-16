@@ -27,6 +27,7 @@ __all__: tuple[str, ...] = (
     "compose",
     "materialize_transform",
     "is_time_dependent",
+    "is_jit_safe",
     "tau_derivative",
     # Groups
     "AbstractTransformGroup",
@@ -66,6 +67,7 @@ with install_import_hook("coordinax.transforms"):
         Shear,
         Translate,
         identity,
+        is_jit_safe,
         is_time_dependent,
         materialize_transform,
         tau_derivative,

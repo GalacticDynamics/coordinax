@@ -343,10 +343,14 @@ def pushforward(
 
 
 @plum.dispatch
-def simplify(op: AbstractAdd, /, **kw: Any) -> AbstractAdd | Identity:
+def simplify(
+    op: AbstractAdd, /, *, approx: bool = True, **kw: Any
+) -> AbstractAdd | Identity:
     """Simplify a AbstractAdd operator.
 
-    A translation with zero delta simplifies to Identity.
+    A translation with zero delta simplifies to Identity. This is a
+    value-inspecting rule, so it is skipped when ``approx=False`` (and for a
+    time-dependent, callable delta).
 
     >>> import coordinax.transforms as cxfm
 
@@ -359,9 +363,28 @@ def simplify(op: AbstractAdd, /, **kw: Any) -> AbstractAdd | Identity:
     Identity()
 
     """
+    if not approx or callable(op.delta):
+        return op
     is_zero = jtu.all(
         jtu.map(lambda v: jnp.allclose(u.ustrip(AllowValue, v), 0, **kw), op.delta)
     )
     if is_zero:
         return identity
     return op
+
+
+@plum.dispatch
+def _merge(a: AbstractAdd, b: AbstractAdd, /) -> AbstractTransform | None:
+    """Merge two adjacent additive operators of the same type and role.
+
+    Static offsets of the same operator type and ``semantic_kind`` combine into
+    one (their deltas add); anything else is left un-merged.
+    """
+    if type(a) is not type(b) or getattr(a, "semantic_kind", None) != getattr(
+        b, "semantic_kind", None
+    ):
+        return None
+    if callable(a.delta) or callable(b.delta):
+        return None
+    combined = a + b
+    return None if isinstance(combined, Composed) else combined

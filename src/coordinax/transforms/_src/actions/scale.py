@@ -91,8 +91,12 @@ def from_(cls: type[Scale], obj: ArrayLike, /) -> Scale:
 
 
 @plum.dispatch
-def simplify(op: Scale, /, **kw: Any) -> AbstractTransform:
-    """Simplify a scaling transform to identity when matrix is identity."""
-    if jnp.allclose(op.S, jnp.eye(op.S.shape[0], dtype=op.S.dtype), **kw):
+def simplify(op: Scale, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
+    """Simplify a scaling transform to identity when matrix is identity.
+
+    The identity-matrix check inspects values, so it is skipped when
+    ``approx=False``.
+    """
+    if approx and jnp.allclose(op.S, jnp.eye(op.S.shape[0], dtype=op.S.dtype), **kw):
         return identity
     return op

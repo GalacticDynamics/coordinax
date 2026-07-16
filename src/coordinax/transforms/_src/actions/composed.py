@@ -434,29 +434,85 @@ def pushforward(
 
 
 @plum.dispatch
-def simplify(op: Composed, /) -> AbstractTransform:
+def simplify(op: Composed, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
     """Simplify a Composed transform.
 
+    Recursively simplifies each sub-operator, strips `Identity` elements, and
+    merges adjacent same-type operators in a single left-to-right pass: two
+    rotations collapse to one (``R1 @ R2``), two same-role static translations
+    to one, and — via the merge plus per-operator identity detection — an
+    inverse pair cancels to `Identity`.
+
+    With ``approx=True`` (default) the value-inspecting per-operator collapses
+    run too (an identity rotation matrix, a zero translation). With
+    ``approx=False`` only value-free structural simplification is done, which is
+    safe to call inside ``jax.jit`` (see `is_jit_safe`).
+
+    >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
-    >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
-    >>> identity = cxfm.Identity()
-    >>> pipe = cxfm.Composed((shift, identity))
-    >>> pipe
-    Composed(( Translate(...), Identity() ))
+    Identity elements are stripped:
 
-    >>> cxfm.simplify(pipe)
+    >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
+    >>> cxfm.simplify(cxfm.Composed((shift, cxfm.Identity())))
     Translate(...)
 
+    Adjacent rotations merge into one:
+
+    >>> R1 = cxfm.Rotate.from_euler("z", u.Q(30, "deg"))
+    >>> R2 = cxfm.Rotate.from_euler("z", u.Q(60, "deg"))
+    >>> cxfm.simplify(cxfm.Composed((R1, R2)))
+    Rotate(...)
+
+    An inverse pair cancels to Identity:
+
+    >>> cxfm.simplify(cxfm.Composed((R1, R1.inverse)))
+    Identity()
+
     """
-    # TODO: figure out how to do pairwise simplifications
-    # Remove identity transforms
-    simplified_ops = tuple(o for o in op.transforms if not isinstance(o, Identity))
-    # If no transforms remain, return identity
-    if not simplified_ops:
+    # Recursively simplify each sub-op, flattening Composed / dropping Identity.
+    ops: list[AbstractTransform] = []
+    for sub in op.transforms:
+        _extend(ops, simplify(sub, approx=approx, **kw))
+
+    # Merge adjacent pairs left-to-right; re-simplify each merge so a merged
+    # identity (e.g. an inverse pair) collapses under approx=True.
+    merged: list[AbstractTransform] = []
+    for o in ops:
+        combined = _merge(merged[-1], o) if merged else None
+        if combined is None:
+            merged.append(o)
+        else:
+            merged.pop()
+            _extend(merged, simplify(combined, approx=approx, **kw))
+
+    if not merged:
         return identity
-    # If only one operator remains, return it
-    if len(simplified_ops) == 1:
-        return simplified_ops[0]
-    # Otherwise, return simplified pipe
-    return replace(op, transforms=simplified_ops)
+    if len(merged) == 1:
+        return merged[0]
+    return replace(op, transforms=tuple(merged))
+
+
+def _extend(acc: list[AbstractTransform], op: AbstractTransform, /) -> None:
+    """Append ``op`` to ``acc``, flattening `Composed` and dropping `Identity`."""
+    if isinstance(op, Composed):
+        acc.extend(op.transforms)
+    elif not isinstance(op, Identity):
+        acc.append(op)
+
+
+@plum.dispatch
+def _merge(a: AbstractTransform, b: AbstractTransform, /) -> AbstractTransform | None:
+    """Merge two adjacent operators of a `Composed` into one.
+
+    Returns the combined operator, or `None` if the pair does not combine. Per
+    operator-type rules are registered alongside the operators (e.g. Rotate,
+    AbstractAdd). ``a`` is applied before ``b``.
+    """
+    return None
+
+
+@plum.dispatch
+def is_jit_safe(op: Composed, /) -> bool:
+    """Return True iff every sub-operator's default simplify is value-free."""
+    return all(is_jit_safe(o) for o in op.transforms)
