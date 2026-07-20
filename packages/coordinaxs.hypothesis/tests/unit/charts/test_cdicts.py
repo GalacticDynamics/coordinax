@@ -1,4 +1,4 @@
-"""Tests for coordinax-hypothesis strategies."""
+"""Tests for coordinaxs-hypothesis strategies."""
 
 import unxt as u
 from hypothesis import given, strategies as st

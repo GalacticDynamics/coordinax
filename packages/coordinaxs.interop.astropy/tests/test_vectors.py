@@ -1,4 +1,4 @@
-"""Test conversions between Astropy and coordinax-astro frames."""
+"""Test conversions between Astropy and coordinaxs-astro frames."""
 
 import astropy.coordinates as apyc
 import astropy.units as apyu

@@ -102,7 +102,7 @@ class TestNamespacedSplitMerge:
 
 
 # =============================================================================
-# Property tests using coordinax-hypothesis
+# Property tests using coordinaxs-hypothesis
 # =============================================================================
 
 
