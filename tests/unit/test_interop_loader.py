@@ -128,6 +128,78 @@ def test_genuine_failure_propagates(monkeypatch: Any) -> None:
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
+def test_retry_completes_after_cycle_clears(monkeypatch: Any) -> None:
+    """A pending entry point loads on a later call once the cycle clears.
+
+    This is the whole point of the retryable design: fail while a sibling is
+    mid-import, then succeed on a later at-rest call. The astro-first ordering
+    relies on exactly this two-phase transition.
+    """
+    calls = {"n": 0}
+
+    class _FlakyEntryPoint:
+        name = "flaky"
+
+        def __init__(self) -> None:
+            self.loaded = False
+
+        def load(self) -> object:
+            calls["n"] += 1
+            if calls["n"] == 1:  # first attempt: fail as if mid-cycle
+                raise AttributeError("partially initialized: no 'Parallax' yet")
+            self.loaded = True
+            return object()
+
+    ep = _FlakyEntryPoint()
+    monkeypatch.setattr(
+        cx, "entry_points", lambda group: [ep] if "interop" in group else []
+    )
+    cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+
+    # Phase 1: a coordinaxs module is initializing -> the failure is tolerated
+    # and the entry point is left pending.
+    initializing = _initializing_module("coordinaxs.fake_pkg")
+    monkeypatch.setitem(sys.modules, "coordinaxs.fake_pkg", initializing)
+    cx._load_optional_interop()
+    assert not ep.loaded
+    assert "flaky" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
+
+    # Phase 2: the sibling finished initializing; a later call retries and the
+    # entry point now loads and is recorded.
+    initializing.__spec__._initializing = False  # type: ignore[union-attr]
+    cx._load_optional_interop()
+    assert ep.loaded
+    assert "flaky" in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    assert calls["n"] == 2
+
+
+@pytest.mark.usefixtures("_reset_interop_state")
+def test_genuine_error_is_swallowed_while_initializing(monkeypatch: Any) -> None:
+    """A genuinely broken interop is swallowed, not raised, while initializing.
+
+    This pins the loader's documented limitation.
+    `_load_optional_interop` cannot distinguish a real failure from the expected
+    import cycle while a `coordinaxs` module is still initializing, so it leaves
+    the entry point pending instead of raising (see the loader docstring). This
+    test locks that intended-but-imperfect semantics so a future change to the
+    failure classification is caught.
+    """
+    ep = _FakeEntryPoint("fake", exc=RuntimeError("interop is genuinely broken"))
+    monkeypatch.setattr(
+        cx, "entry_points", lambda group: [ep] if "interop" in group else []
+    )
+    monkeypatch.setitem(
+        sys.modules, "coordinaxs.fake_pkg", _initializing_module("coordinaxs.fake_pkg")
+    )
+    cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+
+    # Swallowed, not raised, because a coordinaxs module is still initializing.
+    cx._load_optional_interop()
+
+    assert "fake" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
+
+
+@pytest.mark.usefixtures("_reset_interop_state")
 def test_reentrant_call_is_a_noop(monkeypatch: Any) -> None:
     """A re-entrant call returns immediately instead of double-loading."""
     ep = _FakeEntryPoint("fake")
