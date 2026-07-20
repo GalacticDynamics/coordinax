@@ -40,6 +40,20 @@ def test_license_metadata_is_pep639_consistent(path: Path) -> None:
         )
 
 
+@pytest.mark.parametrize("path", _ALL_PYPROJECTS, ids=lambda p: str(p.parent.name))
+def test_distribution_ships_a_license_file(path: Path) -> None:
+    """Every distribution has a LICENSE alongside its pyproject.
+
+    Without a LICENSE file next to the pyproject, hatchling's default
+    ``license-files`` glob finds nothing and the built wheel carries no license
+    text — so the distribution ships without its license.
+    """
+    assert (path.parent / "LICENSE").is_file(), (
+        f"{path.parent} has no LICENSE file; the built wheel would omit the "
+        "license text."
+    )
+
+
 def test_main_package_uses_vcs_source() -> None:
     """Main package should use vcs as the version source."""
     cfg = _read_pyproject(Path("pyproject.toml"))
