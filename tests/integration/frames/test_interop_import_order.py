@@ -12,6 +12,8 @@ These tests must run in a *subprocess*: the session `conftest.py` preloads
 observe the astro-first ordering that this guards.
 """
 
+import importlib.util
+import os
 import subprocess
 import sys
 
@@ -19,8 +21,26 @@ import pytest
 
 import coordinax as cx
 
-pytest.importorskip("coordinaxs.astro")
-pytest.importorskip("coordinaxs.interop.astropy")
+# This is the single most important behavioural test in the packaging overhaul,
+# and a module-level `importorskip` would let a CI job that is *supposed* to
+# verify order-independence report green with zero signal if the extra ever
+# stopped being installed. So the sanctioned test session (the nox `test`
+# session, which installs `--extra workspace`) sets
+# ``COORDINAX_REQUIRE_INTEROP_TESTS=1``: when set, a missing extra is a hard
+# error rather than a silent skip. Ad-hoc minimal-install runs (without the var)
+# still skip gracefully.
+_REQUIRE_INTEROP = os.environ.get("COORDINAX_REQUIRE_INTEROP_TESTS") == "1"
+
+for _pkg in ("coordinaxs.astro", "coordinaxs.interop.astropy"):
+    if importlib.util.find_spec(_pkg) is None:
+        if _REQUIRE_INTEROP:
+            msg = (
+                f"{_pkg} is not installed, but COORDINAX_REQUIRE_INTEROP_TESTS=1 "
+                "requires the interop order-independence tests to run. Install "
+                "the `workspace` extra."
+            )
+            raise RuntimeError(msg)
+        pytest.skip(f"{_pkg} not installed", allow_module_level=True)
 
 # Each case imports a different module *first*, then asserts that an
 # astropy->coordinax conversion registered by the interop package works.
