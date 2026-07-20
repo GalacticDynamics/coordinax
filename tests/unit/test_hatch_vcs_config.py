@@ -3,9 +3,41 @@
 import tomllib
 from pathlib import Path
 
+import pytest
+
+#: Every distribution in the workspace (root + the five sub-packages).
+_ALL_PYPROJECTS = [
+    Path("pyproject.toml"),
+    *sorted(Path("packages").glob("coordinaxs.*/pyproject.toml")),
+]
+
 
 def _read_pyproject(path: Path) -> dict:
     return tomllib.loads(path.read_text())
+
+
+@pytest.mark.parametrize("path", _ALL_PYPROJECTS, ids=lambda p: str(p.parent.name))
+def test_license_metadata_is_pep639_consistent(path: Path) -> None:
+    """No distribution mixes an SPDX ``license`` with a ``License ::`` classifier.
+
+    PEP 639 makes the two mutually exclusive: a project that declares
+    ``license = "MIT"`` (an SPDX expression, Metadata-Version 2.4
+    ``License-Expression``) must not also carry a ``License :: ...`` trove
+    classifier. Warehouse/PyPI rejects such an upload with HTTP 400, and
+    ``twine check`` does not catch it — so this is guarded here instead.
+    """
+    project = _read_pyproject(path)["project"]
+    has_spdx = isinstance(project.get("license"), str)
+    license_classifiers = [
+        c for c in project.get("classifiers", []) if c.startswith("License ::")
+    ]
+
+    if has_spdx:
+        assert not license_classifiers, (
+            f"{path} declares SPDX `license = {project['license']!r}` and also "
+            f"carries {license_classifiers}; PEP 639 forbids both (PyPI rejects "
+            "the upload). Drop the `License ::` classifier."
+        )
 
 
 def test_main_package_uses_vcs_source() -> None:
