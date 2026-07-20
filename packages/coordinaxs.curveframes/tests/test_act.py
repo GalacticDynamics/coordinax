@@ -2,13 +2,13 @@
 
 import pytest
 
+import coordinax.charts as cxc
+import coordinax.representations as cxr
+import coordinax.transforms as cxfm
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax.charts as cxc
 import coordinaxs.curveframes as cxfc
-import coordinax.representations as cxr
-import coordinax.transforms as cxfm
 
 
 class TestTangentAnchorThreading:

@@ -88,6 +88,12 @@ __all__ = (  # distances
     "ToUnitsOptions",
 )
 
+import sys
+import warnings
+from importlib.metadata import entry_points
+
+from typing import Any, Final
+
 from coordinax.angles import Angle
 from coordinax.charts import (
     CartesianProductChart,
@@ -171,22 +177,100 @@ from coordinax.transforms import (
 )
 from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 
-# Import interop modules to register conversions and chart transitions.
+# ============================================================================
+# Optional interop registration
 #
-# This bootstrap participates in an import cycle: `coordinaxs.interop.astropy`
-# references `coordinaxs.astro` types (e.g. `Parallax`), while `coordinaxs.astro`
-# imports `coordinax.frames` — which, now that `coordinax` is a regular package,
-# runs this module. When `coordinaxs.astro` is imported *before* `coordinax`,
-# that chain re-enters here while `coordinaxs.astro` is only partially
-# initialized, so the interop registration can't resolve astro's types yet.
-# Skip the bootstrap in that case; a subsequent top-level `import coordinax`
-# (with astro fully initialized) registers the conversions. Importing
-# `coordinax` first — the documented entry point — always loads interop.
-try:
-    import coordinaxs.interop.astropy as _  # noqa: F401
-except ImportError:
-    pass  # optional interop package is not installed
-except AttributeError as exc:
-    # Re-entrant astro→coordinax→interop→astro cycle (astro still initializing).
-    if "partially initialized" not in str(exc):
-        raise
+# Interop distributions register their `plum` conversions and chart transitions
+# as an import side effect. They are discovered through the ``coordinaxs.interop``
+# entry-point group rather than imported by name, so core never depends on its
+# own optional extras: an interop package that is not installed contributes no
+# entry point and is simply absent from the group.
+#
+# Loading is retryable because interop participates in an import cycle. An
+# interop package references types from a sibling package (e.g.
+# `coordinaxs.interop.astropy` uses `coordinaxs.astro.Parallax`), and that
+# sibling imports `coordinax.frames`, which — now that `coordinax` is a regular
+# package — runs this module. So when the sibling is imported *first*, this
+# loader runs while the sibling is only partially initialized and its types are
+# not yet resolvable. Rather than pre-guessing that state, the loader attempts
+# the import and classifies the failure: if any `coordinaxs.*` module is still
+# executing its body, the entry point is left pending for a later call;
+# otherwise the failure is real and propagates. Packages that participate in
+# such a cycle re-invoke this once their own symbols exist (see
+# `coordinaxs.astro.__init__`), which is what completes the registration.
+
+_INTEROP_ENTRYPOINT_GROUP: Final = "coordinaxs.interop"
+#: Pre-rename group name, still honoured so third-party interop
+#: distributions published against it are not silently dropped.
+_LEGACY_INTEROP_ENTRYPOINT_GROUP: Final = "coordinax.interop"
+_OPTIONAL_INTEROP_STATE: dict[str, Any] = {"loading": False, "loaded": set()}
+
+
+def _coordinaxs_is_initializing() -> bool:
+    """Whether any ``coordinaxs`` module is still executing its module body."""
+    for name in list(sys.modules):
+        if name != "coordinaxs" and not name.startswith("coordinaxs."):
+            continue
+        spec = getattr(sys.modules.get(name), "__spec__", None)
+        if getattr(spec, "_initializing", False):
+            return True
+    return False
+
+
+def _load_optional_interop() -> None:
+    """Import interop packages registered in the ``coordinaxs.interop`` group.
+
+    Idempotent and retryable: each entry point is loaded at most once, and any
+    that cannot be loaded yet (because a package it references is mid-import)
+    is left pending for a later call.
+
+    Known limitation: a genuinely broken interop package whose import fails
+    *while* some ``coordinaxs`` module is still initializing is indistinguishable
+    from the expected cycle, so it is left pending rather than raised. In
+    practice that means a broken interop is reported when `coordinax` is
+    imported first (the common case, and the documented entry point) but is
+    silently skipped when the interop's sibling package is imported first.
+    """
+    state = _OPTIONAL_INTEROP_STATE
+    if state["loading"]:  # guard against re-entrant loading
+        return
+
+    state["loading"] = True
+    try:
+        current = list(entry_points(group=_INTEROP_ENTRYPOINT_GROUP))
+        seen = {ep.name for ep in current}
+        legacy = [
+            ep
+            for ep in entry_points(group=_LEGACY_INTEROP_ENTRYPOINT_GROUP)
+            if ep.name not in seen
+        ]
+        if legacy:
+            names = ", ".join(sorted(ep.name for ep in legacy))
+            warnings.warn(
+                f"Entry point(s) {names} register interop under the legacy "
+                f"'{_LEGACY_INTEROP_ENTRYPOINT_GROUP}' group. That group is "
+                f"deprecated; publish under '{_INTEROP_ENTRYPOINT_GROUP}' "
+                "instead. Support for the legacy group will be removed in a "
+                "future release.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+        eps = sorted(current + legacy, key=lambda e: e.name)
+        for ep in eps:
+            if ep.name in state["loaded"]:
+                continue
+            try:
+                ep.load()  # importing the module performs the registration
+            except Exception:
+                # Only the known import cycle is tolerated; leave this entry
+                # point pending so a later call retries it. Anything else is a
+                # genuine failure in an installed interop package.
+                if not _coordinaxs_is_initializing():
+                    raise
+            else:
+                state["loaded"].add(ep.name)
+    finally:
+        state["loading"] = False
+
+
+_load_optional_interop()

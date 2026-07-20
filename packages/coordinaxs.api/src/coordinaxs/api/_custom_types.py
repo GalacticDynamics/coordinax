@@ -1,6 +1,6 @@
 __all__ = ("CKey", "CDict")
 
-from typing import Any, TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 # Component key type: string for all charts (including dot-delimited product keys)
 CKey: TypeAlias = str

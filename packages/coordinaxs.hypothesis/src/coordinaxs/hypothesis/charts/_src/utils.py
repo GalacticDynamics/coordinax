@@ -5,6 +5,7 @@ __all__ = ("can_pt_map", "get_init_params")
 
 import functools as ft
 import inspect
+
 from collections.abc import Mapping
 from typing import Any, Final, TypeVar
 

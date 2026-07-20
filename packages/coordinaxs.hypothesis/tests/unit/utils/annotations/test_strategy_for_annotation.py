@@ -1,7 +1,8 @@
 """Tests for strategy_for_annotation utility function."""
 
-import jax.numpy as jnp
 import jaxtyping
+
+import jax.numpy as jnp
 import unxt as u
 from hypothesis import given, strategies as st
 

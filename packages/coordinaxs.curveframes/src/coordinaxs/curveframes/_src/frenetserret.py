@@ -22,7 +22,7 @@ from jaxtyping import Array
 from typing import Any, final
 
 import coordinax.charts as cxc
-import coordinax.transforms as cxt
+import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 
@@ -314,8 +314,8 @@ class FrenetSerretTransform(AbstractParallelTransportTransform):
             """
             return cxc.cdict(-curve(tau), cart)  # ty: ignore[invalid-return-type]
 
-        translate = cxt.Translate(neg_gamma_fn, chart=cart)
-        rotate = cxt.Rotate(rotation_matrix_array_fn)
+        translate = cxfm.Translate(neg_gamma_fn, chart=cart)
+        rotate = cxfm.Rotate(rotation_matrix_array_fn)
 
         return cls(  # ty: ignore[missing-argument]
             translate=translate,

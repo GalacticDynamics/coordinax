@@ -36,7 +36,7 @@ def _matching_chart_classes_for_ndim(
     """Return zero-arg chart classes with default instance ndim == target ndim."""
     classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
     for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
-        cls = cast(type[cxc.AbstractChart[Any, Any, Any]], cls)
+        cls = cast("type[cxc.AbstractChart[Any, Any, Any]]", cls)
         if not _is_zero_arg_constructible(cls):
             continue
         if cls().ndim == ndim:
@@ -62,7 +62,7 @@ def manifold_classes(
         exclude_abstract=draw_if_strategy(draw, exclude_abstract),
         exclude=exclude,
     )
-    return cast(type[Any], draw(st.sampled_from(classes)))
+    return cast("type[Any]", draw(st.sampled_from(classes)))
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +165,7 @@ def manifolds(
     ValueError
         If ``manifold_cls`` is provided and ``filter``/``exclude`` are non-empty,
         or if ``required_chart_classes`` is passed for a non-custom manifold.
+
     """
     raise NotImplementedError  # pragma: no cover
 
@@ -172,7 +173,7 @@ def manifolds(
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     manifold_cls: None = None,
     /,
@@ -194,22 +195,22 @@ def manifolds(  # noqa: F811
             exclude=exclude,
         )
         if target_ndim is None
-        or cast(Any, _manifold_class_supports_ndim)(cls, target_ndim)
+        or cast("Any", _manifold_class_supports_ndim)(cls, target_ndim)
     )
     if not classes:
         assume(False)
 
-    selected_cls = cast(type[cxm.AbstractManifold], draw(st.sampled_from(classes)))
+    selected_cls = cast("type[cxm.AbstractManifold]", draw(st.sampled_from(classes)))
     kwargs: dict[str, Any] = {"ndim": target_ndim}
     if issubclass(selected_cls, cxm.CustomManifold):
         kwargs["required_chart_classes"] = required_chart_classes
-    return draw(cast(Any, manifolds)(selected_cls, **kwargs))
+    return draw(cast("Any", manifolds)(selected_cls, **kwargs))
 
 
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     manifold_cls: st.SearchStrategy,
     /,
@@ -229,7 +230,7 @@ def manifolds(  # noqa: F811
 
     manifold_cls = draw(manifold_cls)
     return draw(
-        cast(Any, manifolds)(
+        cast("Any", manifolds)(
             manifold_cls, ndim=ndim, required_chart_classes=required_chart_classes
         )
     )
@@ -238,7 +239,7 @@ def manifolds(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     manifold_cls: type[cxm.AbstractManifold],
     /,
@@ -267,7 +268,7 @@ def manifolds(  # noqa: F811
         )
 
     return draw(
-        cast(Any, manifolds)(
+        cast("Any", manifolds)(
             filter=manifold_cls,
             exclude=(),
             ndim=ndim,
@@ -279,7 +280,7 @@ def manifolds(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     M_cls: type[cxm.EuclideanManifold],
     /,
@@ -311,7 +312,7 @@ def manifolds(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     M_cls: type[cxm.HyperSphericalManifold],
     /,
@@ -342,7 +343,7 @@ def manifolds(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     M_cls: type[cxm.EmbeddedManifold],
     /,
@@ -386,7 +387,7 @@ def manifolds(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     manifold_cls: type[cxm.CustomManifold],
     /,
@@ -415,7 +416,7 @@ def manifolds(  # noqa: F811
     """
     target_ndim = draw_if_strategy(draw, ndim)
     atlas = draw(
-        cast(Any, atlas_strategies.atlases)(
+        cast("Any", atlas_strategies.atlases)(
             cxm.CustomAtlas,
             ndim=target_ndim,
             required_chart_classes=required_chart_classes,
@@ -428,7 +429,7 @@ def manifolds(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def manifolds(  # noqa: F811
+def manifolds(
     draw: st.DrawFn,
     manifold_cls: type[cxm.CartesianProductManifold],
     /,
@@ -486,7 +487,7 @@ def manifolds(  # noqa: F811
     dims = [boundaries[i + 1] - boundaries[i] for i in range(n_factors)]
 
     factors = tuple(
-        draw(cast(Any, manifolds)(exclude=(cxm.CartesianProductManifold,), ndim=d))
+        draw(cast("Any", manifolds)(exclude=(cxm.CartesianProductManifold,), ndim=d))
         for d in dims
     )
     factor_names = tuple(f"f{i}" for i in range(n_factors))

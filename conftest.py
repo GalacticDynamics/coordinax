@@ -123,8 +123,13 @@ def _resolve_package_path_with_namespace(path: pathlib.Path) -> pathlib.Path | N
     """
     resolved = path.resolve()
     for root, namespace_dir in RESOLVED_PACKAGE_ROOTS:
-        if resolved.is_relative_to(root / namespace_dir):
-            return root
+        namespace_root = root / namespace_dir
+        if resolved.is_relative_to(namespace_root):
+            # Match the wrapped function's contract: return the top-level
+            # package directory, not its parent. Callers derive the import root
+            # as ``resolve_package_path(path).parent``, so returning ``root``
+            # here would yield module names like ``src.coordinax.charts``.
+            return namespace_root
     return _ORIG_RESOLVE_PACKAGE_PATH(path)
 
 
@@ -201,12 +206,15 @@ def _preload_coordinax_namespace() -> None:
     installed; otherwise the same logical modules may be loaded under multiple
     non-canonical names.
     """
+    # `coordinax` is a hard requirement of the suite, so a failure to import it
+    # is a real error rather than an absent optional package and must not be
+    # suppressed — swallowing it here would surface much later as confusing
+    # collection failures. (Import order is not otherwise load-bearing: interop
+    # registration is order-independent, see `coordinax._load_optional_interop`.)
+    importlib.import_module("coordinax")
+
+    # Optional/auxiliary modules: absent in minimal installs.
     module_names = (
-        # `coordinax` must load first: as a regular package its __init__
-        # bootstraps `coordinaxs.interop.astropy`, which needs a fully
-        # initialized `coordinaxs.astro`. Importing astro before coordinax
-        # would re-enter that bootstrap mid-astro-init and skip interop.
-        "coordinax",
         "coordinaxs.api",
         "coordinaxs.api.charts",
         "coordinaxs.api.frames",

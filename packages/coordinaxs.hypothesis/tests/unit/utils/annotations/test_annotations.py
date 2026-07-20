@@ -1,10 +1,10 @@
 """Tests for the ``coordinaxs.hypothesis.utils.annotations`` public API."""
 
+import jaxtyping
 from typing import Annotated
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
-import jaxtyping
 import pytest
 import unxt as u
 from beartype.vale import Is
@@ -161,12 +161,12 @@ class TestWrapIfNotInspectable:
         assert result.ann is ann
 
     def test_annotated_quantity_wrapped(self):
-        ann = Annotated[u.Q["length"], Is[lambda x: x.value > 0]]  # noqa: F821
+        ann = Annotated[u.Q["length"], Is[lambda x: x.value > 0]]
         result = annotations.wrap_if_not_inspectable(ann)
         assert isinstance(result, annotations.AnnotatedNotIntrospectable)
 
     def test_jaxtyping_quantity_wrapped(self):
-        ann = jaxtyping.Shaped[u.Q["length"], ""]  # noqa: F821
+        ann = jaxtyping.Shaped[u.Q["length"], ""]
         result = annotations.wrap_if_not_inspectable(ann)
         assert isinstance(result, annotations.JaxtypingNotIntrospectable)
 
@@ -235,7 +235,7 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_annotated_dispatch(self, data: st.DataObject):
         """Annotated[Quantity, ...] is unwrapped and re-dispatched."""
-        ann = Annotated[u.Q["length"], {"dtype": jnp.float64, "shape": ()}]  # noqa: F821
+        ann = Annotated[u.Q["length"], {"dtype": jnp.float64, "shape": ()}]
         wrapped = annotations.wrap_if_not_inspectable(ann)
         strategy = annotations.strategy_for_annotation(
             wrapped, meta=annotations.Metadata()
@@ -306,7 +306,7 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_meta_override_in_annotated(self, data: st.DataObject):
         """Metadata embedded in Annotated overrides the default."""
-        ann = Annotated[u.Q["length"], {"dtype": jnp.float32, "shape": (5,)}]  # noqa: F821
+        ann = Annotated[u.Q["length"], {"dtype": jnp.float32, "shape": (5,)}]
         wrapped = annotations.wrap_if_not_inspectable(ann)
         strategy = annotations.strategy_for_annotation(
             wrapped, meta=annotations.Metadata()

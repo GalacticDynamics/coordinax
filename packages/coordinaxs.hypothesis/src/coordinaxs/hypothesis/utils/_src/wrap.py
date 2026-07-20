@@ -3,6 +3,7 @@
 __all__ = ("strip_return_annotation",)
 
 import inspect
+
 from typing import Any, Final, TypeVar
 
 T = TypeVar("T")

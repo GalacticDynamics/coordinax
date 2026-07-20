@@ -3,6 +3,7 @@
 __all__ = ("AnnotatedNotIntrospectable",)
 
 import dataclasses
+
 from typing import TypeVar, final
 
 import beartype

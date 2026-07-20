@@ -11,6 +11,7 @@ Rotate(f64[3,3](jax))
 
 """
 
+import warnings
 from importlib.metadata import entry_points
 
 from collections.abc import Mapping
@@ -89,6 +90,9 @@ with install_import_hook("coordinax.transforms"):
 # ``coordinaxs.transforms`` entry-point group. No in-tree distribution
 # currently registers here; the consumer is kept live for downstream packages.
 _TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinaxs.transforms"
+#: Pre-rename group name, still honoured (with a deprecation warning) so
+#: third-party registrants published against it are not silently dropped.
+_LEGACY_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinax.transforms"
 _OPTIONAL_TRANSFORM_EXPORTS_STATE: dict[str, bool] = {"loading": False}
 
 
@@ -105,10 +109,25 @@ def _load_optional_transform_exports() -> None:
     export_owners: dict[str, str] = {}
 
     try:
-        eps = sorted(
-            entry_points(group=_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP),
-            key=lambda ep: ep.name,
-        )
+        current = list(entry_points(group=_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP))
+        seen = {ep.name for ep in current}
+        legacy = [
+            ep
+            for ep in entry_points(group=_LEGACY_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP)
+            if ep.name not in seen
+        ]
+        if legacy:
+            names = ", ".join(sorted(ep.name for ep in legacy))
+            warnings.warn(
+                f"Entry point(s) {names} register transform symbols under the "
+                f"legacy '{_LEGACY_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP}' group. "
+                f"That group is deprecated; publish under "
+                f"'{_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP}' instead. Support for "
+                "the legacy group will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+        eps = sorted(current + legacy, key=lambda ep: ep.name)
         for ep in eps:
             provider = ep.load()
             if not callable(provider):

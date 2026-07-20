@@ -20,7 +20,7 @@ def test_atlas_classes_returns_concrete_atlas_subclasses(
 
 @given(atlas=cxst.atlases())
 def test_atlases_generates_valid_atlas_instances(atlas: cxm.AbstractAtlas) -> None:
-    """atlases generates valid atlas instances."""
+    """Atlases generates valid atlas instances."""
     assert isinstance(atlas, cxm.AbstractAtlas)
     assert isinstance(atlas.default_chart(), cxc.AbstractChart)
     assert atlas.default_chart() in atlas
@@ -37,7 +37,7 @@ def test_manifold_classes_returns_concrete_manifold_subclasses(
 
 @given(M=cxst.manifolds())
 def test_manifolds_generates_valid_manifold_instances(M: cxm.AbstractManifold) -> None:
-    """manifolds generates valid manifold instances."""
+    """Manifolds generates valid manifold instances."""
     assert isinstance(M, cxm.AbstractManifold)
     assert isinstance(M.atlas, cxm.AbstractAtlas)
     assert M.atlas.ndim == M.ndim

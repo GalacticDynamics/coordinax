@@ -26,7 +26,7 @@ import jax.numpy as jnp
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
-import coordinax.transforms as cxt
+import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 
@@ -68,13 +68,14 @@ class AbstractParallelTransportFrame(cxf.AbstractTransformedReferenceFrame[Frame
     --------
     Concrete subclasses are used directly; see `FrenetSerretFrame` and
     `BishopFrame` for usage examples.
+
     """
 
 
 # ============================================================================
 
 
-class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
+class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
     r"""ABC for curve-attached rigid-body transforms (Translate | Rotate).
 
     At each parameter value $\tau$, the transform maps an ambient point
@@ -126,10 +127,11 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
     --------
     Concrete subclasses are used directly; see `FrenetSerretTransform` and
     `BishopTransform` for usage examples.
+
     """
 
-    translate: cxt.Translate
-    rotate: cxt.Rotate
+    translate: cxfm.Translate
+    rotate: cxfm.Rotate
 
     curve: Callable[[Any], Any]
     """The original constructing curve."""
@@ -156,7 +158,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
 
     @override
     @property
-    def transforms(self) -> tuple[cxt.Translate, cxt.Rotate]:
+    def transforms(self) -> tuple[cxfm.Translate, cxfm.Rotate]:
         """Return the ordered pipeline of sub-transforms.
 
         The composite transform is always ``Translate(-gamma) | Rotate(R)``.
@@ -167,6 +169,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
         -------
         tuple[Translate, Rotate]
             Two-element tuple ``(translate, rotate)``.
+
         """
         return (self.translate, self.rotate)
 
@@ -267,6 +270,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
         -------
         Array, shape ``(3, 3)``
             Orthogonal rotation matrix.
+
         """
         R = self.rotate.R
         return R(tau) if callable(R) else R  # ty: ignore[call-top-callable]
@@ -383,7 +387,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
     # ---------------------------------------------------------------
     # Inverse-building helpers (shared logic)
 
-    def _make_inverse_rotate(self) -> cxt.Rotate:
+    def _make_inverse_rotate(self) -> cxfm.Rotate:
         r"""Build the inverse rotation: $R^{\mathsf{T}}$.
 
         Since $R \in SO(3)$, its inverse is simply its transpose.  The returned
@@ -392,14 +396,14 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
 
         """
         R_fn = self.rotate.R
-        inv_R = (  # noqa: E731
+        inv_R = (
             lambda tau: jnp.swapaxes(R_fn(tau), -2, -1)  # ty: ignore[call-top-callable]
             if callable(R_fn)
             else jnp.swapaxes(R_fn, -2, -1)
         )
-        return cxt.Rotate(inv_R)
+        return cxfm.Rotate(inv_R)
 
-    def _make_inverse_translate(self) -> cxt.Translate:
+    def _make_inverse_translate(self) -> cxfm.Translate:
         r"""Build the inverse translation: $-R(\tau) \boldsymbol{\gamma}(\tau)$.
 
         For the inverse transform the translation step shifts by
@@ -421,4 +425,4 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
             R_gamma = qnp.einsum("ij,...j->...i", R, gamma)
             return cxc.cdict(R_gamma, cart)
 
-        return cxt.Translate(inv_delta, chart=cart)
+        return cxfm.Translate(inv_delta, chart=cart)

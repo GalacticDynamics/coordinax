@@ -7,7 +7,7 @@ from hypothesis import given
 import coordinax.representations as cxr
 
 import coordinaxs.hypothesis.main as cxst
-import coordinaxs.hypothesis.representations as cxsr
+import coordinaxs.hypothesis.representations as cxrst
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 # ============================================================================
@@ -18,21 +18,21 @@ from coordinaxs.hypothesis.utils import get_all_subclasses
 class TestBasisClasses:
     """Tests for the basis_classes strategy."""
 
-    @given(basis_cls=cxsr.basis_classes())
+    @given(basis_cls=cxrst.basis_classes())
     def test_returns_subclass_of_abstract_basis(
         self, basis_cls: type[cxr.AbstractBasis]
     ) -> None:
         """Generated class is always a subclass of AbstractBasis."""
         assert issubclass(basis_cls, cxr.AbstractBasis)
 
-    @given(basis_cls=cxsr.basis_classes())
+    @given(basis_cls=cxrst.basis_classes())
     def test_never_returns_abstract_base(
         self, basis_cls: type[cxr.AbstractBasis]
     ) -> None:
         """Generated class is never AbstractBasis itself."""
         assert basis_cls is not cxr.AbstractBasis
 
-    @given(basis_cls=cxsr.basis_classes())
+    @given(basis_cls=cxrst.basis_classes())
     def test_is_concrete_and_instantiable(
         self, basis_cls: type[cxr.AbstractBasis]
     ) -> None:
@@ -40,11 +40,11 @@ class TestBasisClasses:
         instance = basis_cls()
         assert isinstance(instance, cxr.AbstractBasis)
 
-    @given(basis_cls=cxsr.basis_classes(include=(cxr.NoBasis,)))
+    @given(basis_cls=cxrst.basis_classes(include=(cxr.NoBasis,)))
     def test_include_restricts_to_provided_classes(
         self, basis_cls: type[cxr.AbstractBasis]
     ) -> None:
-        """include parameter restricts generation to provided classes."""
+        """Include parameter restricts generation to provided classes."""
         assert basis_cls is cxr.NoBasis
 
     @given(data=st.data())
@@ -52,11 +52,11 @@ class TestBasisClasses:
         """Excluding all candidates raises ValueError."""
         all_bases = get_all_subclasses(cxr.AbstractBasis, exclude_abstract=True)
         with pytest.raises(ValueError, match="No basis classes left after exclusions"):
-            data.draw(cxsr.basis_classes(exclude=tuple(all_bases)))
+            data.draw(cxrst.basis_classes(exclude=tuple(all_bases)))
 
     def test_also_accessible_via_main(self) -> None:
         """basis_classes is re-exported from coordinaxs.hypothesis.main."""
-        assert cxst.basis_classes is cxsr.basis_classes
+        assert cxst.basis_classes is cxrst.basis_classes
 
 
 # ============================================================================
@@ -67,17 +67,17 @@ class TestBasisClasses:
 class TestBases:
     """Tests for the bases strategy."""
 
-    @given(basis=cxsr.bases())
+    @given(basis=cxrst.bases())
     def test_returns_abstract_basis_instance(self, basis: cxr.AbstractBasis) -> None:
         """Generated value is an AbstractBasis instance."""
         assert isinstance(basis, cxr.AbstractBasis)
 
-    @given(basis=cxsr.bases(include=(cxr.NoBasis,)))
+    @given(basis=cxrst.bases(include=(cxr.NoBasis,)))
     def test_include_restricts_to_no_basis(self, basis: cxr.AbstractBasis) -> None:
-        """include parameter restricts instances to the provided classes."""
+        """Include parameter restricts instances to the provided classes."""
         assert isinstance(basis, cxr.NoBasis)
 
-    @given(basis=cxsr.bases())
+    @given(basis=cxrst.bases())
     def test_never_returns_abstract_class_instance(
         self, basis: cxr.AbstractBasis
     ) -> None:
@@ -85,5 +85,5 @@ class TestBases:
         assert type(basis) is not cxr.AbstractBasis
 
     def test_also_accessible_via_main(self) -> None:
-        """bases is re-exported from coordinaxs.hypothesis.main."""
-        assert cxst.bases is cxsr.bases
+        """Bases is re-exported from coordinaxs.hypothesis.main."""
+        assert cxst.bases is cxrst.bases

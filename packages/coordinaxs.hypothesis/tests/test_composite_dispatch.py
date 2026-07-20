@@ -1,5 +1,4 @@
-"""
-Integration tests: ``hypothesis.strategies.composite`` + ``plum`` multiple dispatch
+"""Integration tests: ``hypothesis.strategies.composite`` + ``plum`` multiple dispatch
 ====================================================================================
 
 How it works
@@ -50,6 +49,7 @@ pattern (Section 6) for heterogeneous lists.
 
 import sys
 from numbers import Number, Real
+
 from typing import Any
 
 import pytest
@@ -70,7 +70,7 @@ def bounded_value(draw, x: int):
 
 @dispatch
 @st.composite
-def bounded_value(draw, x: float):  # noqa: F811
+def bounded_value(draw, x: float):
     """Strategy: draw a float in [x, x+1]."""
     return draw(st.floats(min_value=x, max_value=x + 1, allow_nan=False))
 
@@ -131,7 +131,7 @@ def interval_value(draw, lo: int, hi: int):
 
 @dispatch
 @st.composite
-def interval_value(draw, lo: float, hi: float):  # noqa: F811
+def interval_value(draw, lo: float, hi: float):
     """Strategy: draw a float from [lo, hi]."""
     assert lo <= hi
     return draw(st.floats(min_value=lo, max_value=hi, allow_nan=False))
@@ -163,7 +163,7 @@ def typed_number(draw, x: Number):
 
 @dispatch
 @st.composite
-def typed_number(draw, x: Real):  # noqa: F811
+def typed_number(draw, x: Real):
     """Specialisation for real numbers: float near x."""
     return draw(
         st.floats(min_value=float(x) - 1, max_value=float(x) + 1, allow_nan=False)
@@ -172,7 +172,7 @@ def typed_number(draw, x: Real):  # noqa: F811
 
 @dispatch
 @st.composite
-def typed_number(draw, x: int):  # noqa: F811
+def typed_number(draw, x: int):
     """Most-specific: integers → bounded integer range."""
     return draw(st.integers(min_value=x, max_value=x + 5))
 
@@ -186,7 +186,7 @@ def test_most_specific_int_method_wins(v):
 
 @given(typed_number(3.14))
 def test_real_overload_for_float(v):
-    """float is a Real but not an int → Real overload is selected."""
+    """Float is a Real but not an int → Real overload is selected."""
     assert isinstance(v, float)
     x = 3.14
     assert float(x) - 1 <= v <= float(x) + 1
@@ -208,7 +208,7 @@ def sorted_pair(draw, n: int):
 
 @dispatch
 @st.composite
-def sorted_pair(draw, x: float):  # noqa: F811
+def sorted_pair(draw, x: float):
     """Draw (a, b) with 0 ≤ a ≤ b ≤ x (floats)."""
     a = draw(st.floats(min_value=0, max_value=x, allow_nan=False))
     b = draw(st.floats(min_value=a, max_value=x, allow_nan=False))
@@ -247,7 +247,7 @@ def multi_bounded(draw, *xs: int):
 
 @dispatch
 @st.composite
-def multi_bounded(draw, *xs: float):  # noqa: F811
+def multi_bounded(draw, *xs: float):
     """Draw one float in [x, x+1] for each seed value x."""
     return [draw(st.floats(min_value=x, max_value=x + 1, allow_nan=False)) for x in xs]
 

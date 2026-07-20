@@ -49,10 +49,11 @@ Array(True, dtype=bool)
 
 """
 
+import warnings
 from importlib.metadata import entry_points
 
 from collections.abc import Mapping
-from typing import Final
+from typing import Any, Final
 
 from ._setup_package import install_import_hook
 
@@ -95,7 +96,42 @@ with install_import_hook("coordinax.frames"):
 
 
 _FRAME_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinaxs.frames"
+#: Pre-rename group name. The group is a cross-distribution contract, so
+#: third-party registrants published against the old name are still honoured
+#: (with a deprecation warning) rather than silently dropped.
+_LEGACY_FRAME_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinax.frames"
 _OPTIONAL_FRAME_EXPORTS_STATE: dict[str, bool] = {"loading": False}
+
+
+def _frame_export_entrypoints() -> list[Any]:
+    """Entry points registering frame exports, newest group name first.
+
+    Reads the current ``coordinaxs.frames`` group and the legacy
+    ``coordinax.frames`` group. A distribution found only under the legacy name
+    gets a `DeprecationWarning`; one found under both is taken from the current
+    group only (no duplicate load).
+    """
+    current = list(entry_points(group=_FRAME_EXPORTS_ENTRYPOINT_GROUP))
+    seen = {ep.name for ep in current}
+
+    legacy = [
+        ep
+        for ep in entry_points(group=_LEGACY_FRAME_EXPORTS_ENTRYPOINT_GROUP)
+        if ep.name not in seen
+    ]
+    if legacy:
+        names = ", ".join(sorted(ep.name for ep in legacy))
+        warnings.warn(
+            f"Entry point(s) {names} register frame exports under the legacy "
+            f"'{_LEGACY_FRAME_EXPORTS_ENTRYPOINT_GROUP}' group. That group is "
+            f"deprecated; publish under '{_FRAME_EXPORTS_ENTRYPOINT_GROUP}' "
+            "instead. Support for the legacy group will be removed in a future "
+            "release.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+
+    return sorted(current + legacy, key=lambda ep: ep.name)
 
 
 def _load_optional_frame_exports() -> None:
@@ -109,9 +145,7 @@ def _load_optional_frame_exports() -> None:
     export_owners: dict[str, str] = {}
 
     try:
-        entrypoints = sorted(
-            entry_points(group=_FRAME_EXPORTS_ENTRYPOINT_GROUP), key=lambda ep: ep.name
-        )
+        entrypoints = _frame_export_entrypoints()
         for ep in entrypoints:
             provider = ep.load()
             if not callable(provider):

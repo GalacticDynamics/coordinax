@@ -101,7 +101,7 @@ Both are equally powerful; OOP wraps functional. Choose based on readability.
 
 Source code (`/src/coordinax/`) uses this structure:
 
-- **`main`**: User-facing re-exports of primary functionality. Most users start here.
+- **`__init__`**: User-facing re-exports of primary functionality (`import coordinax as cx`). Most users start here.
 - **Alphabetic submodules**: `angles`, `charts`, `distances`, `frames`, `manifolds`, `representations`, `vectors`. Organized by semantic concept.
 - **`_src/` subdirectories**: Implementation details. Less stable; avoid importing directly.
 - **Internal modules**: `internal` folder for utilities not intended for public use.

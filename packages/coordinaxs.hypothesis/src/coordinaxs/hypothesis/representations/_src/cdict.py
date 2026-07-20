@@ -31,7 +31,7 @@ xps = make_strategies_namespace(jnp)
 )
 @strip_return_annotation
 @st.composite
-def cdicts(  # noqa: F811
+def cdicts(
     draw: st.DrawFn,
     chart: cxc.AbstractChart | st.SearchStrategy,
     rep: cxr.Representation | st.SearchStrategy,
@@ -58,13 +58,13 @@ def cdicts(  # noqa: F811
 
     # Redispatch to the representation-specific implementation based on the chart
     strategy = cdicts(chart, rep, dtype=dtype, shape=shape, elements=elements, **kwargs)  # ty: ignore[missing-argument]
-    return draw(cast(st.SearchStrategy[CDict], strategy))
+    return draw(cast("st.SearchStrategy[CDict]", strategy))
 
 
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def cdicts(  # noqa: F811
+def cdicts(
     draw: st.DrawFn,
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
@@ -73,25 +73,25 @@ def cdicts(  # noqa: F811
 ) -> CDict:
     """Generate a CDict for a chart and full ``Representation`` descriptor.
 
-    >>> import coordinaxs.hypothesis.representations as cxsr
+    >>> import coordinaxs.hypothesis.representations as cxrst
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> from hypothesis import given
 
-    >>> @given(p=cxsr.cdicts(cxc.sph3d, cxr.point))
+    >>> @given(p=cxrst.cdicts(cxc.sph3d, cxr.point))
     ... def test_cdict_with_concrete_representation(p):
     ...     assert set(p.keys()) == {"r", "theta", "phi"}
 
     """
     # Break apart the rep and redispatch
     strategy = cdicts(chart, rep.geom_kind, rep.basis, rep.semantic_kind, **kwargs)  # ty: ignore[too-many-positional-arguments]
-    return draw(cast(st.SearchStrategy[CDict], strategy))
+    return draw(cast("st.SearchStrategy[CDict]", strategy))
 
 
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def cdicts(  # noqa: F811
+def cdicts(
     draw: st.DrawFn,
     chart: cxc.AbstractChart,
     geom_kind: cxr.PointGeometry,
@@ -102,7 +102,7 @@ def cdicts(  # noqa: F811
 ) -> CDict:
     """Generate a point-geometry CDict with representation validity checks.
 
-    >>> import coordinaxs.hypothesis.representations as cxsr
+    >>> import coordinaxs.hypothesis.representations as cxrst
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> from hypothesis import given, strategies as st
@@ -114,7 +114,7 @@ def cdicts(  # noqa: F811
     >>> @given(data=st.data())
     ... def test_invalid_point_basis_raises(data):
     ...     with pytest.raises(TypeError, match="NoBasis"):
-    ...         data.draw(cxsr.cdicts(cxc.cart3d, cxr.PointGeometry(), FakeBasis(), cxr.Location()))
+    ...         data.draw(cxrst.cdicts(cxc.cart3d, cxr.PointGeometry(), FakeBasis(), cxr.Location()))
 
     """
     if not isinstance(basis, cxr.NoBasis):
@@ -123,13 +123,13 @@ def cdicts(  # noqa: F811
         raise TypeError("cdicts with PointGeometry must have Location semantic kind")
 
     strategy = cdicts(chart, **kwargs)  # ty: ignore[missing-argument]
-    return draw(cast(st.SearchStrategy[CDict], strategy))
+    return draw(cast("st.SearchStrategy[CDict]", strategy))
 
 
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def cdicts(  # noqa: F811
+def cdicts(
     draw: st.DrawFn,
     chart: cxc.AbstractChart,
     geom_kind: cxr.TangentGeometry,
@@ -144,12 +144,12 @@ def cdicts(  # noqa: F811
     chart-coordinate-dimensioned quantities. For hypothesis testing, this is
     sufficient since invariants are checked separately.
 
-    >>> import coordinaxs.hypothesis.representations as cxsr
+    >>> import coordinaxs.hypothesis.representations as cxrst
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> from hypothesis import given
 
-    >>> @given(p=cxsr.cdicts(cxc.cart3d, cxr.coord_disp))
+    >>> @given(p=cxrst.cdicts(cxc.cart3d, cxr.coord_disp))
     ... def test_cdict_tangent(p):
     ...     assert set(p.keys()) == {"x", "y", "z"}
 
@@ -165,4 +165,4 @@ def cdicts(  # noqa: F811
         )
 
     strategy = cdicts(chart, **kwargs)  # ty: ignore[missing-argument]
-    return draw(cast(st.SearchStrategy[CDict], strategy))
+    return draw(cast("st.SearchStrategy[CDict]", strategy))

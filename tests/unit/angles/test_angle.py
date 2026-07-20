@@ -150,6 +150,10 @@ class TestAngleWrapTo:
         ],
     )
     @given(data=st.data())
+    # JAX traces/compiles `wrap_to` on the first call, which can exceed the
+    # default per-example deadline when this test happens to run first under
+    # random ordering (cf. `test_wrap_idempotent` below).
+    @settings(deadline=None)
     def test_wrap_to_range(
         self, unit_str: str, lo: u.Q, hi: u.Q, data: st.DataObject
     ) -> None:

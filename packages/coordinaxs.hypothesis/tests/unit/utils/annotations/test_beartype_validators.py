@@ -1,5 +1,6 @@
 """Test Beartype validator support in hypothesis strategies."""
 
+from jaxtyping import Array, Float
 from typing import Annotated
 
 import hypothesis.strategies as st
@@ -7,7 +8,6 @@ import jax.numpy as jnp
 import unxt as u
 from beartype.vale import Is
 from hypothesis import given
-from jaxtyping import Array, Float
 
 from coordinaxs.hypothesis.utils import annotations
 
@@ -16,7 +16,7 @@ from coordinaxs.hypothesis.utils import annotations
 def test_beartype_validator_extraction_quantity(data):
     """Test that Beartype validators are extracted from Annotated quantities."""
     # Define an annotated type with a Beartype validator
-    PositiveLength = Annotated[u.Q["length"], Is[lambda x: x.value > 0]]  # noqa: F821
+    PositiveLength = Annotated[u.Q["length"], Is[lambda x: x.value > 0]]
 
     # Build a strategy for this type
     strategy = annotations.strategy_for_annotation(
@@ -33,7 +33,7 @@ def test_beartype_validator_extraction_quantity(data):
 def test_beartype_validator_extraction_array(data):
     """Test that Beartype validators are extracted from Annotated arrays."""
     # Define an annotated type with a Beartype validator
-    PositiveArray = Annotated[Float[Array, " "], Is[lambda x: (x > 0).all()]]  # noqa: F722
+    PositiveArray = Annotated[Float[Array, " "], Is[lambda x: (x > 0).all()]]
 
     # Build a strategy for this type
     strategy = annotations.strategy_for_annotation(
@@ -51,7 +51,7 @@ def test_multiple_validators(data):
     """Test that multiple Beartype validators can be combined."""
     # Define an annotated type with multiple validators
     BoundedLength = Annotated[
-        u.Q["length"],  # noqa: F821
+        u.Q["length"],
         Is[lambda x: x.value > 0],
         Is[lambda x: x.value < 100],
     ]
@@ -70,7 +70,7 @@ def test_multiple_validators(data):
 @given(st.data())
 def test_beartype_validator_with_hypothesis(data):
     """Test that Beartype validators work with Hypothesis' @given decorator."""
-    PositiveLength = Annotated[u.Q["length"], Is[lambda x: x.value > 0]]  # noqa: F821
+    PositiveLength = Annotated[u.Q["length"], Is[lambda x: x.value > 0]]
 
     strategy = annotations.strategy_for_annotation(
         annotations.wrap_if_not_inspectable(PositiveLength),

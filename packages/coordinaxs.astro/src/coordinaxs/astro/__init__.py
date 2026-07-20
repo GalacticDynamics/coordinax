@@ -26,9 +26,24 @@ with install_import_hook("coordinaxs.astro"):
     )
 
 
-# Populate optional exports into `coordinax.frames` once astro symbols exist.
+# Now that astro's symbols exist, (a) populate optional exports into
+# `coordinax.frames`, and (b) complete any interop registration that was
+# deferred while this package was initializing: when `coordinaxs.astro` is
+# imported before `coordinax`, core's interop loader runs mid-import here and
+# leaves the astropy entry point pending because astro's types are not yet
+# resolvable, so retrying now registers the conversions.
+#
+# `coordinax` may itself still be initializing (it pulls astro in through the
+# `coordinaxs.frames` entry point while executing `coordinax.frames`), in which
+# case the interop loader is not defined yet — core runs it at the end of its
+# own import, so there is nothing to retry here.
+import coordinax as cx
 import coordinax.frames as cxf
 
 cxf._load_optional_frame_exports()
 
-del cxf, install_import_hook
+_load_interop = getattr(cx, "_load_optional_interop", None)
+if _load_interop is not None:
+    _load_interop()
+
+del cxf, cx, _load_interop, install_import_hook

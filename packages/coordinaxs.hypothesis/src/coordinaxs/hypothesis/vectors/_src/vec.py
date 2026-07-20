@@ -75,7 +75,7 @@ st.register_type_strategy(cxv.Point, lambda _: vectors())  # ty: ignore[missing-
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def vectors(  # noqa: F811
+def vectors(
     draw: st.DrawFn,
     chart: st.SearchStrategy = cxcst.charts(exclude=(cxc.Time1D, cxm.EmbeddedChart)),  # ty: ignore[missing-argument],
     /,
@@ -113,7 +113,7 @@ def vectors(  # noqa: F811
 )
 @strip_return_annotation
 @st.composite
-def vectors(  # noqa: F811
+def vectors(
     draw: st.DrawFn,
     chart: cxc.AbstractChart | st.SearchStrategy,
     rep: cxr.Representation | st.SearchStrategy,
@@ -161,9 +161,7 @@ def vectors(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def vectors(  # noqa: F811
-    draw: st.DrawFn, chart: cxc.AbstractChart, /, **kw: Any
-) -> cxv.Point:
+def vectors(draw: st.DrawFn, chart: cxc.AbstractChart, /, **kw: Any) -> cxv.Point:
     """Generate a point for a concrete *chart*.
 
     Examples
@@ -186,7 +184,7 @@ def vectors(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def vectors(  # noqa: F811
+def vectors(
     draw: st.DrawFn, chart: cxc.AbstractChart, rep: cxr.Representation, /, **kw: Any
 ) -> cxv.Point:
     """Generate a point for a concrete *chart* and *rep* (manifold inferred).

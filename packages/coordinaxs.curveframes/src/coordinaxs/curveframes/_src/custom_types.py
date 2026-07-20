@@ -5,7 +5,7 @@ __all__ = (
     "CDict",
 )
 
-from typing import Any, TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 CKey: TypeAlias = str
 if TYPE_CHECKING:

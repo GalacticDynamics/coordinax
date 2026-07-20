@@ -7,7 +7,7 @@ from hypothesis import given
 import coordinax.representations as cxr
 
 import coordinaxs.hypothesis.main as cxst
-import coordinaxs.hypothesis.representations as cxsr
+import coordinaxs.hypothesis.representations as cxrst
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 # ============================================================================
@@ -18,21 +18,21 @@ from coordinaxs.hypothesis.utils import get_all_subclasses
 class TestSemanticClasses:
     """Tests for the semantic_classes strategy."""
 
-    @given(sem_cls=cxsr.semantic_classes())
+    @given(sem_cls=cxrst.semantic_classes())
     def test_returns_subclass_of_abstract_semantic_kind(
         self, sem_cls: type[cxr.AbstractSemanticKind]
     ) -> None:
         """Generated class is always a subclass of AbstractSemanticKind."""
         assert issubclass(sem_cls, cxr.AbstractSemanticKind)
 
-    @given(sem_cls=cxsr.semantic_classes())
+    @given(sem_cls=cxrst.semantic_classes())
     def test_never_returns_abstract_base(
         self, sem_cls: type[cxr.AbstractSemanticKind]
     ) -> None:
         """Generated class is never AbstractSemanticKind itself."""
         assert sem_cls is not cxr.AbstractSemanticKind
 
-    @given(sem_cls=cxsr.semantic_classes())
+    @given(sem_cls=cxrst.semantic_classes())
     def test_is_concrete_and_instantiable(
         self, sem_cls: type[cxr.AbstractSemanticKind]
     ) -> None:
@@ -40,11 +40,11 @@ class TestSemanticClasses:
         instance = sem_cls()
         assert isinstance(instance, cxr.AbstractSemanticKind)
 
-    @given(sem_cls=cxsr.semantic_classes(include=(cxr.Location,)))
+    @given(sem_cls=cxrst.semantic_classes(include=(cxr.Location,)))
     def test_include_restricts_to_provided_classes(
         self, sem_cls: type[cxr.AbstractSemanticKind]
     ) -> None:
-        """include parameter restricts generation to provided classes."""
+        """Include parameter restricts generation to provided classes."""
         assert sem_cls is cxr.Location
 
     @given(data=st.data())
@@ -56,11 +56,11 @@ class TestSemanticClasses:
         with pytest.raises(
             ValueError, match="No semantic classes left after exclusions"
         ):
-            data.draw(cxsr.semantic_classes(exclude=tuple(all_semantics)))
+            data.draw(cxrst.semantic_classes(exclude=tuple(all_semantics)))
 
     def test_also_accessible_via_main(self) -> None:
         """semantic_classes is re-exported from coordinaxs.hypothesis.main."""
-        assert cxst.semantic_classes is cxsr.semantic_classes
+        assert cxst.semantic_classes is cxrst.semantic_classes
 
 
 # ============================================================================
@@ -71,19 +71,19 @@ class TestSemanticClasses:
 class TestSemantics:
     """Tests for the semantics strategy."""
 
-    @given(sem=cxsr.semantics())
+    @given(sem=cxrst.semantics())
     def test_returns_abstract_semantic_kind_instance(
         self, sem: cxr.AbstractSemanticKind
     ) -> None:
         """Generated value is an AbstractSemanticKind instance."""
         assert isinstance(sem, cxr.AbstractSemanticKind)
 
-    @given(sem=cxsr.semantics(include=(cxr.Location,)))
+    @given(sem=cxrst.semantics(include=(cxr.Location,)))
     def test_include_restricts_to_location(self, sem: cxr.AbstractSemanticKind) -> None:
-        """include parameter restricts instances to the provided classes."""
+        """Include parameter restricts instances to the provided classes."""
         assert isinstance(sem, cxr.Location)
 
-    @given(sem=cxsr.semantics())
+    @given(sem=cxrst.semantics())
     def test_never_returns_abstract_class_instance(
         self, sem: cxr.AbstractSemanticKind
     ) -> None:
@@ -91,5 +91,5 @@ class TestSemantics:
         assert type(sem) is not cxr.AbstractSemanticKind
 
     def test_also_accessible_via_main(self) -> None:
-        """semantics is re-exported from coordinaxs.hypothesis.main."""
-        assert cxst.semantics is cxsr.semantics
+        """Semantics is re-exported from coordinaxs.hypothesis.main."""
+        assert cxst.semantics is cxrst.semantics

@@ -4,6 +4,7 @@ __all__ = ("charts",)
 
 
 import inspect
+
 from typing import Any
 
 import hypothesis.strategies as st
@@ -102,7 +103,7 @@ def charts(
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def charts(  # noqa: F811
+def charts(
     draw: st.DrawFn,
     chart_cls: None = None,
     /,
@@ -135,7 +136,7 @@ def charts(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def charts(  # noqa: F811
+def charts(
     draw: st.DrawFn,
     chart_cls: st.SearchStrategy,
     /,
@@ -150,7 +151,7 @@ def charts(  # noqa: F811
         raise ValueError(
             "When chart_cls is provided, filter and exclude must be empty."
         )
-    elif ndim is not None:
+    if ndim is not None:
         raise ValueError("When chart_cls is provided, ndim must be None.")
 
     # Draw the chart class from the provided strategy
@@ -162,7 +163,7 @@ def charts(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def charts(  # noqa: F811
+def charts(
     draw: st.DrawFn,
     chart_cls: type[cxc.AbstractChart],
     /,

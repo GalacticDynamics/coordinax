@@ -4,6 +4,7 @@ __all__ = ("chart_init_kwargs",)
 
 import functools as ft
 import inspect
+
 from typing import Any
 
 import hypothesis.strategies as st
@@ -84,7 +85,7 @@ def chart_init_kwargs(
 @ft.lru_cache(maxsize=128, typed=True)
 @strip_return_annotation
 @st.composite
-def chart_init_kwargs(  # noqa: F811
+def chart_init_kwargs(
     draw: st.DrawFn,
     chart_class: type[cxc.AbstractChart],
     /,
@@ -141,7 +142,7 @@ def chart_init_kwargs(  # noqa: F811
 @ft.lru_cache(maxsize=128, typed=True)
 @strip_return_annotation
 @st.composite
-def chart_init_kwargs(  # noqa: F811
+def chart_init_kwargs(
     draw: st.DrawFn,
     chart_class: st.SearchStrategy,
     /,

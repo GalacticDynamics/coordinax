@@ -33,12 +33,12 @@ git push origin v0.24.0
 
 **Single Package Bug-fix**
 
-Use package tag: `PACKAGE-vX.Y.Z` where `Z > 0` (for example, `coordinax-api-v0.24.1`)
+Use package tag: `PACKAGE-vX.Y.Z` where `Z > 0` (for example, `coordinaxs-api-v0.24.1`)
 
 ```bash
 # Create and push package-specific tag (example: coordinaxs.api)
-git tag coordinax-api-v0.24.1 -m "Release coordinaxs.api 0.24.1 bug-fix"
-git push origin coordinax-api-v0.24.1
+git tag coordinaxs-api-v0.24.1 -m "Release coordinaxs.api 0.24.1 bug-fix"
+git push origin coordinaxs-api-v0.24.1
 
 # CD automatically builds and publishes only coordinaxs.api
 ```
@@ -49,16 +49,16 @@ Valid coordinator tags (synchronized releases):
 
 - `v0.24.0` -> CD creates:
   - `coordinax-v0.24.0`
-  - `coordinax-api-v0.24.0`
-  - `coordinax-astro-v0.24.0`
-  - `coordinax-hypothesis-v0.24.0`
-  - `coordinax-interop-astropy-v0.24.0`
+  - `coordinaxs-api-v0.24.0`
+  - `coordinaxs-astro-v0.24.0`
+  - `coordinaxs-hypothesis-v0.24.0`
+  - `coordinaxs-interop-astropy-v0.24.0`
 
 Valid package tags (independent bug-fixes):
 
-- `coordinax-api-v0.24.1`
-- `coordinax-hypothesis-v0.24.2`
-- `coordinax-interop-astropy-v0.24.3`
+- `coordinaxs-api-v0.24.1`
+- `coordinaxs-hypothesis-v0.24.2`
+- `coordinaxs-interop-astropy-v0.24.3`
 
 Invalid:
 
@@ -72,10 +72,10 @@ Invalid:
 All packages use `hatch-vcs` with package-specific tag matching:
 
 - `coordinax` matches `coordinax-v*`
-- `coordinaxs.api` matches `coordinax-api-v*`
-- `coordinaxs.astro` matches `coordinax-astro-v*`
-- `coordinaxs.hypothesis` matches `coordinax-hypothesis-v*`
-- `coordinaxs.interop.astropy` matches `coordinax-interop-astropy-v*`
+- `coordinaxs.api` matches `coordinaxs-api-v*`
+- `coordinaxs.astro` matches `coordinaxs-astro-v*`
+- `coordinaxs.hypothesis` matches `coordinaxs-hypothesis-v*`
+- `coordinaxs.interop.astropy` matches `coordinaxs-interop-astropy-v*`
 
 ### How Releases Work
 
@@ -131,8 +131,8 @@ Expected automation:
 ### Scenario 2: Bug-fix Release (Single Package)
 
 ```bash
-git tag coordinax-api-vX.Y.Z -m "Release coordinaxs.api X.Y.Z bug-fix"
-git push origin coordinax-api-vX.Y.Z
+git tag coordinaxs-api-vX.Y.Z -m "Release coordinaxs.api X.Y.Z bug-fix"
+git push origin coordinaxs-api-vX.Y.Z
 ```
 
 Expected automation:
@@ -167,10 +167,10 @@ hatch version
 
 # Local test tag example (do not push)
 cd ../..
-git tag coordinax-api-v0.0.0 -m "Test tag"
+git tag coordinaxs-api-v0.0.0 -m "Test tag"
 cd packages/coordinaxs.api && hatch version
 cd ../..
-git tag -d coordinax-api-v0.0.0
+git tag -d coordinaxs-api-v0.0.0
 ```
 
 ---

@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ("cartesian_product_factors",)
 
 import functools as ft
 import warnings
+
 from typing import Any
 
 import hypothesis.strategies as st
@@ -130,7 +131,7 @@ def cartesian_product_factors(
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def charts(  # noqa: F811
+def charts(
     draw: st.DrawFn,
     chart_cls: type[cxc.CartesianProductChart],
     /,
@@ -221,7 +222,7 @@ def charts(  # noqa: F811
 @ft.lru_cache(maxsize=128, typed=True)
 @strip_return_annotation
 @st.composite
-def chart_init_kwargs(  # noqa: F811
+def chart_init_kwargs(
     draw: st.DrawFn,
     chart_class: type[cxc.CartesianProductChart],
     /,
@@ -255,7 +256,7 @@ def chart_init_kwargs(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def charts(  # noqa: F811
+def charts(
     draw: st.DrawFn,
     chart_cls: type[cxc.AbstractCartesianProductChart],
     /,

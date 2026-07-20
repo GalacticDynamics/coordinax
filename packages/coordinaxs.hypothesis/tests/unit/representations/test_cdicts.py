@@ -8,7 +8,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 
 import coordinaxs.hypothesis.main as cxst
-import coordinaxs.hypothesis.representations as cxsr
+import coordinaxs.hypothesis.representations as cxrst
 
 
 class FakeBasis(cxr.AbstractBasis):
@@ -23,15 +23,15 @@ class FakeSemantic(cxr.AbstractSemanticKind):
         return tuple(None for _ in chart.components)
 
 
-@given(p=cxsr.cdicts(cxc.cart3d, cxst.representations()))
+@given(p=cxrst.cdicts(cxc.cart3d, cxst.representations()))
 def test_cdicts_accepts_representation_strategy(p):
-    """cdicts should accept a representation strategy as the second argument."""
+    """Cdicts should accept a representation strategy as the second argument."""
     assert set(p.keys()) == set(cxc.cart3d.components)
 
 
-@given(p=cxsr.cdicts(cxc.sph3d, cxr.point))
+@given(p=cxrst.cdicts(cxc.sph3d, cxr.point))
 def test_cdicts_accepts_representation_instance(p):
-    """cdicts should accept a concrete Representation instance."""
+    """Cdicts should accept a concrete Representation instance."""
     assert set(p.keys()) == {"r", "theta", "phi"}
     assert u.dimension_of(p["r"]) == u.dimension("length")
     assert u.dimension_of(p["theta"]) == u.dimension("angle")
@@ -43,7 +43,7 @@ def test_point_geometry_requires_no_basis(data):
     """PointGeometry cdicts should reject basis kinds other than NoBasis."""
     with pytest.raises(TypeError, match="NoBasis"):
         data.draw(
-            cxsr.cdicts(cxc.cart3d, cxr.PointGeometry(), FakeBasis(), cxr.Location())
+            cxrst.cdicts(cxc.cart3d, cxr.PointGeometry(), FakeBasis(), cxr.Location())
         )
 
 
@@ -52,23 +52,25 @@ def test_point_geometry_requires_location_semantic(data):
     """PointGeometry cdicts should reject semantic kinds other than Location."""
     with pytest.raises(TypeError, match="Location semantic kind"):
         data.draw(
-            cxsr.cdicts(cxc.cart3d, cxr.PointGeometry(), cxr.NoBasis(), FakeSemantic())
+            cxrst.cdicts(cxc.cart3d, cxr.PointGeometry(), cxr.NoBasis(), FakeSemantic())
         )
 
 
-@given(p=cxsr.cdicts(cxc.cart3d, cxr.coord_disp))
+@given(p=cxrst.cdicts(cxc.cart3d, cxr.coord_disp))
 def test_cdicts_tangent_coord_disp(p):
-    """cdicts with coord_disp (TangentGeometry, CoordinateBasis, Displacement) returns chart components."""
+    """Cdicts with coord_disp (TangentGeometry, CoordinateBasis, Displacement) returns chart components."""
     assert set(p.keys()) == {"x", "y", "z"}
 
 
-@given(p=cxsr.cdicts(cxc.sph3d, cxr.phys_vel))
+@given(p=cxrst.cdicts(cxc.sph3d, cxr.phys_vel))
 def test_cdicts_tangent_phys_vel(p):
-    """cdicts with phys_vel (TangentGeometry, PhysicalBasis, Velocity) returns chart components."""
+    """Cdicts with phys_vel (TangentGeometry, PhysicalBasis, Velocity) returns chart components."""
     assert set(p.keys()) == {"r", "theta", "phi"}
 
 
-@given(p=cxsr.cdicts(cxc.cart3d, cxst.representations(geom_kind=cxr.TangentGeometry())))
+@given(
+    p=cxrst.cdicts(cxc.cart3d, cxst.representations(geom_kind=cxr.TangentGeometry()))
+)
 def test_cdicts_tangent_with_rep_strategy(p):
-    """cdicts with a TangentGeometry representation strategy returns chart components."""
+    """Cdicts with a TangentGeometry representation strategy returns chart components."""
     assert set(p.keys()) == set(cxc.cart3d.components)

@@ -712,14 +712,22 @@ dependencies = [
 astropy = [
     { name = "astropy" },
 ]
+hypothesis = [
+    { name = "coordinaxs-hypothesis" },
+    { name = "hypothesis" },
+    { name = "unxt-hypothesis" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "astropy", marker = "extra == 'astropy'", specifier = ">=7.2.0" },
     { name = "coordinax", editable = "." },
+    { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
+    { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
     { name = "optional-dependencies", specifier = ">=0.4.0" },
+    { name = "unxt-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=1.10.1" },
 ]
-provides-extras = ["astropy"]
+provides-extras = ["astropy", "hypothesis"]
 
 [[package]]
 name = "coordinaxs-curveframes"

@@ -3,6 +3,7 @@
 __all__ = ("atlas_classes", "atlases")
 
 import inspect
+
 from typing import Any, cast
 
 import hypothesis.strategies as st
@@ -83,7 +84,7 @@ def atlas_classes(
         exclude_abstract=draw_if_strategy(draw, exclude_abstract),
         exclude=exclude,
     )
-    return cast(type[Any], draw(st.sampled_from(classes)))
+    return cast("type[Any]", draw(st.sampled_from(classes)))
 
 
 #####################################################################
@@ -309,7 +310,7 @@ def _atlas_class_supports_ndim(
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: None = None,
     /,
@@ -358,17 +359,17 @@ def atlases(  # noqa: F811
         assume(False)
 
     # Draw and redispatch
-    selected_cls = cast(type[cxm.AbstractAtlas], draw(st.sampled_from(classes)))
+    selected_cls = cast("type[cxm.AbstractAtlas]", draw(st.sampled_from(classes)))
     kwargs: dict[str, Any] = {"ndim": target_ndim}
     if issubclass(selected_cls, cxm.CustomAtlas):
         kwargs["required_chart_classes"] = required_chart_classes
-    return draw(cast(Any, atlases)(selected_cls, **kwargs))
+    return draw(cast("Any", atlases)(selected_cls, **kwargs))
 
 
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: st.SearchStrategy,
     /,
@@ -404,7 +405,7 @@ def atlases(  # noqa: F811
     # Draw and redispatch
     selected_cls = draw(atlas_cls)
     return draw(
-        cast(Any, atlases)(
+        cast("Any", atlases)(
             selected_cls, ndim=ndim, required_chart_classes=required_chart_classes
         )
     )
@@ -413,7 +414,7 @@ def atlases(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: type[cxm.AbstractAtlas],
     /,
@@ -448,11 +449,11 @@ def atlases(  # noqa: F811
         kwargs: dict[str, Any] = {"ndim": ndim}
         if issubclass(atlas_cls, cxm.CustomAtlas):
             kwargs["required_chart_classes"] = required_chart_classes
-        return draw(cast(Any, atlases)(atlas_cls, **kwargs))
+        return draw(cast("Any", atlases)(atlas_cls, **kwargs))
 
     # Draw and redispatch
     return draw(
-        cast(Any, atlases)(
+        cast("Any", atlases)(
             filter=atlas_cls,
             exclude=(),
             ndim=ndim,
@@ -464,7 +465,7 @@ def atlases(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: type[cxm.EuclideanAtlas],
     /,
@@ -504,7 +505,7 @@ def atlases(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: type[cxm.HyperSphericalAtlas],
     /,
@@ -532,7 +533,7 @@ def atlases(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: type[cxm.CustomAtlas],
     /,
@@ -587,7 +588,7 @@ def atlases(  # noqa: F811
 
     filtered_classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
     for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
-        cls = cast(type[cxc.AbstractChart[Any, Any, Any]], cls)
+        cls = cast("type[cxc.AbstractChart[Any, Any, Any]]", cls)
         try:
             chart = cls()
         except TypeError:
@@ -614,7 +615,7 @@ def atlases(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def atlases(  # noqa: F811
+def atlases(
     draw: st.DrawFn,
     atlas_cls: type[cxm.CartesianProductAtlas],
     /,
@@ -665,7 +666,7 @@ def atlases(  # noqa: F811
         assume(remaining == 0)
 
     factors = tuple(
-        draw(cast(Any, atlases)(exclude=(cxm.CartesianProductAtlas,), ndim=d))
+        draw(cast("Any", atlases)(exclude=(cxm.CartesianProductAtlas,), ndim=d))
         for d in dims
     )
     factor_names = tuple(f"f{i}" for i in range(n_factors))

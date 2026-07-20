@@ -112,7 +112,7 @@ def act(
 
 
 @plum.dispatch
-def act(  # noqa: F811
+def act(
     op: AbstractParallelTransportTransform,
     tau: Any,
     x: CDict,

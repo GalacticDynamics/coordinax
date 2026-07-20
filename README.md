@@ -134,7 +134,7 @@ Angle(1.57079633, 'rad')
 
 ### Astronomy Frames
 
-Astronomy frames require the `[astro]` extra (`pip install "coordinax[astro]"`) or to separately install the `coordinax-astro` package.
+Astronomy frames require the `[astro]` extra (`pip install "coordinax[astro]"`) or to separately install the `coordinaxs.astro` package.
 
 `to_frame` composes the full transformation chain automatically. The example below converts from ICRS to the Galactic bar frame, which co-rotates at pattern speed $\Omega_b$ relative to Galactocentric. A time-dependent `Rotate` operator captures the rotation; `TransformedReferenceFrame` wraps the base frame with it; `frame_transition` fuses the resulting ICRS -> GCF -> bar chain on-the-fly:
 

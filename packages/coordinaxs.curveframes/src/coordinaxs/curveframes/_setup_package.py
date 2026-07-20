@@ -54,6 +54,7 @@ def install_import_hook(
     contextlib.AbstractContextManager
         A context manager that installs (and later removes) the import
         hook, or a ``nullcontext`` if runtime checking is off.
+
     """
     return (
         _install_import_hook(modules, RUNTIME_TYPECHECKER)

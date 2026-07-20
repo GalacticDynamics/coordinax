@@ -7,7 +7,7 @@ from hypothesis import given
 import coordinax.representations as cxr
 
 import coordinaxs.hypothesis.main as cxst
-import coordinaxs.hypothesis.representations as cxsr
+import coordinaxs.hypothesis.representations as cxrst
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 # ============================================================================
@@ -74,35 +74,35 @@ def test_valid_semantic_classes_for_generic_geometry_returns_all_concrete() -> N
 class TestRepresentations:
     """Tests for the representations strategy."""
 
-    @given(rep=cxsr.representations())
+    @given(rep=cxrst.representations())
     def test_returns_representation_instance(self, rep: cxr.Representation) -> None:
         """Generated value is a Representation instance."""
         assert isinstance(rep, cxr.Representation)
 
-    @given(rep=cxsr.representations())
+    @given(rep=cxrst.representations())
     def test_has_correct_fields(self, rep: cxr.Representation) -> None:
         """Generated Representation has geom_kind, basis, and semantic_kind fields."""
         assert isinstance(rep.geom_kind, cxr.AbstractGeometry)
         assert isinstance(rep.basis, cxr.AbstractBasis)
         assert isinstance(rep.semantic_kind, cxr.AbstractSemanticKind)
 
-    @given(rep=cxsr.representations(geom_kind=cxr.point_geom))
+    @given(rep=cxrst.representations(geom_kind=cxr.point_geom))
     def test_explicit_geom_kind_is_preserved(self, rep: cxr.Representation) -> None:
         """Explicitly provided geom_kind is used."""
         assert isinstance(rep.geom_kind, cxr.PointGeometry)
 
-    @given(rep=cxsr.representations(geom_kind=cxr.point_geom, basis_kind=cxr.no_basis))
+    @given(rep=cxrst.representations(geom_kind=cxr.point_geom, basis_kind=cxr.no_basis))
     def test_explicit_basis_kind_is_preserved(self, rep: cxr.Representation) -> None:
         """Explicitly provided basis_kind is used."""
         assert isinstance(rep.basis, cxr.NoBasis)
 
-    @given(rep=cxsr.representations(geom_kind=cxr.point_geom, semantic_kind=cxr.loc))
+    @given(rep=cxrst.representations(geom_kind=cxr.point_geom, semantic_kind=cxr.loc))
     def test_explicit_semantic_kind_is_preserved(self, rep: cxr.Representation) -> None:
         """Explicitly provided semantic_kind is used."""
         assert isinstance(rep.semantic_kind, cxr.Location)
 
     @given(
-        rep=cxsr.representations(
+        rep=cxrst.representations(
             geom_kind=cxr.point_geom, basis_kind=cxr.no_basis, semantic_kind=cxr.loc
         )
     )
@@ -112,7 +112,7 @@ class TestRepresentations:
         assert isinstance(rep.basis, cxr.NoBasis)
         assert isinstance(rep.semantic_kind, cxr.Location)
 
-    @given(rep=cxsr.representations(geom_kind=cxr.point_geom))
+    @given(rep=cxrst.representations(geom_kind=cxr.point_geom))
     def test_point_geometry_auto_restricts_basis_and_semantic(
         self, rep: cxr.Representation
     ) -> None:
@@ -120,13 +120,13 @@ class TestRepresentations:
         assert isinstance(rep.basis, cxr.NoBasis)
         assert isinstance(rep.semantic_kind, cxr.Location)
 
-    @given(rep=cxsr.representations(geom_kind=st.just(cxr.point_geom)))
+    @given(rep=cxrst.representations(geom_kind=st.just(cxr.point_geom)))
     def test_strategy_valued_geom_kind_is_drawn(self, rep: cxr.Representation) -> None:
         """Strategy-valued geom_kind is drawn before use."""
         assert isinstance(rep.geom_kind, cxr.PointGeometry)
 
     @given(
-        rep=cxsr.representations(
+        rep=cxrst.representations(
             geom_kind=st.just(cxr.point_geom), basis_kind=st.just(cxr.no_basis)
         )
     )
@@ -135,7 +135,7 @@ class TestRepresentations:
         assert isinstance(rep.basis, cxr.NoBasis)
 
     @given(
-        rep=cxsr.representations(
+        rep=cxrst.representations(
             geom_kind=st.just(cxr.point_geom), semantic_kind=st.just(cxr.loc)
         )
     )
@@ -154,7 +154,7 @@ class TestRepresentations:
 
         with pytest.raises(ValueError, match="Invalid basis_kind"):
             data.draw(
-                cxsr.representations(
+                cxrst.representations(
                     geom_kind=cxr.point_geom, basis_kind=_FakeBasis(), check_valid=True
                 )
             )
@@ -172,14 +172,14 @@ class TestRepresentations:
 
         with pytest.raises(ValueError, match="Invalid semantic_kind"):
             data.draw(
-                cxsr.representations(
+                cxrst.representations(
                     geom_kind=cxr.point_geom,
                     semantic_kind=_FakeSemantic(),
                     check_valid=True,
                 )
             )
 
-    @given(rep=cxsr.representations(geom_kind=cxr.point_geom, check_valid=False))
+    @given(rep=cxrst.representations(geom_kind=cxr.point_geom, check_valid=False))
     def test_check_valid_false_allows_any_combination(
         self, rep: cxr.Representation
     ) -> None:
@@ -188,7 +188,7 @@ class TestRepresentations:
         # so we just check the result has the expected geom.
         assert isinstance(rep.geom_kind, cxr.PointGeometry)
 
-    @given(rep=cxsr.representations(geom_kind=cxr.TangentGeometry()))
+    @given(rep=cxrst.representations(geom_kind=cxr.TangentGeometry()))
     def test_tangent_geometry_auto_restricts_basis_and_semantic(
         self, rep: cxr.Representation
     ) -> None:
@@ -198,5 +198,5 @@ class TestRepresentations:
         assert isinstance(rep.semantic_kind, cxr.AbstractTangentSemanticKind)
 
     def test_also_accessible_via_main(self) -> None:
-        """representations is re-exported from coordinaxs.hypothesis.main."""
-        assert cxst.representations is cxsr.representations
+        """Representations is re-exported from coordinaxs.hypothesis.main."""
+        assert cxst.representations is cxrst.representations

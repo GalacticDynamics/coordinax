@@ -28,6 +28,7 @@ def change_basis(*args: Any, **kwargs: Any) -> Any:
     >>> at = {"x": 1.0, "y": 0.0}
     >>> cxr.change_basis(v, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
     {'x': 1.0, 'y': 0.0}
+
     """
     raise NotImplementedError  # pragma: no cover
 
@@ -151,6 +152,7 @@ def guess_semantic_kind(*args: Any, **kwargs: Any) -> Any:
     >>> data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> cxr.guess_semantic_kind(data)
     loc
+
     """
     raise NotImplementedError  # pragma: no cover
 

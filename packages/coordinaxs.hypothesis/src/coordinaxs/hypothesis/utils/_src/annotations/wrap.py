@@ -7,6 +7,7 @@ __all__ = (
 )
 
 import dataclasses
+
 from collections.abc import Callable
 from typing import Any, Final, Generic, TypeVar
 

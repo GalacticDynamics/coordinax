@@ -24,8 +24,8 @@ __all__: tuple[str, ...] = ()
 
 import plum
 
-import coordinaxs.api.frames as cxfapi
 import coordinax.frames as cxf
+import coordinaxs.api.frames as cxfapi
 from coordinax.transforms import AbstractTransform
 
 from .base import AbstractParallelTransportFrame
@@ -84,7 +84,7 @@ def frame_transition(
 
 
 @plum.dispatch
-def frame_transition(  # noqa: F811
+def frame_transition(
     from_frame: AbstractParallelTransportFrame,
     to_frame: cxf.AbstractReferenceFrame,
 ) -> AbstractTransform:
@@ -122,7 +122,7 @@ def frame_transition(  # noqa: F811
 
 
 @plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
-def frame_transition(  # noqa: F811
+def frame_transition(
     from_frame: AbstractParallelTransportFrame,
     to_frame: AbstractParallelTransportFrame,
 ) -> AbstractTransform:

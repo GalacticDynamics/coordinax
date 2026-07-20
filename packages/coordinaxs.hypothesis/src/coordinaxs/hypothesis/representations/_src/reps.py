@@ -22,7 +22,7 @@ from coordinaxs.hypothesis.utils import draw_if_strategy, get_all_subclasses
 
 
 @plum.dispatch
-def valid_basis_classes_for_geometry(  # noqa: F811
+def valid_basis_classes_for_geometry(
     geom_kind: cxr.AbstractGeometry, /
 ) -> tuple[type[cxr.AbstractBasis], ...]:
     """Return valid basis classes for a geometry kind."""
@@ -34,7 +34,7 @@ def valid_basis_classes_for_geometry(  # noqa: F811
 
 
 @plum.dispatch
-def valid_basis_classes_for_geometry(  # noqa: F811
+def valid_basis_classes_for_geometry(
     geom_kind: cxr.PointGeometry, /
 ) -> tuple[type[cxr.AbstractBasis], ...]:
     """Return valid basis classes for point geometry."""
@@ -43,7 +43,7 @@ def valid_basis_classes_for_geometry(  # noqa: F811
 
 
 @plum.dispatch
-def valid_basis_classes_for_geometry(  # noqa: F811
+def valid_basis_classes_for_geometry(
     geom_kind: cxr.TangentGeometry, /
 ) -> tuple[type[cxr.AbstractBasis], ...]:
     """Return valid basis classes for tangent geometry.
@@ -70,7 +70,7 @@ def valid_semantic_classes_for_geometry(
 
 
 @plum.dispatch
-def valid_semantic_classes_for_geometry(  # noqa: F811
+def valid_semantic_classes_for_geometry(
     geom_kind: cxr.PointGeometry, /
 ) -> tuple[type[cxr.AbstractSemanticKind], ...]:
     """Return valid semantic classes for point geometry."""
@@ -79,7 +79,7 @@ def valid_semantic_classes_for_geometry(  # noqa: F811
 
 
 @plum.dispatch
-def valid_semantic_classes_for_geometry(  # noqa: F811
+def valid_semantic_classes_for_geometry(
     geom_kind: cxr.TangentGeometry, /
 ) -> tuple[type[cxr.AbstractSemanticKind], ...]:
     """Return valid semantic classes for tangent geometry.

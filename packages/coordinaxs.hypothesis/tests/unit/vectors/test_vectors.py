@@ -8,7 +8,7 @@ import coordinax.representations as cxr
 import coordinax.vectors as cxv
 
 import coordinaxs.hypothesis.charts as cxcst
-import coordinaxs.hypothesis.representations as cxsr
+import coordinaxs.hypothesis.representations as cxrst
 from coordinaxs.hypothesis.vectors import vectors as vector_strategy
 
 SUPPORTED_CHARTS = cxcst.charts(
@@ -61,7 +61,7 @@ def test_vectors_chart_strategy_concrete_rep(vec: cxv.Point) -> None:
     assert vec.M.has_chart(vec.chart)
 
 
-@given(vec=vector_strategy(cxc.cart3d, cxsr.representations(check_valid=True)))
+@given(vec=vector_strategy(cxc.cart3d, cxrst.representations(check_valid=True)))
 def test_vectors_concrete_chart_rep_strategy(vec: cxv.Point) -> None:
     """vectors(chart, rep_strategy) should draw a rep then build the point."""
     assert vec.chart is cxc.cart3d
@@ -79,7 +79,7 @@ def test_vectors_propagate_shape(vec: cxv.Point) -> None:
 def test_vectors_infer_manifold_from_chart(data: st.DataObject) -> None:
     """When manifold is not given, it should be inferred from the chart."""
     vec = data.draw(vector_strategy(cxc.sph3d, cxr.point))
-    assert vec.M == cxm.guess_manifold(cxc.sph3d)
+    assert cxm.guess_manifold(cxc.sph3d) == vec.M
 
 
 @given(vec=st.from_type(cxv.Point))

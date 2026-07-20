@@ -93,7 +93,7 @@ def cdicts(*args: Any, **kwargs: Any) -> CDict:
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def cdicts(  # noqa: F811
+def cdicts(
     draw: st.DrawFn,
     chart: st.SearchStrategy = st.deferred(lambda: cxc.charts()),  # ty: ignore[unresolved-attribute]
     /,
@@ -127,7 +127,7 @@ def cdicts(  # noqa: F811
 @plum.dispatch
 @strip_return_annotation
 @st.composite
-def cdicts(  # noqa: F811
+def cdicts(
     draw: st.DrawFn,
     chart: cxc.AbstractChart,
     /,

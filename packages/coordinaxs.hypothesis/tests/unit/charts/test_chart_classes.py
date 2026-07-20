@@ -11,6 +11,7 @@ strategy. Tests cover:
 """
 
 import inspect
+
 from typing import final
 
 import hypothesis.strategies as st

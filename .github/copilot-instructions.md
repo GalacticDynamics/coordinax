@@ -51,12 +51,12 @@ The root `docs/spec.md` defines the **global mathematical framework**; package- 
 
 ### Root Level (UV Workspace)
 
-- `/src/coordinax/`: Main package. This is a namespace package.
+- `/src/coordinax/`: Main package. This is a regular package: `src/coordinax/__init__.py` is the user-facing API (`import coordinax as cx`).
 - `/packages/`: Workspace packages
   - `coordinaxs.api/`: Abstract dispatch API package
   - `coordinaxs.astro/`: Astronomy-specific frames and transformations
   - `coordinaxs.hypothesis/`: Hypothesis strategies package
-  - `coordinaxs.interop.astro/`: Optional interoperability package for astropy.
+  - `coordinaxs.interop.astropy/`: Optional interoperability package for astropy.
 - `/tests/`: Main package tests, organized into `unit/`, `integration/`, `benchmark/`
 - `README.md`: Main package documentation, tested via Sybil (all Python code blocks are doctests)
 - `conftest.py`: Pytest config, Sybil setup, optional dependency handling
@@ -65,8 +65,8 @@ The root `docs/spec.md` defines the **global mathematical framework**; package- 
 
 ### Main Package Structure (`/src/coordinax/`)
 
-- This is a namespace package
-- `main` : re-export of all the normal functionality in `coordinax` from the other, more specific modules. Main user entry point. Most things can be found in here. Other modules are for more specific functionality.
+- This is a regular package; the sub-distributions live in the separate `coordinaxs` PEP 420 namespace
+- `__init__` : re-export of all the normal functionality in `coordinax` from the other, more specific modules. Main user entry point (`import coordinax as cx`). Most things can be found in here. Other modules are for more specific functionality.
 - `angles` : angle-specific functionality, including the `Angle` class and related utilities.
 - `distances` : distance-specific functionality, including the `Distance` class and related utilities.
 

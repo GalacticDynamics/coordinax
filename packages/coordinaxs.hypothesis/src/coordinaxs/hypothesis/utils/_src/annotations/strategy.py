@@ -4,6 +4,7 @@ __all__ = ()
 
 import functools as ft
 import inspect
+
 from typing import (
     Any,
     TypeVar,
@@ -53,7 +54,7 @@ def strategy_for_annotation(ann: type, /, *, meta: Metadata) -> st.SearchStrateg
 
 
 @plum.dispatch
-def strategy_for_annotation(  # noqa: F811
+def strategy_for_annotation(
     ann: _GenericAlias, /, *, meta: Metadata
 ) -> st.SearchStrategy:
     """Generate a strategy for a type annotation (base case).
@@ -64,7 +65,7 @@ def strategy_for_annotation(  # noqa: F811
 
 
 @plum.dispatch
-def strategy_for_annotation(  # noqa: F811
+def strategy_for_annotation(
     ann: type[jax.Array], /, *, meta: Metadata
 ) -> st.SearchStrategy:
     strategy = xps.arrays(
@@ -80,7 +81,7 @@ def strategy_for_annotation(  # noqa: F811
 
 
 @plum.dispatch
-def strategy_for_annotation(  # noqa: F811
+def strategy_for_annotation(
     ann: type[u.AbstractQuantity], /, *, meta: Metadata
 ) -> st.SearchStrategy:
     # Get the units/dimensions for the quantity

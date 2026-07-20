@@ -8,6 +8,7 @@ from typing import Any
 import hypothesis.strategies as st
 
 import coordinax.charts as cxc
+
 from coordinaxs.hypothesis.utils import draw_if_strategy, get_all_subclasses
 
 

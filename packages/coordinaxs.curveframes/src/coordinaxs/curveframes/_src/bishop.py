@@ -36,6 +36,7 @@ See Also
 --------
 coordinaxs.curveframes._src.frenetserret : Frenet--Serret frame.
 coordinaxs.curveframes._src.base : Abstract base classes.
+
 """
 
 __all__ = ("BishopFrame", "BishopTransform")
@@ -48,7 +49,7 @@ import jax.numpy as jnp
 from jax.experimental.ode import odeint
 
 import coordinax.charts as cxc
-import coordinax.transforms as cxt
+import coordinax.transforms as cxfm
 import unxt as u
 
 from .base import (
@@ -331,7 +332,7 @@ class BishopTransform(AbstractParallelTransportTransform):
         Q(1., 's')
 
         """
-        tau_unit = cast(u.AbstractUnit, u.unit(tau_unit))
+        tau_unit = cast("u.AbstractUnit", u.unit(tau_unit))
         if tau_0 is None:
             tau_0 = u.Q(0.0, tau_unit)
 
@@ -418,8 +419,8 @@ class BishopTransform(AbstractParallelTransportTransform):
             """
             return cxc.cdict(-curve(tau), cxc.cart3d)
 
-        translate = cxt.Translate(neg_gamma_fn, chart=cxc.cart3d)
-        rotate = cxt.Rotate(rotation_matrix_fn)
+        translate = cxfm.Translate(neg_gamma_fn, chart=cxc.cart3d)
+        rotate = cxfm.Rotate(rotation_matrix_fn)
 
         return cls(  # ty: ignore[missing-argument]
             translate=translate,
