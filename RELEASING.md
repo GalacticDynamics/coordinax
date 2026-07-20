@@ -8,6 +8,8 @@ This workspace contains five packages that can be released:
 - `coordinaxs.hypothesis` - hypothesis testing strategies
 - `coordinaxs.interop.astropy` - Astropy interoperability package
 
+> **Note:** the workspace also contains `coordinaxs.curveframes`, which is **intentionally not part of the release automation** (no CD workflow, not in `create-package-tags.yml`, `cd-publish.yml`, or `validate_tag.py`). It is developed and tested in-tree but not yet published to PyPI. To release it, wire it in like the packages above **and** register its PyPI trusted publisher first (see the note in `validate_tag.py`).
+
 All releases are automated via GitHub Actions.
 
 ---
