@@ -224,6 +224,15 @@ def _load_optional_interop() -> None:
     that cannot be loaded yet (because a package it references is mid-import)
     is left pending for a later call.
 
+    Contract for interop authors: a pending entry point is only retried when
+    something calls this function again. Core calls it once at the end of its
+    own import, and ``coordinaxs.astro`` re-invokes it at the end of *its* import
+    (so astro-first ordering works). If you write an interop that participates
+    in an import cycle through a *different* sibling package, that sibling must
+    likewise call ``coordinax._load_optional_interop()`` at the end of its
+    ``__init__`` once its public symbols exist — otherwise a sibling-first import
+    leaves your interop permanently pending and silently unregistered.
+
     Known limitation: a genuinely broken interop package whose import fails
     *while* some ``coordinaxs`` module is still initializing is indistinguishable
     from the expected cycle, so it is left pending rather than raised. In

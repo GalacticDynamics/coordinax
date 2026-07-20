@@ -13,6 +13,12 @@ __all__ = (
 
 from ._setup_package import install_import_hook
 
+# INVARIANT: this block binds all of astro's public symbols and MUST run before
+# the frames/interop re-invocation below. Those hooks complete registration that
+# was deferred while astro was importing (see the note there); they can only
+# succeed once these names exist. Reordering the re-invocation above this block
+# silently reintroduces the "astropy conversions never registered" bug for the
+# astro-first import ordering.
 with install_import_hook("coordinaxs.astro"):
     from ._src import (
         ICRS,

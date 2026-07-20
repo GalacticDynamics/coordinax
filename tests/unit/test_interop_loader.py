@@ -8,6 +8,7 @@ legacy-group handling, and the failure classification that decides whether an
 entry point is left pending or raised.
 """
 
+import importlib
 import sys
 import warnings
 
@@ -73,6 +74,37 @@ def test_ignores_unrelated_initializing_module(monkeypatch: Any) -> None:
     """A non-coordinaxs module mid-import is not mistaken for the cycle."""
     monkeypatch.setitem(sys.modules, "unrelated", _initializing_module("unrelated"))
     assert cx._coordinaxs_is_initializing() is False
+
+
+def test_importlib_marks_initializing_modules(tmp_path: Any) -> None:
+    """Pin the private importlib contract `_coordinaxs_is_initializing` uses.
+
+    `_coordinaxs_is_initializing` reads ``__spec__._initializing`` — a private,
+    undocumented CPython importlib attribute that is ``True`` only while a
+    module's body executes. Every other test in this module *fakes* that
+    attribute, so a Python release that removed or renamed it would leave the
+    faked tests green while the real cycle-tolerance silently broke (astro-first
+    import would start raising). This test imports a real module that captures
+    its own ``__spec__._initializing`` during execution, pinning the contract so
+    such a change is caught here instead.
+    """
+    probe = tmp_path / "_probe_initializing.py"
+    probe.write_text(
+        "import sys\n"
+        "_spec = sys.modules[__name__].__spec__\n"
+        "captured = getattr(_spec, '_initializing', 'MISSING')\n"
+    )
+    probe_dir = str(tmp_path)
+    sys.path.insert(0, probe_dir)
+    try:
+        module = importlib.import_module("_probe_initializing")
+        assert module.captured is True, (
+            "importlib no longer sets __spec__._initializing during module "
+            "execution; _coordinaxs_is_initializing() needs updating."
+        )
+    finally:
+        sys.path.remove(probe_dir)
+        sys.modules.pop("_probe_initializing", None)
 
 
 # =============================================================================
