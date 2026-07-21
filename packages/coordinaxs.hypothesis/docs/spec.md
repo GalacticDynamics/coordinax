@@ -75,7 +75,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
 | Module | Objects |
 | --- | --- |
 | `coordinaxs.hypothesis.angles` | `angles` |
-| `coordinaxs.hypothesis.distances` | `distances` |
+| `coordinaxs.hypothesis.distances` | `distances`, `make_nonnegative` |
 | `coordinaxs.hypothesis.charts` | `chart_classes`, `chart_init_kwargs`, `charts`, `charts_like`, `cdicts` |
 | `coordinaxs.hypothesis.manifolds` | `atlas_classes`, `atlases`, `manifold_classes`, `manifolds` |
 | `coordinaxs.hypothesis.representations` | `geometry_classes`, `geometries`, `basis_classes`, `bases`, `semantic_classes`, `semantics`, `valid_basis_classes_for_geometry`, `valid_semantic_classes_for_geometry`, `representations`, `cdicts` |
@@ -151,6 +151,39 @@ This module provides general-purpose strategies for generating valid `coordinax`
     - `@given(d=cxst.distances())`
     - `@given(d=cxst.distances(check_negative=False))`
     - `@given(d=cxst.distances(unit="kpc", shape=(2, 3)))`
+
+!!! info `make_nonnegative`:
+
+    Adjust a quantity-strategy's keyword arguments to force non-negative
+    generated values. This is the shared helper behind the non-negativity of
+    `distances` and of the astro distance strategies
+    (`coordinaxs.hypothesis.astro.parallaxes`).
+
+    Source:
+    - `coordinaxs.hypothesis.distances.make_nonnegative` is implemented in
+          `coordinaxs.hypothesis.distances._src.utils`.
+
+    Signature:
+    - `make_nonnegative(draw, /, **kwargs) -> dict[str, Any]`
+
+    Parameters:
+    - `draw`: the Hypothesis draw function (provided automatically inside an
+          `@st.composite` strategy).
+    - `**kwargs`: keyword arguments destined for `unxt_hypothesis.quantities`.
+          Only the `elements` entry is inspected/adjusted; all other keys are
+          returned unchanged.
+
+    Contract:
+    - Returns a new/updated `kwargs` mapping whose `elements` entry generates
+          only non-negative values.
+    - If `elements` is a mapping, its `min_value` is raised to at least `0`.
+    - If `elements` is a `SearchStrategy`, its values are mapped with `abs`.
+    - If `elements` is absent, a default non-negative elements strategy is
+          created from `dtype` (defaulting to `jnp.float32`) with `min_value=0`.
+
+    Failure behavior:
+    - An `elements` value that is neither a mapping nor a `SearchStrategy`
+          triggers `assert_never` (a logic error, not a user-facing failure).
 
 ### `coordinaxs.hypothesis.charts`
 
