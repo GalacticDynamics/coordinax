@@ -3,16 +3,13 @@
 `tests/integration/frames/test_interop_import_order.py` covers the real
 end-to-end behaviour, but it must spawn subprocesses (the session conftest
 preloads `coordinax`, so import order cannot be varied in-process). These
-in-process tests exercise the loader's branches directly: readiness detection,
-legacy-group handling, and the failure classification that decides whether an
-entry point is left pending or raised.
+in-process tests exercise the loader directly: it never raises (interop is an
+optional extra), records failures for inspection, retries pending/failed entry
+points, and honours the legacy group name.
 """
 
-import importlib
-import sys
 import warnings
 
-import types
 from typing import Any
 
 import pytest
@@ -24,10 +21,15 @@ import coordinax as cx
 def _reset_interop_state() -> Any:
     """Save/restore the loader's module-level state around a test."""
     state = cx._OPTIONAL_INTEROP_STATE
-    saved = {"loading": state["loading"], "loaded": set(state["loaded"])}
+    saved = {
+        "loading": state["loading"],
+        "loaded": set(state["loaded"]),
+        "failed": dict(state["failed"]),
+    }
     yield
     state["loading"] = saved["loading"]
     state["loaded"] = saved["loaded"]
+    state["failed"] = saved["failed"]
 
 
 class _FakeEntryPoint:
@@ -45,84 +47,27 @@ class _FakeEntryPoint:
         return object()
 
 
-def _initializing_module(name: str) -> types.ModuleType:
-    """A module object that reports itself as still executing its body."""
-    module = types.ModuleType(name)
-    spec = types.SimpleNamespace(_initializing=True)
-    module.__spec__ = spec  # type: ignore[assignment]
-    return module
+def _only_interop(ep: _FakeEntryPoint) -> Any:
+    """An `entry_points` stub returning ``[ep]`` for the interop group."""
+    return lambda group: [ep] if "interop" in group else []
 
 
 # =============================================================================
-# _coordinaxs_is_initializing
-
-
-def test_not_initializing_at_rest() -> None:
-    """With every coordinaxs module fully imported, nothing is initializing."""
-    assert cx._coordinaxs_is_initializing() is False
-
-
-def test_detects_partially_initialized_module(monkeypatch: Any) -> None:
-    """A coordinaxs module mid-import is detected."""
-    monkeypatch.setitem(
-        sys.modules, "coordinaxs.fake_pkg", _initializing_module("coordinaxs.fake_pkg")
-    )
-    assert cx._coordinaxs_is_initializing() is True
-
-
-def test_ignores_unrelated_initializing_module(monkeypatch: Any) -> None:
-    """A non-coordinaxs module mid-import is not mistaken for the cycle."""
-    monkeypatch.setitem(sys.modules, "unrelated", _initializing_module("unrelated"))
-    assert cx._coordinaxs_is_initializing() is False
-
-
-def test_importlib_marks_initializing_modules(tmp_path: Any) -> None:
-    """Pin the private importlib contract `_coordinaxs_is_initializing` uses.
-
-    `_coordinaxs_is_initializing` reads ``__spec__._initializing`` — a private,
-    undocumented CPython importlib attribute that is ``True`` only while a
-    module's body executes. Every other test in this module *fakes* that
-    attribute, so a Python release that removed or renamed it would leave the
-    faked tests green while the real cycle-tolerance silently broke (astro-first
-    import would start raising). This test imports a real module that captures
-    its own ``__spec__._initializing`` during execution, pinning the contract so
-    such a change is caught here instead.
-    """
-    probe = tmp_path / "_probe_initializing.py"
-    probe.write_text(
-        "import sys\n"
-        "_spec = sys.modules[__name__].__spec__\n"
-        "captured = getattr(_spec, '_initializing', 'MISSING')\n"
-    )
-    probe_dir = str(tmp_path)
-    sys.path.insert(0, probe_dir)
-    try:
-        module = importlib.import_module("_probe_initializing")
-        assert module.captured is True, (
-            "importlib no longer sets __spec__._initializing during module "
-            "execution; _coordinaxs_is_initializing() needs updating."
-        )
-    finally:
-        sys.path.remove(probe_dir)
-        sys.modules.pop("_probe_initializing", None)
-
-
-# =============================================================================
-# _load_optional_interop
+# _load_optional_interop: success and bookkeeping
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
 def test_loads_entry_point_once(monkeypatch: Any) -> None:
     """An entry point is loaded once and then recorded as loaded."""
     ep = _FakeEntryPoint("fake")
-    monkeypatch.setattr(
-        cx, "entry_points", lambda group: [ep] if "interop" in group else []
-    )
+    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
     cx._load_optional_interop()
     assert ep.loaded
     assert "fake" in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    assert cx._OPTIONAL_INTEROP_STATE["failed"] == {}
 
     ep.loaded = False
     cx._load_optional_interop()  # already recorded -> not re-loaded
@@ -130,42 +75,67 @@ def test_loads_entry_point_once(monkeypatch: Any) -> None:
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
-def test_failure_during_cycle_is_left_pending(monkeypatch: Any) -> None:
-    """A failure while a coordinaxs module is mid-import leaves it pending."""
-    ep = _FakeEntryPoint("fake", exc=AttributeError("no attribute 'Parallax'"))
-    monkeypatch.setattr(
-        cx, "entry_points", lambda group: [ep] if "interop" in group else []
-    )
-    monkeypatch.setitem(
-        sys.modules, "coordinaxs.fake_pkg", _initializing_module("coordinaxs.fake_pkg")
-    )
+def test_reentrant_call_is_a_noop(monkeypatch: Any) -> None:
+    """A re-entrant call returns immediately instead of double-loading."""
+    ep = _FakeEntryPoint("fake")
+    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
+    cx._OPTIONAL_INTEROP_STATE["loading"] = True
+
+    cx._load_optional_interop()
+
+    assert not ep.loaded
+
+
+# =============================================================================
+# _load_optional_interop: failures are recorded, never raised
+#
+# Interop is an optional extra, so a load failure must never break `import
+# coordinax`. Instead of classifying failures (which previously required reading
+# a private CPython import-state attribute), the loader records every failure
+# and retries it on the next call. A transient failure (a sibling still
+# mid-import in the astro->coordinax->interop->astro cycle) recovers on the
+# retry; a genuine failure stays recorded. Behaviour is identical regardless of
+# import order.
+
+
+@pytest.mark.usefixtures("_reset_interop_state")
+def test_failure_is_recorded_not_raised(monkeypatch: Any) -> None:
+    """A load failure is recorded rather than raised, and is not marked loaded."""
+    exc = RuntimeError("interop is broken")
+    ep = _FakeEntryPoint("fake", exc=exc)
+    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
     cx._load_optional_interop()  # must not raise
 
     assert "fake" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    assert cx._OPTIONAL_INTEROP_STATE["failed"]["fake"] is exc
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
-def test_genuine_failure_propagates(monkeypatch: Any) -> None:
-    """A failure with nothing mid-import is real breakage and is raised."""
-    ep = _FakeEntryPoint("fake", exc=RuntimeError("interop is broken"))
-    monkeypatch.setattr(
-        cx, "entry_points", lambda group: [ep] if "interop" in group else []
-    )
+def test_import_error_is_also_recorded_not_raised(monkeypatch: Any) -> None:
+    """An ImportError (absent transitive dep) is recorded, not raised."""
+    ep = _FakeEntryPoint("fake", exc=ImportError("no module named 'astropy'"))
+    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
-    with pytest.raises(RuntimeError, match="interop is broken"):
-        cx._load_optional_interop()
+    cx._load_optional_interop()  # must not raise
+
+    assert "fake" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    assert isinstance(cx._OPTIONAL_INTEROP_STATE["failed"]["fake"], ImportError)
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
-def test_retry_completes_after_cycle_clears(monkeypatch: Any) -> None:
-    """A pending entry point loads on a later call once the cycle clears.
+def test_retry_recovers_after_transient_failure(monkeypatch: Any) -> None:
+    """An entry point that fails once then succeeds is recovered on the retry.
 
-    This is the whole point of the retryable design: fail while a sibling is
-    mid-import, then succeed on a later at-rest call. The astro-first ordering
-    relies on exactly this two-phase transition.
+    This is the mechanism the astro-first import ordering relies on: the first
+    load fails because a sibling is still mid-import, and a later call (from the
+    sibling's own re-invocation hook) succeeds.
     """
     calls = {"n": 0}
 
@@ -177,28 +147,23 @@ def test_retry_completes_after_cycle_clears(monkeypatch: Any) -> None:
 
         def load(self) -> object:
             calls["n"] += 1
-            if calls["n"] == 1:  # first attempt: fail as if mid-cycle
+            if calls["n"] == 1:  # first attempt fails, as if mid-cycle
                 raise AttributeError("partially initialized: no 'Parallax' yet")
             self.loaded = True
             return object()
 
     ep = _FlakyEntryPoint()
-    monkeypatch.setattr(
-        cx, "entry_points", lambda group: [ep] if "interop" in group else []
-    )
+    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
-    # Phase 1: a coordinaxs module is initializing -> the failure is tolerated
-    # and the entry point is left pending.
-    initializing = _initializing_module("coordinaxs.fake_pkg")
-    monkeypatch.setitem(sys.modules, "coordinaxs.fake_pkg", initializing)
+    # Phase 1: fails -> recorded, not loaded.
     cx._load_optional_interop()
     assert not ep.loaded
     assert "flaky" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    assert "flaky" in cx._OPTIONAL_INTEROP_STATE["failed"]
 
-    # Phase 2: the sibling finished initializing; a later call retries and the
-    # entry point now loads and is recorded.
-    initializing.__spec__._initializing = False  # type: ignore[union-attr]
+    # Phase 2: a later call retries and now succeeds.
     cx._load_optional_interop()
     assert ep.loaded
     assert "flaky" in cx._OPTIONAL_INTEROP_STATE["loaded"]
@@ -206,44 +171,48 @@ def test_retry_completes_after_cycle_clears(monkeypatch: Any) -> None:
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
-def test_genuine_error_is_swallowed_while_initializing(monkeypatch: Any) -> None:
-    """A genuinely broken interop is swallowed, not raised, while initializing.
+def test_success_clears_prior_failure(monkeypatch: Any) -> None:
+    """Recovering an entry point removes it from the recorded failures."""
+    calls = {"n": 0}
 
-    This pins the loader's documented limitation.
-    `_load_optional_interop` cannot distinguish a real failure from the expected
-    import cycle while a `coordinaxs` module is still initializing, so it leaves
-    the entry point pending instead of raising (see the loader docstring). This
-    test locks that intended-but-imperfect semantics so a future change to the
-    failure classification is caught.
-    """
-    ep = _FakeEntryPoint("fake", exc=RuntimeError("interop is genuinely broken"))
-    monkeypatch.setattr(
-        cx, "entry_points", lambda group: [ep] if "interop" in group else []
-    )
-    monkeypatch.setitem(
-        sys.modules, "coordinaxs.fake_pkg", _initializing_module("coordinaxs.fake_pkg")
-    )
+    class _FlakyEntryPoint:
+        name = "flaky"
+
+        def load(self) -> object:
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("not yet")
+            return object()
+
+    ep = _FlakyEntryPoint()
+    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
-    # Swallowed, not raised, because a coordinaxs module is still initializing.
     cx._load_optional_interop()
+    assert "flaky" in cx._OPTIONAL_INTEROP_STATE["failed"]
 
-    assert "fake" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    cx._load_optional_interop()
+    assert "flaky" not in cx._OPTIONAL_INTEROP_STATE["failed"]
+    assert "flaky" in cx._OPTIONAL_INTEROP_STATE["loaded"]
 
 
 @pytest.mark.usefixtures("_reset_interop_state")
-def test_reentrant_call_is_a_noop(monkeypatch: Any) -> None:
-    """A re-entrant call returns immediately instead of double-loading."""
-    ep = _FakeEntryPoint("fake")
+def test_one_failure_does_not_block_other_entry_points(monkeypatch: Any) -> None:
+    """A failing entry point does not prevent a sibling from loading."""
+    good = _FakeEntryPoint("good")
+    bad = _FakeEntryPoint("bad", exc=RuntimeError("broken"))
     monkeypatch.setattr(
-        cx, "entry_points", lambda group: [ep] if "interop" in group else []
+        cx, "entry_points", lambda group: [bad, good] if "interop" in group else []
     )
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
-    cx._OPTIONAL_INTEROP_STATE["loading"] = True
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
     cx._load_optional_interop()
 
-    assert not ep.loaded
+    assert good.loaded
+    assert "good" in cx._OPTIONAL_INTEROP_STATE["loaded"]
+    assert "bad" in cx._OPTIONAL_INTEROP_STATE["failed"]
 
 
 # =============================================================================
@@ -260,6 +229,7 @@ def test_legacy_group_is_honoured_with_deprecation_warning(monkeypatch: Any) -> 
 
     monkeypatch.setattr(cx, "entry_points", fake_entry_points)
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
     with pytest.warns(DeprecationWarning, match="legacy"):
         cx._load_optional_interop()
@@ -280,6 +250,7 @@ def test_current_group_wins_over_legacy_duplicate(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(cx, "entry_points", fake_entry_points)
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
+    cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)

@@ -88,7 +88,6 @@ __all__ = (  # distances
     "ToUnitsOptions",
 )
 
-import sys
 import warnings
 from importlib.metadata import entry_points
 
@@ -203,42 +202,44 @@ _INTEROP_ENTRYPOINT_GROUP: Final = "coordinaxs.interop"
 #: Pre-rename group name, still honoured so third-party interop
 #: distributions published against it are not silently dropped.
 _LEGACY_INTEROP_ENTRYPOINT_GROUP: Final = "coordinax.interop"
-_OPTIONAL_INTEROP_STATE: dict[str, Any] = {"loading": False, "loaded": set()}
-
-
-def _coordinaxs_is_initializing() -> bool:
-    """Whether any ``coordinaxs`` module is still executing its module body."""
-    for name in list(sys.modules):
-        if name != "coordinaxs" and not name.startswith("coordinaxs."):
-            continue
-        spec = getattr(sys.modules.get(name), "__spec__", None)
-        if getattr(spec, "_initializing", False):
-            return True
-    return False
+#: ``loaded``: names of entry points whose module imported successfully.
+#: ``failed``: name -> the last exception raised while loading it (retryable;
+#: cleared on a later successful load). Inspect ``failed`` to diagnose an
+#: installed-but-broken interop.
+_OPTIONAL_INTEROP_STATE: dict[str, Any] = {
+    "loading": False,
+    "loaded": set(),
+    "failed": {},
+}
 
 
 def _load_optional_interop() -> None:
     """Import interop packages registered in the ``coordinaxs.interop`` group.
 
-    Idempotent and retryable: each entry point is loaded at most once, and any
-    that cannot be loaded yet (because a package it references is mid-import)
-    is left pending for a later call.
+    Interop distributions register their conversions and chart transitions as an
+    import side effect. Because interop is an *optional* extra, a load failure
+    must never break ``import coordinax``: this function never raises. Each entry
+    point is loaded at most once; a load that fails is recorded in
+    ``_OPTIONAL_INTEROP_STATE["failed"]`` and retried on the next call.
 
-    Contract for interop authors: a pending entry point is only retried when
-    something calls this function again. Core calls it once at the end of its
-    own import, and ``coordinaxs.astro`` re-invokes it at the end of *its* import
-    (so astro-first ordering works). If you write an interop that participates
-    in an import cycle through a *different* sibling package, that sibling must
-    likewise call ``coordinax._load_optional_interop()`` at the end of its
-    ``__init__`` once its public symbols exist — otherwise a sibling-first import
-    leaves your interop permanently pending and silently unregistered.
+    Retryability is what makes registration import-order independent. Interop
+    participates in a cycle — ``coordinaxs.interop.astropy`` references
+    ``coordinaxs.astro`` types, and ``coordinaxs.astro`` imports
+    ``coordinax.frames``, which (now that ``coordinax`` is a regular package)
+    runs this module. When the sibling is imported first, this loader runs while
+    the sibling is only partially initialized, so the interop import fails; it is
+    recorded and simply *succeeds on the retry* once the sibling finishes. No
+    inspection of import-machinery state is needed, and the behaviour is the same
+    whichever module is imported first.
 
-    Known limitation: a genuinely broken interop package whose import fails
-    *while* some ``coordinaxs`` module is still initializing is indistinguishable
-    from the expected cycle, so it is left pending rather than raised. In
-    practice that means a broken interop is reported when `coordinax` is
-    imported first (the common case, and the documented entry point) but is
-    silently skipped when the interop's sibling package is imported first.
+    Contract for interop authors: a failed/pending entry point is retried only
+    when something calls this again. Core calls it once at the end of its own
+    import, and ``coordinaxs.astro`` re-invokes it at the end of *its* import. An
+    interop that participates in a cycle through a *different* sibling should
+    have that sibling likewise call ``coordinax._load_optional_interop()`` at the
+    end of its ``__init__`` (once its public symbols exist), or a sibling-first
+    import leaves the interop recorded in ``failed`` and unregistered until the
+    next call. A genuinely broken interop stays in ``failed`` in every ordering.
     """
     state = _OPTIONAL_INTEROP_STATE
     if state["loading"]:  # guard against re-entrant loading
@@ -270,14 +271,14 @@ def _load_optional_interop() -> None:
                 continue
             try:
                 ep.load()  # importing the module performs the registration
-            except Exception:
-                # Only the known import cycle is tolerated; leave this entry
-                # point pending so a later call retries it. Anything else is a
-                # genuine failure in an installed interop package.
-                if not _coordinaxs_is_initializing():
-                    raise
+            except Exception as exc:  # noqa: BLE001
+                # Optional extra: never break `import coordinax`. Record the
+                # failure (retryable) instead of raising. A transient cyclic
+                # failure recovers on a later call; a genuine one persists here.
+                state["failed"][ep.name] = exc
             else:
                 state["loaded"].add(ep.name)
+                state["failed"].pop(ep.name, None)
     finally:
         state["loading"] = False
 
