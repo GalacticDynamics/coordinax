@@ -371,8 +371,16 @@ class AbstractVector(
         if type(other) is not type(self):
             return NotImplemented
 
+        # Vectors in different charts or frames are not equal. Chart and frame
+        # are static metadata, so this comparison is a plain Python bool (safe
+        # under jit); it also avoids the component-key mismatch that comparing
+        # different-chart data dicts would otherwise raise.
+        other_vec = cast("AbstractVector", other)
+        if self.chart != other_vec.chart or self.frame != other_vec.frame:
+            return jnp.zeros((), dtype=bool)
+
         # Delegate to `quax` primitives
-        return jnp.equal(self, cast("AbstractVector", other))
+        return jnp.equal(self, other_vec)
 
     # ---------------------------------
     # methods

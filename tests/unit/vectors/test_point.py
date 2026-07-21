@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
+import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax as cx
@@ -72,3 +73,25 @@ class TestPointFrame:
             frame=cxf.alice,
         )
         assert isinstance(p.frame, cxf.AbstractReferenceFrame)
+
+
+class TestPointEquality:
+    """``==`` accounts for the chart and frame, and never raises."""
+
+    def test_eq_different_chart_is_false(self):
+        """Points in different charts are unequal, not a key-mismatch error."""
+        p1 = cx.Point.from_([1, 2, 3], "m")
+        p2 = p1.cconvert(cxc.sph3d)
+        assert not bool(qnp.all(p1 == p2))
+
+    def test_eq_different_frame_is_false(self):
+        """Points with identical data but different frames are unequal."""
+        p1 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
+        p2 = cx.Point.from_([1, 2, 3], "km", cxf.noframe)
+        assert not bool(qnp.all(p1 == p2))
+
+    def test_eq_same_chart_frame_and_data_is_true(self):
+        """Identical points remain equal."""
+        p1 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
+        p2 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
+        assert bool(qnp.all(p1 == p2))
