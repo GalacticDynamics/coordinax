@@ -120,7 +120,11 @@ def test_failure_is_recorded_not_raised(monkeypatch: Any) -> None:
     cx._load_optional_interop()  # must not raise
 
     assert "fake" not in cx._OPTIONAL_INTEROP_STATE["loaded"]
-    assert cx._OPTIONAL_INTEROP_STATE["failed"]["fake"] is exc
+    stored = cx._OPTIONAL_INTEROP_STATE["failed"]["fake"]
+    assert stored is exc
+    # The traceback is cleared so the long-lived `failed` dict does not pin the
+    # stack frames (and their locals) captured when the load failed.
+    assert stored.__traceback__ is None
 
 
 @pytest.mark.usefixtures("_reset_interop_state")

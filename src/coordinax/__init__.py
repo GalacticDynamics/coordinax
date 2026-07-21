@@ -193,14 +193,16 @@ from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 # loader runs while the sibling is only partially initialized and its types are
 # not yet resolvable, so the interop import fails.
 #
-# Because interop is an *optional* extra, that failure must never break
-# `import coordinax`. Rather than classifying failures, the loader records every
-# failure (in `_OPTIONAL_INTEROP_STATE["failed"]`) and never raises. A transient
-# cyclic failure recovers on a later call — packages that participate in such a
-# cycle re-invoke this once their own symbols exist (see
-# `coordinaxs.astro.__init__`), and the retry succeeds and clears the failure. A
-# genuine failure simply stays recorded. This needs no inspection of
+# Because interop is an *optional* extra, a failed entry-point *load* must never
+# break `import coordinax`. Rather than classifying failures, the loader records
+# each load failure (in `_OPTIONAL_INTEROP_STATE["failed"]`) and does not
+# re-raise it. A transient cyclic failure recovers on a later call — packages
+# that participate in such a cycle re-invoke this once their own symbols exist
+# (see `coordinaxs.astro.__init__`), and the retry succeeds and clears the
+# failure. A genuine failure simply stays recorded. This needs no inspection of
 # import-machinery state and behaves identically in every import order.
+# (Errors from entry-point *discovery* itself — e.g. corrupt distribution
+# metadata — indicate a broken environment and are left to propagate.)
 
 _INTEROP_ENTRYPOINT_GROUP: Final = "coordinaxs.interop"
 #: Pre-rename group name, still honoured so third-party interop
@@ -221,10 +223,13 @@ def _load_optional_interop() -> None:
     """Import interop packages registered in the ``coordinaxs.interop`` group.
 
     Interop distributions register their conversions and chart transitions as an
-    import side effect. Because interop is an *optional* extra, a load failure
-    must never break ``import coordinax``: this function never raises. Each entry
-    point is loaded at most once; a load that fails is recorded in
-    ``_OPTIONAL_INTEROP_STATE["failed"]`` and retried on the next call.
+    import side effect. Because interop is an *optional* extra, an entry point
+    that fails to *load* must never break ``import coordinax``: each entry point
+    is loaded at most once, and a load that raises is recorded in
+    ``_OPTIONAL_INTEROP_STATE["failed"]`` (with its traceback cleared) and retried
+    on the next call rather than propagated. Errors from entry-point *discovery*
+    itself — e.g. corrupt distribution metadata — are a broken environment and
+    are left to propagate.
 
     Retryability is what makes registration import-order independent. Interop
     participates in a cycle — ``coordinaxs.interop.astropy`` references
@@ -276,10 +281,13 @@ def _load_optional_interop() -> None:
             try:
                 ep.load()  # importing the module performs the registration
             except Exception as exc:  # noqa: BLE001
-                # Optional extra: never break `import coordinax`. Record the
-                # failure (retryable) instead of raising. A transient cyclic
-                # failure recovers on a later call; a genuine one persists here.
-                state["failed"][ep.name] = exc
+                # Optional extra: a failed load must never break `import
+                # coordinax`. Record the failure (retryable) instead of raising.
+                # Clear the traceback first: this dict lives for the process
+                # lifetime, and a retained traceback pins its stack frames and
+                # their locals. A transient cyclic failure recovers on a later
+                # call; a genuine one persists here.
+                state["failed"][ep.name] = exc.with_traceback(None)
             else:
                 state["loaded"].add(ep.name)
                 state["failed"].pop(ep.name, None)
