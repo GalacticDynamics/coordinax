@@ -44,13 +44,27 @@ def jax_scalar_handler(obj: Any, /) -> wl.AbstractDoc | None:
     >>> wl.pformat(f, custom=jax_scalar_handler)
     '<function <lambda>>'
 
+    Multi-element arrays fall back to the default summary (no ``.item()`` crash):
+
+    >>> wl.pformat({"v": jnp.array([1.0, 2.0, 3.0])}, custom=jax_scalar_handler)
+    "{'v': f64[3](jax)}"
+
+    Objects without ``.item`` (e.g. a 0-d ``unxt`` Quantity) render normally:
+
+    >>> import unxt as u
+    >>> isinstance(wl.pformat({"d": u.Q(jnp.array(2.0), "km")},
+    ...                       custom=jax_scalar_handler), str)
+    True
+
     """  # noqa: D401
     # Tracers: let wadler_lindig render the shape/dtype summary.
     if isinstance(obj, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
         return None
 
-    # Concrete 0-d arrays: convert to a Python scalar for display.
-    if hasattr(obj, "item"):
+    # Concrete 0-d arrays: convert to a Python scalar for display. Require both
+    # ``.item`` (excludes e.g. unxt Quantity, which renders itself) and
+    # ``ndim == 0`` (``.item()`` raises on size > 1 arrays).
+    if hasattr(obj, "item") and getattr(obj, "ndim", None) == 0:
         return wl.pdoc(obj.item())
 
     return None
