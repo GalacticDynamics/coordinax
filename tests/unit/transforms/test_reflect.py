@@ -4,14 +4,24 @@ __all__: tuple[str, ...] = ()
 
 from typing import Any, cast
 
+import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
+import pytest
 
 import unxt as u
 
 import coordinax as cx
 import coordinax.transforms as cxfm
 from .conftest import EXPECTED_IDENTITY, EXPECTED_REFLECT
+
+
+def test_reflect_from_normal_zero_raises_under_jit() -> None:
+    """A zero normal is rejected even under jit (no tracer bool)."""
+    build = eqx.filter_jit(cxfm.Reflect.from_normal)
+    with pytest.raises(eqx.EquinoxRuntimeError, match="nonzero normal"):
+        jax.block_until_ready(build(jnp.asarray([0.0, 0.0, 0.0])).H)
 
 
 def _extract_xyz(result: Any) -> tuple[float, float, float]:

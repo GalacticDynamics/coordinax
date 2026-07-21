@@ -6,6 +6,7 @@ __all__ = ("Scale",)
 
 from typing import Any, Final, TypeAlias, final
 
+import equinox as eqx
 import plum
 from jax.typing import ArrayLike
 from jaxtyping import Array, Shaped
@@ -58,8 +59,9 @@ class Scale(AbstractLinearTransform):
         if s.ndim != 1:
             msg = f"Scale.from_factors requires a vector; got shape={s.shape!r}."
             raise ValueError(msg)
-        if bool(jnp.any(jnp.isclose(s, 0))):
-            raise ValueError(_MSG_SINGULAR)
+        # Defer the singular check so it survives jit (a plain `bool` on a
+        # traced value raises TracerBoolConversionError).
+        s = eqx.error_if(s, jnp.any(jnp.isclose(s, 0)), _MSG_SINGULAR)
         return cls(jnp.diag(s))
 
     @property

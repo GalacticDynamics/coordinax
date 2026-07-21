@@ -6,6 +6,7 @@ __all__ = ("Reflect",)
 from jaxtyping import Array, Shaped
 from typing import Any, Final, TypeAlias, final
 
+import equinox as eqx
 import plum
 from jax.typing import ArrayLike
 
@@ -75,8 +76,9 @@ class Reflect(AbstractLinearTransform):
             raise ValueError(msg)
 
         norm = jnp.linalg.norm(n)
-        if bool(jnp.allclose(norm, 0)):
-            raise ValueError(_MSG_ZERO_NORMAL)
+        # Defer the zero-normal check so it survives jit (a plain `bool` on a
+        # traced value raises TracerBoolConversionError).
+        n = eqx.error_if(n, jnp.allclose(norm, 0), _MSG_ZERO_NORMAL)
 
         n_hat = n / norm
         H = jnp.eye(n.shape[0], dtype=n_hat.dtype) - 2 * jnp.outer(n_hat, n_hat)
