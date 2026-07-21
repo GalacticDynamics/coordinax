@@ -11,7 +11,7 @@ import unxt as u
 import unxt_hypothesis as ust
 
 import coordinaxs.astro as cxastro
-from coordinaxs.hypothesis.distances._src.utils import make_nonnegative
+from coordinaxs.hypothesis.distances import make_nonnegative
 
 ANGLE = u.dimension("angle")
 

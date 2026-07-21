@@ -1,5 +1,5 @@
 """Hypothesis strategies for coordinax."""
 
-__all__ = ("distances",)
+__all__ = ("distances", "make_nonnegative")
 
-from ._src import distances
+from ._src import distances, make_nonnegative
