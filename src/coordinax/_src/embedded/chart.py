@@ -73,7 +73,7 @@ class EmbeddedChart(
     >>> import unxt as u
     >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
     >>> chart.embed_map
-    TwoSphereIn3D(radius=Q(2., 'km'))
+    TwoSphereIn3D(radius=Q(2., 'km'), ambient=Spherical3D(M=Rn(3)))
 
     """
 
@@ -93,7 +93,8 @@ class EmbeddedChart(
         >>> chart.M
         EmbeddedManifold(intrinsic=HyperSphericalManifold(ndim=2),
                          ambient=Rn(3),
-                         embed_map=TwoSphereIn3D(radius=Q(2., 'km')))
+                         embed_map=TwoSphereIn3D(radius=Q(2., 'km'),
+                                                 ambient=Spherical3D(M=Rn(3))))
 
         """
         return EmbeddedManifold(

@@ -39,7 +39,8 @@ def pt_map(
     >>> M
     EmbeddedManifold(intrinsic=HyperSphericalManifold(...),
                      ambient=Rn(3),
-                     embed_map=TwoSphereIn3D(radius=Q(1, 'kpc')))
+                     embed_map=TwoSphereIn3D(radius=Q(1, 'kpc'),
+                                             ambient=Spherical3D(M=Rn(3))))
     >>> x_cart = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
 
     >>> x_sph2 = cxc.pt_map(x_cart, M, cxc.cart3d, cxc.loncoslat_sph2)
