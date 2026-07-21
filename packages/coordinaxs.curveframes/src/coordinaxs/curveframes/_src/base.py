@@ -276,7 +276,7 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
         return R(tau) if callable(R) else R  # ty: ignore[call-top-callable]
 
     def tangent(self, tau: u.AbstractQuantity, /) -> Any:
-        r"""Unit tangent vector $\mathbf{T}(\tau)$ (row 0 of R).
+        r"""Return the unit tangent vector $\mathbf{T}(\tau)$ (row 0 of R).
 
         Parameters
         ----------

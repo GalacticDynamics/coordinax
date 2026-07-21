@@ -63,14 +63,6 @@ packages = ["src/coordinaxs"]
 [tool.ruff]
 extend = "../../pyproject.toml"
 
-[tool.ruff.lint]
-# Pre-existing lint debt, surfaced now that this package inherits the root
-# ruff config (previously it shadowed the root and silently ran ruff's
-# default rule set, so the root's import-convention aliases were never
-# enforced here). Ignored to keep this packaging change reviewable;
-# TODO: burn these down in a follow-up.
-ignore = ["D401", "PLC0415", "RUF002"]
-
 [tool.ruff.lint.isort]
 combine-as-imports = true
 known-first-party = ["dataclassish", "quaxed", "unxt", "coordinax"]

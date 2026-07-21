@@ -95,8 +95,14 @@ def angle_between(
     ...     "theta": u.Angle(jnp.pi / 2, "rad"),
     ...     "phi": u.Angle(0.0, "rad"),
     ... }
-    >>> u_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
-    >>> v_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
+    >>> u_tan = {
+    ...     "r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"),
+    ...     "phi": u.Angle(0.0, "rad"),
+    ... }
+    >>> v_tan = {
+    ...     "r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"),
+    ...     "phi": u.Angle(1.0, "rad"),
+    ... }
     >>> cxm.angle_between(cxc.sph3d, u_tan, v_tan, at=at_sph)
     Angle(1.57079633, 'rad')
 

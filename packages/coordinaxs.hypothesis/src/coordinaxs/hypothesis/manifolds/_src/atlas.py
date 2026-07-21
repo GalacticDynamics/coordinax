@@ -578,7 +578,8 @@ def atlases(
             chart = cls()
         except TypeError as exc:
             raise ValueError(
-                f"Required chart class {cls.__name__} must be zero-argument constructible."
+                f"Required chart class {cls.__name__} must be zero-argument "
+                "constructible."
             ) from exc
         if chart.ndim != custom_ndim:
             raise ValueError(

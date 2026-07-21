@@ -402,13 +402,14 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = [
   "ANN",
-  "ARG002", # Unused method argument
-  "ARG005", # Unused lambda argument
+  "ARG002",  # Unused method argument
+  "ARG005",  # Unused lambda argument
   "D102",
-  "D401",   # First line of docstring should be in imperative mood
+  "D401",    # First line of docstring should be in imperative mood
   "FBT001",
   "INP001",
   "N803",
+  "PLC0415", # tests may import inside functions (e.g. import-smoke tests)
   "RUF002",
   "S101",
   "T20",

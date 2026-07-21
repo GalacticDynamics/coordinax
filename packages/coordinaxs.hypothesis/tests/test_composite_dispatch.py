@@ -1,5 +1,4 @@
-"""Integration tests: ``hypothesis.strategies.composite`` + ``plum`` multiple dispatch
-====================================================================================
+"""Integration tests: ``hypothesis.strategies.composite`` + ``plum`` multiple dispatch.
 
 How it works
 ------------
@@ -105,10 +104,13 @@ def annotated_draw(draw: Any, x: int):
 
 @pytest.mark.skipif(
     sys.version_info >= (3, 14),
-    reason="Python 3.14 changes annotation behaviour; @st.composite no longer strips draw from __annotations__ the same way",
+    reason=(
+        "Python 3.14 changes annotation behaviour; @st.composite no longer "
+        "strips draw from __annotations__ the same way"
+    ),
 )
 def test_draw_annotation_is_stripped():
-    """@composite removes draw from the public signature regardless of its annotation."""
+    """@composite removes draw from the public signature regardless of annotation."""
     fn = annotated_draw.invoke(int)
     assert "draw" not in fn.__annotations__, (
         "@composite should have stripped draw from annotations"

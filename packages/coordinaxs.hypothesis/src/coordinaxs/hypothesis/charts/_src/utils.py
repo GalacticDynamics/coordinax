@@ -42,9 +42,9 @@ def _param_filter(name: str, param: inspect.Parameter, /) -> bool:
         return False
     # Skip keyword-only params with defaults (e.g., the inherited `manifold`
     # field on AbstractChart) — these are metadata, not mathematical parameters.
-    if param.kind == inspect.Parameter.KEYWORD_ONLY and param.default is not EMPTY:
-        return False
-    return True
+    return not (
+        param.kind == inspect.Parameter.KEYWORD_ONLY and param.default is not EMPTY
+    )
 
 
 @ft.lru_cache(maxsize=256)

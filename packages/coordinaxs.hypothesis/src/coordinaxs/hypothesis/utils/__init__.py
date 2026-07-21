@@ -1,6 +1,7 @@
 """Coordinax Hypothesis Utilities.
 
-NOTE: these are internal utilities for the `coordinaxs.hypothesis` package and are not guaranteed to be stable. They may be changed without warning.
+NOTE: these are internal utilities for the `coordinaxs.hypothesis` package and are
+not guaranteed to be stable. They may be changed without warning.
 
 """
 

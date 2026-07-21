@@ -114,7 +114,11 @@ def cdicts(
     >>> @given(data=st.data())
     ... def test_invalid_point_basis_raises(data):
     ...     with pytest.raises(TypeError, match="NoBasis"):
-    ...         data.draw(cxrst.cdicts(cxc.cart3d, cxr.PointGeometry(), FakeBasis(), cxr.Location()))
+    ...         data.draw(
+    ...             cxrst.cdicts(
+    ...                 cxc.cart3d, cxr.PointGeometry(), FakeBasis(), cxr.Location()
+    ...             )
+    ...         )
 
     """
     if not isinstance(basis, cxr.NoBasis):

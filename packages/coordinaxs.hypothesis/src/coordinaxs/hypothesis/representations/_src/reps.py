@@ -149,7 +149,7 @@ def representations(
     geom_kind = draw_if_strategy(draw, geom_kind)
     if geom_kind is None:
         geom_kind = draw(geometries())
-    assert isinstance(geom_kind, cxr.AbstractGeometry)
+    assert isinstance(geom_kind, cxr.AbstractGeometry)  # noqa: S101  # strategy invariant
 
     # Draw the basis kind
     basis_kind = draw_if_strategy(draw, basis_kind)

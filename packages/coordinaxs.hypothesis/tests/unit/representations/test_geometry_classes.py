@@ -82,7 +82,7 @@ class TestGeometries:
 
     @given(geom=cxrst.geometries())
     def test_never_returns_abstract_class(self, geom: cxr.AbstractGeometry) -> None:
-        """Generated value is never an instance of the abstract base itself (only concrete)."""
+        """Generated value is never an instance of the abstract base itself."""
         # AbstractGeometry is abstract; so all instances are subclass instances
         assert type(geom) is not cxr.AbstractGeometry
 

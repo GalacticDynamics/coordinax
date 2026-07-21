@@ -3,4 +3,4 @@
 
 def test_import() -> None:
     """Test that the package can be imported."""
-    import coordinaxs.interop.astropy  # noqa: F401, PLC0415
+    import coordinaxs.interop.astropy  # noqa: F401

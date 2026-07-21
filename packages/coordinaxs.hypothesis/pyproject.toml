@@ -64,36 +64,16 @@ packages = ["src/coordinaxs"]
 extend = "../../pyproject.toml"
 
 [tool.ruff.lint]
-# Pre-existing lint debt, surfaced now that this package inherits the root
-# ruff config (previously it shadowed the root and silently ran ruff's
-# default rule set, so the root's import-convention aliases were never
-# enforced here). Ignored to keep this packaging change reviewable;
-# TODO: burn these down in a follow-up.
 ignore = [
-  "ANN002",
-  "ANN201",
-  "ANN202",
-  "ANN206",
-  "D102",
-  "D205",
-  "D400",
-  "D415",
-  "D417",
-  "E501",
-  "FBT001",
+  # `hypothesis.assume()` takes its condition positionally, so `assume(False)`
+  # (a common idiom to reject a generated case) trips FBT003 across strategies.
   "FBT003",
-  "INP001",
-  "S101",
-  "SIM103",
 ]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
 known-first-party  = ["coordinax"]
 known-local-folder = ["coordinaxs.hypothesis"]
-
-[tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["F403"]
 
 [tool.uv.sources]
 coordinax = { workspace = true }

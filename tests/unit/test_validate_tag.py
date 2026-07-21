@@ -24,7 +24,7 @@ def validate_tag(monkeypatch):
     monkeypatch.syspath_prepend(str(scripts_path))
 
     # Import inside fixture so path change is scoped
-    import validate_tag as vt  # noqa: PLC0415
+    import validate_tag as vt
 
     return vt
 

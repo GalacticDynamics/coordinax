@@ -20,7 +20,7 @@ def _is_workspace_module(module: ModuleType, /) -> bool:
 
 def test_canonical_chart_module_identity() -> None:
     """Chart classes resolve from canonical ``coordinax.*`` module paths."""
-    from coordinax._src.charts.d3 import Cart3D  # noqa: PLC0415
+    from coordinax._src.charts.d3 import Cart3D
 
     assert Cart3D is cxc.Cart3D
 

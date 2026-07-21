@@ -31,7 +31,7 @@ xps = make_strategies_namespace(jnp)
 
 
 @plum.dispatch.abstract
-def cdicts(*args: Any, **kwargs: Any) -> CDict:
+def cdicts(*args: Any, **kwargs: Any) -> CDict:  # noqa: D417
     """Generate a valid CDict matching chart components and role constraints.
 
     A CDict is a mapping from component-name strings to quantity-like values,

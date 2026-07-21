@@ -105,7 +105,7 @@ class TestCDictValueControl:
         )
     )
     def test_spherical_positive_elements(self, p):
-        """elements= applies to all component values including angles in a sphere chart."""
+        """elements= applies to all component values, including sphere angles."""
         # r, theta, phi all have positive values when elements is positive
         assert float(p["r"].value) > 0
         assert float(p["theta"].value) > 0

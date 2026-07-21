@@ -233,6 +233,8 @@ def chart_init_kwargs(
 
     Parameters
     ----------
+    draw
+        Hypothesis draw function. Automatically provided by hypothesis.
     chart_class : type[cxc.CartesianProductChart]
         The `coordinax.charts.CartesianProductChart` class.
     ndim : int | None
@@ -278,6 +280,8 @@ def charts(
     ----------
     draw
         Hypothesis draw function. Automatically provided by hypothesis.
+    chart_cls
+        The product-chart class to generate instances of.
     factor_charts
         Fixed tuple of factor chart instances, or strategy generating one.  If
         None, generates random charts with count between min_factors and

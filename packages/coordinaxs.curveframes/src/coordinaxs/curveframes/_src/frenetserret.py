@@ -129,7 +129,7 @@ class FrenetSerretTransform(AbstractParallelTransportTransform):
     # Convenience accessors (tangent inherited from ABC)
 
     def normal(self, tau: Any) -> u.Q:
-        r"""Unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).
+        r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).
 
         The principal normal lies in the osculating plane and points towards the
         centre of curvature.  It is obtained by Gram--Schmidt rejection of
@@ -168,7 +168,7 @@ class FrenetSerretTransform(AbstractParallelTransportTransform):
         return u.Q(R[1], "")
 
     def binormal(self, tau: Any) -> u.Q:
-        r"""Unit binormal vector $\mathbf{B}(\tau)$ (row 2 of R).
+        r"""Return the unit binormal vector $\mathbf{B}(\tau)$ (row 2 of R).
 
         The binormal completes the right-handed triad: $\mathbf{B} = \mathbf{T}
         \times \mathbf{N}$.

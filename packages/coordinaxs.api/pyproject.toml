@@ -69,19 +69,3 @@ version_tuple = {version_tuple!r}
 
 [tool.ruff]
 extend = "../../pyproject.toml"
-
-[tool.ruff.lint]
-# Pre-existing lint debt, surfaced now that this package inherits the root
-# ruff config (previously it shadowed the root and silently ran ruff's
-# default rule set, so the root's import-convention aliases were never
-# enforced here). Ignored to keep this packaging change reviewable;
-# TODO: burn these down in a follow-up.
-ignore = [
-  "INP001",  # coordinaxs.api is an implicit namespace package (PEP 420)
-  "E501",
-  "PLC0415",
-  "S101",
-]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = ["FBT001"]

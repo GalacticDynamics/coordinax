@@ -1,6 +1,6 @@
 """Package setup: runtime type-checking import hook for ``coordinaxs.curveframes``.
 
-This module configures `jaxtyping <https://docs.kidger.site/jaxtyping/>`_’s
+This module configures `jaxtyping <https://docs.kidger.site/jaxtyping/>`_'s
 import hook, which optionally checks array shape/dtype annotations at
 runtime.  The behaviour is controlled by the environment variable
 ``COORDINAX_ENABLE_RUNTIME_TYPECHECKING``:

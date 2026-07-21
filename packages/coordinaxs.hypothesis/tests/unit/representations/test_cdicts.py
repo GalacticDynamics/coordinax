@@ -58,13 +58,13 @@ def test_point_geometry_requires_location_semantic(data):
 
 @given(p=cxrst.cdicts(cxc.cart3d, cxr.coord_disp))
 def test_cdicts_tangent_coord_disp(p):
-    """Cdicts with coord_disp (TangentGeometry, CoordinateBasis, Displacement) returns chart components."""
+    """Cdicts with coord_disp returns chart components."""
     assert set(p.keys()) == {"x", "y", "z"}
 
 
 @given(p=cxrst.cdicts(cxc.sph3d, cxr.phys_vel))
 def test_cdicts_tangent_phys_vel(p):
-    """Cdicts with phys_vel (TangentGeometry, PhysicalBasis, Velocity) returns chart components."""
+    """Cdicts with phys_vel returns chart components."""
     assert set(p.keys()) == {"r", "theta", "phi"}
 
 
@@ -72,5 +72,5 @@ def test_cdicts_tangent_phys_vel(p):
     p=cxrst.cdicts(cxc.cart3d, cxst.representations(geom_kind=cxr.TangentGeometry()))
 )
 def test_cdicts_tangent_with_rep_strategy(p):
-    """Cdicts with a TangentGeometry representation strategy returns chart components."""
+    """Cdicts with a TangentGeometry strategy returns chart components."""
     assert set(p.keys()) == set(cxc.cart3d.components)
