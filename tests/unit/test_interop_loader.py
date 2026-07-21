@@ -47,9 +47,17 @@ class _FakeEntryPoint:
         return object()
 
 
-def _only_interop(ep: _FakeEntryPoint) -> Any:
-    """An `entry_points` stub returning ``[ep]`` for the interop group."""
-    return lambda group: [ep] if "interop" in group else []
+def _only_interop(ep: Any) -> Any:
+    """An `entry_points` stub returning ``[ep]`` for the current interop group.
+
+    Mirrors `importlib.metadata.entry_points()`: `group` is keyword-only and
+    matched exactly, so a loader that queries the wrong group name gets nothing.
+    """
+
+    def entry_points(*, group: str) -> list[Any]:
+        return [ep] if group == cx._INTEROP_ENTRYPOINT_GROUP else []
+
+    return entry_points
 
 
 # =============================================================================
@@ -202,9 +210,11 @@ def test_one_failure_does_not_block_other_entry_points(monkeypatch: Any) -> None
     """A failing entry point does not prevent a sibling from loading."""
     good = _FakeEntryPoint("good")
     bad = _FakeEntryPoint("bad", exc=RuntimeError("broken"))
-    monkeypatch.setattr(
-        cx, "entry_points", lambda group: [bad, good] if "interop" in group else []
-    )
+
+    def entry_points(*, group: str) -> list[_FakeEntryPoint]:
+        return [bad, good] if group == cx._INTEROP_ENTRYPOINT_GROUP else []
+
+    monkeypatch.setattr(cx, "entry_points", entry_points)
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 

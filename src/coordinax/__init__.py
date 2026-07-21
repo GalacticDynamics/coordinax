@@ -191,12 +191,16 @@ from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 # sibling imports `coordinax.frames`, which — now that `coordinax` is a regular
 # package — runs this module. So when the sibling is imported *first*, this
 # loader runs while the sibling is only partially initialized and its types are
-# not yet resolvable. Rather than pre-guessing that state, the loader attempts
-# the import and classifies the failure: if any `coordinaxs.*` module is still
-# executing its body, the entry point is left pending for a later call;
-# otherwise the failure is real and propagates. Packages that participate in
-# such a cycle re-invoke this once their own symbols exist (see
-# `coordinaxs.astro.__init__`), which is what completes the registration.
+# not yet resolvable, so the interop import fails.
+#
+# Because interop is an *optional* extra, that failure must never break
+# `import coordinax`. Rather than classifying failures, the loader records every
+# failure (in `_OPTIONAL_INTEROP_STATE["failed"]`) and never raises. A transient
+# cyclic failure recovers on a later call — packages that participate in such a
+# cycle re-invoke this once their own symbols exist (see
+# `coordinaxs.astro.__init__`), and the retry succeeds and clears the failure. A
+# genuine failure simply stays recorded. This needs no inspection of
+# import-machinery state and behaves identically in every import order.
 
 _INTEROP_ENTRYPOINT_GROUP: Final = "coordinaxs.interop"
 #: Pre-rename group name, still honoured so third-party interop
