@@ -15,7 +15,7 @@ from coordinaxs.hypothesis.distances import make_nonnegative
 
 def test_public_import() -> None:
     """The helper is importable from the package public API and callable."""
-    from coordinaxs.hypothesis import distances as cxdst  # noqa: PLC0415
+    from coordinaxs.hypothesis import distances as cxdst
 
     assert "make_nonnegative" in cxdst.__all__
     assert cxdst.make_nonnegative is make_nonnegative
