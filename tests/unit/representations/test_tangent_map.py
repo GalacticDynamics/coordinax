@@ -211,6 +211,41 @@ class TestTangentMapPhysicalBasis:
             via_cc_cdict["phi"].value, direct["phi"].value, atol=1e-6
         )
 
+    def test_cross_chart_and_basis_one_shot(self) -> None:
+        """One call changing both chart and basis matches the two-step result.
+
+        Converting a Cartesian coordinate-basis vector to a spherical
+        physical-basis vector in a single ``tangent_map`` call must equal
+        first pushing the chart forward (keeping the basis) and then changing
+        the basis at the *destination-chart* base point.
+        """
+        v = {
+            "x": u.Q(jnp.array(1.0), "m/s"),
+            "y": u.Q(jnp.array(2.0), "m/s"),
+            "z": u.Q(jnp.array(0.5), "m/s"),
+        }
+        at = {
+            "x": u.Q(jnp.array(2.0), "m"),
+            "y": u.Q(jnp.array(1.0), "m"),
+            "z": u.Q(jnp.array(0.5), "m"),
+        }
+
+        one_shot = cxr.tangent_map(
+            v, cxc.cart3d, cxr.coord_disp, cxc.sph3d, cxr.phys_disp, at=at, usys=usys
+        )
+
+        # Reference: chart pushforward (keeps coord basis) then basis change.
+        mid = cxr.tangent_map(
+            v, cxc.cart3d, cxr.coord_disp, cxc.sph3d, at=at, usys=usys
+        )
+        at_sph = cxc.pt_map(at, cxc.cart3d, cxc.sph3d, usys=usys)
+        ref = cxr.change_basis(
+            mid, cxc.sph3d, cxr.coord_basis, cxr.phys_basis, at=at_sph, usys=usys
+        )
+
+        for k in ("r", "theta", "phi"):
+            np.testing.assert_allclose(one_shot[k].value, ref[k].value, atol=1e-6)
+
 
 class TestTangentMapCart2dToPolar2d:
     """Cart2D → Polar2D CoordinateBasis: Jacobian pushforward at (x=1, y=0).

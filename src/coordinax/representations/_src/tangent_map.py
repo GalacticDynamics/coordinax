@@ -264,5 +264,14 @@ def tangent_map(
 
     """
     v = cxrapi.tangent_map(v, from_chart, from_rep, to_chart, at=at, usys=usys)
-    v = cxrapi.change_basis(v, to_chart, from_rep.basis, to_rep.basis, at=at, usys=usys)
+    # After the pushforward v lives in ``to_chart``; the basis change must be
+    # evaluated at the base point expressed in ``to_chart`` coordinates.
+    at_to = (
+        at
+        if (at is None or from_chart is to_chart)
+        else cxc.pt_map(at, from_chart, to_chart, usys=usys)
+    )
+    v = cxrapi.change_basis(
+        v, to_chart, from_rep.basis, to_rep.basis, at=at_to, usys=usys
+    )
     return v  # noqa: RET504  # ty: ignore[invalid-return-type]
