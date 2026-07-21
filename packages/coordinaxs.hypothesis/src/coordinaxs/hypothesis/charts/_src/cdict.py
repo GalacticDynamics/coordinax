@@ -31,7 +31,7 @@ xps = make_strategies_namespace(jnp)
 
 
 @plum.dispatch.abstract
-def cdicts(*args: Any, **kwargs: Any) -> CDict:  # noqa: D417
+def cdicts(*args: Any, **kwargs: Any) -> CDict:
     """Generate a valid CDict matching chart components and role constraints.
 
     A CDict is a mapping from component-name strings to quantity-like values,
@@ -41,19 +41,8 @@ def cdicts(*args: Any, **kwargs: Any) -> CDict:  # noqa: D417
       have the same physical dimension (length, length/time, or length/time²)
     - For Point role, component dimensions follow `chart.coord_dimensions`
 
-    Parameters
-    ----------
-    draw
-        The Hypothesis draw function (provided automatically)
-    chart
-        Chart instance or strategy generating one, defining the component schema.
-    dtype
-        Data type for array components (default: jnp.float32)
-    shape
-        Shape for array components. Can be int, tuple of ints, or strategy.
-        Default is scalar (shape=())
-    elements
-        Strategy for generating individual float values. If None, uses finite floats.
+    This is the abstract dispatcher; see the concrete overloads below for the
+    accepted arguments (``chart``, ``dtype``, ``shape``, ``elements``).
 
     Returns
     -------
@@ -138,6 +127,28 @@ def cdicts(
 ) -> CDict:
     """Generate a valid CDict matching chart components and role constraints.
 
+    Parameters
+    ----------
+    draw
+        The Hypothesis draw function (provided automatically).
+    chart
+        The chart instance defining the component schema.
+    dtype
+        Data type for array components (default: ``jnp.float32``).
+    shape
+        Shape for array components; int, tuple of ints, or a strategy. Default
+        is scalar (``shape=()``).
+    elements
+        Strategy for generating individual float values. If ``None``, uses
+        finite floats.
+
+    Returns
+    -------
+    dict[str, Any]
+        A mapping from component names to quantity-like values.
+
+    Examples
+    --------
     >>> import coordinaxs.hypothesis.main as cxst
     >>> from hypothesis import given
     >>> import coordinax.charts as cxc
