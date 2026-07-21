@@ -71,12 +71,15 @@ class Parallax(cxd.AbstractDistance):
             msg = "Parallax must have angular dimensions."
             raise ValueError(msg)
 
-        if self.check_negative:  # pylint: disable=unreachable
-            eqx.error_if(
+        if self.check_negative:
+            # Store the checked value back so the guard survives jit (an
+            # unused `error_if` result is dead-code-eliminated under trace).
+            checked = eqx.error_if(
                 self.value,
                 jnp.any(jnp.less(self.value, 0)),
                 "Parallax must be non-negative.",
             )
+            object.__setattr__(self, "value", checked)
 
 
 @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]

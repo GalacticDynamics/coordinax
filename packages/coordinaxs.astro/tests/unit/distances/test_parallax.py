@@ -59,6 +59,18 @@ class TestParallaxConstruction:
         ):
             cxastro.Parallax(-1, "mas", check_negative=True)
 
+    def test_negative_raises_under_jit(self) -> None:
+        """The non-negativity check is not dead-code-eliminated under jit."""
+
+        @eqx.filter_jit
+        def build(v: jax.Array) -> jax.Array:
+            return cxastro.Parallax(v, "mas", check_negative=True).value
+
+        with pytest.raises(
+            eqx.EquinoxRuntimeError, match="Parallax must be non-negative"
+        ):
+            jax.block_until_ready(build(jnp.asarray(-1.0)))
+
     @given(plx=cxastrost.parallaxes())
     def test_has_value_and_unit(self, plx: cxastro.Parallax) -> None:
         """Generated parallaxes have value and unit attributes."""

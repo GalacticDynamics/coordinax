@@ -137,6 +137,18 @@ class TestDistanceConstruction:
         ):
             cxd.Distance(-1, "kpc", check_negative=True)
 
+    def test_negative_raises_under_jit(self) -> None:
+        """The non-negativity check is not dead-code-eliminated under jit."""
+
+        @eqx.filter_jit
+        def build(v: jax.Array) -> jax.Array:
+            return cxd.Distance(v, "kpc", check_negative=True).value
+
+        with pytest.raises(
+            eqx.EquinoxRuntimeError, match="Distance must be non-negative"
+        ):
+            jax.block_until_ready(build(jnp.asarray(-1.0)))
+
 
 class TestDistanceConversion:
     """Unit conversion preserves the Distance type and produces correct values."""
