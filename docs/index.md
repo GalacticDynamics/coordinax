@@ -12,6 +12,7 @@ sd_hide_title: true
 coordinaxs.api <packages/coordinaxs.api/index.md>
 coordinax <self>
 coordinaxs.astro <packages/coordinaxs.astro/index.md>
+coordinaxs.curveframes <packages/coordinaxs.curveframes/index.md>
 coordinaxs.hypothesis <packages/coordinaxs.hypothesis/index.md>
 coordinaxs.interop.astropy <packages/coordinaxs.interop.astropy/index.md>
 ```
@@ -50,6 +51,7 @@ tutorials/*
 coordinaxs.api <packages/coordinaxs.api/api>
 coordinax <api/index.md>
 coordinaxs.astro <packages/coordinaxs.astro/api>
+coordinaxs.curveframes <packages/coordinaxs.curveframes/api>
 coordinaxs.hypothesis <packages/coordinaxs.hypothesis/api>
 coordinaxs.interop.astropy <packages/coordinaxs.interop.astropy/api>
 ```
