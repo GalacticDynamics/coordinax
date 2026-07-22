@@ -117,8 +117,10 @@ def metric_matrix(
     dtype = jnp.result_type(*(block.value.dtype for block in factor_blocks))
     value = jnp.zeros((n, n), dtype=dtype)
 
-    # First pass: place each factor block and record its diagonal units.
-    diag_units: list[Any] = [u.unit("") for _ in range(n)]
+    # Place each factor's numeric block and its (intra-block) units; record the
+    # index range of each block for the cross-factor pass below.
+    units: list[list[Any]] = [[u.unit("") for _ in range(n)] for _ in range(n)]
+    block_ranges: list[range] = []
     offset = 0
     for block in factor_blocks:
         block_n = block.shape[0]
@@ -126,30 +128,25 @@ def metric_matrix(
             block.value
         )
         for i in range(block_n):
-            diag_units[offset + i] = block.unit[i, i]
-        offset += block_n
-
-    # Off-diagonal (i, j) entries are numerically zero across factors, but their
-    # units must be the geometric mean sqrt([g_ii]*[g_jj]) so that every term of
-    # the vᵀGv contraction converts to the row reference unit g[i,0]*v[0]. This
-    # mirrors DiagonalMetric.to_dense and keeps products of factors with
-    # non-dimensionless metrics (e.g. an embedded sphere with a radius)
-    # unit-consistent. It is a no-op when every factor metric is dimensionless.
-    units = [
-        [
-            diag_units[i] if i == j else (diag_units[i] * diag_units[j]) ** 0.5
-            for j in range(n)
-        ]
-        for i in range(n)
-    ]
-    # Second pass: restore genuine intra-block off-diagonals (dense factor metrics).
-    offset = 0
-    for block in factor_blocks:
-        block_n = block.shape[0]
-        for i in range(block_n):
             for j in range(block_n):
                 units[offset + i][offset + j] = block.unit[i, j]
+        block_ranges.append(range(offset, offset + block_n))
         offset += block_n
+
+    # Cross-factor (i, j) entries are numerically zero, but their units must be
+    # the geometric mean sqrt([g_ii]*[g_jj]) so that every term of the vᵀGv
+    # contraction converts to the row reference unit g[i,0]*v[0]. This mirrors
+    # DiagonalMetric.to_dense and keeps products of factors with non-
+    # dimensionless metrics (e.g. an embedded sphere with a radius) consistent.
+    # Only cross-block entries are computed (intra-block units are kept), so it
+    # is a no-op when every factor metric is dimensionless.
+    for a, ra in enumerate(block_ranges):
+        for rb in block_ranges[a + 1 :]:
+            for i in ra:
+                for j in rb:
+                    geo_mean = (units[i][i] * units[j][j]) ** 0.5
+                    units[i][j] = geo_mean
+                    units[j][i] = geo_mean
 
     unit_tup = tuple(tuple(row) for row in units)
     G = QMatrix(value=value, unit=UnitsMatrix(unit_tup))
