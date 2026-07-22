@@ -9,6 +9,7 @@ against an incompatible sibling on PyPI, so guard the floors here.
 __all__: tuple[str, ...] = ()
 
 import pathlib
+import re
 import tomllib
 
 import pytest
@@ -20,8 +21,18 @@ _PYPROJECTS = [
 ]
 
 
+def _requirement_name(req: str) -> str:
+    """The distribution name at the start of a PEP 508 requirement string."""
+    match = re.match(r"\s*([A-Za-z0-9._-]+)", req)
+    return match.group(1) if match else ""
+
+
 def _interpackage_reqs(cfg: dict) -> list[str]:
-    """All ``coordinax``/``coordinaxs.*`` requirement strings in a pyproject."""
+    """All ``coordinax``/``coordinaxs.*`` requirement strings in a pyproject.
+
+    Selection is by the parsed requirement *name*, so every specifier form
+    (``>=``, ``<``, ``!=``, ``~=``, extras, markers) is covered.
+    """
     proj = cfg.get("project", {})
     reqs: list[str] = list(proj.get("dependencies", []))
     for extra in proj.get("optional-dependencies", {}).values():
@@ -31,10 +42,8 @@ def _interpackage_reqs(cfg: dict) -> list[str]:
     return [
         r
         for r in reqs
-        if r == "coordinax"
-        or r.startswith(
-            ("coordinax>", "coordinax=", "coordinax[", "coordinax ", "coordinaxs.")
-        )
+        if _requirement_name(r) == "coordinax"
+        or _requirement_name(r).startswith("coordinaxs.")
     ]
 
 
@@ -42,5 +51,7 @@ def _interpackage_reqs(cfg: dict) -> list[str]:
 def test_interpackage_deps_have_floor(path: pathlib.Path) -> None:
     """Each coordinax/coordinaxs.* requirement declares a ``>=`` floor."""
     cfg = tomllib.loads(path.read_text())
-    unpinned = [r for r in _interpackage_reqs(cfg) if ">=" not in r]
+    # Strip any environment marker (which may itself contain ``>=``) before
+    # inspecting the version specifier.
+    unpinned = [r for r in _interpackage_reqs(cfg) if ">=" not in r.split(";", 1)[0]]
     assert not unpinned, f"{path.parent.name}: unpinned inter-package deps: {unpinned}"

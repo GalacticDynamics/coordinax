@@ -23,7 +23,6 @@ from typing import Any, final
 
 import coordinax.charts as cxc
 import coordinax.transforms as cxfm
-
 import quaxed.numpy as qnp
 import unxt as u
 

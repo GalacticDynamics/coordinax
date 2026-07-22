@@ -65,7 +65,7 @@ extend = "../../pyproject.toml"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["dataclassish", "quaxed", "unxt", "coordinax>=0.24"]
+known-first-party = ["dataclassish", "quaxed", "unxt", "coordinax"]
 known-local-folder = ["coordinaxs.curveframes"]
 section-order = [
   "future",

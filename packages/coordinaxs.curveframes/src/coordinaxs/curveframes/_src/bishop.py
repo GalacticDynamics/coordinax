@@ -44,12 +44,12 @@ __all__ = ("BishopFrame", "BishopTransform")
 from collections.abc import Callable
 from typing import Any, cast, final
 
-import coordinax.charts as cxc
-import coordinax.transforms as cxfm
 import jax
 import jax.numpy as jnp
 from jax.experimental.ode import odeint
 
+import coordinax.charts as cxc
+import coordinax.transforms as cxfm
 import unxt as u
 
 from .base import (
