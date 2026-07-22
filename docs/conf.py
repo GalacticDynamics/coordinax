@@ -124,6 +124,11 @@ nitpick_ignore_regex = [
     (r"py:class", r"jaxtyping\..*"),  # TODO: remove
     (r"py:class", r".*TypedNdArray.*"),
     (r"py:class", r"jax\._src\..*"),
+    # Private ``_src`` implementation paths (and their TypeVars) leak into type
+    # signatures; the public re-exports (e.g. ``coordinax.vectors.Point``) are
+    # the documented targets. Ignore the private forms rather than the public
+    # API. This removes ~940 nitpick warnings.
+    (r"py:.*", r".*\._src\..*"),
 ]
 
 # -- MyST Setting -------------------------------------------------
