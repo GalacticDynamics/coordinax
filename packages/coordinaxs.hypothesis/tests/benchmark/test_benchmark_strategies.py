@@ -58,7 +58,7 @@ def test_benchmark_charts_1d_build(benchmark):
     """Benchmark building the charts strategy for 1D."""
 
     def build_strategy():
-        return cxst.charts(dimensionality=1)
+        return cxst.charts(ndim=1)
 
     strategy = benchmark(build_strategy)
     assert strategy is not None
@@ -68,7 +68,7 @@ def test_benchmark_charts_3d_build(benchmark):
     """Benchmark building the charts strategy for 3D."""
 
     def build_strategy():
-        return cxst.charts(dimensionality=3)
+        return cxst.charts(ndim=3)
 
     strategy = benchmark(build_strategy)
     assert strategy is not None
