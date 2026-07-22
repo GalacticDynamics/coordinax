@@ -57,6 +57,18 @@ class TestTangentMapSameChart:
         np.testing.assert_allclose(result["theta"], v["theta"])
         np.testing.assert_allclose(result["phi"], v["phi"])
 
+    def test_equal_but_distinct_chart_instances(self) -> None:
+        """Charts are non-singleton: equal-but-distinct instances take the same path."""
+        fresh = type(cxc.cart3d)(M=cxc.cart3d.M)
+        assert fresh == cxc.cart3d
+        assert fresh is not cxc.cart3d
+        v = {"x": jnp.array(1), "y": jnp.array(2), "z": jnp.array(3)}
+        at = {"x": jnp.array(0.5), "y": jnp.array(0.5), "z": jnp.array(0)}
+        result = cxr.tangent_map(v, fresh, cxr.coord_disp, cxc.cart3d, at=at, usys=usys)
+        np.testing.assert_allclose(result["x"], v["x"])
+        np.testing.assert_allclose(result["y"], v["y"])
+        np.testing.assert_allclose(result["z"], v["z"])
+
 
 class TestTangentMapCart3dToSph3d:
     """Cart3D → Sph3D CoordinateBasis: Jacobian pushforward at (x=1, y=0, z=0).

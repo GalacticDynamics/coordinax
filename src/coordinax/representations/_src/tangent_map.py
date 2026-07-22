@@ -125,7 +125,7 @@ def tangent_map(
 
     """
     # Same-chart optimization: identity transform
-    if from_chart is to_chart:
+    if from_chart == to_chart:
         return v
 
     J = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys)
@@ -174,7 +174,7 @@ def tangent_map(
 
     """
     # Same-chart optimization: identity transform
-    if from_chart is to_chart:
+    if from_chart == to_chart:
         return v
 
     # TODO: direct routes
@@ -268,7 +268,7 @@ def tangent_map(
     # evaluated at the base point expressed in ``to_chart`` coordinates.
     at_to = (
         at
-        if (at is None or from_chart is to_chart)
+        if (at is None or from_chart == to_chart)
         else cxc.pt_map(at, from_chart, to_chart, usys=usys)
     )
     v = cxrapi.change_basis(
