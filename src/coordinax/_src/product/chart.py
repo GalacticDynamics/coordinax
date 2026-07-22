@@ -67,7 +67,7 @@ class AbstractCartesianProductChart(AbstractChart[CartesianProductManifold, Ks, 
 
     @property
     def ndims(self) -> tuple[int, ...]:
-        """Total dimension, the sum of factor dimensions."""
+        """Per-factor dimensions, as a tuple aligned with ``factors``."""
         return tuple(f.ndim for f in self.factors)
 
     def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
