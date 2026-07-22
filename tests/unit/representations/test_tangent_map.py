@@ -256,6 +256,8 @@ class TestTangentMapPhysicalBasis:
         )
 
         for k in ("r", "theta", "phi"):
+            # Physical-basis output must match in both magnitude and unit.
+            assert one_shot[k].unit == ref[k].unit
             np.testing.assert_allclose(one_shot[k].value, ref[k].value, atol=1e-6)
 
 
