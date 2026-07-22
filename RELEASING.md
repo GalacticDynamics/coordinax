@@ -1,14 +1,15 @@
 # Release Process for coordinax Workspace
 
-This workspace contains five packages that can be released:
+This workspace contains six packages that can be released:
 
 - `coordinax` - the main package
 - `coordinaxs.api` - abstract dispatch API
 - `coordinaxs.astro` - astronomy-specific reference frames
+- `coordinaxs.curveframes` - curve/streamline reference frames
 - `coordinaxs.hypothesis` - hypothesis testing strategies
 - `coordinaxs.interop.astropy` - Astropy interoperability package
 
-> **Note:** the workspace also contains `coordinaxs.curveframes`, which is **intentionally not part of the release automation** (no CD workflow, not in `create-package-tags.yml`, `cd-publish.yml`, or `validate_tag.py`). It is developed and tested in-tree but not yet published to PyPI. To release it, wire it in like the packages above **and** register its PyPI trusted publisher first (see the note in `validate_tag.py`).
+> **Note:** `coordinaxs.curveframes` requires a one-time PyPI setup before its first automated release: register its **PyPI (and TestPyPI) trusted publisher** for the `cd-publish.yml` workflow, exactly as done for the other packages. The release automation is already wired for it.
 
 All releases are automated via GitHub Actions.
 
@@ -53,6 +54,7 @@ Valid coordinator tags (synchronized releases):
   - `coordinax-v0.24.0`
   - `coordinaxs-api-v0.24.0`
   - `coordinaxs-astro-v0.24.0`
+  - `coordinaxs-curveframes-v0.24.0`
   - `coordinaxs-hypothesis-v0.24.0`
   - `coordinaxs-interop-astropy-v0.24.0`
 
@@ -76,6 +78,7 @@ All packages use `hatch-vcs` with package-specific tag matching:
 - `coordinax` matches `coordinax-v*`
 - `coordinaxs.api` matches `coordinaxs-api-v*`
 - `coordinaxs.astro` matches `coordinaxs-astro-v*`
+- `coordinaxs.curveframes` matches `coordinaxs-curveframes-v*`
 - `coordinaxs.hypothesis` matches `coordinaxs-hypothesis-v*`
 - `coordinaxs.interop.astropy` matches `coordinaxs-interop-astropy-v*`
 
@@ -83,7 +86,7 @@ All packages use `hatch-vcs` with package-specific tag matching:
 
 1. Push coordinator tag `vX.Y.0`:
 
-- `create-package-tags` workflow validates it and creates all five package tags.
+- `create-package-tags` workflow validates it and creates all six package tags.
 - Each package CD workflow runs from the created package tag and publishes.
 
 2. Push package tag `PACKAGE-vX.Y.Z`:
@@ -127,7 +130,7 @@ git push origin vX.Y.0
 Expected automation:
 
 1. `Create Package Tags` runs and creates all package tags.
-2. All five `cd-*` workflows run.
+2. All six `cd-*` workflows run.
 3. Packages are published to TestPyPI and PyPI.
 
 ### Scenario 2: Bug-fix Release (Single Package)

@@ -19,15 +19,11 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-# NOTE: `coordinaxs.curveframes` is intentionally omitted — it is developed
-# in-tree but not part of the release automation (see RELEASING.md). To release
-# it, add it here, add a `cd-coordinaxs-curveframes.yml` workflow, wire it into
-# `create-package-tags.yml` / `cd-publish.yml`, and register its PyPI trusted
-# publisher.
 PACKAGE_NAMES: tuple[str, ...] = (
     "coordinax",
     "coordinaxs.api",
     "coordinaxs.astro",
+    "coordinaxs.curveframes",
     "coordinaxs.hypothesis",
     "coordinaxs.interop.astropy",
 )

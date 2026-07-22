@@ -301,6 +301,15 @@ class TestValidateTagForPackage:
         )
         assert is_valid is True
 
+    def test_curveframes_is_a_release_package(self, validate_tag):
+        """coordinaxs.curveframes is wired into the release automation."""
+        assert "coordinaxs.curveframes" in validate_tag.PACKAGE_NAMES
+        # Bug-fix patch tag (Z > 0) needs no coordinator tag.
+        is_valid, error = validate_tag.validate_tag_for_package(
+            "coordinaxs-curveframes-v2.0.99", "coordinaxs.curveframes"
+        )
+        assert is_valid is True, error
+
     def test_bugfix_release_subprocess_not_called(self, validate_tag):
         """Verify subprocess is not called for bugfix releases."""
         with patch("subprocess.run") as mock_subprocess:
@@ -344,16 +353,8 @@ class TestValidateTagForPackage:
         mock_result.stdout = "v1.0.0\n"
         mock_result.stderr = ""
 
-        packages = [
-            "coordinax",
-            "coordinaxs.api",
-            "coordinaxs.astro",
-            "coordinaxs.hypothesis",
-            "coordinaxs.interop.astropy",
-        ]
-
         with patch("subprocess.run", return_value=mock_result):
-            for package in packages:
+            for package in validate_tag.PACKAGE_NAMES:
                 tag_prefix = package.replace(".", "-")
                 is_valid, error = validate_tag.validate_tag_for_package(
                     f"{tag_prefix}-v1.0.0", package

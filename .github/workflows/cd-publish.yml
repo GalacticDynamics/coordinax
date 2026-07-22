@@ -14,6 +14,7 @@ on:
       - "CD - coordinax"
       - "CD - coordinaxs.api"
       - "CD - coordinaxs.astro"
+      - "CD - coordinaxs.curveframes"
       - "CD - coordinaxs.hypothesis"
       - "CD - coordinaxs.interop.astropy"
     types:

@@ -54,6 +54,7 @@ jobs:
             echo "  - coordinax-v${VERSION}"
             echo "  - coordinaxs-api-v${VERSION}"
             echo "  - coordinaxs-astro-v${VERSION}"
+            echo "  - coordinaxs-curveframes-v${VERSION}"
             echo "  - coordinaxs-hypothesis-v${VERSION}"
             echo "  - coordinaxs-interop-astropy-v${VERSION}"
             exit 1
@@ -83,6 +84,7 @@ jobs:
             "coordinax"
             "coordinaxs-api"
             "coordinaxs-astro"
+            "coordinaxs-curveframes"
             "coordinaxs-hypothesis"
             "coordinaxs-interop-astropy"
           )
@@ -91,6 +93,7 @@ jobs:
           COORDINAX_TAG_CREATED="false"
           COORDINAX_API_TAG_CREATED="false"
           COORDINAX_ASTRO_TAG_CREATED="false"
+          COORDINAX_CURVEFRAMES_TAG_CREATED="false"
           COORDINAX_HYPOTHESIS_TAG_CREATED="false"
           COORDINAX_INTEROP_ASTROPY_TAG_CREATED="false"
 
@@ -133,6 +136,9 @@ jobs:
               if [ "$PACKAGE" = "coordinaxs-astro" ]; then
                 COORDINAX_ASTRO_TAG_CREATED="true"
               fi
+              if [ "$PACKAGE" = "coordinaxs-curveframes" ]; then
+                COORDINAX_CURVEFRAMES_TAG_CREATED="true"
+              fi
               if [ "$PACKAGE" = "coordinaxs-hypothesis" ]; then
                 COORDINAX_HYPOTHESIS_TAG_CREATED="true"
               fi
@@ -158,6 +164,10 @@ jobs:
             echo "trigger_coordinax_astro_cd=false" >> "$GITHUB_OUTPUT"
             echo "coordinaxs_astro_tag=coordinaxs-astro-v${VERSION}" >> "$GITHUB_OUTPUT"
             echo "coordinaxs_astro_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+
+            echo "trigger_coordinax_curveframes_cd=false" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_curveframes_tag=coordinaxs-curveframes-v${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "coordinaxs_curveframes_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
             echo "trigger_coordinax_hypothesis_cd=false" >> "$GITHUB_OUTPUT"
             echo "coordinaxs_hypothesis_tag=coordinaxs-hypothesis-v${VERSION}" >> "$GITHUB_OUTPUT"
@@ -185,6 +195,10 @@ jobs:
           echo "trigger_coordinax_astro_cd=${COORDINAX_ASTRO_TAG_CREATED}" >> "$GITHUB_OUTPUT"
           echo "coordinaxs_astro_tag=coordinaxs-astro-v${VERSION}" >> "$GITHUB_OUTPUT"
           echo "coordinaxs_astro_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
+
+          echo "trigger_coordinax_curveframes_cd=${COORDINAX_CURVEFRAMES_TAG_CREATED}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_curveframes_tag=coordinaxs-curveframes-v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "coordinaxs_curveframes_tag_sha=${COORDINATOR_SHA}" >> "$GITHUB_OUTPUT"
 
           echo "trigger_coordinax_hypothesis_cd=${COORDINAX_HYPOTHESIS_TAG_CREATED}" >> "$GITHUB_OUTPUT"
           echo "coordinaxs_hypothesis_tag=coordinaxs-hypothesis-v${VERSION}" >> "$GITHUB_OUTPUT"
@@ -232,6 +246,19 @@ jobs:
           tag_ref: ${{ steps.create_tags.outputs.coordinaxs_astro_tag }}
           tag_sha: ${{ steps.create_tags.outputs.coordinaxs_astro_tag_sha }}
           trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_astro_cd }}
+
+      - name: Trigger CD - coordinaxs.curveframes for auto-created coordinaxs-curveframes tag
+        if: |
+          steps.create_tags.outputs.trigger_coordinax_curveframes_cd == 'true' ||
+          (steps.create_tags.outputs.coordinaxs_curveframes_tag != '' &&
+          steps.create_tags.outputs.trigger_coordinax_curveframes_cd == 'false')
+        uses: ./.github/actions/dispatch-package-cd
+        with:
+          workflow_id: cd-coordinaxs-curveframes.yml
+          workflow_name: CD - coordinaxs.curveframes
+          tag_ref: ${{ steps.create_tags.outputs.coordinaxs_curveframes_tag }}
+          tag_sha: ${{ steps.create_tags.outputs.coordinaxs_curveframes_tag_sha }}
+          trigger_cd: ${{ steps.create_tags.outputs.trigger_coordinax_curveframes_cd }}
 
       - name: Trigger CD - coordinaxs.hypothesis for auto-created coordinaxs-hypothesis tag
         if: |
