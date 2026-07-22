@@ -4,6 +4,8 @@ __all__: tuple[str, ...] = ()
 
 import pathlib
 
+import coordinaxs.hypothesis.main as cxst
+
 
 def test_ships_py_typed_marker() -> None:
     """The package declares ``Typing :: Typed`` so it must ship ``py.typed``.
@@ -12,7 +14,5 @@ def test_ships_py_typed_marker() -> None:
     distributions, so anchor the check to *this* distribution's portion (the
     one containing the ``main`` subpackage) rather than the namespace as a whole.
     """
-    import coordinaxs.hypothesis.main as cxst
-
     portion = pathlib.Path(cxst.__file__).parent.parent  # coordinaxs/hypothesis
     assert (portion / "py.typed").is_file()
