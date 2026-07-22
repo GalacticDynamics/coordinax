@@ -15,10 +15,11 @@ def _portion_dir_for(main_file: str) -> pathlib.Path:
     ``coordinaxs.hypothesis`` is a namespace package split across distributions,
     so anchor on ``main`` (only this distribution provides it). ``main`` may be
     a package (``.../hypothesis/main/__init__.py`` → ``.parent.parent``) or a
-    module (``.../hypothesis/main.py`` → ``.parent``); handle both.
+    module (``.../hypothesis/main.py`` → ``.parent``); handle both. Match on the
+    stem so a compiled ``__init__.pyc`` resolves like its ``.py`` source.
     """
     main_path = pathlib.Path(main_file)
-    if main_path.name == "__init__.py":
+    if main_path.stem == "__init__":
         return main_path.parent.parent
     return main_path.parent
 
@@ -38,6 +39,7 @@ def test_ships_py_typed_marker() -> None:
     "main_file",
     [
         "/pkg/src/coordinaxs/hypothesis/main/__init__.py",  # main as package
+        "/pkg/src/coordinaxs/hypothesis/main/__init__.pyc",  # compiled package
         "/pkg/src/coordinaxs/hypothesis/main.py",  # main as module
     ],
 )
