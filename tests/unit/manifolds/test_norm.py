@@ -574,10 +574,13 @@ class TestProductMetricInterBlockUnits:
 
     def test_length_carrying_factor_gets_geometric_mean_offdiagonal(self):
         """A radius-scaled sphere (metric m²/rad²) x line (dimensionless)."""
-        E = cxm.embedded_twosphere(u.Q(2.0, "m"))
+        radius, theta, phi = 2.0, jnp.pi / 3, 0.5
+        v_theta, v_phi, v_x = 0.5, 0.3, 1.0
+
+        E = cxm.embedded_twosphere(u.Q(radius, "m"))
         at = {
-            "sph.theta": u.Q(jnp.pi / 3, "rad"),
-            "sph.phi": u.Q(0.5, "rad"),
+            "sph.theta": u.Q(theta, "rad"),
+            "sph.phi": u.Q(phi, "rad"),
             "line.x": u.Q(1.0, "m"),
         }
         gm, chart = self._metric((E, cxm.R1), ("sph", "line"), at)
@@ -585,16 +588,22 @@ class TestProductMetricInterBlockUnits:
         assert gm.unit[0, 2] == u.unit("m / rad")
         assert gm.unit[2, 0] == u.unit("m / rad")
 
-        # The assembled metric now yields a unit-consistent norm:
+        # The assembled metric now yields a unit-consistent norm. The round
+        # metric on the radius-R sphere is diag(R², R² sin²θ); the line adds 1:
+        #   |v|² = R²·v_θ² + R²sin²θ·v_φ² + v_x²
         v = {
-            "sph.theta": u.Q(0.5, "rad/s"),
-            "sph.phi": u.Q(0.3, "rad/s"),
-            "line.x": u.Q(1.0, "m/s"),
+            "sph.theta": u.Q(v_theta, "rad/s"),
+            "sph.phi": u.Q(v_phi, "rad/s"),
+            "line.x": u.Q(v_x, "m/s"),
         }
         vv, units = pack_nonuniform_unit(v, chart.components)
-        # |v|^2 = 4*0.5^2 + (4*sin^2(pi/3))*0.3^2 + 1*1^2 = 2.27
+        expected_sq = (
+            radius**2 * v_theta**2 + radius**2 * jnp.sin(theta) ** 2 * v_phi**2 + v_x**2
+        )
         result = cxm.norm(gm, QMatrix(vv, unit=units))
-        assert qnp.allclose(result, u.Q(2.27**0.5, "m/s"), atol=u.Q(1e-5, "m/s"))
+        assert qnp.allclose(
+            result, u.Q(jnp.sqrt(expected_sq), "m/s"), atol=u.Q(1e-5, "m/s")
+        )
 
     def test_all_dimensionless_factors_stay_dimensionless(self):
         """No regression: dimensionless factors keep dimensionless off-diagonals."""
