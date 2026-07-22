@@ -127,9 +127,10 @@ nitpick_ignore_regex = [
     # Private ``coordinax``/``coordinaxs`` ``_src`` implementation paths (and
     # their TypeVars) leak into type signatures; the public re-exports (e.g.
     # ``coordinax.vectors.Point``) are the documented targets. Ignore the
-    # private forms rather than the public API. Scoped to (coordinax|coordinaxs)
-    # so third-party ``._src.`` targets are unaffected. Removes ~940 warnings.
-    (r"py:.*", r"coordinaxs?(\..*)?\._src\..*"),
+    # private forms rather than the public API. Anchored on the coordinax(s)
+    # prefix and built from dotted-segment groups (no greedy ``.*``) so third-
+    # party ``._src.`` targets are unaffected. Removes ~940 warnings.
+    (r"py:.*", r"coordinaxs?(\.\w+)*\._src(\.\w+)+"),
 ]
 
 # -- MyST Setting -------------------------------------------------
