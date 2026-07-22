@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
   "astropy>=7.0.0",
   "beartype>=0.21.0",
-  "coordinaxs.api",
+  "coordinaxs.api>=0.24",
   "dataclassish>=0.8.0,<0.9.0; python_version == '3.11'",
   "dataclassish>=0.9.0; python_version >= '3.12'",
   "equinox>=0.13.8",
@@ -49,16 +49,16 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
-astro = ["coordinaxs.astro"]
+astro = ["coordinaxs.astro>=0.24"]
 benchmark = ["pytest-benchmark>=5.2.3", "pytest-codspeed>=5.0.3"]
-curveframes = ["coordinaxs.curveframes"]
-interop-astropy = ["coordinaxs.interop.astropy"]
+curveframes = ["coordinaxs.curveframes>=0.24"]
+interop-astropy = ["coordinaxs.interop.astropy>=0.24"]
 workspace = [
-  "coordinaxs.api",
-  "coordinaxs.astro",
-  "coordinaxs.curveframes",
-  "coordinaxs.hypothesis",
-  "coordinaxs.interop.astropy",
+  "coordinaxs.api>=0.24",
+  "coordinaxs.astro>=0.24",
+  "coordinaxs.curveframes>=0.24",
+  "coordinaxs.hypothesis>=0.24",
+  "coordinaxs.interop.astropy>=0.24",
 ]
 
 [project.urls]
@@ -106,8 +106,8 @@ ide = ["ipykernel>=7.1.0", "jaxmore>=0.2.0"]
 lint = ["prek>=0.4.0", "pylint>=3.3.2", "ty>=0.0.19"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
-  "coordinaxs.curveframes",
-  "coordinaxs.hypothesis",
+  "coordinaxs.curveframes>=0.24",
+  "coordinaxs.hypothesis>=0.24",
   "hypothesis[numpy]>=6.151.6",
   "jaxmore>=0.2.0",
   "pytest>=8.3.3",

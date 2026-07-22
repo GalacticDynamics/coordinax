@@ -16,9 +16,9 @@ classifiers = [
 ]
 dependencies = [
   "astropy>=7.0.0",
-  "coordinax",
-  "coordinaxs.api",
-  "coordinaxs.astro",
+  "coordinax>=0.24",
+  "coordinaxs.api>=0.24",
+  "coordinaxs.astro>=0.24",
   "jaxtyping>=0.3.3",
   "plum>=2.8.0; python_version < '3.14'",
   "plum>=2.9.0; python_version >= '3.14'",

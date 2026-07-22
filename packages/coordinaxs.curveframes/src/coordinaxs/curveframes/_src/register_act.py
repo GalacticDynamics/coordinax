@@ -22,11 +22,11 @@ __all__: tuple[str, ...] = ()
 
 from typing import Any
 
-import plum
-
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import plum
+
 import unxt as u
 
 from .base import AbstractParallelTransportTransform

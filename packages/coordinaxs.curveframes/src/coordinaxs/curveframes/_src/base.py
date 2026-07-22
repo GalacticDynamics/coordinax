@@ -21,12 +21,12 @@ from collections.abc import Callable
 from typing import Any
 from typing_extensions import TypeVar, override
 
-import equinox as eqx
-import jax.numpy as jnp
-
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
+import equinox as eqx
+import jax.numpy as jnp
+
 import quaxed.numpy as qnp
 import unxt as u
 

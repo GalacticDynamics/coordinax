@@ -19,7 +19,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax", "optional-dependencies>=0.4.0"]
+dependencies = ["coordinax>=0.24", "optional-dependencies>=0.4.0"]
 description = "Astronomy-specific reference frames for coordinax"
 dynamic = ["version"]
 license = "MIT"
@@ -35,7 +35,7 @@ astropy = ["astropy>=7.2.0"]
 # rather than as hard dependencies:
 #   pip install "coordinaxs.astro[hypothesis]"
 hypothesis = [
-  "coordinaxs.hypothesis",
+  "coordinaxs.hypothesis>=0.24",
   "hypothesis>=6.148.7",
   "unxt-hypothesis>=1.10.1",
 ]

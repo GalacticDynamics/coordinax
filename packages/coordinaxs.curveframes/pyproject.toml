@@ -18,7 +18,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax"]
+dependencies = ["coordinax>=0.24"]
 description = "Curve-attached reference frames for coordinax"
 dynamic = ["version"]
 license = "MIT"
@@ -65,7 +65,7 @@ extend = "../../pyproject.toml"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["dataclassish", "quaxed", "unxt", "coordinax"]
+known-first-party = ["dataclassish", "quaxed", "unxt", "coordinax>=0.24"]
 known-local-folder = ["coordinaxs.curveframes"]
 section-order = [
   "future",
