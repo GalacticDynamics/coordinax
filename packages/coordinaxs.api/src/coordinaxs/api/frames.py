@@ -34,8 +34,8 @@ def frame_transition(*args: Any, **kwargs: Any) -> Any:
 
     See Also
     --------
-    coordinax.frames.act : Apply a transform to coordinates
-    coordinax.frames.compose : Compose two transforms into one
+    coordinax.transforms.act : Apply a transform to coordinates
+    coordinax.transforms.compose : Compose two transforms into one
 
     Examples
     --------

@@ -73,15 +73,13 @@ class Composed(AbstractCompositeTransform, Generic[*Ts]):
     is equivalent to evaluating $g \circ f = g(f(x))$. Note the order of the
     transformations!
 
-    ```{note}
+    .. note::
 
-    The `|` operator works differently from the functional composition operator
-    $\circ$, which is sadly not supported in Python. The `|` operator is like
-    the Unix Shell pipe operator, where output is passed left-to-right. This
-    order can be seen in the indexing of the transformations in the `Composed`
-    object.
-
-    ```
+        The ``|`` operator works differently from the functional composition
+        operator $\circ$, which is sadly not supported in Python. The ``|``
+        operator is like the Unix Shell pipe operator, where output is passed
+        left-to-right. This order can be seen in the indexing of the
+        transformations in the `Composed` object.
 
     Parameters
     ----------

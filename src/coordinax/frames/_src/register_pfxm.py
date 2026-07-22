@@ -17,7 +17,7 @@ from .null import NoFrame
 def frame_transition(from_frame: NoFrame, to_frame: NoFrame, /) -> cxfm.Identity:
     """Null-to-null frame transition is always the identity.
 
-    When both source and target frames are :obj:`noframe` (i.e. the vector is
+    When both source and target frames are ``noframe`` (i.e. the vector is
     frame-agnostic) there is nothing to transform, so the result is the
     identity operation.
 

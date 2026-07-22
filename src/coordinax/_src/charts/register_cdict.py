@@ -78,6 +78,7 @@ def cdict(obj: u.AbstractQuantity, keys: tuple[str, ...], /) -> CDict:
     splitting along that axis according to the provided keys.
 
     This function requires that:
+
     1. The last dimension of the quantity matches the number of chart components
     2. The chart has homogeneous coordinate dimensions (all components have the
        same physical dimension, like Cartesian charts)
@@ -155,6 +156,7 @@ def cdict(obj: u.AbstractQuantity, chart: AbstractChart, /) -> CDict:
     splitting along that axis according to the chart's component names.
 
     This function requires that:
+
     1. The last dimension of the quantity matches the number of chart components
     2. The chart has homogeneous coordinate dimensions (all components have the
        same physical dimension, like Cartesian charts)

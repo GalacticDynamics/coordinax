@@ -88,7 +88,7 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     """
 
     spatial_chart: AbstractFixedComponentsChart[Any, Any, Any] = field(default=cart3d)  # pylint: disable=invalid-field-call
-    """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
+    """Spatial part of the representation (defaults to `coordinax.charts.cart3d`)."""
 
     _: KW_ONLY
     c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call

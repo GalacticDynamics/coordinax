@@ -464,7 +464,7 @@ class ProlateSpheroidal3D(
 
     - $\Delta > 0$,
     - $\mu \ge \Delta^2$,
-    - $|\nu| \le \Delta^2$.
+    - $\lvert\nu\rvert \le \Delta^2$.
 
     The parameter $\Delta$ is stored as metadata on the representation.
 

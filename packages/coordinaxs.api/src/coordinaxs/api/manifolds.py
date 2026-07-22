@@ -197,7 +197,6 @@ def pt_embed(
     --------
     pt_project : Inverse operation projecting ambient to intrinsic
         coordinates
-    embed_tangent : Embedding for tangent vector components
     coordinax.manifolds.EmbeddedChart : Container for embedded manifold
         charts
 
@@ -345,7 +344,6 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
     See Also
     --------
     pt_embed : Embed intrinsic chart coordinates into ambient space
-    project_tangent : Project ambient velocity/acceleration onto tangent space
 
     Examples
     --------
@@ -416,7 +414,7 @@ def pt_map(*args: Any, **kwargs: Any) -> CDict:
     coordinate description.
 
     For charts in the same atlas on the same manifold, this reduces to the
-    ordinary chart transition map handled by `pt_map`. It is the
+    ordinary chart transition map handled by `coordinax.charts.pt_map`. It is the
     intrinsic coordinate-change operation: the underlying point on the manifold
     is unchanged, and only its coordinate representation is changed.
 
@@ -448,7 +446,7 @@ def pt_map(*args: Any, **kwargs: Any) -> CDict:
     More generally, if $\varphi_{\mathrm{from}} : U \subset M \to \mathbb{R}^n$
     and $\psi_{\mathrm{to}} : W \subset N \to \mathbb{R}^m$ are chart maps on
     manifolds $M$ and $N$, and there is a point map $F : M \supset U \to W
-    \subset N$, then `pt_map` represents the coordinate expression
+    \subset N$, then `coordinax.charts.pt_map` represents the coordinate expression
 
     $$ \psi_{\mathrm{to}} \circ F \circ \varphi_{\mathrm{from}}^{-1}. $$
 
@@ -483,7 +481,7 @@ def pt_map(*args: Any, **kwargs: Any) -> CDict:
 
     See Also
     --------
-    pt_map : transform position coordinates between charts on the
+    coordinax.charts.pt_map : transform position coordinates between charts on the
     same manifold.
 
     Examples

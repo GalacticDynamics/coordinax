@@ -52,5 +52,5 @@ class RoundMetric(AbstractDiagonalMetricField):
 
     @property
     def signature(self) -> tuple[int, ...]:
-        """Metric signature: ``(1,) * ndim`` — the round sphere metric is Riemannian."""
+        """Metric signature ``(1,) * ndim``, the round sphere metric is Riemannian."""
         return (1,) * self.ndim

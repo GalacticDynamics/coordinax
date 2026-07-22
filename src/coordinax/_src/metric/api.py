@@ -23,25 +23,14 @@ from coordinax._src.base import AbstractChart, AbstractManifold
 def metric_matrix(
     M: AbstractManifold, point: dict, chart: AbstractChart, /
 ) -> AbstractMetricMatrix:
-    """Fallback — raise with a helpful message for unregistered pairs.
+    """Fallback — raise `NotImplementedError` for unregistered pairs.
 
     Concrete ``(manifold, chart)`` pairs register their own dispatch rules in
     the relevant ``register_metric.py`` modules (loaded as part of Phase 2).
-
-    Parameters
-    ----------
-    M : AbstractManifold
-        The manifold carrying the metric field.
-    point : CDict
-        A component dictionary giving the coordinates in ``chart``.
-    chart : AbstractChart
-        The coordinate chart in which to express the metric.
-
-    Raises
-    ------
-    NotImplementedError
-        When no specific dispatch rule is registered for the given types.
-
+    This fallback raises `NotImplementedError` when no specific dispatch rule
+    is registered for the given manifold ``M``, point ``point`` and chart
+    ``chart`` types. See the abstract :func:`metric_matrix` for the full
+    parameter documentation.
     """
     del point
     msg = (

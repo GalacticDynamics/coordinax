@@ -32,7 +32,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
     The atlas does **not** perform coordinate transformations itself. Those are
     implemented by chart-level transition maps and higher-level transformation
-    machinery (e.g. {func}`pt_map`).
+    machinery (e.g. :func:`coordinax.charts.pt_map`).
 
     Notes
     -----

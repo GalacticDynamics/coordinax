@@ -88,6 +88,7 @@ ang = cxm.angle_between(cxc.cart3d, uvec, vvec, at=at)
 .. currentmodule:: coordinax.manifolds
 
 .. automodule:: coordinax.manifolds
+    :no-inherited-members:
     :exclude-members: aval, default, materialise, enable_materialise
 
 ```

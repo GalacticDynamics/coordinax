@@ -20,9 +20,9 @@ AmbientT = TypeVar("AmbientT", bound=AbstractChart[Any, Any, Any])
 class AbstractEmbeddingMap(Generic[IntrinsicT, AmbientT], metaclass=abc.ABCMeta):
     r"""Abstract base class representing a smooth embedding.
 
-    An embedding represents a smooth injective map $$ \iota : M \hookrightarrow
-    N $$ of an intrinsic manifold (with charts in `coordinax.charts`) into an
-    ambient manifold.
+    An embedding represents a smooth injective map
+    $\iota : M \hookrightarrow N$ of an intrinsic manifold (with charts in
+    `coordinax.charts`) into an ambient manifold.
 
     Conceptually, an embedding provides:
 

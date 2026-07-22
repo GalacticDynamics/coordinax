@@ -77,7 +77,7 @@ Additional utilities:
 
 ## Design & Integration
 
-For design philosophy, architecture, and immutability details, see [Working With Vectors](../guides/vectors.md#architecture--design-philosophy). For tangent-vector patterns (basis, semantic kind, Jacobian pushforward), see [Working With Tangent Vectors](../guides/tangents.md). For JAX integration patterns (PyTree, scalar-first design, vmap/jit/grad), see [Working With Vectors](../guides/vectors.md#jax-integration--scaling).
+For design philosophy, architecture, and immutability details, see [Working With Vectors](../guides/vectors.md#motivation-why-a-separate-vector-class). For tangent-vector patterns (basis, semantic kind, Jacobian pushforward), see [Working With Tangent Vectors](../guides/tangents.md). For JAX integration patterns (PyTree, scalar-first design, vmap/jit/grad), see [Working With Vectors](../guides/vectors.md#jax-integration).
 
 ```{automodule} coordinax.vectors
 :members:

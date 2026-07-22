@@ -174,16 +174,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v6
 
-      # TODO: fix this
-      # - name: Build docs (warnings as errors)
-      # run: uv run --frozen nox -s docs -- -W
-      - name: Build docs
+      - name: Build docs (warnings as errors)
         run: uv run --frozen nox -s docs
 
   status:
     name: CI Pass
     runs-on: ubuntu-latest
-    needs: [format, tests_linux, tests_nonlinux, check_oldest]
+    needs: [format, tests_linux, tests_nonlinux, check_oldest, docs]
     if: always()
     steps:
       - name: All required jobs passed

@@ -702,8 +702,8 @@ def pt_map(
 
     We calculate through cylindrical coordinates first:
 
-    $\rho = \sqrt{(\mu-\Delta^2)\left(1-\frac{|\nu|}{\Delta^2}\right)}$
-    $z = \sqrt{\mu\,\frac{|\nu|}{\Delta^2}}\;\mathrm{sign}(\nu)$
+    $\rho = \sqrt{(\mu-\Delta^2)\left(1-\frac{\lvert\nu\rvert}{\Delta^2}\right)}$
+    $z = \sqrt{\mu\,\frac{\lvert\nu\rvert}{\Delta^2}}\;\mathrm{sign}(\nu)$
     $\phi = \phi.$
 
     Then convert to Cartesian:
@@ -1122,12 +1122,12 @@ def pt_map(
 
     - $\Delta > 0$,
     - $\mu \ge \Delta^2$,
-    - $|\nu| \le \Delta^2$.
+    - $\lvert\nu\rvert \le \Delta^2$.
 
     The conversion proceeds via
 
-    $\rho = \sqrt{(\mu-\Delta^2)\left(1-\frac{|\nu|}{\Delta^2}\right)}$,
-    $z = \sqrt{\mu\,\frac{|\nu|}{\Delta^2}}\,\mathrm{sign}(\nu)$,
+    $\rho = \sqrt{(\mu-\Delta^2)\left(1-\frac{\lvert\nu\rvert}{\Delta^2}\right)}$,
+    $z = \sqrt{\mu\,\frac{\lvert\nu\rvert}{\Delta^2}}\,\mathrm{sign}(\nu)$,
     $\phi = \phi$.
 
     >>> import coordinax.manifolds as cxm
@@ -1189,9 +1189,9 @@ def pt_map(
     Then
 
     $\mu = \Delta^2 + \tfrac12(D + D_f)$ (with numerically-stable branches),
-    $|\nu| = \dfrac{2\Delta^2}{S + D}\,z^2$,
-    and $\nu = |\nu|\,\mathrm{sign}(z)$, with a stability fix when
-    $\Delta^2 - |\nu|$ is small.
+    $\lvert\nu\rvert = \dfrac{2\Delta^2}{S + D}\,z^2$,
+    and $\nu = \lvert\nu\rvert\,\mathrm{sign}(z)$, with a stability fix when
+    $\Delta^2 - \lvert\nu\rvert$ is small.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
@@ -1653,6 +1653,8 @@ def pt_map(
         Array of shape ``(..., ndim)`` containing the transformed coordinates in
         ``to_chart``.
 
+    Examples
+    --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
     >>> import jax.numpy as jnp

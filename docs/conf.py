@@ -8,12 +8,16 @@ list see the documentation:
 import importlib.metadata
 from datetime import datetime
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytz
 from docutils.nodes import Element, Node, reference
 from sphinx.application import Sphinx
 from sphinx.environment import BuildEnvironment
+from sphinx.util.nodes import make_refnode
+
+if TYPE_CHECKING:
+    from sphinx.domains.python import PythonDomain
 
 # -- Project information -----------------------------------------------------
 
@@ -87,10 +91,24 @@ autodoc_default_options = {
     "inherited-members": True,
     "show-inheritance": True,
     "member-order": "bysource",
+    # These members are inherited from external ``quax._core.Value``; their
+    # upstream docstrings contain malformed RST we cannot fix in-repo, and they
+    # are implementation details of quax's materialisation machinery rather than
+    # part of coordinax's public API. Exclude them everywhere.
+    "exclude-members": "aval, default, materialise, enable_materialise",
 }
 
 always_document_param_types = True
 typehints_use_signature = True
+
+# -- Napoleon settings ---------------------------------------------------
+# Render class ``Attributes`` sections as ``:ivar:`` info fields rather than
+# standalone ``.. attribute::`` directives. With ``automodule``/``autoclass``
+# already documenting the real attributes and properties, the directive form
+# emits a second object description for the same name ("duplicate object
+# description"); the ``:ivar:`` form keeps the curated prose without a clashing
+# target.
+napoleon_use_ivar = True
 
 
 nitpick_ignore = [
@@ -116,6 +134,34 @@ nitpick_ignore = [
     ("py:class", "coordinax.representations._src.geom.PointGeometry"),
     ("py:class", "coordinax.representations._src.basis.AbstractBasis"),
     ("py:class", "coordinax._src.charts.d3.LonLatSpherical3D"),
+    # --- External types with no resolvable Sphinx inventory entry ---
+    # unxt's objects.inv does not expose these public names under these keys
+    # (it uses different qualified paths internally), so intersphinx cannot
+    # resolve them. The bare / import-alias forms leak in from hand-written
+    # docstrings and generated type signatures.
+    ("py:class", "AbstractQuantity"),
+    ("py:class", "Quantity"),
+    ("py:class", "unxt.AbstractQuantity"),
+    ("py:class", "unxt.Quantity"),
+    ("py:class", "u.AbstractUnit"),
+    ("py:class", "jnp.ndarray"),
+    # typing.TypeIs is only in the CPython inventory from 3.13; the pinned
+    # Python intersphinx target predates it.
+    ("py:class", "typing.TypeIs"),
+    # plum does not publish a Sphinx inventory entry for these names.
+    ("py:exc", "plum.NotFoundLookupError"),
+    ("py:func", "plum.dispatch"),
+    # TypeVars / jaxtyping shape fragments that leak verbatim into
+    # sphinx-autodoc-typehints-generated signatures (source ``<unknown>``);
+    # they are not documentable objects.
+    ("py:class", "Ts"),
+    ("py:class", "Rep"),
+    ("py:class", "StaticValue"),
+    ("py:class", "3"),
+    ("py:class", "'N N'"),
+    # A napoleon-misparsed prose word ("... the same ...") in an aggregated
+    # plum docstring; nothing is legitimately named ``same``.
+    ("py:obj", "same"),
 ]
 
 # TypedNdArray is a JAX-private type (jax._src.basearray) with no public docs.
@@ -133,6 +179,14 @@ nitpick_ignore_regex = [
     # (class/data/obj/…) since ``_src`` symbols are never intentionally
     # documented in any role. Removes ~940 warnings.
     (r"py:.*", r"^coordinaxs?(\.\w+)*\._src(\.\w+)+$"),
+    # External libraries without a resolvable Sphinx inventory (MkDocs sites or
+    # no published objects.inv): render their type references as plain text.
+    (r"py:.*", r"wadler_lindig\..*"),
+    (r"py:.*", r"unxt_hypothesis\..*"),
+    (r"py:.*", r"optype\..*"),
+    # beartype-validator annotations (``typing.Annotated[..., beartype.vale.Is
+    # [...]]``) are emitted verbatim into signatures and are not doc targets.
+    (r"py:.*", r"typing\.Annotated\[.*"),
 ]
 
 # -- MyST Setting -------------------------------------------------
@@ -251,5 +305,93 @@ def _resolve_short_names(
     return reference("", "", contnode, internal=False, refuri=url)
 
 
+def _resolve_internal_short_names(
+    app: Sphinx,
+    env: BuildEnvironment,
+    node: Element,
+    contnode: Element,
+) -> Node | None:
+    """Resolve a bare short name to a coordinax object of the same name.
+
+    Plum's combined ``__doc__`` and hand-written Napoleon ``Parameters`` /
+    ``Returns`` / ``See Also`` sections reference project objects by their short
+    name (e.g. ``Representation``, ``pt_map``, ``minkowski4d``) rather than the
+    fully-qualified path Sphinx indexes them under. Look the target up in this
+    project's own Python object inventory and, when it maps unambiguously to a
+    single public object, return a real internal cross-reference. External
+    names never appear in this inventory, so they fall through to the normal
+    (nitpick) handling.
+    """
+    if node.get("refdomain") != "py":
+        return None
+    target = node.get("reftarget", "")
+    if not target:
+        return None
+    pydomain = cast("PythonDomain", env.get_domain("py"))
+    matches = [
+        name
+        for name in pydomain.objects
+        if name == target or name.endswith(f".{target}")
+    ]
+    # Prefer public paths over private ``._src.`` implementation paths.
+    public = [name for name in matches if "._src." not in name]
+    candidates = public or matches
+    if len(candidates) != 1:
+        return None  # unknown or ambiguous → leave for normal handling
+    name = candidates[0]
+    obj = pydomain.objects[name]
+    return make_refnode(
+        app.builder, node["refdoc"], obj.docname, obj.node_id, contnode, name
+    )
+
+
+# -- Dollar-math in docstrings ----------------------------------------
+# The Markdown (MyST) pages render maths with the ``dollarmath`` extension, so
+# docstrings are written with the same ``$...$`` / ``$$...$$`` convention for
+# consistency. Autodoc, however, feeds docstrings to the *reStructuredText*
+# parser, which has no dollar-math support: inside ``$...$`` a LaTeX subscript
+# such as ``h_\theta`` is misread as an RST reference (``Unknown target name:
+# "h"``), ``|\nu|`` as a substitution, ``**`` as strong emphasis, and multi-line
+# ``$$``-blocks as block quotes (``Unexpected indentation``). Convert dollar-math
+# to the RST ``:math:`` role / ``.. math::`` directive before parsing so the
+# maths both renders correctly *and* stops emitting spurious warnings. Doctest
+# blocks in these docstrings never contain ``$``, so this is safe.
+import re  # noqa: E402
+
+_DISPLAY_MATH_RE = re.compile(r"\$\$(.+?)\$\$", re.DOTALL)
+# Inline maths may wrap across a line break (but not a blank line), so match any
+# run of non-``$`` characters that does not contain a blank line.
+_INLINE_MATH_RE = re.compile(r"\$(?!\$)((?:[^$]|\n(?!\s*\n))+?)\$")
+
+
+def _display_math_repl(match: "re.Match[str]") -> str:
+    """Replace a ``$$...$$`` block with an ``.. math::`` directive."""
+    body = "\n".join(
+        "   " + line.strip() for line in match.group(1).strip().splitlines()
+    )
+    return f"\n\n.. math::\n\n{body}\n\n"
+
+
+def _convert_dollar_math(
+    app: Sphinx,
+    what: str,
+    name: str,
+    obj: object,
+    options: object,
+    lines: list[str],
+) -> None:
+    """Rewrite ``$...$`` / ``$$...$$`` maths in docstrings to RST math."""
+    if not any("$" in line for line in lines):
+        return
+    text = "\n".join(lines)
+    text = _DISPLAY_MATH_RE.sub(_display_math_repl, text)
+    text = _INLINE_MATH_RE.sub(
+        lambda m: ":math:`" + " ".join(m.group(1).split()) + "`", text
+    )
+    lines[:] = text.split("\n")
+
+
 def setup(app: Sphinx, /) -> None:
     app.connect("missing-reference", _resolve_short_names)
+    app.connect("missing-reference", _resolve_internal_short_names)
+    app.connect("autodoc-process-docstring", _convert_dollar_math)

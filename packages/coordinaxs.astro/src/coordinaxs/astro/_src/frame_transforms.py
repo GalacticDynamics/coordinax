@@ -241,6 +241,18 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     3. Tilt correction for the Sun's height above the Galactic plane
     4. Velocity boost to the Galactocentric rest frame
 
+    Notes
+    -----
+    The transformation is composed of:
+
+    - R: Combined rotation matrix (longitude x latitude x roll)
+    - offset_q: Translation by the Galactic center distance
+    - H: Rotation to account for Sun's height above plane
+    - offset_v: Solar-velocity kick to the Galactocentric rest frame
+      (a fibre-only ``Translate(semantic_kind=vel)``)
+
+    The default Galactocentric frame uses parameters from the Astropy default
+    values (as of v4.0), which are based on various literature sources.
 
     Examples
     --------
@@ -302,19 +314,6 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     >>> print(gcf_q)
     <Point: chart=Cart3D (x, y, z) [pc]
         [-8112.898    21.798    29.015]>
-
-    Notes
-    -----
-    The transformation is composed of:
-
-    - R: Combined rotation matrix (longitude x latitude x roll)
-    - offset_q: Translation by the Galactic center distance
-    - H: Rotation to account for Sun's height above plane
-    - offset_v: Solar-velocity kick to the Galactocentric rest frame
-      (a fibre-only ``Translate(semantic_kind=vel)``)
-
-    The default Galactocentric frame uses parameters from the Astropy default
-    values (as of v4.0), which are based on various literature sources.
 
     """
     # rotation matrix to align x(ICRS) with the vector to the Galactic center

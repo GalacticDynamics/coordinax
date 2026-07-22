@@ -836,7 +836,7 @@ def cconvert(
 ) -> Coordinate:
     """Convert a Coordinate to a new chart.
 
-    Delegates to {meth}`Coordinate.cconvert`.
+    Delegates to ``Coordinate.cconvert``.
 
     >>> import coordinax as cx
     >>> import coordinax.charts as cxc

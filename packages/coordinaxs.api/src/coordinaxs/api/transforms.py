@@ -75,8 +75,8 @@ def act(*args: Any, **kwargs: Any) -> Any:
     See Also
     --------
     coordinax.transforms.act : Concrete dispatch entrypoint used in practice
-    coordinax.frames.compose : Compose two transforms into one
-    coordinax.frames.simplify : Simplify a transform to canonical form
+    coordinax.transforms.compose : Compose two transforms into one
+    coordinax.transforms.simplify : Simplify a transform to canonical form
 
     Examples
     --------
@@ -184,11 +184,9 @@ def prolong(*args: Any, **kwargs: Any) -> Any:
 
         prolong(op, tau, jet, chart, /, *, usys=None) -> jet
 
-    See Also
-    --------
-    act : per-slot application (delegates here for time-dependent transforms)
-    pushforward : the frozen-tau spatial differential
-
+    See also `act` (per-slot application, which delegates here for
+    time-dependent transforms) and `pushforward` (the frozen-$\tau$ spatial
+    differential).
     """
     raise NotImplementedError  # pragma: no cover
 

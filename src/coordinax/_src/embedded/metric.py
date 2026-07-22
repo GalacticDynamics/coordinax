@@ -142,7 +142,7 @@ class PullbackMetric(AbstractMetricField):
 
     @property
     def signature(self) -> tuple[int, ...]:
-        """Metric signature: ``(1,) * m`` where ``m`` is the intrinsic dimension.
+        """Metric signature ``(1,) * m`` where ``m`` is the intrinsic dimension.
 
         Embedding into a Riemannian ambient manifold always produces a
         Riemannian induced metric (``J^T g_M J`` is positive-definite when

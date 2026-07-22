@@ -89,7 +89,7 @@ class Rotate(AbstractLinearTransform):
         [0 1 0]>
 
     This also works for a batch of vectors (as a note, it is more efficient to
-    `jax.vmap` over the `jax.jit`ted operator):
+    `jax.vmap` over the `jax.jit`-ed operator):
 
     >>> v = cx.Point.from_([[1, 0, 0], [0, 1, 0]], "m")  # A Point vector
     >>> print(op(t, v))

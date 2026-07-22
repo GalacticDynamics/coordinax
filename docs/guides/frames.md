@@ -396,7 +396,7 @@ print(coord_cart.frame, coord_cart.chart)  # Alice(), Cart3D(M=Rn(3))
 print(coord_sph.frame, coord_sph.chart)  # Alice(), Spherical3D()
 ```
 
-For a full frame-oriented workflow (constructor patterns, frame+chart pipelines, and JAX batching), see [Working With Vectors](./vectors.md#coordinate-objects).
+For a full frame-oriented workflow (constructor patterns, frame+chart pipelines, and JAX batching), see [Working With Vectors](./vectors.md#combined-frame-and-chart-pipelines).
 
 ## Practical Workflow: Rotating Frame
 
