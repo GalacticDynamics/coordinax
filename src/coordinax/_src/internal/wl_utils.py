@@ -44,10 +44,13 @@ def jax_scalar_handler(obj: Any, /) -> wl.AbstractDoc | None:
     >>> wl.pformat(f, custom=jax_scalar_handler)
     '<function <lambda>>'
 
-    Multi-element arrays fall back to the default summary (no ``.item()`` crash):
+    Multi-element arrays fall back to the default summary (no ``.item()`` crash).
+    The exact dtype label depends on ``jax_enable_x64``, so assert the stable
+    shape/backend part:
 
-    >>> wl.pformat({"v": jnp.array([1.0, 2.0, 3.0])}, custom=jax_scalar_handler)
-    "{'v': f64[3](jax)}"
+    >>> "[3](jax)" in wl.pformat({"v": jnp.array([1.0, 2.0, 3.0])},
+    ...                          custom=jax_scalar_handler)
+    True
 
     Objects without ``.item`` (e.g. a 0-d ``unxt`` Quantity) render normally —
     the handler defers to wadler_lindig, which shows the quantity with its unit:
