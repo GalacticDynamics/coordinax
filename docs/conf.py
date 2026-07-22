@@ -91,11 +91,6 @@ autodoc_default_options = {
     "inherited-members": True,
     "show-inheritance": True,
     "member-order": "bysource",
-    # These members are inherited from external ``quax._core.Value``; their
-    # upstream docstrings contain malformed RST we cannot fix in-repo, and they
-    # are implementation details of quax's materialisation machinery rather than
-    # part of coordinax's public API. Exclude them everywhere.
-    "exclude-members": "aval, default, materialise, enable_materialise",
 }
 
 always_document_param_types = True
@@ -189,7 +184,7 @@ nitpick_ignore_regex = [
     # Parametrized unxt Quantity aliases (``Quantity[PhysicalType('length')]``,
     # ``['angle']``, …) are emitted verbatim into signatures but are not
     # resolvable inventory targets.
-    (r"py:.*", r"unxt\._src\.quantity\.quantity\.Quantity\[PhysicalType\("),
+    (r"py:.*", r"unxt\._src\.quantity\.quantity\.Quantity\[PhysicalType\(.*"),
     # beartype-validator annotations (``typing.Annotated[..., beartype.vale.Is
     # [...]]``) are emitted verbatim into signatures and are not doc targets.
     (r"py:.*", r"typing\.Annotated\[.*"),
@@ -397,7 +392,51 @@ def _convert_dollar_math(
     lines[:] = text.split("\n")
 
 
+# Members inherited from the external ``quax.Value`` materialisation protocol
+# (defined on ``quax.Value`` and/or overridden without a docstring on
+# ``unxt.AbstractQuantity``). Their upstream docstrings are written in MkDocs
+# Markdown (autorefs, ``!!!`` admonitions, code fences) that Sphinx's RST parser
+# renders as raw text, so we document these inherited members with a concise RST
+# summary instead. See the quax docs for the full details.
+_QUAX_VALUE_DOCS: dict[str, str] = {
+    "aval": "Return the ``jax.core.AbstractValue`` this value presents to JAX.",
+    "default": (
+        "Default multiple-dispatch rule used when no rule is registered for a "
+        "primitive."
+    ),
+    "materialise": (
+        "Materialise this value into a concrete JAX type (usually an array)."
+    ),
+    "enable_materialise": "Whether this value may be materialised into a JAX type.",
+}
+_QUAX_VALUE_SOURCES = ("quax", "unxt")
+
+
+def _clean_quax_value_docstrings(
+    app: Sphinx,
+    what: str,
+    name: str,
+    obj: object,
+    options: object,
+    lines: list[str],
+) -> None:
+    """Replace the quax-materialisation members' MkDocs docstrings with clean RST.
+
+    Only rewrites the external inherited forms (defining module ``quax``/``unxt``,
+    or a docstring still carrying MkDocs markup); a coordinax-authored override of
+    the same name keeps its own docstring.
+    """
+    summary = _QUAX_VALUE_DOCS.get(name.rsplit(".", 1)[-1])
+    if summary is None:
+        return
+    is_external = (getattr(obj, "__module__", "") or "").startswith(_QUAX_VALUE_SOURCES)
+    has_mkdocs = any("!!!" in ln or "[`" in ln for ln in lines)
+    if is_external or has_mkdocs:
+        lines[:] = [summary, ""]
+
+
 def setup(app: Sphinx, /) -> None:
     app.connect("missing-reference", _resolve_short_names)
     app.connect("missing-reference", _resolve_internal_short_names)
     app.connect("autodoc-process-docstring", _convert_dollar_math)
+    app.connect("autodoc-process-docstring", _clean_quax_value_docstrings)
