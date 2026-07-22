@@ -1,0 +1,45 @@
+name: CodSpeed
+
+on:
+  # Run on pushes to the main branch to keep a performance baseline.
+  push:
+    branches:
+      - main
+  # Run on pull requests to report performance changes.
+  pull_request:
+  # `workflow_dispatch` allows CodSpeed to trigger backtest
+  # performance analysis in order to generate initial data.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # for OpenID Connect authentication with CodSpeed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  benchmarks:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v6
+
+      - name: Install
+        run: uv sync --no-default-groups --group test --extra benchmark --locked
+
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
+        with:
+          mode: simulation
+          # `-W ignore:Signature:UserWarning` silences a numpy longdouble probe
+          # warning that only appears under the CPU simulation instrument and
+          # would otherwise be escalated to an error by `filterwarnings = error`.
+          run: uv run --no-sync pytest tests/benchmark --codspeed -W "ignore:Signature:UserWarning"
