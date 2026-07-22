@@ -49,11 +49,12 @@ def jax_scalar_handler(obj: Any, /) -> wl.AbstractDoc | None:
     >>> wl.pformat({"v": jnp.array([1.0, 2.0, 3.0])}, custom=jax_scalar_handler)
     "{'v': f64[3](jax)}"
 
-    Objects without ``.item`` (e.g. a 0-d ``unxt`` Quantity) render normally:
+    Objects without ``.item`` (e.g. a 0-d ``unxt`` Quantity) render normally —
+    the handler defers to wadler_lindig, which shows the quantity with its unit:
 
     >>> import unxt as u
-    >>> isinstance(wl.pformat({"d": u.Q(jnp.array(2.0), "km")},
-    ...                       custom=jax_scalar_handler), str)
+    >>> "unit='km'" in wl.pformat({"d": u.Q(jnp.array(2.0), "km")},
+    ...                           custom=jax_scalar_handler)
     True
 
     """  # noqa: D401
