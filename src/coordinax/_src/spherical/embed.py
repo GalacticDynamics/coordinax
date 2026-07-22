@@ -99,7 +99,9 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     def embed(self, q: CDict, /, *, usys: OptUSys = None) -> CDict:
         """Embed ``SphericalTwoSphere`` intrinsic coords into the ambient chart."""
         x_sph: CDict = {"r": self.radius, "theta": q["theta"], "phi": q["phi"]}
-        if self.ambient is cxc.sph3d:
+        # A ``Spherical3D`` ambient (any instance — the chart is not a singleton)
+        # already uses ``(r, theta, phi)``, so no coordinate transform is needed.
+        if isinstance(self.ambient, cxc.Spherical3D):
             return x_sph
         out: CDict = cxc.pt_map(  # ty: ignore[invalid-assignment]
             x_sph, cxc.sph3d, self.ambient, usys=usys
@@ -109,7 +111,7 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     def project(self, x: CDict, /, *, usys: OptUSys = None) -> CDict:
         """Project ambient coords onto ``SphericalTwoSphere`` intrinsic coords."""
         x_sph: CDict = x
-        if self.ambient is not cxc.sph3d:
+        if not isinstance(self.ambient, cxc.Spherical3D):
             x_sph = cxc.pt_map(  # ty: ignore[invalid-assignment]
                 x, self.ambient, cxc.sph3d, usys=usys
             )

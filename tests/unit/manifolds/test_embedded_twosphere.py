@@ -43,3 +43,16 @@ class TestEmbeddedTwosphereAmbient:
         np.testing.assert_allclose(
             u.ustrip("rad", back["phi"]), u.ustrip("rad", _P["phi"]), atol=1e-6
         )
+
+    def test_non_singleton_spherical_ambient_takes_spherical_path(self) -> None:
+        """A non-singleton Spherical3D ambient still embeds to spherical coords.
+
+        The ambient check is by type, not identity, so a freshly-constructed
+        ``Spherical3D`` (distinct from the ``sph3d`` instance) is handled too.
+        """
+        fresh = type(cxc.sph3d)(M=cxc.sph3d.M)
+        assert fresh is not cxc.sph3d  # a distinct instance
+        m = cxm.embedded_twosphere(radius=u.Q(2.0, "km"), ambient=fresh)
+        out = cxm.pt_embed(_P, m)
+        assert set(out) == {"r", "theta", "phi"}
+        np.testing.assert_allclose(u.ustrip("km", out["r"]), 2.0, atol=1e-6)
