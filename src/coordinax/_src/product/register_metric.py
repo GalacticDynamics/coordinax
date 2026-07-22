@@ -11,6 +11,8 @@ by recursively calling the standalone ``metric_matrix`` dispatch API.
 
 __all__: tuple[str, ...] = ()
 
+from itertools import combinations, product
+
 from typing import Any
 
 import jax.numpy as jnp
@@ -138,15 +140,15 @@ def metric_matrix(
     # contraction converts to the row reference unit g[i,0]*v[0]. This mirrors
     # DiagonalMetric.to_dense and keeps products of factors with non-
     # dimensionless metrics (e.g. an embedded sphere with a radius) consistent.
-    # Only cross-block entries are computed (intra-block units are kept), so it
+    # Only cross-block entries are filled (intra-block units are kept), so it
     # is a no-op when every factor metric is dimensionless.
-    for a, ra in enumerate(block_ranges):
-        for rb in block_ranges[a + 1 :]:
-            for i in ra:
-                for j in rb:
-                    geo_mean = (units[i][i] * units[j][j]) ** 0.5
-                    units[i][j] = geo_mean
-                    units[j][i] = geo_mean
+    #
+    # The mean factorises as sqrt([g_ii]*[g_jj]) = sqrt([g_ii]) * sqrt([g_jj]),
+    # so the per-index sqrt is taken once (n roots, not one per pair).
+    sqrt_diag = [units[i][i] ** 0.5 for i in range(n)]
+    for ra, rb in combinations(block_ranges, 2):
+        for i, j in product(ra, rb):
+            units[i][j] = units[j][i] = sqrt_diag[i] * sqrt_diag[j]
 
     unit_tup = tuple(tuple(row) for row in units)
     G = QMatrix(value=value, unit=UnitsMatrix(unit_tup))

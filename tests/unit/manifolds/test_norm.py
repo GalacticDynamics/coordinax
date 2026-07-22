@@ -573,7 +573,7 @@ class TestProductMetricInterBlockUnits:
         return cxmapi.metric_matrix(m, at, chart).matrix, chart
 
     def test_length_carrying_factor_gets_geometric_mean_offdiagonal(self):
-        """A radius-scaled sphere (metric m²/rad²) x line (dimensionless)."""
+        """A radius-scaled sphere (metric m²/rad²) x line (unitless g_xx = 1)."""
         radius, theta, phi = 2.0, jnp.pi / 3, 0.5
         v_theta, v_phi, v_x = 0.5, 0.3, 1.0
 
