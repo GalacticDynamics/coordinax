@@ -13,8 +13,7 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 import coordinaxs.api.manifolds as cxmapi
-from coordinax._src.internal import pack_nonuniform_unit
-from coordinax.internal import QMatrix
+from coordinax.internal import QMatrix, pack_nonuniform_unit
 
 # =============================================================================
 # cxm.norm() standalone function
