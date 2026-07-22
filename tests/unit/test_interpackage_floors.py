@@ -22,9 +22,14 @@ _PYPROJECTS = [
 
 
 def _requirement_name(req: str) -> str:
-    """The distribution name at the start of a PEP 508 requirement string."""
+    """The distribution name at the start of a PEP 508 requirement string.
+
+    PEP 508 names are case-insensitive, so the name is case-folded for robust
+    matching. (Only case is folded, not the ``.``/``-`` separators, so the
+    ``coordinaxs.`` namespace prefix stays intact.)
+    """
     match = re.match(r"\s*([A-Za-z0-9._-]+)", req)
-    return match.group(1) if match else ""
+    return match.group(1).casefold() if match else ""
 
 
 def _interpackage_reqs(cfg: dict) -> list[str]:
@@ -42,8 +47,8 @@ def _interpackage_reqs(cfg: dict) -> list[str]:
     return [
         r
         for r in reqs
-        if _requirement_name(r) == "coordinax"
-        or _requirement_name(r).startswith("coordinaxs.")
+        if (name := _requirement_name(r)) == "coordinax"
+        or name.startswith("coordinaxs.")
     ]
 
 
