@@ -7,7 +7,7 @@ on:
       - main
   # Run on pull requests to report performance changes.
   pull_request:
-  # `workflow_dispatch` allows CodSpeed to trigger backtest
+  # `workflow_dispatch` allows CodSpeed to trigger a backtest
   # performance analysis in order to generate initial data.
   workflow_dispatch:
 
@@ -26,11 +26,21 @@ jobs:
   benchmarks:
     name: Run benchmarks
     runs-on: ubuntu-latest
+    # OIDC tokens (`id-token: write`) are not issued to pull requests from
+    # forks, so the CodSpeed auth would fail there. Skip forked PRs; the job
+    # still runs on pushes, manual dispatch, and same-repo PRs.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v6
+        with:
+          # Pin the interpreter so benchmark baselines aren't perturbed when the
+          # runner's default Python changes. Matches the repo's `.python-version`.
+          python-version: "3.12"
 
       - name: Install
         run: uv sync --no-default-groups --group test --extra benchmark --locked
