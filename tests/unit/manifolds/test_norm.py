@@ -12,6 +12,9 @@ import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
+import coordinaxs.api.manifolds as cxmapi
+from coordinax._src.internal import pack_nonuniform_unit
+from coordinax.internal import QMatrix
 
 # =============================================================================
 # cxm.norm() standalone function
@@ -555,3 +558,48 @@ class TestNormJAXCompatSphere:
 
         # sin(π/2) = 1 > sin(π/6) = 0.5
         assert u.ustrip("rad/s", norm_eq) > u.ustrip("rad/s", norm_30)
+
+
+class TestProductMetricInterBlockUnits:
+    """The block-diagonal product metric uses geometric-mean off-diagonal units.
+
+    Cross-factor off-diagonal entries are numerically zero, but their units must
+    be the geometric mean ``sqrt(g_ii * g_jj)`` so that the ``vᵀGv`` contraction
+    is unit-consistent for factors with non-dimensionless metrics.
+    """
+
+    def _metric(self, factors, names, at):
+        m = cxm.CartesianProductManifold(factors=factors, factor_names=names)
+        chart = m.atlas.default_chart()
+        return cxmapi.metric_matrix(m, at, chart).matrix, chart
+
+    def test_length_carrying_factor_gets_geometric_mean_offdiagonal(self):
+        """A radius-scaled sphere (metric m²/rad²) x line (dimensionless)."""
+        E = cxm.embedded_twosphere(u.Q(2.0, "m"))
+        at = {
+            "sph.theta": u.Q(jnp.pi / 3, "rad"),
+            "sph.phi": u.Q(0.5, "rad"),
+            "line.x": u.Q(1.0, "m"),
+        }
+        gm, chart = self._metric((E, cxm.R1), ("sph", "line"), at)
+        # sqrt(m²/rad² * dimensionless) = m/rad
+        assert gm.unit[0, 2] == u.unit("m / rad")
+        assert gm.unit[2, 0] == u.unit("m / rad")
+
+        # The assembled metric now yields a unit-consistent norm:
+        v = {
+            "sph.theta": u.Q(0.5, "rad/s"),
+            "sph.phi": u.Q(0.3, "rad/s"),
+            "line.x": u.Q(1.0, "m/s"),
+        }
+        vv, units = pack_nonuniform_unit(v, chart.components)
+        # |v|^2 = 4*0.5^2 + (4*sin^2(pi/3))*0.3^2 + 1*1^2 = 2.27
+        result = cxm.norm(gm, QMatrix(vv, unit=units))
+        assert qnp.allclose(result, u.Q(2.27**0.5, "m/s"), atol=u.Q(1e-5, "m/s"))
+
+    def test_all_dimensionless_factors_stay_dimensionless(self):
+        """No regression: dimensionless factors keep dimensionless off-diagonals."""
+        at = {"line0.x": u.Q(1.0, "m"), "line1.x": u.Q(2.0, "m")}
+        gm, _ = self._metric((cxm.R1, cxm.R1), ("line0", "line1"), at)
+        assert gm.unit[0, 1] == u.unit("")
+        assert gm.unit[1, 0] == u.unit("")
