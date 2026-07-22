@@ -116,6 +116,36 @@ class TestBoostOnVelocity:
         for k in vel_cdict:
             assert jnp.allclose(result[k], vel_cdict[k] + delta_v[k])
 
+    def test_geom_form_matches_5arg_act(self, boost, vel_cdict):
+        """6-arg geometry-form ``act`` must equal the 5-arg ``act``.
+
+        The generic geom-form funnel routes on ``is_time_dependent`` (False for
+        a static boost), which would misroute to ``pushforward`` and drop the
+        velocity shift. The two ``act`` forms must agree.
+        """
+        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        tau = jnp.array(0.0)
+        for rep in (cxr.coord_vel, cxr.coord_disp, cxr.coord_acc):
+            five = cxfm.act(boost, tau, vel_cdict, cxc.cart3d, rep, at=at)
+            six = cxfm.act(
+                boost, tau, vel_cdict, cxc.cart3d, cxr.tangent_geom, rep, at=at
+            )
+            for k in vel_cdict:
+                assert jnp.allclose(six[k], five[k]), f"{rep} component {k}"
+
+    def test_pushforward_is_frozen_tau_identity(self, boost, vel_cdict):
+        """``pushforward`` is the frozen-tau spatial map: velocity is unchanged.
+
+        This differs from ``act`` for a boost (Δv is a kinematic-prolongation
+        effect, not a pushforward effect); guard against an over-fix.
+        """
+        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        out = cxfm.pushforward(
+            boost, jnp.array(0.0), vel_cdict, cxc.cart3d, cxr.coord_vel, at=at
+        )
+        for k in vel_cdict:
+            assert jnp.allclose(out[k], vel_cdict[k])
+
     def test_right_add_true(self, delta_v, vel_cdict):
         boost_r = cxfm.Boost(delta_v, chart=cxc.cart3d, right_add=True)
         result = cxfm.act(boost_r, None, vel_cdict, cxc.cart3d, cxr.coord_vel)

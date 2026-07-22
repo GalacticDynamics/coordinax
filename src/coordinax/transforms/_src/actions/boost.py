@@ -209,3 +209,29 @@ def act(
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED_TANGENT.format(m=m))
     return delegate()
+
+
+@plum.dispatch
+def act(
+    op: Boost,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    geom: cxr.TangentGeometry,
+    rep: cxr.Representation,
+    /,
+    *,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CDict:
+    """Boost tangent action (geometry-form): defer to the 5-arg ``act``.
+
+    The generic geometry-form funnel routes on ``is_time_dependent``, which is
+    ``False`` for a Boost with constant ``delta`` even though the boost's point
+    action ``x + dv*tau`` is tau-dependent; it would misroute to ``pushforward``
+    and drop the kinematic velocity shift. Boost's 5-arg ``act`` implements the
+    correct kinematic prolongation, so the geometry-form delegates to it,
+    keeping the two ``act`` forms identical by construction.
+    """
+    del geom
+    return cast("CDict", cxfmapi.act(op, tau, x, chart, rep, usys=usys, **kw))
