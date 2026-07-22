@@ -264,6 +264,10 @@ def tangent_map(
 
     """
     v = cxrapi.tangent_map(v, from_chart, from_rep, to_chart, at=at, usys=usys)
+    # Unchanged basis: the pushforward already lives in the target basis, so
+    # skip the identity change_basis (and its base-point mapping).
+    if from_rep.basis == to_rep.basis:
+        return v  # ty: ignore[invalid-return-type]
     # After the pushforward v lives in ``to_chart``; the basis change must be
     # evaluated at the base point expressed in ``to_chart`` coordinates.
     at_to = (
