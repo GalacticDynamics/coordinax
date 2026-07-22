@@ -306,6 +306,27 @@ def _resolve_short_names(
     return reference("", "", contnode, internal=False, refuri=url)
 
 
+def _py_suffix_index(
+    env: BuildEnvironment, pydomain: "PythonDomain"
+) -> dict[str, list[str]]:
+    """Map every dotted suffix of each py object name to the full names.
+
+    Built once per build and cached on ``env`` (missing-reference resolution runs
+    after reading, when the object inventory is complete and stable). A lookup by
+    ``target`` then returns exactly the names for which
+    ``name == target or name.endswith(f".{target}")``.
+    """
+    index: dict[str, list[str]] | None = getattr(env, "_coordinax_suffix_index", None)
+    if index is None:
+        index = {}
+        for name in pydomain.objects:
+            parts = name.split(".")
+            for i in range(len(parts)):
+                index.setdefault(".".join(parts[i:]), []).append(name)
+        env._coordinax_suffix_index = index  # ty: ignore[unresolved-attribute]
+    return index
+
+
 def _resolve_internal_short_names(
     app: Sphinx,
     env: BuildEnvironment,
@@ -329,14 +350,14 @@ def _resolve_internal_short_names(
     if not target:
         return None
     pydomain = cast("PythonDomain", env.get_domain("py"))
-    matches = [
-        name
-        for name in pydomain.objects
-        if name == target or name.endswith(f".{target}")
-    ]
+    # ``target`` matches an object when it equals the full name or a trailing
+    # dotted suffix of it (``name == target or name.endswith(f".{target}")``).
+    # Look that up in a per-build suffix index so each reference is O(1) rather
+    # than an O(N) scan of every documented object.
+    matches = _py_suffix_index(env, pydomain).get(target, ())
     # Prefer public paths over private ``._src.`` implementation paths.
     public = [name for name in matches if "._src." not in name]
-    candidates = public or matches
+    candidates = public or list(matches)
     if len(candidates) != 1:
         return None  # unknown or ambiguous → leave for normal handling
     name = candidates[0]
@@ -382,6 +403,11 @@ def _convert_dollar_math(
     lines: list[str],
 ) -> None:
     """Rewrite ``$...$`` / ``$$...$$`` maths in docstrings to RST math."""
+    # Restrict to this project's own docstrings: ``$`` reliably means math only
+    # in coordinax's controlled docstrings, so an external package entering the
+    # build (where ``$`` might be currency, a shell var, etc.) is left untouched.
+    if not name.startswith(("coordinax", "coordinaxs")):
+        return
     if not any("$" in line for line in lines):
         return
     text = "\n".join(lines)
