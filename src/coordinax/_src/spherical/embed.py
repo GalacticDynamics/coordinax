@@ -34,10 +34,10 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     ({class}`~coordinax.charts.Spherical3D`), regardless of which ambient chart
     is selected. In particular:
 
-    - If ``ambient`` is `{class}`~coordinax.charts.Spherical3D`, then
+    - If ``ambient`` is :class:`~coordinax.charts.Spherical3D`, then
       {meth}`embed` returns spherical coordinates ``(r, theta, phi)`` and
       {meth}`project` expects the same.
-    - If ``ambient`` is `{class}`~coordinax.charts.Cart3D`, then {meth}`embed`
+    - If ``ambient`` is :class:`~coordinax.charts.Cart3D`, then {meth}`embed`
       performs ``SphericalTwoSphere -> Spherical3D -> Cart3D`` and returns Cartesian
       coordinates ``(x, y, z)``; {meth}`project` performs ``Cart3D ->
       Spherical3D -> SphericalTwoSphere``.
@@ -47,12 +47,12 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     radius
         Sphere radius ``R``.
     ambient
-        Ambient chart. Defaults to `{class}`~coordinax.charts.Spherical3D`.
+        Ambient chart. Defaults to :class:`~coordinax.charts.Spherical3D`.
 
     Examples
     --------
-    Embed/project `{class}`~coordinax.charts.SphericalTwoSphere` through an ambient
-    `{class}`~coordinax.charts.Spherical3D` chart::
+    Embed/project :class:`~coordinax.charts.SphericalTwoSphere` through an ambient
+    :class:`~coordinax.charts.Spherical3D` chart:
 
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
@@ -71,8 +71,8 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     >>> jnp.allclose(p2["theta"].value, p["theta"].value)
     Array(True, dtype=bool)
 
-    Embed/project through an ambient `{class}`~coordinax.charts.Cart3D` chart
-    (routing via `{class}`~coordinax.charts.Spherical3D` internally)::
+    Embed/project through an ambient :class:`~coordinax.charts.Cart3D` chart
+    (routing via :class:`~coordinax.charts.Spherical3D` internally):
 
     >>> emb = cxm.TwoSphereIn3D(radius=u.Q(2.0, "km"), ambient=cxc.cart3d)
     >>> chart = cxm.EmbeddedChart(emb)
@@ -144,7 +144,7 @@ def embedded_twosphere(
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
 
-    Default ambient (Spherical3D)::
+    Default ambient (Spherical3D):
 
     >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
     >>> M

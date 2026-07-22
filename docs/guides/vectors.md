@@ -138,7 +138,7 @@ For a full treatment of `Tangent`, basis kinds, and `Coordinate` bundles, see th
 | Change frame of whole bundle | `pv.to_frame(frame)` | frame of point + all fibres | chart, geometric point |
 | Convert units | `u.uconvert(units_dict, v)` | component values | chart, frame, geometric point |
 
-## Combined Frame + Chart Pipelines
+## Combined Frame and Chart Pipelines
 
 Operations chain naturally — each step is independent:
 

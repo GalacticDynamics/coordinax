@@ -390,7 +390,7 @@ You can also call `norm` on a standalone metric object:
 Q(5., 'm / s')
 ```
 
-See [spec § norm](../spec.md#software-spec-norm) for the complete dispatch table and notes on curved-metric position dependence.
+See [spec § norm](#software-spec-norm) for the complete dispatch table and notes on curved-metric position dependence.
 
 ## Quick Reference
 

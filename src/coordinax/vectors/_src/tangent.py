@@ -98,6 +98,8 @@ class Tangent(
     frame
         The reference frame. Defaults to ``cxf.noframe``.
 
+    Examples
+    --------
     Construct a **coordinate-basis velocity** in Cartesian 3D:
 
     >>> import coordinax as cx

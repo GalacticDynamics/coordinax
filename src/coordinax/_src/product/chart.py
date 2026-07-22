@@ -67,7 +67,7 @@ class AbstractCartesianProductChart(AbstractChart[CartesianProductManifold, Ks, 
 
     @property
     def ndims(self) -> tuple[int, ...]:
-        """Total dimension: sum of factor dimensions."""
+        """Total dimension, the sum of factor dimensions."""
         return tuple(f.ndim for f in self.factors)
 
     def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
@@ -144,7 +144,7 @@ class AbstractCartesianProductChart(AbstractChart[CartesianProductManifold, Ks, 
 
     @property
     def components(self) -> Ks:
-        """Component keys: dot-delimited strings ``"factor_name.component"``.
+        """Component keys are dot-delimited strings ``"factor_name.component"``.
 
         Components are dot-delimited string keys to avoid collisions:
             (f"{name_0}.{c}" for c in factors[0].components, ...)
@@ -165,7 +165,7 @@ class AbstractCartesianProductChart(AbstractChart[CartesianProductManifold, Ks, 
 
     @property
     def ndim(self) -> int:
-        """Total dimension: sum of factor dimensions."""
+        """Total dimension, the sum of factor dimensions."""
         return sum(f.ndim for f in self.factors)
 
     # ===============================================================
@@ -194,6 +194,7 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     collide.
 
     Normative requirements:
+
     - `factor_names` must be provided (abstract property)
     - `components` is the direct concatenation of factor components
       (must be collision-free)
@@ -258,7 +259,7 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 
     @property
     def components(self) -> Ks:
-        """Component keys: flat strings (collision-free concatenation of factors).
+        """Component keys are flat strings (collision-free concatenation of factors).
 
         Components are the direct concatenation of factor component strings
         (must be collision-free).

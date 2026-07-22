@@ -118,7 +118,7 @@ class Translate(AbstractAdd):
     semantic_kind: cxr.AbstractTangentSemanticKind = eqx.field(
         static=True, default=cxr.dpl
     )
-    """Semantic kind of tangent data this operator acts on. Default: Displacement."""
+    """Semantic kind of tangent data this operator acts on (default Displacement)."""
 
     # delta, chart, and right_add inherited from AbstractAdd
     @classmethod

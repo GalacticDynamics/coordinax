@@ -21,7 +21,7 @@ def scale_factors(
     r"""Return round-metric diagonal directly without forming the nxn matrix.
 
     Computes the cumulative-sine diagonal $g_{kk} = \prod_{j<k} \sin^2\theta_j$
-    as a 1-D vector, avoiding the O(n^2) cost of :meth:`~.RoundMetric.metric_matrix`.
+    as a 1-D vector, avoiding the O(n^2) cost of ``RoundMetric.metric_matrix``.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u

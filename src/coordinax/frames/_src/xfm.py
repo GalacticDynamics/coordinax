@@ -25,14 +25,12 @@ class AbstractTransformedReferenceFrame(AbstractReferenceFrame, Generic[FrameT])
     reference frame. The transformation from the base reference frame to this
     reference frame is stored as an `coordinax.operators.AbstractTransform`.
 
-    ```{warning}
+    .. warning::
 
-    The transformation operator ``ops`` is the transformation of the
-    points, not a passive re-labeling of coordinates. Frame transitions in
-    `coordinax` use active semantics: coordinates are transformed by direct
-    application of the operator.
-
-    ```
+        The transformation operator ``ops`` is the transformation of the
+        points, not a passive re-labeling of coordinates. Frame transitions in
+        `coordinax` use active semantics: coordinates are transformed by direct
+        application of the operator.
 
     Examples
     --------
@@ -81,14 +79,12 @@ class TransformedReferenceFrame(AbstractTransformedReferenceFrame[FrameT]):
     reference frame. The transformation from the base reference frame to this
     reference frame is stored as an `coordinax.operators.AbstractTransform`.
 
-    ```{warning}
+    .. warning::
 
-    The transformation operator ``ops`` is the transformation of the
-    points, not a passive re-labeling of coordinates. Frame transitions in
-    `coordinax` use active semantics: coordinates are transformed by direct
-    application of the operator.
-
-    ```
+        The transformation operator ``ops`` is the transformation of the
+        points, not a passive re-labeling of coordinates. Frame transitions in
+        `coordinax` use active semantics: coordinates are transformed by direct
+        application of the operator.
 
     Examples
     --------

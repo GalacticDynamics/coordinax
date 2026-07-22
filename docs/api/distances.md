@@ -5,7 +5,7 @@
 .. currentmodule:: coordinax.distances
 
 .. automodule:: coordinax.distances
-    :exclude-members: aval, default, materialise, enable_materialise
+    :exclude-members: Distance, aval, default, materialise, enable_materialise
 
 .. autoclass:: Distance
     :members:

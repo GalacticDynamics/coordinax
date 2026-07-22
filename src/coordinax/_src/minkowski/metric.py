@@ -59,5 +59,5 @@ class MinkowskiMetric(AbstractDiagonalMetricField):
 
     @property
     def signature(self) -> tuple[int, ...]:
-        """Metric signature: ``(-1, 1, 1, 1)`` — Lorentzian pseudo-Riemannian."""
+        """Metric signature ``(-1, 1, 1, 1)``, Lorentzian pseudo-Riemannian."""
         return (-1, 1, 1, 1)

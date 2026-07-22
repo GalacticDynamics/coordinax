@@ -5,7 +5,7 @@
 .. currentmodule:: coordinax.angles
 
 .. automodule:: coordinax.angles
-    :exclude-members: aval, default, materialise, enable_materialise
+    :exclude-members: Angle, aval, default, materialise, enable_materialise
 
 .. autoclass:: Angle
     :members:

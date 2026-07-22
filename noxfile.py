@@ -194,6 +194,7 @@ def docs(s: nox.Session, /) -> None:
     shared_args = (
         "-n",  # nitpicky mode
         "-T",  # full tracebacks
+        "-W",  # turn warnings into errors
         f"-b={args.builder}",
         f"-d {args.output_dir}/doctrees",
         "-D",

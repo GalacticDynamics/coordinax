@@ -35,7 +35,7 @@ class MinkowskiManifold(AbstractManifold):
     **Metric.** The manifold carries the flat Minkowski metric
     $\eta = \operatorname{diag}(-1, 1, 1, 1)$.
 
-    **Pre-built instance.** The module exports :obj:`minkowski4d` as a
+    **Pre-built instance.** The module exports ``minkowski4d`` as a
     ready-to-use instance.
 
     Parameters
