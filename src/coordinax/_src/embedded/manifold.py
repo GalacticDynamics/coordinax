@@ -170,7 +170,7 @@ def pt_embed(
         p_intrinsic, from_intrinsic_chart, embed_map.intrinsic, usys=usys
     )
     # Step 2: embed from embedding's intrinsic chart to ambient chart
-    p_ambient = embed_map.embed(p_intrinsic_in_embedding_chart)
+    p_ambient = embed_map.embed(p_intrinsic_in_embedding_chart, usys=usys)
     # Step 3: point transition from embedding's ambient chart to target chart
     p_ambient_in_target_chart = cxcapi.pt_map(
         p_ambient, embed_map.ambient, to_ambient_chart, usys=usys
@@ -244,7 +244,7 @@ def pt_project(
         p_ambient, from_ambient_chart, embed_map.ambient, usys=usys
     )
     # Step 2: project from embedding's ambient chart to intrinsic chart
-    p_intrinsic = embed_map.project(p_ambient_in_embedding_chart)
+    p_intrinsic = embed_map.project(p_ambient_in_embedding_chart, usys=usys)
     # Step 3: point transition from embedding's intrinsic chart to target chart
     p_intrinsic_in_target_chart = cxcapi.pt_map(
         p_intrinsic, embed_map.intrinsic, to_intrinsic_chart, usys=usys
