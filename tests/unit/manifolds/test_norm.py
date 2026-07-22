@@ -584,9 +584,12 @@ class TestProductMetricInterBlockUnits:
             "line.x": u.Q(1.0, "m"),
         }
         gm, chart = self._metric((E, cxm.R1), ("sph", "line"), at)
-        # sqrt(m²/rad² * dimensionless) = m/rad
-        assert gm.unit[0, 2] == u.unit("m / rad")
+        # Both sphere components (theta=0, phi=1) carry m²/rad², so every
+        # sphere<->line cross-block off-diagonal is sqrt(m²/rad² * 1) = m/rad.
+        assert gm.unit[0, 2] == u.unit("m / rad")  # theta <-> x
         assert gm.unit[2, 0] == u.unit("m / rad")
+        assert gm.unit[1, 2] == u.unit("m / rad")  # phi <-> x
+        assert gm.unit[2, 1] == u.unit("m / rad")
 
         # The assembled metric now yields a unit-consistent norm. The round
         # metric on the radius-R sphere is diag(R², R² sin²θ); the line adds 1:
