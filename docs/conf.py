@@ -128,7 +128,6 @@ nitpick_ignore = [
     ("py:class", "unxt._src.quantity.base._QuantityIndexUpdateHelper"),
     ("py:class", "dataclassish._src.converters.PassThroughTs"),
     ("py:class", "dataclassish._src.converters.ArgT"),
-    ("py:class", "unxt._src.quantity.quantity.Quantity[PhysicalType('length')]"),
     ("py:class", "coordinax.vectors._src.core.Point"),
     ("py:class", "coordinax.representations._src.semantics.AbstractSemanticKind"),
     ("py:class", "coordinax.representations._src.geom.PointGeometry"),
@@ -184,6 +183,13 @@ nitpick_ignore_regex = [
     (r"py:.*", r"wadler_lindig\..*"),
     (r"py:.*", r"unxt_hypothesis\..*"),
     (r"py:.*", r"optype\..*"),
+    # quax-blocks mixins are private (``_src``) implementation details with no
+    # published inventory; they leak into base-class signatures.
+    (r"py:.*", r"quax_blocks\._src\..*"),
+    # Parametrized unxt Quantity aliases (``Quantity[PhysicalType('length')]``,
+    # ``['angle']``, …) are emitted verbatim into signatures but are not
+    # resolvable inventory targets.
+    (r"py:.*", r"unxt\._src\.quantity\.quantity\.Quantity\[PhysicalType\("),
     # beartype-validator annotations (``typing.Annotated[..., beartype.vale.Is
     # [...]]``) are emitted verbatim into signatures and are not doc targets.
     (r"py:.*", r"typing\.Annotated\[.*"),
