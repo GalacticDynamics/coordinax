@@ -4,22 +4,23 @@ __all__: tuple[str, ...] = ()
 
 import pathlib
 
+import pytest
+
 import coordinaxs.hypothesis.main as cxst
 
 
-def _distribution_portion_dir() -> pathlib.Path:
-    """Return this distribution's ``coordinaxs/hypothesis`` directory.
+def _portion_dir_for(main_file: str) -> pathlib.Path:
+    """Resolve the ``coordinaxs/hypothesis`` directory from ``main``'s file.
 
     ``coordinaxs.hypothesis`` is a namespace package split across distributions,
-    so anchor on ``main`` (only this distribution provides it) and resolve the
-    enclosing directory. ``__file__`` is ``.../hypothesis/main/__init__.py`` for
-    a package (→ parents[1]) or ``.../hypothesis/main.py`` for a module
-    (→ parents[0]); handle both so the check is robust to the layout.
+    so anchor on ``main`` (only this distribution provides it). ``main`` may be
+    a package (``.../hypothesis/main/__init__.py`` → ``.parent.parent``) or a
+    module (``.../hypothesis/main.py`` → ``.parent``); handle both.
     """
-    main_path = pathlib.Path(cxst.__file__).resolve()
+    main_path = pathlib.Path(main_file)
     if main_path.name == "__init__.py":
-        return main_path.parents[1]
-    return main_path.parents[0]
+        return main_path.parent.parent
+    return main_path.parent
 
 
 def test_ships_py_typed_marker() -> None:
@@ -28,6 +29,18 @@ def test_ships_py_typed_marker() -> None:
     The check is scoped to *this* distribution's own namespace portion, not the
     shared ``coordinaxs.hypothesis`` namespace as a whole.
     """
-    portion_dir = _distribution_portion_dir()
+    portion_dir = _portion_dir_for(str(pathlib.Path(cxst.__file__).resolve()))
     marker = portion_dir / "py.typed"
     assert marker.is_file(), f"py.typed marker missing from {portion_dir}"
+
+
+@pytest.mark.parametrize(
+    "main_file",
+    [
+        "/pkg/src/coordinaxs/hypothesis/main/__init__.py",  # main as package
+        "/pkg/src/coordinaxs/hypothesis/main.py",  # main as module
+    ],
+)
+def test_portion_dir_handles_both_layouts(main_file: str) -> None:
+    """Both the package and module layouts resolve to ``coordinaxs/hypothesis``."""
+    assert _portion_dir_for(main_file) == pathlib.Path("/pkg/src/coordinaxs/hypothesis")
