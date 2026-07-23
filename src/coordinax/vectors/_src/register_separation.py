@@ -105,6 +105,10 @@ def separation(a: AbstractVector, b: AbstractVector, /) -> Angle:
     common Cartesian chart with a numerically stable, dimension-agnostic
     formula (no cross product), and invariant to chart and component units.
 
+    A vector *at* the origin has no direction, so its angular separation is
+    undefined; the result is ``nan`` (rather than raising, so the function
+    stays ``jit``/``vmap`` friendly).
+
     Examples
     --------
     >>> import coordinax as cx
