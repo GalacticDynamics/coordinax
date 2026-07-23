@@ -35,7 +35,9 @@ def _cartesian_components(
 
     Guards that the two vectors share a frame and a Cartesian chart, then strips
     every component to the first operand's unit so the results are plain arrays
-    ready for elementwise arithmetic.
+    ready for elementwise arithmetic.  Component leaves may be `unxt.Quantity`
+    objects (unitful vectors) or plain JAX arrays (unitless vectors); the shared
+    unit is ``None`` in the latter case.
     """
     if a.frame != b.frame:
         msg = "cannot measure separation between vectors in different frames"
@@ -47,18 +49,23 @@ def _cartesian_components(
         msg = "cannot measure separation between vectors on different manifolds"
         raise ValueError(msg)
 
-    unit = next(iter(ac.data.values())).unit
-    ca = jnp.stack([ac.data[k].ustrip(unit) for k in ac.data])
-    cb = jnp.stack([bc.data[k].ustrip(unit) for k in ac.data])
+    unit = getattr(next(iter(ac.data.values())), "unit", None)
+
+    def _strip(leaf: Any) -> Array:
+        return leaf.ustrip(unit) if hasattr(leaf, "ustrip") else jnp.asarray(leaf)
+
+    ca = jnp.stack([_strip(ac.data[k]) for k in ac.data])
+    cb = jnp.stack([_strip(bc.data[k]) for k in ac.data])
     return ca, cb, unit
 
 
 @dispatch
-def separation_3d(a: AbstractVector, b: AbstractVector, /) -> Distance:
+def separation_3d(a: AbstractVector, b: AbstractVector, /) -> Distance | Array:
     """Straight-line distance between two points.
 
     The Euclidean distance between the points in their common Cartesian chart,
-    invariant to the chart and component units of either operand.
+    invariant to the chart and component units of either operand.  Returns a
+    `Distance` for unitful vectors, or a bare JAX array for unitless ones.
 
     Examples
     --------
@@ -84,7 +91,10 @@ def separation_3d(a: AbstractVector, b: AbstractVector, /) -> Distance:
     """
     ca, cb, unit = _cartesian_components(a, b)
     d = ca - cb
-    return Distance(jnp.sqrt(jnp.sum(d**2, axis=0)), unit)
+    dist = jnp.sqrt(jnp.sum(d**2, axis=0))
+    # Unitless vectors have no length dimension for a ``Distance``; return the
+    # bare magnitude instead.
+    return dist if unit is None else Distance(dist, unit)
 
 
 @dispatch
