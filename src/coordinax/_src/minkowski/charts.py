@@ -4,8 +4,7 @@ __all__ = ("MinkowskiCT", "minkowskict")
 
 import dataclasses
 
-from typing import Final, Literal as L, final  # noqa: N817
-from typing_extensions import override
+from typing import Final, Literal as L, final, override  # noqa: N817
 
 import jax.tree_util as jtu
 import plum

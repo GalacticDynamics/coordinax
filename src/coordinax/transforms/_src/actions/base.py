@@ -8,7 +8,6 @@ __all__ = (
 
 import abc
 import dataclasses
-import sys
 
 from collections.abc import Mapping
 from jaxtyping import ArrayLike
@@ -17,16 +16,8 @@ from typing import TYPE_CHECKING, Any, Final, TypeVar, cast
 import equinox as eqx
 import jax.numpy as jnp
 import jax.tree as jtu
+import optype as op
 import plum
-
-if sys.version_info >= (3, 12):
-    import optype as op
-
-    _DataclassBase = op.dataclasses.HasDataclassFields
-else:
-    from dataclassish import (
-        DataclassInstance as _DataclassBase,  # ty: ignore[unresolved-import]
-    )
 import wadler_lindig as wl
 
 import unxt as u
@@ -37,6 +28,8 @@ from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
     import coordinax.transforms  # noqa: ICN001
+
+_DataclassBase = op.dataclasses.HasDataclassFields
 
 _sentinel: Final = object()
 
@@ -328,10 +321,13 @@ def from_(cls: type[AbstractTransform], obj: AbstractTransform, /) -> AbstractTr
 # =============================================================================
 # materialize_transform: Materialization of time-dependent parameters
 
+# NB: kept as a module-level TypeVar rather than PEP 695 syntax (UP047): the
+# inlined type parameter renders as an unresolved `py:class` cross-reference in
+# the Sphinx (`-W`) docs build.
 OpT = TypeVar("OpT", bound=_DataclassBase)
 
 
-def materialize_transform(op: OpT, tau: Any, /) -> OpT:
+def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     r"""Evaluate time-dependent parameters of an operator at a given time.
 
     This function materializes an operator by evaluating all callable

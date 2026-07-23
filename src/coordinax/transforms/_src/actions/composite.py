@@ -2,24 +2,17 @@
 
 __all__ = ("AbstractCompositeTransform",)
 
-import sys
 from dataclasses import replace
 
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Protocol, final, overload, runtime_checkable
 
 import equinox as eqx
+import optype as op
 
 from .base import AbstractTransform
 
-if sys.version_info >= (3, 12):
-    import optype as op
-
-    _DataclassBase = op.dataclasses.HasDataclassFields
-else:
-    from dataclassish import (
-        DataclassInstance as _DataclassBase,  # ty: ignore[unresolved-import]
-    )
+_DataclassBase = op.dataclasses.HasDataclassFields
 
 if TYPE_CHECKING:
     import coordinax.transforms  # noqa: ICN001

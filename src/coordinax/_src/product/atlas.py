@@ -6,8 +6,7 @@ __all__ = ("CartesianProductAtlas",)
 import dataclasses
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, cast, final
-from typing_extensions import override
+from typing import TYPE_CHECKING, cast, final, override
 
 import jax
 

@@ -2,8 +2,7 @@
 
 __all__ = ("Abstract4D",)
 
-from typing import Any, Literal as L  # noqa: N817
-from typing_extensions import override
+from typing import Any, Literal as L, override  # noqa: N817
 
 from coordinax._src.base import (
     AbstractDimensionalFlag,

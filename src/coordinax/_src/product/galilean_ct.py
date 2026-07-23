@@ -5,8 +5,7 @@ __all__ = ("galilean_spacetime", "GalileanCT", "galileanct")
 from dataclasses import KW_ONLY, field, replace
 
 from jaxtyping import Float
-from typing import Any, ClassVar, Final, cast, final
-from typing_extensions import override
+from typing import Any, ClassVar, Final, cast, final, override
 
 import jax.tree_util as jtu
 import numpy as np

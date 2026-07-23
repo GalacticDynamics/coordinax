@@ -4,8 +4,7 @@ __all__ = ("EmbeddedManifold",)
 
 import dataclasses
 
-from typing import Any, Final, Generic, cast, final
-from typing_extensions import override
+from typing import Any, Final, Generic, cast, final, override
 
 import jax
 import plum

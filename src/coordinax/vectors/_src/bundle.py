@@ -10,8 +10,8 @@ __all__ = ("Coordinate",)
 
 
 from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
-from typing import Any, cast, final
-from typing_extensions import TypeVar, override
+from typing import Any, cast, final, override
+from typing_extensions import TypeVar
 
 import equinox as eqx
 import jax.numpy as jnp

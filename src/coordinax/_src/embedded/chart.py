@@ -3,8 +3,7 @@
 __all__ = ("EmbeddedChart",)
 
 
-from typing import ClassVar, Generic, cast, final
-from typing_extensions import override
+from typing import ClassVar, Generic, cast, final, override
 
 import jax
 import plum

@@ -21,8 +21,7 @@ __all__ = (
 import dataclasses
 
 from jaxtyping import Real
-from typing import Annotated, Any, Final, Literal as L, Self  # noqa: N817
-from typing_extensions import override
+from typing import Annotated, Any, Final, Literal as L, Self, override  # noqa: N817
 
 import jax.tree_util as jtu
 from beartype.vale import Is

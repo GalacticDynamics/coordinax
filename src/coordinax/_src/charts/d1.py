@@ -18,8 +18,8 @@ __all__ = (
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, Self  # noqa: N817
-from typing_extensions import TypeVar, override
+from typing import Any, Final, Literal as L, Self, override  # noqa: N817
+from typing_extensions import TypeVar
 
 import jax.tree_util as jtu
 

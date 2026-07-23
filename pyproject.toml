@@ -12,7 +12,6 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -23,13 +22,13 @@ dependencies = [
   "astropy>=7.0.0",
   "beartype>=0.21.0",
   "coordinaxs.api>=0.24",
-  "dataclassish>=0.8.0,<0.9.0; python_version == '3.11'",
-  "dataclassish>=0.9.0; python_version >= '3.12'",
+  "dataclassish>=0.9.0",
   "equinox>=0.13.8",
   "jax>=0.6.0",
   "jaxlib>=0.6.0",
   "jaxtyping>=0.3.3",
   "optional-dependencies>=0.3.2",
+  "optype>=0.17.0",
   "plum>=2.8.0; python_version < '3.14'",
   "plum>=2.9.0; python_version >= '3.14'",
   "quax>=0.3.6",
@@ -46,7 +45,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 name = "coordinax"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [project.optional-dependencies]
 astro = ["coordinaxs.astro>=0.24"]
@@ -207,7 +206,7 @@ files = [
 ]
 mypy_path = "src:packages/coordinaxs.api/src:packages/coordinaxs.astro/src:packages/coordinaxs.curveframes/src:packages/coordinaxs.hypothesis/src:packages/coordinaxs.interop.astropy/src"
 namespace_packages = true
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_return_any = false
 warn_unreachable = true
@@ -274,7 +273,7 @@ messages_control.disable = [
   "wrong-import-position",                     # handled by ruff
   "wrong-import-order",                        # handled by ruff
 ]
-py-version = "3.11"
+py-version = "3.12"
 reports.output-format = "colorized"
 similarities.ignore-imports = "yes"
 
@@ -299,6 +298,12 @@ filterwarnings = [
   "ignore:jax\\.main\\.pp_eqn_rules is deprecated:DeprecationWarning",
   # hypothesis
   "ignore:Do not use the `random` module inside strategies:hypothesis.errors.HypothesisDeprecationWarning",
+  # Old matplotlib (resolved by the check-oldest job) calls pyparsing APIs that
+  # newer pyparsing deprecates; pulled in transitively via unxt's mpl interop.
+  # Scoped to the matplotlib modules that emit them, and matched by message +
+  # the builtin DeprecationWarning base (which PyparsingDeprecationWarning
+  # subclasses) so the filter loads even where pyparsing is not installed.
+  "ignore:'\\w+' deprecated - use '\\w+':DeprecationWarning:matplotlib\\..*",
 ]
 log_level = "INFO"
 markers = [
@@ -399,6 +404,12 @@ ignore = [
   "TD002",   # Missing author in TODO
   "TD003",   # Missing issue link on the line following this TODO
   "TRY003",  # Avoid specifying long messages outside the exception class
+  # PEP 695 type syntax is incompatible with the runtime type system here:
+  # `type` aliases become `TypeAliasType`, which beartype's door API and the
+  # runtime `__args__` introspection in charts do not support; generic-class
+  # conversion would also drop PEP 696 TypeVar defaults (which need py3.13).
+  "UP040", # non-pep695-type-alias
+  "UP046", # non-pep695-generic-class
 ]
 
 [tool.ruff.lint.per-file-ignores]

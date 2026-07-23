@@ -5,8 +5,7 @@ __all__ = ("NoManifold", "no_manifold")
 
 import dataclasses
 
-from typing import Any
-from typing_extensions import override
+from typing import Any, override
 
 import jax.tree_util as jtu
 

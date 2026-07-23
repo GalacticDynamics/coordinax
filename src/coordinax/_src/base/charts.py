@@ -339,7 +339,7 @@ def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
 
 
 @no_type_check
-def _get_tuple(tp: GAT, /) -> GAT:
+def _get_tuple(tp: GAT, /) -> GAT:  # noqa: UP047
     return tuple(arg.__args__[0] for arg in get_args(tp))
 
 

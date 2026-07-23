@@ -6,8 +6,8 @@ __all__ = ("Tangent",)
 from dataclasses import replace
 
 from jaxtyping import ArrayLike
-from typing import TYPE_CHECKING, Any, Generic, cast, final
-from typing_extensions import TypeVar, override
+from typing import TYPE_CHECKING, Any, Generic, cast, final, override
+from typing_extensions import TypeVar
 
 import equinox as eqx
 import quax_blocks

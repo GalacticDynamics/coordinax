@@ -6,7 +6,7 @@ __all__: tuple[str, ...] = ()
 
 
 from jaxtyping import Shaped
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
@@ -18,11 +18,11 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.vectors as cxv
 
-V = TypeVar("V", bound=cxv.AbstractVector)
 
-
-def check_semantics(obj: V, /, need: type[cxr.AbstractSemanticKind]) -> V:
-    """Check that the vector has the needed role, and raise ValueError if not."""
+def check_semantics[V: cxv.AbstractVector](
+    obj: V, /, need: type[cxr.AbstractSemanticKind]
+) -> V:
+    """Check that the vector has the needed role, and raise TypeError if not."""
     if not isinstance(obj.rep.semantic_kind, need):
         msg = (
             f"Expected role {need.__name__}, "
@@ -75,9 +75,9 @@ def convert_vector_to_astropy(obj: cxv.Point, /) -> apyc.BaseRepresentation:
 
     The specific Astropy representation type (e.g., Cartesian vs. Cylindrical)
     is determined by the chart of the input point. The point's role must be
-    compatible with a position/location (e.g., Point), and the chart must be one
-    of the supported types (e.g., Cart3D, Cyl3D, Sph3D, etc.), or else a
-    ValueError will be raised.
+    compatible with a position/location (e.g., Point), or a `TypeError` is
+    raised; and the chart must be one of the supported types (e.g., Cart3D,
+    Cyl3D, Sph3D, etc.), or a `ValueError` is raised.
 
     >>> import unxt as u
     >>> import coordinax.vectors as cxv
@@ -103,7 +103,7 @@ def convert_vector_to_astropy(obj: cxv.Point, /) -> apyc.BaseRepresentation:
         (1., 2., 3.)>
 
     """
-    # Check that the vector has a compatible role, and raise ValueError if not.
+    # Check that the vector has a compatible role, and raise TypeError if not.
     obj = check_semantics(obj, need=cxr.Location)
 
     # Dispatch to specific conversion method based on chart.
@@ -144,7 +144,7 @@ def cart3_to_apycart3(obj: cxv.Point, /) -> apyc.CartesianRepresentation:
         (1., 2., 3.)>
 
     """
-    # Check that the vector has a compatible role, and raise ValueError if not.
+    # Check that the vector has a compatible role, and raise TypeError if not.
     obj = check_semantics(obj, need=cxr.Location)
     # Convert to Cartesian if not already in that chart.
     if obj.chart != cxc.cart3d:
@@ -196,7 +196,7 @@ def cyl_to_apycyl(
         (1., 2., 3.)>
 
     """
-    # Check that the vector has a compatible role, and raise ValueError if not.
+    # Check that the vector has a compatible role, and raise TypeError if not.
     obj = check_semantics(obj, need=cxr.Location)
     # Convert to CylindricalRepresentation if not already in that chart.
     if obj.chart != cxc.cyl3d:
@@ -246,7 +246,7 @@ def sph_to_apysph(
         (3., 2., 1.)>
 
     """
-    # Check that the vector has a compatible role, and raise ValueError if not.
+    # Check that the vector has a compatible role, and raise TypeError if not.
     obj = check_semantics(obj, need=cxr.Location)
     # Convert to SphericalRepresentation if not already in that chart.
     if obj.chart != cxc.sph3d:

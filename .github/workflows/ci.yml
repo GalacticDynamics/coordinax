@@ -18,7 +18,7 @@ env:
   # Many color libraries just need this to be set to any value, but at least
   # one distinguishes color depth, where "3" -> "256-bit color".
   FORCE_COLOR: 3
-  PYTHON_VERSIONS: '["3.11", "3.12", "3.13", "3.14"]'
+  PYTHON_VERSIONS: '["3.12", "3.13", "3.14"]'
 
 jobs:
   format:
@@ -142,7 +142,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
         runs-on: [ubuntu-latest]
 
     steps:

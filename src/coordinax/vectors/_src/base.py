@@ -5,8 +5,8 @@ __all__ = ("AbstractVector",)
 import abc
 import dataclasses
 
-from typing import TYPE_CHECKING, Any, Generic, NoReturn, cast
-from typing_extensions import TypeIs, TypeVar, override
+from typing import TYPE_CHECKING, Any, Generic, NoReturn, cast, override
+from typing_extensions import TypeIs, TypeVar
 
 import equinox as eqx
 import jax

@@ -6,8 +6,8 @@ __all__ = ("Point",)
 from dataclasses import replace
 
 from jaxtyping import Array, ArrayLike
-from typing import TYPE_CHECKING, Any, Generic, cast, final
-from typing_extensions import TypeVar, override
+from typing import TYPE_CHECKING, Any, Generic, cast, final, override
+from typing_extensions import TypeVar
 
 import equinox as eqx
 import jax

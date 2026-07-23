@@ -18,8 +18,8 @@ __all__ = (
 import abc
 
 from collections.abc import Callable
-from typing import Any
-from typing_extensions import TypeVar, override
+from typing import Any, override
+from typing_extensions import TypeVar
 
 import equinox as eqx
 import jax.numpy as jnp

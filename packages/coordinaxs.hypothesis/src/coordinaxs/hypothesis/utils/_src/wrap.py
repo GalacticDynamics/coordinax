@@ -4,13 +4,13 @@ __all__ = ("strip_return_annotation",)
 
 import inspect
 
-from typing import Any, Final, TypeVar
+from collections.abc import Callable
+from typing import Any, Final
 
-T = TypeVar("T")
 EMPTY: Final = inspect.Parameter.empty
 
 
-def strip_return_annotation(func: T, /) -> T:
+def strip_return_annotation[T: Callable[..., Any]](func: T, /) -> T:
     """Remove the return type annotation from a function and any wrapped functions.
 
     This utility helps work around Plum dispatch issues where parameterized

@@ -26,7 +26,9 @@ RECOGNIZE_NONINTROSPECTABLE: Final[
 ] = []
 
 
-def wrap_if_not_inspectable(ann: T, /) -> T | AbstractNotIntrospectable[T]:
+def wrap_if_not_inspectable[AnnT](
+    ann: AnnT, /
+) -> AnnT | AbstractNotIntrospectable[AnnT]:
     """Wrap a jaxtyping annotation in a wrapper class.
 
     We need to special-case jaxtyping-decorated annotations, since

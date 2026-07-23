@@ -29,7 +29,7 @@ dynamic = ["version"]
 license = "MIT"
 name = "coordinaxs.interop.astropy"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [project.entry-points."coordinaxs.interop"]
 # Loading this entry point imports the module, which registers the astropy

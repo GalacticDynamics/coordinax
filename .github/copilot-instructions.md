@@ -43,7 +43,7 @@ The root `docs/spec.md` defines the **global mathematical framework**; package- 
 
 ## Main Package: coordinax
 
-- **Language**: Python 3.11+
+- **Language**: Python 3.12+
 - **Design goals**: JAX-compatible coordinate objects, type-safe transformations, seamless integration with existing JAX code via Quax
 - **JAX integration**: Objects are PyTrees via Equinox. Use `quaxed` for pre-quaxified JAX functions. Performant with JIT, vmap, grad.
 

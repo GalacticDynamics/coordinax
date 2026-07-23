@@ -10,8 +10,7 @@ import abc
 from itertools import chain
 
 from collections.abc import Mapping
-from typing import Any, ClassVar, TypeVar, cast, final
-from typing_extensions import override
+from typing import Any, ClassVar, TypeVar, cast, final, override
 
 import jax.tree_util as jtu
 import plum
