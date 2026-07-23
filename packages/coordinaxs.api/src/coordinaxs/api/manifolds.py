@@ -242,9 +242,9 @@ def pt_embed(
     Verify the point lies on the sphere:
 
     >>> p_ambient_cart = cxm.pt_map(p_ambient, chart.ambient, cxc.cart3d)
-    >>> r2 = jnp.linalg.norm(jnp.array(list(p_ambient_cart.values())))
-    >>> jnp.allclose(r2, u.Q(25.0, "km"), atol=u.Q(1e-10, "km"))
-    Q(False, '')
+    >>> r = jnp.linalg.norm(jnp.array(list(p_ambient_cart.values())))
+    >>> jnp.allclose(r, u.Q(5.0, "km"), atol=u.Q(1e-10, "km"))
+    Array(True, dtype=bool)
 
     Embedding a point at the north pole:
 
