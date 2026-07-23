@@ -186,6 +186,14 @@ def docs(s: nox.Session, /) -> None:
         "--output",
         "guides/perf.ipynb",
     )
+    s.run(
+        "jupytext",
+        "--to",
+        "notebook",
+        "packages/coordinaxs.curveframes/visualizing.md",
+        "--output",
+        "packages/coordinaxs.curveframes/visualizing.ipynb",
+    )
 
     if args.builder == "linkcheck":
         s.run("sphinx-build", "-b", "linkcheck", ".", "_build/linkcheck", *posargs)

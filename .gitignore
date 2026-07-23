@@ -86,6 +86,7 @@ target/
 .ipynb_checkpoints
 notebooks/
 docs/guides/*.ipynb
+packages/coordinaxs.curveframes/docs/visualizing.ipynb
 
 # IPython
 profile_default/
