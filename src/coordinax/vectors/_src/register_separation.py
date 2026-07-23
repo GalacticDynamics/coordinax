@@ -16,28 +16,28 @@ is undefined and raises; align the operands with `to_frame` first.
 
 __all__ = ("separation", "separation_3d")
 
-from jaxtyping import Array
-from typing import Any
-
-from plum import dispatch
+from plum import convert, dispatch
 
 import quaxed.numpy as jnp
+import unxt as u
 
 from .base import AbstractVector
 from coordinax.angles import Angle
 from coordinax.distances import Distance
 
+_LENGTH = u.dimension("length")
+
 
 def _cartesian_components(
     a: AbstractVector, b: AbstractVector
-) -> tuple[Array, Array, Any]:
-    """Return ``a`` and ``b`` as stacked Cartesian arrays in a shared unit.
+) -> tuple[u.AbstractQuantity, u.AbstractQuantity]:
+    """Return ``a`` and ``b`` as Cartesian `unxt.Quantity` vectors.
 
-    Guards that the two vectors share a frame and a Cartesian chart, then strips
-    every component to the first operand's unit so the results are plain arrays
-    ready for elementwise arithmetic.  Component leaves may be `unxt.Quantity`
-    objects (unitful vectors) or plain JAX arrays (unitless vectors); the shared
-    unit is ``None`` in the latter case.
+    Guards that the two vectors share a frame and a Cartesian chart, then
+    converts each to a single `unxt.Quantity` (components stacked on the last
+    axis) via the registered ``plum`` conversion.  Unit-aware `unxt.Quantity`
+    arithmetic then makes the downstream measures chart- and unit-invariant with
+    no manual per-component unit handling.
     """
     if a.frame != b.frame:
         msg = "cannot measure separation between vectors in different frames"
@@ -49,23 +49,19 @@ def _cartesian_components(
         msg = "cannot measure separation between vectors on different manifolds"
         raise ValueError(msg)
 
-    unit = getattr(next(iter(ac.data.values())), "unit", None)
-
-    def _strip(leaf: Any) -> Array:
-        return leaf.ustrip(unit) if hasattr(leaf, "ustrip") else jnp.asarray(leaf)
-
-    ca = jnp.stack([_strip(ac.data[k]) for k in ac.data])
-    cb = jnp.stack([_strip(bc.data[k]) for k in ac.data])
-    return ca, cb, unit
+    return convert(ac, u.Quantity), convert(bc, u.Quantity)
 
 
 @dispatch
-def separation_3d(a: AbstractVector, b: AbstractVector, /) -> Distance | Array:
+def separation_3d(
+    a: AbstractVector, b: AbstractVector, /
+) -> Distance | u.AbstractQuantity:
     """Straight-line distance between two points.
 
     The Euclidean distance between the points in their common Cartesian chart,
     invariant to the chart and component units of either operand.  Returns a
-    `Distance` for unitful vectors, or a bare JAX array for unitless ones.
+    `Distance` for unitful vectors, or a dimensionless `unxt.Quantity` for
+    unitless ones (a dimensionless magnitude is not a `Distance`).
 
     Examples
     --------
@@ -89,12 +85,11 @@ def separation_3d(a: AbstractVector, b: AbstractVector, /) -> Distance | Array:
     Distance(5., 'm')
 
     """
-    ca, cb, unit = _cartesian_components(a, b)
-    d = ca - cb
-    dist = jnp.sqrt(jnp.sum(d**2, axis=0))
-    # Unitless vectors have no length dimension for a ``Distance``; return the
-    # bare magnitude instead.
-    return dist if unit is None else Distance(dist, unit)
+    d = _cartesian_components(a, b)
+    dist = jnp.sqrt(jnp.sum((d[0] - d[1]) ** 2, axis=-1))
+    if u.dimension_of(dist) == _LENGTH:
+        return Distance.from_(dist)  # ty: ignore[invalid-return-type]
+    return dist  # ty: ignore[invalid-return-type]
 
 
 @dispatch
@@ -127,11 +122,11 @@ def separation(a: AbstractVector, b: AbstractVector, /) -> Angle:
     Angle(90., 'deg')
 
     """
-    ca, cb, _ = _cartesian_components(a, b)
-    ua = ca / jnp.sqrt(jnp.sum(ca**2, axis=0))
-    ub = cb / jnp.sqrt(jnp.sum(cb**2, axis=0))
+    qa, qb = _cartesian_components(a, b)
+    ua = qa / jnp.sqrt(jnp.sum(qa**2, axis=-1, keepdims=True))
+    ub = qb / jnp.sqrt(jnp.sum(qb**2, axis=-1, keepdims=True))
     # theta = 2 * atan2(|uhat - vhat|, |uhat + vhat|): stable for all angles and
     # any dimension, unlike arccos(dot) which loses precision near 0 and pi.
-    sub = jnp.sqrt(jnp.sum((ua - ub) ** 2, axis=0))
-    add = jnp.sqrt(jnp.sum((ua + ub) ** 2, axis=0))
-    return Angle(2.0 * jnp.arctan2(sub, add), "rad")
+    sub = jnp.sqrt(jnp.sum((ua - ub) ** 2, axis=-1))
+    add = jnp.sqrt(jnp.sum((ua + ub) ** 2, axis=-1))
+    return Angle.from_(2.0 * jnp.arctan2(sub, add))  # ty: ignore[invalid-return-type]
