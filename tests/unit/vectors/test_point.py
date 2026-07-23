@@ -147,3 +147,10 @@ class TestPointEquivalence:
         assert bool(qnp.all(cx.equivalent(p1, p2)))
         p3 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 9.0}, cxc.cart3d)
         assert not bool(qnp.all(cx.equivalent(p1, p3)))
+
+    def test_equivalent_unitful_vs_unitless_is_false(self):
+        """A unitful and a unitless vector are not equivalent, and never raise."""
+        unitful = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        unitless = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        assert not bool(qnp.all(cx.equivalent(unitful, unitless)))
+        assert not bool(qnp.all(cx.equivalent(unitless, unitful)))

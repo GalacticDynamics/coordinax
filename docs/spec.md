@@ -2266,6 +2266,7 @@ Separating semantics from geometry provides two advantages:
     - ``__eq__``: strict equality — requires the same type, chart, and frame, then compares component data via the `quax` equality primitive.
       - Chart and frame are static metadata, so they are compared with ordinary Python ``!=`` (safe under `jit`).
       - When they differ, ``__eq__`` short-circuits and returns a 0-d boolean array (``jnp.zeros((), dtype=bool)``) instead of comparing the component dicts, which also avoids raising on their differing keys.
+    - ``equivalent(a, b, *, rtol, atol)``: the relaxed, coordinate-free counterpart to ``__eq__`` — whether two vectors denote the *same geometric point*, invariant to the chart and component units but frame-strict. Compared in a common Cartesian chart, tolerance-based, and never raising (mismatched frame, manifold, or unit-vs-unitless leaves ⇒ ``False``). Registered on the global `plum` ``dispatch`` (shared with `unxt`'s quantity-level ``equivalent``).
     - ``copy()``: call `dataclass.replace`.
     - ``flatten()``: flatten the vector.
     - ``ravel()``: return a flattened vector.

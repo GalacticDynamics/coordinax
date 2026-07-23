@@ -101,6 +101,16 @@ def equivalent(
     if ac.chart != bc.chart:
         return jnp.zeros((), dtype=bool)
 
+    # One operand unitful (``unxt.Quantity`` leaves) and the other unitless
+    # (plain-array leaves) live in different spaces, so they are never
+    # equivalent.  Guard here -- a plain Python bool, like the chart/frame
+    # guards -- so the comparison never raises (a unit-vs-unitless ``ustrip``
+    # would otherwise error).
+    a_unitful = hasattr(next(iter(ac.data.values())), "unit")
+    b_unitful = hasattr(next(iter(bc.data.values())), "unit")
+    if a_unitful != b_unitful:
+        return jnp.zeros((), dtype=bool)
+
     # Element-wise, per component, expressed in the first operand's units
     # (component leaves may be quantities or plain arrays; ``_strip`` handles both).
     checks = [
