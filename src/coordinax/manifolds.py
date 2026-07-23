@@ -11,6 +11,7 @@ __all__ = (
     "metric_matrix",
     "metric_representation",
     "norm",
+    "separation",
     # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
     "AbstractMetricField",
@@ -140,6 +141,7 @@ with install_import_hook("coordinax.manifolds"):
         pt_embed,
         pt_project,
         scale_factors,
+        separation,
     )
 
 

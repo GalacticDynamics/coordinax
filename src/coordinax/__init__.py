@@ -35,6 +35,7 @@ __all__ = (  # distances
     "EmbeddedManifold",
     "CustomAtlas",
     "CustomManifold",
+    "separation",
     # frames -- frames
     "noframe",
     # frame -- transforms
@@ -130,6 +131,7 @@ from coordinax.manifolds import (
     FlatMetric,
     Rn,
     embedded_twosphere,
+    separation,
 )
 from coordinax.representations import (
     AbstractLinearBasis,

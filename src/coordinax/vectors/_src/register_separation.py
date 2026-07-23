@@ -1,34 +1,30 @@
-"""Separation (distance) between vectors.
+"""`separation` dispatch for vector-like objects.
 
-:func:`separation` measures the straight-line distance between two points using
-the manifold's `~coordinax.manifolds.norm`.  The *geometry* is the manifold's:
-the distance is computed in the points' own (Cartesian) chart, so it is the
-Euclidean distance for a flat manifold, and its dimensionality follows the
-points' manifold (2-D points give a 2-D distance, 3-D points a 3-D distance).
-To measure across a different-dimensional or projected space, map the points
-into that space first, then call :func:`separation`.
+This registers the `~coordinax.vectors.Point` (``AbstractVector``) overload of
+`coordinaxs.api.manifolds.separation`.  The distance itself is a manifold
+measurement -- see `coordinax._src.manifolds.separation` for the ``chart`` /
+``metric`` + component-dict / quantity / array overloads.  Here the two points
+are brought into a common Cartesian chart (so the result is invariant to the
+chart and component units each operand happens to use) and the measurement is
+delegated to the manifold-level `separation`.
 
 It is *frame-strict*: coordinates in different frames describe different physical
 points, so a cross-frame separation is undefined and raises; align the operands
 with `to_frame` first.
 """
 
-__all__: tuple[str, ...] = ("separation",)
+__all__: tuple[str, ...] = ()
 
 from typing import Any
 
 from plum import dispatch
 
-import unxt as u
-
+import coordinaxs.api.manifolds as cxmapi
 from .base import AbstractVector
-from coordinax.distances import Distance
-
-_LENGTH = u.dimension("length")
 
 
 @dispatch
-def separation(a: AbstractVector, b: AbstractVector, /) -> Distance | Any:
+def separation(a: AbstractVector, b: AbstractVector, /) -> Any:
     """Distance between two points, via the manifold norm.
 
     The two points are brought into a common Cartesian chart (so the result is
@@ -82,12 +78,4 @@ def separation(a: AbstractVector, b: AbstractVector, /) -> Distance | Any:
         msg = "cannot measure separation between vectors on different manifolds"
         raise ValueError(msg)
 
-    # Difference built per component so it works for both ``unxt.Quantity`` and
-    # plain-array (unitless) leaves, then measured with the manifold's norm.
-    diff = {k: bc.data[k] - ac.data[k] for k in ac.data}
-    dist = ac.M.norm(diff, ac.chart, at=ac.data)
-
-    # A length is a ``Distance``; a dimensionless magnitude is returned as-is.
-    if hasattr(dist, "unit") and u.dimension_of(dist) == _LENGTH:
-        return Distance.from_(dist)  # ty: ignore[invalid-return-type]
-    return dist
+    return cxmapi.separation(ac.chart, ac.data, bc.data)
