@@ -1,43 +1,76 @@
 """Separation (distance) between vectors.
 
-Two metrics, modelled on `astropy.coordinates.SkyCoord.separation` /
-``separation_3d``:
+:func:`separation` measures the straight-line distance between two points using
+the manifold's `~coordinax.manifolds.norm`.  The *geometry* is the manifold's:
+the distance is computed in the points' own (Cartesian) chart, so it is the
+Euclidean distance for a flat manifold, and its dimensionality follows the
+points' manifold (2-D points give a 2-D distance, 3-D points a 3-D distance).
+To measure across a different-dimensional or projected space, map the points
+into that space first, then call :func:`separation`.
 
-- :func:`separation_3d` -- the straight-line (Euclidean, embedded-Cartesian)
-  distance between two points, returned as a `Distance`.
-- :func:`separation` -- the angular separation between the two directions as
-  seen from the origin, returned as an `Angle`.
-
-Both are chart- and unit-invariant: the operands are brought into a common
-Cartesian chart before measuring.  They are *frame-strict* -- coordinates in
-different frames describe different physical points, so a cross-frame separation
-is undefined and raises; align the operands with `to_frame` first.
+It is *frame-strict*: coordinates in different frames describe different physical
+points, so a cross-frame separation is undefined and raises; align the operands
+with `to_frame` first.
 """
 
-__all__ = ("separation", "separation_3d")
+__all__: tuple[str, ...] = ("separation",)
 
-from plum import convert, dispatch
+from typing import Any
 
-import quaxed.numpy as jnp
+from plum import dispatch
+
 import unxt as u
 
 from .base import AbstractVector
-from coordinax.angles import Angle
 from coordinax.distances import Distance
 
 _LENGTH = u.dimension("length")
 
 
-def _cartesian_components(
-    a: AbstractVector, b: AbstractVector
-) -> tuple[u.AbstractQuantity, u.AbstractQuantity]:
-    """Return ``a`` and ``b`` as Cartesian `unxt.Quantity` vectors.
+@dispatch
+def separation(a: AbstractVector, b: AbstractVector, /) -> Distance | Any:
+    """Distance between two points, via the manifold norm.
 
-    Guards that the two vectors share a frame and a Cartesian chart, then
-    converts each to a single `unxt.Quantity` (components stacked on the last
-    axis) via the registered ``plum`` conversion.  Unit-aware `unxt.Quantity`
-    arithmetic then makes the downstream measures chart- and unit-invariant with
-    no manual per-component unit handling.
+    The two points are brought into a common Cartesian chart (so the result is
+    invariant to the chart and component units each operand happens to use), and
+    the distance is the manifold `~coordinax.manifolds.norm` of their coordinate
+    difference -- the Euclidean distance for a flat manifold.  A length result is
+    returned as a `Distance`; a unitless (dimensionless) result is returned as a
+    bare array.
+
+    Dimensionality follows the points' manifold: 2-D points give a 2-D distance,
+    3-D points a 3-D distance.  There is no ``separation_3d`` -- to measure in a
+    particular N-D space, map the points into it first, then call `separation`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+
+    A 3-4-5 right triangle:
+
+    >>> p = cx.Point.from_([3.0, 0.0, 0.0], "m")
+    >>> q = cx.Point.from_([0.0, 4.0, 0.0], "m")
+    >>> cx.separation(p, q).round(2)
+    Distance(5., 'm')
+
+    Chart- and unit-invariant -- the same points expressed differently give the
+    same distance:
+
+    >>> cx.separation(p, q.cconvert(cxc.sph3d)).round(2)
+    Distance(5., 'm')
+    >>> q_km = cx.Point.from_([0.0, 0.004, 0.0], "km")
+    >>> cx.separation(p, q_km).uconvert("m").round(2)
+    Distance(5., 'm')
+
+    The distance lives on the points' manifold, so 2-D points give a 2-D
+    distance:
+
+    >>> p2 = cx.Point.from_([3.0, 0.0], "m")
+    >>> q2 = cx.Point.from_([0.0, 4.0], "m")
+    >>> cx.separation(p2, q2).round(2)
+    Distance(5., 'm')
+
     """
     if a.frame != b.frame:
         msg = "cannot measure separation between vectors in different frames"
@@ -49,84 +82,12 @@ def _cartesian_components(
         msg = "cannot measure separation between vectors on different manifolds"
         raise ValueError(msg)
 
-    return convert(ac, u.Quantity), convert(bc, u.Quantity)
+    # Difference built per component so it works for both ``unxt.Quantity`` and
+    # plain-array (unitless) leaves, then measured with the manifold's norm.
+    diff = {k: bc.data[k] - ac.data[k] for k in ac.data}
+    dist = ac.M.norm(diff, ac.chart, at=ac.data)
 
-
-@dispatch
-def separation_3d(
-    a: AbstractVector, b: AbstractVector, /
-) -> Distance | u.AbstractQuantity:
-    """Straight-line distance between two points.
-
-    The Euclidean distance between the points in their common Cartesian chart,
-    invariant to the chart and component units of either operand.  Returns a
-    `Distance` for unitful vectors, or a dimensionless `unxt.Quantity` for
-    unitless ones (a dimensionless magnitude is not a `Distance`).
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-
-    A 3-4-5 right triangle:
-
-    >>> p = cx.Point.from_([3.0, 0.0, 0.0], "m")
-    >>> q = cx.Point.from_([0.0, 4.0, 0.0], "m")
-    >>> cx.separation_3d(p, q).round(2)
-    Distance(5., 'm')
-
-    Chart- and unit-invariant -- the same points expressed differently give the
-    same distance:
-
-    >>> cx.separation_3d(p, q.cconvert(cxc.sph3d)).round(2)
-    Distance(5., 'm')
-    >>> q_km = cx.Point.from_([0.0, 0.004, 0.0], "km")
-    >>> cx.separation_3d(p, q_km).uconvert("m").round(2)
-    Distance(5., 'm')
-
-    """
-    d = _cartesian_components(a, b)
-    dist = jnp.sqrt(jnp.sum((d[0] - d[1]) ** 2, axis=-1))
-    if u.dimension_of(dist) == _LENGTH:
+    # A length is a ``Distance``; a dimensionless magnitude is returned as-is.
+    if hasattr(dist, "unit") and u.dimension_of(dist) == _LENGTH:
         return Distance.from_(dist)  # ty: ignore[invalid-return-type]
-    return dist  # ty: ignore[invalid-return-type]
-
-
-@dispatch
-def separation(a: AbstractVector, b: AbstractVector, /) -> Angle:
-    """Angular separation between two directions.
-
-    The angle subtended at the origin by the two points, computed in their
-    common Cartesian chart with a numerically stable, dimension-agnostic
-    formula (no cross product), and invariant to chart and component units.
-
-    A vector *at* the origin has no direction, so its angular separation is
-    undefined; the result is ``nan`` (rather than raising, so the function
-    stays ``jit``/``vmap`` friendly).
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-
-    Two orthogonal directions are 90 degrees apart:
-
-    >>> p = cx.Point.from_([3.0, 0.0, 0.0], "m")
-    >>> q = cx.Point.from_([0.0, 4.0, 0.0], "m")
-    >>> cx.separation(p, q).uconvert("deg").round(2)
-    Angle(90., 'deg')
-
-    Chart-invariant:
-
-    >>> cx.separation(p, q.cconvert(cxc.sph3d)).uconvert("deg").round(2)
-    Angle(90., 'deg')
-
-    """
-    qa, qb = _cartesian_components(a, b)
-    ua = qa / jnp.sqrt(jnp.sum(qa**2, axis=-1, keepdims=True))
-    ub = qb / jnp.sqrt(jnp.sum(qb**2, axis=-1, keepdims=True))
-    # theta = 2 * atan2(|uhat - vhat|, |uhat + vhat|): stable for all angles and
-    # any dimension, unlike arccos(dot) which loses precision near 0 and pi.
-    sub = jnp.sqrt(jnp.sum((ua - ub) ** 2, axis=-1))
-    add = jnp.sqrt(jnp.sum((ua + ub) ** 2, axis=-1))
-    return Angle.from_(2.0 * jnp.arctan2(sub, add))  # ty: ignore[invalid-return-type]
+    return dist
