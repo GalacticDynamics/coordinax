@@ -470,30 +470,32 @@ def change_basis(
 ) -> CDict:
     r"""Change from coordinate basis to physical basis in a 3-D spherical chart.
 
-    In spherical coordinates $(r, \theta, \phi)$ the scale factors are
+    In spherical coordinates :math:`(r, \theta, \phi)` the scale factors are
 
-    $$h_r = 1, \quad h_\theta = r, \quad h_\phi = r \sin\theta,$$
+    .. math::
+
+        h_r = 1, \quad h_\theta = r, \quad h_\phi = r \sin\theta,
 
     so the transformation matrix is
 
-    $$
-    H = \begin{pmatrix}
+    .. math::
+
+        H = \begin{pmatrix}
         1 & 0 & 0 \\
         0 & r & 0 \\
         0 & 0 & r\sin\theta
-    \end{pmatrix}.
-    $$
+        \end{pmatrix}.
 
-    Given coordinate-basis components $(v^r, v^\theta, v^\phi)$, the
+    Given coordinate-basis components :math:`(v^r, v^\theta, v^\phi)`, the
     physical-basis components are
 
-    $$
-    \hat{v} = H v
+    .. math::
+
+        \hat{v} = H v
         \implies
         \hat{v}^r = v^r, \quad
         \hat{v}^\theta = r\, v^\theta, \quad
         \hat{v}^\phi = r\sin\theta\, v^\phi.
-    $$
 
     Examples
     --------
@@ -574,27 +576,27 @@ def change_basis(
 ) -> CDict:
     r"""Change from physical basis to coordinate basis in a 3-D spherical chart.
 
-    In spherical coordinates $(r, \theta, \phi)$ the inverse transformation
+    In spherical coordinates :math:`(r, \theta, \phi)` the inverse transformation
     matrix is
 
-    $$
-    H^{-1} = \begin{pmatrix}
+    .. math::
+
+        H^{-1} = \begin{pmatrix}
         1 & 0 & 0 \\
         0 & 1/r & 0 \\
         0 & 0 & 1/(r\sin\theta)
-    \end{pmatrix}.
-    $$
+        \end{pmatrix}.
 
-    Given physical-basis components $(\hat{v}^r, \hat{v}^\theta, \hat{v}^\phi)$,
+    Given physical-basis components :math:`(\hat{v}^r, \hat{v}^\theta, \hat{v}^\phi)`,
     the coordinate-basis components are
 
-    $$
-    v = H^{-1} \hat{v}
+    .. math::
+
+        v = H^{-1} \hat{v}
         \implies
         v^r = \hat{v}^r, \quad
         v^\theta = \hat{v}^\theta / r, \quad
         v^\phi = \hat{v}^\phi / (r\sin\theta).
-    $$
 
     Examples
     --------

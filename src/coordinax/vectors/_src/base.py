@@ -94,35 +94,6 @@ class AbstractVector(
     shape : tuple[int, ...]
         The batch shape of the vector (abstract; implemented by subclasses).
 
-    Methods
-    -------
-    from_(*args, **kwargs) -> AbstractVector
-        Multiple-dispatch constructor.  Dispatches are registered externally
-        via ``plum``; call ``.methods`` to inspect all overloads.
-    cconvert(*args, **kwargs) -> AbstractVector
-        Convert to another chart or representation, forwarding to
-        `coordinax.representations.cconvert`.
-    to_cartesian() -> AbstractVector
-        Shorthand for ``self.cconvert(self.chart.cartesian)``.
-    uconvert(*args, **kwargs) -> AbstractVector
-        Convert component units by forwarding to `unxt.uconvert`.
-    astype(dtype, **kwargs) -> AbstractVector
-        Cast all component leaves to a new dtype.
-    copy() -> Self
-        Shallow copy via `dataclasses.replace`.
-    flatten() -> Self
-        Flatten all component leaves.
-    ravel() -> Self
-        Return a flattened copy (alias of ``flatten``).
-    reshape(*shape) -> Self
-        Return a reshaped copy.
-    round(decimals=0) -> Self
-        Return a rounded copy.
-    to_device(device=None) -> Self
-        Move all leaves to the specified JAX device.
-    is_like(obj) -> TypeIs[Self]
-        Class method; return ``True`` if *obj* is an instance of this class.
-
     See Also
     --------
     coordinax.vectors.Point : Concrete default implementation.
