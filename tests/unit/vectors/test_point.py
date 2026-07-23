@@ -154,3 +154,21 @@ class TestPointEquivalence:
         unitless = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
         assert not bool(qnp.all(cx.equivalent(unitful, unitless)))
         assert not bool(qnp.all(cx.equivalent(unitless, unitful)))
+
+    def test_equivalent_per_component_unit_mismatch_is_false(self):
+        """A per-component unitful/unitless mismatch is False, and never raises."""
+        # Leaves may be mixed within a vector: 'y' is unitful on one side only.
+        a = cx.Point.from_({"x": 0.0, "y": 2.0, "z": 0.0}, cxc.cart3d)
+        b = cx.Point.from_({"x": 0.0, "y": u.Q(2.0, "m"), "z": 0.0}, cxc.cart3d)
+        assert not bool(qnp.all(cx.equivalent(a, b)))
+        assert not bool(qnp.all(cx.equivalent(b, a)))
+
+    def test_equivalent_incompatible_dimensions_is_false(self):
+        """Components with incompatible dimensions are not equivalent (no raise)."""
+        a = cx.Point.from_(
+            {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")}, cxc.cart3d
+        )
+        b = cx.Point.from_(
+            {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "s"), "z": u.Q(0.0, "m")}, cxc.cart3d
+        )
+        assert not bool(qnp.all(cx.equivalent(a, b)))

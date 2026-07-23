@@ -22,6 +22,7 @@ from typing import Any
 from plum import dispatch
 
 import quaxed.numpy as jnp
+import unxt as u
 
 from .base import AbstractVector
 
@@ -101,25 +102,24 @@ def equivalent(
     if ac.chart != bc.chart:
         return jnp.zeros((), dtype=bool)
 
-    # One operand unitful (``unxt.Quantity`` leaves) and the other unitless
-    # (plain-array leaves) live in different spaces, so they are never
-    # equivalent.  Guard here -- a plain Python bool, like the chart/frame
-    # guards -- so the comparison never raises (a unit-vs-unitless ``ustrip``
-    # would otherwise error).
-    a_unitful = hasattr(next(iter(ac.data.values())), "unit")
-    b_unitful = hasattr(next(iter(bc.data.values())), "unit")
-    if a_unitful != b_unitful:
-        return jnp.zeros((), dtype=bool)
-
-    # Element-wise, per component, expressed in the first operand's units
-    # (component leaves may be quantities or plain arrays; ``_strip`` handles both).
-    checks = [
-        jnp.isclose(
-            _strip(av, getattr(av, "unit", None)),
-            _strip(bc.data[k], getattr(av, "unit", None)),
-            rtol=rtol,
-            atol=atol,
+    # Compare per component, in the first operand's units.  A component that is
+    # unitful on one side and unitless on the other -- or that carries an
+    # incompatible dimension -- describes a different space, so the vectors are
+    # not equivalent.  Leaves may be *mixed* within a vector, so this is checked
+    # per component (not just the first), which also keeps the comparison from
+    # ever calling ``ustrip`` on a mismatched leaf (which would raise).  This
+    # mirrors unxt's ``equivalent``: incompatible => not equivalent, never
+    # raising.
+    checks = []
+    for k, av in ac.data.items():
+        bv = bc.data[k]
+        a_unit = getattr(av, "unit", None)
+        b_unit = getattr(bv, "unit", None)
+        if (a_unit is None) != (b_unit is None) or (
+            a_unit is not None and not u.is_unit_convertible(b_unit, a_unit)
+        ):
+            return jnp.zeros((), dtype=bool)
+        checks.append(
+            jnp.isclose(_strip(av, a_unit), _strip(bv, a_unit), rtol=rtol, atol=atol)
         )
-        for k, av in ac.data.items()
-    ]
     return jnp.all(jnp.stack(jnp.broadcast_arrays(*checks)), axis=0)
