@@ -158,7 +158,7 @@ def embedded_twosphere(
     >>> sph
     {'r': Q(2., 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
-    With Cartesian ambient the embedding returns ``(x, y, z)``::
+    With Cartesian ambient the embedding returns ``(x, y, z)``:
 
     >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"), ambient=cxc.cart3d)
     >>> xyz = cxm.pt_embed(p, M)

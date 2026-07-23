@@ -153,6 +153,14 @@ nitpick_ignore = [
     ("py:class", "StaticValue"),
     ("py:class", "3"),
     ("py:class", "'N N'"),
+    # ``ChartT`` is a TypeVar; ``TypeIs`` leaks in bare and from typing_extensions
+    # (the pinned intersphinx Python target predates ``typing.TypeIs``).
+    ("py:class", "ChartT"),
+    ("py:class", "TypeIs"),
+    ("py:class", "typing_extensions.TypeIs"),
+    # AbstractVector's docstring references the ``AbstractCoordinate`` bundle base
+    # by a public path it is not (re-)exported under; not a documentable target.
+    ("py:obj", "coordinax.vectors.AbstractCoordinate"),
     # A napoleon-misparsed prose word ("... the same ...") in an aggregated
     # plum docstring; nothing is legitimately named ``same``.
     ("py:obj", "same"),
