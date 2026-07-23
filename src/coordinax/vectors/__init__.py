@@ -3,6 +3,7 @@
 __all__ = (
     "cconvert",
     "equivalent",
+    "separation",
     "AbstractVector",
     "Point",
     "Coordinate",
@@ -20,6 +21,7 @@ with install_import_hook("coordinax.vectors"):
         Tangent,
         ToUnitsOptions,
         equivalent,
+        separation,
     )
     from coordinaxs.api.representations import cconvert
 

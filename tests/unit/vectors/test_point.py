@@ -201,3 +201,15 @@ class TestPointEquivalence:
         # A Tangent cannot re-chart to Cartesian without a base point, so a naive
         # implementation would raise; the geometry guard short-circuits to False.
         assert not bool(qnp.all(cx.equivalent(t, t)))
+
+
+class TestPointSeparation:
+    """`separation_3d` and `separation` measure between two points."""
+
+    def test_separation_angular(self):
+        """Angular separation is the angle subtended at the origin."""
+        p = cx.Point.from_([3.0, 0.0, 0.0], "m")
+        q = cx.Point.from_([0.0, 4.0, 0.0], "m")
+        sep = cx.separation(p, q)
+        assert isinstance(sep, cx.Angle)
+        assert bool(qnp.isclose(sep.ustrip("deg"), 90.0))

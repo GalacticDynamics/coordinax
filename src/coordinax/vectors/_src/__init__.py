@@ -11,6 +11,7 @@ from .register_compare import *
 from .register_cx import *
 from .register_dataclassish import *
 from .register_quax import *
+from .register_separation import *
 from .register_unxt import *
 from .tangent import *
 from .utils import *

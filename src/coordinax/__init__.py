@@ -87,6 +87,7 @@ __all__ = (  # distances
     "Tangent",
     "ToUnitsOptions",
     "equivalent",
+    "separation",
 )
 
 import warnings
@@ -181,6 +182,7 @@ from coordinax.vectors import (
     Tangent,
     ToUnitsOptions,
     equivalent,
+    separation,
 )
 
 # ============================================================================
