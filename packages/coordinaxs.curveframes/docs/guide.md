@@ -2,7 +2,7 @@
 
 This guide introduces **curve-attached reference frames** provided by `coordinaxs.curveframes`. You will learn what a curve frame is, how to build one from a space curve, and how to transform coordinate data between curve frames and ordinary reference frames.
 
-For the mathematical specification see the [curveframes spec](spec.md). For API reference on the base frame system see [Working With Frames](../../../docs/guides/frames.md) and [Working With Transforms](../../../docs/guides/transforms.md).
+For the mathematical specification see the {doc}`curveframes spec <spec>`. For API reference on the base frame system see [Working With Frames](../../../docs/guides/frames.md) and [Working With Transforms](../../../docs/guides/transforms.md).
 
 ```python
 import jax

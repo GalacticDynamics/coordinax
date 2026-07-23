@@ -2,7 +2,7 @@
 
 This tutorial walks through a complete example: define a space curve, attach a Frenet–Serret frame, transform points into and out of the curve frame, chain through multiple frames, and leverage JAX for JIT compilation and vectorisation.
 
-**Prerequisites**: [Working With Curve Frames](guide.md), [Working With Frames](../../../docs/guides/frames.md).
+**Prerequisites**: {doc}`Working With Curve Frames <guide>`, [Working With Frames](../../../docs/guides/frames.md).
 
 ```pycon
 >>> import jax
@@ -218,7 +218,7 @@ The key idea: **$\tau$ is not stored on the frame**. It is passed at evaluation 
 
 This tutorial shows how to use the **Bishop frame** — the rotation-minimising alternative to Frenet–Serret. You will see how it handles straight lines gracefully and how to compare both frames on the same curve.
 
-**Prerequisites**: [Working With Curve Frames](guide.md), the Frenet–Serret tutorial above.
+**Prerequisites**: {doc}`Working With Curve Frames <guide>`, the Frenet–Serret tutorial above.
 
 ```pycon
 >>> import coordinaxs.curveframes as cxfc
