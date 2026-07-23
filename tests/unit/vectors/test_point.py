@@ -95,3 +95,47 @@ class TestPointEquality:
         p1 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
         p2 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
         assert bool(qnp.all(p1 == p2))
+
+
+class TestPointEquivalence:
+    """`equivalent` is chart- and unit-invariant, but frame-strict."""
+
+    def test_equivalent_across_charts(self):
+        """The same point in different charts is equivalent (though ``!=``)."""
+        p1 = cx.Point.from_([1, 2, 3], "m")
+        p2 = p1.cconvert(cxc.sph3d)
+        assert not bool(qnp.all(p1 == p2))  # strict equality distinguishes charts
+        assert bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_equivalent_across_units(self):
+        """The same point in different units is equivalent."""
+        p1 = cx.Point.from_([1000.0, 2000.0, 3000.0], "m")
+        p2 = cx.Point.from_([1.0, 2.0, 3.0], "km")
+        assert bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_not_equivalent_different_point(self):
+        """Distinct points are not equivalent."""
+        p1 = cx.Point.from_([1, 2, 3], "m")
+        p2 = cx.Point.from_([1, 2, 4], "m")
+        assert not bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_equivalent_is_frame_strict(self):
+        """Identical coordinates in different frames are not equivalent."""
+        p1 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
+        p2 = cx.Point.from_([1, 2, 3], "km", cxf.noframe)
+        assert not bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_equivalent_elementwise_over_batch(self):
+        """Equivalence is evaluated element-wise over the batch."""
+        p1 = cx.Point.from_([[1.0, 1, 1], [2, 2, 2]], "m")
+        p2 = cx.Point.from_([[1.0, 1, 1], [9, 9, 9]], "m").cconvert(cxc.sph3d)
+        result = cx.equivalent(p1, p2)
+        assert bool(result[0])
+        assert not bool(result[1])
+
+    def test_equivalent_respects_tolerance(self):
+        """`atol`/`rtol` control how close counts as equivalent."""
+        p1 = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        p2 = cx.Point.from_([1.001, 0.0, 0.0], "m")
+        assert not bool(qnp.all(cx.equivalent(p1, p2)))
+        assert bool(qnp.all(cx.equivalent(p1, p2, atol=1e-2)))
