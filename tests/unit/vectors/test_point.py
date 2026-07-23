@@ -139,3 +139,11 @@ class TestPointEquivalence:
         p2 = cx.Point.from_([1.001, 0.0, 0.0], "m")
         assert not bool(qnp.all(cx.equivalent(p1, p2)))
         assert bool(qnp.all(cx.equivalent(p1, p2, atol=1e-2)))
+
+    def test_equivalent_unitless_components(self):
+        """Equivalence works for vectors with plain (unitless) array leaves."""
+        p1 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        p2 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        assert bool(qnp.all(cx.equivalent(p1, p2)))
+        p3 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 9.0}, cxc.cart3d)
+        assert not bool(qnp.all(cx.equivalent(p1, p3)))

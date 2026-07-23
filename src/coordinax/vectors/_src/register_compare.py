@@ -5,13 +5,17 @@ when they share the same chart, frame, and component data. :func:`equivalent`
 is the chart- and unit-*invariant* counterpart -- it asks whether two vectors
 denote the *same geometric point*, regardless of the chart used to express it.
 
-This mirrors `unxt.equivalent`, which relaxes ``==`` on quantities from
-unit-blind to unit-aware.  The dispatch is registered on the *global* plum
-``dispatch`` (not imported from `unxt`), so when `unxt` ships its own
-``equivalent`` the two coexist on one multiply-dispatched function.
+It is the vector analogue of the unit-aware "same physical amount" relation on
+quantities: where that relaxes a unit-blind ``==`` to compare across units,
+``equivalent`` additionally compares across charts.  The dispatch is registered
+on the *global* plum ``dispatch`` (the same function `unxt` uses for its own
+quantity-level ``equivalent``), *without* importing it from `unxt` -- so a
+coordinax vector overload and a unxt quantity overload coexist on one
+multiply-dispatched ``equivalent`` when both packages are present, and the
+vector overload works standalone otherwise.
 """
 
-__all__ = ("equivalent",)
+__all__: tuple[str, ...] = ("equivalent",)
 
 from typing import Any
 
@@ -20,6 +24,15 @@ from plum import dispatch
 import quaxed.numpy as jnp
 
 from .base import AbstractVector
+
+
+def _strip(leaf: Any, unit: Any) -> Any:
+    """Return *leaf* as a plain array, converting to *unit* if it is a quantity.
+
+    Vector components may be `unxt.Quantity` leaves (unitful vectors) or plain
+    JAX arrays (unitless vectors); this normalises both to comparable arrays.
+    """
+    return leaf.ustrip(unit) if hasattr(leaf, "ustrip") else jnp.asarray(leaf)
 
 
 @dispatch
@@ -39,7 +52,8 @@ def equivalent(
     It remains *frame-strict*, since coordinates in different frames describe
     different physical points.  Because chart transitions are trigonometric and
     square-root heavy, the comparison is tolerance-based (`rtol`, `atol`);
-    ``atol`` is measured in the Cartesian component units of the first operand.
+    ``atol`` is measured in the Cartesian component units of the first operand
+    (or in raw component units for unitless vectors).
 
     Examples
     --------
@@ -87,10 +101,14 @@ def equivalent(
     if ac.chart != bc.chart:
         return jnp.zeros((), dtype=bool)
 
-    # Element-wise, per component, expressed in the first operand's units.
+    # Element-wise, per component, expressed in the first operand's units
+    # (component leaves may be quantities or plain arrays; ``_strip`` handles both).
     checks = [
         jnp.isclose(
-            av.ustrip(av.unit), bc.data[k].ustrip(av.unit), rtol=rtol, atol=atol
+            _strip(av, getattr(av, "unit", None)),
+            _strip(bc.data[k], getattr(av, "unit", None)),
+            rtol=rtol,
+            atol=atol,
         )
         for k, av in ac.data.items()
     ]
