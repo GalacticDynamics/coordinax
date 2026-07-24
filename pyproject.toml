@@ -36,7 +36,7 @@ dependencies = [
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
   "unxt>=2.0",
-  "unxts.linalg>=2.0",
+  "unxts.linalg>=2.0.1",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
@@ -117,9 +117,8 @@ test = [
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
   "sybil[pytest]>=8.0.0",
-  # unxt v2.0 moved dimension-parametrized quantities into unxts.parametric;
   # the hypothesis annotation-strategy tests use ParametricQuantity["length"].
-  "unxts.parametric",
+  "unxts.parametric>=2.0",
 ]
 test-all = [{ include-group = "test" }]
 
@@ -514,16 +513,6 @@ constraint-dependencies = [
   "starlette>=1.0.1",
   "tornado>=6.5.6",
 ]
-# unxt v2.0 (which ships `unxts.linalg`) is not yet released; track the GitHub
-# main branch and drop the `>=2.0` floors during resolution until it lands.
-# TODO: remove once unxt v2.0 is on PyPI.
-override-dependencies = [
-  "unxt",
-  "unxts.linalg",
-  "unxts.hypothesis",
-  "unxt-hypothesis",
-  "unxts.parametric",
-]
 
 [tool.uv.sources]
 "coordinaxs.api"             = { workspace = true }
@@ -531,11 +520,6 @@ override-dependencies = [
 "coordinaxs.curveframes"     = { workspace = true }
 "coordinaxs.hypothesis"      = { workspace = true }
 "coordinaxs.interop.astropy" = { workspace = true }
-unxt                         = { git = "https://github.com/GalacticDynamics/unxt.git", branch = "main" }
-"unxt-hypothesis"            = { git = "https://github.com/GalacticDynamics/unxt.git", subdirectory = "packages/unxt-hypothesis", branch = "main" }
-"unxts.hypothesis"           = { git = "https://github.com/GalacticDynamics/unxt.git", subdirectory = "packages/unxts.hypothesis", branch = "main" }
-"unxts.linalg"               = { git = "https://github.com/GalacticDynamics/unxt.git", subdirectory = "packages/unxts.linalg", branch = "main" }
-"unxts.parametric"           = { git = "https://github.com/GalacticDynamics/unxt.git", subdirectory = "packages/unxts.parametric", branch = "main" }
 
 [tool.uv.workspace]
 members = ["packages/*"]

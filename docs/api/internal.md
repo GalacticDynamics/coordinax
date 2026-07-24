@@ -13,33 +13,9 @@ anything here.
 
 ## Overview
 
-The module currently provides two kinds of semi-public helpers:
-
-- heterogeneous unit containers for vectors and matrices
-- packing helpers for converting component dictionaries to arrays and back
+The module currently provides packing helpers for converting component dictionaries to arrays and back.
 
 These utilities are primarily useful when implementing downstream transforms, Jacobians, metric-like objects, or other chart-aware machinery that needs to preserve per-component physical units.
-
-## Quick Start
-
-The heterogeneous-unit matrix machinery (`QuantityMatrix`, `UnitsMatrix`, `det`/`inv`, `matmul`/`matvec`/`vecdot`/`vecmat`, `cdict_units`) lives in `unxts.linalg` as of unxt v2.0 — import it directly from there:
-
-```python
-import jax.numpy as jnp
-import unxt as u
-import unxts.linalg as ul
-
-J = ul.QuantityMatrix(
-    value=jnp.eye(3),
-    unit=(
-        (u.unit("m/m"), u.unit("m/rad"), u.unit("m/rad")),
-        (u.unit("rad/m"), u.unit("rad/rad"), u.unit("rad/rad")),
-        (u.unit("rad/m"), u.unit("rad/rad"), u.unit("rad/rad")),
-    ),
-)
-```
-
-`QuantityMatrix` supports both 1-D and 2-D cases. This makes it suitable for heterogeneous vectors as well as Jacobians and metric tensors whose entries do not all share the same unit.
 
 ## Packing Helpers
 
@@ -65,16 +41,6 @@ Use `pack_uniform_unit` when all components should be expressed in a shared unit
 
 ## Available Objects
 
-### Heterogeneous Unit Containers
-
-These live in `unxts.linalg` (import them from there, not from `coordinax.internal`):
-
-- `QuantityMatrix`: N-D quantity container with per-element units; currently supports 1-D vectors and 2-D matrices
-- `UnitsMatrix`: immutable nested tuple of units with tuple-style indexing and shape metadata
-
-### Packing Utilities
-
-- `cdict_units`: unit introspection helper for component dictionaries
 - `pack_uniform_unit`: pack values into an array with one shared unit
 - `pack_nonuniform_unit`: pack values into an array with per-component units
 
