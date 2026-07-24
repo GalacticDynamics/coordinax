@@ -21,10 +21,6 @@ Contents:
     Existing float and complex leaves are left unchanged.  Useful for
     satisfying ``jax.jacfwd``'s requirement of real-floating inputs.
 
-- ``structured``
-    Decorator for transparent argument and return value processing.
-    This helps pushing the logic for packing/unpacking inside a JIT.
-
 """
 
 from . import custom_types  # noqa: F401
