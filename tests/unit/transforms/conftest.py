@@ -75,7 +75,7 @@ def quantity_3d():
 
 
 @pytest.fixture
-def qmatrix_3d():
+def quantitymatrix_3d():
     """QuantityMatrix [1, 0, 0] with uniform km units."""
     return ul.QuantityMatrix(
         jnp.array([1, 0, 0]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))

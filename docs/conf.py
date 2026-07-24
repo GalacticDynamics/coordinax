@@ -196,8 +196,8 @@ nitpick_ignore_regex = [
     (r"py:.*", r"wadler_lindig\..*"),
     (r"py:.*", r"unxt_hypothesis\..*"),
     (r"py:.*", r"optype\..*"),
-    # ``unxts.linalg`` (unxt v2 heterogeneous-unit linalg) is pinned from git and
-    # publishes no objects.inv, so neither the module (``:mod:`unxts.linalg```)
+    # ``unxts.linalg`` (unxt v2 heterogeneous-unit linalg) publishes no
+    # objects.inv, so neither the module (``:mod:`unxts.linalg```)
     # nor its members (``unxts.linalg.QuantityMatrix``) resolve.
     (r"py:.*", r"unxts\.linalg(\..*)?$"),
     # quax-blocks mixins are private (``_src``) implementation details with no

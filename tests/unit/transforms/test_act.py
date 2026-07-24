@@ -96,7 +96,7 @@ USYS = u.unitsystem("km", "s", "kg", "rad")
 INPUT_LEVELS = [
     ("array_3d", jax.Array),
     ("quantity_3d", u.AbstractQuantity),
-    ("qmatrix_3d", ul.QuantityMatrix),
+    ("quantitymatrix_3d", ul.QuantityMatrix),
     ("cdict_3d", dict),
     ("vector_3d", cx.Point),
     ("coord_3d", cx.Point),
@@ -119,7 +119,7 @@ OP_IDS = [name.removesuffix("_op") for name, _, _ in OPS]
 ROUNDTRIP_OPS = [("rotate_op", False), ("translate_op", True), ("composed_op", True)]
 
 # Levels that accept an explicit chart / (chart, rep) as extra positional args.
-CHART_LEVELS = ["quantity_3d", "qmatrix_3d", "cdict_3d"]
+CHART_LEVELS = ["quantity_3d", "quantitymatrix_3d", "cdict_3d"]
 
 
 def _usys_kw(level_fixture, needs_usys):
@@ -159,7 +159,7 @@ def test_act_inverse_roundtrip(request, op_fixture, needs_usys, level_fixture):
 
 
 @pytest.mark.parametrize(
-    "level_fixture", CHART_LEVELS, ids=["quantity", "qmatrix", "cdict"]
+    "level_fixture", CHART_LEVELS, ids=["quantity", "quantitymatrix", "cdict"]
 )
 def test_act_with_explicit_chart_and_rep(request, rotate_op, level_fixture):
     """A chart, and a (chart, rep) pair, may be passed as extra positionals."""
@@ -184,7 +184,7 @@ def test_act_under_jit(request, rotate_op, level_fixture):
 # Level-specific structural checks that don't generalize across input types.
 
 
-def test_qmatrix_heterogeneous_units_identity(identity_op):
+def test_quantitymatrix_heterogeneous_units_identity(identity_op):
     """A QuantityMatrix with heterogeneous per-component units survives Identity."""
     units = (u.unit("km"), u.unit("m"), u.unit("cm"))
     qm = ul.QuantityMatrix(jnp.array([1.0, 2.0, 3.0]), unit=units)
