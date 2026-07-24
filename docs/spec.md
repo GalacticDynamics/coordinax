@@ -986,8 +986,6 @@ Semi-public API:
 - `pack_uniform_unit`: stack component data into an array using a shared unit
 - `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
 
-The heterogeneous-unit matrix machinery (`QuantityMatrix`, `UnitsMatrix`, `det`/`inv`, `matmul`/`matvec`/`vecdot`/`vecmat`, `cdict_units`) lives in `unxts.linalg` as of unxt v2.0 and is imported directly from there — it is **not** part of `coordinax.internal`. The `UnitsMatrix` ⇄ `astropy.StructuredUnit` converters still live in `coordinaxs.interop.astropy`.
-
 </br>
 
 (software-spec-angles)=
