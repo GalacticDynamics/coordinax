@@ -77,7 +77,7 @@ def _apply_jac(
         Tangent vector components in the output chart.
 
     """
-    if isinstance(v[from_components[0]], u.AbstractQuantity):
+    if all(isinstance(v[k], u.AbstractQuantity) for k in from_components):
         v_arr, v_units = pack_nonuniform_unit(v, keys=from_components)
         v_qm = ul.QuantityMatrix(v_arr, unit=v_units)
         w = qnp.matmul(J, v_qm)  # (n_out,) QuantityMatrix

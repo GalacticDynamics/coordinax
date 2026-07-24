@@ -120,13 +120,14 @@ def pack_with_usys(
 
 def pack_to_qmatrix(
     p: CDict, /, keys: tuple[CKey, ...] | None = None
-) -> Array | ul.QuantityMatrix:
-    """Pack a component dictionary into a QuantityMatrix or plain Array.
+) -> ul.QuantityMatrix:
+    """Pack a component dictionary into a 1-D `QuantityMatrix`.
 
-    Components are ordered according to ``keys``. If the values
-    are {class}`~unxt.AbstractQuantity`, a 1-D
-    {class}`~unxts.linalg.QuantityMatrix` is returned with per-component
-    units. If the values are plain arrays, a stacked JAX array is returned.
+    Components are ordered according to ``keys`` and stacked along the trailing
+    axis, each carrying its own unit. Unitless components are treated as
+    dimensionless, so a mix of quantity-valued and plain-array components can be
+    packed together — the result is always a
+    {class}`~unxts.linalg.QuantityMatrix`.
 
     Parameters
     ----------
@@ -137,8 +138,8 @@ def pack_to_qmatrix(
 
     Returns
     -------
-    Array | QuantityMatrix
-        Packed representation of the component dictionary.
+    QuantityMatrix
+        The packed 1-D quantity matrix, with one unit per component.
 
     Examples
     --------
