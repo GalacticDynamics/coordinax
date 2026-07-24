@@ -3295,8 +3295,8 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.11.1.dev141"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "1.11.1.dev142"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "astropy" },
     { name = "dataclassish" },
@@ -3320,32 +3320,32 @@ dependencies = [
 
 [[package]]
 name = "unxt-api"
-version = "1.11.1.dev141"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxt-api&branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "1.11.1.dev142"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxt-api&branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "unxts-api" },
 ]
 
 [[package]]
 name = "unxt-hypothesis"
-version = "1.11.1.dev141"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxt-hypothesis&branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "1.11.1.dev142"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxt-hypothesis&branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "unxts-hypothesis" },
 ]
 
 [[package]]
 name = "unxts-api"
-version = "0.1.dev617"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.api&branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "0.1.dev618"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.api&branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "plum-dispatch" },
 ]
 
 [[package]]
 name = "unxts-hypothesis"
-version = "0.1.dev617"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.hypothesis&branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "0.1.dev618"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.hypothesis&branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "hypothesis", extra = ["numpy"] },
     { name = "jax" },
@@ -3354,8 +3354,8 @@ dependencies = [
 
 [[package]]
 name = "unxts-linalg"
-version = "0.1.dev617"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.linalg&branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "0.1.dev618"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.linalg&branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "equinox" },
     { name = "jaxtyping" },
@@ -3366,8 +3366,8 @@ dependencies = [
 
 [[package]]
 name = "unxts-parametric"
-version = "0.1.dev617"
-source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.parametric&branch=main#f006bdcab5c5da464c74393d8b7f893ec702c37d" }
+version = "0.1.dev618"
+source = { git = "https://github.com/GalacticDynamics/unxt.git?subdirectory=packages%2Funxts.parametric&branch=main#be47e8a17199d4cd15309d2d771323fb23ebafd4" }
 dependencies = [
     { name = "astropy" },
     { name = "plum-dispatch" },

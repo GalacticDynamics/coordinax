@@ -9,11 +9,6 @@
     in minor or patch releases.  Pin to an exact version if you depend on
     anything here.
 
-The heterogeneous-unit matrix machinery (``QuantityMatrix``, ``UnitsMatrix``,
-``det``/``inv``, ``matmul``/``matvec``/``vecdot``/``vecmat``, ``cdict_units``)
-lives in :mod:`unxts.linalg` as of unxt v2.0 and is imported directly from
-there; it is intentionally **not** re-exported here.
-
 Contents:
 
 - ``pack_uniform_unit``
@@ -32,19 +27,7 @@ Contents:
 
 """
 
-# The heterogeneous-unit matrix machinery lives in ``unxts.linalg`` as of
-# unxt v2.0; import it directly from there. ``QuantityMatrix`` is imported here
-# only for the ``short_name`` display side-effect below — it is deliberately not
-# re-exported from ``coordinax.internal``.
-import unxts.linalg as ul
-
 from . import custom_types  # noqa: F401
 from .dtype_utils import *
 from .pack_utils import *
 from .wl_utils import *
-
-# ``QuantityMatrix`` ships without a short name upstream. Give it one so it
-# prints as ``QM(...)`` (matching the ``QM`` alias) under coordinax's
-# ``use_short_name`` repr/str config (see ``[tool.unxts.unxt]`` in
-# ``pyproject.toml``).
-ul.QuantityMatrix.short_name = "QM"  # ty: ignore[unresolved-attribute]
