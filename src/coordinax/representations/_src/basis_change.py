@@ -138,7 +138,9 @@ def change_basis(
     mat = mm.matrix
     if isinstance(mat, ul.QuantityMatrix):
         L_val = jnp.linalg.cholesky(mat.value)
-        L_units = ul.UnitsMatrix(mat.unit._units**0.5)
+        L_units = ul.UnitsMatrix(
+            tuple(tuple(uu**0.5 for uu in row) for row in mat.unit.to_tuple())
+        )
         L = ul.QuantityMatrix(L_val, unit=L_units)
     else:
         L_raw = jnp.linalg.cholesky(mat)
@@ -215,7 +217,9 @@ def change_basis(
     mat = mm.matrix
     if isinstance(mat, ul.QuantityMatrix):
         L_val = jnp.linalg.cholesky(mat.value)
-        L_units = ul.UnitsMatrix(mat.unit._units**0.5)
+        L_units = ul.UnitsMatrix(
+            tuple(tuple(uu**0.5 for uu in row) for row in mat.unit.to_tuple())
+        )
         L = ul.QuantityMatrix(L_val, unit=L_units)
     else:
         L_raw = jnp.linalg.cholesky(mat)

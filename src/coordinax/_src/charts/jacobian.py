@@ -45,7 +45,6 @@ from typing import Any, Final, cast
 
 import jax
 import jax.numpy as jnp
-import numpy as np
 import plum
 import unxts.linalg as ul
 
@@ -189,7 +188,8 @@ def _repack_q_from_jac(jac_qq: ul.QuantityMatrix, /) -> ul.QuantityMatrix:
 
     """
     ufrom_, uto_ = jac_qq.value.unit, jac_qq.unit  # ty: ignore[unresolved-attribute]
-    units = ul.UnitsMatrix(np.divide(uto_._units[:, None], ufrom_._units[None, :]))
+    ufrom_t, uto_t = ufrom_.to_tuple(), uto_.to_tuple()
+    units = ul.UnitsMatrix(tuple(tuple(uj / ui for ui in ufrom_t) for uj in uto_t))
     return ul.QuantityMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
 
 

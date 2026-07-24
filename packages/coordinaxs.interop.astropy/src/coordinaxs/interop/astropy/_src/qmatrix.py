@@ -69,7 +69,9 @@ def structured_unit_to_unitsmatrix(obj: apyu.StructuredUnit, /) -> ul.UnitsMatri
 
 
 @plum.conversion_method(ul.QuantityMatrix, apyu.Quantity)
-def convert_qmatrix_to_astropy_quantity(q: ul.QuantityMatrix, /) -> apyu.Quantity:
+def convert_quantitymatrix_to_astropy_quantity(
+    q: ul.QuantityMatrix, /
+) -> apyu.Quantity:
     """Convert a `unxts.linalg.QuantityMatrix` to an `astropy.units.Quantity`.
 
     >>> import jax.numpy as jnp
