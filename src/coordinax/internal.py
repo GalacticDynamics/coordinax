@@ -9,11 +9,6 @@
     in minor or patch releases.  Pin to an exact version if you depend on
     anything here.
 
-The heterogeneous-unit matrix machinery (``QuantityMatrix``, ``UnitsMatrix``,
-``det``/``inv``, ``matmul``/``matvec``/``vecdot``/``vecmat``, ``cdict_units``)
-lives in :mod:`unxts.linalg` as of unxt v2.0 — import it directly from there,
-**not** from ``coordinax.internal``.
-
 Contents:
 
 - ``pack_uniform_unit``
