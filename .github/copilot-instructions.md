@@ -438,8 +438,8 @@ def some_primitive(x: CustomType, y: CustomType, /, **kwargs) -> ResultType:
    ```
    # Custom type with custom type
    @register(lax.mul_p)
-   def mul_dd(x: Distance, y: Distance, /) -> BareQuantity:
-       return BareQuantity(x.value * y.value, unit=x.unit * y.unit)
+   def mul_dd(x: Distance, y: Distance, /) -> Quantity:
+       return Quantity(x.value * y.value, unit=x.unit * y.unit)
 
 
    # Custom type with JAX array
@@ -461,9 +461,9 @@ See `src/coordinax/_src/distances/register_primitives.py` for comprehensive exam
 ```
 # Unary operations (taking keyword arguments)
 @register(lax.sqrt_p)
-def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
     value = lax.sqrt_p.bind(x.value, accuracy=accuracy)
-    return BareQuantity(value, unit=x.unit ** (1 / 2))
+    return Quantity(value, unit=x.unit ** (1 / 2))
 
 
 # Binary operations
@@ -474,8 +474,8 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
 
 # Operations with special parameter handling
 @register(lax.integer_pow_p)
-def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQuantity:
-    return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> Quantity:
+    return Quantity(lax.integer_pow(x.value, y), unit=x.unit**y)
 ```
 
 **Important Notes:**
