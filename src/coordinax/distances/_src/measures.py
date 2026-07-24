@@ -100,6 +100,27 @@ def from_(cls: type[Distance], d: Distance, /, **kw: Any) -> Distance:
     return cast("Distance", jnp.asarray(d, **kw))
 
 
+def _from_length(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
+    """Distance from a length quantity."""
+    unit = u.unit_of(q)
+    return cls(jnp.asarray(q.ustrip(unit), **kw), unit)
+
+
+def _from_angle(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
+    """Distance from an angle (parallax)."""
+    d = parallax_base_length / jnp.tan(q)  # [AU]
+    unit = u.unit_of(d)
+    return cls(jnp.asarray(d.ustrip(unit), **kw), unit)
+
+
+def _from_mag(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
+    """Distance from a magnitude (distance modulus)."""
+    d = 10 ** (1 + q.ustrip("mag") / 5)
+    # The guard is free here: 10**x lowers to exp(x*ln10), and XLA folds
+    # `exp(...) < 0` to false, eliminating the check entirely.
+    return cls(jnp.asarray(d, **kw), "pc")
+
+
 @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
     """Construct a distance from a quantity, dispatching on its dimensions.
@@ -126,21 +147,39 @@ def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
 
     """
     dim = u.dimension_of(q)
-
     if dim == LENGTH:
-        unit = u.unit_of(q)
-        return cls(jnp.asarray(q.ustrip(unit), **kw), unit)
-
+        return _from_length(cls, q, **kw)
     if dim == ANGLE:  # parallax
-        d = parallax_base_length / jnp.tan(q)  # [AU]
-        unit = u.unit_of(d)
-        return cls(jnp.asarray(d.ustrip(unit), **kw), unit)
-
+        return _from_angle(cls, q, **kw)
     if dim == MAGNITUDE:  # distance modulus
-        d = 10 ** (1 + q.ustrip("mag") / 5)
-        # The guard is free here: 10**x lowers to exp(x*ln10), and XLA folds
-        # `exp(...) < 0` to false, eliminating the check entirely.
-        return cls(jnp.asarray(d, **kw), "pc")
-
+        return _from_mag(cls, q, **kw)
     msg = f"cannot build a Distance from a quantity with dimension {dim}"
     raise ValueError(msg)
+
+
+# When the optional ``unxts.parametric`` package is installed, also register
+# static type-dispatched overloads on its parametric ``Quantity`` classes: a
+# ``ParametricQuantity["length"|"angle"|"mag"]`` is routed by type (plum prefers
+# these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
+# and other ``AbstractQuantity`` subclasses still fall through to the
+# dimension-branching dispatch. If the package is not installed this is a no-op.
+try:
+    from unxts.parametric import PQ
+except ImportError:
+    pass
+else:
+
+    @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
+    def from_(cls: type[Distance], q: PQ["length"], /, **kw: Any) -> Distance:
+        """Construct a distance from a parametric length quantity."""
+        return _from_length(cls, q, **kw)
+
+    @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
+    def from_(cls: type[Distance], q: PQ["angle"], /, **kw: Any) -> Distance:
+        """Construct a distance from a parametric angle (parallax) quantity."""
+        return _from_angle(cls, q, **kw)
+
+    @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
+    def from_(cls: type[Distance], q: PQ["mag"], /, **kw: Any) -> Distance:
+        """Construct a distance from a parametric magnitude quantity."""
+        return _from_mag(cls, q, **kw)

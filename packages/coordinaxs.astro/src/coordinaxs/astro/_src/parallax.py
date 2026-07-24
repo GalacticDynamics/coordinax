@@ -115,6 +115,31 @@ def from_(cls: type[Parallax], p: Parallax, /, **kw: Any) -> Parallax:
     return jnp.asarray(p, **kw)  # ty: ignore[invalid-return-type]
 
 
+def _from_angle(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
+    """Parallax from an angle (already a parallax angle)."""
+    unit = u.unit_of(q)
+    return cls(jnp.asarray(q.ustrip(unit), **kw), unit)
+
+
+def _from_length(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
+    """Parallax from a length (distance)."""
+    p = jnp.atan2(parallax_base_length, q)
+    # atan2(1 AU, d) lies in [0, pi] for any d -- never negative, so the
+    # guard cannot fire. Closed at 0: d = +inf gives exactly 0.
+    return cls._make(jnp.asarray(p.value, **kw), p.unit)  # ty: ignore[unresolved-attribute]
+
+
+def _from_mag(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
+    """Parallax from a magnitude (distance modulus)."""
+    d = u.Q(10 ** (1 + q.ustrip("mag") / 5), "pc")
+    p = jnp.atan2(parallax_base_length, d)
+    unit = u.unit_of(p)
+    # d = 10**x >= 0, so atan2(1 AU, d) is in [0, pi/2] -- never negative, so
+    # the guard cannot fire. Both endpoints are reachable: d underflows to 0
+    # (-> pi/2) for very negative dm, overflows to +inf (-> 0) for large dm.
+    return cls._make(jnp.asarray(p.ustrip(unit), **kw), unit)  # ty: ignore[unresolved-attribute]
+
+
 @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
     """Construct a parallax from a quantity, dispatching on its dimensions.
@@ -147,29 +172,42 @@ def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
 
     """
     dim = u.dimension_of(q)
-
     if dim == ANGLE:  # already a parallax angle
-        unit = u.unit_of(q)
-        return cls(jnp.asarray(q.ustrip(unit), **kw), unit)
-
+        return _from_angle(cls, q, **kw)
     if dim == LENGTH:  # distance
-        p = jnp.atan2(parallax_base_length, q)
-        # atan2(1 AU, d) lies in [0, pi] for any d -- never negative, so the
-        # guard cannot fire. Closed at 0: d = +inf gives exactly 0.
-        return cls._make(jnp.asarray(p.value, **kw), p.unit)
-
+        return _from_length(cls, q, **kw)
     if dim == MAGNITUDE:  # distance modulus
-        d = u.Q(10 ** (1 + q.ustrip("mag") / 5), "pc")
-        p = jnp.atan2(parallax_base_length, d)
-        unit = u.unit_of(p)
-        # d = 10**x >= 0, so atan2(1 AU, d) is in [0, pi/2] -- never negative,
-        # so the guard cannot fire. Both endpoints are reachable: d underflows
-        # to 0 (-> pi/2) for very negative dm, overflows to +inf (-> 0) for
-        # very large dm.
-        return cls._make(jnp.asarray(p.ustrip(unit), **kw), unit)
-
+        return _from_mag(cls, q, **kw)
     msg = f"cannot build a Parallax from a quantity with dimension {dim}"
     raise ValueError(msg)
+
+
+# When the optional ``unxts.parametric`` package is installed, also register
+# static type-dispatched overloads on its parametric ``Quantity`` classes: a
+# ``ParametricQuantity["length"|"angle"|"mag"]`` is routed by type (plum prefers
+# these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
+# and other ``AbstractQuantity`` subclasses still fall through to the
+# dimension-branching dispatch. If the package is not installed this is a no-op.
+try:
+    from unxts.parametric import PQ
+except ImportError:
+    pass
+else:
+
+    @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
+    def from_(cls: type[Parallax], q: PQ["angle"], /, **kw: Any) -> Parallax:
+        """Construct a parallax from a parametric angle quantity."""
+        return _from_angle(cls, q, **kw)
+
+    @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
+    def from_(cls: type[Parallax], q: PQ["length"], /, **kw: Any) -> Parallax:
+        """Construct a parallax from a parametric length (distance) quantity."""
+        return _from_length(cls, q, **kw)
+
+    @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
+    def from_(cls: type[Parallax], q: PQ["mag"], /, **kw: Any) -> Parallax:
+        """Construct a parallax from a parametric magnitude quantity."""
+        return _from_mag(cls, q, **kw)
 
 
 @cxd.Distance.from_.dispatch  # ty: ignore[unresolved-attribute]

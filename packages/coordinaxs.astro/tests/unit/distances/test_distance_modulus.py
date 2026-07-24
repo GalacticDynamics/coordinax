@@ -156,3 +156,16 @@ class TestDistanceModulusAccuracyNearZeroPoint:
         """dm(10 pc) is exactly 0, not merely close to it."""
         got = cxastro.DistanceModulus.from_(u.Q(10.0, "pc")).ustrip("mag")
         assert float(got) == 0.0
+
+
+class TestParametricFromDispatch:
+    """`from_` routes ParametricQuantity by type (optional unxts.parametric)."""
+
+    @pytest.mark.parametrize(("value", "unit"), [(1, "pc"), (1, "mas"), (1, "mag")])
+    def test_matches_quantity_path(self, value: float, unit: str) -> None:
+        """A ParametricQuantity gives the same result as a plain Quantity."""
+        pq = pytest.importorskip("unxts.parametric").PQ(value, unit)
+        got = cxastro.DistanceModulus.from_(pq, dtype=float)
+        expected = cxastro.DistanceModulus.from_(u.Q(value, unit), dtype=float)
+        assert got.unit == expected.unit
+        assert jnp.allclose(got.value, expected.value)

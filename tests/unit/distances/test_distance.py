@@ -484,3 +484,16 @@ class TestAdditionIsClosed:
             lambda a, b: (cxd.Distance(a, "m") + cxd.Distance(b, "m")).value
         )(jnp.arange(3.0), jnp.arange(3.0))
         assert jnp.array_equal(out, jnp.asarray([0.0, 2.0, 4.0]))
+
+
+class TestParametricFromDispatch:
+    """`from_` routes ParametricQuantity by type (optional unxts.parametric)."""
+
+    @pytest.mark.parametrize(("value", "unit"), [(1, "kpc"), (1, "mas"), (10, "mag")])
+    def test_matches_quantity_path(self, value: float, unit: str) -> None:
+        """A ParametricQuantity gives the same result as a plain Quantity."""
+        pq = pytest.importorskip("unxts.parametric").PQ(value, unit)
+        got = cxd.Distance.from_(pq, dtype=float)
+        expected = cxd.Distance.from_(u.Q(value, unit), dtype=float)
+        assert got.unit == expected.unit
+        assert jnp.allclose(got.value, expected.value)

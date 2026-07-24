@@ -4,7 +4,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 
 import unxt as u
 
@@ -84,3 +84,34 @@ class TestConversionEndpoints:
         plx = cxastro.Parallax.from_(q)
         assert jnp.allclose(plx.ustrip("rad"), expected)
         assert jnp.all(plx.value >= 0)
+
+    @given(plx=cxastrost.parallaxes())
+    @settings(deadline=None)
+    def test_pytree_roundtrip(self, plx: cxastro.Parallax) -> None:
+        """Parallax survives PyTree flatten/unflatten."""
+        flat, tree = jax.tree.flatten(plx)
+        restored = jax.tree.unflatten(tree, flat)
+        assert type(restored) is type(plx)
+        assert restored.unit == plx.unit
+        assert jnp.array_equal(restored.value, plx.value)
+
+    @given(plx=cxastrost.parallaxes())
+    @settings(deadline=None)
+    def test_jit_identity(self, plx: cxastro.Parallax) -> None:
+        """JIT-compiled identity preserves Parallax."""
+        result = jax.jit(lambda x: x)(plx)
+        assert type(result) is type(plx)
+        assert jnp.array_equal(result.value, plx.value)
+
+
+class TestParametricFromDispatch:
+    """`from_` routes ParametricQuantity by type (optional unxts.parametric)."""
+
+    @pytest.mark.parametrize(("value", "unit"), [(1, "mas"), (10, "pc"), (10, "mag")])
+    def test_matches_quantity_path(self, value: float, unit: str) -> None:
+        """A ParametricQuantity gives the same result as a plain Quantity."""
+        pq = pytest.importorskip("unxts.parametric").PQ(value, unit)
+        got = cxastro.Parallax.from_(pq, dtype=float)
+        expected = cxastro.Parallax.from_(u.Q(value, unit), dtype=float)
+        assert got.unit == expected.unit
+        assert jnp.allclose(got.value, expected.value)
