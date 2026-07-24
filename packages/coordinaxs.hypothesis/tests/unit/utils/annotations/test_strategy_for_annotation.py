@@ -87,9 +87,9 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_quantity_type_with_metadata(self, data: st.DataObject) -> None:
         """Test strategy_for_annotation(Quantity, meta) - quantity dispatch."""
-        # Create Metadata from a Shaped annotation. unxt v2.0's default Quantity
-        # is no longer parametrized by physical type, so dimension-carrying
-        # annotations use unxts.parametric.ParametricQuantity.
+        # Create Metadata from a Shaped annotation. The default Quantity is not
+        # parametrized by physical type, so dimension-carrying annotations use
+        # unxts.parametric.ParametricQuantity.
         ann = jaxtyping.Shaped[PQ["length"], ""]
         meta = parse_jaxtyping_annotation(ann)
 
