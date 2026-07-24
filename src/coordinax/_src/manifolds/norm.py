@@ -90,11 +90,13 @@ def norm(G: ul.QuantityMatrix, v: u.AbstractQuantity, /) -> u.AbstractQuantity:
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
+    >>> import unxts.linalg as ul
     >>> from coordinax.manifolds import norm
 
-    Identity metric (Euclidean), quantity vector:
+    Dimensionless identity metric, quantity vector:
 
-    >>> G = jnp.eye(3)
+    >>> dmls = ("", "", "")
+    >>> G = ul.QuantityMatrix(jnp.eye(3), unit=(dmls, dmls, dmls))
     >>> v = u.Q(jnp.array([3.0, 4.0, 0.0]), "m/s")
     >>> norm(G, v)
     Q(5., 'm / s')

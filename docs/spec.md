@@ -985,6 +985,11 @@ Semi-public API:
 
 - `pack_uniform_unit`: stack component data into an array using a shared unit
 - `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
+- `pack_with_usys`: stack component data into an array, resolving per-component units from a unit system
+- `pack_to_qmatrix`: pack a component dictionary into a `QuantityMatrix` (or a plain array)
+- `tree_cast_int_bool_to_float`: promote integer/boolean PyTree leaves to floating point (e.g. for `jax.jacfwd` inputs)
+- `pos_named_objs`, `jax_scalar_handler`: wadler-lindig rendering helpers used by `__pdoc__` implementations
+- `CDict`, `OptUSys`: the component-dictionary and optional-unit-system type aliases
 
 </br>
 
