@@ -27,9 +27,9 @@ The heterogeneous-unit matrix machinery (`QuantityMatrix`, `UnitsMatrix`, `det`/
 ```python
 import jax.numpy as jnp
 import unxt as u
-from unxts.linalg import QuantityMatrix
+import unxts.linalg as ul
 
-J = QuantityMatrix(
+J = ul.QuantityMatrix(
     value=jnp.eye(3),
     unit=(
         (u.unit("m/m"), u.unit("m/rad"), u.unit("m/rad")),
