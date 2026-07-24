@@ -95,11 +95,6 @@ def from_(
 ) -> DistanceModulus:
     """Construct a distance modulus from a quantity, dispatching on dimensions.
 
-    unxt v2.0's default `unxt.Quantity` is no longer parametrized by physical
-    type, so overloads can no longer be dispatched on ``Quantity["mag"]`` vs
-    ``Quantity["length"]`` vs ``Quantity["angle"]``. Branch on the runtime
-    dimension instead (the unit -- and hence the dimension -- is static).
-
     From a distance:
 
     >>> import unxt as u

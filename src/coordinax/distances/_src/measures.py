@@ -105,11 +105,6 @@ def from_(cls: type[Distance], d: Distance, /, **kw: Any) -> Distance:
 def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
     """Construct a distance from a quantity, dispatching on its dimensions.
 
-    unxt v2.0's default `unxt.Quantity` is no longer parametrized by physical
-    type, so overloads can no longer be dispatched on ``Quantity["length"]`` vs
-    ``Quantity["angle"]`` vs ``Quantity["mag"]``. Branch on the runtime
-    dimension instead (the unit -- and hence the dimension -- is static).
-
     From a length quantity:
 
     >>> import unxt as u

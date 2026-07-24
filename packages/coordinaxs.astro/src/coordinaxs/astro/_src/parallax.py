@@ -120,11 +120,6 @@ def from_(cls: type[Parallax], p: Parallax, /, **kw: Any) -> Parallax:
 def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
     """Construct a parallax from a quantity, dispatching on its dimensions.
 
-    unxt v2.0's default `unxt.Quantity` is no longer parametrized by physical
-    type, so overloads can no longer be dispatched on ``Quantity["angle"]`` vs
-    ``Quantity["length"]`` vs ``Quantity["mag"]``. Branch on the runtime
-    dimension instead (the unit -- and hence the dimension -- is static).
-
     From a parallax angle:
 
     >>> import unxt as u
