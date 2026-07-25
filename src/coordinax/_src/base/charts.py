@@ -364,6 +364,20 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
                     cls._coord_dimensions = _get_tuple(args[2])
                     break
 
+            # Check the component count matches the declared dimension flag (if
+            # this chart mixes in an `AbstractDimensionalFlag` with a fixed `n`).
+            ndim = getattr(cls, "_chart_ndim", None)
+            if (
+                isinstance(ndim, int)
+                and hasattr(cls, "_components")
+                and len(cls._components) != ndim
+            ):
+                msg = (
+                    f"{cls.__name__} is declared {ndim}D but has "
+                    f"{len(cls._components)} components {cls._components}"
+                )
+                raise TypeError(msg)
+
         super().__init_subclass__(**kw)  # AbstractChart has.
 
     @property
@@ -389,9 +403,15 @@ class AbstractDimensionalFlag:
 
     """
 
+    #: Declared coordinate dimension of the flag (set when ``n`` is given).
+    _chart_ndim: ClassVar[int | L["N"]]
+
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         if n is not None:
             DIMENSIONAL_FLAGS[n] = cls
+            # Record the declared dimension so concrete fixed-component charts
+            # can validate their component count against it.
+            cls._chart_ndim = n
 
         # Enforce that this is a subclass of AbstractChart unless it's an
         # abstract base class (name starts with "Abstract")

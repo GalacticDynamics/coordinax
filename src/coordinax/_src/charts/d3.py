@@ -54,8 +54,6 @@ class Abstract3D(AbstractDimensionalFlag, n=3):
     (cylindrical, spherical), or other three-dimensional manifolds.
     """
 
-    # TODO: add a check it's 3D
-
     @override
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         # Enforce that this is a subclass of AbstractChart

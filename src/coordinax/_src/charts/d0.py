@@ -31,8 +31,6 @@ class Abstract0D(AbstractDimensionalFlag, n=0):
     A 0D representation has no coordinate component.
     """
 
-    # TODO: add a check it's 0D
-
     @override
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         # Enforce that this is a subclass of AbstractChart

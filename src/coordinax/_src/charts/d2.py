@@ -35,8 +35,6 @@ class Abstract2D(AbstractDimensionalFlag, n=2):
     two angular coordinates but represents a curved surface.
     """
 
-    # TODO: add a check it's 2D
-
     @override
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         # Enforce that this is a subclass of AbstractChart
