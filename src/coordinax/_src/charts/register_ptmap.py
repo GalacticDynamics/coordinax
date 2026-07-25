@@ -35,6 +35,9 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.base.manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
+from coordinax._src.null import NoManifold
+from coordinax._src.product.chart import CartesianProductChart
+from coordinax._src.product.manifold import CartesianProductManifold
 from coordinax._src.utils import uconvert_to_rad
 
 #####################################################################
@@ -1743,3 +1746,87 @@ def pt_map(
     p_out: Array = jnp.stack([p_to[comp] for comp in to_chart.components], axis=-1)
 
     return p_out
+
+
+# ===================================================================
+# Cartesian phase space (cart3d x cart3d) -> Poincaré symplectic polar
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: CartesianProductManifold,
+    from_chart: CartesianProductChart,
+    to_M: NoManifold,
+    to_chart: PoincarePolar6D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""Cartesian phase space ``cart3d x cart3d`` -> ``PoincarePolar6D`` (gala forward).
+
+    The source is a two-factor Cartesian product chart: factor 0 is position
+    ``(x, y, z)``, factor 1 its velocity ``(vx, vy, vz)``. Implements gala's
+    ``cartesian_to_poincare_polar`` (Papaphilippou & Laskar 1996):
+
+    ``rho = hypot(x, y)``,  ``phi = atan2(x, y)``  (gala's azimuth convention),
+    ``dt_rho = (x*vx + y*vy) / rho``,  ``Lz = x*vy - y*vx``,
+    ``pp_phi = sqrt(2|Lz|) cos(phi)``,  ``pp_phidot = sqrt(2|Lz|) sin(phi)``,
+    ``dt_z = vz``.
+
+    Forward only: ``sqrt(|Lz|)`` discards ``sign(Lz)``, so there is no inverse.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    >>> q = {"q.x": u.Q(3.0, "kpc"), "q.y": u.Q(4.0, "kpc"), "q.z": u.Q(5.0, "kpc"),
+    ...      "p.x": u.Q(1.0, "kpc/Myr"), "p.y": u.Q(2.0, "kpc/Myr"),
+    ...      "p.z": u.Q(0.5, "kpc/Myr")}
+    >>> out = cxc.pt_map(q, ps.M, ps, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+    >>> sorted(out)
+    ['dt_rho', 'dt_z', 'pp_phi', 'pp_phidot', 'rho', 'z']
+
+    Lz = x*vy - y*vx = 2 kpc^2/Myr, so sqrt(2|Lz|) = 2; phi = atan2(3, 4):
+
+    >>> out["rho"], out["dt_rho"], out["dt_z"]
+    (Q(5., 'kpc'), Q(2.2, 'kpc / Myr'), Q(0.5, 'kpc / Myr'))
+    >>> out["pp_phi"].round(4), out["pp_phidot"].round(4)
+    (Q(1.6, 'kpc / Myr(1/2)'), Q(1.2, 'kpc / Myr(1/2)'))
+
+    A non-Cartesian or wrong-arity product source is rejected:
+
+    >>> bad = cxc.CartesianProductChart((cxc.cart3d, cxc.polar2d), ("q", "p"))
+    >>> try:
+    ...     cxc.pt_map({}, bad.M, bad, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+    ... except NotImplementedError:
+    ...     print("rejected")
+    rejected
+
+    """
+    del usys
+    if len(from_chart.factors) != 2 or not all(
+        isinstance(f, Cart3D) for f in from_chart.factors
+    ):
+        msg = (
+            "pt_map to PoincarePolar6D requires a Cartesian phase-space source: a "
+            "two-factor CartesianProductChart of (Cart3D, Cart3D) [position, "
+            f"velocity]; got factors {from_chart.factors!r}."
+        )
+        raise NotImplementedError(msg)
+
+    pos, vel = from_chart.split_components(p)
+    x, y, z = pos["x"], pos["y"], pos["z"]
+    vx, vy, vz = vel["x"], vel["y"], vel["z"]
+
+    rho = jnp.hypot(x, y)
+    phi = jnp.atan2(x, y)  # gala convention: azimuth from +y
+    lz = x * vy - y * vx
+    s = jnp.sqrt(2 * jnp.abs(lz))
+    return {
+        "rho": rho,
+        "pp_phi": s * jnp.cos(phi),
+        "z": z,
+        "dt_rho": (x * vx + y * vy) / rho,
+        "pp_phidot": s * jnp.sin(phi),
+        "dt_z": vz,
+    }
