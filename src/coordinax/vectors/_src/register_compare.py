@@ -19,6 +19,7 @@ __all__: tuple[str, ...] = ("equivalent",)
 
 from typing import Any
 
+import jax.tree as jtu
 from plum import dispatch
 
 import quaxed.numpy as jnp
@@ -106,20 +107,13 @@ def equivalent(
     if ac.chart != bc.chart:
         return jnp.zeros((), dtype=bool)
 
-    # Compare per component.  A component that is unitful on one side and
-    # unitless on the other -- or that carries an incompatible dimension --
-    # describes a different space, so the vectors are not equivalent.  Leaves may
-    # be *mixed* within a vector, so this is checked per component (not just the
-    # first).  ``jnp.isclose`` is unit-aware when ``atol`` carries the component's
-    # unit, so it converts ``b`` into ``a``'s unit itself -- no manual stripping,
-    # and it never raises here because the guard rejects the incompatible cases
-    # that would.  Seed with a vacuous ``True`` and AND in each component: this
-    # broadcasts up to the batch shape, and an empty loop (a 0-dimensional
-    # Cartesian chart, e.g. ``Cart0D``) stays ``True`` -- every point of a 0D
-    # space is the same point.
-    result = jnp.ones((), dtype=bool)
-    for k, av in ac.data.items():
-        bv = bc.data[k]
+    # Compare component-wise, in the first operand's units.  A component that is
+    # unitful on one side and unitless on the other -- or that carries an
+    # incompatible dimension -- describes a different space, so the vectors are
+    # not equivalent.  ``jnp.isclose`` is unit-aware when ``atol`` carries the
+    # component's unit (it converts ``b`` into ``a``'s unit itself), and never
+    # raises here because the guard rejects the incompatible cases that would.
+    def leaf_close(av: Any, bv: Any) -> Any:
         a_unit = getattr(av, "unit", None)
         b_unit = getattr(bv, "unit", None)
         if (a_unit is None) != (b_unit is None) or (
@@ -127,8 +121,14 @@ def equivalent(
         ):
             return jnp.zeros((), dtype=bool)
         atol_k = atol if a_unit is None else u.Q(atol, a_unit)
-        result = result & jnp.isclose(av, bv, rtol=rtol, atol=atol_k)
-    # ``isclose`` over unitful leaves yields a dimensionless ``Quantity`` of
-    # bools; strip it back to a plain array so the return type matches the
-    # scalar-``False`` guards above.
+        return jnp.isclose(av, bv, rtol=rtol, atol=atol_k)
+
+    # ``is_leaf`` stops the tree walk at the `unxt.Quantity` leaves (which are
+    # themselves pytrees); ``tree_reduce``'s initializer makes an empty chart (a
+    # 0-dimensional Cartesian chart, e.g. ``Cart0D``) vacuously ``True`` -- every
+    # point of a 0D space is the same point.  ``isclose`` over unitful leaves
+    # yields a dimensionless ``Quantity`` of bools; strip it back to a plain array
+    # so the return type matches the scalar-``False`` guards above.
+    checks = jtu.map(leaf_close, ac.data, bc.data, is_leaf=lambda x: hasattr(x, "unit"))
+    result = jtu.reduce(jnp.logical_and, checks, jnp.ones((), dtype=bool))
     return u.ustrip("", result) if hasattr(result, "unit") else result
