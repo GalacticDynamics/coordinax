@@ -219,5 +219,12 @@ class TestAbstractDimensionalFlag:
 
     def test_component_count_matches_for_predefined_charts(self) -> None:
         """Every predefined chart's ndim matches its component count."""
-        assert cxc.cart3d.ndim == len(cxc.cart3d.components) == 3
-        assert cxc.polar2d.ndim == len(cxc.polar2d.components) == 2
+        charts = [
+            obj
+            for name in dir(cxc)
+            if not name.startswith("_")
+            and isinstance(obj := getattr(cxc, name), cxc.AbstractChart)
+        ]
+        assert charts, "no predefined chart instances discovered"
+        for chart in charts:
+            assert chart.ndim == len(chart.components), chart
