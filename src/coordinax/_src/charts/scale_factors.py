@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 
 import plum
+import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -16,7 +17,6 @@ from .dn import CartND
 from coordinax._src.base import AbstractDimensionalFlag
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import FlatMetric
-from coordinax.internal import QMatrix, UnitsMatrix
 
 DMLS = u.unit("")
 
@@ -29,7 +29,7 @@ def scale_factors(
     *,
     at: CDict,
     usys: OptUSys = None,
-) -> QMatrix:
+) -> ul.QuantityMatrix:
     """Fast path for Euclidean metrics in Cartesian charts.
 
     >>> import jax.numpy as jnp
@@ -44,7 +44,7 @@ def scale_factors(
     ...     "z": u.Q(jnp.array(3.0), "m"),
     ... }
     >>> cxm.scale_factors(metric, cxc.cart3d, at=at)
-    QMatrix([1., 1., 1.], '(, , )')
+    QM([1., 1., 1.], '(, , )')
 
     """
     del metric, at, usys
@@ -53,6 +53,6 @@ def scale_factors(
         if isinstance(chart, AbstractDimensionalFlag)
         else len(chart.components)
     )
-    return QMatrix(
-        jnp.ones((n,)), unit=UnitsMatrix(tuple(u.unit("") for _ in range(n)))
+    return ul.QuantityMatrix(
+        jnp.ones((n,)), unit=ul.UnitsMatrix(tuple(u.unit("") for _ in range(n)))
     )

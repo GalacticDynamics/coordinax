@@ -9,6 +9,7 @@ from typing import Any, Final, cast, final
 
 import jax
 import plum
+import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -35,7 +36,6 @@ from coordinax._src.base.manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
 from coordinax._src.utils import uconvert_to_rad
-from coordinax.internal import QMatrix, UnitsMatrix, cdict_units
 
 
 @final
@@ -83,7 +83,7 @@ def pt_map(q: None, /, *fixed_args: Any, **fixed_kw: Any) -> Callable[..., Any]:
     >>> p = u.Q([1.0, 0.0, 0.0], "m")
     >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d)
     >>> map(p)
-    QMatrix([1.        , 1.57079633, 0.        ], '(m, rad, rad)')
+    QM([1.        , 1.57079633, 0.        ], '(m, rad, rad)')
 
     Array-Like inputs are interpreted as Cartesian coordinates with units from
     the required `unxt.AbstractUnitSystem`.
@@ -132,7 +132,7 @@ def pt_map(
     >>> p = u.Q([1.0, 0.0, 0.0], "m")
     >>> map = cxc.pt_map(cxc.cart3d, cxc.sph3d)
     >>> map(p)
-    QMatrix([1.        , 1.57079633, 0.        ], '(m, rad, rad)')
+    QM([1.        , 1.57079633, 0.        ], '(m, rad, rad)')
 
     Array-Like inputs are interpreted as Cartesian coordinates with units from
     the required `unxt.AbstractUnitSystem`.
@@ -1577,10 +1577,10 @@ def pt_map(
     /,
     *,
     usys: OptUSys = None,
-) -> QMatrix:
-    """Transform a QMatrix between charts.
+) -> ul.QuantityMatrix:
+    """Transform a QuantityMatrix between charts.
 
-    Converts the components of a QMatrix from one chart to another,
+    Converts the components of a QuantityMatrix from one chart to another,
     preserving the matrix structure with potentially different units per component.
 
     >>> import coordinax.charts as cxc
@@ -1617,10 +1617,10 @@ def pt_map(
     p_to = cxcapi.pt_map(p_dict, from_M, from_chart, to_M, to_chart, usys=usys)
     p_to = cast("dict[str, u.AbstractQuantity]", p_to)
 
-    # Stack the transformed components into an QMatrix
-    p_out = QMatrix(
+    # Stack the transformed components into an QuantityMatrix
+    p_out = ul.QuantityMatrix(
         jnp.stack([u.ustrip(p_to[k]) for k in to_chart.components], axis=-1),
-        unit=UnitsMatrix(cdict_units(p_to, to_chart.components)),
+        unit=ul.UnitsMatrix(ul.cdict_units(p_to, to_chart.components)),
     )
 
     return p_out  # noqa: RET504

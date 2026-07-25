@@ -16,11 +16,11 @@ def convert_quantity_to_distance(q: u.AbstractQuantity, /) -> Distance:
     """Convert any quantity to a Distance.
 
     >>> from plum import convert
-    >>> from unxt.quantity import BareQuantity
+    >>> from unxt.quantity import Quantity
     >>> from coordinax.distances import Distance
-    >>> q = BareQuantity(1, "m")
+    >>> q = Quantity(1, "m")
     >>> q
-    BareQuantity(1, 'm')
+    Q(1, 'm')
 
     >>> convert(q, Distance)
     Distance(1, 'm')

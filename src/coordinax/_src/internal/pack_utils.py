@@ -20,12 +20,13 @@ __all__ = (
 from jaxtyping import Array, ArrayLike
 from typing import Any, Final, overload
 
+import unxts.linalg as ul
+
 import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
 from .custom_types import CDict, CKey
-from .quantity_matrix import QMatrix
 
 DMLS: Final = u.unit("")
 
@@ -119,13 +120,14 @@ def pack_with_usys(
 
 def pack_to_qmatrix(
     p: CDict, /, keys: tuple[CKey, ...] | None = None
-) -> Array | QMatrix:
-    """Pack a component dictionary into a QMatrix or plain Array.
+) -> ul.QuantityMatrix:
+    """Pack a component dictionary into a 1-D `QuantityMatrix`.
 
-    Components are ordered according to ``keys``. If the values
-    are {class}`~unxt.AbstractQuantity`, a 1-D
-    {class}`~coordinax.internal.QMatrix` is returned with per-component
-    units. If the values are plain arrays, a stacked JAX array is returned.
+    Components are ordered according to ``keys`` and stacked along the trailing
+    axis, each carrying its own unit. Unitless components are treated as
+    dimensionless, so a mix of quantity-valued and plain-array components can be
+    packed together — the result is always a
+    {class}`~unxts.linalg.QuantityMatrix`.
 
     Parameters
     ----------
@@ -136,8 +138,8 @@ def pack_to_qmatrix(
 
     Returns
     -------
-    Array | QMatrix
-        Packed representation of the component dictionary.
+    QuantityMatrix
+        The packed 1-D quantity matrix, with one unit per component.
 
     Examples
     --------
@@ -147,7 +149,7 @@ def pack_to_qmatrix(
 
     >>> p = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
     >>> pack_to_qmatrix(p, ("x", "y", "z"))
-    QMatrix([1., 2., 3.], '(km, km, km)')
+    QM([1., 2., 3.], '(km, km, km)')
 
     """
     # Dict sorter
@@ -160,5 +162,5 @@ def pack_to_qmatrix(
     vals = [
         u.ustrip(AllowValue, unit, p[k]) for k, unit in zip(keys, units, strict=True)
     ]
-    # Return as QMatrix
-    return QMatrix(jnp.stack(vals, axis=-1), unit=units)
+    # Return as QuantityMatrix
+    return ul.QuantityMatrix(jnp.stack(vals, axis=-1), unit=units)

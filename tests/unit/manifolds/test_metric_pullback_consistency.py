@@ -91,7 +91,7 @@ class TestPullbackConsistencyNumerical:
 
         # RoundMetric (diagonal) and Jacobian pullback (dense) must agree.
         expected = g_round.to_dense().matrix  # plain array, shape (2, 2)
-        actual = g_pullback.matrix.value  # QMatrix.value, shape (2, 2)
+        actual = g_pullback.matrix.value  # QuantityMatrix.value, shape (2, 2)
 
         assert jnp.allclose(actual, expected, atol=1e-6), (
             f"Mismatch at theta={theta}, phi={phi}:\n"

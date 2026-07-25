@@ -7,6 +7,7 @@ from typing import Any
 
 import jax.numpy as jnp
 import plum
+import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -17,7 +18,7 @@ from .basis import CoordinateBasis, PhysicalBasis, coord_basis
 from .custom_types import CDict, OptUSys
 from .geom import TangentGeometry
 from .rep import Representation
-from coordinax.internal import QMatrix, pack_nonuniform_unit
+from coordinax.internal import pack_nonuniform_unit
 
 # ---------------------------------------------------------------------------
 # Validation helpers
@@ -40,28 +41,28 @@ def _check_linear_basis(rep: Representation, label: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Shared helper: apply a QMatrix Jacobian to a tangent vector CDict
+# Shared helper: apply a QuantityMatrix Jacobian to a tangent vector CDict
 # ---------------------------------------------------------------------------
 
 
 def _apply_jac(
-    J: Array | QMatrix,
+    J: Array | ul.QuantityMatrix,
     from_components: tuple[str, ...],
     to_components: tuple[str, ...],
     v: CDict,
 ) -> CDict:
-    """Apply a 2-D QMatrix Jacobian to a tangent CDict.
+    """Apply a 2-D QuantityMatrix Jacobian to a tangent CDict.
 
     If the components of ``v`` are plain arrays, the output is a plain-array
     CDict (using ``J.value @ v_arr``).  If any component of ``v`` is a
     {class}`~unxt.AbstractQuantity`, ``v`` is packed into a 1-D
-    {class}`~coordinax.internal.QMatrix` and the result is computed
+    {class}`~unxts.linalg.QuantityMatrix` and the result is computed
     via ``qnp.matmul(J, v_qm)``, which handles per-element unit conversion.
 
     Parameters
     ----------
     J
-        QMatrix of shape ``(n_out, n_in)`` returned by ``jac_pt_map``.
+        QuantityMatrix of shape ``(n_out, n_in)`` returned by ``jac_pt_map``.
     from_components
         Ordered component names for the input chart (columns of J).
     to_components
@@ -76,17 +77,17 @@ def _apply_jac(
         Tangent vector components in the output chart.
 
     """
-    if isinstance(v[from_components[0]], u.AbstractQuantity):
+    if all(isinstance(v[k], u.AbstractQuantity) for k in from_components):
         v_arr, v_units = pack_nonuniform_unit(v, keys=from_components)
-        v_qm = QMatrix(v_arr, unit=v_units)
-        w = qnp.matmul(J, v_qm)  # (n_out,) QMatrix
+        v_qm = ul.QuantityMatrix(v_arr, unit=v_units)
+        w = qnp.matmul(J, v_qm)  # (n_out,) QuantityMatrix
         return {key: u.Q(w.value[i], w.unit[i]) for i, key in enumerate(to_components)}
 
     v_arr = jnp.stack([jnp.asarray(v[k]) for k in from_components])
-    # When J is a QMatrix, use J.value to avoid the Quax fallback path
-    # that returns a QMatrix with J's own 2D unit structure (wrong).
+    # When J is a QuantityMatrix, use J.value to avoid the Quax fallback path
+    # that returns a QuantityMatrix with J's own 2D unit structure (wrong).
     # Plain-array velocity is dimensionless, so numeric-only application is correct.
-    j_arr = J.value if isinstance(J, QMatrix) else J
+    j_arr = J.value if isinstance(J, ul.QuantityMatrix) else J
     result = j_arr @ v_arr
     return {key: result[i] for i, key in enumerate(to_components)}
 

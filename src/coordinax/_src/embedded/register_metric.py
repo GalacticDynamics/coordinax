@@ -19,6 +19,7 @@ __all__: tuple[str, ...] = ()
 import jax
 import jax.numpy as jnp
 import plum
+import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -27,12 +28,7 @@ import coordinaxs.api.charts as cxcapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
 from coordinax._src.metric.matrix import DenseMetric
-from coordinax.internal import (
-    QMatrix,
-    UnitsMatrix,
-    cdict_units,
-    pack_nonuniform_unit,
-)
+from coordinax.internal import pack_nonuniform_unit
 from coordinaxs.api.manifolds import metric_matrix
 
 DMLS = u.unit("")
@@ -97,7 +93,7 @@ def metric_matrix(
     -------
     DenseMetric
         Induced metric matrix at ``point``, backed by a
-        :class:`~coordinax.internal.QMatrix` with units
+        :class:`~unxts.linalg.QuantityMatrix` with units
         ``cart_unit^2 / (intrinsic_unit_i * intrinsic_unit_j)``.
 
     Examples
@@ -152,7 +148,7 @@ def metric_matrix(
 
     at_ambient = embed_map.embed(point, usys=None)
     at_cart = cxcapi.pt_map(at_ambient, ambient_chart, cart_chart)
-    uto_ = cdict_units(at_cart, cart_keys)
+    uto_ = ul.cdict_units(at_cart, cart_keys)
     uto_ = tuple(ut if ut is not None else DMLS for ut in uto_)
 
     def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
@@ -173,10 +169,10 @@ def metric_matrix(
     # g_{ij} unit = uto_[0]² / (ufrom_[i] × ufrom_[j])
     # Valid because all Cartesian coordinates share the same unit.
     n = len(intrinsic_keys)
-    result_unit = UnitsMatrix(
+    result_unit = ul.UnitsMatrix(
         tuple(
             tuple(uto_[0] ** 2 / (ufrom_[i] * ufrom_[j]) for j in range(n))  # ty: ignore[unsupported-operator]
             for i in range(n)
         )
     )
-    return DenseMetric(QMatrix(result_vals, unit=result_unit))
+    return DenseMetric(ul.QuantityMatrix(result_vals, unit=result_unit))

@@ -7,7 +7,7 @@ from jaxtyping import ArrayLike
 from typing import Any, Final, overload
 
 import unxt as u
-from unxt.quantity import AllowValue, BareQuantity
+from unxt.quantity import AllowValue, Quantity
 
 from .custom_types import OptUSys
 
@@ -20,7 +20,7 @@ DMLS: Final = u.dimension_of(UNTLS)
 @overload
 def uconvert_to_rad(value: ArrayLike, usys: OptUSys, /) -> ArrayLike: ...
 @overload
-def uconvert_to_rad(value: u.AbstractQuantity, usys: OptUSys, /) -> BareQuantity: ...
+def uconvert_to_rad(value: u.AbstractQuantity, usys: OptUSys, /) -> Quantity: ...
 def uconvert_to_rad(value: Any, usys: OptUSys, /) -> Any:
     """Convert an angle value to radians, handling no-usys case.
 
@@ -70,4 +70,4 @@ def uconvert_to_rad(value: Any, usys: OptUSys, /) -> Any:
             raise ValueError(msg)
 
     raw_rad = u.uconvert_value(RAD, source_unit, u.ustrip(AllowValue, value))
-    return BareQuantity(raw_rad, unit=RAD) if unit is not None else raw_rad
+    return Quantity(raw_rad, unit=RAD) if unit is not None else raw_rad

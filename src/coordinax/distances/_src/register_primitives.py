@@ -11,7 +11,7 @@ from jax import lax
 from quax import register
 
 import unxt as u
-from unxt.quantity import BareQuantity
+from unxt.quantity import Quantity
 
 from .base import AbstractDistance
 from .constants import ONE, RADIAN
@@ -44,18 +44,18 @@ def atan2_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
     """Cube root of a distance.
 
     >>> import quaxed.numpy as jnp
     >>> from coordinax.distances import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
-    BareQuantity(2., 'm(1/3)')
+    Q(2., 'm(1/3)')
 
     """
     value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
-    return BareQuantity(value, unit=x.unit ** (1 / 3))
+    return Quantity(value, unit=x.unit ** (1 / 3))
 
 
 # ==============================================================================
@@ -83,7 +83,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
 @register(lax.dot_general_p)
 def dot_general_p_abstractdistances(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
-) -> BareQuantity:
+) -> Quantity:
     """Dot product of two Distances.
 
     This is a dot product of two Distances.
@@ -95,9 +95,9 @@ def dot_general_p_abstractdistances(
     >>> q1 = Distance([1, 2, 3], "m")
     >>> q2 = Distance([4, 5, 6], "m")
     >>> jnp.vecdot(q1, q2)
-    BareQuantity(32, 'm2')
+    Q(32, 'm2')
     >>> q1 @ q2
-    BareQuantity(32, 'm2')
+    Q(32, 'm2')
 
     This rule is also used by `jnp.matmul` for quantities.
 
@@ -113,23 +113,23 @@ def dot_general_p_abstractdistances(
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
-    return BareQuantity(value, unit=lhs.unit * rhs.unit)
+    return Quantity(value, unit=lhs.unit * rhs.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.integer_pow_p)
-def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQuantity:
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> Quantity:
     """Integer power of a Distance.
 
     >>> from coordinax.distances import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
-    BareQuantity(8, 'm3')
+    Q(8, 'm3')
 
     """
-    return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)
+    return Quantity(lax.integer_pow(x.value, y), unit=x.unit**y)
 
 
 # ==============================================================================
@@ -152,9 +152,7 @@ def neg_p_distance(x: Distance, /) -> u.Q:
 
 
 @register(lax.pow_p)
-def pow_p_abstractdistance_arraylike(
-    x: AbstractDistance, y: ArrayLike, /
-) -> BareQuantity:
+def pow_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> Quantity:
     """Power of a Distance by redispatching to Quantity.
 
     >>> import math
@@ -163,18 +161,18 @@ def pow_p_abstractdistance_arraylike(
     >>> q1 = Distance(10.0, "m")
     >>> y = 3.0
     >>> q1 ** y
-    BareQuantity(1000., 'm3')
+    Q(1000., 'm3')
 
     """
     # TODO: better call to power
-    return BareQuantity(x.value, x.unit) ** y  # ty: ignore[invalid-return-type]
+    return Quantity(x.value, x.unit) ** y
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
     """Square root of a quantity.
 
     >>> import quaxed.numpy as jnp
@@ -182,17 +180,17 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> from coordinax.distances import Distance
     >>> q = Distance(9, "m")
     >>> jnp.sqrt(q)
-    BareQuantity(3., 'm(1/2)')
+    Q(3., 'm(1/2)')
 
     >>> from coordinaxs.astro import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
-    BareQuantity(3., 'mas(1/2)')
+    Q(3., 'mas(1/2)')
 
     """
     # Promote to something that supports sqrt units.
     value = lax.sqrt_p.bind(x.value, accuracy=accuracy)
-    return BareQuantity(value, unit=x.unit ** (1 / 2))
+    return Quantity(value, unit=x.unit ** (1 / 2))
 
 
 # ==============================================================================
@@ -204,6 +202,6 @@ def to_value_rad_or_one(q: u.AbstractQuantity, /) -> ArrayLike:
 
 # TODO: figure out a promotion alternative that works in general
 @register(lax.tan_p)
-def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
     value = lax.tan_p.bind(to_value_rad_or_one(x), accuracy=accuracy)
-    return BareQuantity(value, unit=ONE)
+    return Quantity(value, unit=ONE)

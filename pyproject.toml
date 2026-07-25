@@ -35,7 +35,8 @@ dependencies = [
   "quax-blocks>=0.4.1",
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
-  "unxt>=1.11.2",
+  "unxt>=2.0",
+  "unxts.linalg>=2.0.1",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
@@ -116,6 +117,8 @@ test = [
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
   "sybil[pytest]>=8.0.0",
+  # the hypothesis annotation-strategy tests use ParametricQuantity["length"].
+  "unxts.parametric>=2.0",
 ]
 test-all = [{ include-group = "test" }]
 
@@ -459,6 +462,7 @@ functools                               = "ft"
 "jax.extend.core"                       = "jexc"
 "jax.tree_util"                         = "jtu"
 unxt                                    = "u"
+"unxts.linalg"                          = "ul"
 
 
 [tool.ruff.lint.isort]
@@ -494,7 +498,7 @@ invalid-argument-type = "ignore"
 [tool.ty.terminal]
 output-format = "concise"
 
-[tool.unxt]
+[tool.unxts.unxt]
 quantity.repr.named_unit     = false
 quantity.repr.short_arrays   = "compact"
 quantity.repr.use_short_name = true

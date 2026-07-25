@@ -7,6 +7,7 @@ import dataclasses
 from typing import final
 
 import jax
+import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -14,20 +15,15 @@ import unxt as u
 from .embedmap import AbstractEmbeddingMap
 from coordinax._src.base import AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import (
-    QMatrix,
-    UnitsMatrix,
-    cdict_units,
-    pack_nonuniform_unit,
-)
+from coordinax.internal import pack_nonuniform_unit
 
 DMLS = u.unit("")
 
 
 def _jacobian_embed_map(
     embed_map: AbstractEmbeddingMap, at: CDict, usys: OptUSys
-) -> QMatrix:
-    """Compute the Jacobian of ``embed_map`` at ``at`` as a ``QMatrix``.
+) -> ul.QuantityMatrix:
+    """Compute the Jacobian of ``embed_map`` at ``at`` as a ``QuantityMatrix``.
 
     Mirrors the general fallback of ``jac_pt_map`` but differentiates
     the embedding function instead of a chart transition map.
@@ -43,8 +39,8 @@ def _jacobian_embed_map(
 
     Returns
     -------
-    QMatrix
-        2-D ``QMatrix`` of shape ``(n_ambient, n_intrinsic)`` where
+    QuantityMatrix
+        2-D ``QuantityMatrix`` of shape ``(n_ambient, n_intrinsic)`` where
         ``J.value[j, i] = \u2202(ambient_j) / \u2202(intrinsic_i)``.
 
     """
@@ -57,14 +53,14 @@ def _jacobian_embed_map(
 
     # Run embedding once to determine output units
     at_ambient = embed_fn(at, usys=usys)
-    uto = cdict_units(at_ambient, ambient_keys)
+    uto = ul.cdict_units(at_ambient, ambient_keys)
 
     # Replace None with dimensionless
     ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
     uto_ = tuple(ut if ut is not None else DMLS for ut in uto)
 
     # Build (n_ambient × n_intrinsic) unit matrix
-    unit_matrix = UnitsMatrix(tuple(tuple(tj / fi for fi in ufrom_) for tj in uto_))  # ty: ignore[unsupported-operator]
+    unit_matrix = ul.UnitsMatrix(tuple(tuple(tj / fi for fi in ufrom_) for tj in uto_))  # ty: ignore[unsupported-operator]
 
     # Plain-array embedding for jacfwd
     def embed_fn_arr(x_arr: qnp.ndarray) -> qnp.ndarray:
@@ -79,7 +75,7 @@ def _jacobian_embed_map(
         return qnp.stack(vals)
 
     J_arr = jax.jacfwd(embed_fn_arr)(xat)  # shape (n_ambient, n_intrinsic)
-    return QMatrix(J_arr, unit=unit_matrix)
+    return ul.QuantityMatrix(J_arr, unit=unit_matrix)
 
 
 @jax.tree_util.register_static

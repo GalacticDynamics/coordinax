@@ -12,7 +12,7 @@ Jacobian at a base point $p$ (expressed in $C_1$ coordinates) is
 $$ J^j{}_i(p) = \frac{\\partial \tau^j}{\partial q^i}\bigg|_p $$
 
 where $q^i$ are the $C_1$ coordinates and $\tau^j$ are the $C_2$ coordinates.
-The result is a 2-D {class}`~coordinax.internal.QMatrix` of shape
+The result is a 2-D {class}`~unxts.linalg.QuantityMatrix` of shape
 $(n_\\mathrm{out},\\, n_\\mathrm{in})$ whose $(j, i)$ element carries units
 
 $$ \mathrm{unit}(J^j{}_i) = \frac{\mathrm{unit}(\tau^j)}{\mathrm{unit}(q^i)} $$
@@ -45,8 +45,8 @@ from typing import Any, Final, cast
 
 import jax
 import jax.numpy as jnp
-import numpy as np
 import plum
+import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -55,12 +55,7 @@ import coordinaxs.api.charts as cxcapi
 from .d2 import Cart2D, Polar2D
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import (
-    QMatrix,
-    UnitsMatrix,
-    pack_to_qmatrix,
-    tree_cast_int_bool_to_float,
-)
+from coordinax.internal import pack_to_qmatrix, tree_cast_int_bool_to_float
 
 DMLS: Final[u.AbstractUnit] = cast("u.AbstractUnit", u.unit(""))
 
@@ -84,7 +79,7 @@ def jac_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     >>> map = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map(at)
-    QMatrix(
+    QM(
         [[ 1.,  0.,  0.],
          [-0., -0., -1.],
          [ 0.,  1.,  0.]],
@@ -114,7 +109,7 @@ def jac_pt_map(
     >>> map = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map(at)
-    QMatrix(
+    QM(
         [[ 1.,  0.,  0.],
          [-0., -0., -1.],
          [ 0.,  1.,  0.]],
@@ -178,13 +173,13 @@ def jac_pt_map(
     return jac_pt_map_fn(at)  # Compute Jacobian as array
 
 
-def _repack_q_from_jac(jac_qq: QMatrix, /) -> QMatrix:
-    r"""Rebuild a 2-D ``QMatrix`` Jacobian from the raw ``jax.jacfwd`` output.
+def _repack_q_from_jac(jac_qq: ul.QuantityMatrix, /) -> ul.QuantityMatrix:
+    r"""Rebuild a 2-D ``QuantityMatrix`` Jacobian from the raw ``jax.jacfwd`` output.
 
     When ``jax.jacfwd`` differentiates a function that maps a 1-D
-    ``QMatrix`` of shape ``(n_in,)`` to a 1-D ``QMatrix`` of
-    shape ``(n_out,)``, the result is a 2-D ``QMatrix`` of shape
-    ``(n_out, n_in)`` whose ``.value`` is *itself* a 1-D ``QMatrix``
+    ``QuantityMatrix`` of shape ``(n_in,)`` to a 1-D ``QuantityMatrix`` of
+    shape ``(n_out,)``, the result is a 2-D ``QuantityMatrix`` of shape
+    ``(n_out, n_in)`` whose ``.value`` is *itself* a 1-D ``QuantityMatrix``
     carrying the input units (one per column), and whose ``.unit`` is a 1-D
     ``UnitsMatrix`` carrying the output units (one per row).
 
@@ -193,8 +188,9 @@ def _repack_q_from_jac(jac_qq: QMatrix, /) -> QMatrix:
 
     """
     ufrom_, uto_ = jac_qq.value.unit, jac_qq.unit  # ty: ignore[unresolved-attribute]
-    units = UnitsMatrix(np.divide(uto_._units[:, None], ufrom_._units[None, :]))
-    return QMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
+    ufrom_t, uto_t = ufrom_.to_tuple(), uto_.to_tuple()
+    units = ul.UnitsMatrix(tuple(tuple(uj / ui for ui in ufrom_t) for uj in uto_t))
+    return ul.QuantityMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
 
 
 @plum.dispatch
@@ -205,7 +201,7 @@ def jac_pt_map(
     /,
     *,
     usys: OptUSys = None,
-) -> Array | QMatrix:
+) -> Array | ul.QuantityMatrix:
     r"""Compute the Jacobian at a coordinate-dictionary base point.
 
     The primary dict-input dispatch.  Branches on whether the values of *at*
@@ -218,21 +214,21 @@ def jac_pt_map(
         ``Array`` dispatch this means *usys* must be provided.
 
     **Quantity-valued branch** (at least one value carries a unit)
-        Packs *at* into a 1-D ``QMatrix`` via
+        Packs *at* into a 1-D ``QuantityMatrix`` via
         ``pack_to_qmatrix(at, keys=from_chart.components)``, promotes any
         integer or boolean leaves to the default floating-point dtype (other
         dtypes, including complex, are left unchanged and will raise a
         ``TypeError`` from ``jax.jacfwd`` if passed), then computes
         ``J_qq = jax.jacfwd(pt_map_fn)(at_in)``.
-        Because ``jacfwd`` applied to a ``QMatrix``-in /
-        ``QMatrix``-out function yields a nested ``QMatrix``,
+        Because ``jacfwd`` applied to a ``QuantityMatrix``-in /
+        ``QuantityMatrix``-out function yields a nested ``QuantityMatrix``,
         ``_repack_q_from_jac`` is called to extract the correct 2-D unit
         structure.
 
     Returns
     -------
-    Array | QMatrix
-        Plain array when *at* is array-valued; ``QMatrix`` of shape
+    Array | QuantityMatrix
+        Plain array when *at* is array-valued; ``QuantityMatrix`` of shape
         ``(n_out, n_in)`` with per-element units otherwise.
 
     Raises
@@ -281,11 +277,11 @@ def jac_pt_map(
     pt_map_fn = cxcapi.pt_map(None, from_chart, to_chart, usys=usys)
     jac_pt_map_fn = jax.jacfwd(pt_map_fn)
 
-    # Pack the input CDict to a QMatrix
+    # Pack the input CDict to a QuantityMatrix
     at_in = pack_to_qmatrix(at, keys=from_chart.components)
     at_in = tree_cast_int_bool_to_float(at_in)
 
-    # Compute Jacobian as QMatrix
+    # Compute Jacobian as QuantityMatrix
     J_qq = jac_pt_map_fn(at_in)
     return _repack_q_from_jac(J_qq)
 
@@ -329,7 +325,7 @@ def jac_pt_map(
     /,
     *,
     usys: OptUSys = None,
-) -> QMatrix:
+) -> ul.QuantityMatrix:
     r"""Compute the Jacobian of the transition function between two charts.
 
     $$
@@ -343,8 +339,8 @@ def jac_pt_map(
 
     >>> x = u.Q(jnp.array([1.0, 1.0]), "m")
     >>> cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
-    QMatrix([[ 0.70710678,  0.70710678],
-                    [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
+    QM([[ 0.70710678,  0.70710678],
+        [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
 
     """
     x, y = at[..., 0], at[..., 1]
@@ -355,7 +351,7 @@ def jac_pt_map(
     # Astropy treats rad as dimensionless, so x2.unit == 1/m rather than
     # the correct rad/m.  Force the right unit explicitly.
     rad_per_len = u.unit("rad") / x.unit
-    return QMatrix(
+    return ul.QuantityMatrix(
         jnp.array([[x0.value, x1.value], [x2.value, x3.value]]),
         unit=((x0.unit, x1.unit), (rad_per_len, rad_per_len)),
     )

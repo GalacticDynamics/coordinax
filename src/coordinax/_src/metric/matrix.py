@@ -18,19 +18,13 @@ from typing import Any, final
 import equinox as eqx
 import jax.numpy as jnp
 import quax
+import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
 
-from coordinax.internal import (
-    QMatrix,
-    UnitsMatrix,
-    det as _det_primitive,
-    inv as _inv_primitive,
-)
-
-_det = quax.quaxify(_det_primitive)
-_inv = quax.quaxify(_inv_primitive)
+_det = quax.quaxify(ul.det)
+_inv = quax.quaxify(ul.inv)
 _matmul = quax.quaxify(jnp.matmul)
 
 # ---------------------------------------------------------------------------
@@ -127,7 +121,7 @@ class AbstractMetricMatrix(eqx.Module):
 
 @final
 class DiagonalMetric(AbstractMetricMatrix):
-    r"""Diagonal metric matrix stored as a 1-D array or QMatrix.
+    r"""Diagonal metric matrix stored as a 1-D array or QuantityMatrix.
 
     Encodes a metric whose coordinate matrix is diagonal — i.e. orthogonal
     coordinate charts.  Storing only the diagonal avoids materialising the full
@@ -136,7 +130,7 @@ class DiagonalMetric(AbstractMetricMatrix):
 
     Parameters
     ----------
-    diagonal : QMatrix or Array, shape ``(n,)``
+    diagonal : QuantityMatrix or Array, shape ``(n,)``
         The diagonal entries $g_{11}, g_{22}, \\ldots, g_{nn}$.
 
     Examples
@@ -154,7 +148,7 @@ class DiagonalMetric(AbstractMetricMatrix):
 
     """
 
-    diagonal: QMatrix | Array
+    diagonal: ul.QuantityMatrix | Array
 
     @property
     def ndim(self) -> int:
@@ -164,12 +158,12 @@ class DiagonalMetric(AbstractMetricMatrix):
     def to_dense(self) -> "DenseMetric":
         r"""Convert to a full $n \times n$ matrix with zeros off the diagonal.
 
-        When the diagonal is a :class:`~coordinax.internal.QMatrix`,
+        When the diagonal is a :class:`~unxts.linalg.QuantityMatrix`,
         the off-diagonal entry ``(i, j)`` is assigned the geometric-mean unit
         ``sqrt(diag_unit[i] * diag_unit[j])``.  This choice ensures that
         ``g[i, j] * v[j]`` is unit-compatible with ``g[i, i] * v[i]`` during
         matrix-vector contraction, which is required for the
-        :func:`~coordinax.internal.QMatrix` dot-product to succeed even
+        :func:`~unxts.linalg.QuantityMatrix` dot-product to succeed even
         when the coordinate components have different physical dimensions (e.g.
         metres and radians in spherical coordinates).
 
@@ -185,11 +179,13 @@ class DiagonalMetric(AbstractMetricMatrix):
         Array([[1., 0.],
                [0., 4.]], dtype=float64)
 
-        QMatrix diagonal — diagonal units are preserved and off-diagonal
+        QuantityMatrix diagonal — diagonal units are preserved and off-diagonal
         entries get the geometric-mean unit:
 
-        >>> from coordinax.internal import QMatrix
-        >>> d = DiagonalMetric(QMatrix(jnp.array([1.0, 4.0]), unit=("m2", "s2")))
+        >>> import unxts.linalg as ul
+        >>> d = DiagonalMetric(
+        ...     ul.QuantityMatrix(jnp.array([1.0, 4.0]), unit=("m2", "s2"))
+        ... )
         >>> d.to_dense().matrix.unit[0, 0]
         Unit("m2")
         >>> d.to_dense().matrix.unit[1, 1]
@@ -198,7 +194,7 @@ class DiagonalMetric(AbstractMetricMatrix):
         Unit("m s")
 
         """
-        if isinstance(self.diagonal, QMatrix):
+        if isinstance(self.diagonal, ul.QuantityMatrix):
             # Off-diagonal entries are numerically zero, but their units must
             # be chosen so that  g[i,j] * v[j]  is unit-compatible with
             # g[i,i] * v[i]  for any tangent vector v.  The physically correct
@@ -217,17 +213,19 @@ class DiagonalMetric(AbstractMetricMatrix):
                 tuple(du[i] if i == j else (du[i] * du[j]) ** 0.5 for j in range(n))
                 for i in range(n)
             )
-            return DenseMetric(QMatrix(dense_val, unit=UnitsMatrix(row_units)))
+            return DenseMetric(
+                ul.QuantityMatrix(dense_val, unit=ul.UnitsMatrix(row_units))
+            )
         return DenseMetric(jnp.diag(self.diagonal))
 
     def __matmul__(
-        self, other: "Array | QMatrix | u.AbstractQuantity", /
-    ) -> "Array | QMatrix | u.AbstractQuantity":
+        self, other: "Array | ul.QuantityMatrix | u.AbstractQuantity", /
+    ) -> "Array | ul.QuantityMatrix | u.AbstractQuantity":
         """Apply this diagonal metric to a vector — element-wise product.
 
         When either the diagonal or ``other`` carries units, the operation is
         routed through :meth:`to_dense` so that unit propagation is handled
-        correctly by the :class:`~coordinax.internal.QMatrix` Quax
+        correctly by the :class:`~unxts.linalg.QuantityMatrix` Quax
         dispatches.  Plain-array inputs use a fast O(n) element-wise multiply.
 
         Examples
@@ -241,11 +239,13 @@ class DiagonalMetric(AbstractMetricMatrix):
         >>> d @ jnp.array([1.0, 2.0, 3.0])
         Array([ 1.,  8., 27.], dtype=float64)
 
-        QMatrix diagonal, plain array vector — result carries diagonal units:
+        QuantityMatrix diagonal, plain array vector — result carries diagonal units:
 
-        >>> from coordinax.internal import QMatrix
+        >>> import unxts.linalg as ul
         >>> d = DiagonalMetric(
-        ...     QMatrix(jnp.array([2.0, 3.0]), unit=("m2 / rad2", "m2 / rad2"))
+        ...     ul.QuantityMatrix(
+        ...         jnp.array([2.0, 3.0]), unit=("m2 / rad2", "m2 / rad2")
+        ...     )
         ... )
         >>> w = d @ jnp.array([1.0, 1.0])
         >>> w.unit.to_string()
@@ -253,7 +253,7 @@ class DiagonalMetric(AbstractMetricMatrix):
         >>> w.value
         Array([2., 3.], dtype=float64)
 
-        QMatrix diagonal, Quantity vector — full unit tracking:
+        QuantityMatrix diagonal, Quantity vector — full unit tracking:
 
         >>> import unxt as u
         >>> w2 = d @ u.Q(jnp.array([1.0, 1.0]), "rad")
@@ -262,9 +262,9 @@ class DiagonalMetric(AbstractMetricMatrix):
         >>> w2.value
         Array([2., 3.], dtype=float64)
 
-        QMatrix diagonal, QMatrix vector — full unit tracking:
+        QuantityMatrix diagonal, QuantityMatrix vector — full unit tracking:
 
-        >>> v = QMatrix(jnp.array([1.0, 1.0]), unit=("rad", "rad"))
+        >>> v = ul.QuantityMatrix(jnp.array([1.0, 1.0]), unit=("rad", "rad"))
         >>> w3 = d @ v
         >>> w3.unit.to_string()
         '(m2 / rad, m2 / rad)'
@@ -272,8 +272,8 @@ class DiagonalMetric(AbstractMetricMatrix):
         Array([2., 3.], dtype=float64)
 
         """
-        if isinstance(self.diagonal, QMatrix) or isinstance(
-            other, (QMatrix, u.AbstractQuantity)
+        if isinstance(self.diagonal, ul.QuantityMatrix) or isinstance(
+            other, (ul.QuantityMatrix, u.AbstractQuantity)
         ):
             # Route through the dense path for correct unit propagation.
             return self.to_dense().__matmul__(other)
@@ -294,9 +294,11 @@ class DiagonalMetric(AbstractMetricMatrix):
         Array([0.5 , 0.25], dtype=float64)
 
         """
-        if isinstance(self.diagonal, QMatrix):
+        if isinstance(self.diagonal, ul.QuantityMatrix):
             inv_vals = 1.0 / self.diagonal.value
-            return DiagonalMetric(QMatrix(inv_vals, unit=self.diagonal.unit.inverse()))
+            return DiagonalMetric(
+                ul.QuantityMatrix(inv_vals, unit=self.diagonal.unit.inverse())
+            )
         return DiagonalMetric(1.0 / self.diagonal)
 
     @property
@@ -304,7 +306,7 @@ class DiagonalMetric(AbstractMetricMatrix):
         """Product of the diagonal entries.
 
         Returns a :class:`~unxt.AbstractQuantity` when the diagonal is a
-        :class:`~coordinax.internal.QMatrix`.
+        :class:`~unxts.linalg.QuantityMatrix`.
 
         Examples
         --------
@@ -316,16 +318,18 @@ class DiagonalMetric(AbstractMetricMatrix):
         >>> DiagonalMetric(jnp.array([2.0, 3.0])).determinant
         Array(6., dtype=float64)
 
-        QMatrix diagonal — returns a :class:`~unxt.Quantity`:
+        QuantityMatrix diagonal — returns a :class:`~unxt.Quantity`:
 
         >>> import unxt as u
-        >>> from coordinax.internal import QMatrix
-        >>> d = DiagonalMetric(QMatrix(jnp.array([2.0, 3.0]), unit=("m2", "s2")))
+        >>> import unxts.linalg as ul
+        >>> d = DiagonalMetric(
+        ...     ul.QuantityMatrix(jnp.array([2.0, 3.0]), unit=("m2", "s2"))
+        ... )
         >>> d.determinant
         Q(6., 'm2 s2')
 
         """
-        if isinstance(self.diagonal, QMatrix):
+        if isinstance(self.diagonal, ul.QuantityMatrix):
             det_val = qnp.prod(self.diagonal.value)
             det_unit = ft.reduce(operator.mul, self.diagonal.unit)
             return u.Q(det_val, det_unit)
@@ -346,7 +350,7 @@ class DenseMetric(AbstractMetricMatrix):
 
     Parameters
     ----------
-    matrix : QMatrix or Array, shape ``(n, n)``
+    matrix : QuantityMatrix or Array, shape ``(n, n)``
         The full metric matrix $g_{ij}$.
 
     Examples
@@ -362,7 +366,7 @@ class DenseMetric(AbstractMetricMatrix):
 
     """
 
-    matrix: QMatrix | Array
+    matrix: ul.QuantityMatrix | Array
 
     @property
     def ndim(self) -> int:
@@ -384,10 +388,12 @@ class DenseMetric(AbstractMetricMatrix):
         """
         return self
 
-    def __matmul__(self, other: "Array | QMatrix", /) -> "Array | QMatrix":
+    def __matmul__(
+        self, other: "Array | ul.QuantityMatrix", /
+    ) -> "Array | ul.QuantityMatrix":
         """Apply this metric matrix to a vector via matrix-vector product.
 
-        When the metric matrix is a :class:`~coordinax.internal.QMatrix`,
+        When the metric matrix is a :class:`~unxts.linalg.QuantityMatrix`,
         a plain-array ``other`` is treated as dimensionless so that units flow
         through the contraction correctly.
 
@@ -402,13 +408,13 @@ class DenseMetric(AbstractMetricMatrix):
         >>> g @ jnp.array([1.0, 1.0])
         Array([2., 3.], dtype=float64)
 
-        QMatrix metric, plain array vector — result carries metric units:
+        QuantityMatrix metric, plain array vector — result carries metric units:
 
-        >>> from coordinax.internal import QMatrix, UnitsMatrix
+        >>> import unxts.linalg as ul
         >>> g = DenseMetric(
-        ...     QMatrix(
+        ...     ul.QuantityMatrix(
         ...         jnp.array([[2.0, 0.0], [0.0, 3.0]]),
-        ...         unit=UnitsMatrix((
+        ...         unit=ul.UnitsMatrix((
         ...             ("m2 / rad2", "m2 / rad2"),
         ...             ("m2 / rad2", "m2 / rad2"),
         ...         )),
@@ -420,9 +426,9 @@ class DenseMetric(AbstractMetricMatrix):
         >>> w.value
         Array([2., 3.], dtype=float64)
 
-        QMatrix metric, QMatrix vector — full unit tracking:
+        QuantityMatrix metric, QuantityMatrix vector — full unit tracking:
 
-        >>> v = QMatrix(jnp.array([1.0, 1.0]), unit=("rad / s", "rad / s"))
+        >>> v = ul.QuantityMatrix(jnp.array([1.0, 1.0]), unit=("rad / s", "rad / s"))
         >>> w2 = g @ v
         >>> w2.unit.to_string()
         '(m2 / (rad s), m2 / (rad s))'
@@ -434,7 +440,7 @@ class DenseMetric(AbstractMetricMatrix):
     def inverse(self) -> "DenseMetric":
         """Inverse via :func:`jax.numpy.linalg.inv` (positive-definite assumption).
 
-        Returns a :class:`~coordinax.internal.QMatrix`-backed
+        Returns a :class:`~unxts.linalg.QuantityMatrix`-backed
         :class:`DenseMetric` with units ``1 / ref_unit`` when the matrix
         carries units.  Assumes all entries share the same unit (physically
         well-formed metrics from the Cartesian-Jacobian pullback always satisfy
@@ -452,14 +458,14 @@ class DenseMetric(AbstractMetricMatrix):
         Array([[0.5 , 0.  ],
                [0.  , 0.25]], dtype=float64)
 
-        QMatrix — inverse carries reciprocal units:
+        QuantityMatrix — inverse carries reciprocal units:
 
         >>> import unxt as u
-        >>> from coordinax.internal import QMatrix, UnitsMatrix
+        >>> import unxts.linalg as ul
         >>> g = DenseMetric(
-        ...     QMatrix(
+        ...     ul.QuantityMatrix(
         ...         jnp.array([[4.0, 0.0], [0.0, 1.0]]),
-        ...         unit=UnitsMatrix((
+        ...         unit=ul.UnitsMatrix((
         ...             ("m2 / rad2", "m2 / rad2"),
         ...             ("m2 / rad2", "m2 / rad2"),
         ...         )),
@@ -478,7 +484,7 @@ class DenseMetric(AbstractMetricMatrix):
     def determinant(self) -> "Array | u.AbstractQuantity":
         """Determinant via the custom ``det_p`` JAX primitive.
 
-        Routes through Quax, so a :class:`~coordinax.internal.QMatrix`
+        Routes through Quax, so a :class:`~unxts.linalg.QuantityMatrix`
         matrix returns a :class:`~unxt.AbstractQuantity` while a plain array
         returns a bare :class:`~jaxtyping.Array`.  The unit is the product of
         the main-diagonal units — valid for diagonal and uniform-unit matrices.
@@ -493,11 +499,13 @@ class DenseMetric(AbstractMetricMatrix):
         >>> DenseMetric(jnp.eye(3)).determinant
         Array(1., dtype=float64)
 
-        QMatrix — returns a :class:`~unxt.Quantity`:
+        QuantityMatrix — returns a :class:`~unxt.Quantity`:
 
         >>> import unxt as u
-        >>> from coordinax.internal import QMatrix
-        >>> g = DenseMetric(QMatrix(jnp.eye(2), unit=(("m2", ""), ("", "s2"))))
+        >>> import unxts.linalg as ul
+        >>> g = DenseMetric(
+        ...     ul.QuantityMatrix(jnp.eye(2), unit=(("m2", ""), ("", "s2")))
+        ... )
         >>> g.determinant
         Q(1., 'm2 s2')
 

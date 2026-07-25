@@ -270,7 +270,7 @@ class Rotate(AbstractLinearTransform):
         Rotate(Q(f64[3,3], ''))
 
         >>> jnp.allclose(op3.R, op2.R @ op1.R)
-        Array(True, dtype=bool)
+        Q(True, '')
 
         """
         if not isinstance(other, Rotate):

@@ -10,7 +10,7 @@ from hypothesis.strategies import data as st_data
 import coordinax.charts as cxc
 
 import coordinaxs.hypothesis.main as cxst
-from coordinaxs.hypothesis._src.utils import get_all_subclasses
+from coordinaxs.hypothesis.utils import get_all_subclasses
 
 # =============================================================================
 # Benchmark: chart_classes strategy
@@ -58,7 +58,7 @@ def test_benchmark_charts_1d_build(benchmark):
     """Benchmark building the charts strategy for 1D."""
 
     def build_strategy():
-        return cxst.charts(dimensionality=1)
+        return cxst.charts(ndim=1)
 
     strategy = benchmark(build_strategy)
     assert strategy is not None
@@ -68,7 +68,7 @@ def test_benchmark_charts_3d_build(benchmark):
     """Benchmark building the charts strategy for 3D."""
 
     def build_strategy():
-        return cxst.charts(dimensionality=3)
+        return cxst.charts(ndim=3)
 
     strategy = benchmark(build_strategy)
     assert strategy is not None

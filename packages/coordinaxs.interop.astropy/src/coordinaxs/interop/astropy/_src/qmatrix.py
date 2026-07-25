@@ -1,12 +1,11 @@
-"""Astropy interoperability: QMatrix."""
+"""Astropy interoperability: QuantityMatrix."""
 
 __all__: tuple[str, ...] = ()
 
 import astropy.units as apyu
 import numpy as np
 import plum
-
-from coordinax.internal import QMatrix, UnitsMatrix
+import unxts.linalg as ul
 
 
 def _structured_unit_to_tuple(obj: apyu.StructuredUnit) -> tuple:
@@ -24,23 +23,23 @@ def _structured_unit_to_tuple(obj: apyu.StructuredUnit) -> tuple:
     return tuple(result)
 
 
-@plum.conversion_method(type_from=UnitsMatrix, type_to=apyu.StructuredUnit)
-def unitsmatrix_to_structured_unit(obj: UnitsMatrix, /) -> apyu.StructuredUnit:
+@plum.conversion_method(type_from=ul.UnitsMatrix, type_to=apyu.StructuredUnit)
+def unitsmatrix_to_structured_unit(obj: ul.UnitsMatrix, /) -> apyu.StructuredUnit:
     """Convert a ``UnitsMatrix`` to an ``astropy.units.StructuredUnit``.
 
     >>> import plum
     >>> import astropy.units as apyu
-    >>> from coordinax.internal import UnitsMatrix
+    >>> import unxts.linalg as ul
 
     1D case:
 
-    >>> umat = UnitsMatrix(("km", "s"))
+    >>> umat = ul.UnitsMatrix(("km", "s"))
     >>> plum.convert(umat, apyu.StructuredUnit)
     Unit("(km, s)")
 
     2D case:
 
-    >>> umat2 = UnitsMatrix((("m", "s"), ("kg", "rad")))
+    >>> umat2 = ul.UnitsMatrix((("m", "s"), ("kg", "rad")))
     >>> plum.convert(umat2, apyu.StructuredUnit)
     Unit("((m, s), (kg, rad))")
 
@@ -48,37 +47,39 @@ def unitsmatrix_to_structured_unit(obj: UnitsMatrix, /) -> apyu.StructuredUnit:
     return apyu.StructuredUnit(obj.to_tuple())
 
 
-@plum.conversion_method(type_from=apyu.StructuredUnit, type_to=UnitsMatrix)
-def structured_unit_to_unitsmatrix(obj: apyu.StructuredUnit, /) -> UnitsMatrix:
+@plum.conversion_method(type_from=apyu.StructuredUnit, type_to=ul.UnitsMatrix)
+def structured_unit_to_unitsmatrix(obj: apyu.StructuredUnit, /) -> ul.UnitsMatrix:
     """Convert an ``astropy.units.StructuredUnit`` to a ``UnitsMatrix``.
 
     >>> import plum
     >>> import astropy.units as apyu
-    >>> from coordinax.internal import UnitsMatrix
+    >>> import unxts.linalg as ul
 
     1D case:
 
     >>> su = apyu.StructuredUnit(("m", "s", "kg"))
-    >>> result = plum.convert(su, UnitsMatrix)
+    >>> result = plum.convert(su, ul.UnitsMatrix)
     >>> result.shape
     (3,)
     >>> result[0]
     Unit("m")
 
     """
-    return UnitsMatrix(_structured_unit_to_tuple(obj))
+    return ul.UnitsMatrix(_structured_unit_to_tuple(obj))
 
 
-@plum.conversion_method(QMatrix, apyu.Quantity)
-def convert_qmatrix_to_astropy_quantity(q: QMatrix, /) -> apyu.Quantity:
-    """Convert a `coordinax.internal.QMatrix` to an `astropy.units.Quantity`.
+@plum.conversion_method(ul.QuantityMatrix, apyu.Quantity)
+def convert_quantitymatrix_to_astropy_quantity(
+    q: ul.QuantityMatrix, /
+) -> apyu.Quantity:
+    """Convert a `unxts.linalg.QuantityMatrix` to an `astropy.units.Quantity`.
 
     >>> import jax.numpy as jnp
     >>> import astropy.units as apyu
     >>> import plum
-    >>> from coordinax.internal import QMatrix
+    >>> import unxts.linalg as ul
 
-    >>> qmat = QMatrix(jnp.array([1.0, 2.0]), unit=("km", "s"))
+    >>> qmat = ul.QuantityMatrix(jnp.array([1.0, 2.0]), unit=("km", "s"))
     >>> plum.convert(qmat, apyu.Quantity)
     <Quantity (1., 2.) (km, s)>
 

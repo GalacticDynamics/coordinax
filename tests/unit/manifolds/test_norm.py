@@ -6,6 +6,7 @@ Coverage includes Euclidean and spherical metric behavior, plus JIT/vmap usage.
 import jax
 import jax.numpy as jnp
 import pytest
+import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -13,7 +14,7 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 import coordinaxs.api.manifolds as cxmapi
-from coordinax.internal import QMatrix, pack_nonuniform_unit
+from coordinax.internal import pack_nonuniform_unit
 
 # =============================================================================
 # cxm.norm() standalone function
@@ -603,7 +604,7 @@ class TestProductMetricInterBlockUnits:
         expected_sq = (
             radius**2 * v_theta**2 + radius**2 * jnp.sin(theta) ** 2 * v_phi**2 + v_x**2
         )
-        result = cxm.norm(gm, QMatrix(vv, unit=units))
+        result = cxm.norm(gm, ul.QuantityMatrix(vv, unit=units))
         assert qnp.allclose(
             result, u.Q(jnp.sqrt(expected_sq), "m/s"), atol=u.Q(1e-5, "m/s")
         )

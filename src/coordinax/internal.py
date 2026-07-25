@@ -11,15 +11,6 @@
 
 Contents:
 
-- ``QMatrix``
-    An N-D quantity matrix/vector where every element carries its own unit.
-    Supports both 1-D (vector) and 2-D (matrix) cases.
-    Useful for Jacobians and metric tensors whose entries have
-    heterogeneous physical dimensions.
-
-- ``UnitsMatrix``
-    Nested tuple of units with indexing support for 1-D, 2-D (and N-D).
-
 - ``pack_uniform_unit``
     Pack dict-of-quantities into an array, converting all entries to
     a common unit.
@@ -30,27 +21,16 @@ Contents:
     Existing float and complex leaves are left unchanged.  Useful for
     satisfying ``jax.jacfwd``'s requirement of real-floating inputs.
 
-- ``structured``
-    Decorator for transparent argument and return value processing.
-    This helps pushing the logic for packing/unpacking inside a JIT.
-
 """
 
 __all__ = (
-    "QMatrix",
-    "UnitsMatrix",
     "tree_cast_int_bool_to_float",
     "pack_uniform_unit",
-    "cdict_units",
     "pack_nonuniform_unit",
     "pack_with_usys",
     "pack_to_qmatrix",
     "pos_named_objs",
     "jax_scalar_handler",
-    "det",
-    "det_p",
-    "inv",
-    "inv_p",
     # Types
     "CDict",
     "OptUSys",
@@ -61,13 +41,6 @@ from ._src.setup_package import install_import_hook
 with install_import_hook("coordinax.internal"):
     from coordinax._src.custom_types import CDict, OptUSys
     from coordinax._src.internal import (
-        QMatrix,
-        UnitsMatrix,
-        cdict_units,
-        det,
-        det_p,
-        inv,
-        inv_p,
         jax_scalar_handler,
         pack_nonuniform_unit,
         pack_to_qmatrix,

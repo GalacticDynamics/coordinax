@@ -19,6 +19,7 @@ from typing import Any, cast
 
 import jax.numpy as jnp
 import plum
+import unxts.linalg as ul
 
 import unxt as u
 
@@ -37,7 +38,6 @@ from coordinax._src.charts.d3 import (
 from coordinax._src.charts.dn import CartND
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
-from coordinax.internal import QMatrix, UnitsMatrix
 
 # =====================================================================
 # Private helpers for unit-aware analytic metric formulas
@@ -232,12 +232,12 @@ def metric_matrix(
     >>> at = {"r": u.Q(2.0, "m")}
     >>> g = metric_matrix(cxm.R1, at, cxc.radial1d)
     >>> g.diagonal
-    QMatrix([1.], '(,)')
+    QM([1.], '(,)')
 
     """
     del M, point, chart
     dmls = u.unit("")
-    return DiagonalMetric(QMatrix(jnp.ones(1), unit=UnitsMatrix((dmls,))))
+    return DiagonalMetric(ul.QuantityMatrix(jnp.ones(1), unit=ul.UnitsMatrix((dmls,))))
 
 
 @plum.dispatch
@@ -260,22 +260,22 @@ def metric_matrix(
     >>> at = {"r": jnp.array(3.0), "theta": jnp.array(0.5)}
     >>> g = metric_matrix(cxm.R2, at, cxc.polar2d)
     >>> g.diagonal
-    QMatrix([1., 9.], '(, )')
+    QM([1., 9.], '(, )')
 
     Length-valued ``r`` and angle-valued ``theta``:
 
     >>> at = {"r": u.Q(3.0, "m"), "theta": u.Angle(0.5, "rad")}
     >>> g = metric_matrix(cxm.R2, at, cxc.polar2d)
     >>> g.diagonal
-    QMatrix([1., 9.], '(, m2 / rad2)')
+    QM([1., 9.], '(, m2 / rad2)')
 
     """
     del M, chart
     r_val, r_unit = _val_unit(point["r"])
     theta_unit = _angle_unit(point["theta"])
     diag = jnp.stack([jnp.asarray(1.0), r_val**2])
-    units = UnitsMatrix((u.unit(""), r_unit**2 / theta_unit**2))
-    return DiagonalMetric(QMatrix(diag, unit=units))
+    units = ul.UnitsMatrix((u.unit(""), r_unit**2 / theta_unit**2))
+    return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
 
 @plum.dispatch
@@ -297,7 +297,7 @@ def metric_matrix(
     >>> at = {"rho": u.Q(3.0, "m"), "phi": u.Angle(0.0, "rad"), "z": u.Q(1.0, "m")}
     >>> g = metric_matrix(cxm.R3, at, cxc.cyl3d)
     >>> g.diagonal
-    QMatrix([1., 9., 1.], '(, m2 / rad2, )')
+    QM([1., 9., 1.], '(, m2 / rad2, )')
 
     """
     del M, chart
@@ -305,8 +305,8 @@ def metric_matrix(
     phi_unit = _angle_unit(point["phi"])
     dmls = u.unit("")
     diag = jnp.stack([jnp.asarray(1.0), rho_val**2, jnp.asarray(1.0)])
-    units = UnitsMatrix((dmls, rho_unit**2 / phi_unit**2, dmls))
-    return DiagonalMetric(QMatrix(diag, unit=units))
+    units = ul.UnitsMatrix((dmls, rho_unit**2 / phi_unit**2, dmls))
+    return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
 
 @plum.dispatch
@@ -336,7 +336,7 @@ def metric_matrix(
     >>> isinstance(g, DiagonalMetric)
     True
     >>> g.diagonal
-    QMatrix([1., 4., 4.], '(, m2 / rad2, m2 / rad2)')
+    QM([1., 4., 4.], '(, m2 / rad2, m2 / rad2)')
 
     """
     del M, chart
@@ -347,8 +347,8 @@ def metric_matrix(
     r2 = r_val**2
     r2_unit = r_unit**2
     diag = jnp.stack([jnp.asarray(1.0), r2, r2 * jnp.sin(theta_val) ** 2])
-    units = UnitsMatrix((u.unit(""), r2_unit / theta_unit**2, r2_unit / phi_unit**2))
-    return DiagonalMetric(QMatrix(diag, unit=units))
+    units = ul.UnitsMatrix((u.unit(""), r2_unit / theta_unit**2, r2_unit / phi_unit**2))
+    return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
 
 @plum.dispatch
@@ -378,7 +378,7 @@ def metric_matrix(
     >>> isinstance(g, DiagonalMetric)
     True
     >>> g.diagonal
-    QMatrix([1., 4., 4.], '(, m2 / rad2, m2 / rad2)')
+    QM([1., 4., 4.], '(, m2 / rad2, m2 / rad2)')
 
     """
     del M, chart
@@ -389,8 +389,8 @@ def metric_matrix(
     r2 = r_val**2
     r2_unit = r_unit**2
     diag = jnp.stack([jnp.asarray(1.0), r2 * jnp.sin(phi_val) ** 2, r2])
-    units = UnitsMatrix((u.unit(""), r2_unit / theta_unit**2, r2_unit / phi_unit**2))
-    return DiagonalMetric(QMatrix(diag, unit=units))
+    units = ul.UnitsMatrix((u.unit(""), r2_unit / theta_unit**2, r2_unit / phi_unit**2))
+    return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
 
 @plum.dispatch
@@ -419,7 +419,7 @@ def metric_matrix(
     >>> isinstance(g, DiagonalMetric)
     True
     >>> g.diagonal
-    QMatrix([4., 4., 1.], '(m2 / rad2, m2 / rad2, )')
+    QM([4., 4., 1.], '(m2 / rad2, m2 / rad2, )')
 
     """
     del M, chart
@@ -430,8 +430,8 @@ def metric_matrix(
     d2 = d_val**2
     d2_unit = d_unit**2
     diag = jnp.stack([d2 * jnp.cos(lat_val) ** 2, d2, jnp.asarray(1.0)])
-    units = UnitsMatrix((d2_unit / lon_unit**2, d2_unit / lat_unit**2, u.unit("")))
-    return DiagonalMetric(QMatrix(diag, unit=units))
+    units = ul.UnitsMatrix((d2_unit / lon_unit**2, d2_unit / lat_unit**2, u.unit("")))
+    return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
 
 # =====================================================================
@@ -472,7 +472,7 @@ def metric_matrix(
     except NoGlobalCartesianChartError:
         n = M.ndim
         unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
-        return DenseMetric(QMatrix(jnp.eye(n), unit=UnitsMatrix(unit_tup)))
+        return DenseMetric(ul.QuantityMatrix(jnp.eye(n), unit=ul.UnitsMatrix(unit_tup)))
     J = cxcapi.jac_pt_map(point, chart, cart_chart, usys=None)
     JT = J.T  # ty: ignore[unresolved-attribute]
     return DenseMetric(JT @ J)

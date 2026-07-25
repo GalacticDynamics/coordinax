@@ -526,7 +526,7 @@ def _total_derivative_chain(
 #
 # All generic (AbstractTransform) rules register at precedence=-1 so that any
 # concrete per-operator registration (default precedence 0) wins, as do the
-# Identity catch-all (precedence 1) and QMatrix funnels (precedence 2).
+# Identity catch-all (precedence 1) and QuantityMatrix funnels (precedence 2).
 
 
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]

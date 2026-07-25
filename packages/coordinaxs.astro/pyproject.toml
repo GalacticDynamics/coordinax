@@ -36,7 +36,7 @@ astropy = ["astropy>=7.2.0"]
 hypothesis = [
   "coordinaxs.hypothesis>=0.24",
   "hypothesis>=6.148.7",
-  "unxt-hypothesis>=1.10.1",
+  "unxt-hypothesis>=2.0",
 ]
 
 [project.entry-points."coordinaxs.frames"]

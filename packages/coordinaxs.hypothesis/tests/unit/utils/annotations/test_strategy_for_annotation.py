@@ -5,6 +5,7 @@ import jaxtyping
 import jax.numpy as jnp
 import unxt as u
 from hypothesis import given, strategies as st
+from unxts.parametric import PQ
 
 import coordinax.charts as cxc
 
@@ -86,12 +87,14 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_quantity_type_with_metadata(self, data: st.DataObject) -> None:
         """Test strategy_for_annotation(Quantity, meta) - quantity dispatch."""
-        # Create Metadata from a Shaped annotation
-        ann = jaxtyping.Shaped[u.Q["length"], ""]
+        # Create Metadata from a Shaped annotation. The default Quantity is not
+        # parametrized by physical type, so dimension-carrying annotations use
+        # unxts.parametric.ParametricQuantity.
+        ann = jaxtyping.Shaped[PQ["length"], ""]
         meta = parse_jaxtyping_annotation(ann)
 
         # Call with Quantity type and Metadata
-        strategy = strategy_for_annotation(u.Q["length"], meta=meta)
+        strategy = strategy_for_annotation(PQ["length"], meta=meta)
         value = data.draw(strategy)
 
         assert isinstance(value, u.Q)
@@ -128,7 +131,7 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_shaped_quantity_with_dimension(self, data: st.DataObject) -> None:
         """Test Shaped[Quantity[Dimension(...)], ''] works."""
-        ann = jaxtyping.Shaped[u.Q[u.dimension("length")], ""]
+        ann = jaxtyping.Shaped[PQ[u.dimension("length")], ""]
 
         wrapped = wrap_if_not_inspectable(ann)
         meta = parse_jaxtyping_annotation(ann)

@@ -9,6 +9,7 @@ import pytest
 import unxt as u
 from beartype.vale import Is
 from hypothesis import given
+from unxts.parametric import PQ
 
 from coordinaxs.hypothesis.utils import annotations
 
@@ -214,7 +215,7 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_quantity_dispatch(self, data: st.DataObject):
         strategy = annotations.strategy_for_annotation(
-            u.Q["length"], meta=annotations.Metadata(dtype=jnp.float64, shape=())
+            PQ["length"], meta=annotations.Metadata(dtype=jnp.float64, shape=())
         )
         value = data.draw(strategy)
         assert isinstance(value, u.Q)
@@ -235,7 +236,7 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_annotated_dispatch(self, data: st.DataObject):
         """Annotated[Quantity, ...] is unwrapped and re-dispatched."""
-        ann = Annotated[u.Q["length"], {"dtype": jnp.float64, "shape": ()}]
+        ann = Annotated[PQ["length"], {"dtype": jnp.float64, "shape": ()}]
         wrapped = annotations.wrap_if_not_inspectable(ann)
         strategy = annotations.strategy_for_annotation(
             wrapped, meta=annotations.Metadata()

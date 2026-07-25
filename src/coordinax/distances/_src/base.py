@@ -43,7 +43,7 @@ class AbstractDistance(u.AbstractQuantity):
 # division of a distance by non-dimensionless quantity where the resulting units
 # are not those of a distance.
 add_promotion_rule(AbstractDistance, u.Q, u.Q)
-add_promotion_rule(AbstractDistance, u.quantity.BareQuantity, u.quantity.BareQuantity)
+add_promotion_rule(AbstractDistance, u.quantity.Quantity, u.quantity.Quantity)
 
 
 # Add a rule that when a AbstractDistance interacts with a Quantity, the

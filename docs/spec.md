@@ -983,11 +983,13 @@ These names are importable and supported for inter-package use, but they are **n
 
 Semi-public API:
 
-- `QMatrix`: heterogeneous 1-D or 2-D quantity container with a per-element unit structure
-- `UnitsMatrix`: immutable, hashable wrapper around a numpy object array of `AbstractUnit` elements, aligned with a `QMatrix`; supports tuple-style indexing, iteration, and `to_tuple()`/`to_string()`. **Not** a subclass of `astropy.StructuredUnit`; bidirectional converters to/from `astropy.StructuredUnit` live in `coordinaxs.interop.astropy`.
-- `cdict_units`: extract per-component units from a coordinate dictionary
 - `pack_uniform_unit`: stack component data into an array using a shared unit
 - `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
+- `pack_with_usys`: stack component data into an array, resolving per-component units from a unit system
+- `pack_to_qmatrix`: pack a component dictionary into a `QuantityMatrix` (unitless components are treated as dimensionless)
+- `tree_cast_int_bool_to_float`: promote integer/boolean PyTree leaves to floating point (e.g. for `jax.jacfwd` inputs)
+- `pos_named_objs`, `jax_scalar_handler`: wadler-lindig rendering helpers used by `__pdoc__` implementations
+- `CDict`, `OptUSys`: the component-dictionary and optional-unit-system type aliases
 
 </br>
 
@@ -1143,7 +1145,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Input `unxt.AbstractQuantity` with last axis size 1, 2, or 3: call `guess_chart` on the quantity to infer chart dimensionality, then apply the chart-based dispatch.
     - Input array-like with chart context: split last axis into named components using `chart.components`. Last axis length MUST match the chart's component count.
     - Input `unxt.AbstractQuantity` with chart context: split last axis into named quantities using `chart.components`. Requires last axis size to match chart.
-    - Input `QMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component.
+    - Input `QuantityMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component.
 
     Failure semantics:
 
@@ -1213,7 +1215,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
       raw array Jacobian. Requires `usys`.
 
     - `(at: CDict, from_chart, to_chart, /, *, usys: OptUSys = None)` ->
-      `Array | QMatrix`. The general dict dispatch. Branches on whether `at`
+      `Array | QuantityMatrix`. The general dict dispatch. Branches on whether `at`
       values are plain arrays or quantities:
 
       - **Array-valued** (`is_array=True`): stacks `at` into a plain array via
@@ -1221,13 +1223,13 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         forwarded and must be an `AbstractUnitSystem` unless a more-specific analytical
         dispatch handles it.
 
-      - **Quantity-valued** (`is_array=False`): packs `at` into a 1-D `QMatrix`
+      - **Quantity-valued** (`is_array=False`): packs `at` into a 1-D `QuantityMatrix`
         via `pack_to_qmatrix(at, keys=from_chart.components)`, casts to `float`, then
         computes `J_qq = jax.jacfwd(pt_map_fn)(at_in)`. The jacfwd result is a
-        `QMatrix` whose `.value` is itself a `QMatrix` encoding the input
+        `QuantityMatrix` whose `.value` is itself a `QuantityMatrix` encoding the input
         units, and whose `.unit` encodes the output units. `_repack_q_from_jac` extracts
         both to build the correct 2-D `UnitsMatrix` and returns
-        `QMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
+        `QuantityMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
 
     **`usys` parameter:** required for the `None`-partial, curried, and plain-`Array`
     dispatches. Optional (`None`) for the `CDict` generic dispatch's quantity-valued
@@ -2658,8 +2660,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Return:**
 
-    - Always a 1-D `QMatrix` of length `ndim`.
-    - A `QMatrix` is used even when the diagonal entries are dimensionless, because different coordinate directions may carry different units.
+    - Always a 1-D `QuantityMatrix` of length `ndim`.
+    - A `QuantityMatrix` is used even when the diagonal entries are dimensionless, because different coordinate directions may carry different units.
 
     **Dispatch behavior:**
 
@@ -3125,23 +3127,23 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **`DiagonalMetric`** (returned for orthogonal charts):
 
-    - Stores only the 1-D diagonal `(g_{11}, \ldots, g_{nn})` as an `Array` or `QMatrix`.
-    - `diagonal: Array | QMatrix` — the diagonal entries.
+    - Stores only the 1-D diagonal `(g_{11}, \ldots, g_{nn})` as an `Array` or `QuantityMatrix`.
+    - `diagonal: Array | QuantityMatrix` — the diagonal entries.
     - `inverse → DiagonalMetric` — reciprocal of each diagonal entry.
     - `determinant → Array | Quantity` — product of diagonal entries.
     - `__matmul__(v) → Array` — element-wise product (O(n), not O(n²)).
 
     **`DenseMetric`** (returned for non-orthogonal charts and embedded manifolds):
 
-    - Stores the full $(n \times n)$ matrix as an `Array` or `QMatrix`.
-    - `matrix: Array | QMatrix` — the full matrix.
+    - Stores the full $(n \times n)$ matrix as an `Array` or `QuantityMatrix`.
+    - `matrix: Array | QuantityMatrix` — the full matrix.
     - `inverse → DenseMetric` — via `jnp.linalg.inv`; preserves unit tracking.
     - `determinant → Array | Quantity` — via a custom `det_p` JAX primitive; preserves unit tracking.
-    - `__matmul__(v) → Array | QMatrix` — full matrix-vector product.
+    - `__matmul__(v) → Array | QuantityMatrix` — full matrix-vector product.
 
     **Unit tracking:**
 
-    Both types propagate units through `QMatrix` fields.  For metrics
+    Both types propagate units through `QuantityMatrix` fields.  For metrics
     induced by Jacobian pullback, units are `cart_unit² / (intrinsic_unit_i × intrinsic_unit_j)`.
 
     **Basis change integration:**
@@ -3187,7 +3189,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     The manifold provides thin wrappers around coordinate transformations that ensure atlas compatibility before delegating to chart‑level machinery.
 
     - ``pt_map(...)`` performs chart transitions while checking that both charts belong to the manifold.
-    - ``scale_factors(chart, /, *, at, usys=None)``: convenience wrapper that delegates to the manifold metric. Returns the 1-D `QMatrix` of diagonal metric entries in `chart` at base point `at`. See the [`scale_factors` functional API section](#software-spec-scale-factors) for full semantics.
+    - ``scale_factors(chart, /, *, at, usys=None)``: convenience wrapper that delegates to the manifold metric. Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`. See the [`scale_factors` functional API section](#software-spec-scale-factors) for full semantics.
 
     Pre-defined manifolds:
 
@@ -3759,7 +3761,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     ```text
     CustomMetric(
-        metric_matrix: Callable[[AbstractChart], QMatrix | Array],
+        metric_matrix: Callable[[AbstractChart], QuantityMatrix | Array],
         signature: tuple[int, ...],
     )
     ```

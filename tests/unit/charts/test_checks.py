@@ -20,7 +20,7 @@ def float32s(**kwargs):
     return st.floats(**kwargs, width=32, allow_subnormal=False)
 
 
-angle_classes = st.sampled_from((u.Q, u.Angle, u.quantity.BareQuantity, cxa.Angle))
+angle_classes = st.sampled_from((u.Q, u.Angle, u.quantity.Quantity, cxa.Angle))
 
 # Float32-representable constants
 PI_F32 = float(np.float32(np.pi))  # 3.1415927...

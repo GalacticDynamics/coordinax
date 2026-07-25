@@ -107,7 +107,7 @@ Use `cxc.pt_map` (or `cxm.pt_map`) to convert a point between two charts on the 
 
 Use `scale_factors` when you want the diagonal entries of the metric matrix in a chart.
 
-This returns the metric diagonal $g_{ii}$, not the basis lengths $\sqrt{g_{ii}}$. The result is a 1-D `QMatrix` because different coordinate directions can carry different units.
+This returns the metric diagonal $g_{ii}$, not the basis lengths $\sqrt{g_{ii}}$. The result is a 1-D `QuantityMatrix` because different coordinate directions can carry different units.
 
 ```{code-block} python
 >>> import coordinax.charts as cxc

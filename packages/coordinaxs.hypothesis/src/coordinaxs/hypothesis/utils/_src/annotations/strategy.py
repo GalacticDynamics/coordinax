@@ -84,10 +84,12 @@ def strategy_for_annotation(
 def strategy_for_annotation(
     ann: type[u.AbstractQuantity], /, *, meta: Metadata
 ) -> st.SearchStrategy:
-    # Get the units/dimensions for the quantity
+    # Get the units/dimensions for the quantity. Determining the dimension from a
+    # bare (non-parametrized) quantity type can raise ``ValueError`` (or, under
+    # tracing, ``EquinoxTracetimeError``); fall back to arbitrary units.
     try:
         dim = u.dimension_of(ann)
-    except eqx.EquinoxTracetimeError:
+    except (eqx.EquinoxTracetimeError, ValueError):
         dim = ust.units()
 
     # Determine the quantity class and whether to use static values

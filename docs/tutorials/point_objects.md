@@ -173,7 +173,7 @@ Because a vector carries both its chart and its manifold, you can ask for the me
 '(, km2 / rad2, km2 / rad2)'
 ```
 
-`scale_factors` returns the diagonal metric entries $g_{ii}$ as a 1-D `QMatrix`, so each direction can keep its own unit.
+`scale_factors` returns the diagonal metric entries $g_{ii}$ as a 1-D `QuantityMatrix`, so each direction can keep its own unit.
 
 ## Changing The Chart (Coordinate Conversion)
 

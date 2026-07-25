@@ -4,13 +4,13 @@ __all__: tuple[str, ...] = ()
 
 import jax.numpy as jnp
 import pytest
+import unxts.linalg as ul
 
 import unxt as u
 
 import coordinax as cx
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
-from coordinax.internal import QMatrix
 
 # ===================================================================
 # Transform fixtures
@@ -75,9 +75,9 @@ def quantity_3d():
 
 
 @pytest.fixture
-def qmatrix_3d():
-    """QMatrix [1, 0, 0] with uniform km units."""
-    return QMatrix(
+def quantitymatrix_3d():
+    """QuantityMatrix [1, 0, 0] with uniform km units."""
+    return ul.QuantityMatrix(
         jnp.array([1, 0, 0]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
     )
 

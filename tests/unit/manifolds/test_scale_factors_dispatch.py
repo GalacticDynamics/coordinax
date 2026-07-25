@@ -2,20 +2,20 @@
 
 import jax
 import jax.numpy as jnp
+import unxts.linalg as ul
 
 import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 from coordinax._src.metric.matrix import DiagonalMetric
-from coordinax.internal import QMatrix
 from coordinaxs.api.manifolds import metric_matrix as mm_dispatch
 
 
 class TestScaleFactorsEuclidean:
     """Tests for scale_factors on Euclidean metrics and manifolds."""
 
-    def test_cartesian_metric_returns_1d_QMatrix(self):
+    def test_cartesian_metric_returns_1d_QuantityMatrix(self):
         metric = cxm.FlatMetric(3)
         at = {
             "x": u.Q(jnp.array(1), "m"),
@@ -25,7 +25,7 @@ class TestScaleFactorsEuclidean:
 
         result = cxm.scale_factors(metric, cxc.cart3d, at=at)
 
-        assert isinstance(result, QMatrix)
+        assert isinstance(result, ul.QuantityMatrix)
         assert result.shape == (3,)
         assert result.ndim == 1
         assert jnp.allclose(result.value, jnp.array([1, 1, 1]))
@@ -41,7 +41,7 @@ class TestScaleFactorsEuclidean:
 
         result = cxm.scale_factors(metric, cxc.sph3d, at=at)
 
-        assert isinstance(result, QMatrix)
+        assert isinstance(result, ul.QuantityMatrix)
         assert result.shape == (3,)
         assert jnp.allclose(result.value, jnp.array([1, 4, 1]), atol=1e-6)
         assert result.unit[0] == u.unit("")
@@ -52,13 +52,13 @@ class TestScaleFactorsEuclidean:
 class TestScaleFactorsGeneric:
     """Tests for generic metric-based scale_factors behavior."""
 
-    def test_hyperspherical_bare_arrays_promote_to_QMatrix(self):
+    def test_hyperspherical_bare_arrays_promote_to_QuantityMatrix(self):
         metric = cxm.RoundMetric(ndim=2)
         at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0)}
 
         result = cxm.scale_factors(metric, cxc.sph2, at=at)
 
-        assert isinstance(result, QMatrix)
+        assert isinstance(result, ul.QuantityMatrix)
         assert result.shape == (2,)
         assert jnp.allclose(result.value, jnp.array([1, 1]), atol=1e-6)
         assert all(result.unit[i] == u.unit("") for i in range(2))
@@ -75,11 +75,11 @@ class TestScaleFactorsGeneric:
         assert isinstance(expected_mm, DiagonalMetric)
         # Extract numeric diagonal values
         diag = expected_mm.diagonal
-        expected_values = diag.value if isinstance(diag, QMatrix) else diag
+        expected_values = diag.value if isinstance(diag, ul.QuantityMatrix) else diag
 
         result = cxm.scale_factors(metric, cxc.sph2, at=at)
 
-        assert isinstance(result, QMatrix)
+        assert isinstance(result, ul.QuantityMatrix)
         assert jnp.allclose(result.value, expected_values, atol=1e-6)
 
     def test_jit(self):
@@ -92,7 +92,7 @@ class TestScaleFactorsGeneric:
         at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.array(0), "rad")}
         result = compute(at)
 
-        assert isinstance(result, QMatrix)
+        assert isinstance(result, ul.QuantityMatrix)
         assert jnp.allclose(result.value, jnp.array([1, 1]), atol=1e-6)
 
     def test_vmap_values(self):
@@ -130,7 +130,7 @@ class TestScaleFactorsGeneric:
         # not just a coincidental [4, 4] value at the equator.
         expected = jnp.array([4, 1])
 
-        assert isinstance(result, QMatrix)
+        assert isinstance(result, ul.QuantityMatrix)
         assert result.shape == (2,)
         assert jnp.allclose(result.value, expected, atol=1e-6)
         assert result.unit[0] == u.unit("m2 / rad2")

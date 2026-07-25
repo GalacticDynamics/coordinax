@@ -14,7 +14,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractDistance
-from .constants import LENGTH
+from .constants import ANGLE, LENGTH, MAGNITUDE
 
 parallax_base_length = u.Q(jnp.array(1), "AU")
 
@@ -102,8 +102,10 @@ def from_(cls: type[Distance], d: Distance, /, **kw: Any) -> Distance:
 
 
 @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:
-    """Compute distance from distance.
+def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
+    """Construct a distance from a quantity, dispatching on its dimensions.
+
+    From a length quantity:
 
     >>> import unxt as u
     >>> import coordinax.distances as cxd
@@ -111,39 +113,33 @@ def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:
     >>> cxd.Distance.from_(q, dtype=float)
     Distance(1., 'kpc')
 
-    """
-    unit = u.unit_of(d)
-    return cls(jnp.asarray(d.ustrip(unit), **kw), unit)
-
-
-@Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Distance], p: u.Q["angle"], /, **kw: Any) -> Distance:
-    """Compute distance from parallax.
-
-    >>> import unxt as u
-    >>> import coordinax.distances as cxd
+    From a parallax angle:
 
     >>> q = u.Q(1, "mas")
     >>> cxd.Distance.from_(q).uconvert("pc").round(2)
     Distance(1000., 'pc')
 
-    """
-    d = parallax_base_length / jnp.tan(p)  # [AU]
-    unit = u.unit_of(d)
-    return cls(jnp.asarray(d.ustrip(unit), **kw), unit)
-
-
-@Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Distance], dm: u.Q["mag"], /, **kw: Any) -> Distance:
-    """Compute distance from distance modulus.
-
-    >>> import unxt as u
-    >>> import coordinax.distances as cxd
+    From a distance modulus:
 
     >>> q = u.Q(10, "mag")
     >>> cxd.Distance.from_(q).uconvert("pc").round(2)
     Distance(1000., 'pc')
 
     """
-    d = 10 ** (1 + dm.ustrip("mag") / 5)
-    return cls(jnp.asarray(d, **kw), "pc")
+    dim = u.dimension_of(q)
+
+    if dim == LENGTH:
+        unit = u.unit_of(q)
+        return cls(jnp.asarray(q.ustrip(unit), **kw), unit)
+
+    if dim == ANGLE:  # parallax
+        d = parallax_base_length / jnp.tan(q)  # [AU]
+        unit = u.unit_of(d)
+        return cls(jnp.asarray(d.ustrip(unit), **kw), unit)
+
+    if dim == MAGNITUDE:  # distance modulus
+        d = 10 ** (1 + q.ustrip("mag") / 5)
+        return cls(jnp.asarray(d, **kw), "pc")
+
+    msg = f"cannot build a Distance from a quantity with dimension {dim}"
+    raise ValueError(msg)

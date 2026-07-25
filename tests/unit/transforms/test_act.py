@@ -1,7 +1,7 @@
 """Tests for ``coordinax.transforms.act`` dispatches.
 
 The dispatch matrix — {Identity, Rotate, Reflect, Translate, Composed} ×
-{Array, Quantity, QMatrix, CDict, Vector, Point+Frame, Point+XfmFrame} — is
+{Array, Quantity, QuantityMatrix, CDict, Vector, Point+Frame, Point+XfmFrame} — is
 covered by parametrized tests for:
   - correctness: known-value checks (also serves as cross-level consistency,
     since every level is compared to the same expected result)
@@ -10,7 +10,7 @@ covered by parametrized tests for:
   - jit compat: wrapping in jit works
 
 Level-specific structural checks (frame/chart preservation, mixed-unit
-QMatrix) and the non-Cartesian tangent-geometry paths follow as their own
+QuantityMatrix) and the non-Cartesian tangent-geometry paths follow as their own
 tests.
 """
 
@@ -21,6 +21,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+import unxts.linalg as ul
 from plum import NotFoundLookupError
 
 import unxt as u
@@ -37,7 +38,6 @@ from .conftest import (
     EXPECTED_ROTATE,
     EXPECTED_TRANSLATE,
 )
-from coordinax.internal import QMatrix
 
 ATOL = 1e-5
 
@@ -62,7 +62,7 @@ def _extract_xyz(result):
         z = float(u.ustrip("km", d["z"]))
         return (x, y, z)
 
-    if isinstance(result, QMatrix):
+    if isinstance(result, ul.QuantityMatrix):
         x = float(u.ustrip("km", u.Q(result.value[0], result.unit[0])))
         y = float(u.ustrip("km", u.Q(result.value[1], result.unit[1])))
         z = float(u.ustrip("km", u.Q(result.value[2], result.unit[2])))
@@ -96,7 +96,7 @@ USYS = u.unitsystem("km", "s", "kg", "rad")
 INPUT_LEVELS = [
     ("array_3d", jax.Array),
     ("quantity_3d", u.AbstractQuantity),
-    ("qmatrix_3d", QMatrix),
+    ("quantitymatrix_3d", ul.QuantityMatrix),
     ("cdict_3d", dict),
     ("vector_3d", cx.Point),
     ("coord_3d", cx.Point),
@@ -119,7 +119,7 @@ OP_IDS = [name.removesuffix("_op") for name, _, _ in OPS]
 ROUNDTRIP_OPS = [("rotate_op", False), ("translate_op", True), ("composed_op", True)]
 
 # Levels that accept an explicit chart / (chart, rep) as extra positional args.
-CHART_LEVELS = ["quantity_3d", "qmatrix_3d", "cdict_3d"]
+CHART_LEVELS = ["quantity_3d", "quantitymatrix_3d", "cdict_3d"]
 
 
 def _usys_kw(level_fixture, needs_usys):
@@ -159,7 +159,7 @@ def test_act_inverse_roundtrip(request, op_fixture, needs_usys, level_fixture):
 
 
 @pytest.mark.parametrize(
-    "level_fixture", CHART_LEVELS, ids=["quantity", "qmatrix", "cdict"]
+    "level_fixture", CHART_LEVELS, ids=["quantity", "quantitymatrix", "cdict"]
 )
 def test_act_with_explicit_chart_and_rep(request, rotate_op, level_fixture):
     """A chart, and a (chart, rep) pair, may be passed as extra positionals."""
@@ -184,12 +184,12 @@ def test_act_under_jit(request, rotate_op, level_fixture):
 # Level-specific structural checks that don't generalize across input types.
 
 
-def test_qmatrix_heterogeneous_units_identity(identity_op):
-    """A QMatrix with per-component (heterogeneous) units passes through Identity."""
+def test_quantitymatrix_heterogeneous_units_identity(identity_op):
+    """A QuantityMatrix with heterogeneous per-component units survives Identity."""
     units = (u.unit("km"), u.unit("m"), u.unit("cm"))
-    qm = QMatrix(jnp.array([1.0, 2.0, 3.0]), unit=units)
+    qm = ul.QuantityMatrix(jnp.array([1.0, 2.0, 3.0]), unit=units)
     result = cxfm.act(identity_op, None, qm)
-    assert isinstance(result, QMatrix)
+    assert isinstance(result, ul.QuantityMatrix)
     np.testing.assert_allclose(np.asarray(result.value), [1.0, 2.0, 3.0])
     assert result.unit == units
 

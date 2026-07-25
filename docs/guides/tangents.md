@@ -121,7 +121,7 @@ Passing an existing `Tangent` returns it unchanged:
 
 >>> # Component access by name
 >>> print(vel["x"])  # Q(1., 'm / s')
-Q['speed'](Array(1, dtype=int64, weak_type=True), unit='m / s')
+Q(Array(1, dtype=int64, weak_type=True), unit='m / s')
 
 # Metadata
 >>> print(vel.chart)  # Cart3D(M=Rn(3))

@@ -90,7 +90,7 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     """Spatial part of the representation (defaults to `coordinax.charts.cart3d`)."""
 
     _: KW_ONLY
-    c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
+    c: Float[u.StaticQuantity, ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
     M: ClassVar[AbstractManifold]
