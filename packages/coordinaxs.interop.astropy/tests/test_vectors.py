@@ -188,3 +188,53 @@ def test_spherical_to_lonlatspherical_astropy():
     assert np.allclose(plum.convert(vec["distance"], apyu.Quantity), apyvec.distance)
     assert np.allclose(plum.convert(vec["lon"], apyu.Quantity), apyvec.lon)
     assert np.allclose(plum.convert(vec["lat"], apyu.Quantity), apyvec.lat)
+
+
+# ============================================================================
+# coordinax Point (with frame) -> astropy frame-with-data / SkyCoord
+
+
+@pytest.mark.parametrize(
+    ("frame", "kw"),
+    [
+        (
+            apyc.ICRS,
+            {"ra": 90 * apyu.deg, "dec": 45 * apyu.deg, "distance": 1 * apyu.kpc},
+        ),
+        (
+            apyc.Galactic,
+            {"l": 30 * apyu.deg, "b": 20 * apyu.deg, "distance": 2 * apyu.kpc},
+        ),
+        (
+            apyc.Galactocentric,
+            {"x": 1 * apyu.kpc, "y": 2 * apyu.kpc, "z": 3 * apyu.kpc},
+        ),
+    ],
+)
+def test_point_to_astropy_frame_roundtrip(frame, kw):
+    """Astropy frame-with-data -> Point -> astropy frame-with-data is identity."""
+    orig = frame(**kw)
+    point = cx.Point.from_(orig)
+    back = plum.convert(point, apyc.BaseCoordinateFrame)
+
+    assert isinstance(back, frame)
+    assert back.has_data
+    d = (back.cartesian.xyz - orig.cartesian.xyz).to(apyu.pc).value
+    assert np.allclose(d, 0.0, atol=1e-6)
+
+
+def test_point_to_astropy_skycoord_roundtrip():
+    """Astropy SkyCoord -> Point -> SkyCoord preserves the sky position."""
+    orig = apyc.SkyCoord(ra=10 * apyu.deg, dec=-5 * apyu.deg, distance=5 * apyu.kpc)
+    point = cx.Point.from_(orig)
+    back = plum.convert(point, apyc.SkyCoord)
+
+    assert isinstance(back, apyc.SkyCoord)
+    assert back.separation_3d(orig).to(apyu.pc).value < 1e-6
+
+
+def test_point_without_frame_to_astropy_frame_raises():
+    """A Point with no reference frame cannot become an astropy frame."""
+    point = cx.Point.from_([1, 2, 3], "kpc")  # noframe
+    with pytest.raises(ValueError, match="no reference frame"):
+        plum.convert(point, apyc.BaseCoordinateFrame)
