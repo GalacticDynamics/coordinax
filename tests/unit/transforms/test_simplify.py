@@ -123,3 +123,56 @@ def test_approx_false_works_under_jit() -> None:
 def test_default_simplify_is_not_jit_safe() -> None:
     with pytest.raises(jax.errors.TracerBoolConversionError):
         jax.jit(lambda op: cxfm.simplify(op))(cxfm.Rotate(jnp.eye(3)))
+
+
+# ===================================================================
+# Rotate.__matmul__ with time-dependent (callable) rotations
+
+
+def _Rz(t) -> Real[Array, "3 3"]:
+    th = t.ustrip("s")
+    c, s = jnp.cos(th), jnp.sin(th)
+    return jnp.asarray([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
+
+
+def _Rx(t) -> Real[Array, "3 3"]:
+    th = t.ustrip("s")
+    c, s = jnp.cos(th), jnp.sin(th)
+    return jnp.asarray([[1.0, 0.0, 0.0], [0.0, c, -s], [0.0, s, c]])
+
+
+def test_matmul_callable_rotations_composes_pointwise() -> None:
+    """`op1 @ op2` composes time-dependent rotations pointwise in tau."""
+    op1 = cxfm.Rotate.from_(_Rz)
+    op2 = cxfm.Rotate.from_(_Rx)
+    combined = op1 @ op2
+    assert cxfm.is_time_dependent(combined)
+    tau = u.Q(0.3, "s")
+    m = cxfm.materialize_transform(combined, tau).R
+    # constant-case convention: (op1 @ op2).R == op2.R @ op1.R
+    np.testing.assert_allclose(
+        np.asarray(m), np.asarray(_Rx(tau) @ _Rz(tau)), atol=1e-7
+    )
+
+
+def test_matmul_callable_action_equals_sequential() -> None:
+    """Acting with `op1 @ op2` equals applying op1 then op2."""
+    op1 = cxfm.Rotate.from_(_Rz)
+    op2 = cxfm.Rotate.from_(_Rx)
+    combined = op1 @ op2
+    tau = u.Q(0.4, "s")
+    p = _point()
+    got = cxfm.act(combined, tau, p, cxc.cart3d, cxr.point)
+    seq = cxfm.act(
+        op2, tau, cxfm.act(op1, tau, p, cxc.cart3d, cxr.point), cxc.cart3d, cxr.point
+    )
+    np.testing.assert_allclose(_xyz(got), _xyz(seq), atol=1e-7)
+
+
+def test_matmul_mixed_callable_and_constant() -> None:
+    """`@` works when only one operand is time-dependent."""
+    spin = cxfm.Rotate.from_(_Rz)
+    const = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    tau = u.Q(0.25, "s")
+    m = cxfm.materialize_transform(spin @ const, tau).R
+    np.testing.assert_allclose(np.asarray(m), np.asarray(const.R @ _Rz(tau)), atol=1e-7)

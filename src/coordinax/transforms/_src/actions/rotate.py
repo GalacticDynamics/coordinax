@@ -25,7 +25,7 @@ from .custom_types import CDict, OptUSys
 from .identity import identity
 from .linear import AbstractLinearTransform
 from .prolong import _attach_leaf, _strip_leaf, _tau_value_unit, prolong_slot
-from .utils import Neg
+from .utils import ComposedR, Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -272,12 +272,27 @@ class Rotate(AbstractLinearTransform):
         >>> jnp.allclose(op3.R, op2.R @ op1.R)
         Q(True, '')
 
+        Time-dependent (callable) rotations compose too, pointwise in ``tau``:
+
+        >>> from jaxtyping import Array, Real
+        >>> def Rz(t) -> Real[Array, "3 3"]:
+        ...     th = t.ustrip("s")
+        ...     c, s = jnp.cos(th), jnp.sin(th)
+        ...     return jnp.asarray([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
+        >>> spin = cxfm.Rotate.from_(Rz)
+        >>> combined = spin @ spin
+        >>> tau = u.Q(0.3, "s")
+        >>> M = cxfm.materialize_transform(combined, tau).R
+        >>> bool(jnp.allclose(M, Rz(tau) @ Rz(tau)))
+        True
+
         """
         if not isinstance(other, Rotate):
             return NotImplemented
         if callable(self.R) or callable(other.R):
-            msg = "@ is not yet implemented for Rotate with callable R."
-            raise NotImplementedError(msg)
+            # Compose pointwise in tau: (self then other)(tau) =
+            # other.R(tau) @ self.R(tau), matching the constant product below.
+            return replace(self, R=ComposedR(self.R, other.R))
         return replace(self, R=other.R @ self.R)
 
 
