@@ -110,7 +110,10 @@ def equivalent(
     # ever calling ``ustrip`` on a mismatched leaf (which would raise).  This
     # mirrors unxt's ``equivalent``: incompatible => not equivalent, never
     # raising.
-    checks = []
+    # Seed with a vacuous ``True`` and AND in each component: this broadcasts up
+    # to the batch shape, and an empty loop (a 0-dimensional Cartesian chart, e.g.
+    # ``Cart0D``) stays ``True`` -- every point of a 0D space is the same point.
+    result = jnp.ones((), dtype=bool)
     for k, av in ac.data.items():
         bv = bc.data[k]
         a_unit = getattr(av, "unit", None)
@@ -119,12 +122,7 @@ def equivalent(
             a_unit is not None and not u.is_unit_convertible(b_unit, a_unit)
         ):
             return jnp.zeros((), dtype=bool)
-        checks.append(
-            jnp.isclose(_strip(av, a_unit), _strip(bv, a_unit), rtol=rtol, atol=atol)
+        result = result & jnp.isclose(
+            _strip(av, a_unit), _strip(bv, a_unit), rtol=rtol, atol=atol
         )
-    # A 0-dimensional Cartesian chart has no components: every point is the same
-    # (the single point of the space), so equivalence is vacuously ``True``,
-    # broadcast over the batch shape.
-    if not checks:
-        return jnp.ones(ac.shape, dtype=bool)
-    return jnp.all(jnp.stack(jnp.broadcast_arrays(*checks)), axis=0)
+    return result
