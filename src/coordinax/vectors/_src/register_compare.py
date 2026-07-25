@@ -122,4 +122,9 @@ def equivalent(
         checks.append(
             jnp.isclose(_strip(av, a_unit), _strip(bv, a_unit), rtol=rtol, atol=atol)
         )
+    # A 0-dimensional Cartesian chart has no components: every point is the same
+    # (the single point of the space), so equivalence is vacuously ``True``,
+    # broadcast over the batch shape.
+    if not checks:
+        return jnp.ones(ac.shape, dtype=bool)
     return jnp.all(jnp.stack(jnp.broadcast_arrays(*checks)), axis=0)

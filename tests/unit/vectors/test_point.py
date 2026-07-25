@@ -172,3 +172,8 @@ class TestPointEquivalence:
             {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "s"), "z": u.Q(0.0, "m")}, cxc.cart3d
         )
         assert not bool(qnp.all(cx.equivalent(a, b)))
+
+    def test_equivalent_zero_component_chart_is_true(self):
+        """A 0D Cartesian chart has no components: equivalence is vacuously True."""
+        p = cx.Point.from_({}, cxc.cart0d, cx.point)
+        assert bool(qnp.all(cx.equivalent(p, p)))
