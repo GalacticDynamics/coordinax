@@ -10,6 +10,8 @@ import pytest
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax.charts as cxc
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 
 
@@ -73,3 +75,53 @@ def test_simplify_identity_scale_and_shear_to_identity() -> None:
 
     assert cxfm.simplify(s) is cxfm.identity
     assert cxfm.simplify(h) is cxfm.identity
+
+
+# ============================================================================
+# Kinematic (velocity / acceleration) acts — constant linear maps need no `at`
+
+
+def _vel(x, y, z):
+    return {"x": u.Q(x, "m/s"), "y": u.Q(y, "m/s"), "z": u.Q(z, "m/s")}
+
+
+@pytest.mark.parametrize(
+    ("op", "expected"),
+    [
+        (cxfm.Scale.from_factors([2.0, 3.0, 4.0]), (2.0, 3.0, 4.0)),
+        (cxfm.Reflect.from_normal([1.0, 0.0, 0.0]), (-1.0, 1.0, 1.0)),
+        (
+            cxfm.Shear(
+                jnp.asarray([[1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+            ),
+            (2.0, 1.0, 1.0),
+        ),
+    ],
+)
+def test_linear_transform_acts_on_velocity_without_at(op, expected) -> None:
+    """A constant linear map transforms a Cartesian velocity as v -> M v, no `at`."""
+    out = cxfm.act(op, None, _vel(1.0, 1.0, 1.0), cxc.cart3d, cxr.coord_vel)
+    got = tuple(round(float(u.ustrip("m/s", out[c])), 6) for c in ("x", "y", "z"))
+    assert got == expected
+
+
+def test_linear_transform_acts_on_acceleration_without_at() -> None:
+    """Acceleration also transforms as a -> M a for a constant linear map."""
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    acc = {"x": u.Q(1.0, "m/s2"), "y": u.Q(0.0, "m/s2"), "z": u.Q(2.0, "m/s2")}
+    out = cxfm.act(op, None, acc, cxc.cart3d, cxr.coord_acc)
+    got = tuple(round(float(u.ustrip("m/s2", out[c])), 6) for c in ("x", "y", "z"))
+    assert got == (2.0, 0.0, 8.0)
+
+
+def test_linear_velocity_matches_generic_prolongation_with_at() -> None:
+    """Keystone: the no-`at` fast path equals the generic prolongation given `at`."""
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    v = _vel(1.0, -2.0, 0.5)
+    at = {"x": u.Q(2.0, "m"), "y": u.Q(-1.0, "m"), "z": u.Q(3.0, "m")}
+    fast = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel)
+    withat = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+    for c in ("x", "y", "z"):
+        np.testing.assert_allclose(
+            _to_np(fast[c], "m/s"), _to_np(withat[c], "m/s"), atol=1e-12
+        )

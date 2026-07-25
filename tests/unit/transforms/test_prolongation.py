@@ -491,11 +491,24 @@ class TestErrors:
         out = cxfm.act_jet(moving, u.Q(1.0, "s"), jet, cxc.cart3d)
         assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 2.0)
 
-    def test_static_scale_vel_requires_at(self):
+    def test_static_scale_vel_no_at_needed(self):
+        # A static (time-independent) linear map has a constant Jacobian equal
+        # to its matrix, so a Cartesian velocity transforms as v -> M v with no
+        # base point required (matching Rotate).
         op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
         v = q3(1.0, 1.0, 1.0, "m/s")
-        with pytest.raises(TypeError, match="base point"):
-            cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel)
+        out = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel)
+        assert jnp.allclose(u.ustrip("m/s", out["x"]), 2.0)
+        assert jnp.allclose(u.ustrip("m/s", out["y"]), 3.0)
+        assert jnp.allclose(u.ustrip("m/s", out["z"]), 4.0)
+
+    def test_static_scale_vel_noncartesian_still_requires_at(self):
+        # On a non-Cartesian chart the Jacobian varies with position, so the
+        # base point is still required.
+        op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+        v = {"r": u.Q(1.0, "m/s"), "theta": u.Q(0.0, "rad/s"), "phi": u.Q(0.0, "rad/s")}
+        with pytest.raises(TypeError, match="'at'"):
+            cxfm.act(op, None, v, cxc.sph3d, cxr.coord_vel)
 
 
 # ============================================================================

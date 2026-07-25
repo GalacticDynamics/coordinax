@@ -231,3 +231,118 @@ def act(
         for i, (f, p) in enumerate(zip(chart.factors, parts, strict=True))
     )
     return chart.merge_components(mapped_parts)
+
+
+# ============================================================================
+# pushforward — tangent geometry (shared by every linear transform)
+
+
+def _linear_pushforward_cdict(
+    op: AbstractLinearTransform,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""Frozen-$\tau$ pushforward of tangent data under a linear map: $v \mapsto M v$.
+
+    A linear map has a *constant* Jacobian equal to its matrix ``M``, so in the
+    canonical Cartesian chart the pushforward is simply ``M v`` and needs no
+    base point ``at``. For a non-Cartesian chart the tangent is pushed through
+    the chart Jacobian (which does require ``at``), ``M`` is applied in
+    Cartesian, then the result is pulled back to the original chart.
+
+    Examples
+    --------
+    Scale a Cartesian velocity vector (no base point needed):
+
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Scale.from_factors([2.0, 3.0, 1.0])
+    >>> v = {"x": u.Q(1.0, "m/s"), "y": u.Q(1.0, "m/s"), "z": u.Q(1.0, "m/s")}
+    >>> out = cxfm.act(op, None, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel)
+    >>> jnp.stack([out[c].to_value("m/s") for c in ("x", "y", "z")]).round(3)
+    Array([2., 3., 1.], dtype=float64)
+
+    """
+    # The tangent must carry exactly the chart's components (a clear error
+    # instead of a raw KeyError when packing); an anchor, if given, must match.
+    expected = set(chart.components)
+    for name, d in (("tangent", x), *(() if at is None else (("base point", at),))):
+        if set(d) != expected:
+            missing = sorted(expected - set(d))
+            extra = sorted(set(d) - expected)
+            msg = (
+                f"pushforward({type(op).__name__}, ...): the {name} components "
+                f"do not match the chart's {sorted(expected)}"
+                + (f"; missing {missing}" if missing else "")
+                + (f"; unexpected {extra}" if extra else "")
+                + "."
+            )
+            raise TypeError(msg)
+
+    cart = chart.cartesian
+    matrix = op._matrix(cart, tau)
+
+    if chart is cart:
+        p_cart = x
+    else:
+        if at is None:
+            msg = (
+                f"pushforward({type(op).__name__}, ..., TangentGeometry) on a "
+                f"non-Cartesian chart ({chart!r}) requires 'at' (base point in "
+                "chart coords) so the Jacobian pushforward can be evaluated."
+            )
+            raise TypeError(msg)
+        at_cart = cxc.pt_map(at, chart, cart, usys=usys)
+        p_cart = cxr.tangent_map(x, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
+
+    comps_cart = cart.components
+    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
+    v_out = jnp.einsum("ij,...j->...i", matrix, v)
+    p_cart_out = cxc.cdict(v_out, unit, comps_cart)
+
+    if chart is cart:
+        return cast("CDict", p_cart_out)
+
+    # Map the base point forward (M @ at) to anchor the inverse Jacobian.
+    at_arr, at_unit = pack_uniform_unit(at_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
+    at_out_arr = jnp.einsum("ij,...j->...i", matrix, at_arr)
+    at_out = cxc.cdict(at_out_arr, at_unit, comps_cart)
+    return cast(
+        "CDict",
+        cxr.tangent_map(p_cart_out, cart, rep, chart, at=at_out, usys=usys),  # ty: ignore[missing-argument]
+    )
+
+
+@plum.dispatch
+def pushforward(
+    op: AbstractLinearTransform,
+    tau: Any,
+    v: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""Frozen-$\tau$ pushforward of tangent data under a linear map.
+
+    A linear map's Jacobian is its (constant) matrix, so a Cartesian velocity
+    or acceleration transforms as ``v -> M v`` with no base point required —
+    matching the behavior already provided for `Rotate`. This is used by the
+    generic tangent ``act`` for displacement data and for every time-independent
+    linear transform (`Scale`, `Reflect`, `Shear`). Time-dependent linear maps
+    still route through the generic prolongation, which supplies the ``dot(M)``
+    term and requires the jet anchors.
+    """
+    return _linear_pushforward_cdict(op, tau, v, chart, rep, at=at, usys=usys)
