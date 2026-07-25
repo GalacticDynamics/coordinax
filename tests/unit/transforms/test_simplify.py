@@ -176,3 +176,13 @@ def test_matmul_mixed_callable_and_constant() -> None:
     tau = u.Q(0.25, "s")
     m = cxfm.materialize_transform(spin @ const, tau).R
     np.testing.assert_allclose(np.asarray(m), np.asarray(const.R @ _Rz(tau)), atol=1e-7)
+
+
+def test_matmul_callable_materialize_under_jit() -> None:
+    """`materialize_transform` on a composed callable rotation is jit-safe."""
+    combined = cxfm.Rotate.from_(_Rz) @ cxfm.Rotate.from_(_Rx)
+    materialize = jax.jit(lambda tau: cxfm.materialize_transform(combined, tau).R)
+    tau = u.Q(0.3, "s")
+    np.testing.assert_allclose(
+        np.asarray(materialize(tau)), np.asarray(_Rx(tau) @ _Rz(tau)), atol=1e-7
+    )
