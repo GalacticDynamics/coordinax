@@ -2918,6 +2918,64 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - This API is for tangent-space geometry. Point-role coordinates should first be converted into a tangent/displacement representation if that is the intended meaning.
     - The angle is defined intrinsically by the metric at the supplied base point and is therefore chart-invariant under valid coordinate changes.
 
+(software-spec-separation)=
+
+!!! info `separation`
+
+    The straight-line distance between two points, as a manifold measurement.
+
+    `separation` is a dispatched function that returns the manifold
+    `~coordinax.manifolds.norm` of the two points' coordinate difference:
+
+    $$
+    \mathrm{separation}(a, b) = \| b - a \|_a,
+    $$
+
+    the Euclidean distance for a flat manifold. It sits alongside `norm` and
+    `angle_between` as the third manifold measurement. `cx.separation` and
+    `cx.manifolds.separation` are the same function object.
+
+    **Signatures:**
+
+    ```
+    # manifold-level (raw data)
+    cxm.separation(chart, a, b, /, *, usys=None)          # component dicts; uses chart.M.metric
+    cxm.separation(metric, chart, a, b, /, *, usys=None)  # explicit metric: norm(b - a) at a
+    cxm.separation(chart, a, b, /, *, usys=None)          # packed unxt.Quantity operands
+    cxm.separation(chart, a, b, /, *, usys=None)          # packed (unitless) Array operands
+
+    # vector-level
+    cx.separation(a, b, /)                                # two coordinax.vectors.Point objects
+    ```
+
+    **Arguments:**
+
+    - `chart`: the coordinate chart in whose components `a` and `b` are expressed.
+    - `metric`: an explicit `AbstractMetricField`; when omitted, `chart.M.metric` is used.
+    - `a`, `b`: the two points, as `CDict` component dicts, packed `unxt.Quantity` / `Array` vectors (trailing axis in `chart.components` order), or — at the vector level — `coordinax.vectors.Point` objects.
+    - `usys` (keyword, optional): unit system forwarded to metric evaluation when needed.
+
+    **Return:**
+
+    - A length result is returned as a `coordinax.distances.Distance`; a dimensionless one as a bare array (or dimensionless `Quantity`).
+    - Dimensionality follows the points' manifold: 2-D points give a 2-D distance, 3-D points a 3-D distance. There is no `separation_3d` — map the points into the target space first, then call `separation`.
+
+    **Dispatch behavior:**
+
+    - The manifold-level overloads measure the norm of the coordinate difference in the given chart (exact for flat manifolds).
+    - The `Point` overload is *frame-strict* (cross-frame raises) and brings both points into a common Cartesian chart before delegating to the manifold-level `separation`, so the result is invariant to the chart and component units each operand happens to use.
+
+    **Examples**
+
+    ```pycon
+    >>> import coordinax as cx
+
+    >>> p = cx.Point.from_([3.0, 0.0, 0.0], "m")
+    >>> q = cx.Point.from_([0.0, 4.0, 0.0], "m")
+    >>> cx.separation(p, q).round(2)
+    Distance(5., 'm')
+    ```
+
 (software-spec-abstractatlas)=
 
 !!! info `AbstractAtlas`

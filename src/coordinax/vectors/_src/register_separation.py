@@ -1,6 +1,6 @@
 """`separation` dispatch for vector-like objects.
 
-This registers the `~coordinax.vectors.Point` (``AbstractVector``) overload of
+This registers the `~coordinax.vectors.Point` overload of
 `coordinaxs.api.manifolds.separation`.  The distance itself is a manifold
 measurement -- see `coordinax._src.manifolds.separation` for the ``chart`` /
 ``metric`` + component-dict / quantity / array overloads.  Here the two points
@@ -13,18 +13,18 @@ points, so a cross-frame separation is undefined and raises; align the operands
 with `to_frame` first.
 """
 
-__all__: tuple[str, ...] = ()
+__all__: tuple[str, ...] = ("separation",)
 
 from typing import Any
 
 from plum import dispatch
 
 import coordinaxs.api.manifolds as cxmapi
-from .base import AbstractVector
+from .point import Point
 
 
 @dispatch
-def separation(a: AbstractVector, b: AbstractVector, /) -> Any:
+def separation(a: Point, b: Point, /) -> Any:
     """Distance between two points, via the manifold norm.
 
     The two points are brought into a common Cartesian chart (so the result is
