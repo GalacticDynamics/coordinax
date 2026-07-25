@@ -108,21 +108,19 @@ def equivalent(
     if ac.chart != bc.chart:
         return jnp.zeros((), dtype=bool)
 
-    # Compare component-wise, in the first operand's units.  A component that is
-    # unitful on one side and unitless on the other -- or that carries an
-    # incompatible dimension -- describes a different space, so the vectors are
-    # not equivalent.  ``jnp.isclose`` is unit-aware when ``atol`` carries the
-    # component's unit (it converts ``b`` into ``a``'s unit itself), and never
-    # raises here because the guard rejects the incompatible cases that would.
+    # Compare component-wise, in the first operand's units.  Promote a unitless
+    # (plain-array) leaf to a *dimensionless* quantity so that a unitful-vs-
+    # unitless mismatch and an incompatible dimension collapse into one
+    # convertibility check (``is_unit_convertible("", "m")`` is ``False``): such
+    # components describe different spaces, so the vectors are not equivalent.
+    # ``jnp.isclose`` is then unit-aware -- ``atol`` carries the component's unit,
+    # so it converts ``b`` into ``a``'s unit itself and never raises here.
     def leaf_close(av: Any, bv: Any) -> Any:
-        a_unit = getattr(av, "unit", None)
-        b_unit = getattr(bv, "unit", None)
-        if (a_unit is None) != (b_unit is None) or (
-            a_unit is not None and not u.is_unit_convertible(b_unit, a_unit)
-        ):
+        av = av if is_any_quantity(av) else u.Q(av, "")
+        bv = bv if is_any_quantity(bv) else u.Q(bv, "")
+        if not u.is_unit_convertible(bv.unit, av.unit):
             return jnp.zeros((), dtype=bool)
-        atol_k = atol if a_unit is None else u.Q(atol, a_unit)
-        return jnp.isclose(av, bv, rtol=rtol, atol=atol_k)
+        return jnp.isclose(av, bv, rtol=rtol, atol=u.Q(atol, av.unit))
 
     # ``is_leaf`` stops the tree walk at the `unxt.Quantity` leaves (which are
     # themselves pytrees); ``tree_reduce``'s initializer makes an empty chart (a
