@@ -24,6 +24,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import is_any_quantity
 
 import coordinax.representations as cxr
 from .base import AbstractVector
@@ -129,6 +130,6 @@ def equivalent(
     # point of a 0D space is the same point.  ``isclose`` over unitful leaves
     # yields a dimensionless ``Quantity`` of bools; strip it back to a plain array
     # so the return type matches the scalar-``False`` guards above.
-    checks = jtu.map(leaf_close, ac.data, bc.data, is_leaf=lambda x: hasattr(x, "unit"))
+    checks = jtu.map(leaf_close, ac.data, bc.data, is_leaf=is_any_quantity)
     result = jtu.reduce(jnp.logical_and, checks, jnp.ones((), dtype=bool))
     return u.ustrip("", result) if hasattr(result, "unit") else result
