@@ -1701,9 +1701,9 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `PoincarePolar6D` is a final concrete chart type in the 6-D chart family.
     - Components (ordered):
-      `("rho", "pp_phi", "z", "dt_rho", "dt_pp_phi", "dt_z")`.
+      `("rho", "pp_phi", "z", "dt_rho", "pp_phidot", "dt_z")`.
     - Coordinate dimensions (ordered):
-      `("length", "length / time**0.5", "length", "speed", "length / time**1.5", "speed")`.
+      `("length", "length / time**0.5", "length", "speed", "length / time**0.5", "speed")`.
     - `poincarepolar6d` is the pre-defined `PoincarePolar6D()` instance.
     - Transition behavior currently registered in-core:
       identity transform only (`pt_map(p, PoincarePolar6D, PoincarePolar6D) -> p`).
