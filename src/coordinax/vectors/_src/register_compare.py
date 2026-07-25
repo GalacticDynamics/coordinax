@@ -20,7 +20,7 @@ __all__: tuple[str, ...] = ("equivalent",)
 from typing import Any
 
 import jax.tree as jtu
-from plum import dispatch
+import plum
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -30,7 +30,7 @@ import coordinax.representations as cxr
 from .base import AbstractVector
 
 
-@dispatch
+@plum.dispatch
 def equivalent(
     a: AbstractVector,
     b: AbstractVector,
