@@ -24,6 +24,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax.representations as cxr
 from .base import AbstractVector
 
 
@@ -84,6 +85,18 @@ def equivalent(
     False
 
     """
+    # ``equivalent`` is a same-*point* relation, so it is meaningful only for
+    # point-geometry vectors (a `Point`, a `Coordinate`).  A `Tangent` denotes a
+    # displacement, not a point -- and cannot even be re-expressed in Cartesian
+    # without a base point (``to_cartesian`` would raise) -- so any non-point or
+    # cross-geometry pair is never "the same point": scalar ``False``, and this
+    # guard also keeps the promise that ``equivalent`` never raises.
+    if not (
+        isinstance(a.rep.geom_kind, cxr.PointGeometry)
+        and isinstance(b.rep.geom_kind, cxr.PointGeometry)
+    ):
+        return jnp.zeros((), dtype=bool)
+
     # Coordinates in different frames describe different physical points.  Chart
     # and frame are static metadata, so this is a plain Python bool -- safe under
     # ``jit`` and mirroring the guard in ``AbstractVector.__eq__``.

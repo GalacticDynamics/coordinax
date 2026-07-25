@@ -2326,9 +2326,10 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     Semantics:
 
+    - **Point-geometry only.** As a same-*point* relation it applies to point-geometry vectors (a `Point`, a `Coordinate`); a `Tangent` denotes a displacement, not a point. Any non-point or cross-geometry pair yields scalar ``False`` (never the same point, and never raising — a `Tangent` cannot re-chart to Cartesian without a base point).
     - **Chart-invariant.** The operands are compared in a common Cartesian chart, so the result does not depend on the chart each is expressed in.
     - **Tolerance-based.** Closeness is controlled by ``rtol``/``atol`` (chart transitions are trigonometric/√-heavy, so exact equality is fragile); the comparison is evaluated element-wise over the batch, mirroring ``==``.
-    - **Never raises.** A differing frame, a differing manifold (Cartesian chart), or a per-component unitful-vs-unitless or incompatible-dimension mismatch all yield ``False`` rather than an error.
+    - **Never raises.** A non-point/cross-geometry operand, a differing frame, a differing manifold (Cartesian chart), or a per-component unitful-vs-unitless or incompatible-dimension mismatch all yield ``False`` rather than an error.
     - **`plum` registration.** ``equivalent`` is registered on the global `plum` ``dispatch`` _without_ importing `unxt`'s ``equivalent``, so the vector overload and `unxt`'s quantity-level ``equivalent`` coexist on one multiply-dispatched function; the vector overload also works standalone when `unxt` provides none.
 
 !!! info `Point`

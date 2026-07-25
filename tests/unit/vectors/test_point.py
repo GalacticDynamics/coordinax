@@ -9,6 +9,7 @@ import unxt as u
 import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.frames as cxf
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 
 
@@ -177,3 +178,26 @@ class TestPointEquivalence:
         """A 0D Cartesian chart has no components: equivalence is vacuously True."""
         p = cx.Point.from_({}, cxc.cart0d, cx.point)
         assert bool(qnp.all(cx.equivalent(p, p)))
+
+    def test_equivalent_cross_geometry_is_false(self):
+        """A Point and a Tangent are never equivalent, even with matching data."""
+        p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        # A displacement Tangent with *matching* Cartesian components and units.
+        t = cx.Tangent.from_(
+            {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
+            cxc.cart3d,
+            cxr.coord_disp,
+        )
+        assert not bool(qnp.all(cx.equivalent(p, t)))
+        assert not bool(qnp.all(cx.equivalent(t, p)))
+
+    def test_equivalent_tangent_never_raises(self):
+        """`equivalent` on non-point (Tangent) vectors returns False, never raises."""
+        t = cx.Tangent.from_(
+            {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+            cxc.cart3d,
+            cxr.coord_vel,
+        )
+        # A Tangent cannot re-chart to Cartesian without a base point, so a naive
+        # implementation would raise; the geometry guard short-circuits to False.
+        assert not bool(qnp.all(cx.equivalent(t, t)))
