@@ -178,29 +178,66 @@ def convert_astropy_frame_with_data_to_cx_point(
     return cxv.Point.from_(obj)  # ty: ignore[invalid-return-type]
 
 
-# TODO: coordinax -> astropy
-# @plum.conversion_method(type_from=cxv.Point, type_to=apyc.BaseCoordinateFrame)
-# def convert_cx_point_to_astropy_frame_with_data(
-#     obj: cxv.Point, /
-# ) -> apyc.BaseCoordinateFrame:
-#     """Convert a Coordinax Point to an Astropy frame with data.
+@plum.conversion_method(type_from=cxv.Point, type_to=apyc.BaseCoordinateFrame)
+def convert_cx_point_to_astropy_frame_with_data(
+    obj: cxv.Point, /
+) -> apyc.BaseCoordinateFrame:
+    """Convert a Coordinax `Point` (with a frame) to an Astropy frame with data.
 
-#     Examples
-#     --------
-#     >>> import astropy.units as apyu
-#     >>> import astropy.coordinates as apyc
-#     >>> import plum
-#     >>> import coordinax.vectors as cxv
+    The inverse of :func:`convert_astropy_frame_with_data_to_cx_point`: the
+    point's chart data becomes the Astropy representation and the point's frame
+    becomes the enclosing Astropy frame. The point must carry a real reference
+    frame (not ``noframe``).
 
-#     """
-#     # Convert the frame
-#     apy_frame = plum.convert(obj.frame, apyc.BaseCoordinateFrame)
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import plum
+    >>> import coordinax.vectors as cxv
 
-#     # Convert and attach the data
-#     data = plum.convert(obj.data)
-#     apy_frame = apy_frame.realize_frame()
+    >>> vec = apyc.ICRS(ra=90 * apyu.deg, dec=45 * apyu.deg, distance=1 * apyu.kpc)
+    >>> point = cxv.Point.from_(vec)
+    >>> apy = plum.convert(point, apyc.BaseCoordinateFrame)
+    >>> bool(isinstance(apy, apyc.ICRS) and apy.has_data)
+    True
 
-#     return apy_frame
+    Round-trips back to the original frame with data:
+
+    >>> bool(apy.separation_3d(vec) < 1e-9 * apyu.kpc)
+    True
+
+    """
+    if obj.frame is cxf.noframe:
+        msg = (
+            "Point has no reference frame (noframe); cannot convert to an Astropy "
+            "coordinate frame. Convert to an Astropy representation instead: "
+            "plum.convert(point, astropy.coordinates.BaseRepresentation)."
+        )
+        raise ValueError(msg)
+
+    apy_frame = plum.convert(obj.frame, apyc.BaseCoordinateFrame)
+    representation = plum.convert(obj, apyc.BaseRepresentation)
+    return apy_frame.realize_frame(representation)
+
+
+@plum.conversion_method(type_from=cxv.Point, type_to=apyc.SkyCoord)
+def convert_cx_point_to_astropy_skycoord(obj: cxv.Point, /) -> apyc.SkyCoord:
+    """Convert a Coordinax `Point` (with a frame) to an Astropy `SkyCoord`.
+
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import plum
+    >>> import coordinax.vectors as cxv
+
+    >>> vec = apyc.SkyCoord(ra=90 * apyu.deg, dec=45 * apyu.deg, distance=1 * apyu.kpc)
+    >>> point = cxv.Point.from_(vec)
+    >>> sc = plum.convert(point, apyc.SkyCoord)
+    >>> isinstance(sc, apyc.SkyCoord)
+    True
+    >>> bool(sc.separation_3d(vec) < 1e-9 * apyu.kpc)
+    True
+
+    """
+    return apyc.SkyCoord(plum.convert(obj, apyc.BaseCoordinateFrame))
 
 
 ##############################################################################
