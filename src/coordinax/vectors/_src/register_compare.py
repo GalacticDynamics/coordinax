@@ -28,15 +28,6 @@ import coordinax.representations as cxr
 from .base import AbstractVector
 
 
-def _strip(leaf: Any, unit: Any) -> Any:
-    """Return *leaf* as a plain array, converting to *unit* if it is a quantity.
-
-    Vector components may be `unxt.Quantity` leaves (unitful vectors) or plain
-    JAX arrays (unitless vectors); this normalises both to comparable arrays.
-    """
-    return leaf.ustrip(unit) if hasattr(leaf, "ustrip") else jnp.asarray(leaf)
-
-
 @dispatch
 def equivalent(
     a: AbstractVector,
@@ -115,17 +106,17 @@ def equivalent(
     if ac.chart != bc.chart:
         return jnp.zeros((), dtype=bool)
 
-    # Compare per component, in the first operand's units.  A component that is
-    # unitful on one side and unitless on the other -- or that carries an
-    # incompatible dimension -- describes a different space, so the vectors are
-    # not equivalent.  Leaves may be *mixed* within a vector, so this is checked
-    # per component (not just the first), which also keeps the comparison from
-    # ever calling ``ustrip`` on a mismatched leaf (which would raise).  This
-    # mirrors unxt's ``equivalent``: incompatible => not equivalent, never
-    # raising.
-    # Seed with a vacuous ``True`` and AND in each component: this broadcasts up
-    # to the batch shape, and an empty loop (a 0-dimensional Cartesian chart, e.g.
-    # ``Cart0D``) stays ``True`` -- every point of a 0D space is the same point.
+    # Compare per component.  A component that is unitful on one side and
+    # unitless on the other -- or that carries an incompatible dimension --
+    # describes a different space, so the vectors are not equivalent.  Leaves may
+    # be *mixed* within a vector, so this is checked per component (not just the
+    # first).  ``jnp.isclose`` is unit-aware when ``atol`` carries the component's
+    # unit, so it converts ``b`` into ``a``'s unit itself -- no manual stripping,
+    # and it never raises here because the guard rejects the incompatible cases
+    # that would.  Seed with a vacuous ``True`` and AND in each component: this
+    # broadcasts up to the batch shape, and an empty loop (a 0-dimensional
+    # Cartesian chart, e.g. ``Cart0D``) stays ``True`` -- every point of a 0D
+    # space is the same point.
     result = jnp.ones((), dtype=bool)
     for k, av in ac.data.items():
         bv = bc.data[k]
@@ -135,7 +126,9 @@ def equivalent(
             a_unit is not None and not u.is_unit_convertible(b_unit, a_unit)
         ):
             return jnp.zeros((), dtype=bool)
-        result = result & jnp.isclose(
-            _strip(av, a_unit), _strip(bv, a_unit), rtol=rtol, atol=atol
-        )
-    return result
+        atol_k = atol if a_unit is None else u.Q(atol, a_unit)
+        result = result & jnp.isclose(av, bv, rtol=rtol, atol=atol_k)
+    # ``isclose`` over unitful leaves yields a dimensionless ``Quantity`` of
+    # bools; strip it back to a plain array so the return type matches the
+    # scalar-``False`` guards above.
+    return u.ustrip("", result) if hasattr(result, "unit") else result
