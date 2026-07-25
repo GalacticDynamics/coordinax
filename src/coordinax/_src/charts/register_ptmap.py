@@ -1830,3 +1830,69 @@ def pt_map(
         "pp_phidot": s * jnp.sin(phi),
         "dt_z": vz,
     }
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: NoManifold,
+    from_chart: PoincarePolar6D,
+    to_M: CartesianProductManifold,
+    to_chart: CartesianProductChart,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""``PoincarePolar6D`` -> Cartesian phase space (partial inverse of gala map).
+
+    Inverts the gala forward map. Because the forward uses ``sqrt(2|Lz|)`` the
+    sign of the angular momentum is not recoverable, so this assumes ``Lz >= 0``
+    (the standard convention) and is a *partial* inverse — exact only when the
+    original point had non-negative ``Lz``:
+
+    ``s = hypot(pp_phi, pp_phidot)``,  ``phi = atan2(pp_phidot, pp_phi)``,
+    ``Lz = s**2 / 2``,  ``x = rho sin(phi)``,  ``y = rho cos(phi)``,
+    ``vx = sin(phi) dt_rho - cos(phi) Lz/rho``,
+    ``vy = cos(phi) dt_rho + sin(phi) Lz/rho``,  ``vz = dt_z``.
+
+    (Singular on the axis ``rho = 0``, inherent to the coordinates.)
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+
+    Round-trips a forward result whose Lz >= 0:
+
+    >>> q = {"q.x": u.Q(3.0, "kpc"), "q.y": u.Q(4.0, "kpc"), "q.z": u.Q(5.0, "kpc"),
+    ...      "p.x": u.Q(1.0, "kpc/Myr"), "p.y": u.Q(2.0, "kpc/Myr"),
+    ...      "p.z": u.Q(0.5, "kpc/Myr")}
+    >>> pp = cxc.pt_map(q, ps.M, ps, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+    >>> back = cxc.pt_map(pp, cxc.poincarepolar6d.M, cxc.poincarepolar6d, ps.M, ps)
+    >>> back["q.x"].round(6), back["q.y"].round(6), back["p.x"].round(6)
+    (Q(3., 'kpc'), Q(4., 'kpc'), Q(1., 'kpc / Myr'))
+
+    """
+    del usys
+    if len(to_chart.factors) != 2 or not all(
+        isinstance(f, Cart3D) for f in to_chart.factors
+    ):
+        msg = (
+            "pt_map from PoincarePolar6D requires a Cartesian phase-space target: a "
+            "two-factor CartesianProductChart of (Cart3D, Cart3D) [position, "
+            f"velocity]; got factors {to_chart.factors!r}."
+        )
+        raise NotImplementedError(msg)
+
+    rho, z, dt_rho, dt_z = p["rho"], p["z"], p["dt_rho"], p["dt_z"]
+    s = jnp.hypot(p["pp_phi"], p["pp_phidot"])
+    phi = jnp.atan2(p["pp_phidot"], p["pp_phi"])
+    lz = s**2 / 2  # sign(Lz) is not recoverable from the forward map; take Lz >= 0
+    sinp, cosp = jnp.sin(phi), jnp.cos(phi)
+
+    pos = {"x": rho * sinp, "y": rho * cosp, "z": z}
+    vel = {
+        "x": sinp * dt_rho - cosp * lz / rho,
+        "y": cosp * dt_rho + sinp * lz / rho,
+        "z": dt_z,
+    }
+    return cast("CDict", to_chart.merge_components((pos, vel)))
