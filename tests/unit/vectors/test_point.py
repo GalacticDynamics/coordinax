@@ -9,6 +9,7 @@ import unxt as u
 import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.frames as cxf
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 
 
@@ -95,3 +96,108 @@ class TestPointEquality:
         p1 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
         p2 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
         assert bool(qnp.all(p1 == p2))
+
+
+class TestPointEquivalence:
+    """`equivalent` is chart- and unit-invariant, but frame-strict."""
+
+    def test_equivalent_across_charts(self):
+        """The same point in different charts is equivalent (though ``!=``)."""
+        p1 = cx.Point.from_([1, 2, 3], "m")
+        p2 = p1.cconvert(cxc.sph3d)
+        assert not bool(qnp.all(p1 == p2))  # strict equality distinguishes charts
+        assert bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_equivalent_across_units(self):
+        """The same point in different units is equivalent."""
+        p1 = cx.Point.from_([1000.0, 2000.0, 3000.0], "m")
+        p2 = cx.Point.from_([1.0, 2.0, 3.0], "km")
+        assert bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_not_equivalent_different_point(self):
+        """Distinct points are not equivalent."""
+        p1 = cx.Point.from_([1, 2, 3], "m")
+        p2 = cx.Point.from_([1, 2, 4], "m")
+        assert not bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_equivalent_is_frame_strict(self):
+        """Identical coordinates in different frames are not equivalent."""
+        p1 = cx.Point.from_([1, 2, 3], "km", cxf.alice)
+        p2 = cx.Point.from_([1, 2, 3], "km", cxf.noframe)
+        assert not bool(qnp.all(cx.equivalent(p1, p2)))
+
+    def test_equivalent_elementwise_over_batch(self):
+        """Equivalence is evaluated element-wise over the batch."""
+        p1 = cx.Point.from_([[1.0, 1, 1], [2, 2, 2]], "m")
+        p2 = cx.Point.from_([[1.0, 1, 1], [9, 9, 9]], "m").cconvert(cxc.sph3d)
+        result = cx.equivalent(p1, p2)
+        assert bool(result[0])
+        assert not bool(result[1])
+
+    def test_equivalent_respects_tolerance(self):
+        """`atol`/`rtol` control how close counts as equivalent."""
+        p1 = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        p2 = cx.Point.from_([1.001, 0.0, 0.0], "m")
+        assert not bool(qnp.all(cx.equivalent(p1, p2)))
+        assert bool(qnp.all(cx.equivalent(p1, p2, atol=1e-2)))
+
+    def test_equivalent_unitless_components(self):
+        """Equivalence works for vectors with plain (unitless) array leaves."""
+        p1 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        p2 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        assert bool(qnp.all(cx.equivalent(p1, p2)))
+        p3 = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 9.0}, cxc.cart3d)
+        assert not bool(qnp.all(cx.equivalent(p1, p3)))
+
+    def test_equivalent_unitful_vs_unitless_is_false(self):
+        """A unitful and a unitless vector are not equivalent, and never raise."""
+        unitful = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        unitless = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        assert not bool(qnp.all(cx.equivalent(unitful, unitless)))
+        assert not bool(qnp.all(cx.equivalent(unitless, unitful)))
+
+    def test_equivalent_per_component_unit_mismatch_is_false(self):
+        """A per-component unitful/unitless mismatch is False, and never raises."""
+        # Leaves may be mixed within a vector: 'y' is unitful on one side only.
+        a = cx.Point.from_({"x": 0.0, "y": 2.0, "z": 0.0}, cxc.cart3d)
+        b = cx.Point.from_({"x": 0.0, "y": u.Q(2.0, "m"), "z": 0.0}, cxc.cart3d)
+        assert not bool(qnp.all(cx.equivalent(a, b)))
+        assert not bool(qnp.all(cx.equivalent(b, a)))
+
+    def test_equivalent_incompatible_dimensions_is_false(self):
+        """Components with incompatible dimensions are not equivalent (no raise)."""
+        a = cx.Point.from_(
+            {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")}, cxc.cart3d
+        )
+        b = cx.Point.from_(
+            {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "s"), "z": u.Q(0.0, "m")}, cxc.cart3d
+        )
+        assert not bool(qnp.all(cx.equivalent(a, b)))
+
+    def test_equivalent_zero_component_chart_is_true(self):
+        """A 0D Cartesian chart has no components: equivalence is vacuously True."""
+        p = cx.Point.from_({}, cxc.cart0d, cx.point)
+        assert bool(qnp.all(cx.equivalent(p, p)))
+
+    def test_equivalent_cross_geometry_is_false(self):
+        """A Point and a Tangent are never equivalent, even with matching data."""
+        p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        # A displacement Tangent with *matching* Cartesian components and units.
+        t = cx.Tangent.from_(
+            {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
+            cxc.cart3d,
+            cxr.coord_disp,
+        )
+        assert not bool(qnp.all(cx.equivalent(p, t)))
+        assert not bool(qnp.all(cx.equivalent(t, p)))
+
+    def test_equivalent_tangent_never_raises(self):
+        """`equivalent` on non-point (Tangent) vectors returns False, never raises."""
+        t = cx.Tangent.from_(
+            {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+            cxc.cart3d,
+            cxr.coord_vel,
+        )
+        # A Tangent cannot re-chart to Cartesian without a base point, so a naive
+        # implementation would raise; the geometry guard short-circuits to False.
+        assert not bool(qnp.all(cx.equivalent(t, t)))

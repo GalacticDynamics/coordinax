@@ -183,6 +183,24 @@ $$
 
 for the inverse transition map.
 
+(math-spec-equivalence)=
+
+### Same-Point Equivalence
+
+[Software Spec](#software-spec-equivalence)
+
+A point $p \in M$ has a coordinate representation $q = \varphi_C(p)$ in every chart $C$ whose domain contains it. Two coordinate tuples therefore describe the **same geometric point** precisely when they are related by the appropriate [transition map](#math-spec-transition-maps): $q_1 \in \varphi_{C_1}(U)$ and $q_2 \in \varphi_{C_2}(V)$ represent the same point iff
+
+$$
+q_2 = \tau_{C_1\to C_2}(q_1)
+\quad\Longleftrightarrow\quad
+\varphi_{C_1}^{-1}(q_1) = \varphi_{C_2}^{-1}(q_2).
+$$
+
+This is an **equivalence relation** on coordinate tuples across all charts of the atlas — reflexive, symmetric (transition maps are invertible), and transitive (they compose). It is coarser than **coordinate equality**, which additionally demands that the two tuples lie in the _same_ chart and be numerically identical: coordinate equality implies same-point equivalence, but not conversely. For example, the Cartesian tuple $(0, 1, 0)$ and the spherical tuple $(1, \tfrac{\pi}{2}, \tfrac{\pi}{2})$ describe the same point yet are not coordinate-equal.
+
+When representations additionally carry a reference frame (an extra transformation-group axis; see Frame Transforms), same-point equivalence is taken **within a fixed frame**: tuples in different frames denote different physical points.
+
 (math-spec-embedded-manifolds)=
 
 ### Embedded Manifolds
@@ -2263,7 +2281,7 @@ Separating semantics from geometry provides two advantages:
       - ``(V, *args, **kwargs) -> uconvert(*args, V, **kwargs)`` redispatch
       - ``(V, u.AbstractUnitSystem) -> uconvert(u.AbstractUnitSystem, V)`` redispatch
     - ``__array_namespace__``: the array API namespace -- `quax.numpy`. This delegates to `quax` primitives.
-    - ``__eq__``: strict equality — requires the same type, chart, and frame, then compares component data via the `quax` equality primitive.
+    - ``__eq__``: strict equality — requires the same type, chart, and frame, then compares component data via the `quax` equality primitive. See [Comparison and Equivalence](#software-spec-equivalence) for the strict-vs-relaxed relations.
       - Chart and frame are static metadata, so they are compared with ordinary Python ``!=`` (safe under `jit`).
       - When they differ, ``__eq__`` short-circuits and returns a 0-d boolean array (``jnp.zeros((), dtype=bool)``) instead of comparing the component dicts, which also avoids raising on their differing keys.
     - ``copy()``: call `dataclass.replace`.
@@ -2291,6 +2309,28 @@ Separating semantics from geometry provides two advantages:
     - ``__int__``
     - ``__setitem__`` : vectors are immutable.
     - ``__hash__()``: hash the vector by its field items. In general this raises an error.
+
+(software-spec-equivalence)=
+
+### Comparison and Equivalence
+
+[Math Spec](#math-spec-equivalence)
+
+Vectors support two comparison relations — a strict one and a coordinate-free one — realising the [same-point equivalence](#math-spec-equivalence) discussed in the math spec.
+
+`==` (`AbstractVector.__eq__`) is **strict**: two vectors are equal only when they share the same type, chart, frame, and component data. It is the software form of _coordinate equality_.
+
+!!! info `equivalent`
+
+    ``equivalent(a, b, *, rtol=..., atol=...)`` is the **coordinate-free** relation: it tests whether two vectors denote the [same geometric point](#math-spec-equivalence). It is the relaxed counterpart to ``==`` — invariant to the chart and to the component units, but **frame-strict** (vectors in different frames denote different physical points).
+
+    Semantics:
+
+    - **Point-geometry only.** As a same-*point* relation it applies to point-geometry vectors (a `Point`, a `Coordinate`); a `Tangent` denotes a displacement, not a point. Any non-point or cross-geometry pair yields scalar ``False`` (never the same point, and never raising — a `Tangent` cannot re-chart to Cartesian without a base point).
+    - **Chart-invariant.** The operands are compared in a common Cartesian chart, so the result does not depend on the chart each is expressed in.
+    - **Tolerance-based.** Closeness is controlled by ``rtol``/``atol`` (chart transitions are trigonometric/√-heavy, so exact equality is fragile); the comparison is evaluated element-wise over the batch, mirroring ``==``.
+    - **Never raises.** A non-point/cross-geometry operand, a differing frame, a differing manifold (Cartesian chart), or a per-component unitful-vs-unitless or incompatible-dimension mismatch all yield ``False`` rather than an error.
+    - **`plum` registration.** ``equivalent`` is registered on the global `plum` ``dispatch`` _without_ importing `unxt`'s ``equivalent``, so the vector overload and `unxt`'s quantity-level ``equivalent`` coexist on one multiply-dispatched function; the vector overload also works standalone when `unxt` provides none.
 
 !!! info `Point`
 
