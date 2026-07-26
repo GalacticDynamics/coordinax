@@ -385,4 +385,4 @@ def apycartdiff_to_tangent(obj: apyc.CartesianDifferential, /) -> cxv.Tangent:
         "y": plum.convert(obj.d_y, u.Q),  # ty: ignore[unresolved-attribute]
         "z": plum.convert(obj.d_z, u.Q),  # ty: ignore[unresolved-attribute]
     }
-    return cxv.Tangent(data, cxc.cart3d, cxr.coord_basis, cxr.vel)  # ty: ignore[missing-argument]
+    return cxv.Tangent(data, cxc.cart3d, cxr.coord_basis, cxr.vel)

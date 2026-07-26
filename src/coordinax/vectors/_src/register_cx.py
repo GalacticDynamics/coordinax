@@ -369,7 +369,7 @@ def change_basis(
     True
 
     """
-    return Tangent(  # ty: ignore[missing-argument]
+    return Tangent(
         data=v.data, chart=v.chart, basis=to_basis, semantic=cxr.dpl, frame=v.frame
     )
 
