@@ -41,7 +41,7 @@ class TestSeparationDispatches:
     def test_all_forms_agree_with_the_point_overload(self):
         p = cx.Point.from_([3.0, 0.0, 0.0], "m")
         q = cx.Point.from_([0.0, 4.0, 0.0], "m")
-        ref = cx.separation(p, q).ustrip("m")
+        ref = cxm.separation(p, q).ustrip("m")
         packed = cxm.separation(
             cxc.cart3d, u.Q([3.0, 0.0, 0.0], "m"), u.Q([0.0, 4.0, 0.0], "m")
         )

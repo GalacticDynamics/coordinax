@@ -17,13 +17,13 @@ __all__: tuple[str, ...] = ("separation",)
 
 from typing import Any
 
-from plum import dispatch
+import plum
 
 import coordinaxs.api.manifolds as cxmapi
 from .point import Point
 
 
-@dispatch
+@plum.dispatch
 def separation(a: Point, b: Point, /) -> Any:
     """Distance between two points, via the manifold norm.
 
