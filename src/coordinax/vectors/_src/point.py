@@ -267,7 +267,7 @@ def from_(
     if rep != cxr.point:
         raise ValueError(f"Point construction needs point rep, got {rep}.")
     data = cast("CDict", cxc.cdict(obj, chart))
-    return cls(data=data, chart=chart)  # ty: ignore[missing-argument]
+    return cls(data=data, chart=chart)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -300,7 +300,7 @@ def from_(cls: type[Point], obj: Any, chart: cxc.AbstractChart, /) -> Point:
 
     """
     data = cast("CDict", cxc.cdict(obj, chart))
-    return cls(data, chart=chart)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -334,7 +334,7 @@ def from_(cls: type[Point], obj: Any, rep: cxr.Representation, /) -> Point:
     """
     data = cast("CDict", cxc.cdict(obj))
     chart = cxc.guess_chart(data)
-    return cls(data, chart=chart)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -365,7 +365,7 @@ def from_(cls: type[Point], obj: Any, /) -> Any:
     # Infer the data from the chart and object
     data = cast("CDict", cxc.cdict(obj, chart))
 
-    return cls(data, chart=chart)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart)
 
 
 # -------------------------------------

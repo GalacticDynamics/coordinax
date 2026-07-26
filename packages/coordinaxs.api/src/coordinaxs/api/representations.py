@@ -9,6 +9,7 @@ __all__ = (
     "guess_rep",
     "guess_semantic_kind",
     "subtract",
+    "tangent_map",
 )
 
 from typing import Any

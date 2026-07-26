@@ -418,11 +418,8 @@ def _kick_delta_in_chart(
         raise TypeError(msg)
     at_in_op_chart = cxc.pt_map(at, chart, op.chart, usys=usys)
     kick_rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, op.semantic_kind)
-    return cast(
-        "CDict",
-        cxr.tangent_map(  # ty: ignore[missing-argument]
-            delta, op.chart, kick_rep, chart, at=at_in_op_chart, usys=usys
-        ),
+    return cxr.tangent_map(  # ty: ignore[missing-argument]
+        delta, op.chart, kick_rep, chart, at=at_in_op_chart, usys=usys
     )
 
 

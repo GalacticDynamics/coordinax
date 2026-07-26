@@ -341,9 +341,7 @@ def from_(
         "lat": plum.convert(frame.galcen_coord.dec, u.Q),
         "distance": plum.convert(frame.galcen_distance, u.Q),
     }
-    galcen = cxv.Point(  # ty: ignore[missing-argument]
-        galcen_data, chart=cxc.lonlat_sph3d, frame=cxastro.icrs
-    )
+    galcen = cxv.Point(galcen_data, chart=cxc.lonlat_sph3d, frame=cxastro.icrs)
 
     # Convert galcen_v_sun to a Cartesian velocity Tangent
     # (astropy stores galcen_v_sun as a CartesianDifferential)

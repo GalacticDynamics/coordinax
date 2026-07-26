@@ -266,9 +266,7 @@ def from_(
 
     """
     data = cast("CDict", cxc.cdict(obj, chart))
-    return Tangent(  # ty: ignore[missing-argument]
-        data=data, chart=chart, basis=basis, semantic=semantic
-    )
+    return Tangent(data=data, chart=chart, basis=basis, semantic=semantic)
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]

@@ -30,7 +30,7 @@ def from_astropy_cartesian_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.cart3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
+    return cls(data, cxc.cart3d, frame=cxf.noframe)
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -53,7 +53,7 @@ def from_astropy_cylindrical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.cyl3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
+    return cls(data, cxc.cyl3d, frame=cxf.noframe)
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -76,7 +76,7 @@ def from_astropy_physics_spherical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.sph3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
+    return cls(data, cxc.sph3d, frame=cxf.noframe)
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -99,7 +99,7 @@ def from_astropy_spherical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.lonlat_sph3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
+    return cls(data, cxc.lonlat_sph3d, frame=cxf.noframe)
 
 
 ##############################################################################
@@ -144,7 +144,7 @@ def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     frame = plum.convert(apy_frame, cxastro.AbstractSpaceFrame)
 
     # Convert the data to a Point
-    return cxv.Point(data, chart, frame=frame)  # ty: ignore[missing-argument]
+    return cxv.Point(data, chart, frame=frame)
 
 
 @plum.conversion_method(type_from=apyc.BaseCoordinateFrame, type_to=cxv.Point)
