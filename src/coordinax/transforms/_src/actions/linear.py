@@ -374,8 +374,7 @@ def pushforward(
 
     >>> ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
     >>> op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
-    >>> v = {"q.x": u.Q(1.0, "m/s"), "q.y": u.Q(1.0, "m/s"), "q.z": u.Q(1.0, "m/s"),
-    ...      "p.x": u.Q(1.0, "m/s2"), "p.y": u.Q(1.0, "m/s2"), "p.z": u.Q(1.0, "m/s2")}
+    >>> v = {f"{f}.{c}": u.Q(1.0, "m/s") for f in ("q", "p") for c in "xyz"}
     >>> out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
     >>> [out[k].value.round(3) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
     [Array(2., dtype=float64), Array(3., dtype=float64), Array(4., dtype=float64),
