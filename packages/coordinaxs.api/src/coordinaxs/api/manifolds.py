@@ -243,8 +243,8 @@ def pt_embed(
 
     >>> p_ambient_cart = cxm.pt_map(p_ambient, chart.ambient, cxc.cart3d)
     >>> r = jnp.linalg.norm(jnp.array(list(p_ambient_cart.values())))
-    >>> jnp.allclose(r, u.Q(5.0, "km"), atol=u.Q(1e-10, "km"))
-    Array(True, dtype=bool)
+    >>> jnp.allclose(r, chart.embed_map.radius, atol=u.Q(1e-10, "km"))
+    Q(True, '')
 
     Embedding a point at the north pole:
 
