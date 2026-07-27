@@ -5,9 +5,10 @@ intrinsic :class:`~coordinax._src.base.AbstractChart`.
 
 The *induced* (pullback) metric on an embedded submanifold is computed as
 $g = J^T J$ where $J$ is the Jacobian of the composition
-``intrinsic → Cartesian ambient``.  Routing through the Cartesian ambient
-ensures every entry of $J$ carries the *same* unit (``cart_unit / intrinsic_unit``),
-which makes $J^T J$ unit-compatible across all summation terms.
+``chart → intrinsic → Cartesian ambient``.  Routing through the Cartesian
+ambient makes every ambient output share the single unit ``cart_unit`` (column
+*i* of $J$ then has unit ``cart_unit / chart_unit_i``), which makes each
+$J^T J$ summation term unit-compatible.
 
 All results are wrapped in a :class:`~coordinax._src.metric.matrix.DenseMetric`
 because the induced metric is not guaranteed to be diagonal.
@@ -79,9 +80,11 @@ def metric_matrix(
     Computes $g_{ij} = \sum_k J^k_i J^k_j$ where $J$ is the Jacobian of the
     composition ``chart → intrinsic → Cartesian ambient`` (the ``chart →
     intrinsic`` leg is the identity when ``chart`` is the intrinsic chart).
-    Routing through Cartesian ambient coordinates ensures all entries of $J$
-    share the same unit (``cart_unit / chart_unit``), so the matrix product
-    $J^T J$ is unit-compatible and the result carries physically correct units.
+    Routing through Cartesian ambient coordinates makes every ambient output
+    share the single unit ``cart_unit`` (so column *i* of $J$ has unit
+    ``cart_unit / chart_unit_i``); each ``g_{ij}`` term $J^k_i J^k_j$ then has a
+    consistent unit ``cart_unit^2 / (chart_unit_i * chart_unit_j)`` and the
+    result carries physically correct units.
 
     Parameters
     ----------
@@ -146,8 +149,8 @@ def metric_matrix(
     # intrinsic chart (where the embedding is defined) when they differ.
     chart_keys = chart.components
 
-    # Use Cartesian ambient so every J entry has the same unit
-    # (cart_unit / chart_unit).
+    # Use Cartesian ambient so all outputs share cart_unit; column i of J then
+    # has unit cart_unit / chart_unit_i, making each g_ij term unit-consistent.
     cart_chart = ambient_chart.cartesian
     cart_keys = cart_chart.components
 
@@ -176,8 +179,8 @@ def metric_matrix(
         ]
         return qnp.stack(vals)
 
-    J_arr = jax.jacfwd(_embed_cart)(xat)  # (n_cart, n_intrinsic)
-    result_vals = J_arr.T @ J_arr  # (n_intrinsic, n_intrinsic)
+    J_arr = jax.jacfwd(_embed_cart)(xat)  # (n_cart, n_chart)
+    result_vals = J_arr.T @ J_arr  # (n_chart, n_chart)
 
     # g_{ij} unit = uto_[0]² / (ufrom_[i] × ufrom_[j])
     # Valid because all Cartesian coordinates share the same unit.
