@@ -240,10 +240,11 @@ def act(
 # pushforward — tangent geometry (shared by every linear transform)
 
 
-def _linear_pushforward_cdict(
+@plum.dispatch
+def pushforward(
     op: AbstractLinearTransform,
     tau: Any,
-    x: CDict,
+    v: CDict,
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
     /,
@@ -254,10 +255,12 @@ def _linear_pushforward_cdict(
     r"""Frozen-$\tau$ pushforward of tangent data under a linear map: $v \mapsto M v$.
 
     A linear map has a *constant* Jacobian equal to its matrix ``M``, so in the
-    canonical Cartesian chart the pushforward is simply ``M v`` and needs no
-    base point ``at``. For a non-Cartesian chart the tangent is pushed through
-    the chart Jacobian (which does require ``at``), ``M`` is applied in
-    Cartesian, then the result is pulled back to the original chart.
+    canonical Cartesian chart the pushforward is simply ``M v`` and needs no base
+    point ``at`` (matching `Rotate`). For a non-Cartesian chart the tangent is
+    pushed through the chart Jacobian (which does require ``at``), ``M`` is applied
+    in Cartesian, then pulled back. Time-dependent linear maps instead route
+    through the generic prolongation, which supplies the ``dot(M)`` term and
+    requires the jet anchors.
 
     Examples
     --------
@@ -279,7 +282,7 @@ def _linear_pushforward_cdict(
     # The tangent must carry exactly the chart's components (a clear error
     # instead of a raw KeyError when packing); an anchor, if given, must match.
     ref = f"do not match the chart's {sorted(chart.components)}"
-    for name, d in (("tangent", x), *(() if at is None else (("base point", at),))):
+    for name, d in (("tangent", v), *(() if at is None else (("base point", at),))):
         pre = f"pushforward({type(op).__name__}, ...): the {name} components "
         require_matching_keys(d, chart.components, pre + ref)
 
@@ -287,7 +290,7 @@ def _linear_pushforward_cdict(
     matrix = op._matrix(cart, tau)
 
     if chart == cart:
-        p_cart = x
+        p_cart = v
     else:
         if at is None:
             msg = (
@@ -297,7 +300,7 @@ def _linear_pushforward_cdict(
             )
             raise TypeError(msg)
         at_cart = cxc.pt_map(at, chart, cart, usys=usys)
-        p_cart = cxr.tangent_map(x, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
+        p_cart = cxr.tangent_map(v, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
 
     comps_cart = cart.components
     p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
@@ -311,31 +314,6 @@ def _linear_pushforward_cdict(
         "CDict",
         cxr.tangent_map(p_cart_out, cart, rep, chart, at=at_out, usys=usys),  # ty: ignore[missing-argument]
     )
-
-
-@plum.dispatch
-def pushforward(
-    op: AbstractLinearTransform,
-    tau: Any,
-    v: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    *,
-    at: CDict | None = None,
-    usys: OptUSys = None,
-) -> CDict:
-    r"""Frozen-$\tau$ pushforward of tangent data under a linear map.
-
-    A linear map's Jacobian is its (constant) matrix, so a Cartesian velocity
-    or acceleration transforms as ``v -> M v`` with no base point required —
-    matching the behavior already provided for `Rotate`. This is used by the
-    generic tangent ``act`` for displacement data and for every time-independent
-    linear transform (`Scale`, `Reflect`, `Shear`). Time-dependent linear maps
-    still route through the generic prolongation, which supplies the ``dot(M)``
-    term and requires the jet anchors.
-    """
-    return _linear_pushforward_cdict(op, tau, v, chart, rep, at=at, usys=usys)
 
 
 @plum.dispatch
@@ -387,7 +365,7 @@ def pushforward(
             return part
         return cast(
             "CDict",
-            _linear_pushforward_cdict(
+            cxfmapi.pushforward(
                 op, tau, part, factor_chart, rep, at=at_part, usys=usys
             ),
         )
