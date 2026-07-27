@@ -107,3 +107,9 @@ class TestEmbeddedMetricRespectsChart:
             got = np.asarray(g.matrix.value)
             ref = self._embedding_metric(chart, coords)
             assert np.allclose(got, ref, atol=1e-9), f"{chart}: {got} != {ref}"
+            # Units: dimensionless ambient (radius=1) over angular coords, so
+            # every g_ij is cart_unit^2 / (rad * rad) = 1 / rad^2.
+            unit = g.matrix.unit
+            assert all(
+                str(unit[i, j]) == "1 / rad2" for i in range(2) for j in range(2)
+            ), f"{chart}: unexpected units {unit}"
