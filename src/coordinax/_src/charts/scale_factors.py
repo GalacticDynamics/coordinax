@@ -18,8 +18,6 @@ from coordinax._src.base import AbstractDimensionalFlag
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import FlatMetric
 
-DMLS = u.unit("")
-
 
 @plum.dispatch
 def scale_factors(

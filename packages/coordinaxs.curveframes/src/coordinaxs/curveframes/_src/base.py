@@ -224,36 +224,6 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
 
         return _location_from_delta
 
-    def _location_at(self, tau: u.AbstractQuantity, /) -> Any:
-        r"""Evaluate the curve position $\boldsymbol{\gamma}(\tau)$.
-
-        Parameters
-        ----------
-        tau : Quantity
-            The evolution parameter value at which to evaluate.
-
-        Returns
-        -------
-        Quantity
-            The 3-D position vector along the curve.
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> import unxt as u
-        >>> import coordinaxs.curveframes as cxfc
-
-        >>> def helix(tau: u.Q) -> u.Q:
-        ...     t = tau.ustrip("s")
-        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
-
-        >>> fs = cxfc.FrenetSerretTransform.from_curve(helix)
-        >>> fs.location(u.Q(0.0, "s"))
-        Q([1., 0., 0.], 'm')
-
-        """
-        return self.location(tau)
-
     def _rotation_matrix(self, tau: u.AbstractQuantity, /) -> Any:
         r"""Evaluate the rotation matrix $R(\tau)$.
 
