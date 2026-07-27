@@ -102,3 +102,23 @@ class TestPointTransformProductCharts:
         assert u.ustrip("rad", result["q.phi"]) == pytest.approx(0)
         assert u.ustrip("m", result["p.r"]) == pytest.approx(1)
         assert u.ustrip("rad", result["p.phi"]) == pytest.approx(jnp.pi / 2)
+
+
+class TestPointTransformProlate:
+    """``pt_map`` into ProlateSpheroidal3D routes via Cylindrical3D (no recursion)."""
+
+    def test_cart3d_to_prolate_roundtrips(self) -> None:
+        prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+        p = {"x": u.Q(0.5, "m"), "y": u.Q(1.5, "m"), "z": u.Q(3.0, "m")}
+        out = cxc.pt_map(p, cxc.cart3d, prolate)
+        assert set(out) == {"mu", "nu", "phi"}
+        back = cxc.pt_map(out, prolate, cxc.cart3d)
+        for k in ("x", "y", "z"):
+            assert u.ustrip("m", back[k]) == pytest.approx(u.ustrip("m", p[k]))
+
+    def test_spherical_to_prolate(self) -> None:
+        # Routes via the generic fallback: Spherical3D -> Cart3D -> Cyl -> Prolate.
+        prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+        p = {"r": u.Q(3.0, "m"), "theta": u.Q(0.6, "rad"), "phi": u.Q(0.4, "rad")}
+        out = cxc.pt_map(p, cxc.sph3d, prolate)
+        assert set(out) == {"mu", "nu", "phi"}
