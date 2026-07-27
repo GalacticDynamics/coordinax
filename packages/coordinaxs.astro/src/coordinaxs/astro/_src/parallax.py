@@ -11,7 +11,6 @@ import equinox as eqx
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import Quantity
 
 import coordinax.distances as cxd
 from .constants import ANGLE, LENGTH, MAGNITUDE
@@ -157,7 +156,7 @@ def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
         return cls(jnp.asarray(p.value, **kw), p.unit)  # ty: ignore[unresolved-attribute]
 
     if dim == MAGNITUDE:  # distance modulus
-        d = Quantity(10 ** (1 + q.ustrip("mag") / 5), "pc")
+        d = u.Q(10 ** (1 + q.ustrip("mag") / 5), "pc")
         p = jnp.atan2(parallax_base_length, d)
         unit = u.unit_of(p)
         return cls(jnp.asarray(p.ustrip(unit), **kw), unit)  # ty: ignore[unresolved-attribute]

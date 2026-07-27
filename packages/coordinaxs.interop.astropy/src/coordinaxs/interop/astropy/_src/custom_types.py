@@ -1,16 +1,12 @@
 """Internal custom types."""
 
-__all__ = (
-    "CKey",
-    "CDict",
-)
+__all__ = ("CDict",)
 
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-CKey: TypeAlias = str
 if TYPE_CHECKING:
     # Typed for static checkers only.
-    CDict: TypeAlias = dict[CKey, Any]
+    CDict: TypeAlias = dict[str, Any]
 else:
     # A parametric `dict[...]` annotation makes every plum signature
     # using CDict "unfaithful", disabling plum's method cache (a full
