@@ -25,7 +25,14 @@ import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform, materialize_transform
 from .custom_types import CDict, HasShape, OptUSys
+from .utils import require_matching_keys
 from coordinax.internal import pack_uniform_unit
+
+
+def _matmul_cdict(matrix: Array, d: CDict, comps: tuple[str, ...], /) -> CDict:
+    """Apply ``matrix`` to a Cartesian cdict ``d``, packed into a shared unit."""
+    v, unit = pack_uniform_unit(d, keys=comps)
+    return cast("CDict", cxc.cdict(jnp.einsum("ij,...j->...i", matrix, v), unit, comps))
 
 
 class AbstractLinearTransform(AbstractTransform):
@@ -180,11 +187,7 @@ def act(
     matrix = op._matrix(cart, tau)
 
     p_cart = cxc.pt_map(x, chart, cart, usys=usys)
-
-    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
-    v_out = jnp.einsum("ij,...j->...i", matrix, v)
-    p_cart_out = cxc.cdict(v_out, unit, comps_cart)
-
+    p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
     out = cxc.pt_map(p_cart_out, cart, chart, usys=usys)
     return cast("CDict", out)
 
@@ -275,19 +278,10 @@ def _linear_pushforward_cdict(
     """
     # The tangent must carry exactly the chart's components (a clear error
     # instead of a raw KeyError when packing); an anchor, if given, must match.
-    expected = set(chart.components)
+    ref = f"do not match the chart's {sorted(chart.components)}"
     for name, d in (("tangent", x), *(() if at is None else (("base point", at),))):
-        if set(d) != expected:
-            missing = sorted(expected - set(d))
-            extra = sorted(set(d) - expected)
-            msg = (
-                f"pushforward({type(op).__name__}, ...): the {name} components "
-                f"do not match the chart's {sorted(expected)}"
-                + (f"; missing {missing}" if missing else "")
-                + (f"; unexpected {extra}" if extra else "")
-                + "."
-            )
-            raise TypeError(msg)
+        pre = f"pushforward({type(op).__name__}, ...): the {name} components "
+        require_matching_keys(d, chart.components, pre + ref)
 
     cart = chart.cartesian
     matrix = op._matrix(cart, tau)
@@ -306,17 +300,13 @@ def _linear_pushforward_cdict(
         p_cart = cxr.tangent_map(x, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
 
     comps_cart = cart.components
-    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
-    v_out = jnp.einsum("ij,...j->...i", matrix, v)
-    p_cart_out = cxc.cdict(v_out, unit, comps_cart)
+    p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
 
     if chart == cart:
-        return cast("CDict", p_cart_out)
+        return p_cart_out
 
     # Map the base point forward (M @ at) to anchor the inverse Jacobian.
-    at_arr, at_unit = pack_uniform_unit(at_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
-    at_out_arr = jnp.einsum("ij,...j->...i", matrix, at_arr)
-    at_out = cxc.cdict(at_out_arr, at_unit, comps_cart)
+    at_out = _matmul_cdict(matrix, at_cart, comps_cart)
     return cast(
         "CDict",
         cxr.tangent_map(p_cart_out, cart, rep, chart, at=at_out, usys=usys),  # ty: ignore[missing-argument]
