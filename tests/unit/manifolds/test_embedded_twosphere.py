@@ -67,3 +67,43 @@ class TestEmbeddedTwosphereAmbient:
         out = cxm.pt_embed(_P, m)
         assert set(out) == {"r", "theta", "phi"}
         np.testing.assert_allclose(u.ustrip("km", out["r"]), 2.0, atol=1e-6)
+
+
+class TestEmbeddedMetricRespectsChart:
+    """metric_matrix returns the induced metric in the *passed* chart's coords."""
+
+    @staticmethod
+    def _embedding_metric(chart, coords):
+        """J^T J of the unit-sphere R^3 embedding, expressed in ``chart`` coords."""
+        import jax
+
+        keys = chart.components
+
+        def embed(x):
+            p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}
+            s = cxc.pt_map(p, chart, cxc.sph2)
+            th, ph = u.ustrip("rad", s["theta"]), u.ustrip("rad", s["phi"])
+            return jnp.array(
+                [jnp.sin(th) * jnp.cos(ph), jnp.sin(th) * jnp.sin(ph), jnp.cos(th)]
+            )
+
+        x0 = jnp.array([coords[k] for k in keys])
+        j = jax.jacfwd(embed)(x0)
+        return np.asarray(j.T @ j)
+
+    def test_metric_in_each_two_sphere_chart(self) -> None:
+        emb = cxm.EmbeddedManifold(
+            intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
+        )
+        cases = [
+            (cxc.sph2, {"theta": 0.9, "phi": 0.6}),
+            (cxc.lonlat_sph2, {"lon": 0.6, "lat": 0.7}),
+            (cxc.loncoslat_sph2, {"lon_coslat": 0.3, "lat": 0.5}),
+            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}),
+        ]
+        for chart, coords in cases:
+            pt = {k: u.Q(v, "rad") for k, v in coords.items()}
+            g = cxm.metric_matrix(emb, pt, chart)
+            got = np.asarray(g.matrix.value)
+            ref = self._embedding_metric(chart, coords)
+            assert np.allclose(got, ref, atol=1e-9), f"{chart}: {got} != {ref}"

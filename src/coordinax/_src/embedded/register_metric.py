@@ -16,6 +16,8 @@ because the induced metric is not guaranteed to be diagonal.
 
 __all__: tuple[str, ...] = ()
 
+from typing import cast
+
 import jax
 import jax.numpy as jnp
 import plum
@@ -27,6 +29,7 @@ import unxt as u
 import coordinaxs.api.charts as cxcapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
+from coordinax._src.custom_types import CDict
 from coordinax._src.metric.matrix import DenseMetric
 from coordinax.internal import pack_nonuniform_unit
 from coordinaxs.api.manifolds import metric_matrix
@@ -133,27 +136,34 @@ def metric_matrix(
     Unit("m2 / rad2")
 
     """
-    del chart
     embed_map = M.embed_map
     ambient_chart = embed_map.ambient
-    intrinsic_keys = embed_map.intrinsic.components
+    intrinsic_chart = embed_map.intrinsic
+    # The metric is returned in the *passed* chart's coordinates; map into the
+    # intrinsic chart (where the embedding is defined) when they differ.
+    chart_keys = chart.components
 
     # Use Cartesian ambient so every J entry has the same unit
-    # (cart_unit / intrinsic_unit).
+    # (cart_unit / chart_unit).
     cart_chart = ambient_chart.cartesian
     cart_keys = cart_chart.components
 
-    xat, ufrom = pack_nonuniform_unit(point, intrinsic_keys)
+    def _to_intrinsic(q: CDict) -> CDict:
+        if chart == intrinsic_chart:
+            return q
+        return cast("CDict", cxcapi.pt_map(q, chart, intrinsic_chart))
+
+    xat, ufrom = pack_nonuniform_unit(point, chart_keys)
     ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
 
-    at_ambient = embed_map.embed(point, usys=None)
+    at_ambient = embed_map.embed(_to_intrinsic(point), usys=None)
     at_cart = cxcapi.pt_map(at_ambient, ambient_chart, cart_chart)
     uto_ = ul.cdict_units(at_cart, cart_keys)
     uto_ = tuple(ut if ut is not None else DMLS for ut in uto_)
 
     def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
-        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(intrinsic_keys)}
-        q_ambient = embed_map.embed(q, usys=None)
+        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(chart_keys)}
+        q_ambient = embed_map.embed(_to_intrinsic(q), usys=None)
         q_cart = cxcapi.pt_map(q_ambient, ambient_chart, cart_chart)
         vals = [
             u.ustrip(uto_[j], q_cart[k])  # ty: ignore[not-subscriptable]
@@ -168,7 +178,7 @@ def metric_matrix(
 
     # g_{ij} unit = uto_[0]² / (ufrom_[i] × ufrom_[j])
     # Valid because all Cartesian coordinates share the same unit.
-    n = len(intrinsic_keys)
+    n = len(chart_keys)
     result_unit = ul.UnitsMatrix(
         tuple(
             tuple(uto_[0] ** 2 / (ufrom_[i] * ufrom_[j]) for j in range(n))  # ty: ignore[unsupported-operator]
