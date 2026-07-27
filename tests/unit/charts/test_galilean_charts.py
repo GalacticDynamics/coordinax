@@ -147,12 +147,12 @@ class TestGalileanCTProductStructure:
         assert chart.factors[1] == cxc.sph3d
 
     def test_factor_names(self) -> None:
-        """factor_names is ('time', 'space')."""
+        """factor_names is ('ct', 'space'), matching galilean_spacetime."""
         chart = cxc.GalileanCT()
-        assert chart.factor_names == ("time", "space")
+        assert chart.factor_names == ("ct", "space")
 
-    def test_split_components_ct_key(self) -> None:
-        """split_components returns time dict with 'ct' key."""
+    def test_split_components_time_key(self) -> None:
+        """split_components returns the time dict with time1d's native 't' key."""
         chart = cxc.GalileanCT()
         p = {
             "ct": u.Q(1, "km"),
@@ -161,7 +161,8 @@ class TestGalileanCTProductStructure:
             "z": u.Q(4, "km"),
         }
         time_part, spatial_part = chart.split_components(p)
-        assert "ct" in time_part
+        assert set(time_part) == {"t"}
+        assert time_part["t"] == p["ct"]
         assert set(spatial_part.keys()) == {"x", "y", "z"}
 
     def test_merge_components_roundtrip(self) -> None:
@@ -334,3 +335,26 @@ class TestGalileanSpacetimeManifold:
     def test_accessible_from_manifolds_module(self) -> None:
         """galilean_spacetime is exported from coordinax.manifolds."""
         assert hasattr(cxm, "galilean_spacetime")
+
+
+class TestGalileanCTMetricAndAtlas:
+    """Regression tests: the GalileanCT chart works with its own manifold."""
+
+    def test_metric_matrix_is_euclidean_4d(self) -> None:
+        """metric_matrix assembles a 4x4 Euclidean product metric (no key crash)."""
+        import numpy as np
+
+        pt = {
+            "ct": u.Q(0.0, "m"),
+            "x": u.Q(1.0, "m"),
+            "y": u.Q(0.0, "m"),
+            "z": u.Q(0.0, "m"),
+        }
+        g = cxm.metric_matrix(cxm.galilean_spacetime, pt, cxc.galileanct)
+        assert np.allclose(np.diag(np.asarray(g.matrix.value)), [1.0, 1.0, 1.0, 1.0])
+
+    def test_manifold_recognizes_its_chart(self) -> None:
+        """galilean_spacetime.has_chart(galileanct) — factor_names must agree."""
+        assert cxc.galileanct.M is cxm.galilean_spacetime
+        assert cxm.galilean_spacetime.has_chart(cxc.galileanct)
+        assert cxc.galileanct.factor_names == cxm.galilean_spacetime.factor_names

@@ -39,7 +39,7 @@ C_DEFAULT = u.StaticQuantity(np.array(299_792.458), "km/s")
 @final
 @chart_dataclass_decorator
 class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
-    r"""4D spacetime rep with components ``(ct, x, y, z)`` and Minkowski metric.
+    r"""4D chart with components ``(ct, x, y, z)`` on Galilean spacetime.
 
     This is a Cartesian product chart: GalileanCT(spatial_chart) ≡ time1d x
     spatial_chart
@@ -51,9 +51,12 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     Mathematical definition:
     $$
        x^0 = ct,\quad x^i = \text{spatial components}
-       \\
-       g = \mathrm{diag}(-1, 1, 1, 1) \quad \text{(signature } - + + +)
     $$
+
+    The underlying manifold is ``galilean_spacetime = R1 x R3`` (both Euclidean),
+    so the induced product metric is ``diag(1, 1, 1, 1)`` — Galilean spacetime
+    carries no invariant Lorentzian spacetime metric. (This is *not* Minkowski
+    ``diag(-1, 1, 1, 1)``; a Lorentzian variant would need a different manifold.)
 
     Parameters
     ----------
@@ -117,8 +120,8 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     @override
     @property
     def factor_names(self) -> tuple[str, ...]:
-        """Factor names are ('time', 'space')."""
-        return ("time", "space")
+        """Factor names are ('ct', 'space'), matching ``galilean_spacetime``."""
+        return ("ct", "space")
 
     @override
     def split_components(self, p: CDict) -> tuple[CDict, CDict]:
@@ -127,7 +130,10 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         GalileanCT uses 'ct' for the time component. The split returns
         factor dicts with their native keys ('ct' for time, spatial keys for space).
         """
-        time_dict = {"ct": p["ct"]}
+        # The time factor is `time1d`, whose native component is "t"; map the
+        # chart's "ct" value onto it so factor operations (metric, pt_map)
+        # validate against the real factor chart.
+        time_dict = {"t": p["ct"]}
         spatial_dict = {k: p[k] for k in self.spatial_chart.components}
         return (time_dict, spatial_dict)
 
@@ -135,9 +141,9 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # ty: ignore[invalid-method-override]
         """Merge factor CDicts back into GalileanCT components.
 
-        Expects time factor dict with 'ct' key, spatial factor dict with spatial keys.
+        The time factor dict uses `time1d`'s native "t" key; re-key it to "ct".
         """
-        return {**parts[0], **parts[1]}
+        return {"ct": parts[0]["t"], **parts[1]}
 
     # ===============================================================
     # Chart API
