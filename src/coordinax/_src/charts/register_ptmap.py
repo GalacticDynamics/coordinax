@@ -640,7 +640,10 @@ def pt_map(
 
     lon_coslat, r_ = p["lon_coslat"], p["distance"]
     lat = uconvert_to_rad(p["lat"], usys)
-    # Longitude is undefined at the poles (cos(lat) == 0); set lon = 0 there.
+    # Longitude is undefined at the poles. The guard fires only when cos(lat) is
+    # *exactly* 0 (giving lon = 0); a floating-point near-pole value (e.g.
+    # cos(pi/2) ~= 6e-17) still divides, but the cos(lat) factor below multiplies
+    # the result back so x, y stay finite.
     coslat = jnp.cos(lat)
     lon = _ratio_zero_on_axis(lon_coslat, coslat)
     lon = uconvert_to_rad(lon, usys)
