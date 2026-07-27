@@ -13,18 +13,67 @@ helper, avoiding a full-matrix allocation.
 
 __all__: tuple[str, ...] = ()
 
+from typing import cast
+
+import jax
 import jax.numpy as jnp
 import plum
+import unxts.linalg as ul
 
 import unxt as u
 from unxt.quantity import AllowValue
 
-from .chart import AbstractSphericalHyperSphere
+import coordinaxs.api.charts as cxcapi
+from .chart import (
+    AbstractSphericalHyperSphere,
+    LonCosLatSphericalTwoSphere,
+    LonLatSphericalTwoSphere,
+    MathSphericalTwoSphere,
+    SphericalTwoSphere,
+)
 from .manifold import HyperSphericalManifold
-from coordinax._src.metric.matrix import DiagonalMetric, _sine_product_diagonal
+from coordinax._src.metric.matrix import (
+    DenseMetric,
+    DiagonalMetric,
+    _sine_product_diagonal,
+)
 from coordinax.internal import CDict
 
 RAD = u.unit("rad")
+
+
+def _rad_value(q: object, /) -> object:
+    """Numeric value of an angular coordinate in radians (bare arrays pass through)."""
+    if isinstance(q, u.AbstractQuantity):
+        return u.ustrip("rad", q)
+    return jnp.asarray(q)
+
+
+def _round_metric_pullback(
+    point: CDict, chart: AbstractSphericalHyperSphere
+) -> DenseMetric:
+    r"""Round metric on the two-sphere via pullback of the canonical metric.
+
+    ``g = Jc^T diag(1, sin^2 theta) Jc`` where ``Jc`` is the Jacobian of the
+    coordinate map ``chart -> SphericalTwoSphere``. Correct for both orthogonal
+    (diagonal) and non-orthogonal (dense, e.g. ``LonCosLat``) charts.
+    """
+    keys = chart.components
+    x0 = jnp.stack([jnp.asarray(_rad_value(point[k]), dtype=float) for k in keys])
+    canon = SphericalTwoSphere()
+
+    def to_canon(x: jnp.ndarray) -> jnp.ndarray:
+        p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}
+        s = cast("CDict", cxcapi.pt_map(p, chart, canon))
+        return jnp.stack([u.ustrip("rad", s["theta"]), u.ustrip("rad", s["phi"])])
+
+    jc = jax.jacfwd(to_canon)(x0)  # (2, n)
+    theta = to_canon(x0)[0]
+    g_can = jnp.diag(jnp.stack([jnp.ones_like(theta), jnp.sin(theta) ** 2]))
+    g = jc.T @ g_can @ jc  # (n, n), dimensionless (angles map angles -> angles)
+    n = len(keys)
+    units = ul.UnitsMatrix(tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n)))
+    return DenseMetric(ul.QuantityMatrix(g, unit=units))
 
 
 @plum.dispatch
@@ -92,3 +141,60 @@ def metric_matrix(
         thetas = jnp.array([])
     diag = _sine_product_diagonal(thetas, 1.0)
     return DiagonalMetric(diag)
+
+
+@plum.dispatch
+def metric_representation(
+    M: HyperSphericalManifold,
+    chart: LonLatSphericalTwoSphere
+    | LonCosLatSphericalTwoSphere
+    | MathSphericalTwoSphere,
+    /,
+) -> type[DenseMetric]:
+    """Non-canonical two-sphere charts return a `DenseMetric`.
+
+    Their round metric is obtained by pullback (see `metric_matrix`); it is
+    diagonal for LonLat/Math but genuinely dense for LonCosLat, so all three use
+    `DenseMetric`.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> cxm.metric_representation(cxm.S2, cxc.loncoslat_sph2)
+    <class 'coordinax._src.metric.matrix.DenseMetric'>
+
+    """
+    del M, chart
+    return DenseMetric
+
+
+@plum.dispatch
+def metric_matrix(
+    M: HyperSphericalManifold,
+    point: CDict,
+    chart: LonLatSphericalTwoSphere
+    | LonCosLatSphericalTwoSphere
+    | MathSphericalTwoSphere,
+    /,
+) -> DenseMetric:
+    r"""Round metric on a non-canonical two-sphere chart (pullback).
+
+    The nested sine-product used by the canonical dispatch assumes the
+    components are polar angles in nested order; that is false for these charts
+    (LonLat, Math swap/relabel the polar and azimuthal angles; LonCosLat is
+    non-orthogonal). The metric is instead pulled back from the canonical chart.
+
+    >>> import math
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    LonLat at lat=40 deg: ``g = diag(cos^2(lat), 1)``:
+
+    >>> at = {"lon": u.Q(0.6, "rad"), "lat": u.Q(math.radians(40), "rad")}
+    >>> g = cxm.metric_matrix(cxm.S2, at, cxc.lonlat_sph2)
+    >>> [round(float(g.matrix.value[i, i]), 4) for i in (0, 1)]
+    [0.5868, 1.0]
+
+    """
+    del M
+    return _round_metric_pullback(point, chart)

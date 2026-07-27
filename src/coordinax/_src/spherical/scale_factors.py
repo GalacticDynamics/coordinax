@@ -9,9 +9,41 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
+from .chart import (
+    LonCosLatSphericalTwoSphere,
+    LonLatSphericalTwoSphere,
+    MathSphericalTwoSphere,
+)
 from .metric import RoundMetric
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
+
+
+@plum.dispatch
+def scale_factors(
+    metric: RoundMetric,
+    chart: LonLatSphericalTwoSphere
+    | LonCosLatSphericalTwoSphere
+    | MathSphericalTwoSphere,
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys = None,
+) -> ul.QuantityMatrix:
+    """Non-canonical two-sphere charts have no nested-sine scale factors.
+
+    The cumulative sine-product below assumes ``components[:-1]`` are polar
+    angles in nested order, which is false for these charts (they relabel/swap
+    the polar and azimuthal angles, and ``LonCosLat`` is non-orthogonal so its
+    metric is not even diagonal). Use ``metric_matrix`` for their round metric.
+    """
+    del metric, at, usys
+    msg = (
+        "scale_factors is only defined for the canonical nested-angle spherical "
+        f"chart; {type(chart).__name__} relabels the angles (and LonCosLat is "
+        "non-orthogonal). Use coordinax.manifolds.metric_matrix instead."
+    )
+    raise NotImplementedError(msg)
 
 
 @plum.dispatch
