@@ -170,6 +170,7 @@ class TestMetricMatrixNumericalValues:
         pt = {"q": jnp.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])}  # (2, 3)
         g = cxmapi.metric_matrix(cxm.R3, pt, cxc.cartnd)
         assert g.diagonal.shape == (3,)
+        assert jnp.allclose(g.diagonal, jnp.ones(3))
 
     def test_minkowski_diagonal_signature(self):
         """Minkowski metric in (ct, x, y, z) coords: diag = [-1, 1, 1, 1]."""

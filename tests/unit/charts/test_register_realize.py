@@ -134,4 +134,5 @@ class TestPointTransformCartND:
         out = cxc.pt_map(p, cxc.cartnd, cxc.cart3d)
         assert set(out) == {"x", "y", "z"}
         assert u.ustrip("m", out["x"]) == pytest.approx([1.0, 4.0])
+        assert u.ustrip("m", out["y"]) == pytest.approx([2.0, 5.0])
         assert u.ustrip("m", out["z"]) == pytest.approx([3.0, 6.0])
