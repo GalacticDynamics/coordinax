@@ -82,10 +82,8 @@ class CartesianProductManifold(AbstractManifold):
     >>> M = cxm.CartesianProductManifold(
     ...     factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1")
     ... )
-    >>> wl.pprint(M, width=60)
-    CartesianProductManifold(
-        factors=(Sn(2), Rn(1)), factor_names=('S2', 'R1')
-    )
+    >>> wl.pprint(M, width=76)
+    CartesianProductManifold(factors=(Sn(2), Rn(1)), factor_names=('S2', 'R1'))
 
     **Dimension**
 

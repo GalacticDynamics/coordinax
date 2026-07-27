@@ -69,7 +69,6 @@ class Rotate(AbstractLinearTransform):
     >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.transforms as cxfm
-    >>> import wadler_lindig as wl
 
     We can then create a rotation operator:
 
@@ -101,8 +100,8 @@ class Rotate(AbstractLinearTransform):
 
     >>> q = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
     >>> nq = op(t, q)  # inferred chart & rep -> cxr.Point
-    >>> wl.pprint(nq, short_arrays="compact", use_short_name=True)
-    {'x': Q(0, unit='m'), 'y': Q(1, unit='m'), 'z': Q(0, unit='m')}
+    >>> nq
+    {'x': Q(0, 'm'), 'y': Q(1, 'm'), 'z': Q(0, 'm')}
 
     In addition to the standard low-level objects, Rotation operators can be
     applied to {class}`~unxt.Quantity` and Array-like objects, taken to
