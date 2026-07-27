@@ -1898,9 +1898,10 @@ def pt_map(
     sinp, cosp = jnp.sin(phi), jnp.cos(phi)
 
     pos = {"x": rho * sinp, "y": rho * cosp, "z": z}
+    lz_over_rho = jnp.where(rho == 0, jnp.zeros_like(dt_rho), lz / rho)
     vel = {
-        "x": sinp * dt_rho - cosp * lz / rho,
-        "y": cosp * dt_rho + sinp * lz / rho,
+        "x": sinp * dt_rho - cosp * lz_over_rho,
+        "y": cosp * dt_rho + sinp * lz_over_rho,
         "z": dt_z,
     }
     return cast("CDict", to_chart.merge_components((pos, vel)))
