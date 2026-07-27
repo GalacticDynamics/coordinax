@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import plum
 
@@ -11,6 +11,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import is_any_quantity
 
+import coordinaxs.api.charts as cxcapi
 from .chart import (
     LonCosLatSphericalTwoSphere,
     LonLatSphericalTwoSphere,
@@ -69,6 +70,45 @@ def pt_map(
     assert to_M == to_chart.M  # noqa: S101
 
     return p
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: Sn,
+    from_chart: LonLatSphericalTwoSphere
+    | LonCosLatSphericalTwoSphere
+    | MathSphericalTwoSphere,
+    to_M: Sn,
+    to_chart: LonLatSphericalTwoSphere
+    | LonCosLatSphericalTwoSphere
+    | MathSphericalTwoSphere,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    """Route between non-canonical two-sphere charts via `SphericalTwoSphere`.
+
+    Only ``sph2 <-> {lonlat, loncoslat, math}`` pairs are registered directly,
+    and the two-sphere has no Cartesian chart, so the generic router cannot
+    bridge two non-canonical charts (it raises ``NoGlobalCartesianChartError``).
+    Go ``A -> SphericalTwoSphere -> B`` instead (matching-type pairs are handled
+    by the identity rule above).
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> import unxt as u
+
+    >>> p = {"lon": u.Q(45, "deg"), "lat": u.Q(30, "deg")}
+    >>> out = cxc.pt_map(p, cxm.S2, cxc.lonlat_sph2, cxm.S2, cxc.math_sph2)
+    >>> sorted(out)
+    ['phi', 'theta']
+
+    """
+    canon = SphericalTwoSphere(M=from_chart.M)
+    p_canon = cxcapi.pt_map(p, from_M, from_chart, to_M, canon, usys=usys)
+    out = cxcapi.pt_map(p_canon, from_M, canon, to_M, to_chart, usys=usys)
+    return cast("CDict", out)
 
 
 # ===================================================================

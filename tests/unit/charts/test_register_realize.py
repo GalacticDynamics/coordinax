@@ -136,3 +136,31 @@ class TestPointTransformCartND:
         assert u.ustrip("m", out["x"]) == pytest.approx([1.0, 4.0])
         assert u.ustrip("m", out["y"]) == pytest.approx([2.0, 5.0])
         assert u.ustrip("m", out["z"]) == pytest.approx([3.0, 6.0])
+
+
+_TWO_SPHERE_PTS = {
+    "lonlat": (cxc.lonlat_sph2, {"lon": u.Q(45, "deg"), "lat": u.Q(30, "deg")}),
+    "math": (cxc.math_sph2, {"theta": u.Q(50, "deg"), "phi": u.Q(35, "deg")}),
+    "loncoslat": (
+        cxc.loncoslat_sph2,
+        {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(0.5, "rad")},
+    ),
+}
+
+
+class TestPointTransformTwoSphereCrossChart:
+    """Non-canonical two-sphere charts convert to each other via SphericalTwoSphere."""
+
+    @pytest.mark.parametrize("src", ["lonlat", "math", "loncoslat"])
+    @pytest.mark.parametrize("dst", ["lonlat", "math", "loncoslat"])
+    def test_cross_chart_matches_route_via_canonical(self, src, dst):
+        if src == dst:
+            return
+        a, p = _TWO_SPHERE_PTS[src]
+        b, _ = _TWO_SPHERE_PTS[dst]
+        out = cxc.pt_map(p, a, b)
+        ref = cxc.pt_map(cxc.pt_map(p, a, cxc.sph2), cxc.sph2, b)
+        for k in out:
+            assert u.ustrip(u.unit_of(out[k]), out[k]) == pytest.approx(
+                u.ustrip(u.unit_of(ref[k]), ref[k])
+            )
