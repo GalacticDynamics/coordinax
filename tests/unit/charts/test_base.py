@@ -181,3 +181,50 @@ class TestAbstractDimensionalFlag:
         for _flag_cls in cxc.DIMENSIONAL_FLAGS.values():
             # All registered flags should have chart subclasses
             pass  # Registration enforces this
+
+    def test_component_count_must_match_declared_dimension(self) -> None:
+        """A concrete chart's component count must match its dimension flag."""
+        import dataclasses
+
+        from typing import Literal
+
+        import jax.tree_util as jtu
+
+        from coordinax._src.base import (
+            MT,
+            AbstractFixedComponentsChart,
+            chart_dataclass_decorator,
+        )
+        from coordinax._src.charts.d3 import Abstract3D, Cart3D
+        from coordinax._src.custom_types import Len
+        from coordinax._src.euclidean.manifold import R3
+
+        two_keys = tuple[Literal["a"], Literal["b"]]
+        two_dims = tuple[Len, Len]
+
+        # A 2-component chart declared 3D (via Abstract3D) must be rejected.
+        with pytest.raises(TypeError, match="declared 3D but has 2 components"):
+
+            @jtu.register_static
+            @chart_dataclass_decorator
+            class _Bad3D(
+                AbstractFixedComponentsChart[MT, two_keys, two_dims], Abstract3D
+            ):
+                _: dataclasses.KW_ONLY
+                M: MT = R3
+
+                @property
+                def cartesian(self):
+                    return Cart3D(M=self.M)
+
+    def test_component_count_matches_for_predefined_charts(self) -> None:
+        """Every predefined chart's ndim matches its component count."""
+        charts = [
+            obj
+            for name in dir(cxc)
+            if not name.startswith("_")
+            and isinstance(obj := getattr(cxc, name), cxc.AbstractChart)
+        ]
+        assert charts, "no predefined chart instances discovered"
+        for chart in charts:
+            assert chart.ndim == len(chart.components), chart

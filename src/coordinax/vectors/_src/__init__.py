@@ -1,6 +1,5 @@
 """Vectors."""
 
-from .api import *
 from .base import *
 from .bundle import *
 from .constants import *

@@ -28,8 +28,6 @@ class Abstract6D(AbstractDimensionalFlag, n=6):
     Examples include Cartesian representations in arbitrary dimensions.
     """
 
-    # TODO: add a check it's 6D
-
     @override
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         # Enforce that this is a subclass of AbstractChart
