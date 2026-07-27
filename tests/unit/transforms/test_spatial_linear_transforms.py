@@ -157,8 +157,8 @@ def test_linear_velocity_on_product_chart_is_factorwise() -> None:
     op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
     v = {f"{f}.{c}": u.Q(1.0, "m/s") for f in ("q", "p") for c in "xyz"}
     out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
-    got = [float(out[k].value) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
-    assert got == [2.0, 3.0, 4.0, 2.0, 3.0, 4.0]
+    got = [_to_np(out[k], "m/s") for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    np.testing.assert_allclose(got, [2.0, 3.0, 4.0, 2.0, 3.0, 4.0])
 
 
 def test_linear_acceleration_on_product_chart_is_factorwise() -> None:
@@ -167,8 +167,8 @@ def test_linear_acceleration_on_product_chart_is_factorwise() -> None:
     op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
     a = {f"{f}.{c}": u.Q(1.0, "m/s2") for f in ("q", "p") for c in "xyz"}
     out = cxfm.act(op, None, a, ps, cxr.tangent_geom, cxr.coord_acc)
-    got = [float(out[k].value) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
-    assert got == [2.0, 3.0, 4.0, 2.0, 3.0, 4.0]
+    got = [_to_np(out[k], "m/s2") for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    np.testing.assert_allclose(got, [2.0, 3.0, 4.0, 2.0, 3.0, 4.0])
 
 
 def test_linear_velocity_on_nested_product_charts_recurses() -> None:
@@ -191,7 +191,7 @@ def test_linear_velocity_on_nested_product_charts_recurses() -> None:
 
     v = {k: u.Q(1.0, "m/s") for k in ps.components}
     out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
-    got = {k: float(out[k].value) for k in ps.components}
+    got = {k: float(_to_np(out[k], "m/s")) for k in ps.components}
 
     # nested product factors pass through; only the plain Cart3D is scaled
     assert got == {
@@ -204,4 +204,4 @@ def test_linear_velocity_on_nested_product_charts_recurses() -> None:
     # pushforward stays consistent with the point action on the same chart
     pt = {k: u.Q(1.0, "m") for k in ps.components}
     pa = cxfm.act(op, None, pt, ps, cxr.point)
-    assert {k: float(pa[k].value) for k in ps.components} == got
+    assert {k: float(_to_np(pa[k], "m")) for k in ps.components} == got

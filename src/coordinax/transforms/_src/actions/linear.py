@@ -294,7 +294,7 @@ def pushforward(
     else:
         if at is None:
             msg = (
-                f"pushforward({type(op).__name__}, ..., TangentGeometry) on a "
+                f"pushforward({type(op).__name__}, ..., {rep!r}) on a "
                 f"non-Cartesian chart ({chart!r}) requires 'at' (base point in "
                 "chart coords) so the Jacobian pushforward can be evaluated."
             )
@@ -349,6 +349,13 @@ def pushforward(
      Array(2., dtype=float64), Array(3., dtype=float64), Array(4., dtype=float64)]
 
     """
+    # Validate the full product-chart keys up front (a clear error instead of a
+    # raw KeyError from split_components), mirroring the non-product overload.
+    ref = f"do not match the chart's {sorted(chart.components)}"
+    for name, d in (("tangent", v), *(() if at is None else (("base point", at),))):
+        pre = f"pushforward({type(op).__name__}, ...): the {name} components "
+        require_matching_keys(d, chart.components, pre + ref)
+
     n = op._validate_square(materialize_transform(op, tau)._raw_matrix).shape[-1]
     n_factors = len(chart.factors)
     parts = chart.split_components(v)
