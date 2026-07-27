@@ -363,13 +363,18 @@ class TestMetricRepresentation:
 def test_curvilinear_metric_is_batch_safe(manifold, chart, point1):
     """Batched points give a (batch, n) diagonal whose rows match the unbatched."""
     n = len(chart.components)
+    point2 = {k: u.Q(q.value * 1.3, q.unit) for k, q in point1.items()}
     batch = {
         k: u.Q(jnp.array([q.value, q.value * 1.3]), q.unit) for k, q in point1.items()
     }
 
     g1 = cxmapi.metric_matrix(manifold, point1, chart).diagonal
+    g2 = cxmapi.metric_matrix(manifold, point2, chart).diagonal
     gb = cxmapi.metric_matrix(manifold, batch, chart).diagonal
 
     assert g1.shape == (n,)
     assert gb.shape == (2, n)
+    # Both batched rows must match their corresponding unbatched results, so a
+    # wrong axis ordering that still yields the right shape is caught.
     assert jnp.allclose(jnp.asarray(gb.value)[0], jnp.asarray(g1.value))
+    assert jnp.allclose(jnp.asarray(gb.value)[1], jnp.asarray(g2.value))
