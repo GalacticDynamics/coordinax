@@ -77,10 +77,11 @@ def metric_matrix(
     r"""Induced metric on an embedded submanifold via Jacobian pullback.
 
     Computes $g_{ij} = \sum_k J^k_i J^k_j$ where $J$ is the Jacobian of the
-    composition ``intrinsic → Cartesian ambient``.  Routing through Cartesian
-    ambient coordinates ensures all entries of $J$ share the same unit
-    (``cart_unit / intrinsic_unit``), so the matrix product $J^T J$ is
-    unit-compatible and the result carries physically correct units.
+    composition ``chart → intrinsic → Cartesian ambient`` (the ``chart →
+    intrinsic`` leg is the identity when ``chart`` is the intrinsic chart).
+    Routing through Cartesian ambient coordinates ensures all entries of $J$
+    share the same unit (``cart_unit / chart_unit``), so the matrix product
+    $J^T J$ is unit-compatible and the result carries physically correct units.
 
     Parameters
     ----------
@@ -88,16 +89,18 @@ def metric_matrix(
         An embedded submanifold; carries ``intrinsic``, ``ambient``, and
         ``embed_map`` fields.
     point : dict
-        A coordinate dictionary in the *intrinsic* chart coordinates.
+        A coordinate dictionary in the passed ``chart``'s coordinates.
     chart : AbstractChart
-        The intrinsic chart (passed through for API consistency).
+        The chart in which ``point`` is expressed and in which the metric is
+        returned; mapped into the embedding's intrinsic chart when the two
+        differ.
 
     Returns
     -------
     DenseMetric
         Induced metric matrix at ``point``, backed by a
         :class:`~unxts.linalg.QuantityMatrix` with units
-        ``cart_unit^2 / (intrinsic_unit_i * intrinsic_unit_j)``.
+        ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.
 
     Examples
     --------
