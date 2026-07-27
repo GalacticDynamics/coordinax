@@ -1708,9 +1708,9 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Transition behavior currently registered in-core:
       - identity transform (`pt_map(p, PoincarePolar6D, PoincarePolar6D) -> p`).
       - gala forward map from a Cartesian phase-space product chart
-        (`CartesianProductChart((cart3d, cart3d))` = [position, velocity]) to
-        `PoincarePolar6D`, and its partial inverse back (exact only for
-        `Lz >= 0`, since `sqrt(|Lz|)` discards `sign(Lz)`).
+        (a `CartesianProductChart` with factors `(cart3d, cart3d)` =
+        [position, velocity]) to `PoincarePolar6D`, and its partial inverse
+        back (exact only for `Lz >= 0`, since `sqrt(|Lz|)` discards `sign(Lz)`).
 
 </br>
 
