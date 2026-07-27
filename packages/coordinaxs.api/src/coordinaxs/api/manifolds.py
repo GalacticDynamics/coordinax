@@ -10,6 +10,7 @@ __all__ = (
     "pt_project",
     "pt_map",
     "norm",
+    "separation",
 )
 
 from typing import TYPE_CHECKING, Any
@@ -63,6 +64,20 @@ def scale_factors(chart: Any, /, *args: Any, **kwargs: Any) -> Any:
     """Return the diagonal entries of the metric matrix.
 
     Dispatches on the first argument (metric or manifold) and the chart.
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def separation(*args: Any, **kwargs: Any) -> Any:
+    """Distance between two points on a manifold.
+
+    The straight-line distance is the manifold `norm` of the two points'
+    coordinate difference, evaluated in the chart they are given in (exact for a
+    flat manifold).  Dispatches on the inputs: two `~coordinax.vectors.Point`
+    objects (chart/frame extracted automatically), or a ``chart`` / ``metric``
+    together with the two points as component dictionaries, packed quantities,
+    or bare arrays.
     """
     raise NotImplementedError  # pragma: no cover
 

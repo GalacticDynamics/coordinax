@@ -6,7 +6,7 @@ The patterns here are taken from integration coverage in `packages/coordinaxs.hy
 
 ## Why Combine Them?
 
-- `@dispatch` selects behavior from argument types.
+- `@plum.dispatch` selects behavior from argument types.
 - `@st.composite` lets a strategy perform dependent draws.
 
 Together, you can build one strategy name with multiple typed overloads while still getting the flexibility of composite draws.
@@ -16,17 +16,17 @@ Together, you can build one strategy name with multiple typed overloads while st
 Use this order:
 
 ```python
+import plum
 from hypothesis import strategies as st
-from plum import dispatch
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def bounded_value(draw, x: int):
     return draw(st.integers(min_value=x, max_value=x + 10))
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def bounded_value(draw, x: float):
     return draw(st.floats(min_value=x, max_value=x + 1.0, allow_nan=False))
@@ -45,7 +45,7 @@ Annotating `draw` (for example `draw: Any`) does not change dispatch behavior. `
 from typing import Any
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def annotated_draw(draw: Any, x: int):
     return draw(st.integers(min_value=x, max_value=x + 10))
@@ -70,13 +70,13 @@ Use normal runtime type objects in annotations instead.
 You can dispatch on multiple typed positional arguments:
 
 ```python
-@dispatch
+@plum.dispatch
 @st.composite
 def interval_value(draw, lo: int, hi: int):
     return draw(st.integers(min_value=lo, max_value=hi))
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def interval_value(draw, lo: float, hi: float):
     return draw(st.floats(min_value=lo, max_value=hi, allow_nan=False))
@@ -92,25 +92,21 @@ Plum picks the most specific matching overload in a type hierarchy.
 from numbers import Number, Real
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def typed_number(draw, x: Number):
     return draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False))
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def typed_number(draw, x: Real):
     return draw(
-        st.floats(
-            min_value=float(x) - 1.0,
-            max_value=float(x) + 1.0,
-            allow_nan=False,
-        )
+        st.floats(min_value=float(x) - 1.0, max_value=float(x) + 1.0, allow_nan=False)
     )
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def typed_number(draw, x: int):
     return draw(st.integers(min_value=x, max_value=x + 5))
@@ -123,13 +119,13 @@ Calling `typed_number(10)` selects the `int` overload, not the broader `Real`/`N
 Homogeneous varargs dispatch is supported:
 
 ```python
-@dispatch
+@plum.dispatch
 @st.composite
 def multi_bounded(draw, *xs: int):
     return [draw(st.integers(min_value=x, max_value=x + 10)) for x in xs]
 
 
-@dispatch
+@plum.dispatch
 @st.composite
 def multi_bounded(draw, *xs: float):
     return [
@@ -144,12 +140,12 @@ This works only when all positional varargs match one element type. Mixed types 
 For mixed inputs, dispatch per element inside a single composite strategy:
 
 ```python
-@dispatch
+@plum.dispatch
 def _element_strategy(x: int):
     return st.integers(min_value=x, max_value=x + 10)
 
 
-@dispatch
+@plum.dispatch
 def _element_strategy(x: float):
     return st.floats(min_value=x, max_value=x + 1.0, allow_nan=False)
 

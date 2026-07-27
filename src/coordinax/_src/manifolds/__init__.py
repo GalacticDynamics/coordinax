@@ -6,3 +6,4 @@ from .angle_between import *
 from .guess import *
 from .norm import *
 from .scale_factors import *
+from .separation import *
