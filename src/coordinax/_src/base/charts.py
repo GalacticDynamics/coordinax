@@ -364,10 +364,16 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
                     cls._coord_dimensions = _get_tuple(args[2])
                     break
 
-            # Check the component count matches the declared dimension flag (if
-            # this chart mixes in an `AbstractDimensionalFlag` with a fixed `n`).
+            # Check the component count matches the declared dimension flag,
+            # but only when the chart mixes in an `AbstractDimensionalFlag` with
+            # a fixed integer `n` (skip the variable-`n` flag, e.g. `CartND`
+            # whose `_chart_ndim` is `"N"`, and charts with no flag at all).
             ndim = getattr(cls, "_chart_ndim", None)
-            if len(getattr(cls, "_components", None)) != ndim:
+            if (
+                isinstance(ndim, int)
+                and hasattr(cls, "_components")
+                and len(cls._components) != ndim
+            ):
                 msg = (
                     f"{cls.__name__} is declared {ndim}D but has "
                     f"{len(cls._components)} components {cls._components}"
