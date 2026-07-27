@@ -351,7 +351,11 @@ class TestGalileanCTMetricAndAtlas:
             "z": u.Q(0.0, "m"),
         }
         g = cxm.metric_matrix(cxm.galilean_spacetime, pt, cxc.galileanct)
-        assert np.allclose(np.diag(np.asarray(g.matrix.value)), [1.0, 1.0, 1.0, 1.0])
+        # Euclidean product metric: the full 4x4 must be the identity, so this
+        # also catches any spurious off-diagonal terms.
+        mat = np.asarray(g.matrix.value)
+        assert mat.shape == (4, 4)
+        assert np.allclose(mat, np.eye(4))
 
     def test_manifold_recognizes_its_chart(self) -> None:
         """galilean_spacetime.has_chart(galileanct) — factor_names must agree."""

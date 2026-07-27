@@ -44,9 +44,15 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     This is a Cartesian product chart: GalileanCT(spatial_chart) ≡ time1d x
     spatial_chart
 
-    The time component is always the canonical 1D time chart `time1d` with
-    component "t". The time coordinate is automatically converted to ct using
-    the speed of light.
+    The time axis coordinate is ``x^0 = ct`` — a *length* — stored directly on
+    the chart (component ``"ct"``, dimension ``"length"``). The underlying time
+    factor is the canonical 1D chart ``time1d`` (native component ``"t"``); this
+    chart carries the length-valued ``ct`` on its axis rather than a physical
+    time, consistent with the Euclidean ``R1`` time factor and the
+    ``diag(1, 1, 1, 1)`` product metric. Because ``ct`` *is* the coordinate,
+    ``split_components``/``merge_components`` simply re-key ``"ct" <-> "t"``
+    without a runtime ``c`` multiply. ``c`` is retained to form ``ct`` from a
+    physical time at construction/conversion boundaries.
 
     Mathematical definition:
     $$
@@ -125,10 +131,12 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     @override
     def split_components(self, p: CDict) -> tuple[CDict, CDict]:
-        """Split CDict by factors, keeping 'ct' for time factor.
+        """Split CDict by factors, re-keying the ``"ct"`` axis to ``time1d``'s ``"t"``.
 
-        GalileanCT uses 'ct' for the time component. The split returns
-        factor dicts with their native keys ('ct' for time, spatial keys for space).
+        The returned factor dicts use each factor's native keys: ``"t"`` for the
+        time factor (holding the length-valued ``x^0 = ct``) and the spatial
+        keys for the space factor. This is a pure re-key — ``ct`` is already the
+        coordinate, so no ``c`` conversion is applied (see the class docstring).
         """
         # The time factor is `time1d`, whose native component is "t"; map the
         # chart's "ct" value onto it so factor operations (metric, pt_map)
@@ -141,7 +149,9 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # ty: ignore[invalid-method-override]
         """Merge factor CDicts back into GalileanCT components.
 
-        The time factor dict uses `time1d`'s native "t" key; re-key it to "ct".
+        The time factor dict uses `time1d`'s native "t" key (holding the
+        length-valued ``x^0 = ct``); re-key it back to "ct". Pure re-key — no
+        ``c`` conversion (see the class docstring).
         """
         return {"ct": parts[0]["t"], **parts[1]}
 
