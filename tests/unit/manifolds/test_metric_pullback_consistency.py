@@ -234,7 +234,9 @@ class TestNonCanonicalTwoSphereMetric:
         g = cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2)
         assert abs(float(jnp.asarray(g.matrix.value)[0, 1])) > 1e-3
 
-    @pytest.mark.parametrize("chart", [cxc.lonlat_sph2, cxc.loncoslat_sph2])
+    @pytest.mark.parametrize(
+        "chart", [cxc.lonlat_sph2, cxc.loncoslat_sph2, cxc.math_sph2]
+    )
     def test_scale_factors_not_defined(self, chart):
         """scale_factors is undefined for non-canonical charts (use metric_matrix)."""
         keys = chart.components

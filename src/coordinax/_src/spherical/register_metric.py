@@ -17,11 +17,12 @@ from typing import cast
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 import plum
 import unxts.linalg as ul
 
 import unxt as u
-from unxt.quantity import AllowValue
+from unxt.quantity import AllowValue, is_any_quantity
 
 import coordinaxs.api.charts as cxcapi
 from .chart import (
@@ -42,11 +43,12 @@ from coordinax.internal import CDict
 RAD = u.unit("rad")
 
 
+_CANON_SPH2 = SphericalTwoSphere()
+
+
 def _rad_value(q: object, /) -> object:
     """Numeric value of an angular coordinate in radians (bare arrays pass through)."""
-    if isinstance(q, u.AbstractQuantity):
-        return u.ustrip("rad", q)
-    return jnp.asarray(q)
+    return u.ustrip("rad", q) if is_any_quantity(q) else jnp.asarray(q)
 
 
 def _round_metric_pullback(
@@ -59,12 +61,11 @@ def _round_metric_pullback(
     (diagonal) and non-orthogonal (dense, e.g. ``LonCosLat``) charts.
     """
     keys = chart.components
-    x0 = jnp.stack([jnp.asarray(_rad_value(point[k]), dtype=float) for k in keys])
-    canon = SphericalTwoSphere()
+    x0 = jnp.stack([jnp.asarray(_rad_value(point[k])) for k in keys])
 
     def to_canon(x: jnp.ndarray) -> jnp.ndarray:
         p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}
-        s = cast("CDict", cxcapi.pt_map(p, chart, canon))
+        s = cast("CDict", cxcapi.pt_map(p, chart, _CANON_SPH2))
         return jnp.stack([u.ustrip("rad", s["theta"]), u.ustrip("rad", s["phi"])])
 
     jc = jax.jacfwd(to_canon)(x0)  # (2, n)
@@ -72,7 +73,7 @@ def _round_metric_pullback(
     g_can = jnp.diag(jnp.stack([jnp.ones_like(theta), jnp.sin(theta) ** 2]))
     g = jc.T @ g_can @ jc  # (n, n), dimensionless (angles map angles -> angles)
     n = len(keys)
-    units = ul.UnitsMatrix(tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n)))
+    units = ul.UnitsMatrix(np.full((n, n), u.unit(""), dtype=object))
     return DenseMetric(ul.QuantityMatrix(g, unit=units))
 
 

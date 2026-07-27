@@ -40,8 +40,8 @@ def scale_factors(
     del metric, at, usys
     msg = (
         "scale_factors is only defined for the canonical nested-angle spherical "
-        f"chart; {type(chart).__name__} relabels the angles (and LonCosLat is "
-        "non-orthogonal). Use coordinax.manifolds.metric_matrix instead."
+        f"chart; {type(chart).__name__} has no nested-sine scale factors. "
+        "Use coordinax.manifolds.metric_matrix instead."
     )
     raise NotImplementedError(msg)
 
