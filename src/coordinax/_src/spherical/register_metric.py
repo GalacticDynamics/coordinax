@@ -62,6 +62,10 @@ def _round_metric_pullback(
     """
     keys = chart.components
     x0 = jnp.stack([jnp.asarray(_rad_value(point[k])) for k in keys])
+    # jax.jacfwd needs an inexact input; promote integer angles (e.g. u.Q(0,
+    # "rad")) to float while leaving float32/float64 inputs untouched.
+    if not jnp.issubdtype(x0.dtype, jnp.inexact):
+        x0 = x0.astype(float)
 
     def to_canon(x: jnp.ndarray) -> jnp.ndarray:
         p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}

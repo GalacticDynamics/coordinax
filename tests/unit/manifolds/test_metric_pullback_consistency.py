@@ -234,6 +234,13 @@ class TestNonCanonicalTwoSphereMetric:
         g = cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2)
         assert abs(float(jnp.asarray(g.matrix.value)[0, 1])) > 1e-3
 
+    def test_integer_angles_do_not_break_jacfwd(self):
+        """Integer-valued angles are promoted to float so the pullback jacfwd works."""
+        pt = {"lon": u.Q(0, "rad"), "lat": u.Q(0, "rad")}  # integer magnitudes
+        g = cxmapi.metric_matrix(cxm.S2, pt, cxc.lonlat_sph2)
+        assert isinstance(g, DenseMetric)
+        assert bool(jnp.all(jnp.isfinite(g.matrix.value)))
+
     @pytest.mark.parametrize(
         "chart", [cxc.lonlat_sph2, cxc.loncoslat_sph2, cxc.math_sph2]
     )
