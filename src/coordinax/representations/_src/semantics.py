@@ -541,22 +541,6 @@ class Displacement(AbstractTangentSemanticKind):
     order: ClassVar[int] = 0
     """Time-derivative order of the role (0 for displacement)."""
 
-    def derivative(self) -> "AbstractTangentSemanticKind":
-        """Return the `Velocity` semantic kind.
-
-        Displacement has time-order 0; its time derivative is always `Velocity`
-        (order 1).  This override avoids a dict lookup and makes the intent
-        explicit.
-
-        Examples
-        --------
-        >>> import coordinax.representations as cxr
-        >>> cxr.Displacement().derivative()
-        vel
-
-        """
-        return vel
-
 
 dpl = Displacement()
 """Instance of `Displacement`."""
@@ -594,36 +578,6 @@ class Velocity(AbstractTangentSemanticKind):
     order: ClassVar[int] = 1
     """Time-derivative order of the role (1 for velocity)."""
 
-    def derivative(self) -> AbstractTangentSemanticKind:
-        """Return the semantic kind for the time derivative of this velocity.
-
-        Velocity has time-order 1. Its time derivative is acceleration
-        (time-order 2).
-
-        Examples
-        --------
-        >>> import coordinax.representations as cxr
-        >>> cxr.Velocity().derivative()
-        acc
-
-        """
-        return acc
-
-    def antiderivative(self) -> AbstractTangentSemanticKind:
-        """Return the semantic kind for the time antiderivative of this velocity.
-
-        Velocity has time-order 1. Its time antiderivative is displacement
-        (time-order 0).
-
-        Examples
-        --------
-        >>> import coordinax.representations as cxr
-        >>> cxr.Velocity().antiderivative()
-        dpl
-
-        """
-        return dpl
-
 
 vel = Velocity()
 """Instance of `Velocity`."""
@@ -660,21 +614,6 @@ class Acceleration(AbstractTangentSemanticKind):
 
     order: ClassVar[int] = 2
     """Time-derivative order of the role (2 for acceleration)."""
-
-    def antiderivative(self) -> AbstractTangentSemanticKind:
-        """Return the semantic kind for the time antiderivative of this acceleration.
-
-        Acceleration has time-order 2. Its time antiderivative is velocity
-        (time-order 1).
-
-        Examples
-        --------
-        >>> import coordinax.representations as cxr
-        >>> cxr.Acceleration().antiderivative()
-        vel
-
-        """
-        return vel
 
 
 acc = Acceleration()
