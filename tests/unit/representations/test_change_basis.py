@@ -145,6 +145,40 @@ class TestChangeBasisDispatch:
             u.ustrip("rad/s", v_back["phi"]), u.ustrip("rad/s", v["phi"])
         )
 
+    def test_diagonal_metric_batched_at_matches_unbatched(self):
+        """Batched `at` scales per-component on the last axis (h[..., i]).
+
+        Guards the DiagonalMetric fast path against reading the batch axis
+        instead of the component axis (the original bug).
+        """
+        M = cxm.R3
+        v = {
+            "r": u.Q(4.0, "m/s"),
+            "theta": u.Q(0.5, "rad/s"),
+            "phi": u.Q(0.25, "rad/s"),
+        }
+        at0 = {"r": u.Q(3.0, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(0.0, "rad")}
+        at1 = {"r": u.Q(5.0, "m"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.0, "rad")}
+        at_b = {
+            "r": u.Q(jnp.array([3.0, 5.0]), "m"),
+            "theta": u.Q(jnp.array([0.5, 1.0]), "rad"),
+            "phi": u.Q(jnp.array([0.0, 0.0]), "rad"),
+        }
+
+        def cb(at):
+            return cxr.change_basis(
+                v, cxc.sph3d, M, cxr.coord_basis, cxr.phys_basis, at=at
+            )
+
+        o0, o1, ob = cb(at0), cb(at1), cb(at_b)
+        # Physical (orthonormal) components are all m/s; each batched row must
+        # match its unbatched counterpart (theta/phi are the discriminating,
+        # r-dependent ones — a wrong axis would give the wrong per-row scaling).
+        for k in ("r", "theta", "phi"):
+            got = u.ustrip("m/s", ob[k])
+            want = np.array([u.ustrip("m/s", o0[k]), u.ustrip("m/s", o1[k])])
+            np.testing.assert_allclose(np.broadcast_to(got, (2,)), want)
+
     def test_round_trip_general_metric(self):
         M = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
