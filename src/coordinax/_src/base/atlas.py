@@ -3,7 +3,6 @@
 __all__ = ("AbstractAtlas",)
 
 import abc
-import dataclasses
 
 from typing import TYPE_CHECKING, Any
 
@@ -115,34 +114,6 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
         """
         raise NotImplementedError  # pragma: no cover
-
-    def default_chart_for(
-        self, M: "coordinax.manifolds.AbstractManifold", /
-    ) -> "coordinax.charts.AbstractChart[Any, Any, Any]":
-        """Return a default chart from the atlas for the given manifold.
-
-        This is a thin convenience wrapper over ``self.default_chart()`` that
-        checks that the manifold's atlas matches this atlas.
-
-        >>> import coordinax.manifolds as cxm
-        >>> M = cxm.R2
-        >>> M.atlas.default_chart_for(M)
-        Cart2D(M=Rn(2))
-
-        >>> try: M.atlas.default_chart_for(cxm.R3)
-        ... except ValueError as e: print(e)
-        Atlas EuclideanAtlas(ndim=2) does not match manifold atlas
-        EuclideanAtlas(ndim=3).
-
-        """
-        # Get the default chart
-        chart = self.default_chart()
-        # Validate that the manifold is compatible with this atlas
-        if M.atlas != self:
-            msg = f"Atlas {self!r} does not match manifold atlas {M.atlas!r}."
-            raise ValueError(msg)
-
-        return dataclasses.replace(chart, M=M)
 
     @abc.abstractmethod
     def has_chart(
