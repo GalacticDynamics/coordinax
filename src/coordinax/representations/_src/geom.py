@@ -14,16 +14,15 @@ __all__ = (
 import abc
 import dataclasses
 
-from typing import Any, ClassVar, final
+from typing import ClassVar, final
 
 import jax.tree_util as jtu
-import wadler_lindig as wl
 
-from dataclassish import field_items
+from ._canonical import CanonicalStaticReprMixin
 
 
 @jtu.register_static
-class AbstractGeometry(metaclass=abc.ABCMeta):
+class AbstractGeometry(CanonicalStaticReprMixin, metaclass=abc.ABCMeta):
     r"""Abstract base class for geometric kind.
 
     A geometric kind specifies the underlying **geometric type** of the data,
@@ -86,73 +85,6 @@ class AbstractGeometry(metaclass=abc.ABCMeta):
     Concrete subclasses should represent immutable geometric categories.
 
     """
-
-    canonical_name: ClassVar[str | None] = None
-    """Canonical name for the geometric kind."""
-
-    # ===============================================================
-    # Wadler-Lindig API
-
-    def __pdoc__(self, *, canonical: bool = True, **kw: Any) -> wl.AbstractDoc:
-        """Generate a Wadler-Lindig docstring for this Basis.
-
-        Parameters
-        ----------
-        canonical
-            Whether to use the canonical forms of the representation in the
-            docstring. E.g. `PointGeometry()` -> `point_geom`.
-        **kw
-            Additional keyword arguments to pass to the Wadler-Lindig docstring
-            formatter.
-
-        Examples
-        --------
-        >>> import wadler_lindig as wl
-        >>> import coordinax.representations as cxr
-
-        >>> geom = cxr.PointGeometry()
-        >>> wl.pprint(geom, canonical=False)
-        PointGeometry()
-
-        >>> wl.pprint(geom, canonical=True)
-        point_geom
-
-        """
-        if canonical and self.canonical_name is not None:
-            return wl.TextDoc(self.canonical_name)
-
-        items = field_items(self) if dataclasses.is_dataclass(self) else ()
-        return wl.bracketed(
-            begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=wl.named_objs(items, **kw),
-            sep=wl.comma,
-            end=wl.TextDoc(")"),
-            indent=kw.get("indent", 4),
-        )
-
-    def __repr__(self) -> str:
-        """Return the canonical string representation.
-
-        >>> import coordinax.representations as cxr
-        >>> repr(cxr.point_geom)
-        'point_geom'
-        >>> repr(cxr.PointGeometry())
-        'point_geom'
-
-        """
-        return wl.pformat(self, canonical=True)
-
-    def __str__(self) -> str:
-        """Return the verbose string representation.
-
-        >>> import coordinax.representations as cxr
-        >>> str(cxr.point_geom)
-        'PointGeometry()'
-        >>> str(cxr.PointGeometry())
-        'PointGeometry()'
-
-        """
-        return wl.pformat(self, canonical=False)
 
 
 @final

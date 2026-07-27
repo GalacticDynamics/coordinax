@@ -18,7 +18,7 @@ import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.embedded.metric import PullbackMetric
-from coordinax._src.euclidean.scale_factors import _column_squared_norms as _csn
+from coordinax._src.euclidean.scale_factors import _column_squared_norms
 from coordinax._src.metric.matrix import DiagonalMetric
 from coordinax.internal import pack_nonuniform_unit
 
@@ -161,8 +161,3 @@ def scale_factors(
     J_arr = jax.jacfwd(_embed_cart)(xat)  # (n_cart, n_intrinsic)
     J_cart = ul.QuantityMatrix(J_arr, unit=unit_matrix)
     return _column_squared_norms(J_cart)
-
-
-def _column_squared_norms(J: ul.QuantityMatrix | Array) -> ul.QuantityMatrix:
-    """Return the squared column norms of a Jacobian matrix as a QuantityMatrix."""
-    return _csn(J)

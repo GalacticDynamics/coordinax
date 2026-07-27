@@ -75,15 +75,10 @@ def _array_column_squared_norms(J: Array, /) -> ul.QuantityMatrix:
 
 def _quantity_column_squared_norms(J: ul.QuantityMatrix) -> ul.QuantityMatrix:
     """Return squared column norms for a heterogeneous-unit Jacobian."""
-    xs = tuple(_colnorm2(J[:, i]) for i in range(J.shape[-1]))
+    xs = tuple(jnp.dot(J[:, i], J[:, i]) for i in range(J.shape[-1]))
     units = tuple(u.unit_of(x) if is_any_quantity(x) else DMLS for x in xs)
     value = jnp.stack(
         [u.ustrip(AllowValue, unit, x) for x, unit in zip(xs, units, strict=True)],
         axis=-1,
     )
     return ul.QuantityMatrix(value, unit=ul.UnitsMatrix(units))
-
-
-def _colnorm2(column: ul.QuantityMatrix) -> u.AbstractQuantity | Array:
-    """Return the squared norm of a single Jacobian column."""
-    return jnp.dot(column, column)

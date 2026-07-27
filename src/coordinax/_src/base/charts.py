@@ -65,17 +65,6 @@ chart_dataclass_decorator = dataclasses.dataclass(
 MISSING = object()
 
 
-class MissingDefault:
-    """Sentinel for missing default values in dataclass fields."""
-
-    @property
-    def default(self) -> object:
-        return MISSING
-
-
-MISSINGDEFAULT = MissingDefault()
-
-
 ##############################################################################
 # AbstractChart
 
@@ -243,7 +232,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
             for k, v in field_items
             if k == "M"
             or not kw["hide_defaults"]
-            or v is not defaults.get(k, MISSINGDEFAULT).default
+            or v is not (defaults[k].default if k in defaults else MISSING)
         ]
         return wl.bracketed(
             begin=cls_name, docs=docs, sep=wl.comma, end=wl.TextDoc(")"), indent=4

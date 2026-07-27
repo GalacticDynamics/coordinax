@@ -42,16 +42,6 @@ ChartT = TypeVar(
 # ---------------------------------------------------------------------------
 
 
-def _broadcast_shapes(shapes: list[tuple[int, ...]]) -> tuple[int, ...]:
-    """Return the broadcast shape of a list of shapes."""
-    if not shapes:
-        return ()
-    result = shapes[0]
-    for s in shapes[1:]:
-        result = jnp.broadcast_shapes(result, s)
-    return result
-
-
 def vectorform_pdoc(pv: "Coordinate", **kwargs: Any) -> wl.AbstractDoc:
     """Return the vector-form Wadler-Lindig document for a `Coordinate`."""
     kwargs.setdefault("canonical", True)
@@ -428,7 +418,7 @@ class Coordinate(AbstractVector):
 
         """
         all_shapes = [self.point.shape, *(v.shape for v in self._data.values())]
-        return _broadcast_shapes(all_shapes)
+        return jnp.broadcast_shapes(*all_shapes)
 
     # ===================================================================
     # Quax API

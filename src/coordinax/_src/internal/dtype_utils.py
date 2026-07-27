@@ -22,10 +22,9 @@ InexactLeaf = Float[Array, "..."] | Complex[Array, "..."]
 
 def _cast_int_bool_leaf_to_float(x: NumericLeaf, /) -> InexactLeaf:
     """Cast integer/bool leaves to the configured default floating dtype."""
-    dtype = x.dtype
-    if jnp.issubdtype(dtype, jnp.integer) or jnp.issubdtype(dtype, jnp.bool_):
-        return x.astype(DEFAULT_FLOAT_DTYPE)
-    return x
+    if jnp.issubdtype(x.dtype, jnp.inexact):
+        return x
+    return x.astype(DEFAULT_FLOAT_DTYPE)
 
 
 def tree_cast_int_bool_to_float(tree: PyTree[NumericLeaf], /) -> PyTree[InexactLeaf]:

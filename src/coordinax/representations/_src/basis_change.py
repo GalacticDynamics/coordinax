@@ -74,6 +74,28 @@ def _qm_triangular_solve(
     return ul.QuantityMatrix(x_vals, unit=x_units)
 
 
+def _cholesky_vielbein(mm: DenseMetric, /) -> ul.QuantityMatrix:
+    """Upper-triangular vielbein E = L^T from a dense metric's Cholesky factor."""
+    mat = mm.matrix
+    if isinstance(mat, ul.QuantityMatrix):
+        L_val = jnp.linalg.cholesky(mat.value)
+        L_units = ul.UnitsMatrix(
+            tuple(tuple(uu**0.5 for uu in row) for row in mat.unit.to_tuple())
+        )
+        L = ul.QuantityMatrix(L_val, unit=L_units)
+    else:
+        L_raw = jnp.linalg.cholesky(mat)
+        n = mat.shape[-1]
+        _dmls = u.unit("")
+        L = ul.QuantityMatrix(
+            L_raw,
+            unit=ul.UnitsMatrix(
+                tuple(tuple(_dmls for _ in range(n)) for _ in range(n))
+            ),
+        )
+    return jnp.transpose(L, axes=(-2, -1))  # E = L^T, upper-triangular vielbein
+
+
 ##############################################################################
 # With a manifold
 
@@ -135,24 +157,7 @@ def change_basis(
         return {k: h[i] * v[k] for i, k in enumerate(keys)}
     # General case: Cholesky vielbein E = L^T, hat_v = E @ v
     assert isinstance(mm, DenseMetric)  # noqa: S101
-    mat = mm.matrix
-    if isinstance(mat, ul.QuantityMatrix):
-        L_val = jnp.linalg.cholesky(mat.value)
-        L_units = ul.UnitsMatrix(
-            tuple(tuple(uu**0.5 for uu in row) for row in mat.unit.to_tuple())
-        )
-        L = ul.QuantityMatrix(L_val, unit=L_units)
-    else:
-        L_raw = jnp.linalg.cholesky(mat)
-        n = mat.shape[-1]
-        _dmls = u.unit("")
-        L = ul.QuantityMatrix(
-            L_raw,
-            unit=ul.UnitsMatrix(
-                tuple(tuple(_dmls for _ in range(n)) for _ in range(n))
-            ),
-        )
-    E = jnp.transpose(L, axes=(-2, -1))  # E = L^T, upper-triangular vielbein
+    E = _cholesky_vielbein(mm)
     v_vec = ul.QuantityMatrix.from_cdict(v, keys)
     hat_v_vec = jnp.matmul(E, v_vec)
     return cxc.cdict(hat_v_vec, keys)  # ty: ignore[invalid-return-type]
@@ -214,24 +219,7 @@ def change_basis(
         return {k: v[k] / h[i] for i, k in enumerate(keys)}
     # General case: Cholesky vielbein E = L^T, v = E^{-1} hat_v (triangular solve)
     assert isinstance(mm, DenseMetric)  # noqa: S101
-    mat = mm.matrix
-    if isinstance(mat, ul.QuantityMatrix):
-        L_val = jnp.linalg.cholesky(mat.value)
-        L_units = ul.UnitsMatrix(
-            tuple(tuple(uu**0.5 for uu in row) for row in mat.unit.to_tuple())
-        )
-        L = ul.QuantityMatrix(L_val, unit=L_units)
-    else:
-        L_raw = jnp.linalg.cholesky(mat)
-        n = mat.shape[-1]
-        _dmls = u.unit("")
-        L = ul.QuantityMatrix(
-            L_raw,
-            unit=ul.UnitsMatrix(
-                tuple(tuple(_dmls for _ in range(n)) for _ in range(n))
-            ),
-        )
-    E = jnp.transpose(L, axes=(-2, -1))  # E = L^T, upper-triangular vielbein
+    E = _cholesky_vielbein(mm)
     hat_v_vec = ul.QuantityMatrix.from_cdict(v, keys)
     v_vec = _qm_triangular_solve(E, hat_v_vec)
     return cxc.cdict(v_vec, keys)  # ty: ignore[invalid-return-type]
