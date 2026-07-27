@@ -378,3 +378,13 @@ def test_curvilinear_metric_is_batch_safe(manifold, chart, point1):
     # wrong axis ordering that still yields the right shape is caught.
     assert jnp.allclose(jnp.asarray(gb.value)[0], jnp.asarray(g1.value))
     assert jnp.allclose(jnp.asarray(gb.value)[1], jnp.asarray(g2.value))
+    # Unit metadata must be preserved (and not reordered) under batching.
+    assert g1.unit == gb.unit
+    assert g2.unit == gb.unit
+
+
+def test_curvilinear_metric_diagonal_is_float_for_integer_coords():
+    """Integer-valued coordinates still yield a floating-dtype metric diagonal."""
+    pt = {"r": u.Q(2, "m"), "theta": u.Q(1, "rad")}  # integer magnitudes
+    g = cxmapi.metric_matrix(cxm.R2, pt, cxc.polar2d).diagonal
+    assert jnp.issubdtype(jnp.asarray(g.value).dtype, jnp.inexact)

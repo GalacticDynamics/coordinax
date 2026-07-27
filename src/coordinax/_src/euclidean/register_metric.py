@@ -273,7 +273,7 @@ def metric_matrix(
     del M, chart
     r_val, r_unit = _val_unit(point["r"])
     theta_unit = _angle_unit(point["theta"])
-    diag = jnp.stack([jnp.ones_like(r_val), r_val**2], axis=-1)
+    diag = jnp.stack([jnp.ones_like(r_val, dtype=float), r_val**2], axis=-1)
     units = ul.UnitsMatrix((u.unit(""), r_unit**2 / theta_unit**2))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
@@ -305,7 +305,12 @@ def metric_matrix(
     phi_unit = _angle_unit(point["phi"])
     dmls = u.unit("")
     diag = jnp.stack(
-        [jnp.ones_like(rho_val), rho_val**2, jnp.ones_like(rho_val)], axis=-1
+        [
+            jnp.ones_like(rho_val, dtype=float),
+            rho_val**2,
+            jnp.ones_like(rho_val, dtype=float),
+        ],
+        axis=-1,
     )
     units = ul.UnitsMatrix((dmls, rho_unit**2 / phi_unit**2, dmls))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
@@ -348,7 +353,9 @@ def metric_matrix(
     phi_unit = _angle_unit(point["phi"])
     r2 = r_val**2
     r2_unit = r_unit**2
-    diag = jnp.stack([jnp.ones_like(r2), r2, r2 * jnp.sin(theta_val) ** 2], axis=-1)
+    diag = jnp.stack(
+        [jnp.ones_like(r2, dtype=float), r2, r2 * jnp.sin(theta_val) ** 2], axis=-1
+    )
     units = ul.UnitsMatrix((u.unit(""), r2_unit / theta_unit**2, r2_unit / phi_unit**2))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
@@ -390,7 +397,9 @@ def metric_matrix(
     phi_unit = _angle_unit(point["phi"])
     r2 = r_val**2
     r2_unit = r_unit**2
-    diag = jnp.stack([jnp.ones_like(r2), r2 * jnp.sin(phi_val) ** 2, r2], axis=-1)
+    diag = jnp.stack(
+        [jnp.ones_like(r2, dtype=float), r2 * jnp.sin(phi_val) ** 2, r2], axis=-1
+    )
     units = ul.UnitsMatrix((u.unit(""), r2_unit / theta_unit**2, r2_unit / phi_unit**2))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
@@ -431,7 +440,9 @@ def metric_matrix(
     lat_unit = _angle_unit(point["lat"])
     d2 = d_val**2
     d2_unit = d_unit**2
-    diag = jnp.stack([d2 * jnp.cos(lat_val) ** 2, d2, jnp.ones_like(d2)], axis=-1)
+    diag = jnp.stack(
+        [d2 * jnp.cos(lat_val) ** 2, d2, jnp.ones_like(d2, dtype=float)], axis=-1
+    )
     units = ul.UnitsMatrix((d2_unit / lon_unit**2, d2_unit / lat_unit**2, u.unit("")))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
