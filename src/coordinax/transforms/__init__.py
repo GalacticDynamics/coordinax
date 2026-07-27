@@ -17,7 +17,7 @@ from importlib.metadata import entry_points
 from collections.abc import Mapping
 from typing import Final
 
-from ._setup_package import install_import_hook
+from coordinax._src.setup_package import install_import_hook
 
 __all__: tuple[str, ...] = (
     # API
