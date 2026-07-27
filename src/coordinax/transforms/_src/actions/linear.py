@@ -292,7 +292,7 @@ def _linear_pushforward_cdict(
     cart = chart.cartesian
     matrix = op._matrix(cart, tau)
 
-    if chart is cart:
+    if chart == cart:
         p_cart = x
     else:
         if at is None:
@@ -310,7 +310,7 @@ def _linear_pushforward_cdict(
     v_out = jnp.einsum("ij,...j->...i", matrix, v)
     p_cart_out = cxc.cdict(v_out, unit, comps_cart)
 
-    if chart is cart:
+    if chart == cart:
         return cast("CDict", p_cart_out)
 
     # Map the base point forward (M @ at) to anchor the inverse Jacobian.
