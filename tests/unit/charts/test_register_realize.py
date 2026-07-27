@@ -160,7 +160,8 @@ class TestPointTransformTwoSphereCrossChart:
         b, _ = _TWO_SPHERE_PTS[dst]
         out = cxc.pt_map(p, a, b)
         ref = cxc.pt_map(cxc.pt_map(p, a, cxc.sph2), cxc.sph2, b)
+        assert set(out) == set(ref)
+        # Compare in a shared canonical unit (rad) so mismatched unit metadata
+        # can't slip through equal magnitudes with different units.
         for k in out:
-            assert u.ustrip(u.unit_of(out[k]), out[k]) == pytest.approx(
-                u.ustrip(u.unit_of(ref[k]), ref[k])
-            )
+            assert u.ustrip("rad", out[k]) == pytest.approx(u.ustrip("rad", ref[k]))

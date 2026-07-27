@@ -105,9 +105,12 @@ def pt_map(
     ['phi', 'theta']
 
     """
-    canon = SphericalTwoSphere(M=from_chart.M)
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
+
+    canon = SphericalTwoSphere(M=to_M)
     p_canon = cxcapi.pt_map(p, from_M, from_chart, to_M, canon, usys=usys)
-    out = cxcapi.pt_map(p_canon, from_M, canon, to_M, to_chart, usys=usys)
+    out = cxcapi.pt_map(p_canon, to_M, canon, to_M, to_chart, usys=usys)
     return cast("CDict", out)
 
 
