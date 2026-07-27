@@ -152,17 +152,20 @@ def test_linear_velocity_noncartesian_roundtrips_with_at() -> None:
 
 
 def test_linear_velocity_on_product_chart_is_factorwise() -> None:
-    """A 3x3 Scale acts factorwise on each Cart3D factor of a 6D phase-space chart."""
+    """A 3x3 Scale acts factorwise on each Cart3D factor of a 6D velocity."""
     ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
     op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
-    v = {
-        "q.x": u.Q(1.0, "m/s"),
-        "q.y": u.Q(1.0, "m/s"),
-        "q.z": u.Q(1.0, "m/s"),
-        "p.x": u.Q(1.0, "m/s2"),
-        "p.y": u.Q(1.0, "m/s2"),
-        "p.z": u.Q(1.0, "m/s2"),
-    }
+    v = {f"{f}.{c}": u.Q(1.0, "m/s") for f in ("q", "p") for c in "xyz"}
     out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
+    got = [float(out[k].value) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    assert got == [2.0, 3.0, 4.0, 2.0, 3.0, 4.0]
+
+
+def test_linear_acceleration_on_product_chart_is_factorwise() -> None:
+    """A 3x3 Scale acts factorwise on each Cart3D factor of a 6D acceleration."""
+    ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    a = {f"{f}.{c}": u.Q(1.0, "m/s2") for f in ("q", "p") for c in "xyz"}
+    out = cxfm.act(op, None, a, ps, cxr.tangent_geom, cxr.coord_acc)
     got = [float(out[k].value) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
     assert got == [2.0, 3.0, 4.0, 2.0, 3.0, 4.0]
