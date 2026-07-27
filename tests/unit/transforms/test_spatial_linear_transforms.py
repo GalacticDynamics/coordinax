@@ -115,15 +115,20 @@ def test_linear_transform_acts_on_acceleration_without_at() -> None:
 
 
 def test_linear_velocity_matches_generic_prolongation_with_at() -> None:
-    """Keystone: the no-`at` fast path equals the generic prolongation given `at`."""
+    """Keystone: the no-`at` fast path equals the generic autodiff prolongation.
+
+    Compare against `cxfm.act_jet` (which differentiates the point action) with
+    `at` as jet slot 0 — not merely against the same pushforward path invoked
+    with `at`, which for a static linear map is the identical code.
+    """
     op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
     v = _vel(1.0, -2.0, 0.5)
     at = {"x": u.Q(2.0, "m"), "y": u.Q(-1.0, "m"), "z": u.Q(3.0, "m")}
     fast = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel)
-    withat = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+    generic = cxfm.act_jet(op, None, {0: at, 1: v}, cxc.cart3d)[1]
     for c in ("x", "y", "z"):
         np.testing.assert_allclose(
-            _to_np(fast[c], "m/s"), _to_np(withat[c], "m/s"), atol=1e-12
+            _to_np(fast[c], "m/s"), _to_np(generic[c], "m/s"), atol=1e-12
         )
 
 
