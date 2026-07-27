@@ -7,7 +7,6 @@ import plum
 import unxts.linalg as ul
 
 import quaxed.numpy as jnp
-import unxt as u
 
 from .d0 import Cart0D
 from .d1 import Cart1D
@@ -51,6 +50,4 @@ def scale_factors(
         if isinstance(chart, AbstractDimensionalFlag)
         else len(chart.components)
     )
-    return ul.QuantityMatrix(
-        jnp.ones((n,)), unit=ul.UnitsMatrix(tuple(u.unit("") for _ in range(n)))
-    )
+    return ul.QM(jnp.ones((n,)), unit=ul.UnitsMatrix.full(n, ""))

@@ -22,17 +22,16 @@ import functools as ft
 from typing import Any, ClassVar, Final, final, overload
 
 import jax.tree_util as jtu
-import wadler_lindig as wl
 
 import unxt as u
-from dataclassish import field_items
 
 import coordinax.charts as cxc
+from ._canonical import CanonicalStaticReprMixin
 from .constants import TIME
 
 
 @jtu.register_static
-class AbstractSemanticKind(metaclass=abc.ABCMeta):
+class AbstractSemanticKind(CanonicalStaticReprMixin, metaclass=abc.ABCMeta):
     r"""Abstract base class for semantic kind.
 
     A semantic kind specifies the **meaning** attached to a represented
@@ -104,9 +103,6 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
 
     """
 
-    canonical_name: ClassVar[str | None] = None
-    """Canonical name for the geometric kind."""
-
     order: ClassVar[int | None] = None
     """Time-derivative ladder order, or ``None`` if not on the ladder.
 
@@ -139,68 +135,6 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
 
         """
         raise NotImplementedError  # pragma: no cover
-
-    # ===============================================================
-    # Wadler-Lindig API
-
-    def __pdoc__(self, *, canonical: bool = True, **kw: Any) -> wl.AbstractDoc:
-        """Generate a Wadler-Lindig docstring for this Basis.
-
-        Parameters
-        ----------
-        canonical
-            Whether to use the canonical forms of the representation in the
-            docstring. E.g. `PointGeometry()` -> `point_geom`.
-        **kw
-            Additional keyword arguments to pass to the Wadler-Lindig docstring
-            formatter.
-
-        Examples
-        --------
-        >>> import wadler_lindig as wl
-        >>> import coordinax.representations as cxr
-
-        >>> semantic = cxr.Location()
-        >>> wl.pprint(semantic, canonical=False)
-        Location()
-
-        >>> wl.pprint(semantic, canonical=True)
-        loc
-
-        """
-        if canonical and self.canonical_name is not None:
-            return wl.TextDoc(self.canonical_name)
-
-        items = field_items(self) if dataclasses.is_dataclass(self) else ()
-        return wl.bracketed(
-            begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=wl.named_objs(items, **kw),
-            sep=wl.comma,
-            end=wl.TextDoc(")"),
-            indent=kw.get("indent", 4),
-        )
-
-    def __repr__(self) -> str:
-        """Return the canonical string representation.
-
-        >>> import coordinax.representations as cxr
-        >>> repr(cxr.vel)
-        'vel'
-        >>> repr(cxr.Velocity())
-        'vel'
-
-        """
-        return wl.pformat(self, canonical=True)
-
-    def __str__(self) -> str:
-        """Return the verbose string representation.
-
-        >>> import coordinax.representations as cxr
-        >>> str(cxr.vel)
-        'Velocity()'
-
-        """
-        return wl.pformat(self, canonical=False)
 
 
 # ===================================================================

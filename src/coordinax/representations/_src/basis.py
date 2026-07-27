@@ -17,16 +17,15 @@ __all__ = (
 import abc
 import dataclasses
 
-from typing import Any, ClassVar, Final, final
+from typing import ClassVar, Final, final
 
 import jax.tree_util as jtu
-import wadler_lindig as wl
 
-from dataclassish import field_items
+from ._canonical import CanonicalStaticReprMixin
 
 
 @jtu.register_static
-class AbstractBasis(metaclass=abc.ABCMeta):
+class AbstractBasis(CanonicalStaticReprMixin, metaclass=abc.ABCMeta):
     r"""Abstract base class for basis kind.
 
     A basis kind specifies the **component basis** in which data is expressed,
@@ -95,71 +94,6 @@ class AbstractBasis(metaclass=abc.ABCMeta):
     Concrete subclasses should represent immutable basis categories.
 
     """
-
-    canonical_name: ClassVar[str | None] = None
-    """Canonical name for the basis kind."""
-
-    # ===============================================================
-    # Wadler-Lindig API
-
-    def __pdoc__(self, *, canonical: bool = True, **kw: Any) -> wl.AbstractDoc:
-        """Generate a Wadler-Lindig docstring for this Basis.
-
-        Parameters
-        ----------
-        canonical
-            Whether to use the canonical forms of the representation in the
-            docstring. E.g. `PointGeometry()` -> `point_geom`.
-        **kw
-            Additional keyword arguments to pass to the Wadler-Lindig docstring
-            formatter.
-
-        Examples
-        --------
-        >>> import wadler_lindig as wl
-        >>> import coordinax.representations as cxr
-
-        >>> basis = cxr.NoBasis()
-        >>> wl.pprint(basis, canonical=False)
-        NoBasis()
-
-        >>> wl.pprint(basis, canonical=True)
-        no_basis
-
-        """
-        if canonical and self.canonical_name is not None:
-            return wl.TextDoc(self.canonical_name)
-
-        items = field_items(self) if dataclasses.is_dataclass(self) else ()
-        return wl.bracketed(
-            begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=wl.named_objs(items, **kw),
-            sep=wl.comma,
-            end=wl.TextDoc(")"),
-            indent=kw.get("indent", 4),
-        )
-
-    def __repr__(self) -> str:
-        """Return the canonical string representation.
-
-        >>> import coordinax.representations as cxr
-        >>> repr(cxr.coord_basis)
-        'coord_basis'
-        >>> repr(cxr.CoordinateBasis())
-        'coord_basis'
-
-        """
-        return wl.pformat(self, canonical=True)
-
-    def __str__(self) -> str:
-        """Return the verbose string representation.
-
-        >>> import coordinax.representations as cxr
-        >>> str(cxr.coord_basis)
-        'CoordinateBasis()'
-
-        """
-        return wl.pformat(self, canonical=False)
 
 
 @final
