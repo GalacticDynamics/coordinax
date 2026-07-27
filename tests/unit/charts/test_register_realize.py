@@ -4,6 +4,7 @@ cartesian_chart, pt_map.
 """
 
 import hypothesis.strategies as st
+import jax
 import jax.numpy as jnp
 import plum
 import pytest
@@ -12,7 +13,9 @@ from hypothesis import assume, given
 import unxt as u
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 import coordinaxs.hypothesis.main as cxst
+from coordinax._src.charts.register_ptmap import _ratio_zero_on_axis
 
 # =============================================================================
 # cartesian_chart
@@ -168,3 +171,50 @@ class TestPointTransformTwoSphereCrossChart:
                     u.ustrip("rad", out[k]), u.ustrip("rad", ref[k]), equal_nan=True
                 )
             )
+
+
+# =============================================================================
+# Coordinate-singularity division is grad-safe (double-where idiom)
+# =============================================================================
+
+
+class TestAxisSingularityGradSafe:
+    """``pt_map`` divisions at a coordinate singularity stay finite in value and grad.
+
+    A plain ``jnp.where(denom == 0, 0, num / denom)`` returns the right value but
+    leaks ``NaN`` into reverse-mode gradients; these guard against regressing to it.
+    """
+
+    def test_ratio_helper_value_and_grad(self):
+        def f(d):
+            return _ratio_zero_on_axis(2.0 * d, d)
+
+        d0 = jnp.asarray(0.0)
+        assert float(f(d0)) == 0.0
+        assert bool(jnp.isfinite(jax.grad(f)(d0)))
+
+    def test_loncoslat_pole_is_finite(self):
+        """LonCosLat -> Cart3D at the pole (cos(lat) == 0) is finite."""
+        p = {
+            "lon_coslat": u.Q(0.4, "rad"),
+            "lat": u.Q(90.0, "deg"),
+            "distance": u.Q(2.0, "m"),
+        }
+        out = cxc.pt_map(p, cxm.R3, cxc.loncoslat_sph3d, cxm.R3, cxc.cart3d)
+        assert all(bool(jnp.isfinite(v.value)) for v in out.values())
+
+    def test_poincarepolar6d_axis_roundtrip_is_finite(self):
+        """Forward + inverse through the rho == 0 axis stays finite (dt_rho, lz/rho)."""
+        ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+        q = {
+            "q.x": u.Q(0.0, "kpc"),
+            "q.y": u.Q(0.0, "kpc"),
+            "q.z": u.Q(5.0, "kpc"),
+            "p.x": u.Q(0.0, "kpc/Myr"),
+            "p.y": u.Q(0.0, "kpc/Myr"),
+            "p.z": u.Q(0.5, "kpc/Myr"),
+        }
+        pp = cxc.pt_map(q, ps.M, ps, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+        back = cxc.pt_map(pp, cxc.poincarepolar6d.M, cxc.poincarepolar6d, ps.M, ps)
+        assert all(bool(jnp.isfinite(v.value)) for v in pp.values())
+        assert all(bool(jnp.isfinite(v.value)) for v in back.values())

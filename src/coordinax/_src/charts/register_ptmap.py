@@ -40,6 +40,20 @@ from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
 from coordinax._src.utils import uconvert_to_rad
 
+
+def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
+    """``num / denom``, defined as 0 where ``denom == 0`` (coordinate singularity).
+
+    Uses the double-``where`` idiom so that both the value *and* its gradient are
+    finite on the axis. A plain ``jnp.where(denom == 0, 0, num / denom)`` still
+    evaluates ``num / denom`` in the unselected branch, leaking ``NaN`` into
+    reverse-mode gradients (``0 * inf``); guarding the denominator first avoids it.
+    """
+    safe = jnp.where(denom == 0, jnp.ones_like(denom), denom)
+    ratio = num / safe
+    return jnp.where(denom == 0, jnp.zeros_like(ratio), ratio)
+
+
 #####################################################################
 # Point transformations
 
@@ -626,9 +640,9 @@ def pt_map(
 
     lon_coslat, r_ = p["lon_coslat"], p["distance"]
     lat = uconvert_to_rad(p["lat"], usys)
-    # Handle the poles where cos(lat) == 0
+    # Longitude is undefined at the poles (cos(lat) == 0); set lon = 0 there.
     coslat = jnp.cos(lat)
-    lon = jnp.where(coslat == 0, 0, lon_coslat / coslat)
+    lon = _ratio_zero_on_axis(lon_coslat, coslat)
     lon = uconvert_to_rad(lon, usys)
     # Convert to Cartesian
     x = r_ * jnp.cos(lat) * jnp.cos(lon)
@@ -1825,9 +1839,9 @@ def pt_map(
     phi = jnp.atan2(x, y)  # gala convention: azimuth from +y
     lz = x * vy - y * vx
     s = jnp.sqrt(2 * jnp.abs(lz))
-    # On the axis (rho == 0) the numerator x*vx + y*vy is also 0; guard the
-    # denominator so dt_rho == 0 there by convention instead of 0/0 -> NaN.
-    dt_rho = (x * vx + y * vy) / jnp.where(rho == 0, jnp.ones_like(rho), rho)
+    # On the axis (rho == 0) the numerator x*vx + y*vy is also 0; define
+    # dt_rho == 0 there by convention instead of 0/0 -> NaN.
+    dt_rho = _ratio_zero_on_axis(x * vx + y * vy, rho)
     return {
         "rho": rho,
         "pp_phi": s * jnp.cos(phi),
@@ -1898,7 +1912,8 @@ def pt_map(
     sinp, cosp = jnp.sin(phi), jnp.cos(phi)
 
     pos = {"x": rho * sinp, "y": rho * cosp, "z": z}
-    lz_over_rho = jnp.where(rho == 0, jnp.zeros_like(dt_rho), lz / rho)
+    # On the axis (rho == 0, where lz == 0 too) define lz/rho == 0 by convention.
+    lz_over_rho = _ratio_zero_on_axis(lz, rho)
     vel = {
         "x": sinp * dt_rho - cosp * lz_over_rho,
         "y": cosp * dt_rho + sinp * lz_over_rho,
