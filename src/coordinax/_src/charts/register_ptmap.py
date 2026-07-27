@@ -1774,7 +1774,8 @@ def pt_map(
     ``pp_phi = sqrt(2|Lz|) cos(phi)``,  ``pp_phidot = sqrt(2|Lz|) sin(phi)``,
     ``dt_z = vz``.
 
-    Forward only: ``sqrt(|Lz|)`` discards ``sign(Lz)``, so there is no inverse.
+    ``sqrt(|Lz|)`` discards ``sign(Lz)``, so there is no *global* inverse. A
+    *partial* inverse (assuming ``Lz >= 0``) is registered below.
 
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -1804,6 +1805,8 @@ def pt_map(
 
     """
     del usys
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
     if len(from_chart.factors) != 2 or not all(
         isinstance(f, Cart3D) for f in from_chart.factors
     ):
@@ -1822,11 +1825,14 @@ def pt_map(
     phi = jnp.atan2(x, y)  # gala convention: azimuth from +y
     lz = x * vy - y * vx
     s = jnp.sqrt(2 * jnp.abs(lz))
+    # On the axis (rho == 0) the numerator x*vx + y*vy is also 0; guard the
+    # denominator so dt_rho == 0 there by convention instead of 0/0 -> NaN.
+    dt_rho = (x * vx + y * vy) / jnp.where(rho == 0, jnp.ones_like(rho), rho)
     return {
         "rho": rho,
         "pp_phi": s * jnp.cos(phi),
         "z": z,
-        "dt_rho": (x * vx + y * vy) / rho,
+        "dt_rho": dt_rho,
         "pp_phidot": s * jnp.sin(phi),
         "dt_z": vz,
     }
@@ -1873,6 +1879,8 @@ def pt_map(
 
     """
     del usys
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
     if len(to_chart.factors) != 2 or not all(
         isinstance(f, Cart3D) for f in to_chart.factors
     ):

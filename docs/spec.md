@@ -1706,8 +1706,11 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
       `("length", "length / time**0.5", "length", "speed", "length / time**0.5", "speed")`.
     - `poincarepolar6d` is the pre-defined `PoincarePolar6D()` instance.
     - Transition behavior currently registered in-core:
-      identity transform only (`pt_map(p, PoincarePolar6D, PoincarePolar6D) -> p`).
-    - No dedicated Cartesian projection dispatch is currently defined for this chart family.
+      - identity transform (`pt_map(p, PoincarePolar6D, PoincarePolar6D) -> p`).
+      - gala forward map from a Cartesian phase-space product chart
+        (`CartesianProductChart((cart3d, cart3d))` = [position, velocity]) to
+        `PoincarePolar6D`, and its partial inverse back (exact only for
+        `Lz >= 0`, since `sqrt(|Lz|)` discards `sign(Lz)`).
 
 </br>
 
