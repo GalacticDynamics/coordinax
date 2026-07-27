@@ -1,4 +1,4 @@
-"""Benchmarks for `act`/`prolong` steady-state (jit-compiled) performance.
+"""Benchmarks for `act`/`act_jet` steady-state (jit-compiled) performance.
 
 Run with: uv run --no-project pytest tests/benchmark --benchmark-only
 (requires the ``benchmark`` extra: pytest-benchmark).
@@ -88,7 +88,7 @@ def test_td_translate_jet_generic(benchmark, jet):
     op = _moving_translate()
     _bench_jitted(
         benchmark,
-        lambda tau, jet_: cxfm.prolong(op, tau, jet_, cxc.cart3d),
+        lambda tau, jet_: cxfm.act_jet(op, tau, jet_, cxc.cart3d),
         u.Q(2.0, "s"),
         jet,
     )
@@ -107,7 +107,7 @@ def test_td_rotate_jet_generic(benchmark):
     }
     _bench_jitted(
         benchmark,
-        lambda tau, jet_: cxfm.prolong(op, tau, jet_, cxc.cart3d),
+        lambda tau, jet_: cxfm.act_jet(op, tau, jet_, cxc.cart3d),
         u.Q(2.0, "s"),
         jet2,
     )
@@ -194,7 +194,7 @@ class TestTraceTime:
         trace()
         benchmark(trace)
 
-    def test_trace_td_prolong_2jet(self, benchmark, jet):
+    def test_trace_td_act_jet_2jet(self, benchmark, jet):
         op = cxfm.Translate(
             lambda t: {
                 "x": 0.5 * u.Q(2.0, "km/s2") * t**2,
@@ -206,7 +206,7 @@ class TestTraceTime:
         tau = u.Q(2.0, "s")
 
         def trace():
-            return jax.jit(lambda t, j: cxfm.prolong(op, t, j, cxc.cart3d)).lower(
+            return jax.jit(lambda t, j: cxfm.act_jet(op, t, j, cxc.cart3d)).lower(
                 tau, jet
             )
 

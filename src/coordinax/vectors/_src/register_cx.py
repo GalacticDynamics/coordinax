@@ -741,7 +741,7 @@ def _act_coordinate_jet(
         ladder[name] = (order, f, orig_chart)
 
     out_jet = cast(
-        "dict[int, CDict]", cxfmapi.prolong(op, tau, jet, point_chart, usys=usys)
+        "dict[int, CDict]", cxfmapi.act_jet(op, tau, jet, point_chart, usys=usys)
     )
     new_point = replace(x.point, data=out_jet[0])
 

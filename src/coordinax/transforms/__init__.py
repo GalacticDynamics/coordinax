@@ -22,8 +22,8 @@ from ._setup_package import install_import_hook
 __all__: tuple[str, ...] = (
     # API
     "act",
+    "act_jet",
     "pushforward",
-    "prolong",
     "simplify",
     "compose",
     "materialize_transform",
@@ -83,7 +83,7 @@ with install_import_hook("coordinax.transforms"):
         ProperOrthochronousLorentzGroup,
         SpecialOrthogonalGroup,
     )
-    from coordinaxs.api.transforms import act, compose, prolong, pushforward, simplify
+    from coordinaxs.api.transforms import act, act_jet, compose, pushforward, simplify
 
 
 # Extension point: distributions may register transform symbols under the

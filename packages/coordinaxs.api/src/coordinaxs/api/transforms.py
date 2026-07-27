@@ -1,6 +1,6 @@
 """Representations."""
 
-__all__: tuple[str, ...] = ("act", "compose", "prolong", "pushforward")
+__all__: tuple[str, ...] = ("act", "act_jet", "compose", "pushforward")
 
 from typing import Any
 
@@ -158,7 +158,7 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
 
 
 @plum.dispatch.abstract
-def prolong(*args: Any, **kwargs: Any) -> Any:
+def act_jet(*args: Any, **kwargs: Any) -> Any:
     r"""Apply the kinematic (jet) prolongation of a transform to a jet.
 
     A *jet* is a dictionary of curve data keyed by time-derivative order:
@@ -182,7 +182,7 @@ def prolong(*args: Any, **kwargs: Any) -> Any:
 
     Canonical signature::
 
-        prolong(op, tau, jet, chart, /, *, usys=None) -> jet
+        act_jet(op, tau, jet, chart, /, *, usys=None) -> jet
 
     See also `act` (per-slot application, which delegates here for
     time-dependent transforms) and `pushforward` (the frozen-$\tau$ spatial

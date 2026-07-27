@@ -184,7 +184,7 @@ class TestPhysics:
             1: q3(0.1, 0.2, 0.3, "km/s"),
             2: q3(0.0, 0.0, 0.0, "km/s2"),
         }
-        out_td = cxfm.prolong(td, tau, jet, cxc.cart3d)
+        out_td = cxfm.act_jet(td, tau, jet, cxc.cart3d)
         out_p = cxfm.act(boost, tau, jet[0], cxc.cart3d, cxr.point)
         out_v = cxfm.act(boost, tau, jet[1], cxc.cart3d, cxr.coord_vel)
         out_a = cxfm.act(boost, tau, jet[2], cxc.cart3d, cxr.coord_acc)
@@ -222,7 +222,7 @@ class TestFastPathEqualsGeneric:
             1: q3(0.5, -0.5, 0.0, "km/s"),
             2: q3(0.1, 0.0, -0.1, "km/s2"),
         }
-        out_gen = cxfm.prolong(op, tq, jet, cxc.cart3d)
+        out_gen = cxfm.act_jet(op, tq, jet, cxc.cart3d)
         out_v = cxfm.act(op, tq, jet[1], cxc.cart3d, cxr.coord_vel)
         out_a = cxfm.act(op, tq, jet[2], cxc.cart3d, cxr.coord_acc)
         assert allclose_cdict(out_v, out_gen[1], "km/s", atol=1e-6)
@@ -239,7 +239,7 @@ class TestFastPathEqualsGeneric:
         out_hand = cxfm.act(
             op, tq, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at
         )
-        out_gen = cxfm.prolong(op, tq, {0: at, 1: v}, cxc.cart3d)
+        out_gen = cxfm.act_jet(op, tq, {0: at, 1: v}, cxc.cart3d)
         assert allclose_cdict(out_hand, out_gen[1], "m/s", atol=1e-6)
 
     def test_vel_kick_translate_vs_generic_fibre_law(self):
@@ -294,8 +294,8 @@ class TestStructure:
         )
         tau = u.Q(2.0, "s")
         jet = {0: q3(1.0, 2.0, 3.0, "km"), 1: q3(0.5, -0.5, 0.0, "km/s")}
-        fwd = cxfm.prolong(moving, tau, jet, cxc.cart3d)
-        back = cxfm.prolong(moving.inverse, tau, fwd, cxc.cart3d)
+        fwd = cxfm.act_jet(moving, tau, jet, cxc.cart3d)
+        back = cxfm.act_jet(moving.inverse, tau, fwd, cxc.cart3d)
         assert allclose_cdict(back[0], jet[0], "km", atol=1e-6)
         assert allclose_cdict(back[1], jet[1], "km/s", atol=1e-6)
 
@@ -306,9 +306,9 @@ class TestStructure:
         )
         tau = u.Q(2.0, "s")
         jet = {0: q3(1.0, 2.0, 3.0, "km"), 1: q3(0.5, -0.5, 0.0, "km/s")}
-        out_pipe = cxfm.prolong(opA | opB, tau, jet, cxc.cart3d)
-        out_seq = cxfm.prolong(
-            opB, tau, cxfm.prolong(opA, tau, jet, cxc.cart3d), cxc.cart3d
+        out_pipe = cxfm.act_jet(opA | opB, tau, jet, cxc.cart3d)
+        out_seq = cxfm.act_jet(
+            opB, tau, cxfm.act_jet(opA, tau, jet, cxc.cart3d), cxc.cart3d
         )
         assert allclose_cdict(out_pipe[0], out_seq[0], "km")
         assert allclose_cdict(out_pipe[1], out_seq[1], "km/s")
@@ -339,7 +339,7 @@ class TestUnits:
                 "phi": u.Q(0.0, "rad/s"),
             },
         }
-        out = cxfm.prolong(moving, tau, jet, cxc.sph3d)
+        out = cxfm.act_jet(moving, tau, jet, cxc.sph3d)
         # point at (1+6, 0, 0) cartesian -> r = 7
         assert jnp.allclose(u.ustrip("m", out[0]["r"]), 7.0, atol=1e-6)
         # velocity gains delta-dot = 3 m/s radially (point on +x axis)
@@ -368,7 +368,7 @@ class TestBatchingAndJit:
             lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
         )
         jet = {0: q3(0.0, 0.0, 0.0, "km"), 1: q3(0.0, 0.0, 0.0, "km/s")}
-        f = jax.jit(lambda tau, jet: cxfm.prolong(moving, tau, jet, cxc.cart3d))
+        f = jax.jit(lambda tau, jet: cxfm.act_jet(moving, tau, jet, cxc.cart3d))
         out = f(u.Q(2.0, "s"), jet)
         assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 3.0)
 
@@ -379,7 +379,7 @@ class TestBatchingAndJit:
             chart=cxc.cart3d,
         )
         jet = {0: q3(0.0, 0.0, 0.0, "m"), 1: q3(0.0, 0.0, 0.0, "m/s")}
-        f = jax.jit(lambda tau: cxfm.prolong(moving, tau, jet, cxc.cart3d)[1]["x"])
+        f = jax.jit(lambda tau: cxfm.act_jet(moving, tau, jet, cxc.cart3d)[1]["x"])
         taus = u.Q(jnp.array([1.0, 2.0, 3.0]), "s")
         out = jax.vmap(f)(taus)
         assert jnp.allclose(u.ustrip("m/s", out), jnp.array([2.0, 4.0, 6.0]))
@@ -462,7 +462,7 @@ class TestErrors:
         op = cxfm.Rotate.from_(rot_z)
         jet = {0: q3(0.0, 0.0, 0.0, "m"), 2: q3(0.0, 0.0, 0.0, "m/s2")}
         with pytest.raises(TypeError, match="slot 1 is missing"):
-            cxfm.prolong(op, u.Q(1.0, "s"), jet, cxc.cart3d)
+            cxfm.act_jet(op, u.Q(1.0, "s"), jet, cxc.cart3d)
 
     def test_prolong_additive_missing_slot0(self):
         # The componentwise (additive) path indexes jet[0] for tangent slots;
@@ -475,7 +475,7 @@ class TestErrors:
         )
         jet = {1: q3(0.0, 0.0, 0.0, "m/s")}
         with pytest.raises(TypeError, match="jet slot 0"):
-            cxfm.prolong(kick, None, jet, cxc.cart3d)
+            cxfm.act_jet(kick, None, jet, cxc.cart3d)
 
     def test_prolong_additive_skips_intermediate_slots(self):
         # Additive ops prolong slot-wise: no intermediate slots required.
@@ -488,7 +488,7 @@ class TestErrors:
             chart=cxc.cart3d,
         )
         jet = {0: q3(0.0, 0.0, 0.0, "km"), 2: q3(0.0, 0.0, 0.0, "km/s2")}
-        out = cxfm.prolong(moving, u.Q(1.0, "s"), jet, cxc.cart3d)
+        out = cxfm.act_jet(moving, u.Q(1.0, "s"), jet, cxc.cart3d)
         assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 2.0)
 
     def test_static_scale_vel_requires_at(self):
@@ -552,7 +552,7 @@ class TestFibreKickProlong:
             q3(100.0, 0.0, 0.0, "m/s"), chart=cxc.cart3d, semantic_kind=cxr.vel
         )
         jet = {0: q3(1.0, 0.0, 0.0, "m"), 1: q3(1.0, 0.0, 0.0, "m/s")}
-        out = cxfm.prolong(kick, None, jet, cxc.cart3d)
+        out = cxfm.act_jet(kick, None, jet, cxc.cart3d)
         assert jnp.allclose(u.ustrip("m", out[0]["x"]), 1.0)
         assert jnp.allclose(u.ustrip("m/s", out[1]["x"]), 101.0)
 
@@ -597,7 +597,7 @@ class TestFibreKickProlong:
             1: q3(0.5, 0.0, 0.0, "km/s"),
             2: q3(0.1, 0.0, 0.0, "km/s2"),
         }
-        out = cxfm.prolong(boost, tau, jet, cxc.cart3d)
+        out = cxfm.act_jet(boost, tau, jet, cxc.cart3d)
         assert jnp.allclose(u.ustrip("km", out[0]["x"]), 4.0)  # x + dv*tau
         assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 1.5)  # v + dv
         assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 0.1)  # a unchanged
@@ -629,7 +629,7 @@ class TestUnitPreservation:
                 for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)
             },
         }
-        out = cxfm.prolong(op, None, jet, cxc.cart3d)
+        out = cxfm.act_jet(op, None, jet, cxc.cart3d)
         assert out[1]["y"].unit == u.unit("kpc/Myr")
         assert jnp.allclose(out[1]["y"].value, 1.0)
 
@@ -651,8 +651,8 @@ class TestUnitPreservation:
                 for k, v in zip("xyz", (1.0, 0.0, 0.0), strict=False)
             },
         }
-        out_myr = cxfm.prolong(moving, u.Q(2.0, "Myr"), jet, cxc.cart3d)
-        out_s = cxfm.prolong(moving, u.Q(2.0, "Myr").uconvert("s"), jet, cxc.cart3d)
+        out_myr = cxfm.act_jet(moving, u.Q(2.0, "Myr"), jet, cxc.cart3d)
+        out_s = cxfm.act_jet(moving, u.Q(2.0, "Myr").uconvert("s"), jet, cxc.cart3d)
         # v' = v + g*tau = 1 + 2 = 3 kpc/Myr, regardless of tau's unit
         assert jnp.allclose(u.ustrip("kpc/Myr", out_myr[1]["x"]), 3.0)
         assert jnp.allclose(u.ustrip("kpc/Myr", out_s[1]["x"]), 3.0, atol=1e-6)
@@ -665,7 +665,7 @@ class TestUnitPreservation:
         """
         boost = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
         jet = {0: q3(1.0, 0.0, 0.0, "km"), 1: q3(0.0, 0.0, 0.0, "km/s")}
-        generic = cxfm.prolong.invoke(
+        generic = cxfm.act_jet.invoke(
             cxfm.AbstractTransform, object, dict, cxc.AbstractChart
         )
         with pytest.raises(TypeError, match="requires a time parameter"):
@@ -827,7 +827,7 @@ class TestNonCartesianOpChart:
             1: {"x": u.Q(0.0, "km/s"), "y": u.Q(0.0, "km/s")},  # missing z
         }
         with pytest.raises(TypeError, match=r"slot 1 .*missing \['z'\]"):
-            cxfm.prolong(op, None, jet, cxc.cart3d)
+            cxfm.act_jet(op, None, jet, cxc.cart3d)
 
     def test_boost_nonflat_chart_acceleration_not_identity(self):
         """Static Boost on spherical-chart accelerations is not identity.
@@ -1063,7 +1063,7 @@ class TestLinearOpsUnderNewVerbs:
         """Prolong on a 1-jet gives the same slots as point-act + vel-act."""
         at = q3(1.0, -2.0, 0.5, "m")
         v = q3(0.3, 0.1, -0.2, "m/s")
-        jet = cxfm.prolong(op, None, {0: at, 1: v}, cxc.cart3d)
+        jet = cxfm.act_jet(op, None, {0: at, 1: v}, cxc.cart3d)
         p_ref = cxfm.act(op, None, at, cxc.cart3d, cxr.point)
         v_ref = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
         assert allclose_cdict(jet[0], p_ref, "m", atol=1e-8)
@@ -1082,7 +1082,7 @@ class TestLinearOpsUnderNewVerbs:
                 "phi": u.Q(0.02, "rad/s"),
             },
         }
-        out = cxfm.prolong(kick, None, jet, cxc.sph3d, usys=usys)
+        out = cxfm.act_jet(kick, None, jet, cxc.sph3d, usys=usys)
         ref = cxfm.act(
             kick, None, jet[1], cxc.sph3d, cxr.coord_vel, at=jet[0], usys=usys
         )
@@ -1181,7 +1181,7 @@ class TestRobustness:
             0: {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},  # ints
             1: q3(0.0, 0.0, 0.0, "km/s"),
         }
-        out = cxfm.prolong(moving, tau, jet, cxc.cart3d)
+        out = cxfm.act_jet(moving, tau, jet, cxc.cart3d)
         assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 3.0)
 
     def test_integer_inputs_through_pushforward(self):

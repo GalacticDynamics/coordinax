@@ -65,11 +65,11 @@ def test_pushforward_dispatch_is_faithful():
     assert cxfm.pushforward._resolver.is_faithful
 
 
-def test_prolong_dispatch_is_faithful():
+def test_act_jet_dispatch_is_faithful():
     op = cxfm.Translate.from_([1, 2, 3], "km")
     jet = {0: _point()}
-    cxfm.prolong(op, None, jet, cxc.cart3d)
-    assert cxfm.prolong._resolver.is_faithful
+    cxfm.act_jet(op, None, jet, cxc.cart3d)
+    assert cxfm.act_jet._resolver.is_faithful
 
 
 def test_pt_map_dispatch_is_faithful():

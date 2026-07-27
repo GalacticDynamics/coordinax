@@ -195,7 +195,7 @@ def pushforward(
 
 
 @plum.dispatch
-def prolong(
+def act_jet(
     op: AbstractParallelTransportTransform,
     tau: Any,
     jet: dict,
@@ -205,6 +205,6 @@ def prolong(
     usys: Any = None,
 ) -> dict:
     """Kinematic prolongation of a jet: delegate to the Composed pipeline."""
-    return cxfm.prolong(  # ty: ignore[invalid-return-type]
+    return cxfm.act_jet(  # ty: ignore[invalid-return-type]
         cxfm.Composed(op.transforms), tau, jet, chart, usys=usys
     )
