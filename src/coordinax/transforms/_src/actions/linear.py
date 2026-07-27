@@ -346,3 +346,64 @@ def pushforward(
     term and requires the jet anchors.
     """
     return _linear_pushforward_cdict(op, tau, v, chart, rep, at=at, usys=usys)
+
+
+@plum.dispatch
+def pushforward(
+    op: AbstractLinearTransform,
+    tau: Any,
+    v: CDict,
+    chart: cxc.AbstractCartesianProductChart,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: OptUSys = None,
+) -> CDict:
+    """Pushforward tangent data factorwise on a Cartesian-product chart.
+
+    Mirrors the point action: the operator matrix is applied only to factors
+    whose Cartesian dimension matches the matrix size (e.g. a 3x3 `Scale` acts on
+    each `Cart3D` factor of a 6D phase-space chart); other factors pass through.
+
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    >>> op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    >>> v = {"q.x": u.Q(1.0, "m/s"), "q.y": u.Q(1.0, "m/s"), "q.z": u.Q(1.0, "m/s"),
+    ...      "p.x": u.Q(1.0, "m/s2"), "p.y": u.Q(1.0, "m/s2"), "p.z": u.Q(1.0, "m/s2")}
+    >>> out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
+    >>> [out[k].value.round(3) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    [Array(2., dtype=float64), Array(3., dtype=float64), Array(4., dtype=float64),
+     Array(2., dtype=float64), Array(3., dtype=float64), Array(4., dtype=float64)]
+
+    """
+    n = op._validate_square(materialize_transform(op, tau)._raw_matrix).shape[-1]
+    n_factors = len(chart.factors)
+    parts = chart.split_components(v)
+    at_parts = chart.split_components(at) if at is not None else [None] * n_factors
+
+    def _maybe(
+        factor_chart: cxc.AbstractChart[Any, Any, Any],
+        part: CDict,
+        at_part: CDict | None,
+        /,
+    ) -> CDict:
+        cart = factor_chart.cartesian
+        if cart.ndim != n or len(cart.components) != n:
+            return part
+        return cast(
+            "CDict",
+            _linear_pushforward_cdict(
+                op, tau, part, factor_chart, rep, at=at_part, usys=usys
+            ),
+        )
+
+    mapped = tuple(
+        _maybe(f, p, a) for f, p, a in zip(chart.factors, parts, at_parts, strict=True)
+    )
+    return chart.merge_components(mapped)

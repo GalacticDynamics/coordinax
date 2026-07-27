@@ -125,3 +125,39 @@ def test_linear_velocity_matches_generic_prolongation_with_at() -> None:
         np.testing.assert_allclose(
             _to_np(fast[c], "m/s"), _to_np(withat[c], "m/s"), atol=1e-12
         )
+
+
+def test_linear_velocity_noncartesian_roundtrips_with_at() -> None:
+    """Non-Cartesian pushforward (needs `at`): Scale then inverse recovers v."""
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    at = {"r": u.Q(2.0, "kpc"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+    v = {
+        "r": u.Q(0.1, "kpc/Myr"),
+        "theta": u.Q(0.2, "rad/Myr"),
+        "phi": u.Q(0.3, "rad/Myr"),
+    }
+    fwd = cxfm.act(op, None, v, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel, at=at)
+    at2 = cxfm.act(op, None, at, cxc.sph3d, cxr.point)
+    back = cxfm.act(
+        op.inverse, None, fwd, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel, at=at2
+    )
+    for k, vk in v.items():
+        unit = u.unit_of(vk).to_string()
+        np.testing.assert_allclose(_to_np(back[k], unit), _to_np(vk, unit), atol=1e-9)
+
+
+def test_linear_velocity_on_product_chart_is_factorwise() -> None:
+    """A 3x3 Scale acts factorwise on each Cart3D factor of a 6D phase-space chart."""
+    ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    v = {
+        "q.x": u.Q(1.0, "m/s"),
+        "q.y": u.Q(1.0, "m/s"),
+        "q.z": u.Q(1.0, "m/s"),
+        "p.x": u.Q(1.0, "m/s2"),
+        "p.y": u.Q(1.0, "m/s2"),
+        "p.z": u.Q(1.0, "m/s2"),
+    }
+    out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
+    got = [float(out[k].value) for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    assert got == [2.0, 3.0, 4.0, 2.0, 3.0, 4.0]
