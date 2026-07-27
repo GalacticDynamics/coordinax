@@ -327,3 +327,49 @@ class TestMetricRepresentation:
     )
     def test_metric_representation_type(self, manifold, chart, expected_cls):
         assert cxmapi.metric_representation(manifold, chart) is expected_cls
+
+
+# =============================================================================
+# Batch safety of the analytic curvilinear diagonal metrics
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    ("manifold", "chart", "point1"),
+    [
+        (cxm.R2, cxc.polar2d, {"r": u.Q(2.0, "m"), "theta": u.Q(0.6, "rad")}),
+        (
+            cxm.R3,
+            cxc.cyl3d,
+            {"rho": u.Q(2.0, "m"), "phi": u.Q(0.6, "rad"), "z": u.Q(1.0, "m")},
+        ),
+        (
+            cxm.R3,
+            cxc.sph3d,
+            {"r": u.Q(2.0, "m"), "theta": u.Q(0.6, "rad"), "phi": u.Q(0.3, "rad")},
+        ),
+        (
+            cxm.R3,
+            cxc.math_sph3d,
+            {"r": u.Q(2.0, "m"), "theta": u.Q(0.6, "rad"), "phi": u.Q(0.3, "rad")},
+        ),
+        (
+            cxm.R3,
+            cxc.lonlat_sph3d,
+            {"lon": u.Q(0.6, "rad"), "lat": u.Q(0.3, "rad"), "distance": u.Q(2.0, "m")},
+        ),
+    ],
+)
+def test_curvilinear_metric_is_batch_safe(manifold, chart, point1):
+    """Batched points give a (batch, n) diagonal whose rows match the unbatched."""
+    n = len(chart.components)
+    batch = {
+        k: u.Q(jnp.array([q.value, q.value * 1.3]), q.unit) for k, q in point1.items()
+    }
+
+    g1 = cxmapi.metric_matrix(manifold, point1, chart).diagonal
+    gb = cxmapi.metric_matrix(manifold, batch, chart).diagonal
+
+    assert g1.shape == (n,)
+    assert gb.shape == (2, n)
+    assert jnp.allclose(jnp.asarray(gb.value)[0], jnp.asarray(g1.value))
