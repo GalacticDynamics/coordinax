@@ -751,7 +751,6 @@ name = "coordinaxs-astro"
 source = { editable = "packages/coordinaxs.astro" }
 dependencies = [
     { name = "coordinax" },
-    { name = "optional-dependencies" },
 ]
 
 [package.optional-dependencies]
@@ -770,7 +769,6 @@ requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
-    { name = "optional-dependencies", specifier = ">=0.4.0" },
     { name = "unxt-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=2.0" },
 ]
 provides-extras = ["astropy", "hypothesis"]
