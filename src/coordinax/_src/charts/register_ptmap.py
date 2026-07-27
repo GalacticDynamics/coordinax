@@ -1272,6 +1272,42 @@ def pt_map(
 def pt_map(
     p: CDict,
     from_M: Rn,
+    from_chart: Cart3D,
+    to_M: Rn,
+    to_chart: ProlateSpheroidal3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    """Cart3D -> Cylindrical3D -> ProlateSpheroidal3D.
+
+    ``ProlateSpheroidal3D`` is only registered as a target from ``Cylindrical3D``;
+    without this route the generic ``A -> A.cartesian -> B`` fallback would send
+    ``Cart3D -> Cart3D -> ProlateSpheroidal3D`` and recurse forever. Route through
+    ``Cylindrical3D`` instead (mirrors the ``Cart3D -> AbstractSpherical3D`` rule).
+
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+    >>> p = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(3.0, "m")}
+    >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, prolate)
+    {'mu': Q(9., 'm2'), 'nu': Q(4., 'm2'), 'phi': Q(0., 'rad')}
+
+    """
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
+    cyl = Cylindrical3D(M=from_chart.M)
+    p_cyl = cxcapi.pt_map(p, from_M, from_chart, to_M, cyl, usys=usys)
+    out = cxcapi.pt_map(p_cyl, from_M, cyl, to_M, to_chart, usys=usys)
+    return cast("CDict", out)
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: Rn,
     from_chart: ProlateSpheroidal3D,
     to_M: Rn,
     to_chart: ProlateSpheroidal3D,
