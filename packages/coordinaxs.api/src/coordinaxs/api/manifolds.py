@@ -223,7 +223,6 @@ def pt_embed(
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
-    >>> import wadler_lindig as wl
 
     Create an embedded manifold for a sphere of radius 5 km:
 
@@ -236,8 +235,8 @@ def pt_embed(
     ...     "phi": u.Angle(0.0, "rad"),           # along x-axis
     ... }
     >>> p_ambient = cxm.pt_embed(p_intrinsic, chart)
-    >>> wl.pprint(p_ambient, short_arrays='compact', named_unit=False)
-    {'r': Quantity(5, 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
+    >>> p_ambient
+    {'r': Q(5, 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     Verify the point lies on the sphere:
 
@@ -253,8 +252,8 @@ def pt_embed(
     ...     "phi": u.Angle(0.0, "rad"),    # phi is arbitrary at poles
     ... }
     >>> p_ambient_pole = cxm.pt_embed(p_pole, chart)
-    >>> wl.pprint(p_ambient_pole, short_arrays='compact', named_unit=False)
-    {'r': Quantity(5, 'km'), 'theta': Angle(0., 'rad'), 'phi': Angle(0., 'rad')}
+    >>> p_ambient_pole
+    {'r': Q(5, 'km'), 'theta': Angle(0., 'rad'), 'phi': Angle(0., 'rad')}
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -379,14 +378,13 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
 
     >>> p_cart = {"x": u.Q(0.5, "km"), "y": u.Q(0.5, "km"), "z": u.Q(0.707, "km")}
     >>> p_sphere = cxm.pt_project(p_cart, cxc.cart3d, sphere)
-    >>> wl.pprint(p_sphere, short_arrays='compact', named_unit=False)
-    {'theta': Quantity(0.78547367, 'rad'), 'phi': Quantity(0.78539816, 'rad')}
+    >>> p_sphere
+    {'theta': Q(0.78547367, 'rad'), 'phi': Q(0.78539816, 'rad')}
 
     The projection normalizes the point to lie exactly on the sphere.  Verify
     round-trip accuracy (project after embed returns original point):
 
-    >>> q_sphere = {"theta": u.Q(jnp.pi / 3, "rad"),
-    ...             "phi": u.Q(jnp.pi / 4, "rad")}
+    >>> q_sphere = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(jnp.pi / 4, "rad")}
     >>> q_cart = cxm.pt_embed(q_sphere, sphere)
     >>> q_recovered = cxm.pt_project(q_cart, sphere)
     >>> all(jax.tree.map(jnp.isclose, q_sphere, q_recovered))
@@ -398,8 +396,8 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
     >>> p_far = {"x": u.Q(2.0,"km"), "y": u.Q(2.0,"km"), "z": u.Q(2.0,"km")}
     >>> p_normalized = cxm.pt_project(p_far, cxc.cart3d, sphere)
     >>> # Direction is preserved: all coordinates equal → theta ≈ 54.7°, phi = 45°
-    >>> wl.pprint(p_normalized, short_arrays='compact', named_unit=False)
-    {'theta': Quantity(0.95531662, 'rad'), 'phi': Quantity(0.78539816, 'rad')}
+    >>> p_normalized
+    {'theta': Q(0.95531662, 'rad'), 'phi': Q(0.78539816, 'rad')}
 
     Handle coordinate singularities at the poles.
     At the north pole ($\theta = 0$), $\phi$ is conventionally set to 0:
