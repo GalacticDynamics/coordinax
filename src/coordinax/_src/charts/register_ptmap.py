@@ -1432,9 +1432,10 @@ def pt_map(
     # Get dimensionality from the target chart
     target_ndim = to_chart.ndim
 
-    # Check that the CartND data has the right dimensionality
+    # Check that the CartND data has the right dimensionality. Components are on
+    # the last axis (leading axes are batch), matching the `q[..., i]` unpack below.
     q = p["q"]
-    data_ndim = q.shape[0]
+    data_ndim = q.shape[-1]
     if data_ndim != target_ndim:
         msg = (
             f"CartND data has {data_ndim} dimensions but target chart "
