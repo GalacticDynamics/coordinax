@@ -25,7 +25,7 @@ import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform, materialize_transform
 from .custom_types import CDict, HasShape, OptUSys
-from .utils import require_matching_keys
+from .utils import is_flat_chart, require_matching_keys
 from coordinax.internal import pack_uniform_unit
 
 
@@ -258,9 +258,13 @@ def pushforward(
     canonical Cartesian chart the pushforward is simply ``M v`` and needs no base
     point ``at`` (matching `Rotate`). For a non-Cartesian chart the tangent is
     pushed through the chart Jacobian (which does require ``at``), ``M`` is applied
-    in Cartesian, then pulled back. Time-dependent linear maps instead route
-    through the generic prolongation, which supplies the ``dot(M)`` term and
-    requires the jet anchors.
+    in Cartesian, then pulled back.
+
+    This overload is the frozen-$\tau$ rule. For an order $\ge 1$ act on a
+    *time-dependent* linear map, the ``act``-level router (see ``prolong``, which
+    branches on ``is_time_dependent``) dispatches to the generic prolongation
+    instead — that path adds the ``dot(M)`` term and requires the jet anchors —
+    so time-dependent maps do not reach this frozen-$\tau$ overload via ``act``.
 
     Examples
     --------
@@ -289,7 +293,7 @@ def pushforward(
     cart = chart.cartesian
     matrix = op._matrix(cart, tau)
 
-    if chart == cart:
+    if is_flat_chart(chart):
         p_cart = v
     else:
         if at is None:
@@ -305,7 +309,7 @@ def pushforward(
     comps_cart = cart.components
     p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
 
-    if chart == cart:
+    if is_flat_chart(chart):
         return p_cart_out
 
     # Map the base point forward (M @ at) to anchor the inverse Jacobian.
