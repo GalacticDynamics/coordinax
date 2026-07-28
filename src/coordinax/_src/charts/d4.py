@@ -6,7 +6,6 @@ from typing import Any, Literal as L, override  # noqa: N817
 
 from coordinax._src.base import (
     AbstractDimensionalFlag,
-    is_not_abstract_chart_subclass,
 )
 
 
@@ -19,11 +18,6 @@ class Abstract4D(AbstractDimensionalFlag, n=4):
 
     @override
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
-        # Enforce that this is a subclass of AbstractChart
-        if is_not_abstract_chart_subclass(cls):
-            msg = f"{cls.__name__} must be a subclass of AbstractChart"
-            raise TypeError(msg)
-
         if n is not None:
             msg = f"{cls.__name__} does not support variable n"
             raise NotImplementedError(msg)
