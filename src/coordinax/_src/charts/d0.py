@@ -14,7 +14,6 @@ from coordinax._src.base import (
     AbstractFixedComponentsChart,
     AbstractManifold,
     chart_dataclass_decorator,
-    is_not_abstract_chart_subclass,
 )
 from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
@@ -33,11 +32,6 @@ class Abstract0D(AbstractDimensionalFlag, n=0):
 
     @override
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
-        # Enforce that this is a subclass of AbstractChart
-        if is_not_abstract_chart_subclass(cls):
-            msg = f"{cls.__name__} must be a subclass of AbstractChart"
-            raise TypeError(msg)
-
         if n is not None:
             msg = f"{cls.__name__} does not support variable n"
             raise NotImplementedError(msg)
