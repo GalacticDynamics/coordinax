@@ -30,7 +30,6 @@ import unxt as u
 import coordinaxs.api.charts as cxcapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
-from coordinax._src.custom_types import CDict
 from coordinax._src.metric.matrix import DenseMetric
 from coordinax.internal import pack_nonuniform_unit
 from coordinaxs.api.manifolds import metric_matrix
@@ -154,10 +153,10 @@ def metric_matrix(
     cart_chart = ambient_chart.cartesian
     cart_keys = cart_chart.components
 
-    def _to_intrinsic(q: CDict) -> CDict:
-        if chart == intrinsic_chart:
-            return q
-        return cast("CDict", cxcapi.pt_map(q, chart, intrinsic_chart))
+    # chart → intrinsic; the identity map when chart is already the intrinsic
+    # chart (same-chart pt_map is an exact-identity round-trip).
+    def _to_intrinsic(q: dict) -> dict:
+        return cast("dict", cxcapi.pt_map(q, chart, intrinsic_chart))
 
     xat, ufrom = pack_nonuniform_unit(point, chart_keys)
     ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
