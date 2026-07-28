@@ -37,11 +37,11 @@ class Abstract6D(AbstractDimensionalFlag, n=6):
 
 
 PoincarePolarKeys = tuple[
-    L["rho"], L["pp_phi"], L["z"], L["dt_rho"], L["dt_pp_phi"], L["dt_z"]
+    L["rho"], L["pp_phi"], L["z"], L["dt_rho"], L["pp_phidot"], L["dt_z"]
 ]
 
 PoincarePolarDims = tuple[
-    Len, L["length / time**0.5"], Len, Spd, L["length / time**1.5"], Spd
+    Len, L["length / time**0.5"], Len, Spd, L["length / time**0.5"], Spd
 ]
 
 
@@ -50,21 +50,46 @@ PoincarePolarDims = tuple[
 class PoincarePolar6D(
     AbstractFixedComponentsChart[Any, PoincarePolarKeys, PoincarePolarDims], Abstract6D
 ):
-    r"""Six-dimensional Poincare-polar chart.
+    r"""Six-dimensional Poincaré symplectic-polar chart on phase space.
 
-    Components are ordered as
-    $(\rho,\;\mathrm{pp\_phi},\;z,\;\dot\rho,\;\dot{\mathrm{pp\_phi}},\;\dot z)$
+    A chart on the 6-D phase space $T^*\mathbb{R}^3$ in the *Poincaré symplectic
+    polar* variables used in galactic dynamics. The azimuthal action-angle pair
+    $(\phi, L_z)$ is replaced by the Cartesian-like quadrature pair
+
+    $\mathrm{pp\_phi} = \sqrt{2\,|L_z|}\,\cos\phi,$
+    $\mathrm{pp\_phidot} = \sqrt{2\,|L_z|}\,\sin\phi,$
+
+    which removes the coordinate singularity of polar coordinates on the axis.
+    Following {mod}`gala` (``cartesian_to_poincare_polar``; Papaphilippou &
+    Laskar 1996, A&A 307, 427) the components are ordered as
+    $(\rho,\;\mathrm{pp\_phi},\;z,\;\dot\rho,\;\mathrm{pp\_phidot},\;\dot z)$
     with dimensions
-    $(\mathrm{length},\;\mathrm{length}/\mathrm{time}^{1/2},\;\mathrm{length},\;\mathrm{speed},\;\mathrm{length}/\mathrm{time}^{3/2},\;\mathrm{speed})$.
+    $(\mathrm{length},\;\mathrm{length}/\mathrm{time}^{1/2},\;\mathrm{length},\;\mathrm{speed},\;\mathrm{length}/\mathrm{time}^{1/2},\;\mathrm{speed})$.
+
+    ``pp_phi`` and ``pp_phidot`` are the two symplectic quadratures of the
+    azimuth (both $\sqrt{\text{action}}$, hence the ``length / time**0.5``
+    dimension); ``pp_phidot`` is **not** the time derivative of ``pp_phi``
+    despite the ``dot`` suffix (it is gala's ``p_phi_dot``). ``rho``, ``z`` are
+    cylindrical position and ``dt_rho``, ``dt_z`` their velocities.
+
+    Notes
+    -----
+    Phase space carries a *symplectic* form $\omega$, not a Riemannian metric,
+    so this chart has **no manifold metric**: ``M`` is ``no_manifold`` and there
+    is no ``metric_matrix``. It likewise has no global 6-D Cartesian chart
+    (``cartesian`` raises). The forward map discards $\mathrm{sign}(L_z)$ (via
+    $\sqrt{|L_z|}$), so it is not injective and the inverse is ambiguous in the
+    sign of angular momentum — matching gala, which provides only the forward
+    transform.
 
     Examples
     --------
     >>> import coordinax.charts as cxc
     >>> cxc.poincarepolar6d.components
-    ('rho', 'pp_phi', 'z', 'dt_rho', 'dt_pp_phi', 'dt_z')
+    ('rho', 'pp_phi', 'z', 'dt_rho', 'pp_phidot', 'dt_z')
 
     >>> cxc.poincarepolar6d.coord_dimensions
-    ('length', 'length / time**0.5', 'length', 'speed', 'length / time**1.5', 'speed')
+    ('length', 'length / time**0.5', 'length', 'speed', 'length / time**0.5', 'speed')
 
     >>> isinstance(cxc.poincarepolar6d, cxc.PoincarePolar6D)
     True
@@ -72,7 +97,9 @@ class PoincarePolar6D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = no_manifold  # TODO: actual manifold
+    # Phase space is symplectic, not Riemannian: there is no manifold metric,
+    # so `M` is `no_manifold` (a metric / `metric_matrix` is inapplicable).
+    M: AbstractManifold = no_manifold
 
     @override
     @property
@@ -83,5 +110,5 @@ class PoincarePolar6D(
         )
 
 
-poincarepolar6d: Final = PoincarePolar6D()  # TODO: actual manifold
-"""Six-dimensional Poincare-polar chart."""
+poincarepolar6d: Final = PoincarePolar6D()
+"""Six-dimensional Poincaré symplectic-polar phase-space chart."""

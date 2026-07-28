@@ -35,7 +35,42 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.base.manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
+from coordinax._src.null import NoManifold
+from coordinax._src.product.chart import CartesianProductChart
+from coordinax._src.product.manifold import CartesianProductManifold
 from coordinax._src.utils import uconvert_to_rad
+
+
+def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
+    """``num / denom``, defined as 0 where ``denom == 0`` (coordinate singularity).
+
+    Uses the double-``where`` idiom so that both the value *and* its gradient are
+    finite on the axis. A plain ``jnp.where(denom == 0, 0, num / denom)`` still
+    evaluates ``num / denom`` in the unselected branch, leaking ``NaN`` into
+    reverse-mode gradients (``0 * inf``); guarding the denominator first avoids it.
+    """
+    safe = jnp.where(denom == 0, jnp.ones_like(denom), denom)
+    ratio = num / safe
+    return jnp.where(denom == 0, jnp.zeros_like(ratio), ratio)
+
+
+def _require_cart3d_phase_space(chart: Any, /, *, direction: str) -> None:
+    """Validate a two-factor ``Cart3D`` Cartesian phase-space product chart.
+
+    ``direction`` is ``"to"`` (``chart`` is the source of ``pt_map`` *to*
+    ``PoincarePolar6D``) or ``"from"`` (``chart`` is the target of ``pt_map``
+    *from* it); it only selects the error wording. Raises ``NotImplementedError``
+    unless ``chart`` has exactly two ``Cart3D`` factors [position, velocity].
+    """
+    if len(chart.factors) != 2 or not all(isinstance(f, Cart3D) for f in chart.factors):
+        role = "source" if direction == "to" else "target"
+        msg = (
+            f"pt_map {direction} PoincarePolar6D requires a Cartesian phase-space "
+            f"{role}: a two-factor CartesianProductChart of (Cart3D, Cart3D) "
+            f"[position, velocity]; got factors {chart.factors!r}."
+        )
+        raise NotImplementedError(msg)
+
 
 #####################################################################
 # Point transformations
@@ -623,9 +658,12 @@ def pt_map(
 
     lon_coslat, r_ = p["lon_coslat"], p["distance"]
     lat = uconvert_to_rad(p["lat"], usys)
-    # Handle the poles where cos(lat) == 0
+    # Longitude is undefined at the poles. The guard fires only when cos(lat) is
+    # *exactly* 0 (giving lon = 0); a floating-point near-pole value (e.g.
+    # cos(pi/2) ~= 6e-17) still divides, but the cos(lat) factor below multiplies
+    # the result back so x, y stay finite.
     coslat = jnp.cos(lat)
-    lon = jnp.where(coslat == 0, 0, lon_coslat / coslat)
+    lon = _ratio_zero_on_axis(lon_coslat, coslat)
     lon = uconvert_to_rad(lon, usys)
     # Convert to Cartesian
     x = r_ * jnp.cos(lat) * jnp.cos(lon)
@@ -1743,3 +1781,148 @@ def pt_map(
     p_out: Array = jnp.stack([p_to[comp] for comp in to_chart.components], axis=-1)
 
     return p_out
+
+
+# ===================================================================
+# Cartesian phase space (cart3d x cart3d) -> Poincaré symplectic polar
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: CartesianProductManifold,
+    from_chart: CartesianProductChart,
+    to_M: NoManifold,
+    to_chart: PoincarePolar6D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""Cartesian phase space ``cart3d x cart3d`` -> ``PoincarePolar6D`` (gala forward).
+
+    The source is a two-factor Cartesian product chart: factor 0 is position
+    ``(x, y, z)``, factor 1 its velocity ``(vx, vy, vz)``. Implements gala's
+    ``cartesian_to_poincare_polar`` (Papaphilippou & Laskar 1996):
+
+    ``rho = hypot(x, y)``,  ``phi = atan2(x, y)``  (gala's azimuth convention),
+    ``dt_rho = (x*vx + y*vy) / rho``,  ``Lz = x*vy - y*vx``,
+    ``pp_phi = sqrt(2|Lz|) cos(phi)``,  ``pp_phidot = sqrt(2|Lz|) sin(phi)``,
+    ``dt_z = vz``.
+
+    ``sqrt(|Lz|)`` discards ``sign(Lz)``, so there is no *global* inverse. A
+    *partial* inverse (assuming ``Lz >= 0``) is registered below.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    >>> q = {"q.x": u.Q(3.0, "kpc"), "q.y": u.Q(4.0, "kpc"), "q.z": u.Q(5.0, "kpc"),
+    ...      "p.x": u.Q(1.0, "kpc/Myr"), "p.y": u.Q(2.0, "kpc/Myr"),
+    ...      "p.z": u.Q(0.5, "kpc/Myr")}
+    >>> out = cxc.pt_map(q, ps.M, ps, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+    >>> sorted(out)
+    ['dt_rho', 'dt_z', 'pp_phi', 'pp_phidot', 'rho', 'z']
+
+    Lz = x*vy - y*vx = 2 kpc^2/Myr, so sqrt(2|Lz|) = 2; phi = atan2(3, 4):
+
+    >>> out["rho"], out["dt_rho"], out["dt_z"]
+    (Q(5., 'kpc'), Q(2.2, 'kpc / Myr'), Q(0.5, 'kpc / Myr'))
+    >>> out["pp_phi"].round(4), out["pp_phidot"].round(4)
+    (Q(1.6, 'kpc / Myr(1/2)'), Q(1.2, 'kpc / Myr(1/2)'))
+
+    A non-Cartesian or wrong-arity product source is rejected:
+
+    >>> bad = cxc.CartesianProductChart((cxc.cart3d, cxc.polar2d), ("q", "p"))
+    >>> try:
+    ...     cxc.pt_map({}, bad.M, bad, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+    ... except NotImplementedError:
+    ...     print("rejected")
+    rejected
+
+    """
+    del usys
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
+    _require_cart3d_phase_space(from_chart, direction="to")
+
+    pos, vel = from_chart.split_components(p)
+    x, y, z = pos["x"], pos["y"], pos["z"]
+    vx, vy, vz = vel["x"], vel["y"], vel["z"]
+
+    rho = jnp.hypot(x, y)
+    phi = jnp.atan2(x, y)  # gala convention: azimuth from +y
+    lz = x * vy - y * vx
+    s = jnp.sqrt(2 * jnp.abs(lz))
+    # On the axis (rho == 0) the numerator x*vx + y*vy is also 0; define
+    # dt_rho == 0 there by convention instead of 0/0 -> NaN.
+    dt_rho = _ratio_zero_on_axis(x * vx + y * vy, rho)
+    return {
+        "rho": rho,
+        "pp_phi": s * jnp.cos(phi),
+        "z": z,
+        "dt_rho": dt_rho,
+        "pp_phidot": s * jnp.sin(phi),
+        "dt_z": vz,
+    }
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: NoManifold,
+    from_chart: PoincarePolar6D,
+    to_M: CartesianProductManifold,
+    to_chart: CartesianProductChart,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""``PoincarePolar6D`` -> Cartesian phase space (partial inverse of gala map).
+
+    Inverts the gala forward map. Because the forward uses ``sqrt(2|Lz|)`` the
+    sign of the angular momentum is not recoverable, so this assumes ``Lz >= 0``
+    (the standard convention) and is a *partial* inverse — exact only when the
+    original point had non-negative ``Lz``:
+
+    ``s = hypot(pp_phi, pp_phidot)``,  ``phi = atan2(pp_phidot, pp_phi)``,
+    ``Lz = s**2 / 2``,  ``x = rho sin(phi)``,  ``y = rho cos(phi)``,
+    ``vx = sin(phi) dt_rho - cos(phi) Lz/rho``,
+    ``vy = cos(phi) dt_rho + sin(phi) Lz/rho``,  ``vz = dt_z``.
+
+    (Singular on the axis ``rho = 0``, inherent to the coordinates.)
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+
+    Round-trips a forward result whose Lz >= 0:
+
+    >>> q = {"q.x": u.Q(3.0, "kpc"), "q.y": u.Q(4.0, "kpc"), "q.z": u.Q(5.0, "kpc"),
+    ...      "p.x": u.Q(1.0, "kpc/Myr"), "p.y": u.Q(2.0, "kpc/Myr"),
+    ...      "p.z": u.Q(0.5, "kpc/Myr")}
+    >>> pp = cxc.pt_map(q, ps.M, ps, cxc.poincarepolar6d.M, cxc.poincarepolar6d)
+    >>> back = cxc.pt_map(pp, cxc.poincarepolar6d.M, cxc.poincarepolar6d, ps.M, ps)
+    >>> back["q.x"].round(6), back["q.y"].round(6), back["p.x"].round(6)
+    (Q(3., 'kpc'), Q(4., 'kpc'), Q(1., 'kpc / Myr'))
+
+    """
+    del usys
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
+    _require_cart3d_phase_space(to_chart, direction="from")
+
+    rho, z, dt_rho, dt_z = p["rho"], p["z"], p["dt_rho"], p["dt_z"]
+    phi = jnp.atan2(p["pp_phidot"], p["pp_phi"])
+    # Lz = s²/2 with s = hypot(pp_phi, pp_phidot); compute directly to skip the
+    # sqrt (sign(Lz) is not recoverable from the forward map, so take Lz >= 0).
+    lz = (p["pp_phi"] ** 2 + p["pp_phidot"] ** 2) / 2
+    sinp, cosp = jnp.sin(phi), jnp.cos(phi)
+
+    pos = {"x": rho * sinp, "y": rho * cosp, "z": z}
+    # On the axis (rho == 0, where lz == 0 too) define lz/rho == 0 by convention.
+    lz_over_rho = _ratio_zero_on_axis(lz, rho)
+    vel = {
+        "x": sinp * dt_rho - cosp * lz_over_rho,
+        "y": cosp * dt_rho + sinp * lz_over_rho,
+        "z": dt_z,
+    }
+    return cast("CDict", to_chart.merge_components((pos, vel)))
