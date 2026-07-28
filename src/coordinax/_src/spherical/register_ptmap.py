@@ -13,6 +13,7 @@ from unxt.quantity import is_any_quantity
 
 import coordinaxs.api.charts as cxcapi
 from .chart import (
+    AbstractSphericalTwoSphere,
     LonCosLatSphericalTwoSphere,
     LonLatSphericalTwoSphere,
     MathSphericalTwoSphere,
@@ -76,24 +77,23 @@ def pt_map(
 def pt_map(
     p: CDict,
     from_M: Sn,
-    from_chart: LonLatSphericalTwoSphere
-    | LonCosLatSphericalTwoSphere
-    | MathSphericalTwoSphere,
+    from_chart: AbstractSphericalTwoSphere,
     to_M: Sn,
-    to_chart: LonLatSphericalTwoSphere
-    | LonCosLatSphericalTwoSphere
-    | MathSphericalTwoSphere,
+    to_chart: AbstractSphericalTwoSphere,
     /,
     *,
     usys: OptUSys = None,
 ) -> CDict:
-    """Route between non-canonical two-sphere charts via `SphericalTwoSphere`.
+    """Route between two-sphere charts via `SphericalTwoSphere`.
 
-    Only ``sph2 <-> {lonlat, loncoslat, math}`` pairs are registered directly,
-    and the two-sphere has no Cartesian chart, so the generic router cannot
-    bridge two non-canonical charts (it raises ``NoGlobalCartesianChartError``).
-    Go ``A -> SphericalTwoSphere -> B`` instead (matching-type pairs are handled
-    by the identity rule above).
+    Each chart registers only its direct ``sph2 <-> chart`` conversion, and the
+    two-sphere has no Cartesian chart, so the generic router cannot bridge two
+    non-canonical charts (it raises ``NoGlobalCartesianChartError``). Go
+    ``A -> SphericalTwoSphere -> B`` instead. Canonical pairs (either side is
+    `SphericalTwoSphere`) and matching-type pairs are handled by the more
+    specific direct/identity rules above, so this fallback fires only for
+    distinct non-canonical charts -- and covers any future
+    `AbstractSphericalTwoSphere` subclass automatically.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
