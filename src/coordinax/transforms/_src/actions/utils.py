@@ -3,10 +3,16 @@
 This module defines helpers for operator implementations.
 """
 
-__all__: tuple[str, ...] = ("Neg", "is_componentwise_offset", "is_flat_chart")
+__all__: tuple[str, ...] = (
+    "Neg",
+    "is_componentwise_offset",
+    "is_flat_chart",
+    "require_matching_keys",
+)
 
 import dataclasses
 
+from collections.abc import Iterable
 from typing import Any, final
 
 import jax.numpy as jnp
@@ -67,3 +73,22 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     """
     k = getattr(op, "semantic_kind", cxr.dpl).order
     return k != 0 or (chart == op.chart and is_flat_chart(chart))
+
+
+def require_matching_keys(
+    actual: Iterable[str], expected: Iterable[str], message: str, /
+) -> None:
+    """Raise ``TypeError(message + missing/unexpected keys)`` if keys differ.
+
+    Shared by `act`, `pushforward`, and `prolong` so component-mismatch errors
+    report the missing and unexpected keys in one consistent format.
+    """
+    got, exp = set(actual), set(expected)
+    if got != exp:
+        miss, extra = sorted(exp - got), sorted(got - exp)
+        raise TypeError(
+            message
+            + (f"; missing {miss}" if miss else "")
+            + (f"; unexpected {extra}" if extra else "")
+            + "."
+        )

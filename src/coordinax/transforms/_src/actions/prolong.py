@@ -59,6 +59,7 @@ import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform, is_time_dependent
 from .custom_types import CDict, OptUSys
+from .utils import require_matching_keys
 from coordinax.internal import tree_cast_int_bool_to_float
 
 JetDict: TypeAlias = dict[int, CDict]
@@ -269,17 +270,12 @@ def pushforward_generic(
     if at is None:
         msg = _MSG_AT_REQUIRED.format(verb="pushforward", op=type(op).__name__, m=order)
         raise TypeError(msg)
-    if set(v) != set(at):
-        missing = sorted(set(at) - set(v))
-        extra = sorted(set(v) - set(at))
-        msg = (
-            f"pushforward({type(op).__name__}, ...): the tangent components "
-            f"do not match the base point's {sorted(at)}"
-            + (f"; missing {missing}" if missing else "")
-            + (f"; unexpected {extra}" if extra else "")
-            + "."
-        )
-        raise TypeError(msg)
+    require_matching_keys(
+        v,
+        at,
+        f"pushforward({type(op).__name__}, ...): the tangent components "
+        f"do not match the base point's {sorted(at)}",
+    )
 
     in_units = _cdict_units(at)
     out_units = _point_act_units(op, tau, at, chart, usys=usys)
@@ -436,17 +432,12 @@ def prolong_jet(
         if m not in jet:
             msg = _MSG_JET_SLOT_MISSING.format(op=type(op).__name__, m=max_order, k=m)
             raise TypeError(msg)
-        if set(jet[m]) != set(q0):
-            missing = sorted(set(q0) - set(jet[m]))
-            extra = sorted(set(jet[m]) - set(q0))
-            msg = (
-                f"act_jet({type(op).__name__}, ...): jet slot {m} components "
-                f"do not match slot 0's {sorted(q0)}"
-                + (f"; missing {missing}" if missing else "")
-                + (f"; unexpected {extra}" if extra else "")
-                + "."
-            )
-            raise TypeError(msg)
+        require_matching_keys(
+            jet[m],
+            q0,
+            f"act_jet({type(op).__name__}, ...): jet slot {m} components "
+            f"do not match slot 0's {sorted(q0)}",
+        )
 
     if is_time_dependent(op) and tau is None and max_order >= 1:
         msg = _MSG_TAU_REQUIRED.format(op=type(op).__name__)

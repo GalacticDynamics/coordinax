@@ -10,6 +10,8 @@ import pytest
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax.charts as cxc
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 
 
@@ -73,3 +75,133 @@ def test_simplify_identity_scale_and_shear_to_identity() -> None:
 
     assert cxfm.simplify(s) is cxfm.identity
     assert cxfm.simplify(h) is cxfm.identity
+
+
+# ============================================================================
+# Kinematic (velocity / acceleration) acts — constant linear maps need no `at`
+
+
+def _vel(x, y, z):
+    return {"x": u.Q(x, "m/s"), "y": u.Q(y, "m/s"), "z": u.Q(z, "m/s")}
+
+
+@pytest.mark.parametrize(
+    ("op", "expected"),
+    [
+        (cxfm.Scale.from_factors([2.0, 3.0, 4.0]), (2.0, 3.0, 4.0)),
+        (cxfm.Reflect.from_normal([1.0, 0.0, 0.0]), (-1.0, 1.0, 1.0)),
+        (
+            cxfm.Shear(
+                jnp.asarray([[1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+            ),
+            (2.0, 1.0, 1.0),
+        ),
+    ],
+)
+def test_linear_transform_acts_on_velocity_without_at(op, expected) -> None:
+    """A constant linear map transforms a Cartesian velocity as v -> M v, no `at`."""
+    out = cxfm.act(op, None, _vel(1.0, 1.0, 1.0), cxc.cart3d, cxr.coord_vel)
+    got = tuple(round(float(u.ustrip("m/s", out[c])), 6) for c in ("x", "y", "z"))
+    assert got == expected
+
+
+def test_linear_transform_acts_on_acceleration_without_at() -> None:
+    """Acceleration also transforms as a -> M a for a constant linear map."""
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    acc = {"x": u.Q(1.0, "m/s2"), "y": u.Q(0.0, "m/s2"), "z": u.Q(2.0, "m/s2")}
+    out = cxfm.act(op, None, acc, cxc.cart3d, cxr.coord_acc)
+    got = tuple(round(float(u.ustrip("m/s2", out[c])), 6) for c in ("x", "y", "z"))
+    assert got == (2.0, 0.0, 8.0)
+
+
+def test_linear_velocity_matches_generic_prolongation_with_at() -> None:
+    """Keystone: the no-`at` fast path equals the generic autodiff prolongation.
+
+    Compare against `cxfm.act_jet` (which differentiates the point action) with
+    `at` as jet slot 0 — not merely against the same pushforward path invoked
+    with `at`, which for a static linear map is the identical code.
+    """
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    v = _vel(1.0, -2.0, 0.5)
+    at = {"x": u.Q(2.0, "m"), "y": u.Q(-1.0, "m"), "z": u.Q(3.0, "m")}
+    fast = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel)
+    generic = cxfm.act_jet(op, None, {0: at, 1: v}, cxc.cart3d)[1]
+    for c in ("x", "y", "z"):
+        np.testing.assert_allclose(
+            _to_np(fast[c], "m/s"), _to_np(generic[c], "m/s"), atol=1e-12
+        )
+
+
+def test_linear_velocity_noncartesian_roundtrips_with_at() -> None:
+    """Non-Cartesian pushforward (needs `at`): Scale then inverse recovers v."""
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    at = {"r": u.Q(2.0, "kpc"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+    v = {
+        "r": u.Q(0.1, "kpc/Myr"),
+        "theta": u.Q(0.2, "rad/Myr"),
+        "phi": u.Q(0.3, "rad/Myr"),
+    }
+    fwd = cxfm.act(op, None, v, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel, at=at)
+    at2 = cxfm.act(op, None, at, cxc.sph3d, cxr.point)
+    back = cxfm.act(
+        op.inverse, None, fwd, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel, at=at2
+    )
+    for k, vk in v.items():
+        unit = u.unit_of(vk).to_string()
+        np.testing.assert_allclose(_to_np(back[k], unit), _to_np(vk, unit), atol=1e-9)
+
+
+def test_linear_velocity_on_product_chart_is_factorwise() -> None:
+    """A 3x3 Scale acts factorwise on each Cart3D factor of a 6D velocity."""
+    ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    v = {f"{f}.{c}": u.Q(1.0, "m/s") for f in ("q", "p") for c in "xyz"}
+    out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
+    got = [_to_np(out[k], "m/s") for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    np.testing.assert_allclose(got, [2.0, 3.0, 4.0, 2.0, 3.0, 4.0])
+
+
+def test_linear_acceleration_on_product_chart_is_factorwise() -> None:
+    """A 3x3 Scale acts factorwise on each Cart3D factor of a 6D acceleration."""
+    ps = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    a = {f"{f}.{c}": u.Q(1.0, "m/s2") for f in ("q", "p") for c in "xyz"}
+    out = cxfm.act(op, None, a, ps, cxr.tangent_geom, cxr.coord_acc)
+    got = [_to_np(out[k], "m/s2") for k in ("q.x", "q.y", "q.z", "p.x", "p.y", "p.z")]
+    np.testing.assert_allclose(got, [2.0, 3.0, 4.0, 2.0, 3.0, 4.0])
+
+
+def test_linear_velocity_on_nested_product_charts_recurses() -> None:
+    """Factorwise pushforward recurses through product-of-product charts.
+
+    A factor that is itself a product chart re-dispatches through the public
+    `pushforward`, so nesting is handled recursively and stays consistent with
+    the point action. A 3x3 `Scale` passes both a 6D ``cart3d x cart3d`` factor
+    and a 3D ``cart1d x cart1d x cart1d`` factor through unchanged, while scaling
+    a sibling `Cart3D`. The 3D nested factor is the keystone: recursion skips
+    each 1D sub-factor rather than flattening the three into one 3-vector (which
+    a non-recursive, direct-helper call would wrongly scale to 2, 3, 4).
+    """
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    six = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+    line3 = cxc.CartesianProductChart(
+        (cxc.cart1d, cxc.cart1d, cxc.cart1d), ("a", "b", "c")
+    )
+    ps = cxc.CartesianProductChart((six, line3, cxc.cart3d), ("six", "line3", "z"))
+
+    v = {k: u.Q(1.0, "m/s") for k in ps.components}
+    out = cxfm.act(op, None, v, ps, cxr.tangent_geom, cxr.coord_vel)
+    got = {k: float(_to_np(out[k], "m/s")) for k in ps.components}
+
+    # nested product factors pass through; only the plain Cart3D is scaled
+    assert got == {
+        "six.q.x": 1.0, "six.q.y": 1.0, "six.q.z": 1.0,
+        "six.p.x": 1.0, "six.p.y": 1.0, "six.p.z": 1.0,
+        "line3.a.x": 1.0, "line3.b.x": 1.0, "line3.c.x": 1.0,
+        "z.x": 2.0, "z.y": 3.0, "z.z": 4.0,
+    }  # fmt: skip
+
+    # pushforward stays consistent with the point action on the same chart
+    pt = {k: u.Q(1.0, "m") for k in ps.components}
+    pa = cxfm.act(op, None, pt, ps, cxr.point)
+    assert {k: float(_to_np(pa[k], "m")) for k in ps.components} == got
