@@ -136,7 +136,7 @@ __all__ = (
     "acc",
 )
 
-from ._setup_package import install_import_hook
+from coordinax._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.representations"):
     from ._src import (

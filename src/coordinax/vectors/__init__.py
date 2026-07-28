@@ -11,7 +11,7 @@ __all__ = (
     "ToUnitsOptions",
 )
 
-from ._setup_package import install_import_hook
+from coordinax._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.vectors"):
     from ._src import (
