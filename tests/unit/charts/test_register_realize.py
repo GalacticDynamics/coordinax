@@ -3,10 +3,11 @@
 cartesian_chart, pt_map.
 """
 
+import hypothesis.strategies as st
 import jax.numpy as jnp
 import plum
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 
 import unxt as u
 
@@ -136,3 +137,34 @@ class TestPointTransformCartND:
         assert u.ustrip("m", out["x"]) == pytest.approx([1.0, 4.0])
         assert u.ustrip("m", out["y"]) == pytest.approx([2.0, 5.0])
         assert u.ustrip("m", out["z"]) == pytest.approx([3.0, 6.0])
+
+
+# Concrete non-canonical two-sphere charts, drawn by type + realization so the
+# test covers any future ``AbstractSphericalTwoSphere`` subclass automatically.
+_two_sphere_charts = cxst.charts(
+    filter=cxc.AbstractSphericalTwoSphere, exclude=(cxc.SphericalTwoSphere,)
+)
+
+
+class TestPointTransformTwoSphereCrossChart:
+    """Non-canonical two-sphere charts convert to each other via SphericalTwoSphere."""
+
+    @given(data=st.data())
+    def test_cross_chart_matches_route_via_canonical(self, data):
+        a = data.draw(_two_sphere_charts)
+        b = data.draw(_two_sphere_charts)
+        assume(type(a) is not type(b))  # matching types are the identity route
+        p = data.draw(cxst.cdicts(a))
+
+        out = cxc.pt_map(p, a, b)
+        ref = cxc.pt_map(cxc.pt_map(p, a, cxc.sph2), cxc.sph2, b)
+
+        assert set(out) == set(ref)
+        # Compare in a shared canonical unit (rad); equal_nan lets pole
+        # singularities (cos(lat) -> 0) match on both routes.
+        for k in out:
+            assert bool(
+                jnp.allclose(
+                    u.ustrip("rad", out[k]), u.ustrip("rad", ref[k]), equal_nan=True
+                )
+            )

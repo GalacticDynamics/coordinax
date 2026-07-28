@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import plum
 
@@ -11,7 +11,9 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import is_any_quantity
 
+import coordinaxs.api.charts as cxcapi
 from .chart import (
+    AbstractSphericalTwoSphere,
     LonCosLatSphericalTwoSphere,
     LonLatSphericalTwoSphere,
     MathSphericalTwoSphere,
@@ -69,6 +71,47 @@ def pt_map(
     assert to_M == to_chart.M  # noqa: S101
 
     return p
+
+
+@plum.dispatch
+def pt_map(
+    p: CDict,
+    from_M: Sn,
+    from_chart: AbstractSphericalTwoSphere,
+    to_M: Sn,
+    to_chart: AbstractSphericalTwoSphere,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    """Route between two-sphere charts via `SphericalTwoSphere`.
+
+    Each chart registers only its direct ``sph2 <-> chart`` conversion, and the
+    two-sphere has no Cartesian chart, so the generic router cannot bridge two
+    non-canonical charts (it raises ``NoGlobalCartesianChartError``). Go
+    ``A -> SphericalTwoSphere -> B`` instead. Canonical pairs (either side is
+    `SphericalTwoSphere`) and matching-type pairs are handled by the more
+    specific direct/identity rules above, so this fallback fires only for
+    distinct non-canonical charts -- and covers any future
+    `AbstractSphericalTwoSphere` subclass automatically.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> import unxt as u
+
+    >>> p = {"lon": u.Q(45, "deg"), "lat": u.Q(30, "deg")}
+    >>> out = cxc.pt_map(p, cxm.S2, cxc.lonlat_sph2, cxm.S2, cxc.math_sph2)
+    >>> sorted(out)
+    ['phi', 'theta']
+
+    """
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
+
+    canon = SphericalTwoSphere(M=to_M)
+    p_canon = cxcapi.pt_map(p, from_M, from_chart, to_M, canon, usys=usys)
+    out = cxcapi.pt_map(p_canon, to_M, canon, to_M, to_chart, usys=usys)
+    return cast("CDict", out)
 
 
 # ===================================================================
