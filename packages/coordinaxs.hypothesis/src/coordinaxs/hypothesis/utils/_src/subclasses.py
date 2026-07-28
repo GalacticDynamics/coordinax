@@ -32,14 +32,7 @@ def _public_coordinax_module_candidates(module: str, /) -> tuple[str, ...]:
     )
     candidates.extend(loaded_public)
 
-    seen: set[str] = set()
-    unique_candidates: list[str] = []
-    for name in candidates:
-        if name in seen:
-            continue
-        seen.add(name)
-        unique_candidates.append(name)
-    return tuple(unique_candidates)
+    return tuple(dict.fromkeys(candidates))
 
 
 @ft.cache
