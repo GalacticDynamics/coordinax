@@ -146,17 +146,7 @@ class AbstractAdd(AbstractTransform):
             width=80,
         )
 
-    def __str__(self) -> str:
-        """Return string representation of Add operator."""
-        return wl.pformat(
-            self.__pdoc__(
-                short_arrays="compact",
-                use_short_name=True,
-                include_params=False,
-                named_unit=False,
-            ),
-            width=80,
-        )
+    __str__ = __repr__
 
 
 # ============================================================================

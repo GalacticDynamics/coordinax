@@ -626,7 +626,7 @@ requires-dist = [
     { name = "quaxed", specifier = ">=0.10.5" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
     { name = "unxt", specifier = ">=2.0" },
-    { name = "unxts-linalg", specifier = ">=2.0.1" },
+    { name = "unxts-linalg", specifier = ">=2.0.3" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
@@ -3365,7 +3365,7 @@ wheels = [
 
 [[package]]
 name = "unxts-linalg"
-version = "2.0.1"
+version = "2.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
@@ -3374,9 +3374,9 @@ dependencies = [
     { name = "quax" },
     { name = "unxt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a8/a2/6fdab6f4069684a3f1d31f1832a1798d8cac25da6444bd8315618267d4ec/unxts_linalg-2.0.1.tar.gz", hash = "sha256:ff20b4240968a0db685b0e10d20dbeaf2539093344d8bee91c25de06f121834f", size = 54966, upload-time = "2026-07-24T18:39:34.373Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/c4/307dcab757c6ebc933b6f11c78aac1a98dd82f6b9b96839f1364cc12abb5/unxts_linalg-2.0.3.tar.gz", hash = "sha256:8c745be6a4d4ed599159ea21c75ac0a6fcd9492ad687c30a585f7e9f2e59905a", size = 55864, upload-time = "2026-07-28T13:17:05.384Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/d1/2a79a8cffc9a90d3514c203b588042485df4b071a6423e886f626a131a36/unxts_linalg-2.0.1-py3-none-any.whl", hash = "sha256:54d216c4b00de17b79fef29a7cee9b04becfa63d1b4f3a62a8b9f129409daf30", size = 33671, upload-time = "2026-07-24T18:39:33.207Z" },
+    { url = "https://files.pythonhosted.org/packages/11/78/56ee7aa4159f24ed467034ce6514393758a2e5400f5212f0e357f1134f99/unxts_linalg-2.0.3-py3-none-any.whl", hash = "sha256:46181cf364dc8086ab066f178258f2a923ca7ea3460955c0b509e3883b160cfc", size = 34365, upload-time = "2026-07-28T13:17:04.222Z" },
 ]
 
 [[package]]

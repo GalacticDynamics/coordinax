@@ -54,5 +54,5 @@ def scale_factors(
     sin2 = jnp.sin(angles) ** 2
     value = jnp.concatenate([jnp.ones(1, dtype=sin2.dtype), jnp.cumprod(sin2)])
     n = len(components)
-    units = ul.UnitsMatrix(tuple(u.unit("") for _ in range(n)))
-    return ul.QuantityMatrix(value, unit=units)
+    units = ul.UnitsMatrix.full(n, "")
+    return ul.QM(value, unit=units)

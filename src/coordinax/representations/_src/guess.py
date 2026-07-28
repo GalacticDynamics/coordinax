@@ -126,6 +126,15 @@ def guess_geometry_kind(obj: u.AbstractQuantity, /) -> AbstractGeometry:
 dim_name = lambda dim: dim._physical_type[0]
 
 
+def _reduce_dims(obj: CDict, what: str, /) -> Any:
+    """Reduce a component dict to a single dimension or sorted tuple for lookup."""
+    dims = {u.dimension_of(v) for v in obj.values()}
+    if len(dims) == 0:
+        msg = f"Cannot infer {what} without dimensions"
+        raise ValueError(msg)
+    return dims.pop() if len(dims) == 1 else tuple(sorted(dims, key=dim_name))
+
+
 @plum.dispatch
 def guess_geometry_kind(obj: CDict, /) -> AbstractGeometry:
     """Infer geometry kind from the physical dimensions of a component dictionary.
@@ -146,16 +155,7 @@ def guess_geometry_kind(obj: CDict, /) -> AbstractGeometry:
     tangent_geom
 
     """
-    # Find the `dim` for determining the geometry kind
-    dims = {u.dimension_of(v) for v in obj.values()}
-    if len(dims) == 0:
-        msg = "Cannot infer geometry kind without dimensions"
-        raise ValueError(msg)
-
-    # Get down to a single dimension or tuple of dimensions for the lookup
-    dim = dims.pop() if len(dims) == 1 else tuple(sorted(dims, key=dim_name))
-
-    # Now we can infer geometry kind from the dimension.
+    dim = _reduce_dims(obj, "geometry kind")
     out = cxrapi.guess_geometry_kind(dim)
     return cast("AbstractGeometry", out)
 
@@ -293,14 +293,7 @@ def guess_basis_kind(obj: CDict, /) -> AbstractBasis:
     no_basis
 
     """
-    dims = {u.dimension_of(v) for v in obj.values()}
-    if len(dims) == 0:
-        msg = "Cannot infer basis kind without dimensions"
-        raise ValueError(msg)
-
-    # Get down to a single dimension or tuple of dimensions for the lookup
-    dim = dims.pop() if len(dims) == 1 else tuple(sorted(dims, key=dim_name))
-
+    dim = _reduce_dims(obj, "basis kind")
     out = cxrapi.guess_basis_kind(dim)
     return cast("AbstractBasis", out)
 
@@ -405,16 +398,7 @@ def guess_semantic_kind(obj: CDict, /) -> AbstractSemanticKind:
     loc
 
     """
-    # Find the `dim` for determining the semantic kind
-    dims = {u.dimension_of(v) for v in obj.values()}
-    if len(dims) == 0:
-        msg = "Cannot infer semantic kind without dimensions"
-        raise ValueError(msg)
-
-    # Get down to a single dimension or tuple of dimensions for the lookup
-    dim = dims.pop() if len(dims) == 1 else tuple(sorted(dims, key=dim_name))
-
-    # Now we can infer semantic kind from the dimension.
+    dim = _reduce_dims(obj, "semantic kind")
     out = cxrapi.guess_semantic_kind(dim)
     return cast("AbstractSemanticKind", out)
 

@@ -412,6 +412,12 @@ class AbstractVector(
     # view() addressable_shards, at, committed, globarl_shards,
     # is_fully_addressable, is_fully_replcated, nbytes, sharding
 
+    def _tree_apply(self, method: str, /, *args: Any, **kwargs: Any) -> "Self":
+        """Apply an array method to every leaf that supports it, in-tree."""
+        dynamic, static = eqx.partition(self, lambda x: hasattr(x, method))
+        dynamic = jtu.map(lambda x: getattr(x, method)(*args, **kwargs), dynamic)
+        return eqx.combine(dynamic, static)
+
     def astype(self, dtype: Any, /, **kwargs: Any) -> "AbstractVector":
         """Cast the vector to a new dtype.
 
@@ -456,33 +462,23 @@ class AbstractVector(
 
     def flatten(self) -> "Self":
         """Flatten the vector."""
-        dynamic, static = eqx.partition(self, lambda x: hasattr(x, "flatten"))
-        dynamic = jtu.map(lambda x: x.flatten(), dynamic)
-        return eqx.combine(dynamic, static)
+        return self._tree_apply("flatten")
 
     def ravel(self) -> "Self":
         """Return a flattened vector."""
-        dynamic, static = eqx.partition(self, lambda x: hasattr(x, "ravel"))
-        dynamic = jtu.map(lambda x: x.ravel(), dynamic)
-        return eqx.combine(dynamic, static)
+        return self._tree_apply("ravel")
 
     def reshape(self, *shape: int) -> "Self":
         """Return a reshaped vector."""
-        dynamic, static = eqx.partition(self, lambda x: hasattr(x, "reshape"))
-        dynamic = jtu.map(lambda x: x.reshape(*shape), dynamic)
-        return eqx.combine(dynamic, static)
+        return self._tree_apply("reshape", *shape)
 
     def round(self, decimals: int = 0) -> "Self":
         """Return a rounded vector."""
-        dynamic, static = eqx.partition(self, lambda x: hasattr(x, "round"))
-        dynamic = jtu.map(lambda x: x.round(decimals), dynamic)
-        return eqx.combine(dynamic, static)
+        return self._tree_apply("round", decimals)
 
     def to_device(self, device: None | jax.Device = None) -> "Self":
         """Move the vector to a new device."""
-        dynamic, static = eqx.partition(self, lambda x: hasattr(x, "to_device"))
-        dynamic = jtu.map(lambda x: x.to_device(device), dynamic)
-        return eqx.combine(dynamic, static)
+        return self._tree_apply("to_device", device)
 
     # ===============================================================
     # Python API
