@@ -69,16 +69,28 @@ exclude_patterns = [
 
 source_suffix = [".md", ".rst", ".ipynb"]
 
+# The equinox/jaxtyping docs (``docs.kidger.site``) sit behind Cloudflare, which
+# intermittently returns 415/403 to CI-runner IPs. When a remote objects.inv is
+# unreachable, intersphinx emits an *untyped* "failed to reach any of the
+# inventories" warning that -W turns into a hard error, breaking the build (and a
+# re-run only masks it until the next flake). So each flaky target lists a
+# vendored fallback under ``_inventory/`` as a second location: the remote is
+# still tried first (fresh links when reachable), and a fetch failure falls back
+# to the committed copy — intersphinx then logs an info, not a warning.
+# Regenerate the vendored copies with ``python docs/_inventory/refresh_inventories.py``.
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     # Canonical URL (jax.readthedocs.io now redirects here)
     "jax": ("https://docs.jax.dev/en/latest/", None),
-    "jaxtyping": ("https://docs.kidger.site/jaxtyping/", None),
+    "jaxtyping": (
+        "https://docs.kidger.site/jaxtyping/",
+        (None, "_inventory/jaxtyping.inv"),
+    ),
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "equinox": ("https://docs.kidger.site/equinox/", None),
+    "equinox": ("https://docs.kidger.site/equinox/", (None, "_inventory/equinox.inv")),
     "plum": ("https://beartype.github.io/plum/", None),
-    "quax": ("https://docs.kidger.site/quax/", None),
+    "quax": ("https://nstarman.github.io/quax/", (None, "_inventory/quax.inv")),
     "unxt": ("https://unxt.readthedocs.io/en/latest/", None),
 }
 
