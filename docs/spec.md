@@ -1601,9 +1601,9 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `time_chart`: always `time1d`.
     - `factors`: `(time1d, spatial_chart)`.
-    - `factor_names`: `("time", "space")`.
-    - `split_components(p)` partitions a `CDict` into `{"ct": ...}` for the time factor and the spatial keys for the space factor.
-    - `merge_components((time_part, space_part))` merges both factor dicts back into a flat `CDict`.
+    - `factor_names`: `("ct", "space")` (matching `galilean_spacetime`, so `galilean_spacetime.has_chart(galileanct)` holds).
+    - `split_components(p)` partitions a `CDict` into `{"t": ...}` for the time factor (`time1d`'s native key, holding the length-valued `ct`) and the spatial keys for the space factor.
+    - `merge_components((time_part, space_part))` re-keys the time factor's `"t"` back to `"ct"` and merges both factor dicts into a flat `CDict`.
 
     Manifold:
 

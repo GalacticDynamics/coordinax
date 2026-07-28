@@ -39,21 +39,30 @@ C_DEFAULT = u.StaticQuantity(np.array(299_792.458), "km/s")
 @final
 @chart_dataclass_decorator
 class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
-    r"""4D spacetime rep with components ``(ct, x, y, z)`` and Minkowski metric.
+    r"""4D chart with components ``(ct, x, y, z)`` on Galilean spacetime.
 
     This is a Cartesian product chart: GalileanCT(spatial_chart) ≡ time1d x
     spatial_chart
 
-    The time component is always the canonical 1D time chart `time1d` with
-    component "t". The time coordinate is automatically converted to ct using
-    the speed of light.
+    The time axis coordinate is ``x^0 = ct`` — a *length* — stored directly on
+    the chart (component ``"ct"``, dimension ``"length"``). The underlying time
+    factor is the canonical 1D chart ``time1d`` (native component ``"t"``); this
+    chart carries the length-valued ``ct`` on its axis rather than a physical
+    time, consistent with the Euclidean ``R1`` time factor and the
+    ``diag(1, 1, 1, 1)`` product metric. Because ``ct`` *is* the coordinate,
+    ``split_components``/``merge_components`` simply re-key ``"ct" <-> "t"``
+    without a runtime ``c`` multiply. ``c`` is retained to form ``ct`` from a
+    physical time at construction/conversion boundaries.
 
     Mathematical definition:
     $$
        x^0 = ct,\quad x^i = \text{spatial components}
-       \\
-       g = \mathrm{diag}(-1, 1, 1, 1) \quad \text{(signature } - + + +)
     $$
+
+    The underlying manifold is ``galilean_spacetime = R1 x R3`` (both Euclidean),
+    so the induced product metric is ``diag(1, 1, 1, 1)`` — Galilean spacetime
+    carries no invariant Lorentzian spacetime metric. (This is *not* Minkowski
+    ``diag(-1, 1, 1, 1)``; a Lorentzian variant would need a different manifold.)
 
     Parameters
     ----------
@@ -117,17 +126,22 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     @override
     @property
     def factor_names(self) -> tuple[str, ...]:
-        """Factor names are ('time', 'space')."""
-        return ("time", "space")
+        """Factor names are ('ct', 'space'), matching ``galilean_spacetime``."""
+        return ("ct", "space")
 
     @override
     def split_components(self, p: CDict) -> tuple[CDict, CDict]:
-        """Split CDict by factors, keeping 'ct' for time factor.
+        """Split CDict by factors, re-keying the ``"ct"`` axis to ``time1d``'s ``"t"``.
 
-        GalileanCT uses 'ct' for the time component. The split returns
-        factor dicts with their native keys ('ct' for time, spatial keys for space).
+        The returned factor dicts use each factor's native keys: ``"t"`` for the
+        time factor (holding the length-valued ``x^0 = ct``) and the spatial
+        keys for the space factor. This is a pure re-key — ``ct`` is already the
+        coordinate, so no ``c`` conversion is applied (see the class docstring).
         """
-        time_dict = {"ct": p["ct"]}
+        # The time factor is `time1d`, whose native component is "t"; map the
+        # chart's "ct" value onto it so factor operations (metric, pt_map)
+        # validate against the real factor chart.
+        time_dict = {"t": p["ct"]}
         spatial_dict = {k: p[k] for k in self.spatial_chart.components}
         return (time_dict, spatial_dict)
 
@@ -135,9 +149,11 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # ty: ignore[invalid-method-override]
         """Merge factor CDicts back into GalileanCT components.
 
-        Expects time factor dict with 'ct' key, spatial factor dict with spatial keys.
+        The time factor dict uses `time1d`'s native "t" key (holding the
+        length-valued ``x^0 = ct``); re-key it back to "ct". Pure re-key — no
+        ``c`` conversion (see the class docstring).
         """
-        return {**parts[0], **parts[1]}
+        return {"ct": parts[0]["t"], **parts[1]}
 
     # ===============================================================
     # Chart API
