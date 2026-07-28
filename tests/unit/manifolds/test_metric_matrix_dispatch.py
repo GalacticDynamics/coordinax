@@ -335,3 +335,64 @@ class TestMetricRepresentation:
     )
     def test_metric_representation_type(self, manifold, chart, expected_cls):
         assert cxmapi.metric_representation(manifold, chart) is expected_cls
+
+
+# =============================================================================
+# Batch safety of the analytic curvilinear diagonal metrics
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    ("manifold", "chart", "point1"),
+    [
+        (cxm.R2, cxc.polar2d, {"r": u.Q(2.0, "m"), "theta": u.Q(0.6, "rad")}),
+        (
+            cxm.R3,
+            cxc.cyl3d,
+            {"rho": u.Q(2.0, "m"), "phi": u.Q(0.6, "rad"), "z": u.Q(1.0, "m")},
+        ),
+        (
+            cxm.R3,
+            cxc.sph3d,
+            {"r": u.Q(2.0, "m"), "theta": u.Q(0.6, "rad"), "phi": u.Q(0.3, "rad")},
+        ),
+        (
+            cxm.R3,
+            cxc.math_sph3d,
+            {"r": u.Q(2.0, "m"), "theta": u.Q(0.6, "rad"), "phi": u.Q(0.3, "rad")},
+        ),
+        (
+            cxm.R3,
+            cxc.lonlat_sph3d,
+            {"lon": u.Q(0.6, "rad"), "lat": u.Q(0.3, "rad"), "distance": u.Q(2.0, "m")},
+        ),
+    ],
+)
+def test_curvilinear_metric_is_batch_safe(manifold, chart, point1):
+    """Batched points give a (batch, n) diagonal whose rows match the unbatched."""
+    n = len(chart.components)
+    point2 = {k: u.Q(q.value * 1.3, q.unit) for k, q in point1.items()}
+    batch = {
+        k: u.Q(jnp.array([q.value, q.value * 1.3]), q.unit) for k, q in point1.items()
+    }
+
+    g1 = cxmapi.metric_matrix(manifold, point1, chart).diagonal
+    g2 = cxmapi.metric_matrix(manifold, point2, chart).diagonal
+    gb = cxmapi.metric_matrix(manifold, batch, chart).diagonal
+
+    assert g1.shape == (n,)
+    assert gb.shape == (2, n)
+    # Both batched rows must match their corresponding unbatched results, so a
+    # wrong axis ordering that still yields the right shape is caught.
+    assert jnp.allclose(jnp.asarray(gb.value)[0], jnp.asarray(g1.value))
+    assert jnp.allclose(jnp.asarray(gb.value)[1], jnp.asarray(g2.value))
+    # Unit metadata must be preserved (and not reordered) under batching.
+    assert g1.unit == gb.unit
+    assert g2.unit == gb.unit
+
+
+def test_curvilinear_metric_diagonal_is_float_for_integer_coords():
+    """Integer-valued coordinates still yield a floating-dtype metric diagonal."""
+    pt = {"r": u.Q(2, "m"), "theta": u.Q(1, "rad")}  # integer magnitudes
+    g = cxmapi.metric_matrix(cxm.R2, pt, cxc.polar2d).diagonal
+    assert jnp.issubdtype(jnp.asarray(g.value).dtype, jnp.inexact)

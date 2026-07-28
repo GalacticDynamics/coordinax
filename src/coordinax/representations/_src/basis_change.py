@@ -142,7 +142,8 @@ def change_basis(
     mm = cxmapi.metric_matrix(M, at, chart)
     if isinstance(mm, DiagonalMetric):
         h = jnp.sqrt(mm.diagonal)
-        return {k: h[i] * v[k] for i, k in enumerate(keys)}
+        # Components are on the last axis (leading axes are batch).
+        return {k: h[..., i] * v[k] for i, k in enumerate(keys)}
     # General case: Cholesky vielbein E = L^T, hat_v = E @ v
     assert isinstance(mm, DenseMetric)  # noqa: S101
     E = _cholesky_vielbein(mm)
@@ -204,7 +205,8 @@ def change_basis(
     mm = cxmapi.metric_matrix(M, at, chart)
     if isinstance(mm, DiagonalMetric):
         h = jnp.sqrt(mm.diagonal)
-        return {k: v[k] / h[i] for i, k in enumerate(keys)}
+        # Components are on the last axis (leading axes are batch).
+        return {k: v[k] / h[..., i] for i, k in enumerate(keys)}
     # General case: Cholesky vielbein E = L^T, v = E^{-1} hat_v (triangular solve)
     assert isinstance(mm, DenseMetric)  # noqa: S101
     E = _cholesky_vielbein(mm)
