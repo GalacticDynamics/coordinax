@@ -26,7 +26,8 @@ def draw_subclass(
     ``kind``) if nothing remains.
     """
     candidates = all_classes if include is None else include
-    candidates = tuple(c for c in candidates if c not in exclude)
+    exclude_set = set(exclude)
+    candidates = tuple(c for c in candidates if c not in exclude_set)
     if not candidates:
         msg = f"No {kind} classes left after exclusions"
         raise ValueError(msg)
