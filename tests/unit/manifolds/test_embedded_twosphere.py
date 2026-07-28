@@ -95,17 +95,28 @@ class TestEmbeddedMetricRespectsChart:
         emb = cxm.EmbeddedManifold(
             intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
         )
+        # (chart, coords, analytic closed-form g or None). The closed forms are
+        # independent of the J^T J machinery under test; where the closed form is
+        # unwieldy (loncoslat, math) fall back to the R^3-embedding J^T J.
         cases = [
-            (cxc.sph2, {"theta": 0.9, "phi": 0.6}),
-            (cxc.lonlat_sph2, {"lon": 0.6, "lat": 0.7}),
-            (cxc.loncoslat_sph2, {"lon_coslat": 0.3, "lat": 0.5}),
-            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}),
+            (cxc.sph2, {"theta": 0.9, "phi": 0.6}, np.diag([1.0, np.sin(0.9) ** 2])),
+            (
+                cxc.lonlat_sph2,
+                {"lon": 0.6, "lat": 0.7},
+                np.diag([np.cos(0.7) ** 2, 1.0]),
+            ),
+            (cxc.loncoslat_sph2, {"lon_coslat": 0.3, "lat": 0.5}, None),
+            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}, None),
         ]
-        for chart, coords in cases:
+        for chart, coords, analytic in cases:
             pt = {k: u.Q(v, "rad") for k, v in coords.items()}
             g = cxm.metric_matrix(emb, pt, chart)
             got = np.asarray(g.matrix.value)
-            ref = self._embedding_metric(chart, coords)
+            ref = (
+                analytic
+                if analytic is not None
+                else self._embedding_metric(chart, coords)
+            )
             assert np.allclose(got, ref, atol=1e-9), f"{chart}: {got} != {ref}"
             # Units: dimensionless ambient (radius=1) over angular coords, so
             # every g_ij is cart_unit^2 / (rad * rad) = 1 / rad^2.
