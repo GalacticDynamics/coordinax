@@ -8,6 +8,7 @@ import hypothesis.strategies as st
 
 import coordinax.representations as cxr
 
+from ._common import draw_subclass
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 BASES: Final = get_all_subclasses(cxr.AbstractBasis, exclude_abstract=True)
@@ -52,17 +53,7 @@ def basis_classes(
     ...     assert issubclass(basis_cls, cxr.NoBasis)
 
     """
-    # Determine candidate basis classes
-    candidates = BASES if include is None else include
-
-    # Filter out excluded basis classes
-    candidates = tuple(r for r in candidates if r not in exclude)
-
-    if not candidates:
-        msg = "No basis classes left after exclusions"
-        raise ValueError(msg)
-
-    return draw(st.sampled_from(candidates))  # ty: ignore[invalid-return-type]
+    return draw_subclass(draw, BASES, include=include, exclude=exclude, kind="basis")  # ty: ignore[invalid-return-type]
 
 
 @st.composite

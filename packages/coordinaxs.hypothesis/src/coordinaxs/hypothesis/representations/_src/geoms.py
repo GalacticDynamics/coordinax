@@ -8,6 +8,7 @@ import hypothesis.strategies as st
 
 import coordinax.representations as cxr
 
+from ._common import draw_subclass
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 GEOMETRIES: Final = get_all_subclasses(cxr.AbstractGeometry, exclude_abstract=True)
@@ -52,17 +53,9 @@ def geometry_classes(
     ...     assert issubclass(geom_cls, cxr.PointGeometry)
 
     """
-    # Determine candidate geometry classes
-    candidates = GEOMETRIES if include is None else include
-
-    # Filter out excluded geometry classes
-    candidates = tuple(r for r in candidates if r not in exclude)
-
-    if not candidates:
-        msg = "No role classes left after exclusions"
-        raise ValueError(msg)
-
-    return draw(st.sampled_from(candidates))  # ty: ignore[invalid-return-type]
+    return draw_subclass(
+        draw, GEOMETRIES, include=include, exclude=exclude, kind="geometry"
+    )  # ty: ignore[invalid-return-type]
 
 
 @st.composite
