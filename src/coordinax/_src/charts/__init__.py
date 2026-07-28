@@ -15,6 +15,7 @@ from .d4 import *
 from .d6 import *
 from .dn import *
 from .jacobian import *
+from .register_carray import *
 from .register_cdict import *
 from .register_guess import *
 from .register_ptmap import *

@@ -55,7 +55,7 @@ import coordinaxs.api.charts as cxcapi
 from .d2 import Cart2D, Polar2D
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import pack_to_qmatrix, tree_cast_int_bool_to_float
+from coordinax.internal import tree_cast_int_bool_to_float
 
 # ===================================================================
 # Partial function
@@ -212,7 +212,7 @@ def jac_pt_map(
 
     **Quantity-valued branch** (at least one value carries a unit)
         Packs *at* into a 1-D ``QuantityMatrix`` via
-        ``pack_to_qmatrix(at, keys=from_chart.components)``, promotes any
+        ``carray(at, from_chart.components)``, promotes any
         integer or boolean leaves to the default floating-point dtype (other
         dtypes, including complex, are left unchanged and will raise a
         ``TypeError`` from ``jax.jacfwd`` if passed), then computes
@@ -274,7 +274,7 @@ def jac_pt_map(
     jac_pt_map_fn = jax.jacfwd(pt_map_fn)
 
     # Pack the input CDict to a QuantityMatrix
-    at_in = pack_to_qmatrix(at, keys=from_chart.components)
+    at_in = cxcapi.carray(at, from_chart.components)
     at_in = tree_cast_int_bool_to_float(at_in)
 
     # Compute Jacobian as QuantityMatrix

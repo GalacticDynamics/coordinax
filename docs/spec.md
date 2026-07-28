@@ -1003,8 +1003,7 @@ Semi-public API:
 
 - `pack_uniform_unit`: stack component data into an array using a shared unit
 - `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
-- `pack_with_usys`: stack component data into an array, resolving per-component units from a unit system
-- `pack_to_qmatrix`: pack a component dictionary into a `QuantityMatrix` (unitless components are treated as dimensionless)
+- `carray`: pack a component dictionary into a `QuantityMatrix` (the complement of `cdict`; unitless components are treated as dimensionless; a unit system or shared unit may be supplied)
 - `tree_cast_int_bool_to_float`: promote integer/boolean PyTree leaves to floating point (e.g. for `jax.jacfwd` inputs)
 - `pos_named_objs`, `jax_scalar_handler`: wadler-lindig rendering helpers used by `__pdoc__` implementations
 - `CDict`, `OptUSys`: the component-dictionary and optional-unit-system type aliases
@@ -1242,7 +1241,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         dispatch handles it.
 
       - **Quantity-valued** (`is_array=False`): packs `at` into a 1-D `QuantityMatrix`
-        via `pack_to_qmatrix(at, keys=from_chart.components)`, casts to `float`, then
+        via `carray(at, from_chart.components)`, casts to `float`, then
         computes `J_qq = jax.jacfwd(pt_map_fn)(at_in)`. The jacfwd result is a
         `QuantityMatrix` whose `.value` is itself a `QuantityMatrix` encoding the input
         units, and whose `.unit` encodes the output units. `_repack_q_from_jac` extracts

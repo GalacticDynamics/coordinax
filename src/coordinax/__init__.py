@@ -10,6 +10,7 @@ __all__ = (  # distances
     "cartesian_chart",
     "guess_chart",
     "cdict",
+    "carray",
     "pt_map",
     "jac_pt_map",
     "cart1d",
@@ -100,6 +101,7 @@ from coordinax.angles import Angle
 from coordinax.charts import (
     CartesianProductChart,
     NoGlobalCartesianChartError,
+    carray,
     cart1d,
     cart2d,
     cart3d,
