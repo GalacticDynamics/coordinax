@@ -54,6 +54,24 @@ def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
     return jnp.where(denom == 0, jnp.zeros_like(ratio), ratio)
 
 
+def _require_cart3d_phase_space(chart: Any, /, *, direction: str) -> None:
+    """Validate a two-factor ``Cart3D`` Cartesian phase-space product chart.
+
+    ``direction`` is ``"to"`` (``chart`` is the source of ``pt_map`` *to*
+    ``PoincarePolar6D``) or ``"from"`` (``chart`` is the target of ``pt_map``
+    *from* it); it only selects the error wording. Raises ``NotImplementedError``
+    unless ``chart`` has exactly two ``Cart3D`` factors [position, velocity].
+    """
+    if len(chart.factors) != 2 or not all(isinstance(f, Cart3D) for f in chart.factors):
+        role = "source" if direction == "to" else "target"
+        msg = (
+            f"pt_map {direction} PoincarePolar6D requires a Cartesian phase-space "
+            f"{role}: a two-factor CartesianProductChart of (Cart3D, Cart3D) "
+            f"[position, velocity]; got factors {chart.factors!r}."
+        )
+        raise NotImplementedError(msg)
+
+
 #####################################################################
 # Point transformations
 
@@ -1824,15 +1842,7 @@ def pt_map(
     del usys
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    if len(from_chart.factors) != 2 or not all(
-        isinstance(f, Cart3D) for f in from_chart.factors
-    ):
-        msg = (
-            "pt_map to PoincarePolar6D requires a Cartesian phase-space source: a "
-            "two-factor CartesianProductChart of (Cart3D, Cart3D) [position, "
-            f"velocity]; got factors {from_chart.factors!r}."
-        )
-        raise NotImplementedError(msg)
+    _require_cart3d_phase_space(from_chart, direction="to")
 
     pos, vel = from_chart.split_components(p)
     x, y, z = pos["x"], pos["y"], pos["z"]
@@ -1898,20 +1908,13 @@ def pt_map(
     del usys
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    if len(to_chart.factors) != 2 or not all(
-        isinstance(f, Cart3D) for f in to_chart.factors
-    ):
-        msg = (
-            "pt_map from PoincarePolar6D requires a Cartesian phase-space target: a "
-            "two-factor CartesianProductChart of (Cart3D, Cart3D) [position, "
-            f"velocity]; got factors {to_chart.factors!r}."
-        )
-        raise NotImplementedError(msg)
+    _require_cart3d_phase_space(to_chart, direction="from")
 
     rho, z, dt_rho, dt_z = p["rho"], p["z"], p["dt_rho"], p["dt_z"]
-    s = jnp.hypot(p["pp_phi"], p["pp_phidot"])
     phi = jnp.atan2(p["pp_phidot"], p["pp_phi"])
-    lz = s**2 / 2  # sign(Lz) is not recoverable from the forward map; take Lz >= 0
+    # Lz = s²/2 with s = hypot(pp_phi, pp_phidot); compute directly to skip the
+    # sqrt (sign(Lz) is not recoverable from the forward map, so take Lz >= 0).
+    lz = (p["pp_phi"] ** 2 + p["pp_phidot"] ** 2) / 2
     sinp, cosp = jnp.sin(phi), jnp.cos(phi)
 
     pos = {"x": rho * sinp, "y": rho * cosp, "z": z}
