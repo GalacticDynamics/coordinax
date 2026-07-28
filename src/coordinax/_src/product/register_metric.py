@@ -40,7 +40,7 @@ def _mm_to_qm(mm: DenseMetric | DiagonalMetric) -> ul.QuantityMatrix:
         mat = mm.matrix
     if isinstance(mat, ul.QuantityMatrix):
         return mat
-    n = mat.shape[0]
+    n = mat.shape[-1]  # component axis (leading axes are batch)
     unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
     return ul.QuantityMatrix(mat, unit=ul.UnitsMatrix(unit_tup))
 
