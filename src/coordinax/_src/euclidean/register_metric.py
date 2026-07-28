@@ -195,7 +195,9 @@ def metric_matrix(
 
     """
     del M, chart
-    n = jnp.asarray(point["q"]).shape[0]
+    # Components are stored on the last axis (leading axes are batch), matching
+    # the `q[..., i]` unpacking used elsewhere for CartND.
+    n = jnp.shape(point["q"])[-1]
     return DiagonalMetric(jnp.ones(n))
 
 

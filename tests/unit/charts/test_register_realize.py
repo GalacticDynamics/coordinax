@@ -122,3 +122,17 @@ class TestPointTransformProlate:
         p = {"r": u.Q(3.0, "m"), "theta": u.Q(0.6, "rad"), "phi": u.Q(0.4, "rad")}
         out = cxc.pt_map(p, cxc.sph3d, prolate)
         assert set(out) == {"mu", "nu", "phi"}
+
+
+class TestPointTransformCartND:
+    """``pt_map`` from CartND reads components on the last axis (batch-safe)."""
+
+    def test_cartnd_to_cart3d_batched(self) -> None:
+        # A batch of 2 points in 3D: the dimensionality guard must read the
+        # component axis (last), not the batch axis (leading), and not raise.
+        p = {"q": u.Q(jnp.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), "m")}
+        out = cxc.pt_map(p, cxc.cartnd, cxc.cart3d)
+        assert set(out) == {"x", "y", "z"}
+        assert u.ustrip("m", out["x"]) == pytest.approx([1.0, 4.0])
+        assert u.ustrip("m", out["y"]) == pytest.approx([2.0, 5.0])
+        assert u.ustrip("m", out["z"]) == pytest.approx([3.0, 6.0])
