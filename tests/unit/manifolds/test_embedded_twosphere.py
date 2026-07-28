@@ -110,7 +110,11 @@ class TestEmbeddedMetricRespectsChart:
     def test_metric_matches_closed_form(self, unit_sphere, chart, coords, expected):
         pt = {k: u.Q(v, "rad") for k, v in coords.items()}
         g = cxm.metric_matrix(unit_sphere, pt, chart)
-        np.testing.assert_allclose(np.asarray(g.matrix.value), expected, atol=1e-12)
+        # rtol=0: the check is purely absolute, else assert_allclose's default
+        # rtol=1e-7 would swamp the 1e-12 atol.
+        np.testing.assert_allclose(
+            np.asarray(g.matrix.value), expected, rtol=0, atol=1e-12
+        )
         # Units: dimensionless ambient (radius=1) over angular coords, so
         # every g_ij is cart_unit^2 / (rad * rad) = 1 / rad^2.
         unit = g.matrix.unit

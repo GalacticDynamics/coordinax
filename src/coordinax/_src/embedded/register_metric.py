@@ -162,7 +162,9 @@ def metric_matrix(
 
     def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
         q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(chart_keys)}
-        q_cart = pt_embed(q, chart, cart_chart, M)
+        # `M.embed_map`, not `M`: the atlas check already ran above, and this
+        # runs under jacfwd/vmap.
+        q_cart = pt_embed(q, chart, cart_chart, M.embed_map)
         vals = [
             u.ustrip(uto_[j], q_cart[k])  # ty: ignore[not-subscriptable]
             if isinstance(q_cart[k], u.AbstractQuantity)  # ty: ignore[not-subscriptable]
