@@ -124,3 +124,20 @@ class TestEmbeddedMetricRespectsChart:
             assert all(
                 str(unit[i, j]) == "1 / rad2" for i in range(2) for j in range(2)
             ), f"{chart}: unexpected units {unit}"
+
+    def test_metric_is_batch_safe(self) -> None:
+        """A batched (B,) point gives (B, n, n) matching the per-point metric."""
+        emb = cxm.EmbeddedManifold(
+            intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
+        )
+        pt = {
+            "theta": u.Q(jnp.array([0.9, 0.5, 1.3]), "rad"),
+            "phi": u.Q(jnp.array([0.6, 0.2, 0.9]), "rad"),
+        }
+        g = cxm.metric_matrix(emb, pt, cxc.sph2)
+        m = jnp.asarray(g.matrix.value)
+        assert m.shape == (3, 2, 2)
+        for i in range(3):
+            single = {k: u.Q(v.value[i], u.unit_of(v)) for k, v in pt.items()}
+            ref = jnp.asarray(cxm.metric_matrix(emb, single, cxc.sph2).matrix.value)
+            assert jnp.allclose(m[i], ref)

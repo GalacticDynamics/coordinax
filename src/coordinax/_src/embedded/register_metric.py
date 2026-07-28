@@ -178,8 +178,21 @@ def metric_matrix(
         ]
         return qnp.stack(vals)
 
-    J_arr = jax.jacfwd(_embed_cart)(xat)  # (n_cart, n_chart)
-    result_vals = J_arr.T @ J_arr  # (n_chart, n_chart)
+    def _single_metric(x_vec: jnp.ndarray) -> jnp.ndarray:
+        j = jax.jacfwd(_embed_cart)(x_vec)  # (n_cart, n_chart)
+        return j.T @ j  # (n_chart, n_chart)
+
+    if xat.ndim == 1:
+        result_vals = _single_metric(xat)
+    else:
+        # `xat` is (*batch, n_chart) — components last, batch leading. vmap the
+        # per-point Jacobian over the flattened batch; a plain jacfwd of the
+        # batched input would give a wrong (cross-batch) Jacobian.
+        n_chart = xat.shape[-1]
+        batch_shape = xat.shape[:-1]
+        flat = xat.reshape(-1, n_chart)  # (prod(batch), n_chart)
+        result_vals = jax.vmap(_single_metric)(flat)  # (prod, n, n)
+        result_vals = result_vals.reshape(*batch_shape, n_chart, n_chart)
 
     # g_{ij} unit = uto_[0]² / (ufrom_[i] × ufrom_[j])
     # Valid because all Cartesian coordinates share the same unit.
