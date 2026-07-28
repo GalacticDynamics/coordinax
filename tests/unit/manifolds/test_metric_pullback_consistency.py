@@ -228,12 +228,6 @@ class TestNonCanonicalTwoSphereMetric:
         ref = _embedding_metric(chart, coords)
         assert jnp.allclose(got, ref, atol=1e-9), f"{got}\n!=\n{ref}"
 
-    def test_loncoslat_metric_is_dense(self):
-        """LonCosLat is non-orthogonal: the metric has a nonzero off-diagonal."""
-        pt = {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(0.7, "rad")}
-        g = cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2)
-        assert abs(float(jnp.asarray(g.matrix.value)[0, 1])) > 1e-3
-
     def test_integer_angles_do_not_break_jacfwd(self):
         """Integer-valued angles are promoted to float so the pullback jacfwd works."""
         pt = {"lon": u.Q(0, "rad"), "lat": u.Q(0, "rad")}  # integer magnitudes

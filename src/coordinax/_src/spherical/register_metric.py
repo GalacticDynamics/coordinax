@@ -17,19 +17,16 @@ from typing import cast
 
 import jax
 import jax.numpy as jnp
-import numpy as np
 import plum
 import unxts.linalg as ul
 
 import unxt as u
-from unxt.quantity import AllowValue, is_any_quantity
+from unxt.quantity import AllowValue
 
 import coordinaxs.api.charts as cxcapi
 from .chart import (
     AbstractSphericalHyperSphere,
-    LonCosLatSphericalTwoSphere,
-    LonLatSphericalTwoSphere,
-    MathSphericalTwoSphere,
+    NonCanonicalTwoSphere,
     SphericalTwoSphere,
 )
 from .manifold import HyperSphericalManifold
@@ -38,47 +35,9 @@ from coordinax._src.metric.matrix import (
     DiagonalMetric,
     _sine_product_diagonal,
 )
-from coordinax.internal import CDict
+from coordinax.internal import CDict, tree_cast_int_bool_to_float
 
 RAD = u.unit("rad")
-
-
-_CANON_SPH2 = SphericalTwoSphere()
-
-
-def _rad_value(q: object, /) -> object:
-    """Numeric value of an angular coordinate in radians (bare arrays pass through)."""
-    return u.ustrip("rad", q) if is_any_quantity(q) else jnp.asarray(q)
-
-
-def _round_metric_pullback(
-    point: CDict, chart: AbstractSphericalHyperSphere
-) -> DenseMetric:
-    r"""Round metric on the two-sphere via pullback of the canonical metric.
-
-    ``g = Jc^T diag(1, sin^2 theta) Jc`` where ``Jc`` is the Jacobian of the
-    coordinate map ``chart -> SphericalTwoSphere``. Correct for both orthogonal
-    (diagonal) and non-orthogonal (dense, e.g. ``LonCosLat``) charts.
-    """
-    keys = chart.components
-    x0 = jnp.stack([jnp.asarray(_rad_value(point[k])) for k in keys])
-    # jax.jacfwd needs an inexact input; promote integer angles (e.g. u.Q(0,
-    # "rad")) to float while leaving float32/float64 inputs untouched.
-    if not jnp.issubdtype(x0.dtype, jnp.inexact):
-        x0 = x0.astype(float)
-
-    def to_canon(x: jnp.ndarray) -> jnp.ndarray:
-        p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}
-        s = cast("CDict", cxcapi.pt_map(p, chart, _CANON_SPH2))
-        return jnp.stack([u.ustrip("rad", s["theta"]), u.ustrip("rad", s["phi"])])
-
-    jc = jax.jacfwd(to_canon)(x0)  # (2, n)
-    theta = to_canon(x0)[0]
-    g_can = jnp.diag(jnp.stack([jnp.ones_like(theta), jnp.sin(theta) ** 2]))
-    g = jc.T @ g_can @ jc  # (n, n), dimensionless (angles map angles -> angles)
-    n = len(keys)
-    units = ul.UnitsMatrix(np.full((n, n), u.unit(""), dtype=object))
-    return DenseMetric(ul.QuantityMatrix(g, unit=units))
 
 
 @plum.dispatch
@@ -150,11 +109,7 @@ def metric_matrix(
 
 @plum.dispatch
 def metric_representation(
-    M: HyperSphericalManifold,
-    chart: LonLatSphericalTwoSphere
-    | LonCosLatSphericalTwoSphere
-    | MathSphericalTwoSphere,
-    /,
+    M: HyperSphericalManifold, chart: NonCanonicalTwoSphere, /
 ) -> type[DenseMetric]:
     """Non-canonical two-sphere charts return a `DenseMetric`.
 
@@ -174,19 +129,16 @@ def metric_representation(
 
 @plum.dispatch
 def metric_matrix(
-    M: HyperSphericalManifold,
-    point: CDict,
-    chart: LonLatSphericalTwoSphere
-    | LonCosLatSphericalTwoSphere
-    | MathSphericalTwoSphere,
-    /,
+    M: HyperSphericalManifold, point: CDict, chart: NonCanonicalTwoSphere, /
 ) -> DenseMetric:
     r"""Round metric on a non-canonical two-sphere chart (pullback).
 
     The nested sine-product used by the canonical dispatch assumes the
     components are polar angles in nested order; that is false for these charts
     (LonLat, Math swap/relabel the polar and azimuthal angles; LonCosLat is
-    non-orthogonal). The metric is instead pulled back from the canonical chart.
+    non-orthogonal). The metric is instead pulled back from the canonical chart:
+    ``g = Jc^T diag(1, sin^2 theta) Jc``, where ``Jc`` is the Jacobian of the
+    coordinate map ``chart -> SphericalTwoSphere``.
 
     >>> import math
     >>> import unxt as u
@@ -202,4 +154,19 @@ def metric_matrix(
 
     """
     del M
-    return _round_metric_pullback(point, chart)
+    keys = chart.components
+    x0 = tree_cast_int_bool_to_float(
+        jnp.stack([jnp.asarray(u.ustrip(AllowValue, RAD, point[k])) for k in keys])
+    )
+
+    def to_canon(x: jnp.ndarray) -> jnp.ndarray:
+        p = {k: u.Q(x[i], RAD) for i, k in enumerate(keys)}
+        s = cast("CDict", cxcapi.pt_map(p, chart, SphericalTwoSphere()))
+        return jnp.stack([u.ustrip(RAD, s["theta"]), u.ustrip(RAD, s["phi"])])
+
+    jc = jax.jacfwd(to_canon)(x0)  # (2, n)
+    theta = to_canon(x0)[0]
+    g_can = jnp.diag(jnp.stack([jnp.ones_like(theta), jnp.sin(theta) ** 2]))
+    n = len(keys)
+    dmls = ul.UnitsMatrix.full((n, n), "")  # angles -> angles, so g is dimensionless
+    return DenseMetric(ul.QM(jc.T @ g_can @ jc, unit=dmls))
