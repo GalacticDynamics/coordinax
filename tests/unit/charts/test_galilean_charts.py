@@ -1,6 +1,7 @@
 """Tests specific to GalileanCT, galileanct, and galilean_spacetime."""
 
 import jax
+import numpy as np
 
 import unxt as u
 
@@ -342,8 +343,6 @@ class TestGalileanCTMetricAndAtlas:
 
     def test_metric_matrix_is_euclidean_4d(self) -> None:
         """metric_matrix assembles a 4x4 Euclidean product metric (no key crash)."""
-        import numpy as np
-
         pt = {
             "ct": u.Q(0.0, "m"),
             "x": u.Q(1.0, "m"),
