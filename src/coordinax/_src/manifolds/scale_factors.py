@@ -2,7 +2,6 @@
 
 __all__: tuple[str, ...] = ()
 
-from jaxtyping import Array
 
 import jax
 import jax.numpy as jnp
@@ -14,6 +13,7 @@ import unxt as u
 
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
+from ._utils import as_quantity_matrix
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.embedded.metric import PullbackMetric
@@ -76,17 +76,7 @@ def scale_factors(
             return diag
         units = ul.UnitsMatrix.full(diag.shape[-1], DMLS)
         return ul.QM(diag, unit=units)
-    return _as_quantity_matrix(mm.matrix).diag()  # ty: ignore[unresolved-attribute]
-
-
-def _as_quantity_matrix(x: ul.QM | Array) -> ul.QM:
-    """Convert a numeric matrix into a dimensionless QuantityMatrix."""
-    if isinstance(x, ul.QM):
-        return x
-
-    n_rows, n_cols = x.shape[-2:]
-    units = ul.UnitsMatrix.full((n_rows, n_cols), DMLS)
-    return ul.QM(value=x, unit=units)
+    return as_quantity_matrix(mm.matrix).diag()  # ty: ignore[unresolved-attribute]
 
 
 @plum.dispatch
