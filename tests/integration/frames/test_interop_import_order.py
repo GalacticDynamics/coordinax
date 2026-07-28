@@ -34,10 +34,13 @@ _REQUIRE_INTEROP = os.environ.get("COORDINAX_REQUIRE_INTEROP_TESTS") == "1"
 for _pkg in ("coordinaxs.astro", "coordinaxs.interop.astropy"):
     # `find_spec` *raises* ModuleNotFoundError (rather than returning None) when
     # a parent namespace is absent — e.g. `coordinaxs.interop` when only the
-    # astro extra is installed — so treat that as "not installed" too.
+    # astro extra is installed — so treat that as "not installed" too. Any other
+    # missing module is a genuine packaging/runtime failure: let it propagate.
     try:
         _spec = importlib.util.find_spec(_pkg)
-    except ModuleNotFoundError:
+    except ModuleNotFoundError as exc:
+        if not f"{_pkg}.".startswith(f"{exc.name}."):
+            raise
         _spec = None
     if _spec is None:
         if _REQUIRE_INTEROP:
