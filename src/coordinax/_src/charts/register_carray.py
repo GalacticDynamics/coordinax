@@ -73,6 +73,20 @@ def carray(p: CDict, keys: tuple[str, ...], usys: u.AbstractUnitSystem, /) -> ul
 
 
 @plum.dispatch
+def carray(p: CDict, chart: AbstractChart, usys: u.AbstractUnitSystem, /) -> ul.QM:
+    """Pack a component dict, using ``chart.components`` and units from ``usys``.
+
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> p = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+    >>> cx.carray(p, cx.cart3d, u.unitsystems.si)
+    QM([1000., 2000., 3000.], '(m, m, m)')
+
+    """
+    return carray(p, chart.components, usys)  # ty: ignore[too-many-positional-arguments]
+
+
+@plum.dispatch
 def carray(p: CDict, keys: tuple[str, ...], unit: u.AbstractUnit, /) -> ul.QM:
     """Pack a component dict into a single shared ``unit`` (all components converted).
 
@@ -85,3 +99,17 @@ def carray(p: CDict, keys: tuple[str, ...], unit: u.AbstractUnit, /) -> ul.QM:
     """
     vals = [u.ustrip(AllowValue, unit, p[k]) for k in keys]
     return ul.QM(jnp.stack(vals, axis=-1), unit=(unit,) * len(keys))
+
+
+@plum.dispatch
+def carray(p: CDict, chart: AbstractChart, unit: u.AbstractUnit, /) -> ul.QM:
+    """Pack a component dict, using ``chart.components`` and a shared ``unit``.
+
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> p = {"x": u.Q(1.0, "km"), "y": u.Q(200.0, "m"), "z": u.Q(0.0, "m")}
+    >>> cx.carray(p, cx.cart3d, u.unit("km"))
+    QM([1. , 0.2, 0. ], '(km, km, km)')
+
+    """
+    return carray(p, chart.components, unit)  # ty: ignore[too-many-positional-arguments]

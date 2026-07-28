@@ -360,9 +360,10 @@ def carray(p: Any, /, *args: Any) -> Any:
 
         - ``carray(p, keys)`` / ``carray(p, chart)`` — one unit per component
           (dimensionless where a component carries no unit)
-        - ``carray(p, keys, usys)`` — units resolved from a unit system by each
-          component's dimension
-        - ``carray(p, keys, unit)`` — a single shared unit for every component
+        - ``carray(p, keys, usys)`` / ``carray(p, chart, usys)`` — units resolved
+          from a unit system by each component's dimension
+        - ``carray(p, keys, unit)`` / ``carray(p, chart, unit)`` — a single
+          shared unit for every component
 
     Returns
     -------
