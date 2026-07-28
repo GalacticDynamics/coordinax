@@ -2,18 +2,16 @@
 
 __all__: tuple[str, ...] = ()
 
-from jaxtyping import Array
 
 import jax
-import numpy as np
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
+from ._utils import as_quantity_matrix
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.metric.matrix import DenseMetric
@@ -95,7 +93,7 @@ def angle_between(
     chart.check_data(vvec, keys=True, values=False)
 
     mm = cxmapi.metric_matrix(chart.M, at, chart)
-    g = _as_quantity_matrix(
+    g = as_quantity_matrix(
         mm.matrix if isinstance(mm, DenseMetric) else mm.to_dense().matrix  # ty: ignore[unresolved-attribute]
     )
     u_qm = pack_to_qmatrix(uvec, keys=chart.components)
@@ -110,16 +108,6 @@ def angle_between(
     cosine = inner / qnp.sqrt(uu * vv)
     cosine_value = qnp.clip(u.ustrip("", cosine), -1.0, 1.0)
     return cxa.Angle(qnp.arccos(cosine_value), "rad")
-
-
-def _as_quantity_matrix(x: ul.QuantityMatrix | Array) -> ul.QuantityMatrix:
-    """Convert a numeric matrix into a dimensionless QuantityMatrix."""
-    if isinstance(x, ul.QuantityMatrix):
-        return x
-
-    n_rows, n_cols = x.shape[-2:]
-    units = ul.UnitsMatrix(np.full((n_rows, n_cols), u.unit("")))
-    return ul.QuantityMatrix(value=x, unit=units)
 
 
 def _check_nonzero_norm(*norms: u.AbstractQuantity) -> None:
