@@ -171,13 +171,19 @@ class TestChangeBasisDispatch:
             )
 
         o0, o1, ob = cb(at0), cb(at1), cb(at_b)
-        # Physical (orthonormal) components are all m/s; each batched row must
-        # match its unbatched counterpart (theta/phi are the discriminating,
-        # r-dependent ones — a wrong axis would give the wrong per-row scaling).
-        for k in ("r", "theta", "phi"):
-            got = u.ustrip("m/s", ob[k])
+        # theta/phi scale by h = r and h = r·sin(theta), so they must genuinely
+        # come back batched (shape (2,)) and match the per-row unbatched results;
+        # a wrong axis would give the wrong per-row scaling.
+        for k in ("theta", "phi"):
+            got = np.asarray(u.ustrip("m/s", ob[k]))
+            assert got.shape == (2,)
             want = np.array([u.ustrip("m/s", o0[k]), u.ustrip("m/s", o1[k])])
-            np.testing.assert_allclose(np.broadcast_to(got, (2,)), want)
+            np.testing.assert_allclose(got, want)
+        # r scales by the constant h = 1, so it is r-independent (may stay scalar).
+        np.testing.assert_allclose(
+            np.broadcast_to(np.asarray(u.ustrip("m/s", ob["r"])), (2,)),
+            np.array([u.ustrip("m/s", o0["r"]), u.ustrip("m/s", o1["r"])]),
+        )
 
     def test_round_trip_general_metric(self):
         M = cxm.EmbeddedManifold(
