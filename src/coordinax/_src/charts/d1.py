@@ -37,9 +37,7 @@ from coordinax._src.euclidean.atlas import (
 )
 from coordinax._src.euclidean.manifold import R1, Rn
 
-GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 MT = TypeVar("MT", bound=AbstractManifold, default=Rn)
-V = TypeVar("V")
 
 
 class Abstract1D(AbstractDimensionalFlag, n=1):

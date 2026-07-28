@@ -41,7 +41,7 @@ __all__ = ("jac_pt_map",)
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, Final, cast
+from typing import Any
 
 import jax
 import jax.numpy as jnp
@@ -56,9 +56,6 @@ from .d2 import Cart2D, Polar2D
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import pack_to_qmatrix, tree_cast_int_bool_to_float
-
-DMLS: Final[u.AbstractUnit] = cast("u.AbstractUnit", u.unit(""))
-
 
 # ===================================================================
 # Partial function
@@ -266,7 +263,6 @@ def jac_pt_map(
     # compute the Jacobian as an array.
     at = from_chart.check_data(at, keys=True)
     is_array = not any(hasattr(v, "unit") for v in at.values())
-    # is_array &= not all(dim is None for dim in from_chart.coord_dimensions)
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)
         return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]

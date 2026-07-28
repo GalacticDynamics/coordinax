@@ -5,7 +5,7 @@ __all__: tuple[str, ...] = ()
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, Final, cast, final
+from typing import Any, Final, cast
 
 import jax
 import plum
@@ -36,15 +36,6 @@ from coordinax._src.base.manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
 from coordinax._src.utils import uconvert_to_rad
-
-
-@final
-class MissingType:
-    """Sentinel for missing arguments."""
-
-
-MISSING: Final[MissingType] = MissingType()
-
 
 #####################################################################
 # Point transformations
