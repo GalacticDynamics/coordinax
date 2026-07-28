@@ -292,27 +292,24 @@ def pushforward(
 
     cart = chart.cartesian
     matrix = op._matrix(cart, tau)
-
-    if is_flat_chart(chart):
-        p_cart = v
-    else:
-        if at is None:
-            msg = (
-                f"pushforward({type(op).__name__}, ..., {rep!r}) on a "
-                f"non-Cartesian chart ({chart!r}) requires 'at' (base point in "
-                "chart coords) so the Jacobian pushforward can be evaluated."
-            )
-            raise TypeError(msg)
-        at_cart = cxc.pt_map(at, chart, cart, usys=usys)
-        p_cart = cxr.tangent_map(v, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
-
     comps_cart = cart.components
-    p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
 
+    # Flat chart: the Jacobian is the identity, so M acts directly, no base point.
     if is_flat_chart(chart):
-        return p_cart_out
+        return _matmul_cdict(matrix, v, comps_cart)
 
-    # Map the base point forward (M @ at) to anchor the inverse Jacobian.
+    # Non-flat: push the tangent through the chart Jacobian at `at`, apply M in
+    # Cartesian, then pull back (anchoring the inverse Jacobian at M @ at).
+    if at is None:
+        msg = (
+            f"pushforward({type(op).__name__}, ..., {rep!r}) on a "
+            f"non-Cartesian chart ({chart!r}) requires 'at' (base point in "
+            "chart coords) so the Jacobian pushforward can be evaluated."
+        )
+        raise TypeError(msg)
+    at_cart = cxc.pt_map(at, chart, cart, usys=usys)
+    p_cart = cxr.tangent_map(v, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
+    p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
     at_out = _matmul_cdict(matrix, at_cart, comps_cart)
     return cast(
         "CDict",
@@ -361,9 +358,10 @@ def pushforward(
         require_matching_keys(d, chart.components, pre + ref)
 
     n = op._validate_square(materialize_transform(op, tau)._raw_matrix).shape[-1]
-    n_factors = len(chart.factors)
     parts = chart.split_components(v)
-    at_parts = chart.split_components(at) if at is not None else [None] * n_factors
+    at_parts = (
+        chart.split_components(at) if at is not None else [None] * len(chart.factors)
+    )
 
     def _maybe(
         factor_chart: cxc.AbstractChart[Any, Any, Any],
