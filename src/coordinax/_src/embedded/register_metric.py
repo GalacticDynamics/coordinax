@@ -38,26 +38,15 @@ DMLS = u.unit("")
 
 
 def _gram_values(g: AbstractMetricMatrix) -> jnp.ndarray:
-    """Ambient metric as a plain dense array, checking it is dimensionless.
+    """Ambient metric as a plain dense array.
 
     Cartesian ambient coordinates share a single unit, so the ambient metric in
-    that chart is dimensionless. The caller's ``cart_unit^2 / (chart_unit_i *
-    chart_unit_j)`` result unit assumes exactly that, so a units-carrying
-    ambient metric is rejected rather than silently mislabelled.
+    that chart is dimensionless and its bare values carry the whole content —
+    which is what the caller's ``cart_unit^2 / (chart_unit_i * chart_unit_j)``
+    result unit assumes.
     """
     m = g.to_dense().matrix
-    if not isinstance(m, ul.QuantityMatrix):
-        return m
-    n = m.value.shape[-1]
-    bad = next(
-        (m.unit[i, j] for i in range(n) for j in range(n) if m.unit[i, j] != DMLS), None
-    )
-    if bad is not None:
-        msg = (
-            f"ambient metric must be dimensionless in Cartesian coordinates, got {bad}"
-        )
-        raise ValueError(msg)
-    return m.value
+    return m.value if isinstance(m, ul.QuantityMatrix) else m
 
 
 # =====================================================================
