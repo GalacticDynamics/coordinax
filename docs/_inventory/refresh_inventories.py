@@ -2,9 +2,8 @@
 """Refresh the vendored intersphinx inventories used as offline fallbacks.
 
 These ``objects.inv`` files back the fallback ``_inventory/*.inv`` locations
-configured in ``docs/conf.py`` for the ``docs.kidger.site`` targets
-(equinox / quax / jaxtyping), whose Cloudflare host intermittently returns
-415/403 to CI-runner IPs. Run this to regenerate them::
+configured in ``docs/conf.py`` for intersphinx targets that can be flaky to fetch
+in CI (e.g. ``docs.kidger.site`` for equinox/jaxtyping). Run this to regenerate them::
 
     python docs/_inventory/refresh_inventories.py
 
@@ -28,7 +27,7 @@ HERE = Path(__file__).parent
 def main() -> None:
     for name, url in INVENTORIES.items():
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})  # noqa: S310
-        with urllib.request.urlopen(req) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
             data = resp.read()
         # Guard against a Cloudflare error page silently overwriting a good file.
         if not data.startswith(_MAGIC):
