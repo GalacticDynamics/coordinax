@@ -32,7 +32,14 @@ import coordinax as cx
 _REQUIRE_INTEROP = os.environ.get("COORDINAX_REQUIRE_INTEROP_TESTS") == "1"
 
 for _pkg in ("coordinaxs.astro", "coordinaxs.interop.astropy"):
-    if importlib.util.find_spec(_pkg) is None:
+    # `find_spec` *raises* ModuleNotFoundError (rather than returning None) when
+    # a parent namespace is absent — e.g. `coordinaxs.interop` when only the
+    # astro extra is installed — so treat that as "not installed" too.
+    try:
+        _spec = importlib.util.find_spec(_pkg)
+    except ModuleNotFoundError:
+        _spec = None
+    if _spec is None:
         if _REQUIRE_INTEROP:
             msg = (
                 f"{_pkg} is not installed, but COORDINAX_REQUIRE_INTEROP_TESTS=1 "
