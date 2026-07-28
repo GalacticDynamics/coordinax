@@ -17,6 +17,8 @@ import plum
 from ._custom_types import CDict
 
 if TYPE_CHECKING:
+    import unxts.linalg  # noqa: ICN001
+
     import coordinax.charts  # noqa: ICN001
 
 
@@ -346,7 +348,7 @@ def cdict(_: Any, /) -> CDict:
 
 
 @plum.dispatch.abstract
-def carray(p: Any, /, *args: Any) -> Any:
+def carray(p: Any, /, *args: Any) -> "unxts.linalg.QuantityMatrix":
     """Pack a component dictionary into a ``QuantityMatrix`` (complement of `cdict`).
 
     Parameters

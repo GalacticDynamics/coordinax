@@ -21,28 +21,28 @@ These utilities are primarily useful when implementing downstream transforms, Ja
 
 ```python
 import unxt as u
+import coordinax as cx
 import coordinax.charts as cxc
-from coordinax.internal import pack_nonuniform_unit, pack_uniform_unit
+from coordinax.internal import pack_uniform_unit
 
 p = {"x": u.Q(1, "km"), "y": u.Q(200, "m"), "z": u.Q(3, "km")}
 
 vals, unit = pack_uniform_unit(p, ("x", "y", "z"))
 restored = cxc.cdict(vals, unit, ("x", "y", "z"))
 
-vals2, units2 = pack_nonuniform_unit(p, ("x", "y", "z"))
+qm = cx.carray(p, ("x", "y", "z"))
 ```
 
-Use `pack_uniform_unit` when all components should be expressed in a shared unit before stacking into an array. Use `pack_nonuniform_unit` when each component should retain its own unit metadata.
+Use `pack_uniform_unit` when all components should be expressed in a shared unit before stacking into an array. Use `cx.carray` when each component should retain its own unit metadata (it returns a `QuantityMatrix` carrying a per-component unit tuple).
 
 ## Functional API
 
 - `pack_uniform_unit`: stack a component dictionary into an array using a shared reference unit
-- `pack_nonuniform_unit`: stack a component dictionary into an array while preserving a per-component unit tuple
+- `cx.carray`: pack a component dictionary into a `QuantityMatrix` preserving per-component units
 
 ## Available Objects
 
 - `pack_uniform_unit`: pack values into an array with one shared unit
-- `pack_nonuniform_unit`: pack values into an array with per-component units
 
 ## Notes
 

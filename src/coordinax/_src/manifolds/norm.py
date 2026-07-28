@@ -19,7 +19,6 @@ from coordinax._src.charts import Cart0D, Cart1D, Cart2D, Cart3D, CartND
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import FlatMetric
 from coordinax._src.internal import (
-    pack_nonuniform_unit,
     pack_uniform_unit,
 )
 
@@ -148,8 +147,7 @@ def norm(G: Array, v: CDict, /) -> Array | u.AbstractQuantity:
     # Pack CDict of quantities into a QuantityMatrix, preserving per-component
     # units.  Then compute v^T G v via QuantityMatrix ops, which handle all unit
     # conversions correctly (including mixed-unit components like m/s and 1/s).
-    v_vec, units = pack_nonuniform_unit(v, keys)
-    v_qm = ul.QuantityMatrix(v_vec, unit=units)
+    v_qm: ul.QM = cxcapi.carray(v, keys)  # ty: ignore[invalid-assignment]
     return jnp.sqrt(jnp.dot(v_qm, jnp.matmul(G, v_qm)))
 
 
@@ -252,8 +250,7 @@ def norm(
     # then compute sqrt(vᵀ G v) via QuantityMatrix/AbstractMetricMatrix arithmetic,
     # which handles all unit conversions correctly (including mixed-unit
     # components like m/s and rad/s).
-    v_vec, units = pack_nonuniform_unit(v, keys)
-    v_qm = ul.QuantityMatrix(v_vec, unit=units)
+    v_qm: ul.QM = cxcapi.carray(v, keys)  # ty: ignore[invalid-assignment]
     return jnp.sqrt(v_qm @ (mm @ v_qm))
 
 

@@ -19,7 +19,6 @@ from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.embedded.metric import PullbackMetric
 from coordinax._src.euclidean.scale_factors import _column_squared_norms
 from coordinax._src.metric.matrix import DiagonalMetric
-from coordinax.internal import pack_nonuniform_unit
 
 DMLS = u.unit("")
 
@@ -119,7 +118,8 @@ def scale_factors(
     cart_chart = ambient_chart.cartesian
     cart_keys = cart_chart.components
 
-    xat, ufrom = pack_nonuniform_unit(at, intrinsic_keys)
+    _qm: ul.QM = cxcapi.carray(at, intrinsic_keys)  # ty: ignore[invalid-assignment]
+    xat, ufrom = _qm.value, _qm.unit.to_tuple()
     ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
 
     # Evaluate once to determine Cartesian output units

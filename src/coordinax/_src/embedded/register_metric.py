@@ -28,10 +28,10 @@ import unxts.linalg as ul
 import quaxed.numpy as qnp
 import unxt as u
 
+import coordinaxs.api.charts as cxcapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
 from coordinax._src.metric.matrix import AbstractMetricMatrix, DenseMetric
-from coordinax.internal import pack_nonuniform_unit
 from coordinaxs.api.manifolds import metric_matrix, pt_embed
 
 DMLS = u.unit("")
@@ -171,7 +171,8 @@ def metric_matrix(
     cart_chart = M.embed_map.ambient.cartesian
     cart_keys = cart_chart.components
 
-    xat, ufrom = pack_nonuniform_unit(point, chart_keys)
+    _qm: ul.QM = cxcapi.carray(point, chart_keys)  # ty: ignore[invalid-assignment]
+    xat, ufrom = _qm.value, _qm.unit.to_tuple()
     ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
 
     # `pt_embed` is the composition chart → intrinsic → ambient → Cartesian; it

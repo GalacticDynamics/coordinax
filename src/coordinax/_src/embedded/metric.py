@@ -12,10 +12,10 @@ import unxts.linalg as ul
 import quaxed.numpy as qnp
 import unxt as u
 
+import coordinaxs.api.charts as cxcapi
 from .embedmap import AbstractEmbeddingMap
 from coordinax._src.base import AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import pack_nonuniform_unit
 
 DMLS = u.unit("")
 
@@ -49,7 +49,8 @@ def _jacobian_embed_map(
     ambient_keys = embed_map.ambient.components
 
     # Pack `at` → plain array + per-component from-units
-    xat, ufrom = pack_nonuniform_unit(at, intrinsic_keys)
+    _qm: ul.QM = cxcapi.carray(at, intrinsic_keys)  # ty: ignore[invalid-assignment]
+    xat, ufrom = _qm.value, _qm.unit.to_tuple()
 
     # Run embedding once to determine output units
     at_ambient = embed_fn(at, usys=usys)

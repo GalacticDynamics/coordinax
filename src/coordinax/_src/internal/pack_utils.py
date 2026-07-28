@@ -1,21 +1,15 @@
 """Helpers for packing component dictionaries into arrays while tracking units.
 
-The helpers in this module are used when chart- or vector-like data is most
-conveniently manipulated as a stacked JAX array, but unit metadata still needs
-to be preserved across the pack/unpack boundary.
-
-Two packing modes are supported:
-
-- uniform-unit packing, where all entries are converted into one shared unit
-- non-uniform packing, where each entry keeps its own unit metadata
+`pack_uniform_unit` converts all entries of a component dict into one shared
+unit and returns a stacked JAX array, preserving the ``None``-for-unitless
+convention that keeps genuinely unitless components as raw arrays. For
+non-uniform (per-component) unit packing into a ``QuantityMatrix``, use the
+:func:`coordinaxs.api.charts.carray` dispatch.
 """
 
-__all__ = (
-    "pack_uniform_unit",
-    "pack_nonuniform_unit",
-)
+__all__ = ("pack_uniform_unit",)
 
-from jaxtyping import Array, ArrayLike
+from jaxtyping import ArrayLike
 from typing import Any, Final, overload
 
 import quaxed.numpy as jnp
@@ -79,23 +73,3 @@ def pack_uniform_unit(
     unit = v0.unit if unitful else DMLS
     vals = [u.ustrip(AllowValue, unit, p[k]) for k in keys]
     return jnp.stack(vals, axis=-1), unit if unitful else None  # ty: ignore[invalid-return-type]
-
-
-def pack_nonuniform_unit(
-    p: CDict, /, keys: tuple[str, ...]
-) -> tuple[Array, tuple[u.AbstractUnit | None, ...]]:
-    """Pack a component dictionary into an array with per-component units.
-
-    Unlike `pack_uniform_unit`, this helper does not choose a single reference
-    unit. Each requested component is stripped in its own native unit and the
-    resulting unit tuple is returned alongside the stacked values.
-
-    This is the appropriate packing mode when different coordinates naturally
-    have different physical dimensions or when preserving the original unit of
-    each component is important.
-    """
-    units = tuple(u.unit_of(p[k]) for k in keys)
-    vals = [
-        u.ustrip(AllowValue, unit, p[k]) for k, unit in zip(keys, units, strict=True)
-    ]
-    return jnp.stack(vals, axis=-1), units  # ty: ignore[invalid-return-type]

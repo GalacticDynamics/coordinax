@@ -13,12 +13,12 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.charts as cxc
+import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.representations as cxrapi
 from .basis import CoordinateBasis, PhysicalBasis, coord_basis
 from .custom_types import CDict, OptUSys
 from .geom import TangentGeometry
 from .rep import Representation
-from coordinax.internal import pack_nonuniform_unit
 
 # ---------------------------------------------------------------------------
 # Validation helpers
@@ -78,8 +78,7 @@ def _apply_jac(
 
     """
     if all(isinstance(v[k], u.AbstractQuantity) for k in from_components):
-        v_arr, v_units = pack_nonuniform_unit(v, keys=from_components)
-        v_qm = ul.QuantityMatrix(v_arr, unit=v_units)
+        v_qm: ul.QM = cxcapi.carray(v, from_components)  # ty: ignore[invalid-assignment]
         w = qnp.matmul(J, v_qm)  # (n_out,) QuantityMatrix
         return {key: u.Q(w.value[i], w.unit[i]) for i, key in enumerate(to_components)}
 

@@ -6,15 +6,17 @@ from dataclasses import replace
 from enum import Enum
 
 from collections.abc import Mapping
-from typing import Any, Literal, cast, final
+from typing import TYPE_CHECKING, Any, Literal, cast, final
 
 import plum
-import unxts.linalg as ul
 
 import unxt as u
 
+import coordinaxs.api.charts as cxcapi
 from .point import Point
-from coordinax.internal import pack_nonuniform_unit
+
+if TYPE_CHECKING:
+    import unxts.linalg as ul
 
 
 @final
@@ -217,7 +219,8 @@ def point_to_q(obj: Point, /) -> u.AbstractQuantity:
 
     """
     # Pack the the data into value, unit tuple
-    vals, units = pack_nonuniform_unit(obj.data, obj.chart.components)
+    qm = cast("ul.QM", cxcapi.carray(obj.data, obj.chart.components))
+    vals, units = qm.value, qm.unit.to_tuple()
 
     # Special case for homogeneous units (e.g. all angles in deg): we can
     # convert to a single unit and return a quantity with that unit.
@@ -225,4 +228,4 @@ def point_to_q(obj: Point, /) -> u.AbstractQuantity:
         unit = u.unit("") if units[0] is None else units[0]
         return u.Q(vals, unit)
 
-    return ul.QuantityMatrix(vals, units)
+    return qm

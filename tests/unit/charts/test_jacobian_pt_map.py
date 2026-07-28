@@ -822,7 +822,7 @@ class TestJacobianPtMapCDictArrayBranch:
     Plain-array CDicts require usys because the branch forwards to the plain-Array
     dispatch which requires a unit system.
 
-    Note: Cart2D→Polar2D has its own CDict dispatch that always calls pack_to_qmatrix,
+    Note: Cart2D→Polar2D has its own CDict dispatch that always calls carray,
     so plain-array CDicts for that pair fail even before the is_array check.
     """
 
