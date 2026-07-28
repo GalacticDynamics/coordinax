@@ -4,11 +4,14 @@ Covers :class:`~coordinax.manifolds.EmbeddedManifold` paired with any
 intrinsic :class:`~coordinax._src.base.AbstractChart`.
 
 The *induced* (pullback) metric on an embedded submanifold is computed as
-$g = J^T J$ where $J$ is the Jacobian of the composition
-``chart → intrinsic → Cartesian ambient``.  Routing through the Cartesian
-ambient makes every ambient output share the single unit ``cart_unit`` (column
-*i* of $J$ then has unit ``cart_unit / chart_unit_i``), which makes each
-$J^T J$ summation term unit-compatible.
+$g = J^T G J$ where $J$ is the Jacobian of the composition
+``chart → intrinsic → Cartesian ambient`` and $G$ is the ambient metric
+evaluated at the embedded point.  $G$ is the identity only when the ambient is
+Euclidean; for a Lorentzian ambient it is $\eta$, and dropping it would report
+a timelike direction as spacelike.  Routing through the Cartesian ambient makes
+every ambient output share the single unit ``cart_unit`` (column *i* of $J$ then
+has unit ``cart_unit / chart_unit_i``), which makes each summation term
+unit-compatible; $G$ in that chart is dimensionless.
 
 All results are wrapped in a :class:`~coordinax._src.metric.matrix.DenseMetric`
 because the induced metric is not guaranteed to be diagonal.
@@ -27,11 +30,34 @@ import unxt as u
 
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart  # type: ignore[type-arg]
-from coordinax._src.metric.matrix import DenseMetric
+from coordinax._src.metric.matrix import AbstractMetricMatrix, DenseMetric
 from coordinax.internal import pack_nonuniform_unit
 from coordinaxs.api.manifolds import metric_matrix, pt_embed
 
 DMLS = u.unit("")
+
+
+def _gram_values(g: AbstractMetricMatrix) -> jnp.ndarray:
+    """Ambient metric as a plain dense array, checking it is dimensionless.
+
+    Cartesian ambient coordinates share a single unit, so the ambient metric in
+    that chart is dimensionless. The caller's ``cart_unit^2 / (chart_unit_i *
+    chart_unit_j)`` result unit assumes exactly that, so a units-carrying
+    ambient metric is rejected rather than silently mislabelled.
+    """
+    m = g.to_dense().matrix
+    if not isinstance(m, ul.QuantityMatrix):
+        return m
+    n = m.value.shape[-1]
+    bad = next(
+        (m.unit[i, j] for i in range(n) for j in range(n) if m.unit[i, j] != DMLS), None
+    )
+    if bad is not None:
+        msg = (
+            f"ambient metric must be dimensionless in Cartesian coordinates, got {bad}"
+        )
+        raise ValueError(msg)
+    return m.value
 
 
 # =====================================================================
@@ -73,14 +99,19 @@ def metric_matrix(
 ) -> DenseMetric:
     r"""Induced metric on an embedded submanifold via Jacobian pullback.
 
-    Computes $g_{ij} = \sum_k J^k_i J^k_j$ where $J$ is the Jacobian of the
-    composition ``chart → intrinsic → Cartesian ambient`` (the ``chart →
-    intrinsic`` leg is the identity when ``chart`` is the intrinsic chart).
+    Computes $g_{ij} = \sum_{kl} J^k_i G_{kl} J^l_j$ where $J$ is the Jacobian
+    of the composition ``chart → intrinsic → Cartesian ambient`` (the ``chart →
+    intrinsic`` leg is the identity when ``chart`` is the intrinsic chart) and
+    $G$ is the ambient metric at the embedded point.  $G$ is the identity for a
+    Euclidean ambient, so the familiar $J^T J$ is the special case; for a
+    Lorentzian ambient $G = \eta$ and the induced metric of a timelike
+    direction is correctly negative.
+
     Routing through Cartesian ambient coordinates makes every ambient output
     share the single unit ``cart_unit`` (so column *i* of $J$ has unit
-    ``cart_unit / chart_unit_i``); each ``g_{ij}`` term $J^k_i J^k_j$ then has a
-    consistent unit ``cart_unit^2 / (chart_unit_i * chart_unit_j)`` and the
-    result carries physically correct units.
+    ``cart_unit / chart_unit_i``) and makes $G$ dimensionless; each ``g_{ij}``
+    term then has a consistent unit ``cart_unit^2 / (chart_unit_i *
+    chart_unit_j)`` and the result carries physically correct units.
 
     Parameters
     ----------
@@ -122,7 +153,7 @@ def metric_matrix(
     True
     >>> g.matrix.value
     Array([[1., 0.],
-           [0., 1.]], dtype=float64, weak_type=True)
+           [0., 1.]], dtype=float64)
 
     Radius-2 sphere — metric scaled by R²:
 
@@ -133,7 +164,7 @@ def metric_matrix(
     >>> g2 = metric_matrix(M2, p, cxc.sph2)
     >>> g2.matrix.value
     Array([[4., 0.],
-           [0., 4.]], dtype=float64, weak_type=True)
+           [0., 4.]], dtype=float64)
     >>> g2.matrix.unit[0, 0]
     Unit("m2 / rad2")
 
@@ -142,7 +173,7 @@ def metric_matrix(
     >>> p_ll = {"lon": u.Angle(0.0, "rad"), "lat": u.Angle(jnp.pi / 3, "rad")}
     >>> metric_matrix(M, p_ll, cxc.lonlat_sph2).matrix.value
     Array([[0.25, 0.  ],
-           [0.  , 1.  ]], dtype=float64, weak_type=True)
+           [0.  , 1.  ]], dtype=float64)
 
     """
     chart_keys = chart.components
@@ -173,9 +204,15 @@ def metric_matrix(
         ]
         return qnp.stack(vals)
 
+    def _ambient_gram(y_arr: jnp.ndarray) -> jnp.ndarray:
+        """Ambient metric G at the embedded point, as (n_cart, n_cart)."""
+        q = {k: u.Q(y_arr[j], uto_[j]) for j, k in enumerate(cart_keys)}
+        return _gram_values(metric_matrix(M.ambient, q, cart_chart))
+
     def _single_metric(x_vec: jnp.ndarray) -> jnp.ndarray:
         j = jax.jacfwd(_embed_cart)(x_vec)  # (n_cart, n_chart)
-        return j.T @ j  # (n_chart, n_chart)
+        # G, not the identity: a Lorentzian ambient contributes the sign.
+        return j.T @ _ambient_gram(_embed_cart(x_vec)) @ j  # (n_chart, n_chart)
 
     # `xat` is (*batch, n_chart) — components last, batch leading. vmap the
     # per-point Jacobian over the flattened batch; a plain jacfwd of a batched

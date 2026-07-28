@@ -127,7 +127,7 @@ class PullbackMetric(AbstractMetricField):
     >>> g = cxmapi.metric_matrix(M_emb, at, cxc.sph2)
     >>> g.matrix.value
     Array([[1., 0.],
-           [0., 1.]], dtype=float64, weak_type=True)
+           [0., 1.]], dtype=float64)
     >>> g.matrix.unit[0, 0]
     Unit("km2 / rad2")
 
@@ -137,11 +137,26 @@ class PullbackMetric(AbstractMetricField):
     ambient_metric: AbstractMetricField
 
     @property
+    def ndim(self) -> int:
+        """Dimension of the submanifold."""
+        return self.embed_map.intrinsic.ndim
+
+    @property
     def signature(self) -> tuple[int, ...]:
         """Metric signature ``(1,) * m`` where ``m`` is the intrinsic dimension.
 
         Embedding into a Riemannian ambient manifold always produces a
         Riemannian induced metric (``J^T g_M J`` is positive-definite when
-        ``J`` has full column rank).
+        ``J`` has full column rank).  An indefinite ambient carries no such
+        guarantee — a curve in Minkowski space is timelike or spacelike
+        depending on where it goes, not on its dimension — so there is no
+        answer to give from the embedding alone.
         """
-        return (1,) * self.embed_map.intrinsic.ndim
+        if any(s < 0 for s in self.ambient_metric.signature):
+            msg = (
+                "the signature of a pullback from the indefinite ambient metric "
+                f"{self.ambient_metric} depends on the embedding, not only on its "
+                "dimension; evaluate `metric_matrix` at a point instead"
+            )
+            raise NotImplementedError(msg)
+        return (1,) * self.ndim
