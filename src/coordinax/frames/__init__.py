@@ -52,9 +52,9 @@ Array(True, dtype=bool)
 import warnings
 from importlib.metadata import entry_points
 
-from collections.abc import Mapping
 from typing import Any, Final
 
+from coordinax._src.optional_exports import load_exports
 from coordinax._src.setup_package import install_import_hook
 
 # Defined here b/c it's mutated by optional imports
@@ -141,47 +141,12 @@ def _load_optional_frame_exports() -> None:
         return
 
     _OPTIONAL_FRAME_EXPORTS_STATE["loading"] = True
-    exported: dict[str, object] = {}
-    export_owners: dict[str, str] = {}
-
     try:
-        entrypoints = _frame_export_entrypoints()
-        for ep in entrypoints:
-            provider = ep.load()
-            if not callable(provider):
-                msg = (
-                    f"Entry point {ep.name!r} in group "
-                    f"'{_FRAME_EXPORTS_ENTRYPOINT_GROUP}' "
-                    "is not callable."
-                )
-                raise TypeError(msg)
-            exports = provider()
-            if not isinstance(exports, Mapping):
-                msg = (
-                    f"Entry point {ep.name!r} in group "
-                    f"'{_FRAME_EXPORTS_ENTRYPOINT_GROUP}' "
-                    "must return a mapping."
-                )
-                raise TypeError(msg)
-            for name, value in exports.items():
-                if not isinstance(name, str):
-                    msg = (
-                        f"Entry point {ep.name!r} in group "
-                        f"'{_FRAME_EXPORTS_ENTRYPOINT_GROUP}' produced "
-                        "a non-string export name."
-                    )
-                    raise TypeError(msg)
-
-                if name in exported and exported[name] is not value:
-                    msg = (
-                        f"Conflicting frame export {name!r} from entry points "
-                        f"{export_owners[name]!r} and {ep.name!r}."
-                    )
-                    raise RuntimeError(msg)
-
-                exported[name] = value
-                export_owners[name] = ep.name
-
+        exported = load_exports(
+            _frame_export_entrypoints(),
+            group=_FRAME_EXPORTS_ENTRYPOINT_GROUP,
+            noun="frame export",
+        )
         globals().update(exported)
     finally:
         _OPTIONAL_FRAME_EXPORTS_STATE["loading"] = False
