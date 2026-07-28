@@ -74,7 +74,7 @@ so it is never a jet slot — displacement fibres transform by ``pushforward``.
 """
 
 _MSG_TAU_REQUIRED = (
-    "act/prolong for the time-dependent transform {op} on tangent data "
+    "act/act_jet for the time-dependent transform {op} on tangent data "
     "requires a time parameter; got tau=None."
 )
 _MSG_AT_REQUIRED = (
@@ -88,9 +88,9 @@ _MSG_AT_VEL_REQUIRED = (
     "velocity at the base point) or use a coordinax.Coordinate bundle."
 )
 _MSG_JET_SLOT_MISSING = (
-    "prolong({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
+    "act_jet({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
 )
-_MSG_JET_SLOT0_MISSING = "prolong requires the base point at jet slot 0."
+_MSG_JET_SLOT0_MISSING = "act_jet requires the base point at jet slot 0."
 
 
 # =============================================================================
@@ -423,7 +423,7 @@ def prolong_jet(
     ...     0: {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
     ...     1: {"x": u.Q(0.0, "km/s"), "y": u.Q(1.0, "km/s"), "z": u.Q(0.0, "km/s")},
     ... }
-    >>> out = cxfm.prolong(op, u.Q(2.0, "s"), jet, cxc.cart3d)
+    >>> out = cxfm.act_jet(op, u.Q(2.0, "s"), jet, cxc.cart3d)
     >>> out[0]["x"], out[1]["x"]
     (Q(7., 'km'), Q(3., 'km / s'))
 
@@ -440,7 +440,7 @@ def prolong_jet(
             missing = sorted(set(q0) - set(jet[m]))
             extra = sorted(set(jet[m]) - set(q0))
             msg = (
-                f"prolong({type(op).__name__}, ...): jet slot {m} components "
+                f"act_jet({type(op).__name__}, ...): jet slot {m} components "
                 f"do not match slot 0's {sorted(q0)}"
                 + (f"; missing {missing}" if missing else "")
                 + (f"; unexpected {extra}" if extra else "")
@@ -630,11 +630,11 @@ def prolong_slot(
     if m > 2:
         msg = (
             f"act on order-{m} tangent data requires jet slots 1..{m - 1}; "
-            "use coordinax.transforms.prolong with a full jet instead."
+            "use coordinax.transforms.act_jet with a full jet instead."
         )
         raise TypeError(msg)
 
-    out = cast("JetDict", cxfmapi.prolong(op, tau, jet, chart, usys=usys))
+    out = cast("JetDict", cxfmapi.act_jet(op, tau, jet, chart, usys=usys))
     return out[m]
 
 
@@ -659,11 +659,11 @@ def pushforward(
 
 
 # -----------------------------------------------------------------------------
-# prolong
+# act_jet
 
 
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
-def prolong(
+def act_jet(
     op: AbstractTransform,
     tau: Any,
     jet: dict,

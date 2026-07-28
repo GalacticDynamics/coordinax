@@ -210,7 +210,7 @@ def from_(cls: type[AbstractAdd], x: ArrayLike, unit: str) -> AbstractAdd:
 
 
 # ============================================================================
-# prolong
+# act_jet
 
 
 @ft.cache
@@ -225,7 +225,7 @@ def _slot_rep(m: int, /) -> Any:
 
 
 @plum.dispatch
-def prolong(
+def act_jet(
     op: AbstractAdd,
     tau: Any,
     jet: dict,
@@ -244,7 +244,7 @@ def prolong(
     $d^{m-k}\delta/d\tau^{m-k}$ for the operator's ladder order $k$). This
     also makes fibre-only offsets (e.g. ``Translate(semantic_kind=vel)``) —
     which are invisible to the generic point-action prolongation — correct
-    under ``prolong``.
+    under ``act_jet``.
 
     >>> import unxt as u
     >>> import coordinax.charts as cxc
@@ -257,7 +257,7 @@ def prolong(
     ... )
     >>> jet = {0: {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
     ...        1: {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}}
-    >>> out = cxfm.prolong(kick, None, jet, cxc.cart3d)
+    >>> out = cxfm.act_jet(kick, None, jet, cxc.cart3d)
     >>> out[0]["x"], out[1]["x"]
     (Q(1., 'm'), Q(101., 'm / s'))
 

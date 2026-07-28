@@ -365,11 +365,11 @@ def act(
 
 
 # ===================================================================
-# `prolong` / `pushforward` for Composed
+# `act_jet` / `pushforward` for Composed
 
 
 @plum.dispatch
-def prolong(
+def act_jet(
     op: Composed,
     tau: Any,
     jet: dict,
@@ -392,14 +392,14 @@ def prolong(
     >>> jet = {0: {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
     ...        1: {"x": u.Q(0.0, "km/s"), "y": u.Q(0.0, "km/s"),
     ...            "z": u.Q(0.0, "km/s")}}
-    >>> out = cxfm.prolong(pipe, u.Q(2.0, "s"), jet, cxc.cart3d)
+    >>> out = cxfm.act_jet(pipe, u.Q(2.0, "s"), jet, cxc.cart3d)
     >>> out[0]["x"], out[1]["x"]
     (Q(2., 'km'), Q(1., 'km / s'))
 
     """
     result = jet
     for sub_op in op.transforms:
-        result = cast("dict", cxfmapi.prolong(sub_op, tau, result, chart, **kw))
+        result = cast("dict", cxfmapi.act_jet(sub_op, tau, result, chart, **kw))
     return result
 
 

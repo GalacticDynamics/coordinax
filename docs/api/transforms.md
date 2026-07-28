@@ -28,7 +28,7 @@ out = cxfm.act(frame_op, None, v)
 
 - `act(transform, tau, x)`: apply a transform to data (the kinematic prolongation for tangent data — see the [transforms guide](../guides/transforms.md#time-dependence-couples-the-ladder-kinematic-prolongation))
 - `pushforward(transform, tau, v, chart, rep, *, at)`: the frozen-tau spatial differential — the transformation law for displacement data
-- `prolong(transform, tau, jet, chart)`: joint action on a jet `{0: point, 1: velocity, 2: acceleration, ...}`
+- `act_jet(transform, tau, jet, chart)`: joint action on a jet `{0: point, 1: velocity, 2: acceleration, ...}`
 - `simplify(transform)`: simplify transform structure
 - `compose(*transforms)`: compose transforms into `Composed`
 - `materialize_transform(transform, tau)`: materialize time-dependent transform parameters

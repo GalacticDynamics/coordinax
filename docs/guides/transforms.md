@@ -354,7 +354,7 @@ Because the $\dot R\,x$-style terms depend on the base point, acting a time-depe
 | --- | --- | --- |
 | `act(op, tau, x, ...)` | Kinematic prolongation (default) | Positions and physically-evolving tangent data |
 | `pushforward(op, tau, v, ..., at=q)` | Frozen-$\tau$ spatial differential $\partial_x\phi \cdot v$ | Displacements; the pure geometric map |
-| `prolong(op, tau, jet, chart)` | Joint action on a whole jet `{0: q, 1: v, 2: a, ...}` | Phase-space states, arbitrary derivative order |
+| `act_jet(op, tau, jet, chart)` | Joint action on a whole jet `{0: q, 1: v, 2: a, ...}` | Phase-space states, arbitrary derivative order |
 
 Acting a time-dependent transform on a _lone_ velocity or acceleration needs the lower jet slots (the $\dot R x$ term acts on the position); pass `at=` / `at_vel=`, or — simpler — act on a `coordinax.Coordinate` bundle, which supplies the whole jet automatically:
 
@@ -402,7 +402,7 @@ Every hand-written rule above is property-tested against the generic autodiff pr
 | Time-dependent rotation | `cxfm.Rotate(callable_returning_matrix)` |
 | Act on a lone velocity (TD op) | `cxfm.act(op, tau, v, chart, rep, at=base_point)` |
 | Pushforward a displacement | `cxfm.pushforward(op, tau, d, chart, rep, at=...)` |
-| Prolong a jet | `cxfm.prolong(op, tau, {0: q, 1: v}, chart)` |
+| Prolong a jet | `cxfm.act_jet(op, tau, {0: q, 1: v}, chart)` |
 | Time-dependent translation | `cxfm.Translate(callable_returning_dict, chart=...)` |
 | Galilean boost | `cxfm.Boost(delta_v_dict, chart=...)` |
 | Velocity kick (fibre-only) | `cxfm.Translate(dv_dict, chart=..., semantic_kind=cxr.vel)` |

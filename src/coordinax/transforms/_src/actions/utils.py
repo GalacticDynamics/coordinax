@@ -62,7 +62,7 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     dependent and must go through the generic engine.
 
     This is THE routing predicate for the additive family — `act`,
-    `pushforward`, and `prolong` must all use it so the fast paths stay
+    `pushforward`, and `act_jet` must all use it so the fast paths stay
     provably consistent with the generic prolongation.
     """
     k = getattr(op, "semantic_kind", cxr.dpl).order
