@@ -452,3 +452,28 @@ class TestProductMetric:
             factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1")
         )
         assert isinstance(M.metric, cxm.ProductMetric)
+
+    def test_product_metric_is_batch_safe(self):
+        """The block-diagonal assembly handles batched points (a batched factor)."""
+        ps = cxc.CartesianProductChart((cxc.cart3d, cxc.sph3d), ("q", "p"))
+
+        def b(x, un):
+            return u.Q(jnp.array([x, x * 1.3]), un)
+
+        pt = {
+            "q.x": b(1.0, "m"),
+            "q.y": b(2.0, "m"),
+            "q.z": b(3.0, "m"),
+            "p.r": b(2.0, "m"),
+            "p.theta": b(0.6, "rad"),
+            "p.phi": b(0.4, "rad"),
+        }
+        g = mm_dispatch(ps.M, pt, ps)
+        m = jnp.asarray(g.matrix.value)
+        assert m.shape == (2, 6, 6)
+        # each batch row equals the metric at that single point
+        for i in (0, 1):
+            single = {k: u.Q(v.value[i], u.unit_of(v)) for k, v in pt.items()}
+            assert jnp.allclose(
+                m[i], jnp.asarray(mm_dispatch(ps.M, single, ps).matrix.value)
+            )
