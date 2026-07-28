@@ -50,7 +50,7 @@ class TestGeometryClasses:
     def test_empty_candidates_raises_value_error(self, data: st.DataObject) -> None:
         """Excluding all candidates raises ValueError."""
         all_geometries = get_all_subclasses(cxr.AbstractGeometry, exclude_abstract=True)
-        with pytest.raises(ValueError, match="No role classes left after exclusions"):
+        with pytest.raises(ValueError, match="No geometry classes"):
             data.draw(cxrst.geometry_classes(exclude=tuple(all_geometries)))
 
     def test_also_accessible_via_main(self) -> None:

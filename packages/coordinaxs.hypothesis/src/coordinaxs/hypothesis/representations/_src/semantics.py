@@ -8,6 +8,7 @@ import hypothesis.strategies as st
 
 import coordinax.representations as cxr
 
+from ._common import draw_subclass
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 SEMANTICS: Final = get_all_subclasses(cxr.AbstractSemanticKind, exclude_abstract=True)
@@ -52,17 +53,9 @@ def semantic_classes(
     ...     assert issubclass(sem_cls, cxr.Location)
 
     """
-    # Determine candidate semantic classes
-    candidates = SEMANTICS if include is None else include
-
-    # Filter out excluded semantic classes
-    candidates = tuple(r for r in candidates if r not in exclude)
-
-    if not candidates:
-        msg = "No semantic classes left after exclusions"
-        raise ValueError(msg)
-
-    return draw(st.sampled_from(candidates))  # ty: ignore[invalid-return-type]
+    return draw_subclass(
+        draw, SEMANTICS, include=include, exclude=exclude, kind="semantic"
+    )  # ty: ignore[invalid-return-type]
 
 
 @st.composite
