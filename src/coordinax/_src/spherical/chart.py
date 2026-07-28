@@ -17,6 +17,7 @@ __all__ = (
     "loncoslat_sph2",
     "MathSphericalTwoSphere",
     "math_sph2",
+    "NonCanonicalTwoSphere",
 )
 
 
@@ -392,3 +393,14 @@ class MathSphericalTwoSphere(
 
 math_sph2: Final = MathSphericalTwoSphere(M=S2)
 """Standard spherical coordinates on the two-sphere with mathematics convention."""
+
+
+NonCanonicalTwoSphere = (
+    LonLatSphericalTwoSphere | LonCosLatSphericalTwoSphere | MathSphericalTwoSphere
+)
+"""Two-sphere charts whose components are not nested polar angles.
+
+These relabel or swap the polar and azimuthal angles (``LonLat``, ``Math``) or
+are outright non-orthogonal (``LonCosLat``), so the nested sine-product used by
+`SphericalTwoSphere` does not describe their round metric.
+"""

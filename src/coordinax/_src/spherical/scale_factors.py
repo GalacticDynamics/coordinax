@@ -9,9 +9,29 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
+from .chart import NonCanonicalTwoSphere
 from .metric import RoundMetric
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
+
+
+@plum.dispatch
+def scale_factors(
+    metric: RoundMetric,
+    chart: NonCanonicalTwoSphere,
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys = None,
+) -> ul.QuantityMatrix:
+    """Non-canonical two-sphere charts have no nested-sine scale factors."""
+    del metric, at, usys
+    msg = (
+        "scale_factors is only defined for the canonical nested-angle spherical "
+        f"chart; {type(chart).__name__} has no nested-sine scale factors. "
+        "Use coordinax.manifolds.metric_matrix instead."
+    )
+    raise NotImplementedError(msg)
 
 
 @plum.dispatch

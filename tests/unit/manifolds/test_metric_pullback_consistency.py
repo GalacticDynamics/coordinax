@@ -185,3 +185,62 @@ class TestPullbackMetricUnits:
         # Metric = R² × I at equator → values should be [[4, 0], [0, 4]]
         assert jnp.allclose(g.matrix.value, 4 * jnp.eye(2), atol=1e-6)
         assert str(g.matrix.unit[0, 0]) == "m2 / rad2"
+
+
+# ---------------------------------------------------------------------------
+# Non-canonical two-sphere charts: metric must match the R³ embedding J^T J
+# ---------------------------------------------------------------------------
+
+
+def _embedding_metric(chart, coords_rad):
+    """Induced metric of ``chart`` from the unit-sphere R³ embedding, via J^T J."""
+    keys = chart.components
+
+    def embed(x):
+        p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}
+        s = cxc.pt_map(p, chart, cxc.sph2)
+        th, ph = u.ustrip("rad", s["theta"]), u.ustrip("rad", s["phi"])
+        return jnp.array(
+            [jnp.sin(th) * jnp.cos(ph), jnp.sin(th) * jnp.sin(ph), jnp.cos(th)]
+        )
+
+    x0 = jnp.array([coords_rad[k] for k in keys])
+    jmat = jax.jacfwd(embed)(x0)  # (3, n)
+    return jmat.T @ jmat
+
+
+class TestNonCanonicalTwoSphereMetric:
+    """metric_matrix for LonLat/Math/LonCosLat charts must be the true metric."""
+
+    @pytest.mark.parametrize(
+        ("chart", "coords"),
+        [
+            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}),
+            (cxc.lonlat_sph2, {"lon": 0.6, "lat": 0.7}),
+            (cxc.loncoslat_sph2, {"lon_coslat": 0.4, "lat": 0.7}),
+        ],
+    )
+    def test_metric_matches_embedding(self, chart, coords):
+        pt = {k: u.Q(v, "rad") for k, v in coords.items()}
+        g = cxmapi.metric_matrix(cxm.S2, pt, chart)
+        assert isinstance(g, DenseMetric)
+        got = jnp.asarray(g.matrix.value)
+        ref = _embedding_metric(chart, coords)
+        assert jnp.allclose(got, ref, atol=1e-9), f"{got}\n!=\n{ref}"
+
+    def test_integer_angles_do_not_break_jacfwd(self):
+        """Integer-valued angles are promoted to float so the pullback jacfwd works."""
+        pt = {"lon": u.Q(0, "rad"), "lat": u.Q(0, "rad")}  # integer magnitudes
+        g = cxmapi.metric_matrix(cxm.S2, pt, cxc.lonlat_sph2)
+        assert isinstance(g, DenseMetric)
+        assert bool(jnp.all(jnp.isfinite(g.matrix.value)))
+
+    @pytest.mark.parametrize(
+        "chart", [cxc.lonlat_sph2, cxc.loncoslat_sph2, cxc.math_sph2]
+    )
+    def test_scale_factors_not_defined(self, chart):
+        """scale_factors is undefined for non-canonical charts (use metric_matrix)."""
+        keys = chart.components
+        at = {k: u.Q(0.4, "rad") for k in keys}
+        with pytest.raises(NotImplementedError, match="canonical"):
+            cxm.scale_factors(chart, at=at)
