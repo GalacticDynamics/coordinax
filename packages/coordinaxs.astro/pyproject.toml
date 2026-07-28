@@ -18,7 +18,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24", "optional-dependencies>=0.4.0"]
+dependencies = ["coordinax>=0.24"]
 description = "Astronomy-specific reference frames for coordinax"
 dynamic = ["version"]
 license = "MIT"
