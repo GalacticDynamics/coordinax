@@ -5,9 +5,10 @@ intrinsic :class:`~coordinax._src.base.AbstractChart`.
 
 The *induced* (pullback) metric on an embedded submanifold is computed as
 $g = J^T J$ where $J$ is the Jacobian of the composition
-``intrinsic → Cartesian ambient``.  Routing through the Cartesian ambient
-ensures every entry of $J$ carries the *same* unit (``cart_unit / intrinsic_unit``),
-which makes $J^T J$ unit-compatible across all summation terms.
+``chart → intrinsic → Cartesian ambient``.  Routing through the Cartesian
+ambient makes every ambient output share the single unit ``cart_unit`` (column
+*i* of $J$ then has unit ``cart_unit / chart_unit_i``), which makes each
+$J^T J$ summation term unit-compatible.
 
 All results are wrapped in a :class:`~coordinax._src.metric.matrix.DenseMetric`
 because the induced metric is not guaranteed to be diagonal.
@@ -15,6 +16,8 @@ because the induced metric is not guaranteed to be diagonal.
 """
 
 __all__: tuple[str, ...] = ()
+
+from typing import cast
 
 import jax
 import jax.numpy as jnp
@@ -74,10 +77,13 @@ def metric_matrix(
     r"""Induced metric on an embedded submanifold via Jacobian pullback.
 
     Computes $g_{ij} = \sum_k J^k_i J^k_j$ where $J$ is the Jacobian of the
-    composition ``intrinsic → Cartesian ambient``.  Routing through Cartesian
-    ambient coordinates ensures all entries of $J$ share the same unit
-    (``cart_unit / intrinsic_unit``), so the matrix product $J^T J$ is
-    unit-compatible and the result carries physically correct units.
+    composition ``chart → intrinsic → Cartesian ambient`` (the ``chart →
+    intrinsic`` leg is the identity when ``chart`` is the intrinsic chart).
+    Routing through Cartesian ambient coordinates makes every ambient output
+    share the single unit ``cart_unit`` (so column *i* of $J$ has unit
+    ``cart_unit / chart_unit_i``); each ``g_{ij}`` term $J^k_i J^k_j$ then has a
+    consistent unit ``cart_unit^2 / (chart_unit_i * chart_unit_j)`` and the
+    result carries physically correct units.
 
     Parameters
     ----------
@@ -85,16 +91,18 @@ def metric_matrix(
         An embedded submanifold; carries ``intrinsic``, ``ambient``, and
         ``embed_map`` fields.
     point : dict
-        A coordinate dictionary in the *intrinsic* chart coordinates.
+        A coordinate dictionary in the passed ``chart``'s coordinates.
     chart : AbstractChart
-        The intrinsic chart (passed through for API consistency).
+        The chart in which ``point`` is expressed and in which the metric is
+        returned; mapped into the embedding's intrinsic chart when the two
+        differ.
 
     Returns
     -------
     DenseMetric
         Induced metric matrix at ``point``, backed by a
         :class:`~unxts.linalg.QuantityMatrix` with units
-        ``cart_unit^2 / (intrinsic_unit_i * intrinsic_unit_j)``.
+        ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.
 
     Examples
     --------
@@ -133,27 +141,34 @@ def metric_matrix(
     Unit("m2 / rad2")
 
     """
-    del chart
     embed_map = M.embed_map
     ambient_chart = embed_map.ambient
-    intrinsic_keys = embed_map.intrinsic.components
+    intrinsic_chart = embed_map.intrinsic
+    # The metric is returned in the *passed* chart's coordinates; map into the
+    # intrinsic chart (where the embedding is defined) when they differ.
+    chart_keys = chart.components
 
-    # Use Cartesian ambient so every J entry has the same unit
-    # (cart_unit / intrinsic_unit).
+    # Use Cartesian ambient so all outputs share cart_unit; column i of J then
+    # has unit cart_unit / chart_unit_i, making each g_ij term unit-consistent.
     cart_chart = ambient_chart.cartesian
     cart_keys = cart_chart.components
 
-    xat, ufrom = pack_nonuniform_unit(point, intrinsic_keys)
+    # chart → intrinsic; the identity map when chart is already the intrinsic
+    # chart (same-chart pt_map is an exact-identity round-trip).
+    def _to_intrinsic(q: dict) -> dict:
+        return cast("dict", cxcapi.pt_map(q, chart, intrinsic_chart))
+
+    xat, ufrom = pack_nonuniform_unit(point, chart_keys)
     ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
 
-    at_ambient = embed_map.embed(point, usys=None)
+    at_ambient = embed_map.embed(_to_intrinsic(point), usys=None)
     at_cart = cxcapi.pt_map(at_ambient, ambient_chart, cart_chart)
     uto_ = ul.cdict_units(at_cart, cart_keys)
     uto_ = tuple(ut if ut is not None else DMLS for ut in uto_)
 
     def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
-        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(intrinsic_keys)}
-        q_ambient = embed_map.embed(q, usys=None)
+        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(chart_keys)}
+        q_ambient = embed_map.embed(_to_intrinsic(q), usys=None)
         q_cart = cxcapi.pt_map(q_ambient, ambient_chart, cart_chart)
         vals = [
             u.ustrip(uto_[j], q_cart[k])  # ty: ignore[not-subscriptable]
@@ -163,12 +178,25 @@ def metric_matrix(
         ]
         return qnp.stack(vals)
 
-    J_arr = jax.jacfwd(_embed_cart)(xat)  # (n_cart, n_intrinsic)
-    result_vals = J_arr.T @ J_arr  # (n_intrinsic, n_intrinsic)
+    def _single_metric(x_vec: jnp.ndarray) -> jnp.ndarray:
+        j = jax.jacfwd(_embed_cart)(x_vec)  # (n_cart, n_chart)
+        return j.T @ j  # (n_chart, n_chart)
+
+    if xat.ndim == 1:
+        result_vals = _single_metric(xat)
+    else:
+        # `xat` is (*batch, n_chart) — components last, batch leading. vmap the
+        # per-point Jacobian over the flattened batch; a plain jacfwd of the
+        # batched input would give a wrong (cross-batch) Jacobian.
+        n_chart = xat.shape[-1]
+        batch_shape = xat.shape[:-1]
+        flat = xat.reshape(-1, n_chart)  # (prod(batch), n_chart)
+        result_vals = jax.vmap(_single_metric)(flat)  # (prod, n, n)
+        result_vals = result_vals.reshape(*batch_shape, n_chart, n_chart)
 
     # g_{ij} unit = uto_[0]² / (ufrom_[i] × ufrom_[j])
     # Valid because all Cartesian coordinates share the same unit.
-    n = len(intrinsic_keys)
+    n = len(chart_keys)
     result_unit = ul.UnitsMatrix(
         tuple(
             tuple(uto_[0] ** 2 / (ufrom_[i] * ufrom_[j]) for j in range(n))  # ty: ignore[unsupported-operator]

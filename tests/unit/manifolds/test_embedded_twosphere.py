@@ -67,3 +67,77 @@ class TestEmbeddedTwosphereAmbient:
         out = cxm.pt_embed(_P, m)
         assert set(out) == {"r", "theta", "phi"}
         np.testing.assert_allclose(u.ustrip("km", out["r"]), 2.0, atol=1e-6)
+
+
+class TestEmbeddedMetricRespectsChart:
+    """metric_matrix returns the induced metric in the *passed* chart's coords."""
+
+    @staticmethod
+    def _embedding_metric(chart, coords):
+        """J^T J of the unit-sphere R^3 embedding, expressed in ``chart`` coords."""
+        import jax
+
+        keys = chart.components
+
+        def embed(x):
+            p = {k: u.Q(x[i], "rad") for i, k in enumerate(keys)}
+            s = cxc.pt_map(p, chart, cxc.sph2)
+            th, ph = u.ustrip("rad", s["theta"]), u.ustrip("rad", s["phi"])
+            return jnp.array(
+                [jnp.sin(th) * jnp.cos(ph), jnp.sin(th) * jnp.sin(ph), jnp.cos(th)]
+            )
+
+        x0 = jnp.array([coords[k] for k in keys])
+        j = jax.jacfwd(embed)(x0)
+        return np.asarray(j.T @ j)
+
+    def test_metric_in_each_two_sphere_chart(self) -> None:
+        emb = cxm.EmbeddedManifold(
+            intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
+        )
+        # (chart, coords, analytic closed-form g or None). The closed forms are
+        # independent of the J^T J machinery under test; where the closed form is
+        # unwieldy (loncoslat, math) fall back to the R^3-embedding J^T J.
+        cases = [
+            (cxc.sph2, {"theta": 0.9, "phi": 0.6}, np.diag([1.0, np.sin(0.9) ** 2])),
+            (
+                cxc.lonlat_sph2,
+                {"lon": 0.6, "lat": 0.7},
+                np.diag([np.cos(0.7) ** 2, 1.0]),
+            ),
+            (cxc.loncoslat_sph2, {"lon_coslat": 0.3, "lat": 0.5}, None),
+            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}, None),
+        ]
+        for chart, coords, analytic in cases:
+            pt = {k: u.Q(v, "rad") for k, v in coords.items()}
+            g = cxm.metric_matrix(emb, pt, chart)
+            got = np.asarray(g.matrix.value)
+            ref = (
+                analytic
+                if analytic is not None
+                else self._embedding_metric(chart, coords)
+            )
+            assert np.allclose(got, ref, atol=1e-9), f"{chart}: {got} != {ref}"
+            # Units: dimensionless ambient (radius=1) over angular coords, so
+            # every g_ij is cart_unit^2 / (rad * rad) = 1 / rad^2.
+            unit = g.matrix.unit
+            assert all(
+                str(unit[i, j]) == "1 / rad2" for i in range(2) for j in range(2)
+            ), f"{chart}: unexpected units {unit}"
+
+    def test_metric_is_batch_safe(self) -> None:
+        """A batched (B,) point gives (B, n, n) matching the per-point metric."""
+        emb = cxm.EmbeddedManifold(
+            intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
+        )
+        pt = {
+            "theta": u.Q(jnp.array([0.9, 0.5, 1.3]), "rad"),
+            "phi": u.Q(jnp.array([0.6, 0.2, 0.9]), "rad"),
+        }
+        g = cxm.metric_matrix(emb, pt, cxc.sph2)
+        m = jnp.asarray(g.matrix.value)
+        assert m.shape == (3, 2, 2)
+        for i in range(3):
+            single = {k: u.Q(v.value[i], u.unit_of(v)) for k, v in pt.items()}
+            ref = jnp.asarray(cxm.metric_matrix(emb, single, cxc.sph2).matrix.value)
+            assert jnp.allclose(m[i], ref)
