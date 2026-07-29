@@ -3,9 +3,6 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import TYPE_CHECKING, cast
-
-import jax.numpy as jnp
 import plum
 
 import unxt as u
@@ -18,9 +15,6 @@ from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.embedded.manifold import EmbeddedManifold
 from coordinax._src.embedded.metric import PullbackMetric
 from coordinax._src.metric.matrix import DiagonalMetric
-
-if TYPE_CHECKING:
-    from coordinax._src.metric.matrix import DenseMetric
 
 DMLS = u.unit("")
 
@@ -128,11 +122,5 @@ def scale_factors(
         ambient=embed_map.ambient.M,
         embed_map=embed_map,
     )
-    dense = cast("DenseMetric", cxmapi.metric_matrix(M, at, chart))
-    # `.matrix` is typed `QuantityMatrix | Array`; the embedded rule always
-    # builds the united form, which is what carries the per-entry units.
-    g = cast("ul.QM", dense.matrix)
-    return ul.QM(
-        jnp.diagonal(g.value, axis1=-2, axis2=-1),
-        unit=ul.UnitsMatrix(tuple(g.unit[i, i] for i in range(len(chart.components)))),
-    )
+    mm = cxmapi.metric_matrix(M, at, chart)
+    return as_quantity_matrix(mm.matrix).diag()  # ty: ignore[unresolved-attribute]
