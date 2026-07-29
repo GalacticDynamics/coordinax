@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast, final
 import plum
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from .point import Point

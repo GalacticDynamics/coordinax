@@ -16,9 +16,9 @@ __all__: tuple[str, ...] = ()
 
 import jax.numpy as jnp
 import plum
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 from .charts import MinkowskiCT

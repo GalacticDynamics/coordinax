@@ -7,10 +7,10 @@ from jaxtyping import Array, ArrayLike
 from typing import cast
 
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart

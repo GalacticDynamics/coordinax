@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 import jax.numpy as jnp
 import plum
+
 import unxts.linalg as ul
 
 from .charts import MinkowskiCT

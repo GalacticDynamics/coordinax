@@ -18,9 +18,9 @@ from typing import cast
 import jax
 import jax.numpy as jnp
 import plum
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 from unxt.quantity import AllowValue
 
 import coordinaxs.api.charts as cxcapi

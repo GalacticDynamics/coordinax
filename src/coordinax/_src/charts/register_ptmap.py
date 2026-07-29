@@ -9,10 +9,10 @@ from typing import Any, Final, cast
 
 import jax
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
 import coordinaxs.api.charts as cxcapi

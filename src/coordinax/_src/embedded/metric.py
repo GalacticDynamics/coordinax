@@ -7,10 +7,10 @@ import dataclasses
 from typing import final
 
 import jax
-import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
+import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from .embedmap import AbstractEmbeddingMap

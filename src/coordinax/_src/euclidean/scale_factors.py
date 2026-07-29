@@ -5,10 +5,10 @@ __all__: tuple[str, ...] = ()
 from jaxtyping import Array
 
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 from unxt.quantity import AllowValue, is_any_quantity
 
 import coordinaxs.api.charts as cxcapi

@@ -6,9 +6,9 @@ from jaxtyping import Array, ArrayLike
 from typing import Any, TypeAlias, cast
 
 import plum
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 from unxt import AbstractQuantity as AbcQ
 
 import coordinax.charts as cxc

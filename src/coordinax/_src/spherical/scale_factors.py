@@ -3,10 +3,10 @@
 __all__: tuple[str, ...] = ()
 
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 from unxt.quantity import AllowValue
 
 from .chart import NonCanonicalTwoSphere
