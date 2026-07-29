@@ -6,7 +6,7 @@ from astropy.units import Quantity as AstropyQuantity
 from hypothesis import given, strategies as st
 from plum import convert
 
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinaxs.interop.astropy  # noqa: F401
 from coordinax.distances import Distance

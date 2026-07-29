@@ -6,10 +6,10 @@ from jaxtyping import Array
 from typing import Any
 
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 from unxt.quantity import is_any_quantity
 
 import coordinaxs.api.charts as cxcapi

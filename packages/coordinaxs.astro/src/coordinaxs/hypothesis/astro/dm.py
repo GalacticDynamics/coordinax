@@ -8,7 +8,7 @@ from typing import Any, cast
 
 from hypothesis import strategies as st
 
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinaxs.astro as cxastro
 
@@ -22,7 +22,7 @@ def distance_moduli(draw: st.DrawFn, /, **kwargs: Any) -> cxastro.DistanceModulu
     draw
         Hypothesis draw function. Automatically provided by hypothesis.
     **kwargs
-        Additional keyword arguments passed to `unxt_hypothesis.quantities`.
+        Additional keyword arguments passed to `unxts.hypothesis.quantities`.
         Common options include 'dtype', 'shape', 'elements', 'unique'. The
         arguments 'unit' and 'quantity_cls' are set automatically and should not
         be provided. Note that DistanceModulus always has units of 'mag'.

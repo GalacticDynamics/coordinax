@@ -19,7 +19,6 @@ __all__: tuple[str, ...] = ()
 import jax
 import jax.numpy as jnp
 import numpy as np
-import unxts.linalg as ul
 from hypothesis import given, settings
 from strategies import (
     any_angle_rad as _any_angle_rad,
@@ -30,6 +29,7 @@ from strategies import (
 
 import quaxed.numpy as qnp
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 

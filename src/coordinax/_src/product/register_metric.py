@@ -17,9 +17,9 @@ from typing import Any
 
 import jax.numpy as jnp
 import plum
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 from .chart import AbstractCartesianProductChart
 from .manifold import CartesianProductManifold

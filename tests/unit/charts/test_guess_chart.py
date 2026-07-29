@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 from hypothesis import given, strategies as st
 
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst

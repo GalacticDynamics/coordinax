@@ -29,14 +29,14 @@ requires-python = ">=3.12"
 [project.optional-dependencies]
 astropy = ["astropy>=7.2.0"]
 # This distribution also ships the `coordinaxs.hypothesis.astro` strategy tree,
-# which imports `hypothesis`, `unxt_hypothesis`, and `coordinaxs.hypothesis`.
+# which imports `hypothesis`, `unxts.hypothesis`, and `coordinaxs.hypothesis`.
 # Those are not needed to `import coordinaxs.astro`, so they are declared here
 # rather than as hard dependencies:
 #   pip install "coordinaxs.astro[hypothesis]"
 hypothesis = [
   "coordinaxs.hypothesis>=0.24",
   "hypothesis>=6.148.7",
-  "unxt-hypothesis>=2.0",
+  "unxts.hypothesis>=2.0",
 ]
 
 [project.entry-points."coordinaxs.frames"]

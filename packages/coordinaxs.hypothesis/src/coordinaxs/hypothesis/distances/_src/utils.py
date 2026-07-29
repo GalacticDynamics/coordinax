@@ -28,7 +28,7 @@ def make_nonnegative(draw: st.DrawFn, /, **kwargs: Any) -> dict[str, Any]:
     draw
         Hypothesis draw function for drawing from strategies.
     **kwargs
-        Keyword arguments that will be passed to `unxt_hypothesis.quantities`.
+        Keyword arguments that will be passed to `unxts.hypothesis.quantities`.
         The `elements` parameter will be modified if present, or created if absent.
 
     Returns

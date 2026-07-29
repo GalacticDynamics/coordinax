@@ -4,9 +4,8 @@ __all__: tuple[str, ...] = ()
 
 from jaxtyping import Array
 
-import unxts.linalg as ul
-
 import unxt as u
+import unxts.linalg as ul
 
 DMLS = u.unit("")
 

@@ -2,4 +2,4 @@
 
 __all__ = ("angles",)
 
-from unxt_hypothesis import angles
+from unxts.hypothesis import angles

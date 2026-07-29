@@ -8,10 +8,10 @@ from typing import Any, TypeVar
 import jax
 import jax.scipy.linalg
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 from unxt.quantity import Quantity, is_any_quantity
 
 import coordinax.charts as cxc

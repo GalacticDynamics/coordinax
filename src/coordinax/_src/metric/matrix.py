@@ -18,10 +18,10 @@ from typing import Any, final
 import equinox as eqx
 import jax.numpy as jnp
 import quax
-import unxts.linalg as ul
 
 import quaxed.numpy as qnp
 import unxt as u
+import unxts.linalg as ul
 
 _det = quax.quaxify(ul.det)
 _inv = quax.quaxify(ul.inv)

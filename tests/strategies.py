@@ -10,7 +10,7 @@ __all__: tuple[str, ...] = ()
 
 from hypothesis import strategies as st
 
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 
 def _m_qty(min_value: float, max_value: float):

@@ -42,7 +42,7 @@ requires      = ["hatch-vcs", "hatchling"]
 
 
 [dependency-groups]
-test = ["hypothesis>=6.148.7", "pytest>=9.0.2", "unxt-hypothesis>=2.0"]
+test = ["hypothesis>=6.148.7", "pytest>=9.0.2", "unxts.hypothesis>=2.0"]
 
 
 [tool.hatch.build.targets.wheel]

@@ -472,7 +472,7 @@ known-first-party = [
   "optional_dependencies",
   "quaxed",
   "unxt",
-  "unxt_hypothesis",
+  "unxts",
   "xmmutablemap",
 ]
 known-local-folder = ["coordinax", "coordinaxs"]

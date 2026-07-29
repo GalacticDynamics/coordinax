@@ -18,7 +18,7 @@ import jax
 import jax.numpy as jnp
 import plum
 import unxt as u
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 from hypothesis.extra.array_api import make_strategies_namespace
 
 from .meta import Metadata

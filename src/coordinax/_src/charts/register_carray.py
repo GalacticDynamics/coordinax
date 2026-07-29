@@ -5,10 +5,10 @@ __all__ = ()
 from typing import Final
 
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.linalg as ul
 from unxt.quantity import AllowValue
 
 from coordinax._src.base import AbstractChart

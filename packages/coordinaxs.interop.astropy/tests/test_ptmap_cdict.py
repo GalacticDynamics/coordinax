@@ -28,7 +28,7 @@ import pytest
 from hypothesis import assume, given, settings, strategies as st
 
 import unxt as u
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinax.charts as cxc
 from coordinaxs.interop.astropy import (

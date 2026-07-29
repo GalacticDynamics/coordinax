@@ -4,9 +4,9 @@ __all__: tuple[str, ...] = ()
 
 
 import plum
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
+import unxts.linalg as ul
 
 from .d0 import Cart0D
 from .d1 import Cart1D
