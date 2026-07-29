@@ -187,7 +187,7 @@ class TestNegation:
     def test_negation_preserves_magnitude_and_unit(self, kind: SimpleNamespace) -> None:
         unit = _a_valid_unit(kind)
         result = -kind.cls(10, unit)
-        assert result.value == -10
+        assert jnp.array_equal(result.value, -10)
         assert result.unit == u.unit(unit)
 
     def test_survives_jit(self, kind: SimpleNamespace) -> None:
