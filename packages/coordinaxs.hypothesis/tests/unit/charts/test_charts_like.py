@@ -1,43 +1,37 @@
-"""Tests for the charts_like strategy."""
+"""The `charts_like` strategy: draw charts matching a template's shape."""
 
+__all__: tuple[str, ...] = ()
+
+import hypothesis.strategies as st
+import pytest
 from hypothesis import given
 
 import coordinax.charts as cxc
 
 import coordinaxs.hypothesis.main as cxst
 
-
-@given(chart=cxst.charts_like(cxc.cart3d))
-def test_charts_like_cart3d(chart: cxc.AbstractChart) -> None:
-    """Test charts_like with Cart3D template."""
-    assert isinstance(chart, cxc.Abstract3D)
-    assert chart.ndim == 3
-
-
-@given(chart=cxst.charts_like(cxc.sph3d))
-def test_charts_like_spherical3d(chart: cxc.AbstractChart) -> None:
-    """Test charts_like with Spherical3D template."""
-    assert isinstance(chart, cxc.Abstract3D)
-    assert isinstance(chart, cxc.AbstractSpherical3D)
-    assert chart.ndim == 3
+#: (template chart, ndim it implies, base classes every draw must satisfy).
+TEMPLATES = [
+    pytest.param(cxc.cart3d, 3, (cxc.Abstract3D,), id="cart3d"),
+    pytest.param(
+        cxc.sph3d, 3, (cxc.Abstract3D, cxc.AbstractSpherical3D), id="spherical3d"
+    ),
+    pytest.param(cxc.polar2d, 2, (cxc.Abstract2D,), id="polar2d"),
+    pytest.param(cxc.radial1d, 1, (cxc.Abstract1D,), id="radial1d"),
+    pytest.param(cxc.sph2, 2, (cxc.Abstract2D,), id="sph2"),
+]
 
 
-@given(chart=cxst.charts_like(cxc.polar2d))
-def test_charts_like_polar2d(chart: cxc.AbstractChart) -> None:
-    """Test charts_like with Polar2D template."""
-    assert isinstance(chart, cxc.Abstract2D)
-    assert chart.ndim == 2
-
-
-@given(chart=cxst.charts_like(cxc.radial1d))
-def test_charts_like_radial1d(chart: cxc.AbstractChart) -> None:
-    """Test charts_like with Radial1D template."""
-    assert isinstance(chart, cxc.Abstract1D)
-    assert chart.ndim == 1
-
-
-@given(chart=cxst.charts_like(cxc.sph2))
-def test_charts_like_sph2(chart: cxc.AbstractChart) -> None:
-    """Test charts_like with SphericalTwoSphere template."""
-    assert isinstance(chart, cxc.Abstract2D)
-    assert chart.ndim == 2
+@pytest.mark.parametrize(("template", "ndim", "bases"), TEMPLATES)
+@given(data=st.data())
+def test_charts_like_matches_template(
+    template: cxc.AbstractChart,
+    ndim: int,
+    bases: tuple[type, ...],
+    data: st.DataObject,
+) -> None:
+    """Every draw shares the template's dimensionality and base classes."""
+    chart = data.draw(cxst.charts_like(template))
+    assert chart.ndim == ndim
+    for base in bases:
+        assert isinstance(chart, base)

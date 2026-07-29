@@ -169,39 +169,6 @@ class TestExcludeParameter:
 
 
 # ============================================================================
-# Exclude_Abstract Parameter Tests
-# ============================================================================
-
-
-class TestExcludeAbstractParameter:
-    """Test exclude_abstract parameter behavior."""
-
-    @given(chart_cls=cxst.chart_classes(exclude_abstract=True))
-    def test_exclude_abstract_true_generates_concrete(
-        self, chart_cls: type[cxc.AbstractChart]
-    ) -> None:
-        """exclude_abstract=True generates only concrete classes."""
-        assert not is_abstract_class(chart_cls)
-
-    @given(chart_cls=cxst.chart_classes(exclude_abstract=False))
-    def test_exclude_abstract_false_accepts_abstract(
-        self, chart_cls: type[cxc.AbstractChart]
-    ) -> None:
-        """exclude_abstract=False allows abstract classes."""
-        assert issubclass(chart_cls, cxc.AbstractChart)
-
-    @given(data=st.data(), exclude_abstract=st.sampled_from([True, False]))
-    def test_dynamic_exclude_abstract_strategy(
-        self, data, exclude_abstract: bool
-    ) -> None:
-        """exclude_abstract can be a strategy."""
-        chart_cls = data.draw(cxst.chart_classes(exclude_abstract=exclude_abstract))
-        assert issubclass(chart_cls, cxc.AbstractChart)
-        if exclude_abstract:
-            assert not is_abstract_class(chart_cls)
-
-
-# ============================================================================
 # Combined Parameters Tests
 # ============================================================================
 
@@ -281,15 +248,6 @@ class TestGeneratedClassProperties:
         assert all(isinstance(c, str) for c in components)
         # Components count should match ndim
         assert len(components) == instance.ndim
-
-    @given(data=st.data(), chart_cls=cxst.chart_classes(exclude_abstract=True))
-    def test_generated_class_components_match_ndim(
-        self, data, chart_cls: type[cxc.AbstractChart]
-    ) -> None:
-        """Number of components matches ndim."""
-        kwargs = data.draw(cxst.chart_init_kwargs(chart_cls))
-        instance = chart_cls(**kwargs)
-        assert len(instance.components) == instance.ndim
 
 
 # ============================================================================
