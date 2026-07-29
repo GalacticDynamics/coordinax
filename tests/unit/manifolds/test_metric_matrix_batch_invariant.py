@@ -15,8 +15,11 @@ unbatched evaluation, both of which this catches.
 
 import hypothesis.strategies as st
 import numpy as np
+import pytest
 from hypothesis import given, settings
 from hypothesis.extra.numpy import array_shapes
+
+import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
@@ -69,3 +72,22 @@ def test_curvilinear_metric_batches_like_elementwise(data):
             gbv[idx], np.asarray(getattr(gi, "value", gi)), rtol=1e-5
         )
         assert getattr(gb, "unit", None) == getattr(gi, "unit", None)
+
+
+@pytest.mark.parametrize("dtype", ["float32", "float64"])
+def test_sphere_diagonal_preserves_input_dtype(dtype):
+    """The diagonal's dtype comes from the point, not the environment default.
+
+    S¹ has no polar angles, so the diagonal is built from an *empty* stack. If
+    that stack is created without an explicit dtype it picks up JAX's default
+    and decides the result dtype, silently promoting (x64 on) or demoting
+    (x64 off) the caller's angles.
+    """
+    at = {"phi": u.Q(np.asarray(0.7, dtype=dtype), "rad")}
+    assert cxmapi.metric_matrix(cxm.S1, at, cxc.sph1).diagonal.dtype == dtype
+
+    at2 = {
+        "theta": u.Q(np.asarray(0.7, dtype=dtype), "rad"),
+        "phi": u.Q(np.asarray(0.3, dtype=dtype), "rad"),
+    }
+    assert cxmapi.metric_matrix(cxm.S2, at2, cxc.sph2).diagonal.dtype == dtype

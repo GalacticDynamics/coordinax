@@ -100,7 +100,13 @@ def metric_matrix(
     # Stack on the leading axis; `_sine_product_diagonal` moves it to the back.
     # The no-polar-angle case (S¹) still needs the batch shape, which only the
     # azimuthal component carries -- hence the empty stack rather than `[]`.
-    thetas = jnp.stack(vals[:-1]) if len(vals) > 1 else jnp.zeros((0, *vals[-1].shape))
+    thetas = (
+        jnp.stack(vals[:-1])
+        if len(vals) > 1
+        # dtype from the input, not the environment default: otherwise the
+        # empty stack decides the result dtype for S¹.
+        else jnp.zeros((0, *vals[-1].shape), dtype=vals[-1].dtype)
+    )
     return DiagonalMetric(_sine_product_diagonal(thetas, 1.0))
 
 
