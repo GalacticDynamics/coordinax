@@ -5,6 +5,7 @@ __all__: tuple[str, ...] = ()
 import astropy.units as apyu
 import numpy as np
 import plum
+
 import unxts.linalg as ul
 
 

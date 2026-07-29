@@ -760,7 +760,7 @@ astropy = [
 hypothesis = [
     { name = "coordinaxs-hypothesis" },
     { name = "hypothesis" },
-    { name = "unxt-hypothesis" },
+    { name = "unxts-hypothesis" },
 ]
 
 [package.metadata]
@@ -769,7 +769,7 @@ requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
-    { name = "unxt-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=2.0" },
+    { name = "unxts-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=2.0" },
 ]
 provides-extras = ["astropy", "hypothesis"]
 
@@ -789,14 +789,14 @@ source = { editable = "packages/coordinaxs.hypothesis" }
 dependencies = [
     { name = "coordinax" },
     { name = "hypothesis" },
-    { name = "unxt-hypothesis" },
+    { name = "unxts-hypothesis" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "hypothesis", specifier = ">=6.0" },
-    { name = "unxt-hypothesis", specifier = ">=2.0" },
+    { name = "unxts-hypothesis", specifier = ">=2.0" },
 ]
 
 [[package]]
@@ -816,7 +816,7 @@ dependencies = [
 test = [
     { name = "hypothesis" },
     { name = "pytest" },
-    { name = "unxt-hypothesis" },
+    { name = "unxts-hypothesis" },
 ]
 
 [package.metadata]
@@ -835,7 +835,7 @@ requires-dist = [
 test = [
     { name = "hypothesis", specifier = ">=6.148.7" },
     { name = "pytest", specifier = ">=9.0.2" },
-    { name = "unxt-hypothesis", specifier = ">=2.0" },
+    { name = "unxts-hypothesis", specifier = ">=2.0" },
 ]
 
 [[package]]
@@ -3323,18 +3323,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/dd/05/4fdcf04277ca3237d19388ee0c4902f5c52061f713316a9a7d0808b30ebe/unxt_api-2.0.0.tar.gz", hash = "sha256:164ae14673bde98c7358fba12e3e94080a26c979c72e2e8ad1298fd1531026fb", size = 5462, upload-time = "2026-07-24T18:00:06.468Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/29/ac/b1faf16701501fde6241ab5df42f12a339d069b9d84b607f607d897fd1a9/unxt_api-2.0.0-py3-none-any.whl", hash = "sha256:10e19f7c31b29a8be6e54f266b0dd0bd8c861482ac1f46d0fecaddf5a29be160", size = 2946, upload-time = "2026-07-24T18:00:05.367Z" },
-]
-
-[[package]]
-name = "unxt-hypothesis"
-version = "2.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "unxts-hypothesis" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/eb/ec964d9bcc23bde4578e33bc3aa8da19b2387ee56956c7d4f60134599e7b/unxt_hypothesis-2.0.0.tar.gz", hash = "sha256:b8bec434f2422d36ccc4d2cacb498cf8efd1f549933203af3d9516b3815ec59a", size = 4533, upload-time = "2026-07-24T18:00:04.425Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/f9/08b400a5c580d4803d87b2aae539b68e277547ecd7ed8e1717d38af6cdfd/unxt_hypothesis-2.0.0-py3-none-any.whl", hash = "sha256:fc640da7747cbe0f50154e681fe29ffe48d2e06076ff4a426c9d0a4440133846", size = 3770, upload-time = "2026-07-24T18:00:03.268Z" },
 ]
 
 [[package]]

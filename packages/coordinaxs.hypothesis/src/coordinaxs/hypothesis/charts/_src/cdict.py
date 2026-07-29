@@ -14,7 +14,7 @@ import hypothesis.strategies as st
 import jax.numpy as jnp
 import plum
 import unxt as u
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 from hypothesis.extra.array_api import make_strategies_namespace
 
 import coordinax.charts as cxc

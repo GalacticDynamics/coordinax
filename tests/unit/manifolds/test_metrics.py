@@ -6,9 +6,9 @@ All tests in this file are RED until the metrics module is implemented.
 import jax
 import jax.numpy as jnp
 import pytest
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm

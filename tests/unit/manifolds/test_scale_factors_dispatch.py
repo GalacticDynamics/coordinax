@@ -2,9 +2,9 @@
 
 import jax
 import jax.numpy as jnp
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm

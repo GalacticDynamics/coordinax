@@ -5,7 +5,7 @@ from astropy.coordinates import Angle as AstropyAngle
 from hypothesis import given
 from plum import convert
 
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinax.angles as cxa
 import coordinaxs.interop.astropy  # noqa: F401

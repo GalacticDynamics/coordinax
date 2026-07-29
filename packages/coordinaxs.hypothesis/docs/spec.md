@@ -88,7 +88,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
     Generate `unxt.Angle` values.
 
     Source:
-    - `coordinaxs.hypothesis.angles.angles` is re-exported from `unxt_hypothesis.angles`.
+    - `coordinaxs.hypothesis.angles.angles` is re-exported from `unxts.hypothesis.angles`.
 
     Signature:
     - `angles(*, wrap_to=None, **kwargs)`
@@ -104,7 +104,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
     - Supports scalar and array-shaped outputs via `shape`.
 
     Failure behavior:
-    - Invalid unit/parameter combinations follow `unxt_hypothesis.quantities` validation and raise from that implementation.
+    - Invalid unit/parameter combinations follow `unxts.hypothesis.quantities` validation and raise from that implementation.
 
     Examples:
     - `@given(a=cxst.angles())`
@@ -144,7 +144,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
 
     Failure behavior:
     - Invalid unit/parameter combinations follow
-          `unxt_hypothesis.quantities` validation and raise from that
+          `unxts.hypothesis.quantities` validation and raise from that
           implementation.
 
     Examples:
@@ -169,7 +169,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
     Parameters:
     - `draw`: the Hypothesis draw function (provided automatically inside an
           `@st.composite` strategy).
-    - `**kwargs`: keyword arguments destined for `unxt_hypothesis.quantities`.
+    - `**kwargs`: keyword arguments destined for `unxts.hypothesis.quantities`.
           Only the `elements` entry is inspected/adjusted; all other keys are
           returned unchanged.
 

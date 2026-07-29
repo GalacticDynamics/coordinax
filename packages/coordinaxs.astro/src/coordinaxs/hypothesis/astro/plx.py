@@ -8,7 +8,7 @@ from typing import Any, cast
 from hypothesis import strategies as st
 
 import unxt as u
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinaxs.astro as cxastro
 from coordinaxs.hypothesis.distances import make_nonnegative
@@ -37,7 +37,7 @@ def parallaxes(
         parallax must be non-negative, noisy measurements can yield negative
         values.
     **kwargs
-        Additional keyword arguments passed to `unxt_hypothesis.quantities`.
+        Additional keyword arguments passed to `unxts.hypothesis.quantities`.
         Common options include 'dtype', 'shape', 'elements', 'unique'. The
         arguments 'unit' and 'quantity_cls' are set automatically and should not
         be provided.

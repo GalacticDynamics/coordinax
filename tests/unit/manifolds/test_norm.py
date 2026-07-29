@@ -9,6 +9,7 @@ import pytest
 
 import quaxed.numpy as qnp
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm

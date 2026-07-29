@@ -4,9 +4,9 @@ __all__: tuple[str, ...] = ()
 
 import jax.numpy as jnp
 import pytest
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax as cx
 import coordinax.frames as cxf

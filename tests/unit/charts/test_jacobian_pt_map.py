@@ -9,7 +9,6 @@ import jaxtyping
 import jax
 import jax.numpy as jnp
 import pytest
-import unxts.linalg as ul
 from hypothesis import given, settings
 from numpy.testing import assert_allclose
 from strategies import (
@@ -21,6 +20,7 @@ from strategies import (
 
 import quaxed.numpy as qnp
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 

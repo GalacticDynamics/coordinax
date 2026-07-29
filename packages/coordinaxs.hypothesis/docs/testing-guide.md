@@ -283,13 +283,13 @@ def test_charts_like_polar(chart):
 
 ## Testing Coordinate Transformations
 
-## Integration with `unxt-hypothesis`
+## Integration with `unxts.hypothesis`
 
-The {mod}`coordinaxs.hypothesis` package builds on top of `unxt-hypothesis` strategies. You can use both packages together:
+The {mod}`coordinaxs.hypothesis` package builds on top of `unxts.hypothesis` strategies. You can use both packages together:
 
 ```python
 from hypothesis import given
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 import coordinaxs.hypothesis.main as cxst
 import unxt as u
 

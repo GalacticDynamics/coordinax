@@ -6,7 +6,7 @@ __all__ = ("distances",)
 from typing import Any
 
 import unxt as u
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 from hypothesis import strategies as st
 
 import coordinax.distances as cxd
@@ -36,7 +36,7 @@ def distances(
         generated distances will be >= 0. Can be a hypothesis strategy to vary
         this behavior across test examples.
     **kwargs
-        Additional keyword arguments passed to `unxt_hypothesis.quantities`.
+        Additional keyword arguments passed to `unxts.hypothesis.quantities`.
         Common options include 'dtype', 'shape', 'elements', 'unique'. The
         arguments 'unit' and 'quantity_cls' are set automatically and should not
         be provided.

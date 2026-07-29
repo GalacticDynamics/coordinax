@@ -6,9 +6,9 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax as cx
 import coordinax.charts as cxc

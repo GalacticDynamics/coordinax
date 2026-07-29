@@ -7,7 +7,7 @@ import pytest
 from hypothesis import given, settings, strategies as st
 
 import unxt as u
-import unxt_hypothesis as ust
+import unxts.hypothesis as ust
 
 import coordinax.angles as cxa
 from coordinax._src.charts import checks

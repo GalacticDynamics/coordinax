@@ -17,7 +17,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24", "hypothesis>=6.0", "unxt-hypothesis>=2.0"]
+dependencies = ["coordinax>=0.24", "hypothesis>=6.0", "unxts.hypothesis>=2.0"]
 description = "Hypothesis strategies for coordinax"
 dynamic = ["version"]
 license = "MIT"

@@ -5,9 +5,9 @@ import jax.numpy as jnp
 import numpy as np
 import plum
 import pytest
-import unxts.linalg as ul
 
 import unxt as u
+import unxts.linalg as ul
 
 
 class TestUnitsMatrixToStructuredUnit:

@@ -64,12 +64,12 @@ def test_distance_property(dist):
 
 Generate random {class}`unxt.Angle` objects for testing.
 
-This strategy builds on {func}`unxt_hypothesis.quantities` to generate angles with optional wrapping bounds. The strategy is useful for property-based testing of angle-related computations.
+This strategy builds on {func}`unxts.hypothesis.quantities` to generate angles with optional wrapping bounds. The strategy is useful for property-based testing of angle-related computations.
 
 **Parameters:**
 
 - `wrap_to` (`SearchStrategy[tuple[Quantity, Quantity]] | None`): Optional hypothesis strategy that generates a tuple of (min_bound, max_bound) for angle wrapping. If None, generates angles without wrapping (default: None).
-- `**kwargs`: Additional keyword arguments passed to {func}`~unxt_hypothesis.quantities`. Common options include:
+- `**kwargs`: Additional keyword arguments passed to {func}`~unxts.hypothesis.quantities`. Common options include:
   - `units` (str): Unit for the angle (e.g., "rad", "deg")
   - `min_value` (float): Minimum value for the angle
   - `max_value` (float): Maximum value for the angle
@@ -123,12 +123,12 @@ def test_angle_2d(angle):
 
 Generate random `coordinax.distances.Distance` objects for testing.
 
-This strategy builds on `unxt_hypothesis.quantities` to generate distances with automatic handling of the non-negativity constraint. The strategy is useful for property-based testing of distance-related computations.
+This strategy builds on `unxts.hypothesis.quantities` to generate distances with automatic handling of the non-negativity constraint. The strategy is useful for property-based testing of distance-related computations.
 
 **Parameters:**
 
 - `check_negative` (bool | SearchStrategy[bool]): Whether to enforce non-negative distances. If `True` (default), generated distances will be >= 0. Can be a hypothesis strategy to vary this behavior across test examples.
-- `**kwargs`: Additional keyword arguments passed to `unxt_hypothesis.quantities`. Common options include:
+- `**kwargs`: Additional keyword arguments passed to `unxts.hypothesis.quantities`. Common options include:
   - `units` (str): Unit for the distance (e.g., "kpc", "m", "AU")
   - `shape` (int | tuple | SearchStrategy): Shape of the generated distance array
   - `elements` (SearchStrategy): Strategy for generating array elements. When `check_negative=True`, the min_value will be automatically adjusted to 0 if needed.
@@ -179,11 +179,11 @@ def test_distance_range(dist):
 
 ### `distance_moduli(**kwargs)`
 
-Generate random `coordinaxs.astro.DistanceModulus` objects for testing. distance and angle strategiesategy builds on `unxt_hypothesis.quantities` to generate distance moduli (apparent minus absolute magnitude). Distance moduli are always in units of 'mag'. The strategy is useful for property-based testing of magnitude-based distance computations.
+Generate random `coordinaxs.astro.DistanceModulus` objects for testing. distance and angle strategiesategy builds on `unxts.hypothesis.quantities` to generate distance moduli (apparent minus absolute magnitude). Distance moduli are always in units of 'mag'. The strategy is useful for property-based testing of magnitude-based distance computations.
 
 **Parameters:**
 
-- `**kwargs`: Additional keyword arguments passed to `unxt_hypothesis.quantities`. Common options include:
+- `**kwargs`: Additional keyword arguments passed to `unxts.hypothesis.quantities`. Common options include:
   - `shape` (int | tuple | SearchStrategy): Shape of the generated distance modulus array
   - `elements` (SearchStrategy): Strategy for generating array elements
 
@@ -222,12 +222,12 @@ def test_dm_range(dm):
 
 Generate random `coordinaxs.astro.Parallax` objects for testing.
 
-This strategy builds on `unxt_hypothesis.quantities` to generate parallaxes with automatic handling of the non-negativity constraint. While theoretically parallax must be non-negative (tan(p) = 1 AU / d), noisy direct measurements can yield negative values. The strategy is useful for property-based testing of parallax-based distance computations.
+This strategy builds on `unxts.hypothesis.quantities` to generate parallaxes with automatic handling of the non-negativity constraint. While theoretically parallax must be non-negative (tan(p) = 1 AU / d), noisy direct measurements can yield negative values. The strategy is useful for property-based testing of parallax-based distance computations.
 
 **Parameters:**
 
 - `check_negative` (bool | SearchStrategy[bool]): Whether to enforce non-negative parallaxes. If `True` (default), generated parallaxes will be >= 0. Can be a hypothesis strategy to vary this behavior across test examples. Set to `False` when testing handling of noisy measurements.
-- `**kwargs`: Additional keyword arguments passed to {func}`unxt_hypothesis.quantities`. Common options include:
+- `**kwargs`: Additional keyword arguments passed to {func}`unxts.hypothesis.quantities`. Common options include:
   - `units` (str): Unit for the parallax (e.g., "mas", "arcsec", "deg")
   - `shape` (int | tuple | SearchStrategy): Shape of the generated parallax array
   - `elements` (SearchStrategy): Strategy for generating array elements. When `check_negative=True`, the min_value will be automatically adjusted to 0 if needed.
@@ -278,9 +278,9 @@ def test_nearby_parallax(plx):
     assert 1.0 <= plx.to("mas").value <= 100.0
 ```
 
-## Integration with `unxt-hypothesis`
+## Integration with `unxts.hypothesis`
 
-The {mod}`coordinaxs.hypothesis` package builds on top of `unxt-hypothesis` strategies.
+The {mod}`coordinaxs.hypothesis` package builds on top of `unxts.hypothesis` strategies.
 
 For more advanced usage patterns, see the {doc}`Testing Guide </packages/coordinaxs.hypothesis/testing-guide>`.
 
