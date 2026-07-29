@@ -6,11 +6,11 @@ from collections.abc import Iterable
 
 import numpy as np
 import pytest
-import unxts.hypothesis as ust
 from hypothesis import given, settings
 
 import quaxed.numpy as jnp
 import unxt as u
+import unxts.hypothesis as ust
 
 import coordinax as cx
 import coordinax.frames as cxf
@@ -184,8 +184,8 @@ class TestFrameTransformProperties:
             via_inverse.ustrip("pc"), via_bwd.ustrip("pc"), rtol=0, atol=1e-6
         )
 
-    @given(q=POSITIONS_PC)
     @requires_astropy
+    @given(q=POSITIONS_PC)
     @settings(deadline=None)
     def test_icrs_to_gcf_matches_astropy_on_random_positions(
         self, q: u.AbstractQuantity
