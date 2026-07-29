@@ -26,7 +26,9 @@ from unxt.quantity import AllowValue
 import coordinaxs.api.charts as cxcapi
 from .chart import (
     AbstractSphericalHyperSphere,
+    LonCosLatSphericalTwoSphere,
     NonCanonicalTwoSphere,
+    RelabeledTwoSphere,
     SphericalTwoSphere,
 )
 from .manifold import HyperSphericalManifold
@@ -112,13 +114,12 @@ def metric_matrix(
 
 @plum.dispatch
 def metric_representation(
-    M: HyperSphericalManifold, chart: NonCanonicalTwoSphere, /
+    M: HyperSphericalManifold, chart: LonCosLatSphericalTwoSphere, /
 ) -> type[DenseMetric]:
-    """Non-canonical two-sphere charts return a `DenseMetric`.
+    """`LonCosLat` is non-orthogonal, so its round metric is genuinely dense.
 
-    Their round metric is obtained by pullback (see `metric_matrix`); it is
-    diagonal for LonLat/Math but genuinely dense for LonCosLat, so all three use
-    `DenseMetric`.
+    Its off-diagonal is ``g_01 = lon_coslat * tan(lat)``, nonzero away from the
+    equator.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
@@ -131,53 +132,30 @@ def metric_representation(
 
 
 @plum.dispatch
-def metric_matrix(
-    M: HyperSphericalManifold, point: CDict, chart: NonCanonicalTwoSphere, /
-) -> DenseMetric:
-    r"""Round metric on a non-canonical two-sphere chart (pullback).
+def metric_representation(
+    M: HyperSphericalManifold, chart: RelabeledTwoSphere, /
+) -> type[DiagonalMetric]:
+    """`LonLat` and `Math` relabel the canonical angles but stay orthogonal.
 
-    The nested sine-product used by the canonical dispatch assumes the
-    components are polar angles in nested order; that is false for these charts
-    (LonLat, Math swap/relabel the polar and azimuthal angles; LonCosLat is
-    non-orthogonal). The metric is instead pulled back from the canonical chart:
-    ``g = Jc^T diag(1, sin^2 theta) Jc``, where ``Jc`` is the Jacobian of the
-    coordinate map ``chart -> SphericalTwoSphere``.
+    Their round metrics are exactly diagonal -- ``diag(cos^2(lat), 1)`` and
+    ``diag(sin^2(phi), 1)`` -- so `DiagonalMetric` is the accurate
+    classification and gives callers the O(n) diagonal path.
 
-    >>> import math
-    >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-
-    LonLat at lat=40 deg: ``g = diag(cos^2(lat), 1)``:
-
-    >>> at = {"lon": u.Q(0.6, "rad"), "lat": u.Q(math.radians(40), "rad")}
-    >>> g = cxm.metric_matrix(cxm.S2, at, cxc.lonlat_sph2)
-    >>> [round(float(g.matrix.value[i, i]), 4) for i in (0, 1)]
-    [0.5868, 1.0]
-
-    Leading axes are batch; the two component axes trail:
-
-    >>> import jax.numpy as jnp
-    >>> at = {"lon": u.Q(jnp.zeros((5,)), "rad"), "lat": u.Q(jnp.zeros((5,)), "rad")}
-    >>> cxm.metric_matrix(cxm.S2, at, cxc.lonlat_sph2).matrix.value.shape
-    (5, 2, 2)
-
-    .. warning::
-
-        ``LonCosLat`` is **not a chart at the poles**: ``lon_coslat = lon *
-        cos(lat)`` collapses every longitude onto ``0`` at ``lat = +-pi/2``, so
-        the map is not injective there.  Away from the poles ``g_LL =
-        cos^2(lat) * sec^2(lat)`` is exactly ``1`` and ``det g`` is exactly
-        ``1``; evaluated *at* a pole that product becomes ``0 * inf`` and the
-        returned matrix is degenerate (``det g == 0``) rather than the limiting
-        identity.  Precision degrades within roughly ``1e-10`` rad of the pole,
-        where the chart's condition number ``~ lon_coslat^2 tan^2(lat)`` exceeds
-        what float64 can carry.  ``LonLat`` and ``Math`` are genuinely singular
-        at their poles too, but there the degenerate metric *is* the correct
-        limit.
+    >>> cxm.metric_representation(cxm.S2, cxc.lonlat_sph2)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
 
     """
-    del M
+    del M, chart
+    return DiagonalMetric
+
+
+def _round_metric_values(point: CDict, chart: NonCanonicalTwoSphere) -> jnp.ndarray:
+    """Dense ``(*batch, n, n)`` round-metric values via pullback.
+
+    Shared by the `LonCosLat` (dense) and `Relabeled` (diagonal) rules below.
+    """
     keys = chart.components
     n = len(keys)
     # Components trail: (*batch, n).
@@ -204,7 +182,101 @@ def metric_matrix(
     # `jacfwd` on a batched input would differentiate every output w.r.t. every
     # batch element, so map it per point and restore the leading batch axes.
     batch = x.shape[:-1]
-    g = jax.vmap(pullback)(x.reshape(-1, n)).reshape(*batch, n, n)
+    return jax.vmap(pullback)(x.reshape(-1, n)).reshape(*batch, n, n)
 
+
+@plum.dispatch
+def metric_matrix(
+    M: HyperSphericalManifold, point: CDict, chart: LonCosLatSphericalTwoSphere, /
+) -> DenseMetric:
+    r"""Round metric on the non-orthogonal `LonCosLat` chart (pullback).
+
+    The nested sine-product used by the canonical dispatch assumes the
+    components are polar angles in nested order; that is false for these charts
+    (LonLat, Math swap/relabel the polar and azimuthal angles; LonCosLat is
+    non-orthogonal). The metric is instead pulled back from the canonical chart:
+    ``g = Jc^T diag(1, sin^2 theta) Jc``, where ``Jc`` is the Jacobian of the
+    coordinate map ``chart -> SphericalTwoSphere``.
+
+    >>> import math
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    ``g = [[1, a], [a, 1 + a^2]]`` with ``a = lon_coslat * tan(lat)``; note the
+    nonzero off-diagonal, and that ``det g == 1`` (the area element is
+    ``dL dlat``):
+
+    >>> at = {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(0.7, "rad")}
+    >>> g = cxm.metric_matrix(cxm.S2, at, cxc.loncoslat_sph2)
+    >>> [round(float(v), 4) for v in g.matrix.value.ravel()]
+    [1.0, 0.3369, 0.3369, 1.1135]
+    >>> round(float(math.prod([0.4, math.tan(0.7)])), 4)
+    0.3369
+
+    Leading axes are batch; the two component axes trail:
+
+    >>> import jax.numpy as jnp
+    >>> at = {"lon_coslat": u.Q(jnp.zeros((5,)), "rad"),
+    ...       "lat": u.Q(jnp.zeros((5,)), "rad")}
+    >>> cxm.metric_matrix(cxm.S2, at, cxc.loncoslat_sph2).matrix.value.shape
+    (5, 2, 2)
+
+    .. warning::
+
+        ``LonCosLat`` is **not a chart at the poles**: ``lon_coslat = lon *
+        cos(lat)`` collapses every longitude onto ``0`` at ``lat = +-pi/2``, so
+        the map is not injective there.  Away from the poles ``g_LL =
+        cos^2(lat) * sec^2(lat)`` is exactly ``1`` and ``det g`` is exactly
+        ``1``; evaluated *at* a pole that product becomes ``0 * inf`` and the
+        returned matrix is degenerate (``det g == 0``) rather than the limiting
+        identity.  Precision degrades within roughly ``1e-10`` rad of the pole,
+        where the chart's condition number ``~ lon_coslat^2 tan^2(lat)`` exceeds
+        what float64 can carry.  ``LonLat`` and ``Math`` are genuinely singular
+        at their poles too, but there the degenerate metric *is* the correct
+        limit.
+
+    """
+    del M
+    n = len(chart.components)
+    g = _round_metric_values(point, chart)
     dmls = ul.UnitsMatrix.full((n, n), "")  # angles -> angles, so g is dimensionless
     return DenseMetric(ul.QM(g, unit=dmls))
+
+
+@plum.dispatch
+def metric_matrix(
+    M: HyperSphericalManifold, point: CDict, chart: RelabeledTwoSphere, /
+) -> DiagonalMetric:
+    r"""Round metric on an orthogonal relabelled two-sphere chart.
+
+    ``LonLat`` and ``Math`` relabel/swap the canonical angles, so the nested
+    sine-product does not apply, but they stay orthogonal: the pullback is
+    exactly diagonal, so only the diagonal is kept.
+
+    - ``LonLat`` ``(lon, lat)``: ``diag(cos^2(lat), 1)``
+    - ``Math`` ``(theta, phi)``: ``diag(sin^2(phi), 1)``
+
+    >>> import math
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> at = {"lon": u.Q(0.6, "rad"), "lat": u.Q(math.radians(40), "rad")}
+    >>> g = cxm.metric_matrix(cxm.S2, at, cxc.lonlat_sph2)
+    >>> [round(float(v), 4) for v in g.diagonal.value]
+    [0.5868, 1.0]
+
+    Leading axes are batch; the component axis trails:
+
+    >>> import jax.numpy as jnp
+    >>> at = {"lon": u.Q(jnp.zeros((5,)), "rad"), "lat": u.Q(jnp.zeros((5,)), "rad")}
+    >>> cxm.metric_matrix(cxm.S2, at, cxc.lonlat_sph2).diagonal.value.shape
+    (5, 2)
+
+    """
+    del M
+    n = len(chart.components)
+    g = _round_metric_values(point, chart)
+    diag = jnp.diagonal(g, axis1=-2, axis2=-1)
+    return DiagonalMetric(ul.QM(diag, unit=ul.UnitsMatrix.full(n, "")))
