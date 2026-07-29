@@ -152,21 +152,54 @@ def metric_matrix(
     >>> [round(float(g.matrix.value[i, i]), 4) for i in (0, 1)]
     [0.5868, 1.0]
 
+    Leading axes are batch; the two component axes trail:
+
+    >>> import jax.numpy as jnp
+    >>> at = {"lon": u.Q(jnp.zeros((5,)), "rad"), "lat": u.Q(jnp.zeros((5,)), "rad")}
+    >>> cxm.metric_matrix(cxm.S2, at, cxc.lonlat_sph2).matrix.value.shape
+    (5, 2, 2)
+
+    .. warning::
+
+        ``LonCosLat`` is **not a chart at the poles**: ``lon_coslat = lon *
+        cos(lat)`` collapses every longitude onto ``0`` at ``lat = +-pi/2``, so
+        the map is not injective there.  Away from the poles ``g_LL =
+        cos^2(lat) * sec^2(lat)`` is exactly ``1`` and ``det g`` is exactly
+        ``1``; evaluated *at* a pole that product becomes ``0 * inf`` and the
+        returned matrix is degenerate (``det g == 0``) rather than the limiting
+        identity.  Precision degrades within roughly ``1e-10`` rad of the pole,
+        where the chart's condition number ``~ lon_coslat^2 tan^2(lat)`` exceeds
+        what float64 can carry.  ``LonLat`` and ``Math`` are genuinely singular
+        at their poles too, but there the degenerate metric *is* the correct
+        limit.
+
     """
     del M
     keys = chart.components
-    x0 = tree_cast_int_bool_to_float(
-        jnp.stack([jnp.asarray(u.ustrip(AllowValue, RAD, point[k])) for k in keys])
+    n = len(keys)
+    # Components trail: (*batch, n).
+    x = tree_cast_int_bool_to_float(
+        jnp.stack(
+            [jnp.asarray(u.ustrip(AllowValue, RAD, point[k])) for k in keys], axis=-1
+        )
     )
 
-    def to_canon(x: jnp.ndarray) -> jnp.ndarray:
-        p = {k: u.Q(x[i], RAD) for i, k in enumerate(keys)}
+    def to_canon(xi: jnp.ndarray) -> jnp.ndarray:
+        p = {k: u.Q(xi[i], RAD) for i, k in enumerate(keys)}
         s = cast("CDict", cxcapi.pt_map(p, chart, SphericalTwoSphere()))
         return jnp.stack([u.ustrip(RAD, s["theta"]), u.ustrip(RAD, s["phi"])])
 
-    jc = jax.jacfwd(to_canon)(x0)  # (2, n)
-    theta = to_canon(x0)[0]
-    g_can = jnp.diag(jnp.stack([jnp.ones_like(theta), jnp.sin(theta) ** 2]))
-    n = len(keys)
+    def pullback(xi: jnp.ndarray) -> jnp.ndarray:
+        """Metric at a single point ``xi`` of shape ``(n,)``."""
+        jc = jax.jacfwd(to_canon)(xi)  # (2, n)
+        theta = to_canon(xi)[0]
+        g_can = jnp.diag(jnp.stack([jnp.ones_like(theta), jnp.sin(theta) ** 2]))
+        return jc.T @ g_can @ jc
+
+    # `jacfwd` on a batched input would differentiate every output w.r.t. every
+    # batch element, so map it per point and restore the leading batch axes.
+    batch = x.shape[:-1]
+    g = jax.vmap(pullback)(x.reshape(-1, n)).reshape(*batch, n, n)
+
     dmls = ul.UnitsMatrix.full((n, n), "")  # angles -> angles, so g is dimensionless
-    return DenseMetric(ul.QM(jc.T @ g_can @ jc, unit=dmls))
+    return DenseMetric(ul.QM(g, unit=dmls))
