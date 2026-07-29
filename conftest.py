@@ -42,72 +42,48 @@ settings.register_profile("thorough", max_examples=500)
 # =========================================================
 # Paths and Namespaces
 
-ModuleRoot = tuple[pathlib.Path, tuple[str, ...]]
-COORDINAX_NAMESPACE: tuple[str, ...] = ("coordinax",)
-COORDINAXS_NAMESPACE: tuple[str, ...] = ("coordinaxs",)
-
 CX_WORKSPACE_ROOT = pathlib.Path(__file__).parent
 CX_PACKAGES_ROOT = CX_WORKSPACE_ROOT / "packages"
 
+#: ``(src directory, namespace package name)`` for every workspace source tree.
+#:
+#: The core distribution ships ``src/coordinax``; every workspace sub-package
+#: ships ``src/coordinaxs``, the shared PEP 420 namespace.
+SrcRoot = tuple[pathlib.Path, str]
 
-def _discover_module_roots() -> tuple[ModuleRoot, ...]:
-    """Discover all workspace source-tree roots and their canonical namespaces.
 
-    The core distribution ships ``src/coordinax`` (namespace ``coordinax``);
-    every workspace sub-package ships ``src/coordinaxs`` (the shared PEP 420
-    ``coordinaxs`` namespace).
-    """
-    roots: list[ModuleRoot] = []
-
-    main_root = CX_WORKSPACE_ROOT / "src" / "coordinax"
-    if main_root.exists():
-        roots.append((main_root, COORDINAX_NAMESPACE))
-
+def _discover_src_roots() -> tuple[SrcRoot, ...]:
+    """Every workspace ``src`` directory paired with its namespace name."""
+    candidates: list[SrcRoot] = [(CX_WORKSPACE_ROOT / "src", "coordinax")]
     if CX_PACKAGES_ROOT.exists():
-        for package_dir in sorted(CX_PACKAGES_ROOT.iterdir()):
-            package_root = package_dir / "src" / "coordinaxs"
-            if package_root.exists():
-                roots.append((package_root, COORDINAXS_NAMESPACE))
+        candidates += [
+            (package_dir / "src", "coordinaxs")
+            for package_dir in sorted(CX_PACKAGES_ROOT.iterdir())
+        ]
+    # Order-preserving dedup. In a normal checkout it removes nothing -- each
+    # sub-package has its own `src`, so the pairs already differ despite
+    # sharing the `coordinaxs` namespace name. It matters only when two
+    # candidates `.resolve()` to the same directory, e.g. a symlinked package
+    # dir. The hand-rolled `unique_roots` loop this replaces guarded the same
+    # case.
+    return tuple(
+        dict.fromkeys(
+            (src.resolve(), namespace)
+            for src, namespace in candidates
+            if (src / namespace).exists()
+        )
+    )
 
-    return tuple(roots)
 
+SRC_ROOTS: tuple[SrcRoot, ...] = _discover_src_roots()
 
-MODULE_ROOTS: tuple[ModuleRoot, ...] = _discover_module_roots()
-RESOLVED_MODULE_ROOTS: tuple[ModuleRoot, ...] = tuple(
-    (root.resolve(), namespace) for root, namespace in MODULE_ROOTS
+#: ``(src root, namespace name)`` -- for mapping a file to its import root.
+RESOLVED_PACKAGE_ROOTS: tuple[SrcRoot, ...] = SRC_ROOTS
+
+#: ``(namespace directory, namespace parts)`` -- for mapping a file to a module.
+RESOLVED_MODULE_ROOTS: tuple[tuple[pathlib.Path, tuple[str, ...]], ...] = tuple(
+    (src / namespace, (namespace,)) for src, namespace in SRC_ROOTS
 )
-
-
-PackageRoot = tuple[pathlib.Path, str]
-
-
-def _discover_package_roots() -> tuple[PackageRoot, ...]:
-    """Discover workspace ``src`` roots paired with their namespace directory.
-
-    The core ``src`` holds the ``coordinax`` namespace; each sub-package ``src``
-    holds the ``coordinaxs`` namespace.
-    """
-    roots: list[PackageRoot] = []
-
-    main_src_root = CX_WORKSPACE_ROOT / "src"
-    if (main_src_root / "coordinax").exists():
-        roots.append((main_src_root.resolve(), "coordinax"))
-
-    if CX_PACKAGES_ROOT.exists():
-        for package_dir in sorted(CX_PACKAGES_ROOT.iterdir()):
-            src_root = package_dir / "src"
-            if (src_root / "coordinaxs").exists():
-                roots.append((src_root.resolve(), "coordinaxs"))
-
-    # Preserve order but deduplicate.
-    unique_roots: list[PackageRoot] = []
-    for root in roots:
-        if root not in unique_roots:
-            unique_roots.append(root)
-    return tuple(unique_roots)
-
-
-RESOLVED_PACKAGE_ROOTS: tuple[PackageRoot, ...] = _discover_package_roots()
 
 
 _ORIG_RESOLVE_PACKAGE_PATH = pytest_pathlib.resolve_package_path
@@ -240,70 +216,34 @@ _preload_coordinax_namespace()
 # Sybil parser setup
 
 
-class PyconCodeBlockParser:
-    """Parser for MyST pycon code blocks with doctest evaluation."""
+class MystCodeBlockParser:
+    """Parse a MyST code block, routing ``>>>`` content to the doctest evaluator.
 
-    def __init__(self, doctest_optionflags: int = 0) -> None:
-        """Initialize the pycon code block parser.
+    Covers both block flavours the docs use. They differ only in the language
+    tag, whether a `PythonEvaluator` runs the non-doctest case, and whether the
+    source needs cleaning first:
 
-        Parameters
-        ----------
-        doctest_optionflags : int
-            Doctest option flags (e.g., ELLIPSIS, NORMALIZE_WHITESPACE).
-
-        """
-        self.doctest_parser = DocTestStringParser(DocTestEvaluator(doctest_optionflags))
-        self.codeblock_parser = myst.CodeBlockParser(language="pycon")
-
-    def __call__(self, document: Document) -> Iterable[Region]:
-        """Parse pycon code blocks and yield doctest regions.
-
-        Parameters
-        ----------
-        document : Document
-            The Sybil document to parse.
-
-        Yields
-        ------
-        Region
-            Parsed regions from either pycon doctest blocks or regular code blocks.
-
-        """
-        for region in self.codeblock_parser(document):
-            source = region.parsed
-            # Treat pycon blocks as doctests (always start with >>>)
-            if isinstance(source, str) and source.startswith(">>>"):
-                for doctest_region in self.doctest_parser(source, document.path):
-                    doctest_region.adjust(region, source)
-                    yield doctest_region
-            else:
-                yield region
-
-
-class CodeCellParser:
-    """Parser for MyST ``{code-cell} ipython3`` blocks.
-
-    Treats the content as Python code (via ``PythonEvaluator``) or as a
-    doctest when it starts with ``>>>``.  IPython line-magics (``%…``) are
-    stripped before evaluation so that cells authored for Jupyter still
-    compile as plain Python.
+    * ``pycon``          -- doctest or plain region, no evaluator.
+    * ``{code-cell} ipython3`` -- run as Python, with IPython line-magics
+      (``%...``) stripped so cells authored for Jupyter still compile.
     """
 
-    def __init__(self, doctest_optionflags: int = 0) -> None:  # noqa: D107
+    def __init__(
+        self,
+        language: str,
+        doctest_optionflags: int = 0,
+        *,
+        evaluator: object | None = None,
+        transform: Callable[[Lexeme], Lexeme] | None = None,
+    ) -> None:
+        """Build a parser for *language*, optionally evaluating and cleaning."""
         self.doctest_parser = DocTestStringParser(DocTestEvaluator(doctest_optionflags))
-        self.codeblock_parser = myst.CodeBlockParser(
-            language="ipython3", evaluator=PythonEvaluator()
-        )
+        kwargs = {} if evaluator is None else {"evaluator": evaluator}
+        self.codeblock_parser = myst.CodeBlockParser(language=language, **kwargs)
+        self.transform = transform
 
-    @staticmethod
-    def _strip_magics(source: Lexeme) -> Lexeme:
-        """Remove IPython line-magic lines (``%…``) from *source*."""
-        cleaned = "\n".join(
-            line for line in source.splitlines() if not line.lstrip().startswith("%")
-        )
-        return Lexeme(cleaned, source.offset, source.line_offset)
-
-    def __call__(self, document: Document) -> Iterable[Region]:  # noqa: D102
+    def __call__(self, document: Document) -> Iterable[Region]:
+        """Yield doctest regions for ``>>>`` blocks, code regions otherwise."""
         for region in self.codeblock_parser(document):
             source = region.parsed
             if isinstance(source, str) and source.startswith(">>>"):
@@ -311,8 +251,17 @@ class CodeCellParser:
                     doctest_region.adjust(region, source)
                     yield doctest_region
             else:
-                region.parsed = self._strip_magics(source)
+                if self.transform is not None:
+                    region.parsed = self.transform(source)
                 yield region
+
+
+def _strip_ipython_magics(source: Lexeme) -> Lexeme:
+    """Remove IPython line-magic lines (``%...``) from *source*."""
+    cleaned = "\n".join(
+        line for line in source.splitlines() if not line.lstrip().startswith("%")
+    )
+    return Lexeme(cleaned, source.offset, source.line_offset)
 
 
 optionflags = ELLIPSIS | NORMALIZE_WHITESPACE
@@ -320,8 +269,13 @@ optionflags = ELLIPSIS | NORMALIZE_WHITESPACE
 parsers: Sequence[Callable[[Document], Iterable[Region]]] = [
     myst.DocTestDirectiveParser(optionflags=optionflags),
     myst.PythonCodeBlockParser(doctest_optionflags=optionflags),
-    PyconCodeBlockParser(doctest_optionflags=optionflags),
-    CodeCellParser(doctest_optionflags=optionflags),
+    MystCodeBlockParser("pycon", doctest_optionflags=optionflags),
+    MystCodeBlockParser(
+        "ipython3",
+        doctest_optionflags=optionflags,
+        evaluator=PythonEvaluator(),
+        transform=_strip_ipython_magics,
+    ),
     myst.SkipParser(),
 ]
 
