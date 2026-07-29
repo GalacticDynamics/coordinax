@@ -52,16 +52,18 @@ def _sine_product_diagonal(thetas: Array, scale: Any, /) -> Array:
 
     Parameters
     ----------
-    thetas : Array, shape ``(k,)``
+    thetas : Array, shape ``(k, *batch)``
         Polar angles $\theta_1, \dots, \theta_k$ in radians (the *last*
-        azimuthal angle $\phi$ is excluded by the caller).
-    scale : scalar
+        azimuthal angle $\phi$ is excluded by the caller), stacked along the
+        *leading* axis.  Any trailing axes are batch.
+    scale : scalar or Array, shape ``(*batch,)``
         Scale factor $R$ (sphere radius) or $r$ (radial coordinate).
 
     Returns
     -------
-    Array, shape ``(k+1,)``
-        The metric diagonal.
+    Array, shape ``(*batch, k+1)``
+        The metric diagonal, with the component axis trailing (the convention
+        every other ``metric_matrix`` rule follows).
 
     Examples
     --------
@@ -79,10 +81,20 @@ def _sine_product_diagonal(thetas: Array, scale: Any, /) -> Array:
     >>> _sine_product_diagonal(jnp.array([jnp.pi / 6]), 2.0)
     Array([4., 1.], dtype=float64)
 
+    Batched polar angles — components trail, each row independent:
+
+    >>> _sine_product_diagonal(jnp.array([[jnp.pi / 2, jnp.pi / 6]]), 1.0)
+    Array([[1.  , 1.  ],
+           [1.  , 0.25]], dtype=float64)
+
     """
     sin2 = qnp.sin(thetas) ** 2
-    cumprod = jnp.concat([jnp.ones(1, dtype=sin2.dtype), jnp.cumprod(sin2)])
-    return scale**2 * cumprod
+    # cumprod along the *component* axis only; a bare `jnp.cumprod` flattens,
+    # which silently multiplies across the batch.
+    ones = jnp.ones((1, *sin2.shape[1:]), dtype=sin2.dtype)
+    cumprod = jnp.concat([ones, jnp.cumprod(sin2, axis=0)], axis=0)
+    # Move the component axis to the back: (k+1, *batch) -> (*batch, k+1).
+    return jnp.moveaxis(scale**2 * cumprod, 0, -1)
 
 
 # ---------------------------------------------------------------------------
