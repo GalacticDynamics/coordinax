@@ -2,6 +2,8 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import cast
+
 import plum
 import unxts.linalg as ul
 
@@ -9,27 +11,77 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
-from .chart import NonCanonicalTwoSphere
+import coordinaxs.api.manifolds as cxmapi
+from .chart import LonCosLatSphericalTwoSphere, RelabeledTwoSphere
+from .manifold import HyperSphericalManifold
 from .metric import RoundMetric
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.metric.matrix import DenseMetric
 
 
 @plum.dispatch
 def scale_factors(
     metric: RoundMetric,
-    chart: NonCanonicalTwoSphere,
+    chart: RelabeledTwoSphere,
     /,
     *,
     at: CDict,
     usys: OptUSys = None,
 ) -> ul.QuantityMatrix:
-    """Non-canonical two-sphere charts have no nested-sine scale factors."""
+    r"""Scale factors for the orthogonal relabelled two-sphere charts.
+
+    ``LonLat`` and ``Math`` relabel/swap the canonical angles, so the nested
+    sine-product does not apply -- but they stay *orthogonal*, so the metric is
+    diagonal and its diagonal is the answer:
+
+    - ``LonLat`` ``(lon, lat)``: ``diag(cos^2(lat), 1)``
+    - ``Math`` ``(theta, phi)``: ``diag(sin^2(phi), 1)``
+
+    Taken from `metric_matrix` rather than re-derived, so there is one source of
+    truth for the pullback.
+
+    >>> import math
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> at = {"lon": u.Q(0.6, "rad"), "lat": u.Q(math.radians(40), "rad")}
+    >>> h = cxm.scale_factors(cxm.RoundMetric(2), cxc.lonlat_sph2, at=at)
+    >>> [round(float(v), 4) for v in h.value]
+    [0.5868, 1.0]
+
+    """
+    del usys
+    g = cast(
+        "DenseMetric",
+        cxmapi.metric_matrix(HyperSphericalManifold(metric.ndim), at, chart),
+    )
+    # `.matrix` is typed `QuantityMatrix | Array`; this rule always builds the
+    # former, but handle both so the diagonal extraction is total.
+    gm = g.matrix
+    diag = jnp.diagonal(
+        gm.value if isinstance(gm, ul.QuantityMatrix) else gm, axis1=-2, axis2=-1
+    )
+    return ul.QuantityMatrix(diag, unit=ul.UnitsMatrix.full(len(chart.components), ""))
+
+
+@plum.dispatch
+def scale_factors(
+    metric: RoundMetric,
+    chart: LonCosLatSphericalTwoSphere,
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys = None,
+) -> ul.QuantityMatrix:
+    """`LonCosLat` is non-orthogonal, so it has no scale factors at all."""
     del metric, at, usys
     msg = (
-        "scale_factors is only defined for the canonical nested-angle spherical "
-        f"chart; {type(chart).__name__} has no nested-sine scale factors. "
-        "Use coordinax.manifolds.metric_matrix instead."
+        "scale_factors is a diagonal (orthogonal-frame) concept and "
+        f"{type(chart).__name__} is non-orthogonal: its round metric has a "
+        "nonzero off-diagonal (g_01 = lon_coslat * tan(lat)), so no set of "
+        "per-axis factors reproduces it. Use coordinax.manifolds.metric_matrix."
     )
     raise NotImplementedError(msg)
 
