@@ -87,7 +87,7 @@ def _sine_product_diagonal(thetas: Array, scale: Any, /) -> Array:
     """
     sin2 = qnp.sin(thetas) ** 2
     ones = jnp.ones((*sin2.shape[:-1], 1), dtype=sin2.dtype)
-    cumprod = jnp.concat([ones, jnp.cumprod(sin2, axis=-1)], axis=-1)
+    cumprod = jnp.concatenate([ones, jnp.cumprod(sin2, axis=-1)], axis=-1)
     return scale**2 * cumprod
 
 
