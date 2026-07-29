@@ -190,9 +190,22 @@ class TestDistanceNonNegativity:
     def test_non_negative_by_default(self, d: cxd.Distance) -> None:
         assert jnp.all(d.value >= 0)
 
-    @given(d=cxst.distances(check_negative=False))
-    def test_check_negative_false_permits_negatives(self, d: cxd.Distance) -> None:
+    def test_check_negative_false_permits_negatives(self) -> None:
+        """A negative value survives construction when the check is off.
+
+        Asserted against a literal rather than a draw: the strategy is free to
+        return non-negative values, so a generated example could not establish
+        that a negative one is *accepted*.
+        """
+        d = cxd.Distance(-1, "kpc", check_negative=False)
         assert isinstance(d, cxd.Distance)
+        assert d.value < 0
+
+    @given(d=cxst.distances(check_negative=False))
+    def test_check_negative_false_still_builds_distances(self, d: cxd.Distance) -> None:
+        """Every draw with the check off is still a well-formed Distance."""
+        assert isinstance(d, cxd.Distance)
+        assert d.unit is not None
 
     def test_negative_raises_when_checked(self) -> None:
         with pytest.raises(
@@ -239,7 +252,7 @@ class TestDistanceArithmetic:
         """Doubling a near-max float32 Distance saturates to infinity."""
         result = d + d
         assert isinstance(result, cxd.Distance)
-        assert jnp.isinf(result.value)
+        assert jnp.all(jnp.isinf(result.value))
 
     @given(d=cxst.distances())
     def test_mul_dimensioned_quantity_promotes(self, d: cxd.Distance) -> None:
