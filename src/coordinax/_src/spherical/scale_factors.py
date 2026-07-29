@@ -17,7 +17,7 @@ from .manifold import HyperSphericalManifold
 from .metric import RoundMetric
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax._src.metric.matrix import DenseMetric
+from coordinax._src.metric.matrix import DiagonalMetric
 
 
 @plum.dispatch
@@ -66,17 +66,13 @@ def scale_factors(
     rad = u.unit("rad")
     ang_unit = usys["angle"] if usys is not None else rad
     at_rad = {k: u.uconvert_value(rad, ang_unit, v) for k, v in at.items()}
+    # `metric_matrix` already returns a DiagonalMetric for these charts, so the
+    # diagonal *is* the answer -- no dense matrix is ever formed.
     g = cast(
-        "DenseMetric",
+        "DiagonalMetric",
         cxmapi.metric_matrix(HyperSphericalManifold(metric.ndim), at_rad, chart),
     )
-    # `.matrix` is typed `QuantityMatrix | Array`; this rule always builds the
-    # former, but handle both so the diagonal extraction is total.
-    gm = g.matrix
-    diag = jnp.diagonal(
-        gm.value if isinstance(gm, ul.QuantityMatrix) else gm, axis1=-2, axis2=-1
-    )
-    return ul.QuantityMatrix(diag, unit=ul.UnitsMatrix.full(len(chart.components), ""))
+    return cast("ul.QuantityMatrix", g.diagonal)
 
 
 @plum.dispatch

@@ -194,6 +194,16 @@ class TestPullbackMetricUnits:
 # ---------------------------------------------------------------------------
 
 
+def _dense_values(g):
+    """Full ``(*batch, n, n)`` values from a Diagonal *or* Dense metric.
+
+    The orthogonal charts (LonLat, Math) return a `DiagonalMetric`; only the
+    non-orthogonal LonCosLat returns a `DenseMetric`.
+    """
+    m = g.to_dense().matrix
+    return jnp.asarray(getattr(m, "value", m))
+
+
 def _embedding_metric(chart, coords_rad):
     """Induced metric of ``chart`` from the unit-sphere R³ embedding, via J^T J."""
     keys = chart.components
@@ -225,8 +235,10 @@ class TestNonCanonicalTwoSphereMetric:
     def test_metric_matches_embedding(self, chart, coords):
         pt = {k: u.Q(v, "rad") for k, v in coords.items()}
         g = cxmapi.metric_matrix(cxm.S2, pt, chart)
-        assert isinstance(g, DenseMetric)
-        got = jnp.asarray(g.matrix.value)
+        # LonLat/Math are orthogonal -> Diagonal; LonCosLat is not -> Dense.
+        expect = DenseMetric if chart is cxc.loncoslat_sph2 else DiagonalMetric
+        assert isinstance(g, expect)
+        got = _dense_values(g)
         ref = _embedding_metric(chart, coords)
         assert jnp.allclose(got, ref, atol=1e-9), f"{got}\n!=\n{ref}"
 
@@ -234,8 +246,8 @@ class TestNonCanonicalTwoSphereMetric:
         """Integer-valued angles are promoted to float so the pullback jacfwd works."""
         pt = {"lon": u.Q(0, "rad"), "lat": u.Q(0, "rad")}  # integer magnitudes
         g = cxmapi.metric_matrix(cxm.S2, pt, cxc.lonlat_sph2)
-        assert isinstance(g, DenseMetric)
-        assert bool(jnp.all(jnp.isfinite(g.matrix.value)))
+        assert isinstance(g, DiagonalMetric)
+        assert bool(jnp.all(jnp.isfinite(_dense_values(g))))
 
     @pytest.mark.parametrize(
         ("chart", "at", "expected"),
@@ -262,7 +274,7 @@ class TestNonCanonicalTwoSphereMetric:
         """They must agree with the diagonal of the full metric."""
         at = {k: u.Q(v, "rad") for k, v in zip(keys, (0.4, 0.8), strict=True)}
         h = jnp.asarray(cxm.scale_factors(chart, at=at).value)
-        g = jnp.asarray(cxmapi.metric_matrix(cxm.S2, at, chart).matrix.value)
+        g = _dense_values(cxmapi.metric_matrix(cxm.S2, at, chart))
         assert jnp.allclose(h, jnp.diagonal(g), atol=1e-12)
 
     def test_scale_factors_refused_for_non_orthogonal_chart(self):
@@ -348,18 +360,18 @@ class TestNonCanonicalTwoSphereBatching:
         """A batched point equals stacking the per-point metrics."""
         vals = jnp.array([0.3, 0.5, 0.7])
         pt = {k: u.Q(vals, "rad") for k in keys}
-        gb = jnp.asarray(cxmapi.metric_matrix(cxm.S2, pt, chart).matrix.value)
+        gb = _dense_values(cxmapi.metric_matrix(cxm.S2, pt, chart))
         assert gb.shape == (3, 2, 2)
         for i in range(3):
             gi = cxmapi.metric_matrix(cxm.S2, {k: v[i] for k, v in pt.items()}, chart)
-            assert jnp.allclose(gb[i], jnp.asarray(gi.matrix.value), atol=1e-12)
+            assert jnp.allclose(gb[i], _dense_values(gi), atol=1e-12)
 
     @pytest.mark.parametrize(("chart", "keys"), _BATCH_CASES)
     def test_multidim_batch_shape(self, chart, keys):
         """Leading axes are batch, the two component axes trail."""
         pt = {k: u.Q(jnp.full((2, 3), 0.4), "rad") for k in keys}
         g = cxmapi.metric_matrix(cxm.S2, pt, chart)
-        assert jnp.asarray(g.matrix.value).shape == (2, 3, 2, 2)
+        assert _dense_values(g).shape == (2, 3, 2, 2)
 
 
 class TestLonCosLatPoleIsSingular:
@@ -378,7 +390,7 @@ class TestLonCosLatPoleIsSingular:
         for lat in (0.0, 0.5, 1.0, 1.5, math.pi / 2 - 1e-6):
             pt = {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(lat, "rad")}
             g = cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2)
-            assert jnp.allclose(jnp.asarray(g.matrix.value)[0, 0], 1.0, atol=1e-9)
+            assert jnp.allclose(_dense_values(g)[0, 0], 1.0, atol=1e-9)
 
     def test_det_is_one_away_from_the_pole(self):
         """sqrt(det g) == 1: the area element is dL dlat in this chart."""
@@ -398,3 +410,34 @@ class TestLonCosLatPoleIsSingular:
         assert bool(jnp.all(jnp.isfinite(g)))
         # Degenerate: det == 0, whereas the limit along lat -> pi/2 is 1.
         assert jnp.allclose(jnp.linalg.det(g), 0.0, atol=1e-12)
+
+
+class TestDiagonalMetricDensifiesBatched:
+    """`DiagonalMetric.to_dense` must handle a batched diagonal.
+
+    Reachable now that the orthogonal two-sphere charts return a
+    `DiagonalMetric`: `jnp.diag` is 1-D only, so a batched diagonal used to
+    raise instead of densifying to ``(*batch, n, n)``.
+    """
+
+    def test_batched_diagonal_densifies(self):
+        pt = {
+            "lon": u.Q(jnp.array([0.3, 0.5]), "rad"),
+            "lat": u.Q(jnp.array([0.4, 0.6]), "rad"),
+        }
+        g = cxmapi.metric_matrix(cxm.S2, pt, cxc.lonlat_sph2)
+        assert isinstance(g, DiagonalMetric)
+        dense = _dense_values(g)
+        assert dense.shape == (2, 2, 2)
+        for i in range(2):
+            gi = cxmapi.metric_matrix(
+                cxm.S2, {k: v[i] for k, v in pt.items()}, cxc.lonlat_sph2
+            )
+            assert jnp.allclose(dense[i], _dense_values(gi), atol=1e-12)
+
+    def test_bare_array_diagonal_densifies_batched(self):
+        """The un-united branch of `to_dense` must broadcast too."""
+        d = DiagonalMetric(jnp.array([[1.0, 4.0], [9.0, 16.0]]))
+        m = d.to_dense().matrix
+        assert jnp.asarray(m).shape == (2, 2, 2)
+        assert jnp.allclose(jnp.asarray(m)[1], jnp.array([[9.0, 0.0], [0.0, 16.0]]))
