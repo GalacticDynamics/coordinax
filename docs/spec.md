@@ -3141,7 +3141,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     | Class | Manifold | Diagonal in |
     |-------|----------|-------------|
     | [`FlatMetric`](#software-spec-flatmetric) | $\mathbb{R}^n$ | Cartesian charts; orthogonal curvilinear charts via $g = J^\top J$ |
-    | [`RoundMetric`](#software-spec-roundmetric) | $S^{n-1}$ | Intrinsic hyperspherical chart; cumulative-sine rule $g_{kk} = \prod_{j<k}\sin^2\!\theta_j$ |
+    | [`RoundMetric`](#software-spec-roundmetric) | $S^{n-1}$ | Orthogonal intrinsic hyperspherical charts; in canonical polar order the cumulative-sine rule $g_{kk} = \prod_{j<k}\sin^2\!\theta_j$ |
     | [`MinkowskiMetric`](#software-spec-minkowskimetric) | $\mathbb{R}^{1,3}$ | Canonical Cartesian spacetime chart $\eta = \operatorname{diag}(-1,1,1,1)$ |
 
     **Example**
@@ -3569,7 +3569,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Semantics:
 
     - `signature = (1,) * ndim`.
-    - `metric_matrix(manifold, point, chart)` returns a `DiagonalMetric` in the intrinsic hyperspherical chart basis.
+    - `metric_matrix(manifold, point, chart)` expresses the metric in the coordinates of the passed `chart`.
+    - The cumulative-sine rule above applies only in **canonical polar order** — components $(\theta_1, \ldots, \theta_{n-1}, \phi)$ with the $\theta_j$ colatitudes. Charts that reorder or reparameterise the angles have their own forms: `lonlat_sph2` gives $\operatorname{diag}(\cos^2 b, 1)$ and `math_sph2` gives $\operatorname{diag}(\sin^2\phi, 1)$, both still `DiagonalMetric`.
+    - `loncoslat_sph2` is **not orthogonal**: with $x = \lambda\cos b$ the metric is $\begin{pmatrix} 1 & x\tan b \\ x\tan b & 1 + x^2\tan^2 b\end{pmatrix}$, so `metric_matrix` returns a `DenseMetric` there.
     - Angular inputs are interpreted in radians by default, or via `usys["angle"]` when a unit system is provided.
 
     **Example**

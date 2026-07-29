@@ -52,15 +52,15 @@ def _sine_product_diagonal(thetas: Array, scale: Any, /) -> Array:
 
     Parameters
     ----------
-    thetas : Array, shape ``(k,)``
-        Polar angles $\theta_1, \dots, \theta_k$ in radians (the *last*
-        azimuthal angle $\phi$ is excluded by the caller).
+    thetas : Array, shape ``(*batch, k)``
+        Polar angles $\theta_1, \dots, \theta_k$ in radians, angles last (the
+        *last* azimuthal angle $\phi$ is excluded by the caller).
     scale : scalar
         Scale factor $R$ (sphere radius) or $r$ (radial coordinate).
 
     Returns
     -------
-    Array, shape ``(k+1,)``
+    Array, shape ``(*batch, k+1)``
         The metric diagonal.
 
     Examples
@@ -79,9 +79,15 @@ def _sine_product_diagonal(thetas: Array, scale: Any, /) -> Array:
     >>> _sine_product_diagonal(jnp.array([jnp.pi / 6]), 2.0)
     Array([4., 1.], dtype=float64)
 
+    Batched angles keep their leading shape:
+
+    >>> _sine_product_diagonal(jnp.full((2, 3, 1), jnp.pi / 6), 1.0).shape
+    (2, 3, 2)
+
     """
     sin2 = qnp.sin(thetas) ** 2
-    cumprod = jnp.concat([jnp.ones(1, dtype=sin2.dtype), jnp.cumprod(sin2)])
+    ones = jnp.ones((*sin2.shape[:-1], 1), dtype=sin2.dtype)
+    cumprod = jnp.concat([ones, jnp.cumprod(sin2, axis=-1)], axis=-1)
     return scale**2 * cumprod
 
 

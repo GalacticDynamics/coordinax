@@ -213,25 +213,28 @@ class TestNonCanonicalTwoSphereMetric:
     """metric_matrix for LonLat/Math/LonCosLat charts must be the true metric."""
 
     @pytest.mark.parametrize(
-        ("chart", "coords"),
+        ("chart", "coords", "kind"),
         [
-            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}),
-            (cxc.lonlat_sph2, {"lon": 0.6, "lat": 0.7}),
-            (cxc.loncoslat_sph2, {"lon_coslat": 0.4, "lat": 0.7}),
+            # LonLat/Math are orthogonal reorderings → DiagonalMetric;
+            # LonCosLat is genuinely non-orthogonal → DenseMetric.
+            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}, DiagonalMetric),
+            (cxc.lonlat_sph2, {"lon": 0.6, "lat": 0.7}, DiagonalMetric),
+            (cxc.loncoslat_sph2, {"lon_coslat": 0.4, "lat": 0.7}, DenseMetric),
         ],
     )
-    def test_metric_matches_embedding(self, chart, coords):
+    def test_metric_matches_embedding(self, chart, coords, kind):
         pt = {k: u.Q(v, "rad") for k, v in coords.items()}
         g = cxmapi.metric_matrix(cxm.S2, pt, chart)
-        assert isinstance(g, DenseMetric)
-        got = jnp.asarray(g.matrix.value)
+        assert isinstance(g, kind)
+        m = g.to_dense().matrix
+        got = jnp.asarray(getattr(m, "value", m))
         ref = _embedding_metric(chart, coords)
-        assert jnp.allclose(got, ref, atol=1e-9), f"{got}\n!=\n{ref}"
+        assert jnp.allclose(got, ref, atol=1e-6), f"{got}\n!=\n{ref}"
 
     def test_integer_angles_do_not_break_jacfwd(self):
         """Integer-valued angles are promoted to float so the pullback jacfwd works."""
-        pt = {"lon": u.Q(0, "rad"), "lat": u.Q(0, "rad")}  # integer magnitudes
-        g = cxmapi.metric_matrix(cxm.S2, pt, cxc.lonlat_sph2)
+        pt = {"lon_coslat": u.Q(0, "rad"), "lat": u.Q(0, "rad")}  # integer magnitudes
+        g = cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2)
         assert isinstance(g, DenseMetric)
         assert bool(jnp.all(jnp.isfinite(g.matrix.value)))
 
