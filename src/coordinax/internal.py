@@ -27,8 +27,6 @@ __all__ = (
     "tree_cast_int_bool_to_float",
     "pack_uniform_unit",
     "pack_nonuniform_unit",
-    "pack_with_usys",
-    "pack_to_qmatrix",
     "pos_named_objs",
     "jax_scalar_handler",
     # Types
@@ -43,9 +41,7 @@ with install_import_hook("coordinax.internal"):
     from coordinax._src.internal import (
         jax_scalar_handler,
         pack_nonuniform_unit,
-        pack_to_qmatrix,
         pack_uniform_unit,
-        pack_with_usys,
         pos_named_objs,
         tree_cast_int_bool_to_float,
     )

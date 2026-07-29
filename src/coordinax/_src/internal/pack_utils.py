@@ -13,14 +13,10 @@ Two packing modes are supported:
 __all__ = (
     "pack_uniform_unit",
     "pack_nonuniform_unit",
-    "pack_with_usys",
-    "pack_to_qmatrix",
 )
 
 from jaxtyping import Array, ArrayLike
 from typing import Any, Final, overload
-
-import unxts.linalg as ul
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -103,64 +99,3 @@ def pack_nonuniform_unit(
         u.ustrip(AllowValue, unit, p[k]) for k, unit in zip(keys, units, strict=True)
     ]
     return jnp.stack(vals, axis=-1), units  # ty: ignore[invalid-return-type]
-
-
-def pack_with_usys(
-    p: CDict, /, keys: tuple[str, ...], usys: u.AbstractUnitSystem
-) -> tuple[Array, tuple[u.AbstractUnit, ...]]:
-    """Pack a component dictionary into an array with per-component units."""
-    units = tuple(
-        usys[dim] if (dim := u.dimension_of(p[k])) is not None else DMLS for k in keys
-    )
-    vals = [
-        u.ustrip(AllowValue, unit, p[k]) for k, unit in zip(keys, units, strict=True)
-    ]
-    return jnp.stack(vals, axis=-1), units  # ty: ignore[invalid-return-type]
-
-
-def pack_to_qmatrix(
-    p: CDict, /, keys: tuple[CKey, ...] | None = None
-) -> ul.QuantityMatrix:
-    """Pack a component dictionary into a 1-D `QuantityMatrix`.
-
-    Components are ordered according to ``keys`` and stacked along the trailing
-    axis, each carrying its own unit. Unitless components are treated as
-    dimensionless, so a mix of quantity-valued and plain-array components can be
-    packed together — the result is always a
-    {class}`~unxts.linalg.QuantityMatrix`.
-
-    Parameters
-    ----------
-    p
-        Component dictionary to pack.
-    keys
-        Ordered keys to extract and stack.
-
-    Returns
-    -------
-    QuantityMatrix
-        The packed 1-D quantity matrix, with one unit per component.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> from coordinax.internal import pack_to_qmatrix
-
-    >>> p = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
-    >>> pack_to_qmatrix(p, ("x", "y", "z"))
-    QM([1., 2., 3.], '(km, km, km)')
-
-    """
-    # Dict sorter
-    if keys is None:
-        keys = tuple(p.keys())
-    # Extract units and values, casting to DMLS when no unit is found.  This
-    # allows unitless values to be packed alongside quantity-valued ones, which
-    # is a common use case for chart data.
-    units = tuple(u_ if (u_ := u.unit_of(p[k])) is not None else DMLS for k in keys)
-    vals = [
-        u.ustrip(AllowValue, unit, p[k]) for k, unit in zip(keys, units, strict=True)
-    ]
-    # Return as QuantityMatrix
-    return ul.QuantityMatrix(jnp.stack(vals, axis=-1), unit=units)

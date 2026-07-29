@@ -186,10 +186,9 @@ To achieve the same performance as the raw array version, we can shift the pytre
 
 ```{code-cell} ipython3
 from jaxmore import structured
-from coordinax.internal import pack_with_usys
 
 structurer = structured(lambda x: cx.cdict(x, cx.cart3d),
-                        lambda x:pack_with_usys(x, cx.sph3d.components, usys)[0])
+                        lambda x:cx.carray(x, cx.sph3d.components, usys).value)
 c2s_cx_dict = jax.jit(vmap(structurer(_c2s_cx)))
 
 %time jax.block_until_ready(c2s_cx_dict(xarr))
@@ -273,7 +272,7 @@ Just like the basic JAX version, this is around 2-3x slower than the raw array v
 ```{code-cell} ipython3
 # Pre-specialize `c2s_cx`, pushing pytrees into a JIT-optimizable closure.
 structurer = structured(lambda x: cx.cdict(x, usys["length"], cx.cart3d),
-                        lambda x: pack_with_usys(x, cx.sph3d.components, usys)[0])
+                        lambda x: cx.carray(x, cx.sph3d.components, usys).value)
 c2s_cx_qdict = jax.jit(jax.vmap(structurer(_c2s_cx)))
 
 %time jax.block_until_ready(c2s_cx_qdict(xarr))
@@ -320,7 +319,7 @@ With `coordinax`, optimizing is very easy.
 ```{code-cell} ipython3
 # Pre-specialize `c2s_cx`, pushing pytrees into a JIT-optimizable closure.
 structurer = structured(lambda x: cx.Point.from_(u.Q(x, usys["length"]), cx.cart3d),
-                        lambda x: pack_with_usys(x.data, cx.sph3d.components, usys)[0])
+                        lambda x: cx.carray(x.data, cx.sph3d.components, usys).value)
 c2s_cx_vec = jax.jit(vmap(structurer(_c2s_cx)))
 
 %time jax.block_until_ready(c2s_cx_vec(xarr))

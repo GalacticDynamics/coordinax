@@ -10,12 +10,12 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.angles as cxa
+import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import as_quantity_matrix
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.metric.matrix import DenseMetric
-from coordinax.internal import pack_to_qmatrix
 
 
 @plum.dispatch
@@ -96,8 +96,8 @@ def angle_between(
     g = as_quantity_matrix(
         mm.matrix if isinstance(mm, DenseMetric) else mm.to_dense().matrix  # ty: ignore[unresolved-attribute]
     )
-    u_qm = pack_to_qmatrix(uvec, keys=chart.components)
-    v_qm = pack_to_qmatrix(vvec, keys=chart.components)
+    u_qm = cxcapi.carray(uvec, chart.components)
+    v_qm = cxcapi.carray(vvec, chart.components)
 
     inner = u_qm @ (g @ v_qm)
     uu = u_qm @ (g @ u_qm)

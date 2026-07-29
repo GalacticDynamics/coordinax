@@ -6,6 +6,7 @@ __all__ = (
     "jac_pt_map",
     # Data
     "cdict",
+    "carray",
     "guess_chart",
 )
 
@@ -339,6 +340,50 @@ def cdict(_: Any, /) -> CDict:
     >>> cx.cdict(arr, cx.cart3d)
     {'x': Array(1., dtype=float64), 'y': Array(2., dtype=float64),
      'z': Array(3., dtype=float64)}
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def carray(p: Any, /, *args: Any) -> Any:
+    """Pack a component dictionary into a ``QuantityMatrix`` (complement of `cdict`).
+
+    Parameters
+    ----------
+    p
+        A component dictionary (keys are component names, values are
+        scalars/arrays or quantities).
+    *args
+        Either ``keys`` (a tuple of component names) or a chart, optionally
+        followed by a unit or unit system controlling the packed units:
+
+        - ``carray(p, keys)`` / ``carray(p, chart)`` — one unit per component
+          (dimensionless where a component carries no unit)
+        - ``carray(p, keys, usys)`` / ``carray(p, chart, usys)`` — units resolved
+          from a unit system by each component's dimension
+        - ``carray(p, keys, unit)`` / ``carray(p, chart, unit)`` — a single
+          shared unit for every component
+
+    Returns
+    -------
+    unxts.linalg.QuantityMatrix
+        The packed 1-D quantity matrix, stacked along the trailing axis, with
+        one unit per component.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> p = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+    >>> cx.carray(p, ("x", "y", "z"))
+    QM([1., 2., 3.], '(km, km, km)')
+
+    Unitless components pack as dimensionless:
+
+    >>> cx.carray({"x": 1.0, "y": 2.0}, cx.cart2d)
+    QM([1., 2.], '(, )')
 
     """
     raise NotImplementedError  # pragma: no cover

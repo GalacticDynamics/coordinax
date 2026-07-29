@@ -78,6 +78,7 @@ __all__ = (
     "cartesian_chart",
     "guess_chart",
     "cdict",
+    "carray",
     "jac_pt_map",
     "pt_map",
     # ===========================================
@@ -227,7 +228,13 @@ with install_import_hook("coordinax.charts"):
         sph1,
         sph2,
     )
-    from coordinaxs.api.charts import cartesian_chart, cdict, guess_chart, pt_map
+    from coordinaxs.api.charts import (
+        carray,
+        cartesian_chart,
+        cdict,
+        guess_chart,
+        pt_map,
+    )
 
 
 del install_import_hook
