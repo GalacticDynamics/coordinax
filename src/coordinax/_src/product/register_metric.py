@@ -40,7 +40,7 @@ def _mm_to_qm(mm: DenseMetric | DiagonalMetric) -> ul.QuantityMatrix:
         mat = mm.matrix
     if isinstance(mat, ul.QuantityMatrix):
         return mat
-    n = mat.shape[0]
+    n = mat.shape[-1]  # component axis (leading axes are batch)
     unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
     return ul.QuantityMatrix(mat, unit=ul.UnitsMatrix(unit_tup))
 
@@ -115,18 +115,26 @@ def metric_matrix(
         for fm, fc, fp in zip(M.factors, chart.factors, parts, strict=True)
     ]
 
-    n = sum(block.shape[0] for block in factor_blocks)
+    # Component dimension is the last axis (leading axes are batch); factor
+    # blocks may carry different batch shapes (e.g. a constant identity block
+    # vs a position-dependent one), so broadcast them to a common batch shape.
+    n = sum(block.shape[-1] for block in factor_blocks)
     dtype = jnp.result_type(*(block.value.dtype for block in factor_blocks))
-    value = jnp.zeros((n, n), dtype=dtype)
+    batch_shape = jnp.broadcast_shapes(
+        *(block.value.shape[:-2] for block in factor_blocks)
+    )
+    value = jnp.zeros((*batch_shape, n, n), dtype=dtype)
 
     # Place each factor's numeric block and its (intra-block) units; record the
-    # index range of each block for the cross-factor pass below.
+    # index range of each block for the cross-factor pass below. Units are
+    # batch-independent (per component-pair), so the unit loop is unchanged.
     units: list[list[Any]] = [[u.unit("") for _ in range(n)] for _ in range(n)]
     block_ranges: list[range] = []
     offset = 0
     for block in factor_blocks:
-        block_n = block.shape[0]
-        value = value.at[offset : offset + block_n, offset : offset + block_n].set(
+        block_n = block.shape[-1]
+        # `.set` broadcasts an unbatched (d, d) block over the batch slice.
+        value = value.at[..., offset : offset + block_n, offset : offset + block_n].set(
             block.value
         )
         for i in range(block_n):

@@ -71,6 +71,16 @@ class TestDiagonalMetric:
         off_diag_mask = ~jnp.eye(n, dtype=bool)
         assert jnp.allclose(dense.matrix[off_diag_mask], 0)
 
+    def test_to_dense_batched_builds_diagonal(self) -> None:
+        """to_dense embeds a batched (B, n) diagonal into (B, n, n) matrices."""
+        # jnp.diag would *extract* a diagonal from a batched array; must build one.
+        diag = jnp.array([[1.0, 4.0, 9.0], [1.0, 16.0, 25.0]])  # (2, 3)
+        dense = DiagonalMetric(diag).to_dense()
+        m = jnp.asarray(dense.matrix)
+        assert m.shape == (2, 3, 3)
+        assert jnp.allclose(jnp.diagonal(m, axis1=-2, axis2=-1), diag)
+        assert jnp.allclose(m[0][~jnp.eye(3, dtype=bool)], 0)
+
     def test_matmul(self, diag_metric):
         n = diag_metric.ndim
         v = jnp.ones(n)

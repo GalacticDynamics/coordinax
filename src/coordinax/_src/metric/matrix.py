@@ -207,7 +207,10 @@ class DiagonalMetric(AbstractMetricMatrix):
             # the scale-factor computation in _dot_general_2d_1d can always
             # convert every term to the reference unit ref[i] = g[i,0]*v[0].
             n = self.ndim
-            dense_val = jnp.diag(self.diagonal.value)
+            # Batch-safe diagonal embedding: `jnp.diag` would *extract* a
+            # diagonal from a batched (..., n) array instead of building one.
+            dv = self.diagonal.value
+            dense_val = dv[..., :, None] * jnp.eye(n, dtype=dv.dtype)
             du = self.diagonal.unit._units  # shape (n,)
             row_units = tuple(
                 tuple(du[i] if i == j else (du[i] * du[j]) ** 0.5 for j in range(n))
@@ -216,7 +219,8 @@ class DiagonalMetric(AbstractMetricMatrix):
             return DenseMetric(
                 ul.QuantityMatrix(dense_val, unit=ul.UnitsMatrix(row_units))
             )
-        return DenseMetric(jnp.diag(self.diagonal))
+        d = jnp.asarray(self.diagonal)
+        return DenseMetric(d[..., :, None] * jnp.eye(d.shape[-1], dtype=d.dtype))
 
     def __matmul__(
         self, other: "Array | ul.QuantityMatrix | u.AbstractQuantity", /
