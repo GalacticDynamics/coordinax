@@ -223,15 +223,22 @@ class TestWithChart:
     """The `(CDict, chart)` overloads."""
 
     @pytest.mark.parametrize(
-        "guess",
-        [cxr.guess_geometry_kind, cxr.guess_rep],
+        ("guess", "expected"),
+        [
+            (cxr.guess_geometry_kind, cxr.point_geom),
+            (cxr.guess_rep, cxr.point),
+        ],
         ids=["geometry_kind", "rep"],
     )
-    def test_matching_keys(self, guess) -> None:
+    def test_matching_keys(self, guess, expected) -> None:
+        """Each function returns its own whole answer, not just the geometry.
+
+        `guess_rep` is compared against the canonical `point` rather than
+        having its geometry picked out, so a wrong basis or semantic kind
+        cannot slip through.
+        """
         d = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
-        result = guess(d, cxc.cart2d)
-        geom = result.geom_kind if isinstance(result, cxr.Representation) else result
-        assert geom == cxr.point_geom
+        assert guess(d, cxc.cart2d) == expected
 
     def test_wrong_keys_raise(self) -> None:
         d = {"a": u.Q(1, "m"), "b": u.Q(2, "m")}
