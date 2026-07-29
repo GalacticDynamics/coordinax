@@ -1,10 +1,10 @@
 """Register Quantity support for jax primitives."""
-# pylint: disable=import-error, too-many-lines
+# pylint: disable=import-error
 
 __all__: tuple[str, ...] = ()
 
 from jaxtyping import ArrayLike
-from typing import Any, TypeVar
+from typing import Any
 
 import plum
 from jax import lax
@@ -16,8 +16,6 @@ from unxt.quantity import Quantity
 from .base import AbstractDistance
 from .constants import ONE, RADIAN
 from .measures import Distance
-
-T = TypeVar("T")
 
 
 # TODO: can this be done with promotion/conversion instead?
