@@ -13,10 +13,11 @@ from unxt import AbstractQuantity as AbcQ
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .custom_types import CDict
-from coordinax.internal import pack_nonuniform_unit, pack_uniform_unit
+from coordinax.internal import pack_uniform_unit
 
 # A "point-like" input the entry funnel accepts. Faithful (each member and the
 # union), so the normalizer methods below stay in plum's method cache.
@@ -267,5 +268,4 @@ def act(
     # Act on the CDict
     nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
     # Repack CDict → QuantityMatrix
-    arr, units = pack_nonuniform_unit(nv, keys=chart.components)
-    return ul.QuantityMatrix(arr, unit=units)
+    return cast("ul.QuantityMatrix", cxcapi.carray(nv, chart.components))

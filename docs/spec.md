@@ -1002,8 +1002,7 @@ These names are importable and supported for inter-package use, but they are **n
 Semi-public API:
 
 - `pack_uniform_unit`: stack component data into an array using a shared unit
-- `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
-- `carray`: pack a component dictionary into a `QuantityMatrix` (the complement of `cdict`; unitless components are treated as dimensionless; a unit system or shared unit may be supplied)
+- `carray`: pack a component dictionary into a `QuantityMatrix` (the complement of `cdict`, preserving per-component units; unitless components are treated as dimensionless; a unit system or shared unit may be supplied)
 - `tree_cast_int_bool_to_float`: promote integer/boolean PyTree leaves to floating point (e.g. for `jax.jacfwd` inputs)
 - `pos_named_objs`, `jax_scalar_handler`: wadler-lindig rendering helpers used by `__pdoc__` implementations
 - `CDict`, `OptUSys`: the component-dictionary and optional-unit-system type aliases
