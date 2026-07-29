@@ -92,7 +92,7 @@ def _sine_product_diagonal(thetas: Array, scale: Any, /) -> Array:
     # cumprod along the *component* axis only; a bare `jnp.cumprod` flattens,
     # which silently multiplies across the batch.
     ones = jnp.ones((1, *sin2.shape[1:]), dtype=sin2.dtype)
-    cumprod = jnp.concat([ones, jnp.cumprod(sin2, axis=0)], axis=0)
+    cumprod = jnp.concatenate([ones, jnp.cumprod(sin2, axis=0)], axis=0)
     # Move the component axis to the back: (k+1, *batch) -> (*batch, k+1).
     return jnp.moveaxis(scale**2 * cumprod, 0, -1)
 
