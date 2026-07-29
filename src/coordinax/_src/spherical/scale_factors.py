@@ -51,11 +51,24 @@ def scale_factors(
     >>> [round(float(v), 4) for v in h.value]
     [0.5868, 1.0]
 
+    Bare angle values are interpreted via ``usys["angle"]`` when a unit system
+    is supplied:
+
+    >>> usys = u.unitsystem("m", "s", "kg", "deg")
+    >>> h = cxm.scale_factors(cxm.RoundMetric(2), cxc.lonlat_sph2,
+    ...                       at={"lon": 30.0, "lat": 40.0}, usys=usys)
+    >>> [round(float(v), 4) for v in h.value]
+    [0.5868, 1.0]
+
     """
-    del usys
+    # `metric_matrix` interprets bare angle values as radians, so normalise
+    # `at` through the chart's angle unit first (radians when no `usys`).
+    rad = u.unit("rad")
+    ang_unit = usys["angle"] if usys is not None else rad
+    at_rad = {k: u.uconvert_value(rad, ang_unit, v) for k, v in at.items()}
     g = cast(
         "DenseMetric",
-        cxmapi.metric_matrix(HyperSphericalManifold(metric.ndim), at, chart),
+        cxmapi.metric_matrix(HyperSphericalManifold(metric.ndim), at_rad, chart),
     )
     # `.matrix` is typed `QuantityMatrix | Array`; this rule always builds the
     # former, but handle both so the diagonal extraction is total.
