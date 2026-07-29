@@ -84,18 +84,52 @@ def arr():
 # autodiff, while Bishop integrates a parallel-transport ODE and so carries
 # integrator error. Each spec states the tolerance its own frame can hold.
 
+#: Per-assertion absolute tolerances, per type.
+#
+# These are not stylistic. Each entry is the value that assertion carried in the
+# per-type modules before they were merged, and the two columns differ by up to
+# four orders of magnitude: Frenet-Serret's `act` plumbing agrees to 1e-10
+# because it is closed-form autodiff, while Bishop's is 1e-5 because a transport
+# ODE has been integrated in between. A single shared tolerance would have to be
+# the looser of the two everywhere, which would stop Frenet-Serret regressions
+# from being caught at all.
+TOLERANCES = {
+    "frenet-serret": {
+        "location": 1e-6,  # gamma(0), straight from the curve
+        "field": 1e-5,  # a frame-field value or norm
+        "orthogonality": 1e-5,  # dot products within the triad
+        "transform_roundtrip": 1e-4,  # R_inv @ (R @ (p - g) - g_inv)
+        "double_inverse": 1e-4,
+        "act": 1e-6,  # one `act` application
+        "act_roundtrip": 1e-6,  # act then act-inverse
+        "chain": 1e-6,  # through one intermediate frame
+        "full_chain": 1e-5,  # Alice -> frame -> Alex -> frame -> Alice
+        "plumbing": 1e-10,  # jit vs eager; transition vs direct xop
+    },
+    "bishop": {
+        "location": 1e-6,
+        "field": 1e-5,
+        "orthogonality": 1e-4,
+        "transform_roundtrip": 1e-3,
+        "double_inverse": 1e-4,
+        "act": 1e-5,
+        "act_roundtrip": 1e-3,
+        "chain": 1e-3,
+        "full_chain": 1e-2,
+        "plumbing": 1e-5,
+    },
+}
+
 PARALLEL_TRANSPORT_TYPES = {
     "frenet-serret": SimpleNamespace(
         transform_cls=cxfc.FrenetSerretTransform,
         frame_cls=cxfc.FrenetSerretFrame,
         triad=("tangent", "normal", "binormal"),
-        atol=1e-5,
     ),
     "bishop": SimpleNamespace(
         transform_cls=cxfc.BishopTransform,
         frame_cls=cxfc.BishopFrame,
         triad=("tangent", "normal1", "normal2"),
-        atol=1e-3,
     ),
 }
 
@@ -104,10 +138,11 @@ PARALLEL_TRANSPORT_TYPES = {
 def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     """Every parallel-transport frame type, on the unit circle.
 
-    Yields a namespace of ``transform``, ``frame``, ``atol``, and ``fields`` --
-    a callable ``(transform, tau) -> (e0, e1, e2)`` returning that type's three
-    frame fields in right-handed order, so contract tests can be written
-    without naming ``binormal`` or ``normal2``.
+    Yields a namespace of ``transform``, ``frame``, ``tol`` (the per-assertion
+    tolerance table above) and ``fields`` -- a callable
+    ``(transform, tau) -> (e0, e1, e2)`` returning that type's three frame
+    fields in right-handed order, so contract tests can be written without
+    naming ``binormal`` or ``normal2``.
     """
     spec = PARALLEL_TRANSPORT_TYPES[request.param]
 
@@ -119,7 +154,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
         transform=spec.transform_cls.from_curve(circle),
         frame=spec.frame_cls.from_curve(cxf.Alice(), circle),
         triad=spec.triad,
-        atol=spec.atol,
+        tol=SimpleNamespace(**TOLERANCES[request.param]),
         fields=fields,
     )
 

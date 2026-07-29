@@ -39,24 +39,26 @@ class TestTriad:
     def test_location_is_the_curve(self, pt_case: SimpleNamespace) -> None:
         """The location field is gamma itself: gamma(0) = (1,0,0) km."""
         loc = pt_case.transform.location(u.Q(0, "s"))
-        np.testing.assert_allclose(loc.value, [1, 0, 0], atol=pt_case.atol)
+        np.testing.assert_allclose(loc.value, [1, 0, 0], atol=pt_case.tol.location)
 
     def test_tangent_at_zero(self, pt_case: SimpleNamespace) -> None:
         """At tau=0 on the unit circle, T = (0, 1, 0)."""
         T = pt_case.transform.tangent(u.Q(0, "s"))
-        np.testing.assert_allclose(T.value, [0, 1, 0], atol=pt_case.atol)
+        np.testing.assert_allclose(T.value, [0, 1, 0], atol=pt_case.tol.field)
 
     def test_tangent_at_pi_over_2(self, pt_case: SimpleNamespace) -> None:
         """At tau=pi/2, T = (-1, 0, 0)."""
         T = pt_case.transform.tangent(u.Q(jnp.pi / 2, "s"))
-        np.testing.assert_allclose(T.value, [-1, 0, 0], atol=pt_case.atol)
+        np.testing.assert_allclose(T.value, [-1, 0, 0], atol=pt_case.tol.field)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_unit_length(self, pt_case: SimpleNamespace, tau_val: float) -> None:
         """Every frame field is a unit vector."""
         triad = pt_case.fields(pt_case.transform, u.Q(tau_val, "s"))
         for name, e in zip(pt_case.triad, triad, strict=True):
-            assert jnp.allclose(jnp.linalg.norm(e.value), 1, atol=pt_case.atol), name
+            assert jnp.allclose(jnp.linalg.norm(e.value), 1, atol=pt_case.tol.field), (
+                name
+            )
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_orthogonality(self, pt_case: SimpleNamespace, tau_val: float) -> None:
@@ -64,9 +66,9 @@ class TestTriad:
         e0, e1, e2 = (
             e.value for e in pt_case.fields(pt_case.transform, u.Q(tau_val, "s"))
         )
-        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.atol)
-        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.atol)
-        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.atol)
+        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.tol.orthogonality)
+        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.tol.orthogonality)
+        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.tol.orthogonality)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_right_handed(self, pt_case: SimpleNamespace, tau_val: float) -> None:
@@ -74,7 +76,9 @@ class TestTriad:
         e0, e1, e2 = (
             e.value for e in pt_case.fields(pt_case.transform, u.Q(tau_val, "s"))
         )
-        np.testing.assert_allclose(jnp.cross(e0, e1), e2, atol=pt_case.atol)
+        np.testing.assert_allclose(
+            jnp.cross(e0, e1), e2, atol=pt_case.tol.orthogonality
+        )
 
 
 # ===================================================================
@@ -95,11 +99,11 @@ class TestInverse:
         """The inverse triad is itself orthonormal."""
         inv = pt_case.transform.inverse
         e0, e1, e2 = (e.value for e in pt_case.fields(inv, u.Q(tau_val, "s")))
-        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.atol)
-        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.atol)
-        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.atol)
+        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.tol.orthogonality)
+        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.tol.orthogonality)
+        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.tol.orthogonality)
         for v in (e0, e1, e2):
-            assert jnp.allclose(jnp.linalg.norm(v), 1, atol=pt_case.atol)
+            assert jnp.allclose(jnp.linalg.norm(v), 1, atol=pt_case.tol.orthogonality)
 
     @pytest.mark.parametrize("tau_val", [0, 1, jnp.pi])
     def test_roundtrip_forward_inverse(
@@ -117,7 +121,9 @@ class TestInverse:
         diff_inv = p_fwd - inv.location(tau)
         p_rec = qnp.stack([qnp.sum(e * diff_inv) for e in pt_case.fields(inv, tau)])
 
-        np.testing.assert_allclose(p_rec.value, p.value, atol=1e-3)
+        np.testing.assert_allclose(
+            p_rec.value, p.value, atol=pt_case.tol.transform_roundtrip
+        )
 
     @pytest.mark.parametrize("tau_val", [0, 1, jnp.pi])
     def test_double_inverse(self, pt_case: SimpleNamespace, tau_val: float) -> None:
@@ -125,10 +131,14 @@ class TestInverse:
         tau = u.Q(tau_val, "s")
         fwd, back = pt_case.transform, pt_case.transform.inverse.inverse
         np.testing.assert_allclose(
-            back.location(tau).value, fwd.location(tau).value, atol=1e-3
+            back.location(tau).value,
+            fwd.location(tau).value,
+            atol=pt_case.tol.double_inverse,
         )
         np.testing.assert_allclose(
-            back.tangent(tau).value, fwd.tangent(tau).value, atol=1e-3
+            back.tangent(tau).value,
+            fwd.tangent(tau).value,
+            atol=pt_case.tol.double_inverse,
         )
 
     def test_inverse_jit(self, pt_case: SimpleNamespace) -> None:
@@ -146,13 +156,13 @@ class TestJAX:
 
     def test_jit_tangent(self, pt_case: SimpleNamespace) -> None:
         T = jax.jit(pt_case.transform.tangent)(u.Q(0, "s"))
-        np.testing.assert_allclose(T.value, [0, 1, 0], atol=pt_case.atol)
+        np.testing.assert_allclose(T.value, [0, 1, 0], atol=pt_case.tol.field)
 
     def test_vmap_tangent(self, pt_case: SimpleNamespace) -> None:
         taus = u.Q(jnp.linspace(0, 2 * jnp.pi, 8), "s")
         Ts = jax.vmap(pt_case.transform.tangent)(taus)
         norms = jnp.sqrt(jnp.sum(Ts.value**2, axis=-1))
-        assert jnp.allclose(norms, 1, atol=pt_case.atol)
+        assert jnp.allclose(norms, 1, atol=pt_case.tol.field)
 
 
 # ===================================================================
@@ -167,7 +177,7 @@ class TestConstructors:
     ) -> None:
         built = type(pt_case.transform).from_(curve)
         np.testing.assert_allclose(
-            built.location(u.Q(0, "s")).value, [1, 0, 0], atol=pt_case.atol
+            built.location(u.Q(0, "s")).value, [1, 0, 0], atol=pt_case.tol.location
         )
 
     def test_frame_is_parallel_transport_frame(self, pt_case: SimpleNamespace) -> None:
@@ -208,7 +218,7 @@ class TestAct:
         """A point at gamma(0) has delta = 0, so it maps to (0,0,0)."""
         p = u.Q(jnp.array([1, 0, 0]), "km")
         result = cxfm.act(pt_case.transform, u.Q(0, "s"), p)
-        np.testing.assert_allclose(arr(result, "km"), [0, 0, 0], atol=pt_case.atol)
+        np.testing.assert_allclose(arr(result, "km"), [0, 0, 0], atol=pt_case.tol.act)
 
     def test_inverse_maps_origin_back_to_curve(
         self, pt_case: SimpleNamespace, arr
@@ -217,13 +227,17 @@ class TestAct:
         result = cxfm.act(
             pt_case.transform.inverse, u.Q(0, "s"), u.Q(jnp.array([0, 0, 0]), "km")
         )
-        np.testing.assert_allclose(arr(result, "km"), [1, 0, 0], atol=1e-3)
+        np.testing.assert_allclose(
+            arr(result, "km"), [1, 0, 0], atol=pt_case.tol.act_roundtrip
+        )
 
     def test_act_inverse_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
         tau, p = u.Q(0.5, "s"), u.Q(jnp.array([3, -1, 2]), "km")
         fwd = cxfm.act(pt_case.transform, tau, p)
         back = cxfm.act(pt_case.transform.inverse, tau, fwd)
-        np.testing.assert_allclose(arr(back, "km"), arr(p, "km"), atol=1e-3)
+        np.testing.assert_allclose(
+            arr(back, "km"), arr(p, "km"), atol=pt_case.tol.act_roundtrip
+        )
 
     def test_different_tau_gives_different_result(
         self, pt_case: SimpleNamespace, arr
@@ -240,7 +254,7 @@ class TestAct:
         eager = cxfm.act(xop, tau, p)
         jitted = jax.jit(lambda t, x: cxfm.act(xop, t, x))(tau, p)
         np.testing.assert_allclose(
-            arr(jitted, "km"), arr(eager, "km"), atol=pt_case.atol
+            arr(jitted, "km"), arr(eager, "km"), atol=pt_case.tol.plumbing
         )
 
     def test_act_vmap_over_tau(self, pt_case: SimpleNamespace) -> None:
@@ -276,7 +290,9 @@ class TestFrameTransition:
         fwd = cxf.frame_transition(cxf.Alice(), pt_case.frame)
         bwd = cxf.frame_transition(pt_case.frame, cxf.Alice())
         back = cxfm.act(bwd, tau, cxfm.act(fwd, tau, p))
-        np.testing.assert_allclose(arr(back, "km"), arr(p, "km"), atol=1e-3)
+        np.testing.assert_allclose(
+            arr(back, "km"), arr(p, "km"), atol=pt_case.tol.chain
+        )
 
     def test_alex_chain_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
         """Curve frame -> Alex -> curve frame is the identity."""
@@ -285,7 +301,9 @@ class TestFrameTransition:
         p_frame = cxfm.act(cxf.frame_transition(cxf.Alice(), frame), tau, p)
         p_alex = cxfm.act(cxf.frame_transition(frame, cxf.Alex()), tau, p_frame)
         p_back = cxfm.act(cxf.frame_transition(cxf.Alex(), frame), tau, p_alex)
-        np.testing.assert_allclose(arr(p_back, "km"), arr(p_frame, "km"), atol=1e-3)
+        np.testing.assert_allclose(
+            arr(p_back, "km"), arr(p_frame, "km"), atol=pt_case.tol.chain
+        )
 
     def test_full_chain_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
         """Alice -> frame -> Alex -> frame -> Alice recovers the original."""
@@ -297,7 +315,9 @@ class TestFrameTransition:
         op3 = cxf.frame_transition(cxf.Alex(), frame)
         op4 = cxf.frame_transition(frame, cxf.Alice())
         back = cxfm.act(op4, tau, cxfm.act(op3, tau, p_alex))
-        np.testing.assert_allclose(arr(back, "km"), arr(p, "km"), atol=1e-2)
+        np.testing.assert_allclose(
+            arr(back, "km"), arr(p, "km"), atol=pt_case.tol.full_chain
+        )
 
     def test_transition_matches_direct_transform(
         self, pt_case: SimpleNamespace, arr
@@ -308,5 +328,5 @@ class TestFrameTransition:
         np.testing.assert_allclose(
             arr(cxfm.act(op, tau, p), "km"),
             arr(cxfm.act(pt_case.transform, tau, p), "km"),
-            atol=pt_case.atol,
+            atol=pt_case.tol.plumbing,
         )

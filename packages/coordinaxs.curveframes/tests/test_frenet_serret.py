@@ -92,7 +92,7 @@ class TestFrenetSerretOpaqueUnits:
     def test_inverse_location_at_zero(self, circle_yr_fs: cxfc.FrenetSerretTransform):
         """gamma=(5,0,0) km, T=(0,1,0), N=(-1,0,0) => inv_location = (0, 5, 0)."""
         loc = circle_yr_fs.inverse.location(u.Q(0, "yr"))
-        np.testing.assert_allclose(loc.value, [0, 5, 0], atol=1e-3)
+        np.testing.assert_allclose(loc.value, [0, 5, 0], atol=1e-5)
 
 
 class TestFrenetSerretAct:
