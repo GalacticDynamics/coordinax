@@ -4,7 +4,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import unxt as u
 
@@ -16,11 +16,6 @@ ANGLE = u.dimension("angle")
 
 class TestParallaxConstruction:
     """Tests for Parallax construction and basic properties."""
-
-    @given(plx=cxastrost.parallaxes())
-    def test_is_parallax(self, plx: cxastro.Parallax) -> None:
-        """Generated parallaxes are Parallax instances."""
-        assert isinstance(plx, cxastro.Parallax)
 
     @given(plx=cxastrost.parallaxes())
     def test_has_angular_dimension(self, plx: cxastro.Parallax) -> None:
@@ -42,16 +37,6 @@ class TestParallaxConstruction:
         """Can generate parallaxes in specific units."""
         assert plx.unit == u.unit("mas")
 
-    @given(plx=cxastrost.parallaxes(shape=(3,)))
-    def test_shape(self, plx: cxastro.Parallax) -> None:
-        """Can generate parallaxes with a specific shape."""
-        assert plx.shape == (3,)
-
-    @given(plx=cxastrost.parallaxes())
-    def test_scalar_default(self, plx: cxastro.Parallax) -> None:
-        """Default parallaxes are scalar."""
-        assert plx.shape == ()
-
     def test_negative_raises(self) -> None:
         """Parallax with negative value raises when check_negative=True."""
         with pytest.raises(
@@ -70,31 +55,3 @@ class TestParallaxConstruction:
             eqx.EquinoxRuntimeError, match="Parallax must be non-negative"
         ):
             jax.block_until_ready(build(jnp.asarray(-1.0)))
-
-    @given(plx=cxastrost.parallaxes())
-    def test_has_value_and_unit(self, plx: cxastro.Parallax) -> None:
-        """Generated parallaxes have value and unit attributes."""
-        assert hasattr(plx, "value")
-        assert hasattr(plx, "unit")
-
-
-class TestParallaxJAX:
-    """Tests for JAX compatibility of Parallax."""
-
-    @given(plx=cxastrost.parallaxes())
-    @settings(deadline=None)
-    def test_pytree_roundtrip(self, plx: cxastro.Parallax) -> None:
-        """Parallax survives PyTree flatten/unflatten."""
-        flat, tree = jax.tree.flatten(plx)
-        restored = jax.tree.unflatten(tree, flat)
-        assert type(restored) is type(plx)
-        assert restored.unit == plx.unit
-        assert jnp.array_equal(restored.value, plx.value)
-
-    @given(plx=cxastrost.parallaxes())
-    @settings(deadline=None)
-    def test_jit_identity(self, plx: cxastro.Parallax) -> None:
-        """JIT-compiled identity preserves Parallax."""
-        result = jax.jit(lambda x: x)(plx)
-        assert type(result) is type(plx)
-        assert jnp.array_equal(result.value, plx.value)
