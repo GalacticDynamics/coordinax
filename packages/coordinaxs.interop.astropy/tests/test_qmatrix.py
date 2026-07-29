@@ -1,4 +1,6 @@
-"""Tests for coordinaxs.interop.astropy qmatrix converters."""
+"""Converters between `unxts.linalg` matrix types and Astropy structured units."""
+
+__all__: tuple[str, ...] = ()
 
 import astropy.units as apyu
 import jax.numpy as jnp
@@ -9,94 +11,69 @@ import pytest
 import unxt as u
 import unxts.linalg as ul
 
+#: Unit layouts, exercised in both directions.
+UNIT_LAYOUTS = [
+    pytest.param(("m", "s", "kg"), id="1d"),
+    pytest.param((("m", "s"), ("kg", "rad")), id="2d"),
+]
 
-class TestUnitsMatrixToStructuredUnit:
-    """Tests for UnitsMatrix → apyu.StructuredUnit conversion."""
-
-    def test_1d(self) -> None:
-        umat = ul.UnitsMatrix(("m", "s", "kg"))
-        result = plum.convert(umat, apyu.StructuredUnit)
-        assert isinstance(result, apyu.StructuredUnit)
-        assert result == apyu.StructuredUnit(("m", "s", "kg"))
-
-    def test_1d_values(self) -> None:
-        umat = ul.UnitsMatrix(("km", "s"))
-        result = plum.convert(umat, apyu.StructuredUnit)
-        vals = result.values()
-        assert vals[0] == apyu.Unit("km")
-        assert vals[1] == apyu.Unit("s")
-
-    def test_2d(self) -> None:
-        umat = ul.UnitsMatrix((("m", "s"), ("kg", "rad")))
-        result = plum.convert(umat, apyu.StructuredUnit)
-        assert isinstance(result, apyu.StructuredUnit)
-        assert result == apyu.StructuredUnit((("m", "s"), ("kg", "rad")))
-
-    def test_roundtrip_via_structured_unit(self) -> None:
-        """UnitsMatrix → StructuredUnit → UnitsMatrix is identity."""
-        umat = ul.UnitsMatrix(("m", "s", "kg"))
-        su = plum.convert(umat, apyu.StructuredUnit)
-        result = plum.convert(su, ul.UnitsMatrix)
-        assert result == umat
+#: The same layouts, paired with the shape they must round-trip to.
+UNIT_LAYOUTS_WITH_SHAPE = [
+    pytest.param(("m", "s", "kg"), (3,), id="1d"),
+    pytest.param((("m", "s"), ("kg", "rad")), (2, 2), id="2d"),
+]
 
 
-class TestStructuredUnitToUnitsMatrix:
-    """Tests for apyu.StructuredUnit → UnitsMatrix conversion."""
+@pytest.mark.parametrize("units", UNIT_LAYOUTS)
+def test_units_matrix_to_structured_unit(units: tuple) -> None:
+    """UnitsMatrix -> StructuredUnit preserves layout and units."""
+    result = plum.convert(ul.UnitsMatrix(units), apyu.StructuredUnit)
 
-    def test_1d(self) -> None:
-        su = apyu.StructuredUnit(("m", "s", "kg"))
-        result = plum.convert(su, ul.UnitsMatrix)
-        assert isinstance(result, ul.UnitsMatrix)
-        assert result.shape == (3,)
+    assert isinstance(result, apyu.StructuredUnit)
+    assert result == apyu.StructuredUnit(units)
 
-    def test_1d_units(self) -> None:
-        su = apyu.StructuredUnit(("m", "s", "kg"))
-        result = plum.convert(su, ul.UnitsMatrix)
 
-        assert result[0] == u.unit("m")
-        assert result[1] == u.unit("s")
-        assert result[2] == u.unit("kg")
+@pytest.mark.parametrize(("units", "shape"), UNIT_LAYOUTS_WITH_SHAPE)
+def test_structured_unit_to_units_matrix(units: tuple, shape: tuple) -> None:
+    """StructuredUnit -> UnitsMatrix preserves layout and units."""
+    result = plum.convert(apyu.StructuredUnit(units), ul.UnitsMatrix)
 
-    def test_2d(self) -> None:
-        su = apyu.StructuredUnit((("m", "s"), ("kg", "rad")))
-        result = plum.convert(su, ul.UnitsMatrix)
-        assert isinstance(result, ul.UnitsMatrix)
-        assert result.shape == (2, 2)
+    assert isinstance(result, ul.UnitsMatrix)
+    assert result.shape == shape
+    for index in np.ndindex(shape):
+        expected = units
+        for i in index:
+            expected = expected[i]
+        assert result[index] == u.unit(expected)
 
-    def test_2d_units(self) -> None:
-        su = apyu.StructuredUnit((("m", "s"), ("kg", "rad")))
-        result = plum.convert(su, ul.UnitsMatrix)
 
-        assert result[0, 0] == u.unit("m")
-        assert result[0, 1] == u.unit("s")
-        assert result[1, 0] == u.unit("kg")
-        assert result[1, 1] == u.unit("rad")
+@pytest.mark.parametrize("units", UNIT_LAYOUTS)
+def test_units_matrix_roundtrip(units: tuple) -> None:
+    """UnitsMatrix -> StructuredUnit -> UnitsMatrix is the identity."""
+    umat = ul.UnitsMatrix(units)
+    assert plum.convert(plum.convert(umat, apyu.StructuredUnit), ul.UnitsMatrix) == umat
 
-    def test_roundtrip_via_unitsmatrix(self) -> None:
-        """StructuredUnit → UnitsMatrix → StructuredUnit is identity."""
-        su = apyu.StructuredUnit(("m", "s", "kg"))
-        umat = plum.convert(su, ul.UnitsMatrix)
-        result = plum.convert(umat, apyu.StructuredUnit)
-        assert result == su
+
+@pytest.mark.parametrize("units", UNIT_LAYOUTS)
+def test_structured_unit_roundtrip(units: tuple) -> None:
+    """StructuredUnit -> UnitsMatrix -> StructuredUnit is the identity."""
+    su = apyu.StructuredUnit(units)
+    assert plum.convert(plum.convert(su, ul.UnitsMatrix), apyu.StructuredUnit) == su
 
 
 class TestQuantityMatrixToAstropyQuantity:
-    """Tests for QuantityMatrix → apyu.Quantity conversion."""
+    """QuantityMatrix -> apyu.Quantity carries values and structured units."""
 
-    def test_1d(self) -> None:
+    def test_type_and_unit(self) -> None:
         qmat = ul.QuantityMatrix(jnp.array([1, 2]), unit=("km", "s"))
         result = plum.convert(qmat, apyu.Quantity)
+
         assert isinstance(result, apyu.Quantity)
-
-    def test_1d_unit(self) -> None:
-        qmat = ul.QuantityMatrix(jnp.array([1, 2]), unit=("km", "s"))
-        result = plum.convert(qmat, apyu.Quantity)
         assert result.unit == apyu.StructuredUnit(("km", "s"))
 
-    def test_1d_values(self) -> None:
+    def test_values(self) -> None:
         qmat = ul.QuantityMatrix(jnp.array([3, 4]), unit=("m", "kg"))
-        result = plum.convert(qmat, apyu.Quantity)
+        arr = np.array(plum.convert(qmat, apyu.Quantity))
 
-        arr = np.array(result)
         assert float(arr["f0"]) == pytest.approx(3)
         assert float(arr["f1"]) == pytest.approx(4)

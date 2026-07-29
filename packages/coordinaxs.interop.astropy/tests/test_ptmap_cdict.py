@@ -1,25 +1,23 @@
-"""Tests: pt_map (CDict) vs Astropy representation transforms.
+"""`coordinax.charts.pt_map` on CDicts agrees with Astropy's `represent_as`.
 
-These tests verify that ``coordinax.charts.pt_map`` operating on
-plain ``CDict`` dictionaries produces the same numerical results as Astropy's
-``represent_as()`` method for all supported chart / representation pairs.
+Every supported 3-D chart is checked against its Astropy counterpart, in both
+directions, for a known point and for arbitrary Hypothesis-generated points.
+The chart <-> representation correspondence is the whole of the test:
 
-Scope
------
-* Only ``CDict`` (dict of ``unxt.Quantity``) inputs are tested here.
-* ``coordinax.vectors.Point`` <-> Astropy comparisons live in a separate test module.
+* ``cart3d``       <-> ``CartesianRepresentation``        (x, y, z)
+* ``cyl3d``        <-> ``CylindricalRepresentation``      (rho, phi, z)
+* ``sph3d``        <-> ``PhysicsSphericalRepresentation`` (r, theta, phi)
+* ``lonlat_sph3d`` <-> ``SphericalRepresentation``        (lon, lat, distance)
 
-Chart <-> Astropy representation mapping
----------------------------------------
-* ``cart3d``      <-> ``CartesianRepresentation``        (keys: x, y, z)
-* ``cyl3d``       <-> ``CylindricalRepresentation``      (keys: rho, phi, z)
-* ``sph3d``       <-> ``PhysicsSphericalRepresentation`` (keys: r, theta, phi)
-* ``lonlat_sph3d``<-> ``SphericalRepresentation``        (keys: lon, lat, distance)
+Only CDict (dict of `unxt.Quantity`) inputs are covered here;
+`coordinax.vectors.Point` <-> Astropy lives in `test_vectors.py`.
 """
 
 __all__: tuple[str, ...] = ()
 
 import math
+
+from types import SimpleNamespace
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
@@ -39,15 +37,13 @@ from coordinaxs.interop.astropy import (
 )
 
 # ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
+# Strategies
+#
 # allow_subnormal=False: JAX flushes subnormals to zero (FTZ) while NumPy keeps
 # them, causing divergence in atan2 near the origin.
-def make_strat(
-    unit: str, lower: float, upper: float
-) -> st.SearchStrategy[u.AbstractQuantity]:
+
+
+def _q(unit: str, lower: float, upper: float) -> st.SearchStrategy:
     return ust.quantities(
         unit,
         dtype=jnp.float64,
@@ -55,380 +51,129 @@ def make_strat(
     )
 
 
-_pos_km = make_strat("km", 0.5, 100)
-_any_km = make_strat("km", -100, 100)
-_phi_rad = make_strat("rad", -3, 3)
-# 0.1 avoids the polar singularity; 3.04 avoids theta≈π (south pole)
-_theta_rad = make_strat("rad", 0.1, 3.04)
-_lon_rad = make_strat("rad", -3, 3)
-_lat_rad = make_strat("rad", -1.5, 1.5)
+POS_KM = _q("km", 0.5, 100)
+ANY_KM = _q("km", -100, 100)
+AZIMUTH_RAD = _q("rad", -3, 3)
+# 0.1 avoids the polar singularity; 3.04 avoids theta ~ pi (south pole)
+POLAR_RAD = _q("rad", 0.1, 3.04)
+LAT_RAD = _q("rad", -1.5, 1.5)
+
+#: Components Astropy normalises onto a different branch than `atan2` does.
+ANGULAR_COMPONENTS = frozenset({"phi", "lon"})
+
+
+def _off_axis(p: dict) -> bool:
+    """`atan2(y, x)` is undefined on the z-axis, and r=0 is degenerate."""
+    x, y, z = (float(p[k].value) for k in ("x", "y", "z"))
+    return math.hypot(x, y) > 1e-6 and math.hypot(x, y, z) > 1e-6
+
+
+CHARTS = {
+    "cart3d": SimpleNamespace(
+        chart=cxc.cart3d,
+        to_astropy=convert_cx_cdict_to_astropy_cartrep,
+        astropy_rep=apyc.CartesianRepresentation,
+        known={"x": u.Q(3, "km"), "y": u.Q(4, "km"), "z": u.Q(0, "km")},
+        strategies={"x": ANY_KM, "y": ANY_KM, "z": ANY_KM},
+        assume=_off_axis,
+    ),
+    "cyl3d": SimpleNamespace(
+        chart=cxc.cyl3d,
+        to_astropy=convert_cx_cdict_to_astropy_cylrep,
+        astropy_rep=apyc.CylindricalRepresentation,
+        known={"rho": u.Q(5, "km"), "phi": u.Q(0.6435942, "rad"), "z": u.Q(1, "km")},
+        strategies={"rho": POS_KM, "phi": AZIMUTH_RAD, "z": ANY_KM},
+        assume=None,
+    ),
+    "sph3d": SimpleNamespace(
+        chart=cxc.sph3d,
+        to_astropy=convert_cx_cdict_to_astropy_physsphrep,
+        astropy_rep=apyc.PhysicsSphericalRepresentation,
+        known={"r": u.Q(5, "km"), "theta": u.Q(1, "rad"), "phi": u.Q(0.6435942, "rad")},
+        strategies={"r": POS_KM, "theta": POLAR_RAD, "phi": AZIMUTH_RAD},
+        assume=None,
+    ),
+    "lonlat_sph3d": SimpleNamespace(
+        chart=cxc.lonlat_sph3d,
+        to_astropy=convert_cx_cdict_to_astropy_sphrep,
+        astropy_rep=apyc.SphericalRepresentation,
+        known={
+            "lon": u.Q(0.6435942, "rad"),
+            "lat": u.Q(0.4, "rad"),
+            "distance": u.Q(5, "km"),
+        },
+        strategies={"lon": AZIMUTH_RAD, "lat": LAT_RAD, "distance": POS_KM},
+        assume=None,
+    ),
+}
+
+PAIRS = [(src, dst) for src in CHARTS for dst in CHARTS if src != dst]
+PAIR_IDS = [f"{src}->{dst}" for src, dst in PAIRS]
+
+
+# ---------------------------------------------------------------------------
+# Comparison
 
 
 def _approx_equal(got: u.AbstractQuantity, apy: apyu.Quantity, *, rel=1e-5) -> None:
-    """Assert ``got`` ≈ ``apy`` after converting both to a common unit."""
-    got_val = float(u.ustrip(apy.unit, got))
-    apy_val = float(apy.to(apy.unit).value)
-    assert got_val == pytest.approx(apy_val, rel=rel, abs=1e-7)
+    """Assert ``got`` ~= ``apy`` after converting both to a common unit."""
+    assert float(u.ustrip(apy.unit, got)) == pytest.approx(
+        float(apy.to(apy.unit).value), rel=rel, abs=1e-7
+    )
 
 
 def _approx_angle_equal(
     got: u.AbstractQuantity, apy: apyu.Quantity, *, abs_tol: float = 1e-5
 ) -> None:
-    """Assert ``got`` ≈ ``apy`` modulo 2π.
+    """Assert ``got`` ~= ``apy`` modulo 2*pi.
 
-    Astropy normalises azimuthal angles (phi / lon) to ``[0, 2π)`` via its
-    ``Longitude`` type, while coordinax returns values from ``atan2`` in
-    ``(-π, π]``.  Both representations are physically identical; we compare
-    the *circular* distance between the two angles.
+    Astropy normalises azimuthal angles (phi / lon) onto ``[0, 2pi)`` via its
+    ``Longitude`` type, while coordinax returns ``atan2`` values in
+    ``(-pi, pi]``. Both are physically identical, so compare the *circular*
+    distance between them.
     """
     got_val = float(u.ustrip(apy.unit, got))
     apy_val = float(apy.to(apy.unit).value)
-
-    # Convert to radians for the modular comparison
     scale = math.pi / 180 if apy.unit == "deg" else 1
-
     diff_rad = (got_val - apy_val) * scale
-    # Reduce to (-π, π]
-    diff_rad = (diff_rad + math.pi) % (2 * math.pi) - math.pi
+    diff_rad = (diff_rad + math.pi) % (2 * math.pi) - math.pi  # reduce to (-pi, pi]
     assert abs(diff_rad) == pytest.approx(0, abs=abs_tol)
 
 
-# ---------------------------------------------------------------------------
-# Tests: Cartesian → other charts
-# ---------------------------------------------------------------------------
+def _assert_pt_map_matches_astropy(point: dict, src: str, dst: str) -> None:
+    """`pt_map(point, src, dst)` equals Astropy's `represent_as` on every key."""
+    source, target = CHARTS[src], CHARTS[dst]
 
+    got = cxc.pt_map(point, source.chart, target.chart)
+    ref = source.to_astropy(point).represent_as(target.astropy_rep)
 
-class TestCart3DToOther:
-    """pt_map(cart3d → X) matches Astropy represent_as(X)."""
-
-    @pytest.fixture
-    def point(self):
-        return {"x": u.Q(3, "km"), "y": u.Q(4, "km"), "z": u.Q(0, "km")}
-
-    def test_cart3d_to_cyl3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.cart3d, cxc.cyl3d)
-        ref = convert_cx_cdict_to_astropy_cartrep(point).represent_as(
-            apyc.CylindricalRepresentation
-        )
-
-        _approx_equal(got["rho"], ref.rho)
-        _approx_angle_equal(got["phi"], ref.phi)
-        _approx_equal(got["z"], ref.z)
-
-    def test_cart3d_to_sph3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.cart3d, cxc.sph3d)
-        ref = convert_cx_cdict_to_astropy_cartrep(point).represent_as(
-            apyc.PhysicsSphericalRepresentation
-        )
-
-        _approx_equal(got["r"], ref.r)
-        _approx_equal(got["theta"], ref.theta)
-        _approx_angle_equal(got["phi"], ref.phi)
-
-    def test_cart3d_to_lonlat_sph3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.cart3d, cxc.lonlat_sph3d)
-        ref = convert_cx_cdict_to_astropy_cartrep(point).represent_as(
-            apyc.SphericalRepresentation
-        )
-
-        _approx_angle_equal(got["lon"], ref.lon)
-        _approx_equal(got["lat"], ref.lat)
-        _approx_equal(got["distance"], ref.distance)
-
-    @given(x=_any_km, y=_any_km, z=_any_km)
-    @settings(deadline=None)
-    def test_cart3d_to_cyl3d_hypothesis(self, x, y, z) -> None:
-        # phi = atan2(y, x) is undefined (or implementation-dependent) when x=y=0
-        assume(math.hypot(x.value, y.value) > 1e-6)
-        p = {"x": x, "y": y, "z": z}
-        got = cxc.pt_map(p, cxc.cart3d, cxc.cyl3d)
-        ref = convert_cx_cdict_to_astropy_cartrep(p).represent_as(
-            apyc.CylindricalRepresentation
-        )
-
-        _approx_equal(got["rho"], ref.rho)
-        _approx_angle_equal(got["phi"], ref.phi)
-        _approx_equal(got["z"], ref.z)
-
-    @given(x=_any_km, y=_any_km, z=_pos_km)
-    @settings(deadline=None)
-    def test_cart3d_to_sph3d_hypothesis(self, x, y, z) -> None:
-        # phi = atan2(y, x) is undefined when x=y=0 (along z-axis)
-        assume(math.hypot(x.value, y.value) > 1e-6)
-        p = {"x": x, "y": y, "z": z}
-        got = cxc.pt_map(p, cxc.cart3d, cxc.sph3d)
-        ref = convert_cx_cdict_to_astropy_cartrep(p).represent_as(
-            apyc.PhysicsSphericalRepresentation
-        )
-
-        _approx_equal(got["r"], ref.r)
-        _approx_equal(got["theta"], ref.theta)
-        _approx_angle_equal(got["phi"], ref.phi)
-
-    @given(x=_any_km, y=_any_km, z=_any_km)
-    @settings(deadline=None)
-    def test_cart3d_to_lonlat_sph3d_hypothesis(self, x, y, z) -> None:
-        # lon = atan2(y, x) is undefined at poles (x=y=0); r=0 is degenerate
-        assume(
-            math.hypot(x.value, y.value) > 1e-6
-            and math.hypot(x.value, y.value, float(z.value)) > 1e-6
-        )
-        p = {"x": x, "y": y, "z": z}
-        got = cxc.pt_map(p, cxc.cart3d, cxc.lonlat_sph3d)
-        ref = convert_cx_cdict_to_astropy_cartrep(p).represent_as(
-            apyc.SphericalRepresentation
-        )
-
-        _approx_angle_equal(got["lon"], ref.lon)
-        _approx_equal(got["lat"], ref.lat)
-        _approx_equal(got["distance"], ref.distance)
+    for key in target.chart.components:
+        expected = getattr(ref, key)
+        if key in ANGULAR_COMPONENTS:
+            _approx_angle_equal(got[key], expected)
+        else:
+            _approx_equal(got[key], expected)
 
 
 # ---------------------------------------------------------------------------
-# Tests: Cylindrical → other charts
-# ---------------------------------------------------------------------------
+# Tests
 
 
-class TestCyl3DToOther:
-    """pt_map(cyl3d → X) matches Astropy represent_as(X)."""
-
-    @pytest.fixture
-    def point(self):
-        return {"rho": u.Q(5, "km"), "phi": u.Q(0.6435942, "rad"), "z": u.Q(1, "km")}
-
-    def test_cyl3d_to_cart3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.cyl3d, cxc.cart3d)
-        ref = convert_cx_cdict_to_astropy_cylrep(point).represent_as(
-            apyc.CartesianRepresentation
-        )
-
-        _approx_equal(got["x"], ref.x)
-        _approx_equal(got["y"], ref.y)
-        _approx_equal(got["z"], ref.z)
-
-    def test_cyl3d_to_sph3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.cyl3d, cxc.sph3d)
-        ref = convert_cx_cdict_to_astropy_cylrep(point).represent_as(
-            apyc.PhysicsSphericalRepresentation
-        )
-
-        _approx_equal(got["r"], ref.r)
-        _approx_equal(got["theta"], ref.theta)
-        _approx_angle_equal(got["phi"], ref.phi)
-
-    def test_cyl3d_to_lonlat_sph3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.cyl3d, cxc.lonlat_sph3d)
-        ref = convert_cx_cdict_to_astropy_cylrep(point).represent_as(
-            apyc.SphericalRepresentation
-        )
-
-        _approx_angle_equal(got["lon"], ref.lon)
-        _approx_equal(got["lat"], ref.lat)
-        _approx_equal(got["distance"], ref.distance)
-
-    @given(rho=_pos_km, phi=_phi_rad, z=_any_km)
-    @settings(deadline=None)
-    def test_cyl3d_to_cart3d_hypothesis(self, rho, phi, z) -> None:
-        p = {"rho": rho, "phi": phi, "z": z}
-        got = cxc.pt_map(p, cxc.cyl3d, cxc.cart3d)
-        ref = convert_cx_cdict_to_astropy_cylrep(p).represent_as(
-            apyc.CartesianRepresentation
-        )
-
-        _approx_equal(got["x"], ref.x)
-        _approx_equal(got["y"], ref.y)
-        _approx_equal(got["z"], ref.z)
-
-    @given(rho=_pos_km, phi=_phi_rad, z=_any_km)
-    @settings(deadline=None)
-    def test_cyl3d_to_sph3d_hypothesis(self, rho, phi, z) -> None:
-        p = {"rho": rho, "phi": phi, "z": z}
-        got = cxc.pt_map(p, cxc.cyl3d, cxc.sph3d)
-        ref = convert_cx_cdict_to_astropy_cylrep(p).represent_as(
-            apyc.PhysicsSphericalRepresentation
-        )
-
-        _approx_equal(got["r"], ref.r)
-        _approx_equal(got["theta"], ref.theta)
-        _approx_angle_equal(got["phi"], ref.phi)
-
-    @given(rho=_pos_km, phi=_phi_rad, z=_any_km)
-    @settings(deadline=None)
-    def test_cyl3d_to_lonlat_sph3d_hypothesis(self, rho, phi, z) -> None:
-        p = {"rho": rho, "phi": phi, "z": z}
-        got = cxc.pt_map(p, cxc.cyl3d, cxc.lonlat_sph3d)
-        ref = convert_cx_cdict_to_astropy_cylrep(p).represent_as(
-            apyc.SphericalRepresentation
-        )
-
-        _approx_angle_equal(got["lon"], ref.lon)
-        _approx_equal(got["lat"], ref.lat)
-        _approx_equal(got["distance"], ref.distance)
+@pytest.mark.parametrize(("src", "dst"), PAIRS, ids=PAIR_IDS)
+def test_known_point_matches_astropy(src: str, dst: str) -> None:
+    """A fixed, human-checkable point maps the same way Astropy maps it."""
+    _assert_pt_map_matches_astropy(CHARTS[src].known, src, dst)
 
 
-# ---------------------------------------------------------------------------
-# Tests: PhysicsSpherical → other charts
-# ---------------------------------------------------------------------------
-
-
-class TestSph3DToOther:
-    """pt_map(sph3d → X) matches Astropy represent_as(X)."""
-
-    @pytest.fixture
-    def point(self):
-        return {"r": u.Q(5, "km"), "theta": u.Q(1, "rad"), "phi": u.Q(0.6435942, "rad")}
-
-    def test_sph3d_to_cart3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.sph3d, cxc.cart3d)
-        ref = convert_cx_cdict_to_astropy_physsphrep(point).represent_as(
-            apyc.CartesianRepresentation
-        )
-
-        _approx_equal(got["x"], ref.x)
-        _approx_equal(got["y"], ref.y)
-        _approx_equal(got["z"], ref.z)
-
-    def test_sph3d_to_cyl3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.sph3d, cxc.cyl3d)
-        ref = convert_cx_cdict_to_astropy_physsphrep(point).represent_as(
-            apyc.CylindricalRepresentation
-        )
-
-        _approx_equal(got["rho"], ref.rho)
-        _approx_angle_equal(got["phi"], ref.phi)
-        _approx_equal(got["z"], ref.z)
-
-    def test_sph3d_to_lonlat_sph3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.sph3d, cxc.lonlat_sph3d)
-        ref = convert_cx_cdict_to_astropy_physsphrep(point).represent_as(
-            apyc.SphericalRepresentation
-        )
-
-        _approx_angle_equal(got["lon"], ref.lon)
-        _approx_equal(got["lat"], ref.lat)
-        _approx_equal(got["distance"], ref.distance)
-
-    @given(r=_pos_km, theta=_theta_rad, phi=_phi_rad)
-    @settings(deadline=None)
-    def test_sph3d_to_cart3d_hypothesis(self, r, theta, phi) -> None:
-        p = {"r": r, "theta": theta, "phi": phi}
-        got = cxc.pt_map(p, cxc.sph3d, cxc.cart3d)
-        ref = convert_cx_cdict_to_astropy_physsphrep(p).represent_as(
-            apyc.CartesianRepresentation
-        )
-
-        _approx_equal(got["x"], ref.x)
-        _approx_equal(got["y"], ref.y)
-        _approx_equal(got["z"], ref.z)
-
-    @given(r=_pos_km, theta=_theta_rad, phi=_phi_rad)
-    @settings(deadline=None)
-    def test_sph3d_to_cyl3d_hypothesis(self, r, theta, phi) -> None:
-        p = {"r": r, "theta": theta, "phi": phi}
-        got = cxc.pt_map(p, cxc.sph3d, cxc.cyl3d)
-        ref = convert_cx_cdict_to_astropy_physsphrep(p).represent_as(
-            apyc.CylindricalRepresentation
-        )
-
-        _approx_equal(got["rho"], ref.rho)
-        _approx_angle_equal(got["phi"], ref.phi)
-        _approx_equal(got["z"], ref.z)
-
-    @given(r=_pos_km, theta=_theta_rad, phi=_phi_rad)
-    @settings(deadline=None)
-    def test_sph3d_to_lonlat_sph3d_hypothesis(self, r, theta, phi) -> None:
-        p = {"r": r, "theta": theta, "phi": phi}
-        got = cxc.pt_map(p, cxc.sph3d, cxc.lonlat_sph3d)
-        ref = convert_cx_cdict_to_astropy_physsphrep(p).represent_as(
-            apyc.SphericalRepresentation
-        )
-
-        _approx_angle_equal(got["lon"], ref.lon)
-        _approx_equal(got["lat"], ref.lat)
-        _approx_equal(got["distance"], ref.distance)
-
-
-# ---------------------------------------------------------------------------
-# Tests: LonLatSpherical → other charts
-# ---------------------------------------------------------------------------
-
-
-class TestLonLatSph3DToOther:
-    """pt_map(lonlat_sph3d → X) matches Astropy represent_as(X)."""
-
-    @pytest.fixture
-    def point(self):
-        return {
-            "lon": u.Q(0.6435942, "rad"),
-            "lat": u.Q(0.4, "rad"),
-            "distance": u.Q(5, "km"),
-        }
-
-    def test_lonlat_to_cart3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.lonlat_sph3d, cxc.cart3d)
-        ref = convert_cx_cdict_to_astropy_sphrep(point).represent_as(
-            apyc.CartesianRepresentation
-        )
-
-        _approx_equal(got["x"], ref.x)
-        _approx_equal(got["y"], ref.y)
-        _approx_equal(got["z"], ref.z)
-
-    def test_lonlat_to_cyl3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.lonlat_sph3d, cxc.cyl3d)
-        ref = convert_cx_cdict_to_astropy_sphrep(point).represent_as(
-            apyc.CylindricalRepresentation
-        )
-
-        _approx_equal(got["rho"], ref.rho)
-        _approx_angle_equal(got["phi"], ref.phi)
-        _approx_equal(got["z"], ref.z)
-
-    def test_lonlat_to_sph3d_known(self, point) -> None:
-        got = cxc.pt_map(point, cxc.lonlat_sph3d, cxc.sph3d)
-        ref = convert_cx_cdict_to_astropy_sphrep(point).represent_as(
-            apyc.PhysicsSphericalRepresentation
-        )
-
-        _approx_equal(got["r"], ref.r)
-        _approx_equal(got["theta"], ref.theta)
-        _approx_angle_equal(got["phi"], ref.phi)
-
-    @given(lon=_lon_rad, lat=_lat_rad, distance=_pos_km)
-    @settings(deadline=None)
-    def test_lonlat_to_cart3d_hypothesis(self, lon, lat, distance) -> None:
-        p = {"lon": lon, "lat": lat, "distance": distance}
-        got = cxc.pt_map(p, cxc.lonlat_sph3d, cxc.cart3d)
-        ref = convert_cx_cdict_to_astropy_sphrep(p).represent_as(
-            apyc.CartesianRepresentation
-        )
-
-        _approx_equal(got["x"], ref.x)
-        _approx_equal(got["y"], ref.y)
-        _approx_equal(got["z"], ref.z)
-
-    @given(lon=_lon_rad, lat=_lat_rad, distance=_pos_km)
-    @settings(deadline=None)
-    def test_lonlat_to_cyl3d_hypothesis(self, lon, lat, distance) -> None:
-        p = {"lon": lon, "lat": lat, "distance": distance}
-        got = cxc.pt_map(p, cxc.lonlat_sph3d, cxc.cyl3d)
-        ref = convert_cx_cdict_to_astropy_sphrep(p).represent_as(
-            apyc.CylindricalRepresentation
-        )
-
-        _approx_angle_equal(got["phi"], ref.phi)
-        _approx_equal(got["rho"], ref.rho)
-        _approx_equal(got["z"], ref.z)
-
-    @given(lon=_lon_rad, lat=_lat_rad, distance=_pos_km)
-    @settings(deadline=None)
-    def test_lonlat_to_sph3d_hypothesis(self, lon, lat, distance) -> None:
-        p = {"lon": lon, "lat": lat, "distance": distance}
-        got = cxc.pt_map(p, cxc.lonlat_sph3d, cxc.sph3d)
-        ref = convert_cx_cdict_to_astropy_sphrep(p).represent_as(
-            apyc.PhysicsSphericalRepresentation
-        )
-
-        _approx_equal(got["r"], ref.r)
-        _approx_equal(got["theta"], ref.theta)
-        _approx_angle_equal(got["phi"], ref.phi)
+@pytest.mark.parametrize(("src", "dst"), PAIRS, ids=PAIR_IDS)
+@given(data=st.data())
+@settings(deadline=None)
+def test_arbitrary_point_matches_astropy(
+    src: str, dst: str, data: st.DataObject
+) -> None:
+    """Arbitrary bounded points map the same way Astropy maps them."""
+    source = CHARTS[src]
+    point = {k: data.draw(s, label=k) for k, s in source.strategies.items()}
+    if source.assume is not None:
+        assume(source.assume(point))
+    _assert_pt_map_matches_astropy(point, src, dst)
