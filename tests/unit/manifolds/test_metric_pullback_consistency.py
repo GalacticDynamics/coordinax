@@ -238,14 +238,38 @@ class TestNonCanonicalTwoSphereMetric:
         assert bool(jnp.all(jnp.isfinite(g.matrix.value)))
 
     @pytest.mark.parametrize(
-        "chart", [cxc.lonlat_sph2, cxc.loncoslat_sph2, cxc.math_sph2]
+        ("chart", "at", "expected"),
+        [
+            # LonLat (lon, lat) -> diag(cos^2 lat, 1)
+            (cxc.lonlat_sph2, {"lon": 0.6, "lat": 0.7}, (math.cos(0.7) ** 2, 1.0)),
+            # Math (theta=azimuth, phi=polar) -> diag(sin^2 phi, 1)
+            (cxc.math_sph2, {"theta": 0.6, "phi": 0.9}, (math.sin(0.9) ** 2, 1.0)),
+        ],
     )
-    def test_scale_factors_not_defined(self, chart):
-        """scale_factors is undefined for non-canonical charts (use metric_matrix)."""
-        keys = chart.components
-        at = {k: u.Q(0.4, "rad") for k in keys}
-        with pytest.raises(NotImplementedError, match="canonical"):
-            cxm.scale_factors(chart, at=at)
+    def test_scale_factors_defined_for_orthogonal_charts(self, chart, at, expected):
+        """LonLat and Math are orthogonal, so scale factors exist."""
+        h = cxm.scale_factors(chart, at={k: u.Q(v, "rad") for k, v in at.items()})
+        assert jnp.allclose(jnp.asarray(h.value), jnp.asarray(expected), atol=1e-9)
+
+    @pytest.mark.parametrize(
+        ("chart", "keys"),
+        [
+            (cxc.lonlat_sph2, ("lon", "lat")),
+            (cxc.math_sph2, ("theta", "phi")),
+        ],
+    )
+    def test_scale_factors_match_metric_diagonal(self, chart, keys):
+        """They must agree with the diagonal of the full metric."""
+        at = {k: u.Q(v, "rad") for k, v in zip(keys, (0.4, 0.8), strict=True)}
+        h = jnp.asarray(cxm.scale_factors(chart, at=at).value)
+        g = jnp.asarray(cxmapi.metric_matrix(cxm.S2, at, chart).matrix.value)
+        assert jnp.allclose(h, jnp.diagonal(g), atol=1e-12)
+
+    def test_scale_factors_refused_for_non_orthogonal_chart(self):
+        """LonCosLat is genuinely non-orthogonal: no per-axis factors exist."""
+        at = {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(0.7, "rad")}
+        with pytest.raises(NotImplementedError, match="non-orthogonal"):
+            cxm.scale_factors(cxc.loncoslat_sph2, at=at)
 
 
 # ---------------------------------------------------------------------------
