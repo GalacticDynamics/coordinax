@@ -60,8 +60,12 @@ def _discover_src_roots() -> tuple[SrcRoot, ...]:
             (package_dir / "src", "coordinaxs")
             for package_dir in sorted(CX_PACKAGES_ROOT.iterdir())
         ]
-    # dict.fromkeys: order-preserving dedup, since several sub-packages share
-    # the one `coordinaxs` namespace directory name.
+    # Order-preserving dedup. In a normal checkout it removes nothing -- each
+    # sub-package has its own `src`, so the pairs already differ despite
+    # sharing the `coordinaxs` namespace name. It matters only when two
+    # candidates `.resolve()` to the same directory, e.g. a symlinked package
+    # dir. The hand-rolled `unique_roots` loop this replaces guarded the same
+    # case.
     return tuple(
         dict.fromkeys(
             (src.resolve(), namespace)
