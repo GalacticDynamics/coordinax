@@ -172,7 +172,16 @@ OFFLINE_CASES = [
     ids=[f"{tag}-for-{package}" for tag, package, _, _ in OFFLINE_CASES],
 )
 def test_validate_tag_without_git(validate_tag, tag, package, valid, fragments) -> None:
-    is_valid, error = validate_tag.validate_tag_for_package(tag, package)
+    """These rules resolve without git, and `subprocess.run` proves it.
+
+    Patched rather than left alone: if a regression made one of these paths
+    shell out, an unpatched test would run a real `git tag -l` and pass or fail
+    on whatever tags the CI checkout happens to have. Patching turns that into
+    a deterministic failure here.
+    """
+    with patch("subprocess.run") as run:
+        is_valid, error = validate_tag.validate_tag_for_package(tag, package)
+    run.assert_not_called()
     assert is_valid is valid, error
     if valid:
         assert error == ""
