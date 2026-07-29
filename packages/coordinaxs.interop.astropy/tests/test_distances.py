@@ -2,11 +2,10 @@
 
 import astropy.units as apyu
 import pytest
+import unxts.hypothesis as ust
 from astropy.units import Quantity as AstropyQuantity
 from hypothesis import given, strategies as st
 from plum import convert
-
-import unxts.hypothesis as ust
 
 import coordinaxs.interop.astropy  # noqa: F401
 from coordinax.distances import Distance

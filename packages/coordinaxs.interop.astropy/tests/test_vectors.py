@@ -1,4 +1,11 @@
-"""Test conversions between Astropy and coordinaxs-astro frames."""
+"""Conversions between Astropy representations and `coordinax.vectors.Point`.
+
+`Point.cconvert(target)` must agree with Astropy's `represent_as(target)` for
+every supported chart pair; that correspondence is the `CCONVERT_CASES` table.
+CDict-level agreement is covered separately in `test_ptmap_cdict.py`.
+"""
+
+__all__: tuple[str, ...] = ()
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
@@ -10,6 +17,9 @@ import unxt as u
 
 import coordinax as cx
 import coordinax.charts as cxc
+
+# ---------------------------------------------------------------------------
+# Source points, and their Astropy counterparts
 
 cart = cx.Point.from_(
     {
@@ -49,10 +59,68 @@ prolatesph = cx.Point.from_(
     },
     cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1, "kpc")),
 )
-apyprolatesph = None  # No corresponding Astropy representation
 
 
-# TODO: rewrite this test to use hypothesis
+# ---------------------------------------------------------------------------
+# cconvert vs represent_as
+
+#: (source Point, source Astropy rep, target chart, target Astropy rep).
+#: The chart's own `components` supply the keys to compare, and the Astropy
+#: attribute names match them one-for-one.
+CCONVERT_CASES = [
+    (cart, apycart, cxc.cart3d, apyc.CartesianRepresentation),
+    (cart, apycart, cxc.sph3d, apyc.PhysicsSphericalRepresentation),
+    (cart, apycart, cxc.cyl3d, apyc.CylindricalRepresentation),
+    (cyl, apycyl, cxc.cart3d, apyc.CartesianRepresentation),
+    (cyl, apycyl, cxc.sph3d, apyc.PhysicsSphericalRepresentation),
+    (cyl, apycyl, cxc.cyl3d, apyc.CylindricalRepresentation),
+    (sph, apysph, cxc.cart3d, apyc.CartesianRepresentation),
+    (sph, apysph, cxc.sph3d, apyc.PhysicsSphericalRepresentation),
+    (sph, apysph, cxc.lonlat_sph3d, apyc.SphericalRepresentation),
+]
+
+CCONVERT_IDS = [
+    f"{src.chart.__class__.__name__}->{target.__class__.__name__}"
+    for src, _, target, _ in CCONVERT_CASES
+]
+
+
+@pytest.mark.parametrize(
+    ("point", "apy_point", "target_chart", "apy_rep"), CCONVERT_CASES, ids=CCONVERT_IDS
+)
+def test_cconvert_matches_astropy(point, apy_point, target_chart, apy_rep) -> None:
+    """`Point.cconvert(target)` equals Astropy's `represent_as(target)`."""
+    got = point.cconvert(target_chart)
+    expected = apy_point.represent_as(apy_rep)
+
+    for key in target_chart.components:
+        assert np.allclose(
+            plum.convert(got[key], apyu.Quantity), getattr(expected, key)
+        ), key
+
+
+def test_spherical_to_cylindrical_astropy() -> None:
+    """sph3d -> cyl3d, where Astropy's own rho can come out negative.
+
+    Kept out of `CCONVERT_CASES` because the comparison is not the plain
+    component-wise one: coordinax always returns rho >= 0, so the reference
+    needs `abs`.
+    """
+    vec = sph.cconvert(cxc.cyl3d)
+    apyvec = apysph.represent_as(apyc.CylindricalRepresentation)
+
+    assert plum.convert(vec["rho"][-1], apyu.Quantity) == apyvec.rho[-1]
+    assert np.allclose(plum.convert(vec["rho"], apyu.Quantity), np.abs(apyvec.rho))
+    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvec.z)
+    assert np.allclose(
+        plum.convert(vec["phi"], apyu.Quantity), apyu.Quantity(apyvec.phi)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Negation
+
+
 @pytest.mark.parametrize(
     ("v", "apy_cls"),
     [
@@ -65,14 +133,13 @@ apyprolatesph = None  # No corresponding Astropy representation
 def test_negation_astropy_point_roundtrip(
     v: cx.Point, apy_cls: type[apyc.BaseRepresentation] | None
 ) -> None:
-    """Test negation."""
+    """Negation agrees with Astropy once both are taken to Cartesian."""
     if apy_cls is None:
         pytest.xfail("No corresponding Astropy representation class.")
 
-    # To take the negative, Point converts to Cartesian coordinates, takes
-    # the negative, then converts back to the original representation.
-    # This can result in equivalent but different angular coordinates than
-    # Astropy. AFAIK this only happens at the poles.
+    # To negate, Point converts to Cartesian, negates, and converts back. That
+    # can yield equivalent-but-different angular coordinates than Astropy --
+    # AFAIK only at the poles -- so compare in Cartesian.
     negcart = plum.convert(-v, apy_cls).represent_as(apyc.CartesianRepresentation)
     negapycart = -plum.convert(v, apy_cls).represent_as(apyc.CartesianRepresentation)
     assert np.allclose(negcart.x, negapycart.x, atol=1e-6)
@@ -81,117 +148,8 @@ def test_negation_astropy_point_roundtrip(
     # TODO: use representation_equal_up_to_angular_type
 
 
-# =============================================================================
-
-
-# TODO: rewrite this test to use hypothesis
-def test_cartesian3d_to_astropy_cartesianrepresentation():
-    """Test Astropy equivalence."""
-    vec = cart.cconvert(cxc.cart3d)
-    apyvector = apycart.represent_as(apyc.CartesianRepresentation)
-
-    assert np.allclose(plum.convert(vec["x"], apyu.Quantity), apyvector.x)
-    assert np.allclose(plum.convert(vec["y"], apyu.Quantity), apyvector.y)
-    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvector.z)
-
-
-def test_cartesian3d_to_spherical_astropy():
-    """Test Astropy equivalence."""
-    vec = cart.cconvert(cxc.sph3d)
-    apyvec = apycart.represent_as(apyc.PhysicsSphericalRepresentation)
-
-    assert np.allclose(plum.convert(vec["r"], apyu.Quantity), apyvec.r)
-    assert np.allclose(plum.convert(vec["theta"], apyu.Quantity), apyvec.theta)
-    assert np.allclose(plum.convert(vec["phi"], apyu.Quantity), apyvec.phi)
-
-
-def test_cartesian3d_to_cylindrical_astropy():
-    """Test Astropy equivalence."""
-    vec = cart.cconvert(cxc.cyl3d)
-    apyvec = apycart.represent_as(apyc.CylindricalRepresentation)
-
-    assert np.allclose(plum.convert(vec["rho"], apyu.Quantity), apyvec.rho)
-    assert np.allclose(plum.convert(vec["phi"], apyu.Quantity), apyvec.phi)
-    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvec.z)
-
-
-def test_cylindrical_to_cartesian3d_astropy():
-    """Test Astropy equivalence."""
-    vec = cyl.cconvert(cxc.cart3d)
-    apyvec = apycyl.represent_as(apyc.CartesianRepresentation)
-
-    assert np.allclose(plum.convert(vec["x"], apyu.Quantity), apyvec.x)
-    assert np.allclose(plum.convert(vec["y"], apyu.Quantity), apyvec.y)
-    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvec.z)
-
-
-def test_cylindrical_to_spherical_astropy():
-    """Test Astropy equivalence."""
-    vec = cyl.cconvert(cxc.sph3d)
-    apyvec = apycyl.represent_as(apyc.PhysicsSphericalRepresentation)
-
-    assert np.allclose(plum.convert(vec["r"], apyu.Quantity), apyvec.r)
-    assert np.allclose(plum.convert(vec["theta"], apyu.Quantity), apyvec.theta)
-    assert np.allclose(plum.convert(vec["phi"], apyu.Quantity), apyvec.phi)
-
-
-def test_cylindrical_to_cylindrical_astropy():
-    """Test Astropy equivalence."""
-    vec = cyl.cconvert(cxc.cyl3d)
-    apyvec = apycyl.represent_as(apyc.CylindricalRepresentation)
-
-    assert np.allclose(plum.convert(vec["rho"], apyu.Quantity), apyvec.rho)
-    assert np.allclose(plum.convert(vec["phi"], apyu.Quantity), apyvec.phi)
-    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvec.z)
-
-
-def test_spherical_to_cartesian3d_astropy():
-    """Test Astropy equivalence."""
-    vec = sph.cconvert(cxc.cart3d)
-    apyvec = apysph.represent_as(apyc.CartesianRepresentation)
-
-    assert np.allclose(plum.convert(vec["x"], apyu.Quantity), apyvec.x)
-    assert np.allclose(plum.convert(vec["y"], apyu.Quantity), apyvec.y)
-    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvec.z)
-
-
-def test_spherical_to_cylindrical_astropy():
-    """Test ``coordinax.cconvert(CylindricalPos)``."""
-    vec = sph.cconvert(cxc.cyl3d)
-    apyvec = apysph.represent_as(apyc.CylindricalRepresentation)
-
-    # There's a 'bug' in Astropy where rho can be negative.
-    assert plum.convert(vec["rho"][-1], apyu.Quantity) == apyvec.rho[-1]
-    assert np.allclose(plum.convert(vec["rho"], apyu.Quantity), np.abs(apyvec.rho))
-
-    assert np.allclose(plum.convert(vec["z"], apyu.Quantity), apyvec.z)
-    assert np.allclose(
-        plum.convert(vec["phi"], apyu.Quantity), apyu.Quantity(apyvec.phi)
-    )
-
-
-def test_spherical_to_spherical_astropy():
-    """Test Astropy equivalence."""
-    vec = sph.cconvert(cxc.sph3d)
-    apyvec = apysph.represent_as(apyc.PhysicsSphericalRepresentation)
-
-    assert np.allclose(plum.convert(vec["r"], apyu.Quantity), apyvec.r)
-    assert np.allclose(plum.convert(vec["theta"], apyu.Quantity), apyvec.theta)
-    assert np.allclose(plum.convert(vec["phi"], apyu.Quantity), apyvec.phi)
-
-
-def test_spherical_to_lonlatspherical_astropy():
-    """Test Astropy equivalence."""
-    vec = sph.cconvert(cxc.lonlat_sph3d)
-    apyvec = apysph.represent_as(apyc.SphericalRepresentation)
-
-    assert np.allclose(plum.convert(vec["distance"], apyu.Quantity), apyvec.distance)
-    assert np.allclose(plum.convert(vec["lon"], apyu.Quantity), apyvec.lon)
-    assert np.allclose(plum.convert(vec["lat"], apyu.Quantity), apyvec.lat)
-
-
-# ============================================================================
-# coordinax Point (with frame) -> astropy frame-with-data / SkyCoord
+# ---------------------------------------------------------------------------
+# Point (with frame) -> Astropy frame-with-data / SkyCoord
 
 
 @pytest.mark.parametrize(
@@ -211,7 +169,7 @@ def test_spherical_to_lonlatspherical_astropy():
         ),
     ],
 )
-def test_point_to_astropy_frame_roundtrip(frame, kw):
+def test_point_to_astropy_frame_roundtrip(frame, kw) -> None:
     """Astropy frame-with-data -> Point -> astropy frame-with-data is identity."""
     orig = frame(**kw)
     point = cx.Point.from_(orig)
@@ -223,7 +181,7 @@ def test_point_to_astropy_frame_roundtrip(frame, kw):
     assert np.allclose(d, 0.0, atol=1e-6)
 
 
-def test_point_to_astropy_skycoord_roundtrip():
+def test_point_to_astropy_skycoord_roundtrip() -> None:
     """Astropy SkyCoord -> Point -> SkyCoord preserves the sky position."""
     orig = apyc.SkyCoord(ra=10 * apyu.deg, dec=-5 * apyu.deg, distance=5 * apyu.kpc)
     point = cx.Point.from_(orig)
@@ -233,7 +191,7 @@ def test_point_to_astropy_skycoord_roundtrip():
     assert back.separation_3d(orig).to(apyu.pc).value < 1e-6
 
 
-def test_point_without_frame_to_astropy_frame_raises():
+def test_point_without_frame_to_astropy_frame_raises() -> None:
     """A Point with no reference frame cannot become an astropy frame."""
     point = cx.Point.from_([1, 2, 3], "kpc")  # noframe
     with pytest.raises(ValueError, match="no reference frame"):
