@@ -244,3 +244,64 @@ class TestNonCanonicalTwoSphereMetric:
         at = {k: u.Q(0.4, "rad") for k in keys}
         with pytest.raises(NotImplementedError, match="canonical"):
             cxm.scale_factors(chart, at=at)
+
+
+# ---------------------------------------------------------------------------
+# Non-Riemannian ambient
+# ---------------------------------------------------------------------------
+
+
+def _worldline(ct_of, x_of):
+    """1-D submanifold of Minkowski space: lambda -> (ct, x, 0, 0)."""
+    embed_map = cxm.CustomEmbeddingMap(
+        intrinsic=cxc.cart1d,
+        ambient=cxc.minkowskict,
+        embed_fn=lambda p, *, usys=None: {
+            "ct": ct_of(p["x"]),
+            "x": x_of(p["x"]),
+            "y": p["x"] * 0,
+            "z": p["x"] * 0,
+        },
+        project_fn=lambda p, *, usys=None: {"x": p["ct"]},
+    )
+    return cxm.EmbeddedManifold(
+        intrinsic=cxm.R1, ambient=cxm.minkowski4d, embed_map=embed_map
+    )
+
+
+class TestLorentzianAmbient:
+    """The pullback is J^T G J, not J^T J: G carries the ambient signature."""
+
+    @pytest.mark.parametrize(
+        ("name", "ct_of", "x_of", "expected"),
+        [
+            ("timelike", lambda s: s, lambda s: s * 0, -1.0),
+            ("spacelike", lambda s: s * 0, lambda s: s, 1.0),
+            ("null", lambda s: s, lambda s: s, 0.0),
+            # A boost cannot change the character of a worldline.
+            (
+                "boosted-timelike",
+                lambda s: s * jnp.cosh(0.7),
+                lambda s: s * jnp.sinh(0.7),
+                -1.0,
+            ),
+        ],
+        ids=lambda v: v if isinstance(v, str) else "",
+    )
+    def test_induced_metric_carries_ambient_signature(
+        self, name, ct_of, x_of, expected
+    ):
+        del name
+        M = _worldline(ct_of, x_of)
+        g = cxmapi.metric_matrix(M, {"x": u.Q(1.0, "m")}, cxc.cart1d)
+        assert jnp.allclose(g.matrix.value, jnp.array([[expected]]), atol=1e-12)
+
+    def test_signature_of_indefinite_pullback_is_refused(self):
+        """It depends on the embedding, so there is no dimension-only answer."""
+        M = _worldline(lambda s: s, lambda s: s * 0)
+        assert M.metric.ndim == 1  # still answerable
+        with pytest.raises(NotImplementedError, match="depends on the embedding"):
+            _ = M.metric.signature
+
+    def test_riemannian_ambient_signature_unaffected(self, unit_sphere_embedded):
+        assert unit_sphere_embedded.metric.signature == (1, 1)
