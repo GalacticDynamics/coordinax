@@ -179,7 +179,7 @@ def test_distance_range(dist):
 
 ### `distance_moduli(**kwargs)`
 
-Generate random `coordinaxs.astro.DistanceModulus` objects for testing. distance and angle strategiesategy builds on `unxts.hypothesis.quantities` to generate distance moduli (apparent minus absolute magnitude). Distance moduli are always in units of 'mag'. The strategy is useful for property-based testing of magnitude-based distance computations.
+Generate random `coordinaxs.astro.DistanceModulus` objects for testing. This strategy builds on `unxts.hypothesis.quantities` to generate distance moduli (apparent minus absolute magnitude). Distance moduli are always in units of 'mag'. The strategy is useful for property-based testing of magnitude-based distance computations.
 
 **Parameters:**
 
