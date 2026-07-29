@@ -178,6 +178,24 @@ class TestScaleFactorsPullbackMetric:
         g = mm_dispatch(M, pt, cxc.lonlat_sph2)
         assert h.unit[0] == g.matrix.unit[0, 0]
 
+    def test_ambient_metric_the_route_cannot_apply_is_refused(self):
+        """A hand-built pullback can name an ambient metric this route can't use.
+
+        The delegate evaluates the Gram on the ambient *manifold*, so only
+        ``embed_map.ambient.M.metric`` is reachable. Returning the diagonal of
+        that other metric instead would be the silent-wrong-answer this class
+        exists to guard against.
+        """
+        pb = cxm.PullbackMetric(
+            cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")), cxm.RoundMetric(3)
+        )
+        at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        with pytest.raises(NotImplementedError, match="cannot be evaluated"):
+            cxm.scale_factors(pb, cxc.sph2, at=at)
+
+        # An `EmbeddedManifold`'s own metric always agrees, so it never trips.
+        assert self._sphere().metric.ambient_metric == cxc.sph3d.M.metric
+
     def test_batched_point(self):
         """A batched point returns (*batch, n), not a shape error."""
         M = self._sphere()

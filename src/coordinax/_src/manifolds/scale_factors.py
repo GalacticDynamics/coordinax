@@ -114,12 +114,34 @@ def scale_factors(
     >>> cxm.scale_factors(M.metric, cxc.lonlat_sph2, at=at)
     QM([4., 4.], '(m2 / rad2, m2 / rad2)')
 
+    The delegate reads the ambient Gram off the ambient *manifold*, so an
+    ``ambient_metric`` that disagrees with it cannot be honoured. That is
+    refused rather than answered with the diagonal of a different metric:
+
+    >>> pb = cxm.PullbackMetric(cxm.TwoSphereIn3D(radius=1.0), cxm.RoundMetric(3))
+    >>> try: cxm.scale_factors(pb, cxc.sph2, at=at)
+    ... except NotImplementedError as e: print(e)
+    the pullback of RoundMetric(ndim=3) cannot be evaluated: the ambient
+    manifold Rn(3) of chart Spherical3D... carries FlatMetric(ndim=3)
+
     """
     del usys
     embed_map = metric.embed_map
+    ambient = embed_map.ambient.M
+    # `metric_matrix` below evaluates the ambient Gram on `ambient`, i.e. with
+    # `ambient.metric` — the only ambient metric this route can apply. An
+    # `EmbeddedManifold`'s own `metric` always agrees (it is built from
+    # `ambient.metric`); a hand-built `PullbackMetric` need not.
+    if metric.ambient_metric != ambient.metric:
+        msg = (
+            f"the pullback of {metric.ambient_metric} cannot be evaluated: the "
+            f"ambient manifold {ambient} of chart {embed_map.ambient} carries "
+            f"{ambient.metric}"
+        )
+        raise NotImplementedError(msg)
     M = EmbeddedManifold(
         intrinsic=embed_map.intrinsic.M,
-        ambient=embed_map.ambient.M,
+        ambient=ambient,
         embed_map=embed_map,
     )
     mm = cxmapi.metric_matrix(M, at, chart)
