@@ -27,6 +27,7 @@ import coordinaxs.astro as cxastro
 import coordinaxs.hypothesis.astro as cxastrost
 import coordinaxs.hypothesis.distances as cxdst
 
+#: `dimension` is what both the class and its instances must report.
 #: `sign_constrained` records whether the kind's domain excludes negatives.
 #: `Distance` and `Parallax` are non-negative by construction, so negating one
 #: cannot yield a value of the same type. `DistanceModulus` is two-sided --
@@ -34,15 +35,22 @@ import coordinaxs.hypothesis.distances as cxdst
 #: negative dm is the ordinary way to say "nearer than 10 pc".
 KINDS = {
     "distance": SimpleNamespace(
-        cls=cxd.Distance, strategy=cxdst.distances, sign_constrained=True
+        cls=cxd.Distance,
+        strategy=cxdst.distances,
+        dimension=u.dimension("length"),
+        sign_constrained=True,
     ),
     "distance_modulus": SimpleNamespace(
         cls=cxastro.DistanceModulus,
         strategy=cxastrost.distance_moduli,
+        dimension=u.dimension_of(u.Q(1.0, "mag")),
         sign_constrained=False,
     ),
     "parallax": SimpleNamespace(
-        cls=cxastro.Parallax, strategy=cxastrost.parallaxes, sign_constrained=True
+        cls=cxastro.Parallax,
+        strategy=cxastrost.parallaxes,
+        dimension=u.dimension("angle"),
+        sign_constrained=True,
     ),
 }
 
@@ -210,3 +218,29 @@ class TestNegation:
         twice = -once
         assert type(twice) is kind.cls
         assert jnp.array_equal(twice.value, original.value)
+
+
+class TestDimensionOf:
+    """`dimension_of` agrees whether asked about the class or an instance.
+
+    Regression: `coordinax.distances` registers `dimension_of` for
+    `type[AbstractDistance]` returning length. That is right for
+    `AbstractDistance` and for `Distance`, but it was inherited by `Parallax`
+    (angle) and `DistanceModulus` (magnitude), so asking those two classes
+    their dimension gave `length` while every instance of them said otherwise.
+    """
+
+    def test_class_matches_its_declared_dimension(self, kind: SimpleNamespace) -> None:
+        assert u.dimension_of(kind.cls) == kind.dimension
+
+    @given(data=st.data())
+    def test_instance_matches_its_class(
+        self, kind: SimpleNamespace, data: st.DataObject
+    ) -> None:
+        """The point of the fix: the two answers cannot disagree."""
+        instance = data.draw(kind.strategy())
+        assert u.dimension_of(instance) == u.dimension_of(kind.cls)
+
+    def test_the_base_class_still_reports_length(self) -> None:
+        """The inherited rule is correct for the abstraction itself; keep it."""
+        assert u.dimension_of(cxd.AbstractDistance) == u.dimension("length")

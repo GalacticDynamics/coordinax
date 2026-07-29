@@ -8,6 +8,7 @@ from jaxtyping import Array, ArrayLike, Shaped
 from typing import Any, final
 
 import equinox as eqx
+import plum
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -180,3 +181,27 @@ def from_(cls: type[cxd.Distance], p: Parallax, /, **kw: Any) -> cxd.Distance:
     d = parallax_base_length / jnp.tan(p)  # [AU]
     unit = u.unit_of(d)
     return cls(jnp.asarray(d.ustrip(unit), **kw), unit)
+
+
+@plum.dispatch
+def dimension_of(obj: type[Parallax], /) -> u.AbstractDimension:
+    """Return the angle dimension: a parallax is an angle, not a length.
+
+    `coordinax.distances` registers `dimension_of` for
+    `type[AbstractDistance]` returning length, which is right for
+    `AbstractDistance` itself and for `Distance` but wrong for this subclass --
+    every `Parallax` *instance* reports angle, so the class-level answer has to
+    agree with it.
+
+    >>> import unxt as u
+    >>> from coordinaxs.astro import Parallax
+    >>> u.dimension_of(Parallax)
+    PhysicalType('angle')
+
+    Which is what the instances say:
+
+    >>> u.dimension_of(Parallax(1, "mas"))
+    PhysicalType('angle')
+
+    """
+    return ANGLE
