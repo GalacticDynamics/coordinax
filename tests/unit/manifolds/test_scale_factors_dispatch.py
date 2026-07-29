@@ -2,6 +2,7 @@
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 import unxt as u
 import unxts.linalg as ul
@@ -135,3 +136,88 @@ class TestScaleFactorsGeneric:
         assert jnp.allclose(result.value, expected, atol=1e-6)
         assert result.unit[0] == u.unit("m2 / rad2")
         assert result.unit[1] == u.unit("m2 / rad2")
+
+
+class TestScaleFactorsPullbackMetric:
+    """`scale_factors` on a `PullbackMetric` must agree with `metric_matrix`.
+
+    It used to read the point with ``embed_map.intrinsic.components`` and ignore
+    the passed ``chart`` -- the same defect #604 fixed for ``metric_matrix``.
+    It also dropped the ambient Gram and was not batch-safe.
+    """
+
+    @staticmethod
+    def _sphere(radius=u.Q(2.0, "m")):
+        return cxm.EmbeddedManifold(
+            intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=radius)
+        )
+
+    @pytest.mark.parametrize(
+        ("chart", "at"),
+        [
+            (cxc.sph2, {"theta": jnp.pi / 2, "phi": 0.0}),
+            (cxc.lonlat_sph2, {"lon": 0.0, "lat": 0.0}),
+            (cxc.math_sph2, {"theta": 0.0, "phi": jnp.pi / 2}),
+            (cxc.loncoslat_sph2, {"lon_coslat": 0.0, "lat": 0.0}),
+        ],
+    )
+    def test_matches_metric_matrix_diagonal(self, chart, at):
+        """Any valid intrinsic chart, not just the embedding's own."""
+        M = self._sphere()
+        pt = {k: u.Angle(v, "rad") for k, v in at.items()}
+        h = jnp.asarray(cxm.scale_factors(M.metric, chart, at=pt).value)
+        g = jnp.asarray(mm_dispatch(M, pt, chart).matrix.value)
+        assert jnp.allclose(h, jnp.diagonal(g, axis1=-2, axis2=-1), atol=1e-6)
+        # Every point above is on the equator of a radius-2 sphere -> 4 m2/rad2.
+        assert jnp.allclose(h, jnp.asarray([4.0, 4.0]), atol=1e-5)
+
+    def test_units_match_metric_matrix(self):
+        M = self._sphere()
+        pt = {"lon": u.Angle(0.0, "rad"), "lat": u.Angle(0.0, "rad")}
+        h = cxm.scale_factors(M.metric, cxc.lonlat_sph2, at=pt)
+        g = mm_dispatch(M, pt, cxc.lonlat_sph2)
+        assert h.unit[0] == g.matrix.unit[0, 0]
+
+    def test_batched_point(self):
+        """A batched point returns (*batch, n), not a shape error."""
+        M = self._sphere()
+        pt = {
+            "lon": u.Angle(jnp.array([0.0, 0.3, 0.6]), "rad"),
+            "lat": u.Angle(jnp.array([0.0, 0.2, 0.4]), "rad"),
+        }
+        h = jnp.asarray(cxm.scale_factors(M.metric, cxc.lonlat_sph2, at=pt).value)
+        assert h.shape == (3, 2)
+        for i in range(3):
+            hi = cxm.scale_factors(
+                M.metric, cxc.lonlat_sph2, at={k: v[i] for k, v in pt.items()}
+            )
+            assert jnp.allclose(h[i], jnp.asarray(hi.value), atol=1e-6)
+
+    @pytest.mark.parametrize(
+        ("name", "ct_of", "x_of", "expected"),
+        [
+            ("timelike", lambda s: s, lambda s: s * 0, -1.0),
+            ("spacelike", lambda s: s * 0, lambda s: s, 1.0),
+            ("null", lambda s: s, lambda s: s, 0.0),
+        ],
+        ids=lambda v: v if isinstance(v, str) else "",
+    )
+    def test_lorentzian_ambient_keeps_the_signature(self, name, ct_of, x_of, expected):
+        """Squared column norms are always positive; the ambient Gram is not."""
+        del name
+        embed_map = cxm.CustomEmbeddingMap(
+            intrinsic=cxc.cart1d,
+            ambient=cxc.minkowskict,
+            embed_fn=lambda p, *, usys=None: {
+                "ct": ct_of(p["x"]),
+                "x": x_of(p["x"]),
+                "y": p["x"] * 0,
+                "z": p["x"] * 0,
+            },
+            project_fn=lambda p, *, usys=None: {"x": p["ct"]},
+        )
+        M = cxm.EmbeddedManifold(
+            intrinsic=cxm.R1, ambient=cxm.minkowski4d, embed_map=embed_map
+        )
+        h = cxm.scale_factors(M.metric, cxc.cart1d, at={"x": u.Q(1.0, "m")})
+        assert jnp.allclose(jnp.asarray(h.value).ravel()[0], expected, atol=1e-9)
