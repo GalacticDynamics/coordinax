@@ -255,62 +255,52 @@ class TestDiagonalMetricOffDiagonal:
 
 
 class TestMetricMatrixJIT:
-    """metric_matrix must be JIT-compilable for all dispatch paths."""
+    """`metric_matrix` must be JIT-compilable on every dispatch path.
 
-    def test_jit_euclidean_cart3d(self):
+    One table: each row is a manifold, its chart, a point in that chart, and
+    the metric diagonal expected there. The six cases previously wrote out
+    their own `@jax.jit` closure differing only in the component names.
+    """
+
+    @pytest.mark.parametrize(
+        ("manifold", "chart", "point", "expected"),
+        [
+            pytest.param(cxm.R1, cxc.cart1d, {"x": 0}, jnp.ones(1), id="cart1d"),
+            pytest.param(
+                cxm.R2, cxc.cart2d, {"x": 0, "y": 0}, jnp.ones(2), id="cart2d"
+            ),
+            pytest.param(
+                cxm.R3, cxc.cart3d, {"x": 1, "y": 2, "z": 3}, jnp.ones(3), id="cart3d"
+            ),
+            pytest.param(
+                cxm.R3, cxc.cartnd, {"q": [1, 2, 3]}, jnp.ones(3), id="cartnd"
+            ),
+            pytest.param(
+                cxm.MinkowskiManifold(),
+                cxc.minkowskict,
+                {"ct": 0, "x": 0, "y": 0, "z": 0},
+                jnp.array([-1, 1, 1, 1]),
+                id="minkowski",
+            ),
+            pytest.param(
+                cxm.S2,
+                cxc.sph2,
+                {"theta": jnp.pi / 2, "phi": 0},
+                jnp.array([1, 1]),
+                id="hyperspherical",
+            ),
+        ],
+    )
+    def test_jit(self, manifold, chart, point, expected) -> None:
+        keys = tuple(point)
+
         @jax.jit
-        def compute(x, y, z):
-            pt = {"x": x, "y": y, "z": z}
-            return cxmapi.metric_matrix(cxm.R3, pt, cxc.cart3d).diagonal
+        def compute(*values):
+            pt = dict(zip(keys, values, strict=True))
+            return cxmapi.metric_matrix(manifold, pt, chart).diagonal
 
-        result = compute(jnp.array(1), jnp.array(2), jnp.array(3))
-        assert jnp.allclose(result, jnp.ones(3))
-
-    def test_jit_euclidean_cartnd(self):
-        @jax.jit
-        def compute(q):
-            return cxmapi.metric_matrix(cxm.R3, {"q": q}, cxc.cartnd).diagonal
-
-        result = compute(jnp.array([1, 2, 3]))
-        assert jnp.allclose(result, jnp.ones(3))
-
-    def test_jit_minkowski(self):
-        M = cxm.MinkowskiManifold()
-        chart = cxc.minkowskict
-
-        @jax.jit
-        def compute(ct, x, y, z):
-            pt = {"ct": ct, "x": x, "y": y, "z": z}
-            return cxmapi.metric_matrix(M, pt, chart).diagonal
-
-        result = compute(jnp.array(0), jnp.array(0), jnp.array(0), jnp.array(0))
-        assert jnp.allclose(result, jnp.array([-1, 1, 1, 1]))
-
-    def test_jit_hyperspherical(self):
-        @jax.jit
-        def compute(theta, phi):
-            return cxmapi.metric_matrix(
-                cxm.S2, {"theta": theta, "phi": phi}, cxc.sph2
-            ).diagonal
-
-        result = compute(jnp.array(jnp.pi / 2), jnp.array(0))
-        assert jnp.allclose(result, jnp.array([1, 1]), atol=1e-6)
-
-    def test_jit_cart1d(self):
-        @jax.jit
-        def compute(x):
-            return cxmapi.metric_matrix(cxm.R1, {"x": x}, cxc.cart1d).diagonal
-
-        result = compute(jnp.array(0))
-        assert jnp.allclose(result, jnp.ones(1))
-
-    def test_jit_cart2d(self):
-        @jax.jit
-        def compute(x, y):
-            return cxmapi.metric_matrix(cxm.R2, {"x": x, "y": y}, cxc.cart2d).diagonal
-
-        result = compute(jnp.array(0), jnp.array(0))
-        assert jnp.allclose(result, jnp.ones(2))
+        result = compute(*(jnp.asarray(v) for v in point.values()))
+        assert jnp.allclose(result, expected, atol=1e-6)
 
 
 # ---------------------------------------------------------------------------
