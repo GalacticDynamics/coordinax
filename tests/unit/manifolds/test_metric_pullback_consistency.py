@@ -10,6 +10,8 @@ These tests assert that both paths agree numerically at sample points and
 across a range of angles verified with Hypothesis.
 """
 
+import math
+
 import hypothesis.strategies as st
 import jax
 import jax.numpy as jnp
@@ -305,3 +307,70 @@ class TestLorentzianAmbient:
 
     def test_riemannian_ambient_signature_unaffected(self, unit_sphere_embedded):
         assert unit_sphere_embedded.metric.signature == (1, 1)
+
+
+_BATCH_CASES = [
+    (cxc.lonlat_sph2, ("lon", "lat")),
+    (cxc.math_sph2, ("theta", "phi")),
+    (cxc.loncoslat_sph2, ("lon_coslat", "lat")),
+]
+
+
+class TestNonCanonicalTwoSphereBatching:
+    """The pullback metric must batch like element-wise evaluation."""
+
+    @pytest.mark.parametrize(("chart", "keys"), _BATCH_CASES)
+    def test_batch_matches_elementwise(self, chart, keys):
+        """A batched point equals stacking the per-point metrics."""
+        vals = jnp.array([0.3, 0.5, 0.7])
+        pt = {k: u.Q(vals, "rad") for k in keys}
+        gb = jnp.asarray(cxmapi.metric_matrix(cxm.S2, pt, chart).matrix.value)
+        assert gb.shape == (3, 2, 2)
+        for i in range(3):
+            gi = cxmapi.metric_matrix(cxm.S2, {k: v[i] for k, v in pt.items()}, chart)
+            assert jnp.allclose(gb[i], jnp.asarray(gi.matrix.value), atol=1e-12)
+
+    @pytest.mark.parametrize(("chart", "keys"), _BATCH_CASES)
+    def test_multidim_batch_shape(self, chart, keys):
+        """Leading axes are batch, the two component axes trail."""
+        pt = {k: u.Q(jnp.full((2, 3), 0.4), "rad") for k in keys}
+        g = cxmapi.metric_matrix(cxm.S2, pt, chart)
+        assert jnp.asarray(g.matrix.value).shape == (2, 3, 2, 2)
+
+
+class TestLonCosLatPoleIsSingular:
+    """`loncoslat` is not a chart at the poles; pin what happens there.
+
+    ``lon_coslat = lon * cos(lat)`` collapses every longitude onto ``0`` at
+    ``lat = +-pi/2``, so the map is not injective and the coordinates are not a
+    chart there. Away from the pole ``g_LL = cos^2(lat) * sec^2(lat) == 1``
+    exactly; at the pole that product is evaluated as ``0 * inf`` and collapses.
+    We pin the honest behaviour rather than fabricate a value at a point where
+    the chart is not defined.
+    """
+
+    def test_g_LL_is_one_away_from_the_pole(self):
+        """Analytically g_LL == 1 everywhere the chart is valid."""
+        for lat in (0.0, 0.5, 1.0, 1.5, math.pi / 2 - 1e-6):
+            pt = {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(lat, "rad")}
+            g = cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2)
+            assert jnp.allclose(jnp.asarray(g.matrix.value)[0, 0], 1.0, atol=1e-9)
+
+    def test_det_is_one_away_from_the_pole(self):
+        """sqrt(det g) == 1: the area element is dL dlat in this chart."""
+        for lat in (-1.0, 0.0, 0.7, 1.2):
+            pt = {"lon_coslat": u.Q(0.4, "rad"), "lat": u.Q(lat, "rad")}
+            g = jnp.asarray(
+                cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2).matrix.value
+            )
+            assert jnp.allclose(jnp.linalg.det(g), 1.0, atol=1e-9)
+
+    def test_pole_is_degenerate_not_nan(self):
+        """At the pole the result is finite but singular -- a known limitation."""
+        pt = {"lon_coslat": u.Q(0.0, "rad"), "lat": u.Q(math.pi / 2, "rad")}
+        g = jnp.asarray(
+            cxmapi.metric_matrix(cxm.S2, pt, cxc.loncoslat_sph2).matrix.value
+        )
+        assert bool(jnp.all(jnp.isfinite(g)))
+        # Degenerate: det == 0, whereas the limit along lat -> pi/2 is 1.
+        assert jnp.allclose(jnp.linalg.det(g), 0.0, atol=1e-12)
