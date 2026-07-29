@@ -9,7 +9,6 @@ This module depends on the following modules:
 """
 
 from .base import *
-from .custom_types import *
 from .measures import *
 from .register_converters import *
 from .register_primitives import *

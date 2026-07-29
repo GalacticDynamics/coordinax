@@ -8,7 +8,6 @@ from jaxtyping import Array, ArrayLike, Shaped
 from typing import Any, cast, final
 
 import equinox as eqx
-import jax.numpy as jnp
 
 import quaxed.numpy as jnp
 import unxt as u
