@@ -124,9 +124,10 @@ class TestDistanceModulusAccuracyNearZeroPoint:
     @staticmethod
     def _exact_dm(d_pc: float) -> float:
         """Dm for the exact value the float32 holds, at 60 decimal digits."""
-        decimal.getcontext().prec = 60
-        d = decimal.Decimal(float(np.float32(d_pc)))
-        return float(5 * (d / decimal.Decimal(10)).ln() / decimal.Decimal(10).ln())
+        with decimal.localcontext() as ctx:  # don't leak `prec` to other tests
+            ctx.prec = 60
+            d = decimal.Decimal(float(np.float32(d_pc)))
+            return float(5 * (d / decimal.Decimal(10)).ln() / decimal.Decimal(10).ln())
 
     @classmethod
     def _abs_error(cls, d_pc: float) -> float:

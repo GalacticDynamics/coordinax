@@ -17,7 +17,10 @@ from .constants import ANGLE, LENGTH, MAGNITUDE
 parallax_base_length = u.Q(jnp.array(1), "AU")
 
 #: The distance-modulus zero point: dm == 0 at d == 10 pc, by definition.
-_DM_ZERO_POINT_PC = 10.0
+#: An `int`, so an integer-dtype distance keeps the dtype the pre-#634 form gave
+#: it: under ``JAX_ENABLE_X64`` an int32 divided by a weak float widens to
+#: float64, by a weak int stays float32. Float inputs are unaffected either way.
+_DM_ZERO_POINT_PC = 10
 
 
 def _distance_modulus_from_pc(d_pc: ArrayLike, /) -> ArrayLike:
