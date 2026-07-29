@@ -20,18 +20,40 @@ import jax.numpy as jnp
 import pytest
 from hypothesis import given, settings
 
+import unxt as u
+
 import coordinax.distances as cxd
 import coordinaxs.astro as cxastro
 import coordinaxs.hypothesis.astro as cxastrost
 import coordinaxs.hypothesis.distances as cxdst
 
+#: `sign_constrained` records whether the kind's domain excludes negatives.
+#: `Distance` and `Parallax` are non-negative by construction, so negating one
+#: cannot yield a value of the same type. `DistanceModulus` is two-sided --
+#: dm = 5 log10(d/10pc) maps d in (0, inf) onto all of the reals, and a
+#: negative dm is the ordinary way to say "nearer than 10 pc".
 KINDS = {
-    "distance": SimpleNamespace(cls=cxd.Distance, strategy=cxdst.distances),
-    "distance_modulus": SimpleNamespace(
-        cls=cxastro.DistanceModulus, strategy=cxastrost.distance_moduli
+    "distance": SimpleNamespace(
+        cls=cxd.Distance, strategy=cxdst.distances, sign_constrained=True
     ),
-    "parallax": SimpleNamespace(cls=cxastro.Parallax, strategy=cxastrost.parallaxes),
+    "distance_modulus": SimpleNamespace(
+        cls=cxastro.DistanceModulus,
+        strategy=cxastrost.distance_moduli,
+        sign_constrained=False,
+    ),
+    "parallax": SimpleNamespace(
+        cls=cxastro.Parallax, strategy=cxastrost.parallaxes, sign_constrained=True
+    ),
 }
+
+
+def _a_valid_unit(kind: SimpleNamespace) -> str:
+    """A unit the kind's `__check_init__` accepts."""
+    return {
+        cxd.Distance: "kpc",
+        cxastro.Parallax: "mas",
+        cxastro.DistanceModulus: "mag",
+    }[kind.cls]
 
 
 @pytest.fixture(params=sorted(KINDS), scope="module")
@@ -141,3 +163,50 @@ class TestJAX:
         value = data.draw(kind.strategy(shape=(3,)))
         result = jax.vmap(lambda x: x + x)(value)
         assert result.shape == (3,)
+
+
+class TestNegation:
+    """Negation degrades exactly for the kinds that constrain sign.
+
+    Regression: the `neg_p` rule was registered on the concrete `Distance`
+    rather than on `AbstractDistance`, so `-Parallax(...)` fell through to
+    unxt's type-preserving rule, rebuilt a `Parallax` holding a negative value,
+    and tripped that class's own `check_negative` guard -- it raised
+    `EquinoxRuntimeError` rather than returning anything.
+    """
+
+    def test_degrades_iff_sign_constrained(self, kind: SimpleNamespace) -> None:
+        """A sign-constrained kind yields `Quantity`; a two-sided one keeps its type."""
+        result = -kind.cls(10, _a_valid_unit(kind))
+
+        if kind.sign_constrained:
+            assert type(result) is u.Q
+        else:
+            assert type(result) is kind.cls
+
+    def test_negation_preserves_magnitude_and_unit(self, kind: SimpleNamespace) -> None:
+        unit = _a_valid_unit(kind)
+        result = -kind.cls(10, unit)
+        assert result.value == -10
+        assert result.unit == u.unit(unit)
+
+    def test_survives_jit(self, kind: SimpleNamespace) -> None:
+        """`check_negative` is an `error_if`, so jit is where it would fire."""
+        result = jax.jit(lambda x: -x)(kind.cls(10, _a_valid_unit(kind)))
+        expected = u.Q if kind.sign_constrained else kind.cls
+        assert type(result) is expected
+
+    def test_survives_vmap(self, kind: SimpleNamespace) -> None:
+        value = kind.cls(jnp.asarray([1.0, 2.0]), _a_valid_unit(kind))
+        result = jax.vmap(lambda x: -x)(value)
+        assert jnp.array_equal(result.value, jnp.asarray([-1.0, -2.0]))
+
+    def test_two_sided_kinds_negate_back(self, kind: SimpleNamespace) -> None:
+        """Where negation is closed it is also an involution."""
+        if kind.sign_constrained:
+            pytest.skip("negation is not closed on this kind")
+        original = kind.cls(-5, _a_valid_unit(kind))
+        once = -original
+        twice = -once
+        assert type(twice) is kind.cls
+        assert jnp.array_equal(twice.value, original.value)

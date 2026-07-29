@@ -15,7 +15,6 @@ from unxt.quantity import Quantity
 
 from .base import AbstractDistance
 from .constants import ONE, RADIAN
-from .measures import Distance
 
 
 # TODO: can this be done with promotion/conversion instead?
@@ -134,13 +133,25 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> Quantit
 
 
 @register(lax.neg_p)
-def neg_p_distance(x: Distance, /) -> u.Q:
-    """Negation of a Distance degrades to a Quantity.
+def neg_p_abstractdistance(x: AbstractDistance, /) -> u.Q:
+    """Negation of a distance-like quantity degrades to a Quantity.
+
+    `Distance` and `Parallax` are non-negative by construction, so their
+    negation is not a value of the same type -- it has to degrade.
 
     >>> from coordinax.distances import Distance
     >>> q = Distance(10, "m")
     >>> -q
     Q(-10, 'm')
+
+    This holds for every sign-constrained subclass, not just `Distance`:
+
+    >>> from coordinaxs.astro import Parallax
+    >>> -Parallax(1, "mas")
+    Q(-1, 'mas')
+
+    `DistanceModulus` overrides this: its domain is all of the reals, so
+    negation stays closed and it keeps its own type.
 
     """
     return u.Q(-x.value, x.unit)
