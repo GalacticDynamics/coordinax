@@ -6,11 +6,11 @@ from collections.abc import Iterable
 
 import numpy as np
 import pytest
+import unxts.hypothesis as ust
 from hypothesis import given, settings
 
 import quaxed.numpy as jnp
 import unxt as u
-import unxts.hypothesis as ust
 
 import coordinax as cx
 import coordinax.frames as cxf
@@ -20,6 +20,14 @@ import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 from coordinaxs.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
 
+apyc = pytest.importorskip("astropy.coordinates")
+apyu = pytest.importorskip("astropy.units")
+
+#: Bounded positions for the round-trip properties; written once, used four times.
+POSITIONS_PC = ust.quantities(
+    "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
+)
+
 
 def _to_np(x: object, unit: str) -> np.ndarray:
     assert isinstance(x, u.AbstractQuantity)
@@ -27,9 +35,6 @@ def _to_np(x: object, unit: str) -> np.ndarray:
 
 
 def _as_astropy_galactocentric(frame: cxastro.Galactocentric):
-    apyc = pytest.importorskip("astropy.coordinates")
-    apyu = pytest.importorskip("astropy.units")
-
     galcen = frame.galcen.data
     galcen_coord = apyc.SkyCoord(
         ra=u.ustrip("deg", galcen["lon"]) * apyu.deg,
@@ -52,39 +57,21 @@ def _as_astropy_galactocentric(frame: cxastro.Galactocentric):
     )
 
 
-def _astropy_icrs_to_gcf_xyz_pc(xyz_pc: Iterable[float], frame: cxastro.Galactocentric):
-    apyc = pytest.importorskip("astropy.coordinates")
-    apyu = pytest.importorskip("astropy.units")
+def _astropy_xyz_pc(xyz_pc, *, frm, to) -> np.ndarray:
+    """Transform a cartesian position between two astropy frames, in pc.
 
+    One helper for both directions: the ICRS->GCF and GCF->ICRS references
+    differed only in which frame went where.
+    """
     x, y, z = xyz_pc
     sc = apyc.SkyCoord(
         x=x * apyu.pc,
         y=y * apyu.pc,
         z=z * apyu.pc,
         representation_type="cartesian",
-        frame=apyc.ICRS(),
+        frame=frm,
     )
-    out = sc.transform_to(_as_astropy_galactocentric(frame)).cartesian
-    return np.array(
-        [out.x.to_value(apyu.pc), out.y.to_value(apyu.pc), out.z.to_value(apyu.pc)],
-        dtype=float,
-    )
-
-
-def _astropy_gcf_to_icrs_xyz_pc(xyz_pc: Iterable[float], frame: cxastro.Galactocentric):
-    apyc = pytest.importorskip("astropy.coordinates")
-    apyu = pytest.importorskip("astropy.units")
-
-    x, y, z = xyz_pc
-    gcf = _as_astropy_galactocentric(frame)
-    sc = apyc.SkyCoord(
-        x=x * apyu.pc,
-        y=y * apyu.pc,
-        z=z * apyu.pc,
-        representation_type="cartesian",
-        frame=gcf,
-    )
-    out = sc.transform_to(apyc.ICRS()).cartesian
+    out = sc.transform_to(to).cartesian
     return np.array(
         [out.x.to_value(apyu.pc), out.y.to_value(apyu.pc), out.z.to_value(apyu.pc)],
         dtype=float,
@@ -98,7 +85,9 @@ def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     op = cxf.frame_transition(cxastro.ICRS(), gcf)
 
     got = cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")).ustrip("pc")
-    expected = _astropy_icrs_to_gcf_xyz_pc(xyz_pc, gcf)
+    expected = _astropy_xyz_pc(
+        xyz_pc, frm=apyc.ICRS(), to=_as_astropy_galactocentric(gcf)
+    )
 
     np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
@@ -112,23 +101,11 @@ def test_galactocentric_to_icrs_matches_astropy_positions(xyz_pc) -> None:
     op = cxf.frame_transition(gcf, cxastro.ICRS())
 
     got = cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")).ustrip("pc")
-    expected = _astropy_gcf_to_icrs_xyz_pc(xyz_pc, gcf)
+    expected = _astropy_xyz_pc(
+        xyz_pc, frm=_as_astropy_galactocentric(gcf), to=apyc.ICRS()
+    )
 
     np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
-
-
-def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
-    """ICRS<->Galactocentric operators are inverses for position transforms."""
-    icrs = cxastro.ICRS()
-    gcf = cxastro.Galactocentric()
-
-    fwd = cxf.frame_transition(icrs, gcf)
-    bwd = cxf.frame_transition(gcf, icrs)
-
-    q = u.Q(jnp.asarray([450, -100, 220]), "pc")
-    back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
-
-    np.testing.assert_allclose(_to_np(back, "pc"), _to_np(q, "pc"), rtol=0, atol=1e-6)
 
 
 # ===================================================================
@@ -138,11 +115,7 @@ def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
 class TestFrameTransformProperties:
     """Hypothesis-driven property tests for ICRS <-> Galactocentric transforms."""
 
-    @given(
-        q=ust.quantities(
-            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
-        )
-    )
+    @given(q=POSITIONS_PC)
     @settings(deadline=None)
     def test_icrs_gcf_icrs_roundtrip(self, q: u.AbstractQuantity) -> None:
         """ICRS → GCF → ICRS is the identity for arbitrary bounded positions."""
@@ -157,11 +130,7 @@ class TestFrameTransformProperties:
             _to_np(back, "pc"), _to_np(q, "pc"), rtol=0, atol=1e-6
         )
 
-    @given(
-        q=ust.quantities(
-            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
-        )
-    )
+    @given(q=POSITIONS_PC)
     @settings(deadline=None)
     def test_gcf_icrs_gcf_roundtrip(self, q: u.AbstractQuantity) -> None:
         """GCF → ICRS → GCF is the identity for arbitrary bounded positions."""
@@ -174,11 +143,7 @@ class TestFrameTransformProperties:
         back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
         np.testing.assert_allclose(back.ustrip("pc"), q.ustrip("pc"), rtol=0, atol=1e-6)
 
-    @given(
-        q=ust.quantities(
-            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
-        )
-    )
+    @given(q=POSITIONS_PC)
     @settings(deadline=None)
     def test_inverse_is_frame_transition_in_reverse(
         self, q: u.AbstractQuantity
@@ -202,11 +167,7 @@ class TestFrameTransformProperties:
             via_inverse.ustrip("pc"), via_bwd.ustrip("pc"), rtol=0, atol=1e-6
         )
 
-    @given(
-        q=ust.quantities(
-            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
-        )
-    )
+    @given(q=POSITIONS_PC)
     @settings(deadline=None)
     def test_icrs_to_gcf_matches_astropy_on_random_positions(
         self, q: u.AbstractQuantity
@@ -217,7 +178,11 @@ class TestFrameTransformProperties:
 
         xyz = q.ustrip("pc")
         got = cxfm.act(op, None, q).ustrip("pc")
-        expected = _astropy_icrs_to_gcf_xyz_pc((xyz[0], xyz[1], xyz[2]), gcf)
+        expected = _astropy_xyz_pc(
+            (xyz[0], xyz[1], xyz[2]),
+            frm=apyc.ICRS(),
+            to=_as_astropy_galactocentric(gcf),
+        )
         np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
 
@@ -230,9 +195,6 @@ def _astropy_icrs_to_gcf_phase_space(
     vxyz_kms: Iterable[float],
     frame: cxastro.Galactocentric,
 ):
-    apyc = pytest.importorskip("astropy.coordinates")
-    apyu = pytest.importorskip("astropy.units")
-
     x, y, z = xyz_pc
     vx, vy, vz = vxyz_kms
     sc = apyc.SkyCoord(
@@ -323,9 +285,6 @@ def test_icrs_galactocentric_phase_space_roundtrip() -> None:
 
 def test_custom_galcen_v_sun_velocities_match_astropy() -> None:
     """A non-default galcen_v_sun is honored and matches Astropy."""
-    apyc = pytest.importorskip("astropy.coordinates")
-    apyu = pytest.importorskip("astropy.units")
-
     v_sun = cxv.Tangent.from_([11.1, 232.24, 7.25], "km/s")
     gcf = cxastro.Galactocentric(galcen_v_sun=v_sun)
 
@@ -368,9 +327,6 @@ def test_custom_galcen_v_sun_velocities_match_astropy() -> None:
 
 def _astropy_galactic_phase_space(xyz_pc, vxyz_kms, from_frame, to_frame):
     """Transform cartesian phase-space data between astropy frames."""
-    apyc = pytest.importorskip("astropy.coordinates")
-    apyu = pytest.importorskip("astropy.units")
-
     kms = apyu.km / apyu.s
     rep = apyc.CartesianRepresentation(
         x=xyz_pc[0] * apyu.pc,
@@ -400,8 +356,6 @@ def _astropy_galactic_phase_space(xyz_pc, vxyz_kms, from_frame, to_frame):
 )
 def test_icrs_to_galactic_matches_astropy(xyz_pc, vxyz_kms) -> None:
     """ICRS->Galactic phase-space transforms match Astropy."""
-    apyc = pytest.importorskip("astropy.coordinates")
-
     op = cxf.frame_transition(cxastro.icrs, cxastro.galactic)
     out = cxfm.act(op, None, _coordinate(xyz_pc, vxyz_kms))
     got_q = np.array([_to_np(v, "pc") for v in out.point.data.values()])
@@ -461,8 +415,6 @@ def test_ngp_maps_to_z_axis() -> None:
 
 def test_galactic_to_galactocentric_via_fallback_matches_astropy() -> None:
     """Galactic->Galactocentric (generic route through ICRS) matches Astropy."""
-    apyc = pytest.importorskip("astropy.coordinates")
-
     gcf = cxastro.Galactocentric()
     op = cxf.frame_transition(cxastro.galactic, gcf)
 

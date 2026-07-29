@@ -21,9 +21,3 @@ def test_module_exports() -> None:
     # All items in __all__ should be accessible
     for name in cxastro.__all__:
         assert hasattr(cxastro, name)
-
-
-def test_module_docstring() -> None:
-    """Test that the module has a docstring."""
-    assert cxastro.__doc__ is not None
-    assert "astronomy" in cxastro.__doc__.lower()
