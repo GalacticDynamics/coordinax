@@ -13,6 +13,7 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
+from coordinax._src.product.register_metric import _mm_to_qm
 from coordinaxs.api.manifolds import metric_matrix as mm_dispatch
 
 
@@ -477,3 +478,9 @@ class TestProductMetric:
             assert jnp.allclose(
                 m[i], jnp.asarray(mm_dispatch(ps.M, single, ps).matrix.value)
             )
+
+    def test_mm_to_qm_batched_plain_array(self):
+        """A batched plain-array factor block sizes units from the last axis."""
+        qm = _mm_to_qm(DenseMetric(jnp.broadcast_to(jnp.eye(3), (5, 3, 3))))
+        assert qm.shape == (5, 3, 3)
+        assert qm.unit.shape == (3, 3)
