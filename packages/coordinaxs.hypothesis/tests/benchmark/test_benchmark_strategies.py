@@ -19,12 +19,6 @@ from coordinaxs.hypothesis.utils import get_all_subclasses
 def test_benchmark_chart_classes_simple(benchmark):
     """Benchmark drawing a representation class."""
 
-    @given(d=st_data())
-    @settings(max_examples=1, deadline=None)
-    def draw_one(d):
-        return d.draw(cxst.chart_classes())
-
-    # Use data() to draw from strategy
     def run_draw():
         result = []
 

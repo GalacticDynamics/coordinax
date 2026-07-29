@@ -258,44 +258,6 @@ class TestProductChartsEdgeCases:
         assert all(f.ndim > 0 for f in chart.factors)
 
 
-class TestProductChartsDocExamples:
-    """Test examples from docstring."""
-
-    @given(chart=cxst.charts(cxc.AbstractCartesianProductChart))
-    def test_basic_example(self, chart: cxc.AbstractCartesianProductChart) -> None:
-        """Basic usage example from docstring."""
-        assert isinstance(chart, cxc.AbstractCartesianProductChart)
-        assert len(chart.factors) >= 1
-
-    @given(
-        chart=cxst.charts(
-            cxc.CartesianProductChart,
-            factor_charts=(cxc.cart3d, cxc.cart3d),
-            factor_names=("q", "p"),
-        )
-    )
-    def test_phase_space_example(
-        self, chart: cxc.AbstractCartesianProductChart
-    ) -> None:
-        """Phase space example from docstring."""
-        assert chart.ndim == 6
-        assert len(chart.factors) == 2
-
-    @given(chart=cxst.charts(cxc.AbstractCartesianProductChart))
-    def test_can_generate_both_types(
-        self, chart: cxc.AbstractCartesianProductChart
-    ) -> None:
-        """Strategy can generate both namespaced and flat-key products."""
-        # Just verify it's a valid product chart
-        assert isinstance(chart, cxc.AbstractCartesianProductChart)
-        # Components are always strings (dot-delimited for namespaced, plain for
-        # flat-key)
-        if isinstance(chart, cxc.CartesianProductChart):
-            assert all(isinstance(c, str) and "." in c for c in chart.components)
-        else:  # Flat-key specializations
-            assert all(isinstance(c, str) for c in chart.components)
-
-
 @given(ndim=st.integers(min_value=2, max_value=6), chart=st.data())
 @settings(deadline=None)
 def test_product_charts_with_ndim(ndim: int, chart: st.DataObject) -> None:

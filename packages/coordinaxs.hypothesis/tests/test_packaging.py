@@ -2,6 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
+import importlib.util
 import pathlib
 
 import pytest
@@ -21,9 +22,7 @@ def _portion_dir_for(main_file: str) -> pathlib.Path:
     """
     main_path = pathlib.Path(main_file)
     if main_path.parent.name == "__pycache__":
-        # .../X/__pycache__/name.cpython-XY.pyc → .../X/name.py
-        source_stem = main_path.name.split(".", 1)[0]
-        main_path = main_path.parent.parent / f"{source_stem}.py"
+        main_path = pathlib.Path(importlib.util.source_from_cache(str(main_path)))
     if main_path.stem == "__init__":
         return main_path.parent.parent
     return main_path.parent
