@@ -1,18 +1,16 @@
-"""Unit tests for coordinax.angles.Angle.
+"""Angle-specific behaviour: wrapping, and the operators that keep the type.
 
-Covers construction, unit conversion, wrapping, arithmetic, and JAX
-compatibility. Property-based tests use hypothesis strategies from
-``coordinaxs.hypothesis``.
+Construction, unit conversion, the additive laws and JAX compatibility are
+shared with `Distance` and asserted once in
+`tests/unit/test_quantity_kind_contract.py`.
 """
 
 __all__: tuple[str, ...] = ()
 
-import jax
 import jax.numpy as jnp
 import pytest
 from hypothesis import given, settings, strategies as st
 
-import quaxed.numpy as qnp
 import unxt as u
 from unxt.quantity import AbstractAngle
 
@@ -212,122 +210,32 @@ class TestAngleWrapTo:
 
 
 class TestAngleArithmetic:
-    """Arithmetic operators preserve the Angle type and follow numeric laws."""
+    """Operators where Angle differs from a plain Quantity, or from Distance."""
 
-    @given(angle=cxst.angles())
-    def test_add_returns_angle(self, angle: cxa.Angle) -> None:
-        assert isinstance(angle + angle, cxa.Angle)
-
-    @given(angle=cxst.angles())
-    def test_sub_self_is_zero(self, angle: cxa.Angle) -> None:
-        result = angle - angle
-        assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, 0)
-
-    @given(angle=cxst.angles())
-    def test_neg_flips_sign(self, angle: cxa.Angle) -> None:
-        result = -angle
-        assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, -angle.value)
-
-    @given(angle=cxst.angles())
-    def test_scalar_mul_scales_value(self, angle: cxa.Angle) -> None:
-        result = 2 * angle
-        assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, 2 * angle.value)
-
-    @given(angle=cxst.angles(elements=_bounded_f32))
-    def test_add_sub_roundtrip(self, angle: cxa.Angle) -> None:
-        """(a + a) - a == a for values that don't overflow float32."""
-        result = (angle + angle) - angle
-        assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, angle.value, atol=1e-5)
+    @given(angle=cxst.angles(unit="rad", elements=_bounded_f32))
+    def test_neg_flips_sign_and_keeps_type(self, angle: cxa.Angle) -> None:
+        """Unlike Distance, an Angle stays an Angle under negation."""
+        negated = -angle
+        assert isinstance(negated, cxa.Angle)
+        assert jnp.allclose(negated.value, -angle.value)
 
     @given(
         angle=cxst.angles(
+            unit="rad",
             elements=st.floats(
-                # Both bounds are > float32_max / 2, so x + x overflows to inf.
-                min_value=_F32_OVERFLOW_MIN,
-                max_value=_F32_OVERFLOW_MAX,
-                width=32,
-            )
+                min_value=_F32_OVERFLOW_MIN, max_value=_F32_OVERFLOW_MAX, width=32
+            ),
         )
     )
     def test_add_overflow_produces_inf(self, angle: cxa.Angle) -> None:
-        """Doubling a near-max float32 Angle produces infinity, not a silent wrap."""
-        result = angle + angle
-        assert isinstance(result, cxa.Angle)
-        assert jnp.isinf(result.value)
+        """Doubling past float32 max saturates to inf rather than wrapping."""
+        assert jnp.all(jnp.isinf((angle + angle).value))
 
     @given(angle=cxst.angles())
-    def test_mul_quantity_leaves_angle_type(self, angle: cxa.Angle) -> None:
+    def test_mul_dimensioned_quantity_drops_the_angle_type(
+        self, angle: cxa.Angle
+    ) -> None:
         """Angle x dimensioned Quantity yields a plain Quantity, not an Angle."""
         result = angle * u.Q(2, "s")
         assert isinstance(result, u.AbstractQuantity)
         assert not isinstance(result, AbstractAngle)
-
-    # --- algebraic laws (bounded to avoid float32 overflow) ---
-
-    @given(
-        a=cxst.angles(unit="rad", elements=_unit_f32),
-        b=cxst.angles(unit="rad", elements=_unit_f32),
-    )
-    def test_add_commutativity(self, a: cxa.Angle, b: cxa.Angle) -> None:
-        """A + b == b + a."""
-        assert jnp.allclose((a + b).value, (b + a).value, atol=1e-5)
-
-    @given(
-        a=cxst.angles(unit="rad", elements=_unit_f32),
-        b=cxst.angles(unit="rad", elements=_unit_f32),
-        c=cxst.angles(unit="rad", elements=_unit_f32),
-    )
-    def test_add_associativity(self, a: cxa.Angle, b: cxa.Angle, c: cxa.Angle) -> None:
-        """(a + b) + c == a + (b + c)."""
-        assert jnp.allclose(((a + b) + c).value, (a + (b + c)).value, atol=1e-4)
-
-
-class TestAngleJAX:
-    """Angles are valid JAX pytrees and work under JIT, vmap, and grad."""
-
-    @given(angle=cxst.angles())
-    @settings(deadline=None)
-    def test_pytree_roundtrip(self, angle: cxa.Angle) -> None:
-        """Flatten → unflatten recovers an identical Angle."""
-        flat, tree = jax.tree.flatten(angle)
-        restored = jax.tree.unflatten(tree, flat)
-        assert type(restored) is type(angle)
-        assert restored.unit == angle.unit
-        assert jnp.array_equal(restored.value, angle.value)
-
-    @given(angle=cxst.angles())
-    @settings(deadline=None)
-    def test_jit_identity(self, angle: cxa.Angle) -> None:
-        """jax.jit of the identity function preserves the Angle unchanged."""
-        result = jax.jit(lambda x: x)(angle)
-        assert type(result) is type(angle)
-        assert jnp.array_equal(result.value, angle.value)
-
-    @given(angle=cxst.angles())
-    @settings(deadline=None)
-    def test_jit_add(self, angle: cxa.Angle) -> None:
-        """jax.jit works over Angle addition."""
-        result = jax.jit(lambda x: x + x)(angle)
-        assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, 2 * angle.value)
-
-    @given(angle=cxst.angles(shape=(3,)))
-    @settings(deadline=None)
-    def test_vmap(self, angle: cxa.Angle) -> None:
-        """jax.vmap maps a scalar op over an Angle array."""
-        result = jax.vmap(lambda x: x + x)(angle)
-        assert isinstance(result, cxa.Angle)
-        assert result.shape == (3,)
-        assert jnp.allclose(result.value, 2 * angle.value)
-
-    @given(angle=cxst.angles(unit="rad", elements=_trig_f32))
-    @settings(deadline=None)
-    def test_grad_through_angle(self, angle: cxa.Angle) -> None:
-        """jax.grad differentiates through quaxed ops; d/dx sin(x) = cos(x)."""
-        g = jax.grad(lambda x: qnp.sin(x).value)(angle)
-        assert isinstance(g, cxa.Angle)
-        assert jnp.allclose(g.value, jnp.cos(angle.value), atol=1e-5)

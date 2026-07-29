@@ -1,4 +1,10 @@
-"""Unit tests for coordinax.distances.Distance.
+"""Distance-specific behaviour: non-negativity, and the operators it breaks.
+
+Construction, unit conversion, the additive laws and JAX compatibility are
+shared with `Angle` and asserted once in
+`tests/unit/test_quantity_kind_contract.py`.
+
+Original docstring: unit tests for coordinax.distances.Distance.
 
 Covers construction, unit conversion, arithmetic, and JAX compatibility.
 Property-based tests use hypothesis strategies from ``coordinaxs.hypothesis``.
@@ -177,44 +183,63 @@ class TestDistanceConversion:
         assert jnp.allclose(round_tripped.value, d.value, rtol=1e-4)
 
 
-class TestDistanceArithmetic:
-    """Arithmetic operators observe the non-negativity constraint of Distance."""
+class TestDistanceNonNegativity:
+    """A Distance is non-negative by construction. Angle has no analogue."""
 
     @given(d=cxst.distances())
-    def test_add_returns_distance(self, d: cxd.Distance) -> None:
-        assert isinstance(d + d, cxd.Distance)
+    def test_non_negative_by_default(self, d: cxd.Distance) -> None:
+        assert jnp.all(d.value >= 0)
 
-    @given(d=cxst.distances(elements={"allow_infinity": False}))
-    def test_sub_self_is_zero(self, d: cxd.Distance) -> None:
-        result = d - d
-        assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, 0)
+    def test_check_negative_false_permits_negatives(self) -> None:
+        """A negative value survives construction when the check is off.
+
+        Asserted against a literal rather than a draw: the strategy is free to
+        return non-negative values, so a generated example could not establish
+        that a negative one is *accepted*.
+        """
+        d = cxd.Distance(-1, "kpc", check_negative=False)
+        assert isinstance(d, cxd.Distance)
+        assert jnp.all(d.value < 0)
+
+    @given(d=cxst.distances(check_negative=False))
+    def test_check_negative_false_still_builds_distances(self, d: cxd.Distance) -> None:
+        """Every draw with the check off is still a well-formed Distance."""
+        assert isinstance(d, cxd.Distance)
+        assert d.unit is not None
+
+    def test_negative_raises_when_checked(self) -> None:
+        with pytest.raises(
+            (eqx.EquinoxRuntimeError, ValueError), match="Distance must be non-negative"
+        ):
+            cxd.Distance(-1, "kpc", check_negative=True)
+
+    def test_negative_raises_under_jit(self) -> None:
+        """The check is not dead-code-eliminated under jit."""
+
+        @eqx.filter_jit
+        def build(v: jax.Array) -> jax.Array:
+            return cxd.Distance(v, "kpc", check_negative=True).value
+
+        with pytest.raises(
+            eqx.EquinoxRuntimeError, match="Distance must be non-negative"
+        ):
+            jax.block_until_ready(build(jnp.asarray(-1.0)))
+
+
+class TestDistanceArithmetic:
+    """Operators where non-negativity forces Distance out of its own type."""
 
     @given(d=cxst.distances())
     def test_neg_degrades_to_quantity(self, d: cxd.Distance) -> None:
-        """Negation cannot produce a valid Distance; result is a plain Quantity.
+        """Negation cannot produce a valid Distance, so it drops to Quantity.
 
-        This is the key behavioral difference from ``Angle``, where ``-angle``
-        returns an ``Angle``.  A ``Distance`` is defined as non-negative, so
-        negation must drop to the parent ``Quantity`` type.
+        This is the key behavioural difference from `Angle`, where `-angle`
+        is still an `Angle`.
         """
         result = -d
         assert isinstance(result, u.AbstractQuantity)
         assert not isinstance(result, cxd.Distance)
         assert jnp.allclose(result.value, -d.value)
-
-    @given(d=cxst.distances())
-    def test_scalar_mul_scales_value(self, d: cxd.Distance) -> None:
-        result = 2 * d
-        assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, 2 * d.value)
-
-    @given(d=cxst.distances(elements=_bounded_f32))
-    def test_add_sub_roundtrip(self, d: cxd.Distance) -> None:
-        """(d + d) - d == d for values that don't overflow float32."""
-        result = (d + d) - d
-        assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, d.value, atol=1e-5)
 
     @given(
         d=cxst.distances(
@@ -224,38 +249,17 @@ class TestDistanceArithmetic:
         )
     )
     def test_add_overflow_produces_inf(self, d: cxd.Distance) -> None:
-        """Doubling a near-max float32 Distance produces infinity."""
+        """Doubling a near-max float32 Distance saturates to infinity."""
         result = d + d
         assert isinstance(result, cxd.Distance)
-        assert jnp.isinf(result.value)
+        assert jnp.all(jnp.isinf(result.value))
 
     @given(d=cxst.distances())
-    def test_mul_quantity_promotes(self, d: cxd.Distance) -> None:
-        """Distance x dimensioned Quantity yields a plain Quantity, not a Distance."""
+    def test_mul_dimensioned_quantity_promotes(self, d: cxd.Distance) -> None:
+        """Distance x dimensioned Quantity yields a plain Quantity."""
         result = d * u.Q(2, "s")
         assert isinstance(result, u.AbstractQuantity)
         assert not isinstance(result, cxd.Distance)
-
-    # --- algebraic laws (bounded to avoid float32 overflow) ---
-
-    @given(
-        a=cxst.distances(unit="kpc", elements=_unit_f32),
-        b=cxst.distances(unit="kpc", elements=_unit_f32),
-    )
-    def test_add_commutativity(self, a: cxd.Distance, b: cxd.Distance) -> None:
-        """A + b == b + a."""
-        assert jnp.allclose((a + b).value, (b + a).value, atol=1e-5)
-
-    @given(
-        a=cxst.distances(unit="kpc", elements=_unit_f32),
-        b=cxst.distances(unit="kpc", elements=_unit_f32),
-        c=cxst.distances(unit="kpc", elements=_unit_f32),
-    )
-    def test_add_associativity(
-        self, a: cxd.Distance, b: cxd.Distance, c: cxd.Distance
-    ) -> None:
-        """(a + b) + c == a + (b + c)."""
-        assert jnp.allclose(((a + b) + c).value, (a + (b + c)).value, atol=1e-4)
 
     def test_atan2_promotes_to_angle(self) -> None:
         """atan2(Distance, Distance) yields an angle-dimensioned Quantity."""
