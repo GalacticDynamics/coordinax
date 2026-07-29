@@ -184,9 +184,11 @@ def metric_matrix(
         )
     )
 
+    canonical = SphericalTwoSphere()
+
     def to_canon(xi: jnp.ndarray) -> jnp.ndarray:
         p = {k: u.Q(xi[i], RAD) for i, k in enumerate(keys)}
-        s = cast("CDict", cxcapi.pt_map(p, chart, SphericalTwoSphere()))
+        s = cast("CDict", cxcapi.pt_map(p, chart, canonical))
         return jnp.stack([u.ustrip(RAD, s["theta"]), u.ustrip(RAD, s["phi"])])
 
     def pullback(xi: jnp.ndarray) -> jnp.ndarray:
