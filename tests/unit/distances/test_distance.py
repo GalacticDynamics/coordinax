@@ -199,7 +199,7 @@ class TestDistanceNonNegativity:
         """
         d = cxd.Distance(-1, "kpc", check_negative=False)
         assert isinstance(d, cxd.Distance)
-        assert d.value < 0
+        assert jnp.all(d.value < 0)
 
     @given(d=cxst.distances(check_negative=False))
     def test_check_negative_false_still_builds_distances(self, d: cxd.Distance) -> None:
