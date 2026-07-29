@@ -1,11 +1,22 @@
 """Unit tests for scripts/validate_tag.py.
 
-Tests cover the core release/tagging validation rules:
-- Package tag required (not bare vX.Y.Z tags)
-- .0 releases require coordinator tag
-- Legacy (<0.24) behavior exceptions
-- subprocess-based coordinator lookup with error handling
+The script answers two questions, and the tests are the two tables that go with
+them:
+
+* `parse_version_tag(tag)` -- a pure string parse, so a (tag, expected) table.
+* `validate_tag_for_package(tag, package)` -- the release rules, so a
+  (tag, package, valid, error fragments) table. Rows that reach git are split
+  out, because those need a canned `git tag -l` result.
+
+The rules under test:
+
+- package-specific tags required (not bare vX.Y.Z), from 0.24 on
+- .0 releases require a matching coordinator tag
+- legacy (<0.24) exceptions
+- subprocess-based coordinator lookup, with error handling
 """
+
+__all__: tuple[str, ...] = ()
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -29,461 +40,267 @@ def validate_tag(monkeypatch):
     return vt
 
 
-class TestParseVersionTag:
-    """Test tag parsing functionality."""
+@pytest.fixture
+def fake_git():
+    """Patch `subprocess.run` with a canned `git tag -l` result.
 
-    def test_valid_package_specific_tag(self, validate_tag):
-        """Parse package-specific tags correctly."""
-        assert validate_tag.parse_version_tag("coordinax-v1.0.0") == (
-            "coordinax",
-            1,
-            0,
-            0,
-        )
-        assert validate_tag.parse_version_tag("coordinaxs-api-v2.3.4") == (
-            "coordinaxs-api",
-            2,
-            3,
-            4,
-        )
-        assert validate_tag.parse_version_tag("coordinaxs-astro-v0.5.2") == (
-            "coordinaxs-astro",
-            0,
-            5,
-            2,
-        )
-        assert validate_tag.parse_version_tag("coordinaxs-interop-astropy-v1.2.3") == (
-            "coordinaxs-interop-astropy",
-            1,
-            2,
-            3,
-        )
+    The twelve call sites that needed one previously built the same four-line
+    `MagicMock` by hand.
+    """
 
-    def test_valid_bare_tag(self, validate_tag):
-        """Parse bare coordinator tags correctly."""
-        assert validate_tag.parse_version_tag("v1.0.0") == ("", 1, 0, 0)
-        assert validate_tag.parse_version_tag("v2.3.4") == ("", 2, 3, 4)
-        assert validate_tag.parse_version_tag("v0.24.0") == ("", 0, 24, 0)
+    def _patch(stdout: str = "", *, returncode: int = 0, stderr: str = ""):
+        result = MagicMock(returncode=returncode, stdout=stdout, stderr=stderr)
+        return patch("subprocess.run", return_value=result)
 
-    def test_invalid_formats(self, validate_tag):
-        """Return None for invalid tag formats."""
-        assert validate_tag.parse_version_tag("1.0.0") is None  # Missing 'v' prefix
-        assert validate_tag.parse_version_tag("va.b.c") is None  # Non-numeric version
-        assert validate_tag.parse_version_tag("coordinax-1.0.0") is None  # Missing 'v'
-        assert (
-            validate_tag.parse_version_tag("coordinax_v1.0.0") is None
-        )  # Underscore instead of dash
-        assert validate_tag.parse_version_tag("v1.0") is None  # Missing patch version
-        assert validate_tag.parse_version_tag("random-tag") is None  # Not a version tag
+    return _patch
 
 
-class TestCheckCoordinatorTagExists:
-    """Test coordinator tag existence checking."""
-
-    def test_tag_exists(self, validate_tag):
-        """Return True when coordinator tag exists."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v1.0.0\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            assert validate_tag.check_coordinator_tag_exists("1.0.0") is True
-
-    def test_tag_does_not_exist(self, validate_tag):
-        """Return False when coordinator tag doesn't exist."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "\n"  # Empty result
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            assert validate_tag.check_coordinator_tag_exists("1.0.0") is False
-
-    def test_git_command_failure_raises_error(self, validate_tag):
-        """Raise RuntimeError when git command fails."""
-        mock_result = MagicMock()
-        mock_result.returncode = 128  # Git error
-        mock_result.stdout = ""
-        mock_result.stderr = "fatal: not a git repository"
-
-        with patch("subprocess.run", return_value=mock_result):
-            with pytest.raises(RuntimeError) as exc_info:
-                validate_tag.check_coordinator_tag_exists("1.0.0")
-
-            error_msg = str(exc_info.value)
-            assert "git tag -l failed" in error_msg
-            assert "fetch-depth" in error_msg
-
-    def test_git_command_failure_without_stderr(self, validate_tag):
-        """Raise RuntimeError when git fails without stderr output."""
-        mock_result = MagicMock()
-        mock_result.returncode = 1
-        mock_result.stdout = ""
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            with pytest.raises(RuntimeError) as exc_info:
-                validate_tag.check_coordinator_tag_exists("1.0.0")
-
-            assert "git tag -l failed" in str(exc_info.value)
+# ===================================================================
+# parse_version_tag
 
 
-class TestValidateTagForPackage:
-    """Test tag validation logic for packages."""
+@pytest.mark.parametrize(
+    ("tag", "expected"),
+    [
+        # package-specific
+        ("coordinax-v1.0.0", ("coordinax", 1, 0, 0)),
+        ("coordinaxs-api-v2.3.4", ("coordinaxs-api", 2, 3, 4)),
+        ("coordinaxs-astro-v0.5.2", ("coordinaxs-astro", 0, 5, 2)),
+        ("coordinaxs-interop-astropy-v1.2.3", ("coordinaxs-interop-astropy", 1, 2, 3)),
+        # bare coordinator tags -- empty package name
+        ("v1.0.0", ("", 1, 0, 0)),
+        ("v2.3.4", ("", 2, 3, 4)),
+        ("v0.24.0", ("", 0, 24, 0)),
+        # rejected
+        ("1.0.0", None),  # missing 'v' prefix
+        ("va.b.c", None),  # non-numeric version
+        ("coordinax-1.0.0", None),  # missing 'v'
+        ("coordinax_v1.0.0", None),  # underscore instead of dash
+        ("v1.0", None),  # missing patch version
+        ("random-tag", None),  # not a version tag
+    ],
+)
+def test_parse_version_tag(validate_tag, tag: str, expected) -> None:
+    assert validate_tag.parse_version_tag(tag) == expected
 
-    # Legacy behavior tests
 
-    def test_legacy_tags_always_valid(self, validate_tag):
-        """Tags for version 0.23.x and lower are always valid."""
-        # Bare tags are acceptable for legacy
-        is_valid, error = validate_tag.validate_tag_for_package("v0.23.0", "coordinax")
-        assert is_valid is True
+# ===================================================================
+# check_coordinator_tag_exists
+
+
+@pytest.mark.parametrize(
+    ("stdout", "exists"),
+    [
+        ("v1.0.0\n", True),
+        ("\n", False),
+    ],
+    ids=["found", "absent"],
+)
+def test_check_coordinator_tag_exists(validate_tag, fake_git, stdout, exists) -> None:
+    with fake_git(stdout):
+        assert validate_tag.check_coordinator_tag_exists("1.0.0") is exists
+
+
+@pytest.mark.parametrize(
+    ("returncode", "stderr"),
+    [(128, "fatal: not a git repository"), (1, "")],
+    ids=["with-stderr", "without-stderr"],
+)
+def test_git_failure_raises(validate_tag, fake_git, returncode, stderr) -> None:
+    """A non-zero `git tag -l` is an error, not an absent tag."""
+    with (
+        fake_git("", returncode=returncode, stderr=stderr),
+        pytest.raises(RuntimeError, match="git tag -l failed"),
+    ):
+        validate_tag.check_coordinator_tag_exists("1.0.0")
+
+
+# ===================================================================
+# validate_tag_for_package -- rules that never reach git
+
+#: (tag, package, valid, fragments the error message must contain)
+OFFLINE_CASES = [
+    # legacy: <= 0.23 accepts bare *and* package-specific tags
+    ("v0.23.0", "coordinax", True, ()),
+    ("v0.20.5", "coordinax", True, ()),
+    ("v0.23.10", "coordinaxs.api", True, ()),
+    ("coordinax-v0.23.0", "coordinax", True, ()),
+    # unparsable
+    ("invalid-tag", "coordinax", False, ("Invalid tag format",)),
+    ("1.0.0", "coordinax", False, ("Invalid tag format",)),
+    # bare tags rejected from 0.24 on
+    ("v0.24.0", "coordinax", False, ("Coordinator tags", "package-specific tags")),
+    ("v1.0.0", "coordinaxs.api", False, ("Coordinator tags",)),
+    # the tag's package must match the workflow's
+    (
+        "coordinaxs-api-v0.24.0",
+        "coordinax",
+        False,
+        ("This tag is for package 'coordinaxs.api'", "this workflow is for package"),
+    ),
+    (
+        "coordinax-v0.24.0",
+        "coordinaxs.api",
+        False,
+        ("This tag is for package 'coordinax'",),
+    ),
+    # unknown package
+    (
+        "invalid-package-v1.0.0",
+        "invalid-package",
+        False,
+        ("Unknown package", "Allowed values"),
+    ),
+    # bugfix releases (.1+) need no coordinator tag, so never reach git
+    ("coordinax-v0.24.1", "coordinax", True, ()),
+    ("coordinaxs-api-v1.5.3", "coordinaxs.api", True, ()),
+    ("coordinaxs-astro-v2.0.99", "coordinaxs.astro", True, ()),
+    ("coordinaxs-curveframes-v2.0.99", "coordinaxs.curveframes", True, ()),
+    # package=None defaults to coordinax
+    (
+        "coordinaxs-api-v0.24.0",
+        None,
+        False,
+        ("This tag is for package 'coordinaxs.api'", "this workflow is for package"),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("tag", "package", "valid", "fragments"),
+    OFFLINE_CASES,
+    ids=[f"{tag}-for-{package}" for tag, package, _, _ in OFFLINE_CASES],
+)
+def test_validate_tag_without_git(validate_tag, tag, package, valid, fragments) -> None:
+    """These rules resolve without git, and `subprocess.run` proves it.
+
+    Patched rather than left alone: if a regression made one of these paths
+    shell out, an unpatched test would run a real `git tag -l` and pass or fail
+    on whatever tags the CI checkout happens to have. Patching turns that into
+    a deterministic failure here.
+    """
+    with patch("subprocess.run") as run:
+        is_valid, error = validate_tag.validate_tag_for_package(tag, package)
+    run.assert_not_called()
+    assert is_valid is valid, error
+    if valid:
         assert error == ""
+    for fragment in fragments:
+        assert fragment in error
 
-        is_valid, error = validate_tag.validate_tag_for_package("v0.20.5", "coordinax")
-        assert is_valid is True
 
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "v0.23.10", "coordinaxs.api"
-        )
-        assert is_valid is True
+# ===================================================================
+# validate_tag_for_package -- .0 releases, which consult git
 
-        # Package-specific tags are also valid for legacy
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-v0.23.0", "coordinax"
-        )
-        assert is_valid is True
+#: (tag, package, `git tag -l` output, valid, error fragments)
+DOT_ZERO_CASES = [
+    ("coordinax-v0.24.0", "coordinax", "v0.24.0\n", True, ()),
+    ("coordinaxs-api-v1.0.0", "coordinaxs.api", "v1.0.0\n", True, ()),
+    ("coordinax-v0.24.0", None, "v0.24.0\n", True, ()),
+    # large version numbers are not special
+    ("coordinax-v99.999.999", "coordinax", "v99.999.999\n", True, ()),
+    # the match is per-line, so extra tags and surrounding whitespace are fine
+    ("coordinax-v1.0.0", "coordinax", "v1.0.0\nv1.0.0-rc1\n", True, ()),
+    ("coordinax-v1.0.0", "coordinax", "  v1.0.0  \n", True, ()),
+    # no coordinator tag -> rejected
+    (
+        "coordinax-v0.24.0",
+        "coordinax",
+        "\n",
+        False,
+        ("must have a corresponding coordinator tag", "v0.24.0"),
+    ),
+]
 
-    # Invalid format tests
 
-    def test_invalid_tag_format_rejected(self, validate_tag):
-        """Invalid tag formats are rejected."""
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "invalid-tag", "coordinax"
-        )
-        assert is_valid is False
-        assert "Invalid tag format" in error
+@pytest.mark.parametrize(
+    ("tag", "package", "git_stdout", "valid", "fragments"),
+    DOT_ZERO_CASES,
+    ids=[f"{tag}-{'found' if v else 'missing'}" for tag, _, _, v, _ in DOT_ZERO_CASES],
+)
+def test_validate_dot_zero_release(
+    validate_tag, fake_git, tag, package, git_stdout, valid, fragments
+) -> None:
+    with fake_git(git_stdout):
+        is_valid, error = validate_tag.validate_tag_for_package(tag, package)
+    assert is_valid is valid, error
+    if valid:
+        assert error == ""
+    for fragment in fragments:
+        assert fragment in error
 
-        is_valid, error = validate_tag.validate_tag_for_package("1.0.0", "coordinax")
-        assert is_valid is False
 
-    # Rule 1: Package-specific tag required (post-0.23)
-
-    def test_bare_tag_rejected_for_new_versions(self, validate_tag):
-        """Bare vX.Y.Z tags are rejected for versions >= 0.24."""
-        is_valid, error = validate_tag.validate_tag_for_package("v0.24.0", "coordinax")
-        assert is_valid is False
-        assert "Coordinator tags" in error
-        assert "package-specific tags" in error
-
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "v1.0.0", "coordinaxs.api"
-        )
-        assert is_valid is False
-
-    # Rule 2: Package must match
-
-    def test_package_specific_tag_matches_package(self, validate_tag):
-        """Package-specific tags must match the specified package."""
-        # Valid: tag matches package
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v0.24.0\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.0", "coordinax"
-            )
-            assert is_valid is True
+def test_every_release_package_accepts_its_own_tag(validate_tag, fake_git) -> None:
+    """Every name in PACKAGE_NAMES validates against its own vX.0.0 tag."""
+    with fake_git("v1.0.0\n"):
+        for package in validate_tag.PACKAGE_NAMES:
+            tag = f"{package.replace('.', '-')}-v1.0.0"
+            is_valid, error = validate_tag.validate_tag_for_package(tag, package)
+            assert is_valid is True, f"{package}: {error}"
             assert error == ""
 
-    def test_package_specific_tag_wrong_package(self, validate_tag):
-        """Reject tag when package doesn't match."""
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinaxs-api-v0.24.0", "coordinax"
+
+def test_curveframes_is_a_release_package(validate_tag) -> None:
+    """Regression: curveframes must not fall out of the release set."""
+    assert "coordinaxs.curveframes" in validate_tag.PACKAGE_NAMES
+
+
+# ===================================================================
+# When git is consulted, and how
+
+
+def test_dot_zero_release_queries_the_exact_coordinator_tag(
+    validate_tag, fake_git
+) -> None:
+    with fake_git("v0.24.0\n") as run:
+        is_valid, _ = validate_tag.validate_tag_for_package(
+            "coordinax-v0.24.0", "coordinax"
         )
-        assert is_valid is False
-        assert "This tag is for package 'coordinaxs.api'" in error
-        assert "but this workflow is for package 'coordinax'" in error
-
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-v0.24.0", "coordinaxs.api"
-        )
-        assert is_valid is False
-        assert "This tag is for package 'coordinax'" in error
-
-    def test_unknown_package_rejected(self, validate_tag):
-        """Reject unknown package names."""
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "invalid-package-v1.0.0", "invalid-package"
-        )
-        assert is_valid is False
-        assert "Unknown package" in error
-        assert "Allowed values" in error
-
-    # Rule 3: .0 releases require coordinator tag
-
-    def test_dot_zero_release_with_coordinator_tag(self, validate_tag):
-        """Accept .0 release when coordinator tag exists."""
-        # Test for coordinax-v0.24.0 with v0.24.0 coordinator
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v0.24.0\n"  # Coordinator tag exists
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.0", "coordinax"
-            )
-            assert is_valid is True
-            assert error == ""
-
-        # Test for coordinaxs-api-v1.0.0 with v1.0.0 coordinator
-        mock_result_2 = MagicMock()
-        mock_result_2.returncode = 0
-        mock_result_2.stdout = "v1.0.0\n"  # Different coordinator tag
-        mock_result_2.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result_2):
-            is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinaxs-api-v1.0.0", "coordinaxs.api"
-            )
-            assert is_valid is True
-
-    def test_dot_zero_release_without_coordinator_tag(self, validate_tag):
-        """Reject .0 release when coordinator tag doesn't exist."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "\n"  # No coordinator tag
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.0", "coordinax"
-            )
-            assert is_valid is False
-            assert "must have a corresponding coordinator tag" in error
-            assert "v0.24.0" in error
-
-    def test_dot_zero_release_git_error_propagates(self, validate_tag):
-        """Propagate git errors when checking for .0 release coordinator."""
-        mock_result = MagicMock()
-        mock_result.returncode = 128
-        mock_result.stdout = ""
-        mock_result.stderr = "fatal: not a git repository"
-
-        with patch("subprocess.run", return_value=mock_result):
-            with pytest.raises(RuntimeError) as exc_info:
-                validate_tag.validate_tag_for_package("coordinax-v0.24.0", "coordinax")
-
-            assert "git tag -l failed" in str(exc_info.value)
-
-    # Bug-fix releases (patch > 0)
-
-    def test_bugfix_release_no_coordinator_required(self, validate_tag):
-        """Bug-fix releases (X.Y.Z where Z > 0) don't require coordinator tag."""
-        # No subprocess.run call should happen for patch > 0
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-v0.24.1", "coordinax"
-        )
-        assert is_valid is True
-        assert error == ""
-
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinaxs-api-v1.5.3", "coordinaxs.api"
-        )
-        assert is_valid is True
-
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinaxs-astro-v2.0.99", "coordinaxs.astro"
-        )
-        assert is_valid is True
-
-    def test_curveframes_is_a_release_package(self, validate_tag):
-        """coordinaxs.curveframes is wired into the release automation."""
-        assert "coordinaxs.curveframes" in validate_tag.PACKAGE_NAMES
-        # Bug-fix patch tag (Z > 0) needs no coordinator tag.
-        is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinaxs-curveframes-v2.0.99", "coordinaxs.curveframes"
-        )
-        assert is_valid is True, error
-
-    def test_bugfix_release_subprocess_not_called(self, validate_tag):
-        """Verify subprocess is not called for bugfix releases."""
-        with patch("subprocess.run") as mock_subprocess:
-            is_valid, _ = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.1", "coordinax"
-            )
-            assert is_valid is True
-            # subprocess.run should not have been called
-            mock_subprocess.assert_not_called()
-
-    # Package name normalization
-
-    def test_none_package_defaults_to_coordinax(self, validate_tag):
-        """package=None should default to 'coordinax'."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v0.24.0\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            # Should validate as if package='coordinax'
-            is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.0", None
-            )
-            assert is_valid is True
-
-            # Should fail for wrong package
-            is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinaxs-api-v0.24.0", None
-            )
-            assert is_valid is False
-            assert "This tag is for package 'coordinaxs.api'" in error
-            assert "but this workflow is for package 'coordinax'" in error
-
-    # All supported packages
-
-    def test_all_valid_packages(self, validate_tag):
-        """Test validation for all supported packages."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v1.0.0\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            for package in validate_tag.PACKAGE_NAMES:
-                tag_prefix = package.replace(".", "-")
-                is_valid, error = validate_tag.validate_tag_for_package(
-                    f"{tag_prefix}-v1.0.0", package
-                )
-                assert is_valid is True, f"Failed for package {package}: {error}"
-                assert error == ""
+    assert is_valid is True
+    run.assert_called_once()
+    assert run.call_args[0][0] == ["git", "tag", "-l", "v0.24.0"]
 
 
-class TestEdgeCases:
-    """Test edge cases and boundary conditions."""
-
-    def test_version_with_large_numbers(self, validate_tag):
-        """Handle versions with large numbers correctly."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v99.999.999\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            is_valid, _ = validate_tag.validate_tag_for_package(
-                "coordinax-v99.999.999", "coordinax"
-            )
-            # This is valid - just testing parsing works
-            assert is_valid is True
-
-    def test_version_boundary_0_23_vs_0_24(self, validate_tag):
-        """Verify legacy boundary at 0.23."""
-        # 0.23.0 is legacy - bare tag is acceptable
-        is_valid, _ = validate_tag.validate_tag_for_package("v0.23.0", "coordinax")
-        assert is_valid is True
-
-        # 0.24.0 is new - bare tag should be rejected
-        is_valid, _ = validate_tag.validate_tag_for_package("v0.24.0", "coordinax")
-        assert is_valid is False
-
-    def test_multiple_coordinator_tags_in_output(self, validate_tag):
-        """Handle git output with multiple tags correctly."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        # Multiple tags can be returned from git tag -l
-        mock_result.stdout = "v1.0.0\nv1.0.0-rc1\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            # Should find v1.0.0 in the output
-            is_valid, _ = validate_tag.validate_tag_for_package(
-                "coordinax-v1.0.0", "coordinax"
-            )
-            assert is_valid is True
-
-    def test_coordinator_tag_with_whitespace(self, validate_tag):
-        """Handle coordinator tag lookup with extra whitespace."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "  v1.0.0  \n"  # Extra whitespace
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            is_valid, _ = validate_tag.validate_tag_for_package(
-                "coordinax-v1.0.0", "coordinax"
-            )
-            assert is_valid is True
+@pytest.mark.parametrize(
+    "tag", ["coordinax-v0.24.1", "coordinax-v0.24.5"], ids=["patch-1", "patch-5"]
+)
+def test_bugfix_release_never_shells_out(validate_tag, tag) -> None:
+    with patch("subprocess.run") as run:
+        is_valid, _ = validate_tag.validate_tag_for_package(tag, "coordinax")
+    assert is_valid is True
+    run.assert_not_called()
 
 
-class TestIntegration:
-    """Integration tests combining multiple validation rules."""
+@pytest.mark.parametrize(
+    ("returncode", "stderr"),
+    [(128, "fatal: not a git repository"), (1, "Failed to fetch tags")],
+    ids=["not-a-repo", "fetch-failed"],
+)
+def test_git_failure_propagates_out_of_validation(
+    validate_tag, fake_git, returncode, stderr
+) -> None:
+    """A git failure during a .0 check surfaces, rather than reading as absent."""
+    with (
+        fake_git("", returncode=returncode, stderr=stderr),
+        pytest.raises(RuntimeError) as exc_info,
+    ):
+        validate_tag.validate_tag_for_package("coordinax-v0.24.0", "coordinax")
 
-    def test_complete_validation_flow_dot_zero_release(self, validate_tag):
-        """Test complete flow for .0 release validation."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v0.24.0\n"
-        mock_result.stderr = ""
+    message = str(exc_info.value)
+    assert "git tag -l failed" in message
+    assert "fetch-depth" in message
 
-        with patch("subprocess.run", return_value=mock_result) as mock_subprocess:
-            # Valid .0 release
-            is_valid, _ = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.0", "coordinax"
-            )
-            assert is_valid is True
 
-            # Verify git was called to check coordinator tag
-            mock_subprocess.assert_called_once()
-            call_args = mock_subprocess.call_args[0][0]
-            assert call_args == ["git", "tag", "-l", "v0.24.0"]
+# ===================================================================
+# Boundary
 
-    def test_complete_validation_flow_bugfix_release(self, validate_tag):
-        """Test complete flow for bugfix release validation."""
-        # Bugfix releases should not call git at all
-        with patch("subprocess.run") as mock_subprocess:
-            is_valid, _ = validate_tag.validate_tag_for_package(
-                "coordinax-v0.24.5", "coordinax"
-            )
-            assert is_valid is True
-            mock_subprocess.assert_not_called()
 
-    def test_complete_validation_flow_error_handling(self, validate_tag):
-        """Test error handling in complete validation flow."""
-        mock_result = MagicMock()
-        mock_result.returncode = 1
-        mock_result.stdout = ""
-        mock_result.stderr = "Failed to fetch tags"
-
-        with patch("subprocess.run", return_value=mock_result):
-            with pytest.raises(RuntimeError) as exc_info:
-                validate_tag.validate_tag_for_package("coordinax-v0.24.0", "coordinax")
-
-            error_msg = str(exc_info.value)
-            assert "git tag -l failed" in error_msg
-            assert "fetch-depth" in error_msg
-
-    def test_validation_for_different_packages_in_sequence(self, validate_tag):
-        """Test validating tags for different packages in sequence."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "v1.0.0\n"
-        mock_result.stderr = ""
-
-        with patch("subprocess.run", return_value=mock_result):
-            # Test different packages with .0 tags
-            for package in [
-                "coordinax",
-                "coordinaxs.api",
-                "coordinaxs.astro",
-                "coordinaxs.hypothesis",
-                "coordinaxs.interop.astropy",
-            ]:
-                tag_prefix = package.replace(".", "-")
-                is_valid, error = validate_tag.validate_tag_for_package(
-                    f"{tag_prefix}-v1.0.0", package
-                )
-                assert is_valid is True, f"Failed for {package}: {error}"
+@pytest.mark.parametrize(
+    ("tag", "valid"),
+    [("v0.23.0", True), ("v0.24.0", False)],
+    ids=["legacy-0.23", "modern-0.24"],
+)
+def test_bare_tag_boundary_at_0_24(validate_tag, tag, valid) -> None:
+    """0.23 is the last version where a bare coordinator tag is accepted."""
+    is_valid, _ = validate_tag.validate_tag_for_package(tag, "coordinax")
+    assert is_valid is valid
