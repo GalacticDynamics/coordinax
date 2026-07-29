@@ -86,8 +86,12 @@ class TestMetricContract:
         """
         leaves, _ = jax.tree_util.tree_flatten(metric)
         assert leaves, "metric flattened to no leaves at all"
-        assert metric not in leaves, "metric is an opaque leaf, not a pytree"
-        assert all(isinstance(leaf, jnp.ndarray) for leaf in leaves)
+        # `is`, not `in`: containment would compare with `==`, which on a JAX
+        # leaf can return an array rather than a bool.
+        assert not any(leaf is metric for leaf in leaves), (
+            "metric is an opaque leaf, not a registered pytree"
+        )
+        assert all(isinstance(leaf, jax.Array) for leaf in leaves)
 
     def test_matmul_agrees_with_dense(self, metric) -> None:
         v = jnp.arange(1, metric.ndim + 1, dtype=float)
