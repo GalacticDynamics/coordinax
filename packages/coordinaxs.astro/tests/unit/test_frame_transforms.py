@@ -20,8 +20,23 @@ import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 from coordinaxs.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
 
-apyc = pytest.importorskip("astropy.coordinates")
-apyu = pytest.importorskip("astropy.units")
+# Astropy is imported once, not re-checked inside five helper bodies -- but the
+# skip stays per-test. A module-level `importorskip` would also skip the
+# invariants below that never touch Astropy (the rotation-matrix properties,
+# the NGP mapping, the dtype guard, and every round-trip property), which are
+# exactly the ones worth still running in a minimal environment.
+try:
+    import astropy.coordinates as apyc
+    import astropy.units as apyu
+
+    HAS_ASTROPY = True
+except ImportError:  # pragma: no cover - exercised only in minimal installs
+    apyc = apyu = None
+    HAS_ASTROPY = False
+
+requires_astropy = pytest.mark.skipif(
+    not HAS_ASTROPY, reason="astropy is not installed"
+)
 
 #: Bounded positions for the round-trip properties; written once, used four times.
 POSITIONS_PC = ust.quantities(
@@ -78,6 +93,7 @@ def _astropy_xyz_pc(xyz_pc, *, frm, to) -> np.ndarray:
     )
 
 
+@requires_astropy
 @pytest.mark.parametrize("xyz_pc", [(0, 0, 0), (100, -20, 50), (-5000, 3200, 1200)])
 def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     """ICRS->Galactocentric position transforms match Astropy."""
@@ -92,6 +108,7 @@ def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
 
+@requires_astropy
 @pytest.mark.parametrize(
     "xyz_pc", [(-8122, 0, 21), (-7800, 600, -200), (-9200, -500, 300)]
 )
@@ -168,6 +185,7 @@ class TestFrameTransformProperties:
         )
 
     @given(q=POSITIONS_PC)
+    @requires_astropy
     @settings(deadline=None)
     def test_icrs_to_gcf_matches_astropy_on_random_positions(
         self, q: u.AbstractQuantity
@@ -225,6 +243,7 @@ def _coordinate(xyz_pc, vxyz_kms):
     )
 
 
+@requires_astropy
 @pytest.mark.parametrize(
     ("xyz_pc", "vxyz_kms"),
     [
@@ -283,6 +302,7 @@ def test_icrs_galactocentric_phase_space_roundtrip() -> None:
     )
 
 
+@requires_astropy
 def test_custom_galcen_v_sun_velocities_match_astropy() -> None:
     """A non-default galcen_v_sun is honored and matches Astropy."""
     v_sun = cxv.Tangent.from_([11.1, 232.24, 7.25], "km/s")
@@ -346,6 +366,7 @@ def _astropy_galactic_phase_space(xyz_pc, vxyz_kms, from_frame, to_frame):
     )
 
 
+@requires_astropy
 @pytest.mark.parametrize(
     ("xyz_pc", "vxyz_kms"),
     [
@@ -413,6 +434,7 @@ def test_ngp_maps_to_z_axis() -> None:
     np.testing.assert_allclose(got, [0.0, 0.0, 1.0], rtol=0, atol=1e-7)
 
 
+@requires_astropy
 def test_galactic_to_galactocentric_via_fallback_matches_astropy() -> None:
     """Galactic->Galactocentric (generic route through ICRS) matches Astropy."""
     gcf = cxastro.Galactocentric()
