@@ -11,15 +11,21 @@ import pytest
 import unxt as u
 import unxts.linalg as ul
 
-#: (units, expected shape) -- exercised in both directions.
+#: Unit layouts, exercised in both directions.
 UNIT_LAYOUTS = [
+    pytest.param(("m", "s", "kg"), id="1d"),
+    pytest.param((("m", "s"), ("kg", "rad")), id="2d"),
+]
+
+#: The same layouts, paired with the shape they must round-trip to.
+UNIT_LAYOUTS_WITH_SHAPE = [
     pytest.param(("m", "s", "kg"), (3,), id="1d"),
     pytest.param((("m", "s"), ("kg", "rad")), (2, 2), id="2d"),
 ]
 
 
-@pytest.mark.parametrize(("units", "shape"), UNIT_LAYOUTS)
-def test_units_matrix_to_structured_unit(units: tuple, shape: tuple) -> None:
+@pytest.mark.parametrize("units", UNIT_LAYOUTS)
+def test_units_matrix_to_structured_unit(units: tuple) -> None:
     """UnitsMatrix -> StructuredUnit preserves layout and units."""
     result = plum.convert(ul.UnitsMatrix(units), apyu.StructuredUnit)
 
@@ -27,7 +33,7 @@ def test_units_matrix_to_structured_unit(units: tuple, shape: tuple) -> None:
     assert result == apyu.StructuredUnit(units)
 
 
-@pytest.mark.parametrize(("units", "shape"), UNIT_LAYOUTS)
+@pytest.mark.parametrize(("units", "shape"), UNIT_LAYOUTS_WITH_SHAPE)
 def test_structured_unit_to_units_matrix(units: tuple, shape: tuple) -> None:
     """StructuredUnit -> UnitsMatrix preserves layout and units."""
     result = plum.convert(apyu.StructuredUnit(units), ul.UnitsMatrix)
@@ -41,15 +47,15 @@ def test_structured_unit_to_units_matrix(units: tuple, shape: tuple) -> None:
         assert result[index] == u.unit(expected)
 
 
-@pytest.mark.parametrize(("units", "shape"), UNIT_LAYOUTS)
-def test_units_matrix_roundtrip(units: tuple, shape: tuple) -> None:
+@pytest.mark.parametrize("units", UNIT_LAYOUTS)
+def test_units_matrix_roundtrip(units: tuple) -> None:
     """UnitsMatrix -> StructuredUnit -> UnitsMatrix is the identity."""
     umat = ul.UnitsMatrix(units)
     assert plum.convert(plum.convert(umat, apyu.StructuredUnit), ul.UnitsMatrix) == umat
 
 
-@pytest.mark.parametrize(("units", "shape"), UNIT_LAYOUTS)
-def test_structured_unit_roundtrip(units: tuple, shape: tuple) -> None:
+@pytest.mark.parametrize("units", UNIT_LAYOUTS)
+def test_structured_unit_roundtrip(units: tuple) -> None:
     """StructuredUnit -> UnitsMatrix -> StructuredUnit is the identity."""
     su = apyu.StructuredUnit(units)
     assert plum.convert(plum.convert(su, ul.UnitsMatrix), apyu.StructuredUnit) == su

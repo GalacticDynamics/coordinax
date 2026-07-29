@@ -1,10 +1,11 @@
 """Test angle conversions between Astropy and coordinax."""
 
 import pytest
-import unxts.hypothesis as ust
 from astropy.coordinates import Angle as AstropyAngle
 from hypothesis import given
 from plum import convert
+
+import unxts.hypothesis as ust
 
 import coordinax.angles as cxa
 import coordinaxs.interop.astropy  # noqa: F401

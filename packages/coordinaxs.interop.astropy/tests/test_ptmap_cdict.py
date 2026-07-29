@@ -23,10 +23,10 @@ import astropy.coordinates as apyc
 import astropy.units as apyu
 import jax.numpy as jnp
 import pytest
-import unxts.hypothesis as ust
 from hypothesis import assume, given, settings, strategies as st
 
 import unxt as u
+import unxts.hypothesis as ust
 
 import coordinax.charts as cxc
 from coordinaxs.interop.astropy import (
