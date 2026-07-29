@@ -218,7 +218,7 @@ def point_to_q(obj: Point, /) -> u.AbstractQuantity:
     QM([1, 2, 3], '(km, deg, m)')
 
     """
-    # Pack the the data into value, unit tuple
+    # Pack the data into value, unit tuple
     qm = cast("ul.QM", cxcapi.carray(obj.data, obj.chart.components))
     vals, units = qm.value, qm.unit.to_tuple()
 

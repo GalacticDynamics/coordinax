@@ -817,13 +817,13 @@ class TestJacobianPtMapArrayInput:
 class TestJacobianPtMapCDictArrayBranch:
     """CDict with plain array values — the is_array=True branch in the generic dispatch.
 
-    The generic CDict dispatch (for chart pairs without a dedicated CDict overload,
-    e.g. Cart3D→Sph3D) branches on whether values are quantities or plain arrays.
-    Plain-array CDicts require usys because the branch forwards to the plain-Array
-    dispatch which requires a unit system.
+    The CDict dispatch branches on whether values are quantities or plain arrays.
+    The plain-array branch stacks the values and forwards to the Array dispatch,
+    so whether usys is required is decided by that dispatch, not by this branch.
 
-    Note: Cart2D→Polar2D has its own CDict dispatch that always calls carray,
-    so plain-array CDicts for that pair fail even before the is_array check.
+    Note: for pairs with an analytical Array dispatch (e.g. Cart2D→Polar2D) a
+    plain-array CDict works without usys; for pairs that fall through to the
+    generic Array path (e.g. Cart3D→Sph3D) usys must be supplied.
     """
 
     def test_generic_pair_with_usys(self) -> None:

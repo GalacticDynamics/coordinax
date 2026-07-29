@@ -268,4 +268,4 @@ def act(
     # Act on the CDict
     nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
     # Repack CDict → QuantityMatrix
-    return cxcapi.carray(nv, chart.components)  # ty: ignore[invalid-return-type]
+    return cast("ul.QuantityMatrix", cxcapi.carray(nv, chart.components))
