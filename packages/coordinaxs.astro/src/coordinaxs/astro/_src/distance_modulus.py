@@ -7,6 +7,7 @@ from jaxtyping import Array, ArrayLike, Shaped
 from typing import Any, final
 
 import equinox as eqx
+import plum
 from jax import lax
 from quax import register
 
@@ -229,3 +230,26 @@ def neg_p_distancemodulus(x: DistanceModulus, /) -> DistanceModulus:
 
     """
     return DistanceModulus(-x.value, x.unit)
+
+
+@plum.dispatch
+def dimension_of(obj: type[DistanceModulus], /) -> u.AbstractDimension:
+    """Return the magnitude dimension: a distance modulus is not a length.
+
+    See `coordinaxs.astro._src.parallax.dimension_of` -- same correction, for
+    the same reason: the inherited `type[AbstractDistance]` rule reports length,
+    while every `DistanceModulus` instance reports magnitude.
+
+    >>> import unxt as u
+    >>> from coordinaxs.astro import DistanceModulus
+    >>> u.dimension_of(DistanceModulus)
+    PhysicalType('unknown')
+
+    Which is what the instances say (astropy has no dedicated physical type for
+    magnitude, so it resolves to ``'unknown'``):
+
+    >>> u.dimension_of(DistanceModulus(10, "mag"))
+    PhysicalType('unknown')
+
+    """
+    return MAGNITUDE
