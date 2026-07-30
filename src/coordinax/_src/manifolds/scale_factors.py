@@ -3,21 +3,17 @@
 __all__: tuple[str, ...] = ()
 
 
-import jax
-import jax.numpy as jnp
 import plum
 
-import quaxed.numpy as qnp
 import unxt as u
 import unxts.linalg as ul
 
-import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import as_quantity_matrix
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.embedded.manifold import EmbeddedManifold
 from coordinax._src.embedded.metric import PullbackMetric
-from coordinax._src.euclidean.scale_factors import _column_squared_norms
 from coordinax._src.metric.matrix import DiagonalMetric
 
 DMLS = u.unit("")
@@ -87,12 +83,17 @@ def scale_factors(
     at: CDict,
     usys: OptUSys = None,
 ) -> ul.QM:
-    """Return scale factors for a pullback (induced) metric via Jacobian pullback.
+    """Return scale factors for a pullback (induced) metric.
 
-    Computes the Jacobian of the composed embedding ``intrinsic →
-    Cartesian ambient`` to obtain a unit-consistent Jacobian where every
-    entry has the same unit (``ambient_cart_unit / intrinsic_unit``).
-    The squared column norms then give the scale factors with correct units.
+    The scale factors of an induced metric are the diagonal of that metric, so
+    this delegates to the ``EmbeddedManifold`` ``metric_matrix`` rule rather
+    than re-deriving the Jacobian. That keeps one implementation of the
+    pullback, and inherits its handling of a non-intrinsic ``chart``, of a
+    non-Euclidean ambient metric (the ambient Gram carries the signature), and
+    of batched points.
+
+    Points are interpreted in the passed *chart*, which need not be the
+    embedding's own intrinsic chart.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -107,44 +108,41 @@ def scale_factors(
     >>> cxm.scale_factors(M.metric, cxc.sph2, at=at)
     QM([4., 4.], '(m2 / rad2, m2 / rad2)')
 
+    A chart other than the embedding's intrinsic one:
+
+    >>> at = {"lon": u.Angle(0.0, "rad"), "lat": u.Angle(0.0, "rad")}
+    >>> cxm.scale_factors(M.metric, cxc.lonlat_sph2, at=at)
+    QM([4., 4.], '(m2 / rad2, m2 / rad2)')
+
+    The delegate reads the ambient Gram off the ambient *manifold*, so an
+    ``ambient_metric`` that disagrees with it cannot be honoured. That is
+    refused rather than answered with the diagonal of a different metric:
+
+    >>> pb = cxm.PullbackMetric(cxm.TwoSphereIn3D(radius=1.0), cxm.RoundMetric(3))
+    >>> try: cxm.scale_factors(pb, cxc.sph2, at=at)
+    ... except NotImplementedError as e: print(e)
+    the pullback of RoundMetric(ndim=3) cannot be evaluated: the ambient
+    manifold Rn(3) of chart Spherical3D... carries FlatMetric(ndim=3)
+
     """
+    del usys
     embed_map = metric.embed_map
-    ambient_chart = embed_map.ambient
-    intrinsic_keys = embed_map.intrinsic.components
-
-    # Use Cartesian ambient chart for a unit-consistent Jacobian.
-    # Every column of J_cart has the same per-column unit (cart_unit / intrinsic_unit),
-    # which makes _column_squared_norms well-defined with correct units.
-    cart_chart = ambient_chart.cartesian
-    cart_keys = cart_chart.components
-
-    _qm: ul.QM = cxcapi.carray(at, intrinsic_keys)  # ty: ignore[invalid-assignment]
-    xat, ufrom = _qm.value, _qm.unit.to_tuple()
-    ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
-
-    # Evaluate once to determine Cartesian output units
-    at_ambient = embed_map.embed(at, usys=usys)
-    at_cart = cxcapi.pt_map(at_ambient, ambient_chart, cart_chart)
-    uto_ = ul.cdict_units(at_cart, cart_keys)
-    uto_ = tuple(ut if ut is not None else DMLS for ut in uto_)
-
-    # Build the unit matrix: J_cart.unit[k][i] = cart_unit_k / intrinsic_unit_i
-    unit_matrix = ul.UnitsMatrix(
-        tuple(tuple(tj / fi for fi in ufrom_) for tj in uto_)  # ty: ignore[unsupported-operator]
+    ambient = embed_map.ambient.M
+    # `metric_matrix` below evaluates the ambient Gram on `ambient`, i.e. with
+    # `ambient.metric` — the only ambient metric this route can apply. An
+    # `EmbeddedManifold`'s own `metric` always agrees (it is built from
+    # `ambient.metric`); a hand-built `PullbackMetric` need not.
+    if metric.ambient_metric != ambient.metric:
+        msg = (
+            f"the pullback of {metric.ambient_metric} cannot be evaluated: the "
+            f"ambient manifold {ambient} of chart {embed_map.ambient} carries "
+            f"{ambient.metric}"
+        )
+        raise NotImplementedError(msg)
+    M = EmbeddedManifold(
+        intrinsic=embed_map.intrinsic.M,
+        ambient=ambient,
+        embed_map=embed_map,
     )
-
-    def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
-        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(intrinsic_keys)}
-        q_ambient = embed_map.embed(q, usys=usys)
-        q_cart = cxcapi.pt_map(q_ambient, ambient_chart, cart_chart)
-        vals = [
-            u.ustrip(uto_[j], q_cart[k])  # ty: ignore[not-subscriptable]
-            if isinstance(q_cart[k], u.AbstractQuantity)  # ty: ignore[not-subscriptable]
-            else qnp.asarray(q_cart[k])  # ty: ignore[not-subscriptable]
-            for j, k in enumerate(cart_keys)
-        ]
-        return qnp.stack(vals)
-
-    J_arr = jax.jacfwd(_embed_cart)(xat)  # (n_cart, n_intrinsic)
-    J_cart = ul.QM(J_arr, unit=unit_matrix)
-    return _column_squared_norms(J_cart)
+    mm = cxmapi.metric_matrix(M, at, chart)
+    return as_quantity_matrix(mm.matrix).diag()  # ty: ignore[unresolved-attribute]
