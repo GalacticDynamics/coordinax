@@ -208,6 +208,8 @@ def from_(
 
     """
     d = 10 ** (1 + dm.ustrip("mag") / 5)
+    # The guard is free here: 10**x lowers to exp(x*ln10), and XLA folds
+    # `exp(...) < 0` to false, eliminating the check entirely.
     return cls(jnp.asarray(d, **kw), "pc")
 
 

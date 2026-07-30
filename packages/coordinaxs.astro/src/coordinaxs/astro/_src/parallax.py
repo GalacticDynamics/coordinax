@@ -154,13 +154,19 @@ def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
 
     if dim == LENGTH:  # distance
         p = jnp.atan2(parallax_base_length, q)
-        return cls(jnp.asarray(p.value, **kw), p.unit)  # ty: ignore[unresolved-attribute]
+        # atan2(1 AU, d) lies in [0, pi] for any d -- never negative, so the
+        # guard cannot fire. Closed at 0: d = +inf gives exactly 0.
+        return cls._make(jnp.asarray(p.value, **kw), p.unit)
 
     if dim == MAGNITUDE:  # distance modulus
         d = u.Q(10 ** (1 + q.ustrip("mag") / 5), "pc")
         p = jnp.atan2(parallax_base_length, d)
         unit = u.unit_of(p)
-        return cls(jnp.asarray(p.ustrip(unit), **kw), unit)  # ty: ignore[unresolved-attribute]
+        # d = 10**x >= 0, so atan2(1 AU, d) is in [0, pi/2] -- never negative,
+        # so the guard cannot fire. Both endpoints are reachable: d underflows
+        # to 0 (-> pi/2) for very negative dm, overflows to +inf (-> 0) for
+        # very large dm.
+        return cls._make(jnp.asarray(p.ustrip(unit), **kw), unit)
 
     msg = f"cannot build a Parallax from a quantity with dimension {dim}"
     raise ValueError(msg)
