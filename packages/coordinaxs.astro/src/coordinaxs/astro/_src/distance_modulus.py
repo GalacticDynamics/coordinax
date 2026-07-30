@@ -7,6 +7,8 @@ from jaxtyping import Array, ArrayLike, Shaped
 from typing import Any, final
 
 import equinox as eqx
+from jax import lax
+from quax import register
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -159,3 +161,24 @@ def from_(
     """
     d = 10 ** (1 + dm.ustrip("mag") / 5)
     return cls(jnp.asarray(d, **kw), "pc")
+
+
+@register(lax.neg_p)
+def neg_p_distancemodulus(x: DistanceModulus, /) -> DistanceModulus:
+    """Negation of a distance modulus stays a distance modulus.
+
+    This overrides the `AbstractDistance` rule, which degrades to a `Quantity`
+    because `Distance` and `Parallax` are non-negative by construction. A
+    distance modulus is not: ``dm = 5 log10(d / 10 pc)`` maps d in (0, inf)
+    onto all of the reals, and a negative value is the ordinary way to say
+    "nearer than 10 pc". Negation is closed here, so the type survives it.
+
+    >>> from coordinaxs.astro import DistanceModulus
+    >>> -DistanceModulus(10, "mag")
+    DistanceModulus(-10, 'mag')
+
+    >>> -DistanceModulus(-5, "mag")
+    DistanceModulus(5, 'mag')
+
+    """
+    return DistanceModulus(-x.value, x.unit)
