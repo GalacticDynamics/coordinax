@@ -22,6 +22,7 @@ __all__: tuple[str, ...] = ()
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import jax.tree as jt
 import pytest
 from hypothesis import given, settings, strategies as st
 from plum import convert
@@ -335,3 +336,64 @@ class TestDistanceJAX:
         g = jax.grad(lambda x: qnp.sum(x).value)(d)
         assert isinstance(g, cxd.Distance)
         assert jnp.allclose(g.value, 1, atol=1e-5)
+
+
+class TestMakeConstruction:
+    """`AbstractDistance._make` skips the guard, changing nothing else.
+
+    Used by conversions whose result cannot be negative as a matter of
+    arithmetic (`atan2(1 AU, d)` lies in `[0, pi]` for any `d` -- closed at 0,
+    which `d = +inf` attains, and which the guard accepts). The point of
+    the helper is that the resulting object must be *indistinguishable* from a
+    normally-constructed one -- otherwise it would leak into `repr`, equality
+    or pytree structure the way `check_negative=False` does.
+    """
+
+    @pytest.mark.parametrize("unit_str", ["m", "kpc"])
+    def test_indistinguishable_from_normal_construction(self, unit_str: str) -> None:
+        value = jnp.asarray([1.0, 2.0, 3.0])
+        normal = cxd.Distance(value, unit_str)
+        bypass = cxd.Distance._make(value, unit_str)
+
+        assert type(bypass) is type(normal)
+        assert repr(bypass) == repr(normal)
+        assert bypass.unit == normal.unit
+        assert bypass.check_negative == normal.check_negative is True
+        assert jnp.array_equal(bypass.value, normal.value)
+        assert bypass.value.dtype == normal.value.dtype
+
+    def test_pytree_structure_matches(self) -> None:
+        """Equal treedefs, so it composes with jit/vmap/tree_map identically."""
+        value = jnp.asarray([1.0, 2.0])
+        normal = jt.structure(cxd.Distance(value, "m"))
+        bypass = jt.structure(cxd.Distance._make(value, "m"))
+        assert normal == bypass
+
+    def test_repr_does_not_leak_a_flag(self) -> None:
+        """Unlike `check_negative=False`, which is visible in the repr."""
+        value = jnp.asarray([1.0])
+        assert "check_negative" not in repr(cxd.Distance._make(value, "m"))
+        assert "check_negative" in repr(cxd.Distance(value, "m", check_negative=False))
+
+    def test_it_really_does_skip_the_guard(self) -> None:
+        """The whole point: a negative value passes, where the guard would raise."""
+        with pytest.raises((eqx.EquinoxRuntimeError, ValueError)):
+            cxd.Distance(jnp.asarray([-1.0]), "m")
+
+        bypassed = cxd.Distance._make(jnp.asarray([-1.0]), "m")
+        assert float(bypassed.value[0]) == -1.0
+
+    def test_structure_cache_is_shape_and_dtype_agnostic(self) -> None:
+        """One cache entry per (cls, unit) must serve every array."""
+        scalar = cxd.Distance._make(jnp.zeros(()), "m")
+        batched = cxd.Distance._make(jnp.zeros((4, 3), dtype=jnp.float32), "m")
+        assert scalar.shape == ()
+        assert batched.shape == (4, 3)
+        assert scalar.unit == batched.unit
+
+    def test_distinct_units_are_not_conflated(self) -> None:
+        """The unit is part of the cached structure, so it must not be shared."""
+        in_m = cxd.Distance._make(jnp.asarray([1.0]), "m")
+        in_kpc = cxd.Distance._make(jnp.asarray([1.0]), "kpc")
+        assert in_m.unit == u.unit("m")
+        assert in_kpc.unit == u.unit("kpc")

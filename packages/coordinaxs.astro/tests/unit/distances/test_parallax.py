@@ -55,3 +55,32 @@ class TestParallaxConstruction:
             eqx.EquinoxRuntimeError, match="Parallax must be non-negative"
         ):
             jax.block_until_ready(build(jnp.asarray(-1.0)))
+
+
+class TestConversionEndpoints:
+    """The guard-free conversions hold at the ends of their range.
+
+    `Parallax.from_` builds via `_make`, which skips the non-negativity guard
+    because `atan2(1 AU, d)` is never negative. That interval is *closed*:
+    `atan2` returns exactly `0` at `d = +inf` and `pi/2` at `d = 0`, and the
+    distance-modulus route reaches both by over/underflow of `10 ** x`. Zero
+    is what the guard accepts, so these are sound -- asserted here because the
+    comments at those call sites assert it in prose.
+    """
+
+    @pytest.mark.parametrize(
+        ("q", "expected"),
+        [
+            (u.Q(jnp.inf, "pc"), 0.0),  # d -> inf: atan2 -> 0
+            (u.Q(0.0, "pc"), jnp.pi / 2),  # d = 0: atan2 -> pi/2
+            (u.Q(1e4, "mag"), 0.0),  # 10**x overflows to +inf
+            (u.Q(-1e4, "mag"), jnp.pi / 2),  # 10**x underflows to 0
+        ],
+        ids=["d_inf", "d_zero", "dm_overflow", "dm_underflow"],
+    )
+    def test_endpoints_are_non_negative(
+        self, q: u.AbstractQuantity, expected: float
+    ) -> None:
+        plx = cxastro.Parallax.from_(q)
+        assert jnp.allclose(plx.ustrip("rad"), expected)
+        assert jnp.all(plx.value >= 0)

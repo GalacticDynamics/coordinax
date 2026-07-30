@@ -138,6 +138,8 @@ def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
 
     if dim == MAGNITUDE:  # distance modulus
         d = 10 ** (1 + q.ustrip("mag") / 5)
+        # The guard is free here: 10**x lowers to exp(x*ln10), and XLA folds
+        # `exp(...) < 0` to false, eliminating the check entirely.
         return cls(jnp.asarray(d, **kw), "pc")
 
     msg = f"cannot build a Distance from a quantity with dimension {dim}"
