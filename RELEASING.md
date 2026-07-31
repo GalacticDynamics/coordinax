@@ -9,9 +9,31 @@ This workspace contains six packages that can be released:
 - `coordinaxs.hypothesis` - hypothesis testing strategies
 - `coordinaxs.interop.astropy` - Astropy interoperability package
 
-> **Note:** `coordinaxs.curveframes` requires a one-time PyPI setup before its first automated release: register its **PyPI (and TestPyPI) trusted publisher** for the `cd-publish.yml` workflow, exactly as done for the other packages. The release automation is already wired for it.
-
 All releases are automated via GitHub Actions.
+
+---
+
+## One-time registry setup (required for the `coordinaxs.*` packages)
+
+Only `coordinax` is registered on PyPI and TestPyPI. Every `coordinaxs.*` name is still unregistered, so `cd-publish.yml` fails its upload with:
+
+```text
+400 Non-user identities cannot create new projects.
+```
+
+The OIDC exchange succeeds — the trusted publisher on the `coordinax` project covers this workflow — but that identity is not allowed to create a _new_ project, so nothing can be uploaded under a name PyPI has never seen. This is a registry-side setting; no repository change can work around it.
+
+Before the first release of each of `coordinaxs.api`, `coordinaxs.astro`, `coordinaxs.curveframes`, `coordinaxs.hypothesis`, and `coordinaxs.interop.astropy`, add a **pending publisher** on both <https://test.pypi.org/manage/account/publishing/> and <https://pypi.org/manage/account/publishing/>:
+
+| Field           | Value                                          |
+| --------------- | ---------------------------------------------- |
+| Project name    | the package name, e.g. `coordinaxs.hypothesis` |
+| Owner           | `GalacticDynamics`                             |
+| Repository name | `coordinax`                                    |
+| Workflow name   | `cd-publish.yml`                               |
+| Environment     | `testpypi` on TestPyPI, `pypi` on PyPI         |
+
+The pending publisher becomes a normal trusted publisher on the first successful upload. Until then, every push to `main` that touches one of these packages will red-X `CD Publish`.
 
 ---
 
