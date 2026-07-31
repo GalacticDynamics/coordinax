@@ -7,6 +7,7 @@ import inspect
 
 from typing import (
     Any,
+    Final,
     TypeVar,
     _GenericAlias,  # ty: ignore[unresolved-import]
     get_origin,
@@ -27,6 +28,16 @@ from .wrap import AbstractNotIntrospectable
 T = TypeVar("T")
 
 xps = make_strategies_namespace(jnp)
+
+# Fallback unit strategy for quantity annotations that pin no dimension.
+# ``ust.units()`` re-runs astropy's ``UnitBase.compose()`` on every draw, which is
+# uncached and costs ~0.25s for exotic dimensions (e.g. "molar heat capacity") --
+# enough to trip ``HealthCheck.too_slow`` on its own. When the annotation tells us
+# nothing about the dimension any valid unit will do, so sample the canonical unit
+# of each named dimension instead.
+ANY_UNITS: Final = st.sampled_from(
+    [u.unit(u.dimension(name)._unit) for name in ust.DIMENSION_NAMES]  # ty: ignore[unresolved-attribute]
+)
 
 
 @ft.lru_cache(maxsize=256)
@@ -90,7 +101,7 @@ def strategy_for_annotation(
     try:
         dim = u.dimension_of(ann)
     except (eqx.EquinoxTracetimeError, ValueError):
-        dim = ust.units()
+        dim = ANY_UNITS
 
     # Determine the quantity class and whether to use static values
     # Check if ann is a subclass of StaticQuantity or if it's a parametrized

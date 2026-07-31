@@ -4,6 +4,7 @@ import jaxtyping
 
 import jax.numpy as jnp
 import unxt as u
+import unxts.hypothesis as ust
 from hypothesis import given, strategies as st
 from unxts.parametric import PQ
 
@@ -142,3 +143,28 @@ class TestStrategyForAnnotation:
         assert isinstance(value, u.Q)
         assert value.shape == ()
         assert u.dimension_of(value) == u.dimension("length")
+
+    @given(st.data())
+    def test_undimensioned_quantity_uses_canonical_units(
+        self, data: st.DataObject
+    ) -> None:
+        """Test an annotation pinning no dimension draws canonical units only.
+
+        Deriving units with ``unxts.hypothesis.units()`` re-runs astropy's
+        ``UnitBase.compose()`` on every draw. That is uncached and costs ~0.25s
+        for exotic dimensions (e.g. "molar heat capacity"), which was enough on
+        its own to trip ``HealthCheck.too_slow`` in any strategy reaching this
+        fallback -- notably ``charts(filter=cxc.Abstract3D)``, via the
+        un-dimensioned ``ProlateSpheroidal3D.Delta``. Sampling one canonical unit
+        per named dimension avoids composing anything.
+        """
+        canonical = {u.unit(u.dimension(name)._unit) for name in ust.DIMENSION_NAMES}
+
+        ann = jaxtyping.Real[u.quantity.StaticQuantity, ""]
+        wrapped = wrap_if_not_inspectable(ann)
+        meta = parse_jaxtyping_annotation(ann)
+
+        value = data.draw(strategy_for_annotation(wrapped, meta=meta))
+
+        assert isinstance(value, u.quantity.StaticQuantity)
+        assert value.unit in canonical
