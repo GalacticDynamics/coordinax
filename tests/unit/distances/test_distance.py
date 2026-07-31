@@ -11,10 +11,19 @@ Property-based tests use hypothesis strategies from ``coordinaxs.hypothesis``.
 
 Key behavioral contracts:
 * Distance is non-negative by default (``check_negative=True``).
-* Negation degrades to a plain length ``Quantity`` — a negative Distance is
-  not representable.
-* Arithmetic between two Distances preserves the ``Distance`` type.
+* An operation returns a ``Distance`` exactly when closure is a *theorem*, and
+  widens to a plain ``Quantity`` otherwise. Addition qualifies -- but only when
+  both operands were actually validated, since ``check_negative=False`` opts an
+  instance out and such a value may be negative. Subtraction, negation and
+  scalar scaling never qualify: a negative Distance is not representable, and a
+  scalar's sign is not knowable at trace time.
+* The choice never depends on the values -- ``d1 - d2`` widens whichever way
+  round the pair falls, so it cannot succeed eagerly and fail under ``vmap``.
 * Distance is a valid JAX pytree and works under JIT, vmap, and grad.
+
+The cross-kind version of the closure contract, covering ``Parallax`` and
+``DistanceModulus`` too, lives in
+``packages/coordinaxs.astro/tests/unit/distances/test_distance_kind_contract.py``.
 """
 
 __all__: tuple[str, ...] = ()

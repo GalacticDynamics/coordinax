@@ -8,6 +8,7 @@ from typing import Any
 
 import jax.numpy as jnp
 import plum
+import quax
 from jax import lax
 from quax import register
 
@@ -102,6 +103,254 @@ def add_p_abstractdistances(
         return type(x)._make(total, x.unit)
 
     return type(x)(total, x.unit, check_negative=x_validated)
+
+
+# ==============================================================================
+
+#: Quaxified bind, matching how `unxt` implements its own `mul_p` rules so the
+#: primitive's parameters (e.g. `out_dtype`) are forwarded rather than dropped.
+_mul_qbind = quax.quaxify(lax.mul_p.bind)
+
+
+@register(lax.mul_p)
+def mul_p_abstractdistance_arraylike(
+    x: AbstractDistance, y: ArrayLike, /, **kw: Any
+) -> u.Q:
+    """Scaling a non-negative quantity degrades it to a `Quantity`.
+
+    The result is a distance only when the scalar is non-negative, and a
+    scalar's sign is not knowable at trace time. That leaves three possible
+    behaviours -- raise, return a `Distance` holding a negative value, or widen
+    -- and only widening is both total and honest, so this always widens.
+
+    >>> from coordinax.distances import Distance
+    >>> Distance(3, "m") * 2
+    Q(6, 'm')
+
+    >>> Distance(3, "m") * -1
+    Q(-3, 'm')
+
+    """
+    return u.Q(_mul_qbind(u.ustrip(x), y, **kw), x.unit)
+
+
+@register(lax.mul_p)
+def mul_p_arraylike_abstractdistance(
+    x: ArrayLike, y: AbstractDistance, /, **kw: Any
+) -> u.Q:
+    """Scaling from the left, as above.
+
+    >>> from coordinax.distances import Distance
+    >>> 2 * Distance(3, "m")
+    Q(6, 'm')
+
+    """
+    return u.Q(_mul_qbind(x, u.ustrip(y), **kw), y.unit)
+
+
+@register(lax.mul_p)
+def mul_p_abstractdistances(
+    x: AbstractDistance, y: AbstractDistance, /, **kw: Any
+) -> u.Q:
+    """Multiply two distances, giving an area rather than a distance.
+
+    >>> from coordinax.distances import Distance
+    >>> Distance(2, "m") * Distance(3, "m")
+    Q(6, 'm2')
+
+    """
+    return u.Q(_mul_qbind(u.ustrip(x), u.ustrip(y), **kw), x.unit * y.unit)
+
+
+# ==============================================================================
+
+
+@register(lax.sub_p)
+def sub_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
+    """Subtract two non-negative quantities, widening to a `Quantity`.
+
+    Subtraction is not closed on ``[0, inf)``, and which way round a given pair
+    falls is a property of the values, not the types. Preserving the type would
+    make ``d1 - d2`` succeed or raise depending on the data -- survivable
+    eagerly, useless under `jax.jit`, and poisonous under `jax.vmap`, where one
+    negative element would fail the whole batch.
+
+    Widening also makes this agree with ``Distance - Quantity``, which already
+    returned a `Quantity`; the same operation no longer depends on how the
+    right-hand operand happens to be typed.
+
+    >>> from coordinax.distances import Distance
+
+    >>> Distance(3, "m") - Distance(1, "m")
+    Q(2, 'm')
+
+    >>> Distance(1, "m") - Distance(3, "m")
+    Q(-2, 'm')
+
+    The left operand fixes the unit:
+
+    >>> Distance(1, "km") - Distance(500, "m")
+    Q(0.5, 'km')
+
+    """
+    xv: Any = u.ustrip(x)
+    yv: Any = u.ustrip(x.unit, y)
+    return u.Q(xv - yv, x.unit)
+
+
+# ==============================================================================
+
+
+@register(lax.div_p)
+def div_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> u.Q:
+    """Dividing by a scalar degrades, for the reason scaling does.
+
+    >>> from coordinax.distances import Distance
+    >>> Distance(6, "m") / 2
+    Q(3., 'm')
+
+    >>> Distance(6, "m") / -2
+    Q(-3., 'm')
+
+    """
+    xv: Any = u.ustrip(x)
+    return u.Q(xv / y, x.unit)
+
+
+@register(lax.div_p)
+def div_p_arraylike_abstractdistance(x: ArrayLike, y: AbstractDistance, /) -> u.Q:
+    """Divide by a distance, giving a reciprocal length.
+
+    >>> from coordinax.distances import Distance
+    >>> 1 / Distance(2, "m")
+    Q(0.5, '1 / m')
+
+    """
+    return u.Q(lax.div(x, u.ustrip(y)), 1 / y.unit)
+
+
+# ==============================================================================
+
+#: Quaxified bind, matching how `unxt` implements its own `mul_p` rules so the
+#: primitive's parameters (e.g. `out_dtype`) are forwarded rather than dropped.
+_mul_qbind = quax.quaxify(lax.mul_p.bind)
+
+
+@register(lax.mul_p)
+def mul_p_abstractdistance_arraylike(
+    x: AbstractDistance, y: ArrayLike, /, **kw: Any
+) -> u.Q:
+    """Scaling a non-negative quantity degrades it to a `Quantity`.
+
+    The result is a distance only when the scalar is non-negative, and a
+    scalar's sign is not knowable at trace time. That leaves three possible
+    behaviours -- raise, return a `Distance` holding a negative value, or widen
+    -- and only widening is both total and honest, so this always widens.
+
+    >>> from coordinax.distances import Distance
+    >>> Distance(3, "m") * 2
+    Q(6, 'm')
+
+    >>> Distance(3, "m") * -1
+    Q(-3, 'm')
+
+    """
+    return u.Q(_mul_qbind(u.ustrip(x), y, **kw), x.unit)
+
+
+@register(lax.mul_p)
+def mul_p_arraylike_abstractdistance(
+    x: ArrayLike, y: AbstractDistance, /, **kw: Any
+) -> u.Q:
+    """Scaling from the left, as above.
+
+    >>> from coordinax.distances import Distance
+    >>> 2 * Distance(3, "m")
+    Q(6, 'm')
+
+    """
+    return u.Q(_mul_qbind(x, u.ustrip(y), **kw), y.unit)
+
+
+@register(lax.mul_p)
+def mul_p_abstractdistances(
+    x: AbstractDistance, y: AbstractDistance, /, **kw: Any
+) -> u.Q:
+    """Multiply two distances, giving an area rather than a distance.
+
+    >>> from coordinax.distances import Distance
+    >>> Distance(2, "m") * Distance(3, "m")
+    Q(6, 'm2')
+
+    """
+    return u.Q(_mul_qbind(u.ustrip(x), u.ustrip(y), **kw), x.unit * y.unit)
+
+
+# ==============================================================================
+
+
+@register(lax.sub_p)
+def sub_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
+    """Subtract two non-negative quantities, widening to a `Quantity`.
+
+    Subtraction is not closed on ``[0, inf)``, and which way round a given pair
+    falls is a property of the values, not the types. Preserving the type would
+    make ``d1 - d2`` succeed or raise depending on the data -- survivable
+    eagerly, useless under `jax.jit`, and poisonous under `jax.vmap`, where one
+    negative element would fail the whole batch.
+
+    Widening also makes this agree with ``Distance - Quantity``, which already
+    returned a `Quantity`; the same operation no longer depends on how the
+    right-hand operand happens to be typed.
+
+    >>> from coordinax.distances import Distance
+
+    >>> Distance(3, "m") - Distance(1, "m")
+    Q(2, 'm')
+
+    >>> Distance(1, "m") - Distance(3, "m")
+    Q(-2, 'm')
+
+    The left operand fixes the unit:
+
+    >>> Distance(1, "km") - Distance(500, "m")
+    Q(0.5, 'km')
+
+    """
+    xv: Any = u.ustrip(x)
+    yv: Any = u.ustrip(x.unit, y)
+    return u.Q(xv - yv, x.unit)
+
+
+# ==============================================================================
+
+
+@register(lax.div_p)
+def div_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> u.Q:
+    """Dividing by a scalar degrades, for the reason scaling does.
+
+    >>> from coordinax.distances import Distance
+    >>> Distance(6, "m") / 2
+    Q(3., 'm')
+
+    >>> Distance(6, "m") / -2
+    Q(-3., 'm')
+
+    """
+    xv: Any = u.ustrip(x)
+    return u.Q(xv / y, x.unit)
+
+
+@register(lax.div_p)
+def div_p_arraylike_abstractdistance(x: ArrayLike, y: AbstractDistance, /) -> u.Q:
+    """Divide by a distance, giving a reciprocal length.
+
+    >>> from coordinax.distances import Distance
+    >>> 1 / Distance(2, "m")
+    Q(0.5, '1 / m')
+
+    """
+    return u.Q(lax.div(x, u.ustrip(y)), 1 / y.unit)
 
 
 # ==============================================================================
