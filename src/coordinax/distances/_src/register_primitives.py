@@ -44,13 +44,18 @@ def atan2_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.
 def add_p_abstractdistances(
     x: AbstractDistance, y: AbstractDistance, /
 ) -> AbstractDistance:
-    """Sum of two distance-like quantities, without re-checking the sum.
+    """Sum of two distance-like quantities, skipping a guard that cannot fire.
 
     Addition is the one binary operation the non-negative types are closed
-    under: `Distance` and `Parallax` each validated their operand at
-    construction, so ``x >= 0`` and ``y >= 0``, hence ``x + y >= 0``. The guard
-    cannot fire, and re-running it costs a conditional plus two custom-calls
-    per construction -- six across a single ``d1 + d2``.
+    under -- but only when both operands really are non-negative. That is a
+    theorem exactly when each *was validated*, so the bypass is gated on it.
+
+    ``check_negative=False`` opts an instance out of validation, and such an
+    instance may hold a negative. Adding two of those can produce a negative
+    sum, so they fall back to ordinary construction, carrying the left
+    operand's setting. Otherwise the result would be an instance whose
+    ``check_negative=True`` asserts an invariant its value violates -- and a
+    lying `Distance` is worse than a slow one.
 
     >>> from coordinax.distances import Distance
 
@@ -62,6 +67,18 @@ def add_p_abstractdistances(
     >>> Distance(1, "m") + Distance(2, "km")
     Distance(2001., 'm')
 
+    Opted-out operands keep the opt-out rather than being relabelled:
+
+    >>> a = Distance(-1, "m", check_negative=False)
+    >>> a + a
+    Distance(-2, 'm', check_negative=False)
+
+    And a validated operand still refuses to absorb an unvalidated negative:
+
+    >>> try: Distance(1, "m") + Distance(-5, "m", check_negative=False)
+    ... except Exception as e: print(type(e).__name__)
+    EquinoxRuntimeError
+
     Mismatched dimensions remain a unit error, not a silent result:
 
     >>> from coordinaxs.astro import Parallax
@@ -69,12 +86,22 @@ def add_p_abstractdistances(
     ... except Exception as e: print(type(e).__name__)
     UnitConversionError
 
-    The bypass rests on non-negativity being the only invariant in this
+    The bypass also rests on non-negativity being the only invariant in this
     hierarchy. A subclass constraining something addition does not preserve
     would need to register its own narrower rule.
     """
     yv = u.ustrip(x.unit, y)
-    return type(x)._make(jnp.add(x.value, yv), x.unit)
+    total = jnp.add(x.value, yv)
+
+    # `None` for a kind with no sign guard at all (e.g. `DistanceModulus`),
+    # where there is nothing for the bypass to be unsound about.
+    x_validated = getattr(x, "check_negative", None)
+    y_validated = getattr(y, "check_negative", None)
+
+    if x_validated is None or (x_validated and y_validated):
+        return type(x)._make(total, x.unit)
+
+    return type(x)(total, x.unit, check_negative=x_validated)
 
 
 # ==============================================================================

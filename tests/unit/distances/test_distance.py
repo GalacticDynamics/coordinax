@@ -24,6 +24,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree as jt
 import pytest
+from astropy.units import UnitConversionError
 from hypothesis import given, settings, strategies as st
 from plum import convert
 
@@ -428,11 +429,39 @@ class TestAdditionIsClosed:
         assert float(total.ustrip("m")) == pytest.approx(2001.0)
 
     def test_mismatched_dimensions_still_raise(self) -> None:
-        """Bypassing the guard must not also bypass unit checking."""
-        from coordinaxs.astro import Parallax
+        """Bypassing the guard must not also bypass unit checking.
 
-        with pytest.raises(Exception, match="not convertible"):
-            _ = cxd.Distance(1, "m") + Parallax(1, "mas")
+        Needs a second `AbstractDistance` kind with a different dimension, and
+        the only one is in the optional `coordinaxs.astro` package -- hence the
+        skip rather than a hard import.
+        """
+        astro = pytest.importorskip("coordinaxs.astro")
+
+        with pytest.raises(UnitConversionError, match="not convertible"):
+            _ = cxd.Distance(1, "m") + astro.Parallax(1, "mas")
+
+    def test_unvalidated_operands_keep_the_opt_out(self) -> None:
+        """`check_negative=False` operands may be negative, so no bypass.
+
+        Relabelling the sum `check_negative=True` would produce an instance
+        asserting an invariant its value violates.
+        """
+        opted_out = cxd.Distance(-1, "m", check_negative=False)
+        total = opted_out + opted_out
+
+        assert total.check_negative is False
+        assert float(total.ustrip("m")) == pytest.approx(-2.0)
+
+    def test_validated_operand_does_not_absorb_an_unvalidated_negative(self) -> None:
+        """A checked left operand still guards the sum, as it did before."""
+        with pytest.raises((eqx.EquinoxRuntimeError, ValueError)):
+            _ = cxd.Distance(1, "m") + cxd.Distance(-5, "m", check_negative=False)
+
+    def test_bypass_still_applies_when_both_are_validated(self) -> None:
+        """The fast path must survive the gating -- otherwise the PR does nothing."""
+        total = cxd.Distance(1, "m") + cxd.Distance(2, "m")
+        assert total.check_negative is True
+        assert "check_negative" not in repr(total)
 
     def test_batched_addition(self) -> None:
         got = cxd.Distance(jnp.asarray([1.0, 2.0]), "m") + cxd.Distance(
