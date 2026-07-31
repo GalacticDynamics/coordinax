@@ -1,6 +1,7 @@
 """Tests for strategy_for_annotation utility function."""
 
 import jaxtyping
+from typing import Final
 
 import jax.numpy as jnp
 import unxt as u
@@ -15,6 +16,14 @@ from coordinaxs.hypothesis.utils._src.annotations.jaxtyping_utils import (
     strategy_for_annotation,
     wrap_if_not_inspectable,
 )
+
+# The canonical unit of each named dimension. Derived here rather than imported
+# from ``annotations.strategy`` so the assertion below pins the contract instead
+# of comparing the implementation against itself.
+CANONICAL_UNITS: Final = {
+    u.unit(u.dimension(name)._unit)  # ty: ignore[unresolved-attribute]
+    for name in ust.DIMENSION_NAMES
+}
 
 
 class TestAnnotationProcessing:
@@ -158,8 +167,6 @@ class TestStrategyForAnnotation:
         un-dimensioned ``ProlateSpheroidal3D.Delta``. Sampling one canonical unit
         per named dimension avoids composing anything.
         """
-        canonical = {u.unit(u.dimension(name)._unit) for name in ust.DIMENSION_NAMES}
-
         ann = jaxtyping.Real[u.quantity.StaticQuantity, ""]
         wrapped = wrap_if_not_inspectable(ann)
         meta = parse_jaxtyping_annotation(ann)
@@ -167,4 +174,4 @@ class TestStrategyForAnnotation:
         value = data.draw(strategy_for_annotation(wrapped, meta=meta))
 
         assert isinstance(value, u.quantity.StaticQuantity)
-        assert value.unit in canonical
+        assert value.unit in CANONICAL_UNITS
