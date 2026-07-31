@@ -397,3 +397,52 @@ class TestMakeConstruction:
         in_kpc = cxd.Distance._make(jnp.asarray([1.0]), "kpc")
         assert in_m.unit == u.unit("m")
         assert in_kpc.unit == u.unit("kpc")
+
+
+class TestAdditionIsClosed:
+    """Addition is the one binary op the non-negative types are closed under.
+
+    Both operands validated their own non-negativity at construction, so the
+    sum cannot be negative and the result does not need re-checking. These
+    assert the contract that bypass has to preserve exactly.
+    """
+
+    def test_sum_of_two_distances_is_a_distance(self) -> None:
+        assert type(cxd.Distance(1, "m") + cxd.Distance(2, "m")) is cxd.Distance
+
+    def test_left_operand_fixes_the_unit(self) -> None:
+        assert (cxd.Distance(1, "m") + cxd.Distance(2, "km")).unit == u.unit("m")
+        assert (cxd.Distance(1, "km") + cxd.Distance(2, "m")).unit == u.unit("km")
+
+    @pytest.mark.parametrize(
+        ("a", "b", "unit", "expected"),
+        [(1, 2, "m", 3.0), (1, 2, "km", 3.0), (0, 0, "m", 0.0), (1, 2000, "m", 2001.0)],
+    )
+    def test_values(self, a: float, b: float, unit: str, expected: float) -> None:
+        total = cxd.Distance(a, unit) + cxd.Distance(b, unit)
+        assert float(total.ustrip(unit)) == pytest.approx(expected)
+
+    def test_mixed_unit_value_is_converted_not_dropped(self) -> None:
+        """The regression a naive bypass would cause: ignoring y's unit."""
+        total = cxd.Distance(1, "m") + cxd.Distance(2, "km")
+        assert float(total.ustrip("m")) == pytest.approx(2001.0)
+
+    def test_mismatched_dimensions_still_raise(self) -> None:
+        """Bypassing the guard must not also bypass unit checking."""
+        from coordinaxs.astro import Parallax
+
+        with pytest.raises(Exception, match="not convertible"):
+            _ = cxd.Distance(1, "m") + Parallax(1, "mas")
+
+    def test_batched_addition(self) -> None:
+        got = cxd.Distance(jnp.asarray([1.0, 2.0]), "m") + cxd.Distance(
+            jnp.asarray([3.0, 4.0]), "m"
+        )
+        assert type(got) is cxd.Distance
+        assert jnp.array_equal(got.value, jnp.asarray([4.0, 6.0]))
+
+    def test_under_vmap(self) -> None:
+        out = jax.vmap(
+            lambda a, b: (cxd.Distance(a, "m") + cxd.Distance(b, "m")).value
+        )(jnp.arange(3.0), jnp.arange(3.0))
+        assert jnp.array_equal(out, jnp.asarray([0.0, 2.0, 4.0]))

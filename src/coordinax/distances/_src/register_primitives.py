@@ -6,6 +6,7 @@ __all__: tuple[str, ...] = ()
 from jaxtyping import ArrayLike
 from typing import Any
 
+import jax.numpy as jnp
 import plum
 from jax import lax
 from quax import register
@@ -34,6 +35,46 @@ def atan2_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.
     x, y = plum.promote(x, y)  # ty: ignore[too-many-positional-arguments]
     yv = u.ustrip(x.unit, y)
     return u.Q(lax.atan2(u.ustrip(x), yv), unit=RADIAN)
+
+
+# ==============================================================================
+
+
+@register(lax.add_p)
+def add_p_abstractdistances(
+    x: AbstractDistance, y: AbstractDistance, /
+) -> AbstractDistance:
+    """Sum of two distance-like quantities, without re-checking the sum.
+
+    Addition is the one binary operation the non-negative types are closed
+    under: `Distance` and `Parallax` each validated their operand at
+    construction, so ``x >= 0`` and ``y >= 0``, hence ``x + y >= 0``. The guard
+    cannot fire, and re-running it costs a conditional plus two custom-calls
+    per construction -- six across a single ``d1 + d2``.
+
+    >>> from coordinax.distances import Distance
+
+    >>> Distance(1, "m") + Distance(2, "m")
+    Distance(3, 'm')
+
+    The left operand fixes the unit, as before:
+
+    >>> Distance(1, "m") + Distance(2, "km")
+    Distance(2001., 'm')
+
+    Mismatched dimensions remain a unit error, not a silent result:
+
+    >>> from coordinaxs.astro import Parallax
+    >>> try: Distance(1, "m") + Parallax(1, "mas")
+    ... except Exception as e: print(type(e).__name__)
+    UnitConversionError
+
+    The bypass rests on non-negativity being the only invariant in this
+    hierarchy. A subclass constraining something addition does not preserve
+    would need to register its own narrower rule.
+    """
+    yv = u.ustrip(x.unit, y)
+    return type(x)._make(jnp.add(x.value, yv), x.unit)
 
 
 # ==============================================================================
