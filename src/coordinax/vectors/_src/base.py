@@ -32,7 +32,6 @@ from .custom_types import HasShape
 from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
-    from jaxtyping import Array
     from typing import Self
 
 Ks = TypeVar("Ks", bound=tuple[str, ...])
@@ -677,7 +676,7 @@ def vector_comps_unit_docs(vector: AbstractVector) -> tuple[str, str]:
 
 def vector_values_str(vector: AbstractVector, **kwargs: Any) -> str:
     r"""Return the formatted array string ``'\\n    [values]'`` (no closing ``>``)."""
-    vals: list[Array] = [
+    vals = [
         jnp.asarray(u.ustrip(u.unit_of(v), v) if uq.is_any_quantity(v) else v)
         for comp in vector.chart.components
         for v in (vector.data[comp],)
