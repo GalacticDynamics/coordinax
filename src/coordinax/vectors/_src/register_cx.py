@@ -147,32 +147,19 @@ def pt_map(
 
 
 @plum.dispatch
-def cdict(obj: Point, /) -> CDict:
-    """Extract component dictionary from a Point.
-
-    >>> import coordinax as cx
-    >>> import unxt as u
-    >>> vec = cx.Point.from_(u.Q([1, 2, 3], "m"))
-    >>> d = cx.cdict(vec)
-    >>> list(d.keys())
-    ['x', 'y', 'z']
-
-    """
-    return obj.data
-
-
-@plum.dispatch
-def cdict(obj: Tangent, /) -> CDict:
-    """Extract component dictionary from a Tangent.
+def cdict(obj: Point | Tangent, /) -> CDict:
+    """Extract the component dictionary from a `Point` or `Tangent`.
 
     >>> import coordinax as cx
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> import unxt as u
+
+    >>> list(cx.cdict(cx.Point.from_(u.Q([1, 2, 3], "m"))).keys())
+    ['x', 'y', 'z']
+
     >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
-    >>> vec = cx.Tangent.from_(d, cxc.cart3d, cxr.coord_vel)
-    >>> d = cx.cdict(vec)
-    >>> list(d.keys())
+    >>> list(cx.cdict(cx.Tangent.from_(d, cxc.cart3d, cxr.coord_vel)).keys())
     ['x', 'y', 'z']
 
     """
