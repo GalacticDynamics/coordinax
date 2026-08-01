@@ -25,9 +25,14 @@ import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
-from .base import AbstractVector
-from .point import Point, _vector_comps_unit_docs, _vector_values_str
-from .tangent import Tangent, _vectorform_pdoc as _vec_vectorform_pdoc
+from .base import (
+    AbstractVector,
+    vector_comps_unit_docs,
+    vector_values_str,
+    vectorform_pdoc as _vec_vectorform_pdoc,
+)
+from .point import Point
+from .tangent import Tangent
 from coordinax.internal import OptUSys
 
 ChartT = TypeVar(
@@ -47,8 +52,8 @@ def vectorform_pdoc(pv: "Coordinate", **kwargs: Any) -> wl.AbstractDoc:
     kwargs.setdefault("canonical", True)
     chart_name = type(pv.point.chart).__name__
     rep_name = wl.pformat(pv.point.rep, **kwargs)
-    comps_doc, unit_doc = _vector_comps_unit_docs(pv.point)
-    values_str = _vector_values_str(pv.point, **kwargs)
+    comps_doc, unit_doc = vector_comps_unit_docs(pv.point)
+    values_str = vector_values_str(pv.point, **kwargs)
 
     header = f"<Coordinate: chart={chart_name}, rep={rep_name} {comps_doc}"
     if unit_doc:

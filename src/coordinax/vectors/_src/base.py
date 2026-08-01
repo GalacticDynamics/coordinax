@@ -11,6 +11,7 @@ from typing_extensions import TypeIs, TypeVar
 import equinox as eqx
 import jax
 import jax.tree as jtu
+import numpy as np
 import plum
 import quax_blocks
 import wadler_lindig as wl
@@ -19,6 +20,7 @@ from quax import ArrayValue
 import dataclassish
 import quaxed.numpy as jnp
 import unxt as u
+import unxt.quantity as uq
 from dataclassish import field_items
 
 import coordinax.charts as cxc
@@ -27,8 +29,10 @@ import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .custom_types import HasShape
+from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
+    from jaxtyping import Array
     from typing import Self
 
 Ks = TypeVar("Ks", bound=tuple[str, ...])
@@ -92,7 +96,7 @@ class AbstractVector(
     M : coordinax.manifolds.AbstractManifold
         The manifold on which the vector lives.
     shape : tuple[int, ...]
-        The batch shape of the vector (abstract; implemented by subclasses).
+        The batch shape of the vector, broadcast across the component leaves.
 
     See Also
     --------
@@ -302,11 +306,22 @@ class AbstractVector(
         msg = f"Refusing to materialise `{type(self).__name__}`."
         raise RuntimeError(msg)
 
+    # TODO: generalize to work with FourVector, and Space
+    def aval(self) -> jax.core.ShapedArray:  # ty: ignore[possibly-missing-submodule]
+        """Return the vector as an abstract JAX array.
+
+        The shape is ``(*batch, n_components)`` and the dtype is promoted
+        across the component leaves.
+        """
+        fvs = self.data.values()
+        shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
+        dtype = jnp.result_type(*map(jnp.dtype, fvs))
+        return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-submodule]
+
     @property
-    @abc.abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """Return the shape of the vector."""
-        raise NotImplementedError  # pragma: no cover
+        """Return the batch shape of the vector."""
+        return jnp.broadcast_shapes(*(v.shape for v in self.data.values()))
 
     # ===============================================================
     # Array API
@@ -481,6 +496,41 @@ class AbstractVector(
         return self._tree_apply("to_device", device)
 
     # ===============================================================
+    # Wadler-Lindig API
+
+    def __pdoc__(self, *, vector_form: bool = False, **kw: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig document for the vector.
+
+        Parameters
+        ----------
+        vector_form
+            If True, return the compact angle-bracket vector form; otherwise
+            the constructor-style document.
+        **kw
+            Additional keyword arguments passed to the Wadler-Lindig formatter.
+
+        """
+        if vector_form:
+            return vectorform_pdoc(self, **kw)
+
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kw.setdefault("use_short_name", True)
+        kw.setdefault("named_unit", False)
+        kw.setdefault("include_params", False)
+        kw.setdefault("canonical", True)
+
+        docs = pos_named_objs(
+            dataclassish.field_items(self), ["data"], self.__dataclass_fields__, **kw
+        )
+        return wl.bracketed(
+            begin=wl.TextDoc(f"{type(self).__name__}("),
+            docs=docs,
+            sep=wl.comma,
+            end=wl.TextDoc(")"),
+            indent=kw.get("indent", 4),
+        )
+
+    # ===============================================================
     # Python API
 
     def __hash__(self) -> int:
@@ -586,3 +636,86 @@ class AbstractVector(
         # Otherwise, apply the transformation and return a new point
         new = cxfm.act(op, t, self)
         return dataclassish.replace(new, frame=toframe)  # ty: ignore[invalid-return-type]
+
+
+# ===================================================================
+# Vector-form rendering
+#
+# Shared by every vector-like: `Point`, `Tangent`, and (for its base point)
+# `Coordinate`. Only `.chart` and `.data` are needed.
+
+
+def vector_comps_unit_docs(vector: AbstractVector) -> tuple[str, str]:
+    """Return ``(comps_doc, unit_doc)`` strings for a vector header.
+
+    ``comps_doc`` is the parenthesised component list, e.g. ``(x, y, z)`` or
+    ``(x[m], y[m/s], z[m/s])`` when units differ per component.
+    ``unit_doc`` is the bracketed shared unit string, e.g. ``[m]``, or an
+    empty string when units are absent or differ per component.
+    """
+    comps = vector.chart.components
+    units = [
+        cast("u.AbstractUnit", u.unit_of(v))
+        if uq.is_any_quantity(v := vector.data[comp])
+        else None
+        for comp in comps
+    ]
+
+    # One shared unit across every component: hoist it out of the component
+    # list into the trailing ``[unit]``.
+    if units and units[0] is not None and all(un == units[0] for un in units):
+        return f"({', '.join(comps)})", f"[{units[0]}]"
+
+    # Otherwise annotate each component that has a unit. This also covers the
+    # all-unitless case, where it degrades to a bare component list.
+    inner = ", ".join(
+        f"{c}[{un}]" if un is not None else c
+        for c, un in zip(comps, units, strict=True)
+    )
+    return f"({inner})", ""
+
+
+def vector_values_str(vector: AbstractVector, **kwargs: Any) -> str:
+    r"""Return the formatted array string ``'\\n    [values]'`` (no closing ``>``)."""
+    vals: list[Array] = [
+        jnp.asarray(u.ustrip(u.unit_of(v), v) if uq.is_any_quantity(v) else v)
+        for comp in vector.chart.components
+        for v in (vector.data[comp],)
+    ]
+
+    # If there are no component leaves to display, return an empty string so
+    # the caller can append the closing ``>`` directly after the header.
+    if not vals:
+        return ""
+
+    stacked = jnp.stack(jnp.broadcast_arrays(*vals), axis=-1)
+    val_str = np.array2string(
+        np.asarray(stacked),
+        precision=kwargs.get("precision", 3),
+        threshold=kwargs.get("threshold", 1000),
+    )
+    return f"\n    {val_str.replace(chr(10), chr(10) + '    ')}"
+
+
+def vectorform_pdoc(vector: AbstractVector, **kwargs: Any) -> wl.AbstractDoc:
+    """Return the compact angle-bracket document for a vector.
+
+    Parameters
+    ----------
+    vector
+        The vector to render.
+    **kwargs
+        Additional keyword arguments passed to the Wadler-Lindig formatter
+        (e.g. ``precision``, ``threshold``, ``canonical``).
+
+    """
+    kwargs.setdefault("canonical", True)
+    comps_doc, unit_doc = vector_comps_unit_docs(vector)
+
+    header = (
+        f"<{type(vector).__name__}: chart={type(vector.chart).__name__} {comps_doc}"
+    )
+    if unit_doc:
+        header = f"{header} {unit_doc}"
+
+    return wl.TextDoc(header + vector_values_str(vector, **kwargs) + ">")
