@@ -11,11 +11,7 @@ from typing_extensions import TypeVar
 
 import equinox as eqx
 import quax_blocks
-import wadler_lindig as wl
-from jax.core import ShapedArray
 
-import dataclassish
-import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.charts as cxc
@@ -24,8 +20,7 @@ import coordinax.representations as cxr
 from .base import AbstractVector
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
-from .point import _frame_converter, _vector_comps_unit_docs, _vector_values_str
-from coordinax.internal import pos_named_objs
+from .point import _frame_converter
 
 if TYPE_CHECKING:
     from coordinax.internal import CDict
@@ -147,73 +142,6 @@ class Tangent(
         if isinstance(key, str):
             return self.data[key]
         return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type,not-subscriptable]
-
-    # ===============================================================
-    # Quax API
-
-    def aval(self) -> ShapedArray:
-        """Return the vector as a JAX abstract array."""
-        fvs = self.data.values()
-        shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
-        dtype = jnp.result_type(*map(jnp.dtype, fvs))
-        return ShapedArray(shape, dtype)
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        """Return the batch shape of the vector."""
-        shapes = [v.shape for v in self.data.values()]
-        return jnp.broadcast_shapes(*shapes)
-
-    # ===============================================================
-    # Wadler-Lindig API
-
-    def __pdoc__(self, *, vector_form: bool = False, **kw: Any) -> wl.AbstractDoc:
-        """Return the Wadler-Lindig docstring for the vector.
-
-        Parameters
-        ----------
-        vector_form
-            If True, return the compact vector-form representation.
-        **kw
-            Additional keyword arguments forwarded to the formatter.
-
-        """
-        if vector_form:
-            return _vectorform_pdoc(self, **kw)
-
-        kw.setdefault("use_short_name", True)
-        kw.setdefault("named_unit", False)
-        kw.setdefault("include_params", False)
-        kw.setdefault("canonical", True)
-
-        docs = pos_named_objs(
-            dataclassish.field_items(self), ["data"], self.__dataclass_fields__, **kw
-        )
-        return wl.bracketed(
-            begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=docs,
-            sep=wl.comma,
-            end=wl.TextDoc(")"),
-            indent=kw.get("indent", 4),
-        )
-
-
-def _vectorform_pdoc(
-    vector: Tangent[Any, Any, Any, Any], *, class_name: str | None = None, **kwargs: Any
-) -> wl.AbstractDoc:
-    """Return the compact vector-form docstring for a Tangent."""
-    kwargs.setdefault("canonical", True)
-    cls_name = class_name if class_name is not None else vector.__class__.__name__
-    chart_name = type(vector.chart).__name__
-    # Reuse Point's helper (works on any object with .chart and .data)
-    comps_doc, unit_doc = _vector_comps_unit_docs(vector)
-    values_str = _vector_values_str(vector, **kwargs)
-
-    header = f"<{cls_name}: chart={chart_name} {comps_doc}"
-    if unit_doc:
-        header = f"{header} {unit_doc}"
-
-    return wl.TextDoc(header + values_str + ">")
 
 
 # ===================================================================

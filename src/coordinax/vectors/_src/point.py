@@ -5,20 +5,14 @@ __all__ = ("Point",)
 
 from dataclasses import replace
 
-from jaxtyping import Array, ArrayLike
+from jaxtyping import ArrayLike
 from typing import TYPE_CHECKING, Any, Generic, cast, final, override
 from typing_extensions import TypeVar
 
 import equinox as eqx
-import jax
-import numpy as np
 import quax_blocks
-import wadler_lindig as wl
 
-import dataclassish
-import quaxed.numpy as jnp
 import unxt as u
-import unxt.quantity as uq
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
@@ -26,7 +20,6 @@ import coordinax.representations as cxr
 from .base import AbstractVector
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
-from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
     from .custom_types import CDict
@@ -159,60 +152,6 @@ class Point(
         if isinstance(key, str):
             return self.data[key]
         return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type]
-
-    # ===============================================================
-    # Quax API
-
-    # TODO: generalize to work with FourVector, and Space
-    def aval(self) -> jax.core.ShapedArray:  # ty: ignore[possibly-missing-submodule]
-        """Return the vector as a JAX array."""
-        fvs = self.data.values()
-        shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
-        dtype = jnp.result_type(*map(jnp.dtype, fvs))
-        return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-submodule]
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        """Return the shape of the vector."""
-        shapes = [v.shape for v in self.data.values()]
-        return jnp.broadcast_shapes(*shapes)
-
-    # ===============================================================
-    # Wadler-Lindig API
-
-    def __pdoc__(self, *, vector_form: bool = False, **kw: Any) -> wl.AbstractDoc:
-        """Return the Wadler-Lindig docstring for the vector.
-
-        Parameters
-        ----------
-        vector_form
-            If True, return the vector form of the docstring.
-        short_arrays
-            If True, use short arrays for the docstring.
-        **kw
-            Additional keyword arguments to pass to the Wadler-Lindig docstring
-            formatter.
-
-        """
-        if vector_form:
-            return vectorform_pdoc(self, **kw)
-
-        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
-        kw.setdefault("use_short_name", True)
-        kw.setdefault("named_unit", False)
-        kw.setdefault("include_params", False)
-        kw.setdefault("canonical", True)
-
-        docs = pos_named_objs(
-            dataclassish.field_items(self), ["data"], self.__dataclass_fields__, **kw
-        )
-        return wl.bracketed(
-            begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=docs,
-            sep=wl.comma,
-            end=wl.TextDoc(")"),
-            indent=kw.get("indent", 4),
-        )
 
 
 # ===================================================================
@@ -592,107 +531,3 @@ def from_(
     """
     p = cls.from_(obj, unit)
     return replace(p, frame=frame)
-
-
-# ===============================================
-
-
-def _vector_comps_unit_docs(vector: AbstractVector) -> tuple[str, str]:
-    """Return ``(comps_doc, unit_doc)`` strings for a vector header.
-
-    ``comps_doc`` is the parenthesised component list, e.g. ``(x, y, z)`` or
-    ``(x[m], y[m/s], z[m/s])`` when units differ per component.
-    ``unit_doc`` is the bracketed shared unit string, e.g. ``[m]``, or an
-    empty string when units are absent or differ per component.
-    """
-    comps = vector.chart.components
-    unit_vals = [
-        cast("u.AbstractUnit", u.unit_of(v))
-        if uq.is_any_quantity(v := vector.data[comp])
-        else None
-        for comp in comps
-    ]
-
-    unit_doc = ""
-    if unit_vals and all(u_ is not None for u_ in unit_vals):
-        unit0 = unit_vals[0]
-        if all(u_ == unit0 for u_ in unit_vals):
-            unit_doc = f"[{unit0}]"
-            comps_doc = f"({', '.join(comps)})"
-        else:
-            comps_doc = (
-                "("
-                + ", ".join(
-                    f"{c}[{u_}]" for c, u_ in zip(comps, unit_vals, strict=True)
-                )
-                + ")"
-            )
-    elif any(u_ is not None for u_ in unit_vals):
-        comps_doc = (
-            "("
-            + ", ".join(
-                f"{c}[{u_}]" if u_ is not None else c
-                for c, u_ in zip(comps, unit_vals, strict=True)
-            )
-            + ")"
-        )
-    else:
-        comps_doc = f"({', '.join(comps)})"
-
-    return comps_doc, unit_doc
-
-
-def _vector_values_str(vector: AbstractVector, **kwargs: Any) -> str:
-    r"""Return the formatted array string ``'\\n    [values]'`` (no closing ``>``)."""
-    comps = vector.chart.components
-    vals: list[Array] = [
-        jnp.asarray(u.ustrip(u.unit_of(v), v) if uq.is_any_quantity(v) else v)
-        for comp in comps
-        for v in (vector.data[comp],)
-    ]
-
-    # If there are no component leaves to display, return an empty string so
-    # the caller can append the closing ``>`` directly after the header.
-    if not vals:
-        return ""
-
-    stacked = jnp.stack(jnp.broadcast_arrays(*vals), axis=-1)
-    val_str = np.array2string(
-        np.asarray(stacked),
-        precision=kwargs.get("precision", 3),
-        threshold=kwargs.get("threshold", 1000),
-    )
-    return f"\n    {val_str.replace(chr(10), chr(10) + '    ')}"
-
-
-def vectorform_pdoc(
-    vector: Point[Any, Any],
-    *,
-    class_name: str | None = None,
-    **kwargs: Any,
-) -> wl.AbstractDoc:
-    """Return the Wadler-Lindig docstring for the vector.
-
-    Parameters
-    ----------
-    vector
-        The vector to generate the docstring for.
-    class_name
-        Override the class name used in the header.  Defaults to
-        ``type(vector).__name__``.
-    **kwargs
-        Additional keyword arguments passed to the Wadler-Lindig formatter
-        (e.g. ``precision``, ``threshold``, ``canonical``).
-
-    """
-    kwargs.setdefault("canonical", True)
-    cls_name = class_name if class_name is not None else vector.__class__.__name__
-    chart_name = type(vector.chart).__name__
-    comps_doc, unit_doc = _vector_comps_unit_docs(vector)
-    values_str = _vector_values_str(vector, **kwargs)
-
-    header = f"<{cls_name}: chart={chart_name} {comps_doc}"
-    if unit_doc:
-        header = f"{header} {unit_doc}"
-
-    return wl.TextDoc(header + values_str + ">")
