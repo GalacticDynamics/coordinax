@@ -100,21 +100,29 @@ class TestQuaxedUnary:
 class TestQuaxedBinary:
     """quaxed.numpy binary ops on Distance produce correct types and values."""
 
-    @pytest.mark.parametrize(
-        ("a_val", "b_val", "fn", "expected"),
-        [(1, 0.5, qnp.add, 1.5), (1.5, 0.5, qnp.subtract, 1)],
-    )
-    def test_known_value(
-        self, a_val: float, b_val: float, fn: object, expected: float
-    ) -> None:
-        result = fn(cxd.Distance(a_val, "kpc"), cxd.Distance(b_val, "kpc"))
+    def test_add_stays_a_distance(self) -> None:
+        """Addition is closed: both operands are non-negative, so the sum is."""
+        result = qnp.add(cxd.Distance(1, "kpc"), cxd.Distance(0.5, "kpc"))
         assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, expected)
+        assert jnp.allclose(result.value, 1.5)
 
-    def test_multiply_by_scalar(self) -> None:
-        """Multiplying a Distance by a plain scalar returns a Distance."""
+    def test_subtract_widens_to_quantity(self) -> None:
+        """Subtraction is not closed, so it widens regardless of the values.
+
+        It would be wrong for this to depend on which way round the pair
+        falls -- that is precisely the data-dependence the closure policy
+        removes.
+        """
+        result = qnp.subtract(cxd.Distance(1.5, "kpc"), cxd.Distance(0.5, "kpc"))
+        assert isinstance(result, u.AbstractQuantity)
+        assert not isinstance(result, cxd.Distance)
+        assert jnp.allclose(result.value, 1)
+
+    def test_multiply_by_scalar_widens_to_quantity(self) -> None:
+        """A scalar's sign is not knowable at trace time, so scaling widens."""
         result = qnp.multiply(cxd.Distance(1.5, "kpc"), 2)
-        assert isinstance(result, cxd.Distance)
+        assert isinstance(result, u.AbstractQuantity)
+        assert not isinstance(result, cxd.Distance)
         assert jnp.allclose(result.value, 3)
 
     @given(
@@ -139,19 +147,28 @@ class TestQuaxedReductions:
 
     @pytest.mark.parametrize(
         ("values", "fn", "expected"),
-        [
-            ([1, 2, 3], qnp.sum, 6),
-            ([0, 2, 4], qnp.mean, 2),
-            ([3, 1, 2], qnp.min, 1),
-            ([3, 1, 2], qnp.max, 3),
-        ],
+        [([1, 2, 3], qnp.sum, 6), ([3, 1, 2], qnp.min, 1), ([3, 1, 2], qnp.max, 3)],
     )
-    def test_known_value(
+    def test_closed_reductions_stay_distances(
         self, values: list[float], fn: object, expected: float
     ) -> None:
+        """sum, min and max are built from closed operations."""
         result = fn(cxd.Distance(values, "kpc"))
         assert isinstance(result, cxd.Distance)
         assert jnp.allclose(result.value, expected)
+
+    def test_mean_widens_to_quantity(self) -> None:
+        """`mean` divides by the count, and division widens.
+
+        The mean of non-negative values *is* non-negative, so this is a real
+        cost of the policy rather than a gain: the divisor's sign is no more
+        knowable than any other, and exempting it would make the return type
+        depend on whether the divisor happens to be a literal.
+        """
+        result = qnp.mean(cxd.Distance([0, 2, 4], "kpc"))
+        assert isinstance(result, u.AbstractQuantity)
+        assert not isinstance(result, cxd.Distance)
+        assert jnp.allclose(result.value, 2)
 
     @pytest.mark.parametrize("fn", [qnp.sum, qnp.mean])
     @given(d=cxst.distances(shape=(4,)))
@@ -194,9 +211,11 @@ class TestQuaxedArrayOps:
         assert result.shape == (3,)
         assert jnp.all(result.value == 1.5)
 
-    def test_diff(self) -> None:
+    def test_diff_widens_to_quantity(self) -> None:
+        """`diff` is subtraction, and successive differences can be negative."""
         result = qnp.diff(cxd.Distance([1, 3, 6], "kpc"))
-        assert isinstance(result, cxd.Distance)
+        assert isinstance(result, u.AbstractQuantity)
+        assert not isinstance(result, cxd.Distance)
         assert result.shape == (2,)
         assert jnp.allclose(result.value, jnp.array([2, 3]))
 
@@ -242,17 +261,27 @@ class TestQuaxQuaxify:
             jax.numpy.add(cxd.Distance(1, "kpc"), cxd.Distance(0.5, "kpc"))
 
     @pytest.mark.parametrize(
-        ("fn", "a_val", "b_val", "expected"),
-        [(jax.numpy.add, 1, 0.5, 1.5), (jax.numpy.subtract, 1.5, 0.5, 1)],
+        ("fn", "a_val", "b_val", "expected", "stays_distance"),
+        [
+            (jax.numpy.add, 1, 0.5, 1.5, True),
+            # subtraction is not closed, so it widens -- see the closure policy
+            (jax.numpy.subtract, 1.5, 0.5, 1, False),
+        ],
     )
     def test_quaxify_binary_known_value(
-        self, fn: object, a_val: float, b_val: float, expected: float
+        self,
+        fn: object,
+        a_val: float,
+        b_val: float,
+        expected: float,
+        stays_distance: bool,
     ) -> None:
         """Quaxify wraps raw jax.numpy binary functions to accept Distances."""
         result = quax.quaxify(fn)(
             cxd.Distance(a_val, "kpc"), cxd.Distance(b_val, "kpc")
         )
-        assert isinstance(result, cxd.Distance)
+        assert isinstance(result, u.AbstractQuantity)
+        assert isinstance(result, cxd.Distance) is stays_distance
         assert jnp.allclose(result.value, expected)
 
     def test_quaxify_user_function(self) -> None:
@@ -318,13 +347,20 @@ class TestJAXTransformsWithQuaxed:
         assert jnp.allclose(g.value, 1, atol=1e-5)
 
     @pytest.mark.parametrize(
-        ("fn", "d_val", "expected_val"),
-        [(lambda x: qnp.add(x, x), 1, 2), (lambda x: qnp.multiply(x, 3), 2, 6)],
+        ("fn", "d_val", "expected_val", "stays_distance"),
+        [
+            (lambda x: qnp.add(x, x), 1, 2, True),
+            # scaling widens: a scalar's sign is unknowable at trace time
+            (lambda x: qnp.multiply(x, 3), 2, 6, False),
+        ],
     )
-    def test_jit(self, fn: object, d_val: float, expected_val: float) -> None:
+    def test_jit(
+        self, fn: object, d_val: float, expected_val: float, stays_distance: bool
+    ) -> None:
         """jax.jit works on functions using qnp over Distance."""
         result = jax.jit(fn)(cxd.Distance(d_val, "kpc"))
-        assert isinstance(result, cxd.Distance)
+        assert isinstance(result, u.AbstractQuantity)
+        assert isinstance(result, cxd.Distance) is stays_distance
         assert jnp.allclose(result.value, expected_val, atol=1e-6)
 
     @given(d=cxst.distances(shape=(3,)))

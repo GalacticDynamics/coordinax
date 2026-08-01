@@ -244,3 +244,96 @@ class TestDimensionOf:
     def test_the_base_class_still_reports_length(self) -> None:
         """The inherited rule is correct for the abstraction itself; keep it."""
         assert u.dimension_of(cxd.AbstractDistance) == u.dimension("length")
+
+
+class TestArithmeticClosure:
+    """A kind survives an operation exactly when that operation is closed on it.
+
+    The policy: return the kind iff closure is a *theorem*, and widen to
+    `Quantity` otherwise -- never decide at runtime. For the sign-constrained
+    kinds only addition qualifies; `DistanceModulus` spans the reals, so
+    subtraction and scalar scaling are closed on it too.
+
+    The point of asserting this per-kind is that the alternative -- preserving
+    the type and validating the result -- makes success depend on the values
+    rather than the types, which is unusable under `jit` and `vmap`.
+    """
+
+    def _expected(self, kind: SimpleNamespace) -> type:
+        return u.quantity.Quantity if kind.sign_constrained else kind.cls
+
+    def test_addition_is_always_closed(self, kind: SimpleNamespace) -> None:
+        """Both operands are in the domain, so the sum is too -- every kind."""
+        unit = _a_valid_unit(kind)
+        result = kind.cls(1, unit) + kind.cls(2, unit)
+        assert type(result) is kind.cls
+
+    def test_subtraction_towards_a_negative_result(self, kind: SimpleNamespace) -> None:
+        unit = _a_valid_unit(kind)
+        result = kind.cls(1, unit) - kind.cls(3, unit)
+        assert type(result) is self._expected(kind)
+        assert float(u.ustrip(unit, result)) == pytest.approx(-2.0)
+
+    def test_subtraction_towards_a_positive_result_agrees(
+        self, kind: SimpleNamespace
+    ) -> None:
+        """The same op must not change type with the data -- that is the bug."""
+        unit = _a_valid_unit(kind)
+        negative = kind.cls(1, unit) - kind.cls(3, unit)
+        positive = kind.cls(3, unit) - kind.cls(1, unit)
+        assert type(negative) is type(positive)
+
+    @pytest.mark.parametrize("scalar", [2, -1, 0])
+    def test_scalar_multiplication(self, kind: SimpleNamespace, scalar: int) -> None:
+        unit = _a_valid_unit(kind)
+        assert type(kind.cls(3, unit) * scalar) is self._expected(kind)
+        assert type(scalar * kind.cls(3, unit)) is self._expected(kind)
+
+    @pytest.mark.parametrize("scalar", [2, -2])
+    def test_scalar_division(self, kind: SimpleNamespace, scalar: int) -> None:
+        unit = _a_valid_unit(kind)
+        assert type(kind.cls(6, unit) / scalar) is self._expected(kind)
+
+    def test_no_arithmetic_raises(self, kind: SimpleNamespace) -> None:
+        """Totality: none of these may depend on the values to succeed."""
+        unit = _a_valid_unit(kind)
+        a, b = kind.cls(1, unit), kind.cls(3, unit)
+        for op in (
+            lambda: a - b,
+            lambda: b - a,
+            lambda: a * -1,
+            lambda: -1 * a,
+            lambda: a / -2,
+            lambda: a + b,
+            lambda: -a,
+        ):
+            op()  # must not raise
+
+    def test_batched_subtraction_does_not_fail_on_one_element(
+        self, kind: SimpleNamespace
+    ) -> None:
+        """A single negative element used to poison the whole array."""
+        unit = _a_valid_unit(kind)
+        lhs = kind.cls(jnp.asarray([3.0, 1.0]), unit)
+        rhs = kind.cls(jnp.asarray([1.0, 3.0]), unit)
+        assert jnp.array_equal(u.ustrip(unit, lhs - rhs), jnp.asarray([2.0, -2.0]))
+
+    def test_under_vmap(self, kind: SimpleNamespace) -> None:
+        unit = _a_valid_unit(kind)
+        out = jax.vmap(
+            lambda a, b: u.ustrip(unit, kind.cls(a, unit) - kind.cls(b, unit))
+        )(jnp.asarray([3.0, 1.0]), jnp.asarray([1.0, 3.0]))
+        assert jnp.array_equal(out, jnp.asarray([2.0, -2.0]))
+
+    def test_dimension_changing_products_always_widen(
+        self, kind: SimpleNamespace
+    ) -> None:
+        """`x * x` squares the unit, so it is never the same kind."""
+        unit = _a_valid_unit(kind)
+        result = kind.cls(2, unit) * kind.cls(3, unit)
+        assert type(result) is u.quantity.Quantity
+
+    def test_reciprocal_always_widens(self, kind: SimpleNamespace) -> None:
+        """`1 / x` inverts the unit, so it is never the same kind."""
+        result = 1 / kind.cls(2, _a_valid_unit(kind))
+        assert type(result) is u.quantity.Quantity

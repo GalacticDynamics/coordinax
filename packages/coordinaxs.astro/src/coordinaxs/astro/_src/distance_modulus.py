@@ -8,6 +8,7 @@ from typing import Any, final
 
 import equinox as eqx
 import plum
+import quax
 from jax import lax
 from quax import register
 
@@ -16,6 +17,9 @@ import unxt as u
 
 import coordinax.distances as cxd
 from .constants import ANGLE, LENGTH, MAGNITUDE
+
+#: Matches how `unxt` binds `mul_p`, forwarding the primitive's parameters.
+_mul_qbind = quax.quaxify(lax.mul_p.bind)
 
 parallax_base_length = u.Q(jnp.array(1), "AU")
 
@@ -232,6 +236,69 @@ def neg_p_distancemodulus(x: DistanceModulus, /) -> DistanceModulus:
 
     """
     return DistanceModulus(-x.value, x.unit)
+
+
+@register(lax.sub_p)
+def sub_p_distancemoduli(x: DistanceModulus, y: DistanceModulus, /) -> DistanceModulus:
+    """Subtract two distance moduli, keeping the type.
+
+    Overrides the `AbstractDistance` rule, which widens to a `Quantity` because
+    `Distance` and `Parallax` cannot represent a negative. A distance modulus
+    can: its domain is all of the reals, so subtraction is closed here.
+
+    >>> from coordinaxs.astro import DistanceModulus
+    >>> DistanceModulus(1, "mag") - DistanceModulus(3, "mag")
+    DistanceModulus(-2, 'mag')
+
+    """
+    yv: Any = u.ustrip(x.unit, y)
+    return DistanceModulus(x.value - yv, x.unit)
+
+
+@register(lax.mul_p)
+def mul_p_distancemodulus_arraylike(
+    x: DistanceModulus, y: ArrayLike, /, **kw: Any
+) -> DistanceModulus:
+    """Scaling a distance modulus keeps it a distance modulus, either sign.
+
+    >>> from coordinaxs.astro import DistanceModulus
+    >>> DistanceModulus(2, "mag") * 3
+    DistanceModulus(6, 'mag')
+
+    >>> DistanceModulus(2, "mag") * -1
+    DistanceModulus(-2, 'mag')
+
+    """
+    return DistanceModulus(_mul_qbind(u.ustrip(x), y, **kw), x.unit)
+
+
+@register(lax.mul_p)
+def mul_p_arraylike_distancemodulus(
+    x: ArrayLike, y: DistanceModulus, /, **kw: Any
+) -> DistanceModulus:
+    """Scaling from the left, as above.
+
+    >>> from coordinaxs.astro import DistanceModulus
+    >>> 3 * DistanceModulus(2, "mag")
+    DistanceModulus(6, 'mag')
+
+    """
+    return DistanceModulus(_mul_qbind(x, u.ustrip(y), **kw), y.unit)
+
+
+@register(lax.div_p)
+def div_p_distancemodulus_arraylike(
+    x: DistanceModulus, y: ArrayLike, /
+) -> DistanceModulus:
+    """Dividing a distance modulus by a scalar keeps the type.
+
+    >>> from coordinaxs.astro import DistanceModulus
+    >>> DistanceModulus(4, "mag") / 2
+    DistanceModulus(2., 'mag')
+
+    """
+    xv: Any = u.ustrip(x)
+    return DistanceModulus(xv / y, x.unit)
 
 
 @plum.dispatch

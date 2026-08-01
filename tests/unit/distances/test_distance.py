@@ -11,10 +11,19 @@ Property-based tests use hypothesis strategies from ``coordinaxs.hypothesis``.
 
 Key behavioral contracts:
 * Distance is non-negative by default (``check_negative=True``).
-* Negation degrades to a plain length ``Quantity`` — a negative Distance is
-  not representable.
-* Arithmetic between two Distances preserves the ``Distance`` type.
+* An operation returns a ``Distance`` exactly when closure is a *theorem*, and
+  widens to a plain ``Quantity`` otherwise. Addition qualifies -- but only when
+  both operands were actually validated, since ``check_negative=False`` opts an
+  instance out and such a value may be negative. Subtraction, negation and
+  scalar scaling never qualify: a negative Distance is not representable, and a
+  scalar's sign is not knowable at trace time.
+* The choice never depends on the values -- ``d1 - d2`` widens whichever way
+  round the pair falls, so it cannot succeed eagerly and fail under ``vmap``.
 * Distance is a valid JAX pytree and works under JIT, vmap, and grad.
+
+The cross-kind version of the closure contract, covering ``Parallax`` and
+``DistanceModulus`` too, lives in
+``packages/coordinaxs.astro/tests/unit/distances/test_distance_kind_contract.py``.
 """
 
 __all__: tuple[str, ...] = ()
@@ -24,6 +33,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree as jt
 import pytest
+from astropy.units import UnitConversionError
 from hypothesis import given, settings, strategies as st
 from plum import convert
 
@@ -397,3 +407,80 @@ class TestMakeConstruction:
         in_kpc = cxd.Distance._make(jnp.asarray([1.0]), "kpc")
         assert in_m.unit == u.unit("m")
         assert in_kpc.unit == u.unit("kpc")
+
+
+class TestAdditionIsClosed:
+    """Addition is the one binary op the non-negative types are closed under.
+
+    Both operands validated their own non-negativity at construction, so the
+    sum cannot be negative and the result does not need re-checking. These
+    assert the contract that bypass has to preserve exactly.
+    """
+
+    def test_sum_of_two_distances_is_a_distance(self) -> None:
+        assert type(cxd.Distance(1, "m") + cxd.Distance(2, "m")) is cxd.Distance
+
+    def test_left_operand_fixes_the_unit(self) -> None:
+        assert (cxd.Distance(1, "m") + cxd.Distance(2, "km")).unit == u.unit("m")
+        assert (cxd.Distance(1, "km") + cxd.Distance(2, "m")).unit == u.unit("km")
+
+    @pytest.mark.parametrize(
+        ("a", "b", "unit", "expected"),
+        [(1, 2, "m", 3.0), (1, 2, "km", 3.0), (0, 0, "m", 0.0), (1, 2000, "m", 2001.0)],
+    )
+    def test_values(self, a: float, b: float, unit: str, expected: float) -> None:
+        total = cxd.Distance(a, unit) + cxd.Distance(b, unit)
+        assert float(total.ustrip(unit)) == pytest.approx(expected)
+
+    def test_mixed_unit_value_is_converted_not_dropped(self) -> None:
+        """The regression a naive bypass would cause: ignoring y's unit."""
+        total = cxd.Distance(1, "m") + cxd.Distance(2, "km")
+        assert float(total.ustrip("m")) == pytest.approx(2001.0)
+
+    def test_mismatched_dimensions_still_raise(self) -> None:
+        """Bypassing the guard must not also bypass unit checking.
+
+        Needs a second `AbstractDistance` kind with a different dimension, and
+        the only one is in the optional `coordinaxs.astro` package -- hence the
+        skip rather than a hard import.
+        """
+        astro = pytest.importorskip("coordinaxs.astro")
+
+        with pytest.raises(UnitConversionError, match="not convertible"):
+            _ = cxd.Distance(1, "m") + astro.Parallax(1, "mas")
+
+    def test_unvalidated_operands_keep_the_opt_out(self) -> None:
+        """`check_negative=False` operands may be negative, so no bypass.
+
+        Relabelling the sum `check_negative=True` would produce an instance
+        asserting an invariant its value violates.
+        """
+        opted_out = cxd.Distance(-1, "m", check_negative=False)
+        total = opted_out + opted_out
+
+        assert total.check_negative is False
+        assert float(total.ustrip("m")) == pytest.approx(-2.0)
+
+    def test_validated_operand_does_not_absorb_an_unvalidated_negative(self) -> None:
+        """A checked left operand still guards the sum, as it did before."""
+        with pytest.raises((eqx.EquinoxRuntimeError, ValueError)):
+            _ = cxd.Distance(1, "m") + cxd.Distance(-5, "m", check_negative=False)
+
+    def test_bypass_still_applies_when_both_are_validated(self) -> None:
+        """The fast path must survive the gating -- otherwise the PR does nothing."""
+        total = cxd.Distance(1, "m") + cxd.Distance(2, "m")
+        assert total.check_negative is True
+        assert "check_negative" not in repr(total)
+
+    def test_batched_addition(self) -> None:
+        got = cxd.Distance(jnp.asarray([1.0, 2.0]), "m") + cxd.Distance(
+            jnp.asarray([3.0, 4.0]), "m"
+        )
+        assert type(got) is cxd.Distance
+        assert jnp.array_equal(got.value, jnp.asarray([4.0, 6.0]))
+
+    def test_under_vmap(self) -> None:
+        out = jax.vmap(
+            lambda a, b: (cxd.Distance(a, "m") + cxd.Distance(b, "m")).value
+        )(jnp.arange(3.0), jnp.arange(3.0))
+        assert jnp.array_equal(out, jnp.asarray([0.0, 2.0, 4.0]))
