@@ -2,7 +2,6 @@
 
 from .base import *
 from .bundle import *
-from .constants import *
 from .custom_types import *
 from .mixins import *
 from .point import *

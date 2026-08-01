@@ -1,21 +1,10 @@
 """Custom types for coordinax.vectors."""
 
-__all__ = ("Shape", "HasShape", "CKey", "CDict")
+__all__ = ("Shape", "HasShape", "CKey", "CDict", "OptUSys")
 
-from typing import TYPE_CHECKING, Any, Protocol, TypeAlias, runtime_checkable
+from typing import Protocol, TypeAlias, runtime_checkable
 
-import unxt as u
-
-CKey: TypeAlias = str
-if TYPE_CHECKING:
-    # Typed for static checkers only.
-    CDict: TypeAlias = dict[CKey, Any]
-else:
-    # A parametric `dict[...]` annotation makes every plum signature
-    # using CDict "unfaithful", disabling plum's method cache (a full
-    # ~200x slower resolution per call). The bare `dict` keeps the cache;
-    # the TYPE_CHECKING branch above preserves the static type.
-    CDict: TypeAlias = dict
+from coordinax._src.custom_types import CDict, CKey, OptUSys
 
 Shape: TypeAlias = tuple[int, ...]
 
@@ -28,6 +17,3 @@ class HasShape(Protocol):
     def shape(self) -> Shape:
         """The shape of the object."""
         raise NotImplementedError  # pragma: no cover
-
-
-OptUSys: TypeAlias = u.AbstractUnitSystem | None

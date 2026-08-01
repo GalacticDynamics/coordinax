@@ -418,7 +418,7 @@ class AbstractVector(
         dynamic = jtu.map(lambda x: getattr(x, method)(*args, **kwargs), dynamic)
         return eqx.combine(dynamic, static)
 
-    def astype(self, dtype: Any, /, **kwargs: Any) -> "AbstractVector":
+    def astype(self, dtype: Any, /, **kwargs: Any) -> "Self":
         """Cast the vector to a new dtype.
 
         Examples
@@ -439,9 +439,7 @@ class AbstractVector(
             [1. 2. 3.]>
 
         """
-        dynamic, static = eqx.partition(self, lambda x: hasattr(x, "astype"))
-        dynamic = jtu.map(lambda x: x.astype(dtype, **kwargs), dynamic)
-        return eqx.combine(dynamic, static)
+        return self._tree_apply("astype", dtype, **kwargs)
 
     # -------------------------------
 
