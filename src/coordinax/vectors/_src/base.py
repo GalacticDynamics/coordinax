@@ -15,6 +15,7 @@ import numpy as np
 import plum
 import quax_blocks
 import wadler_lindig as wl
+from jax.numpy import broadcast_shapes
 from quax import ArrayValue
 
 import dataclassish
@@ -320,7 +321,12 @@ class AbstractVector(
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the batch shape of the vector."""
-        return jnp.broadcast_shapes(*(v.shape for v in self.data.values()))
+        # `jax.numpy.broadcast_shapes`, not the `quaxed` one: the arguments are
+        # plain shape tuples, never array values, so the quax wrapper can never
+        # fire and only costs dispatch (~3.4us per call). The list comprehension
+        # likewise beats a generator here — `f(*[...])` skips the iterator
+        # protocol that `f(*(...))` pays for.
+        return broadcast_shapes(*[v.shape for v in self.data.values()])
 
     # ===============================================================
     # Array API
