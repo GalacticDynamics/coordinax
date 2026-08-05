@@ -321,11 +321,7 @@ class AbstractVector(
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the batch shape of the vector."""
-        # `jax.numpy.broadcast_shapes`, not the `quaxed` one: the arguments are
-        # plain shape tuples, never array values, so the quax wrapper can never
-        # fire and only costs dispatch (~3.4us per call). The list comprehension
-        # likewise beats a generator here — `f(*[...])` skips the iterator
-        # protocol that `f(*(...))` pays for.
+        # jax.numpy, not quaxed: the args are plain shape tuples, never arrays.
         return broadcast_shapes(*[v.shape for v in self.data.values()])
 
     # ===============================================================
