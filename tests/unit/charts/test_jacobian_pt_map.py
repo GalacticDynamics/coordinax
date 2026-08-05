@@ -9,7 +9,7 @@ import jaxtyping
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, settings
+from hypothesis import given, settings, strategies as st
 from numpy.testing import assert_allclose
 from strategies import (
     any_angle_rad as _any_angle_rad,
@@ -25,6 +25,40 @@ import unxts.linalg as ul
 import coordinax.charts as cxc
 
 usys_si = u.unitsystems.si
+
+#: Chart pairs whose Jacobians are checked in both directions.
+#:
+#: Points are always drawn in the *curvilinear* member, where the singularities
+#: are simple to exclude (r > 0, theta away from the poles), then mapped into
+#: whichever chart the Jacobian is taken from. Drawing directly in the
+#: Cartesian member would need a rejection filter for the origin and the polar
+#: axis instead.
+CHART_PAIRS = [
+    pytest.param(cxc.cart2d, cxc.polar2d, id="cart2d-polar2d"),
+    pytest.param(cxc.cart3d, cxc.sph3d, id="cart3d-sph3d"),
+    pytest.param(cxc.cart3d, cxc.cyl3d, id="cart3d-cyl3d"),
+]
+
+
+def _draw_curvilinear_point(data: st.DataObject, chart: cxc.AbstractChart) -> dict:
+    """Draw a point in *chart*, bounded away from its coordinate singularities."""
+    if chart is cxc.polar2d:
+        return {"r": data.draw(_pos_m), "theta": data.draw(_any_angle_rad)}
+    if chart is cxc.sph3d:
+        return {
+            "r": data.draw(_pos_m),
+            "theta": data.draw(_angle_rad),
+            "phi": data.draw(_any_angle_rad),
+        }
+    if chart is cxc.cyl3d:
+        return {
+            "rho": data.draw(_pos_m),
+            "phi": data.draw(_any_angle_rad),
+            "z": data.draw(_any_m),
+        }
+    msg = f"no point strategy registered for {chart}"  # pragma: no cover
+    raise AssertionError(msg)  # pragma: no cover
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -502,34 +536,6 @@ class TestJacobianPtMapCompositionProperty:
             err_msg=f"J_{{{c2}→{c1}}} @ J_{{{c1}→{c2}}} ≠ I",
         )
 
-    def test_cart2d_polar2d_at_1_0(self) -> None:
-        """Cart2D ↔ Polar2D at (1, 0): composition = I."""
-        self._check_composition_identity(
-            cxc.cart2d, cxc.polar2d, {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
-        )
-
-    def test_cart2d_polar2d_at_1_1(self) -> None:
-        """Cart2D ↔ Polar2D at (1, 1): composition = I."""
-        self._check_composition_identity(
-            cxc.cart2d, cxc.polar2d, {"x": u.Q(1, "m"), "y": u.Q(1, "m")}
-        )
-
-    def test_cart3d_sph3d_at_x1_y0_z0(self) -> None:
-        """Cart3D ↔ Sph3D at (1, 0, 0): composition = I."""
-        self._check_composition_identity(
-            cxc.cart3d,
-            cxc.sph3d,
-            {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")},
-        )
-
-    def test_cart3d_cyl3d_at_x1_y0_z0(self) -> None:
-        """Cart3D ↔ Cyl3D at (1, 0, 0): composition = I."""
-        self._check_composition_identity(
-            cxc.cart3d,
-            cxc.cyl3d,
-            {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")},
-        )
-
     @given(r=_pos_m, theta=_angle_rad, phi=_any_angle_rad)
     @settings(deadline=None)
     def test_cart3d_sph3d_property(self, r, theta, phi) -> None:
@@ -591,71 +597,32 @@ class TestJacobianPtMapAgreesWithJacfwd:
                 err_msg=f"J[{ok}, {ik}] mismatch vs jacfwd",
             )
 
-    def test_cart2d_to_polar2d_at_1_0(self) -> None:
-        self._check_agrees(
-            cxc.cart2d, cxc.polar2d, {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
-        )
-
-    def test_cart2d_to_polar2d_at_1_1(self) -> None:
-        self._check_agrees(
-            cxc.cart2d, cxc.polar2d, {"x": u.Q(1, "m"), "y": u.Q(1, "m")}
-        )
-
-    def test_polar2d_to_cart2d_at_r1_theta_pi3(self) -> None:
-        self._check_agrees(
-            cxc.polar2d, cxc.cart2d, {"r": u.Q(1, "m"), "theta": u.Q(jnp.pi / 3, "rad")}
-        )
-
-    def test_cart3d_to_sph3d_at_x1_y0_z0(self) -> None:
-        self._check_agrees(
-            cxc.cart3d,
-            cxc.sph3d,
-            {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")},
-        )
-
-    def test_cart3d_to_sph3d_at_x3_y4_z0(self) -> None:
-        self._check_agrees(
-            cxc.cart3d,
-            cxc.sph3d,
-            {"x": u.Q(3, "m"), "y": u.Q(4, "m"), "z": u.Q(0, "m")},
-        )
-
-    def test_sph3d_to_cart3d_at_r1_theta_pi2_phi0(self) -> None:
-        self._check_agrees(
-            cxc.sph3d,
-            cxc.cart3d,
-            {"r": u.Q(1, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")},
-        )
-
-    def test_cart3d_to_cyl3d_at_x0_y1_z2(self) -> None:
-        self._check_agrees(
-            cxc.cart3d,
-            cxc.cyl3d,
-            {"x": u.Q(0, "m"), "y": u.Q(1, "m"), "z": u.Q(2, "m")},
-        )
-
-    def test_cyl3d_to_cart3d_at_rho1_phi_pi4_z1(self) -> None:
-        self._check_agrees(
-            cxc.cyl3d,
-            cxc.cart3d,
-            {"rho": u.Q(1, "m"), "phi": u.Q(jnp.pi / 4, "rad"), "z": u.Q(1, "m")},
-        )
-
-    @given(r=_pos_m, theta=_angle_rad, phi=_any_angle_rad)
+    @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
+    @pytest.mark.parametrize("forward", [True, False], ids=["cart->curv", "curv->cart"])
+    @given(data=st.data())
     @settings(deadline=None)
-    def test_cart3d_sph3d_property(self, r, theta, phi) -> None:
-        """Analytical J agrees with jacfwd for any non-singular sph3d point."""
-        p_sph = {"r": r, "theta": theta, "phi": phi}
-        p_cart = cxc.pt_map(p_sph, cxc.sph3d, cxc.cart3d)
-        self._check_agrees(cxc.cart3d, cxc.sph3d, p_cart, atol=1e-4)
+    def test_agrees_with_jacfwd(
+        self,
+        cart: cxc.AbstractChart,
+        curv: cxc.AbstractChart,
+        forward: bool,
+        data: st.DataObject,
+    ) -> None:
+        """The analytic Jacobian matches jacfwd at an arbitrary point.
 
-    @given(r=_pos_m, phi=_any_angle_rad, z=_any_m)
-    @settings(deadline=None)
-    def test_cart3d_cyl3d_property(self, r, phi, z) -> None:
-        """Analytical J agrees with jacfwd for any non-singular cyl3d point."""
-        p_cyl = {"rho": r, "phi": phi, "z": z}
-        p_cart = cxc.pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
-        self._check_agrees(cxc.cart3d, cxc.cyl3d, p_cart, atol=1e-4)
+        Replaces eight single-point tests. Those covered six chart pairs but
+        only ever at one hand-picked point each, and the two property tests
+        that sat beside them covered just `cart3d -> sph3d` and
+        `cart3d -> cyl3d` -- so `cart2d <-> polar2d` and the three reverse
+        directions had no arbitrary-point coverage at all. This closes that:
+        every pair is now checked in both directions over its whole
+        non-singular domain.
+        """
+        point = _draw_curvilinear_point(data, curv)
+        if forward:
+            self._check_agrees(cart, curv, cxc.pt_map(point, curv, cart), atol=1e-4)
+        else:
+            self._check_agrees(curv, cart, point, atol=1e-4)
 
 
 # ===========================================================================
