@@ -5,6 +5,7 @@ __all__: tuple[str, ...] = ()
 
 from dataclasses import replace
 
+from collections.abc import Callable
 from jaxtyping import Array, Bool
 from typing import Any, cast
 
@@ -23,15 +24,47 @@ from .point import Point
 from .tangent import Tangent
 
 ##############################################################################
+# Helpers
+
+
+def _map_data(vec: Point | Tangent, fn: Callable[[Any], Any], /) -> Point | Tangent:
+    """Return ``vec`` with ``fn`` applied to each of its component leaves."""
+    return replace(vec, data=jtu.map(fn, vec.data))
+
+
+def _scale(vec: Point | Tangent, fn: Callable[[Any], Any], /) -> Point | Tangent:
+    """Like `_map_data`, but stopping the tree walk at whole `Quantity` leaves."""
+    return replace(vec, data=jtu.map(fn, vec.data, is_leaf=uq.is_any_quantity))
+
+
+def _map_bundle_data(bundle: Coordinate, fn: Callable[[Any], Any], /) -> Coordinate:
+    """Apply `_map_data` to a bundle's base point and every fibre."""
+    return Coordinate._create_unchecked(
+        cast("Point", _map_data(bundle.point, fn)),
+        {name: cast("Tangent", _map_data(vec, fn)) for name, vec in bundle.items()},
+    )
+
+
+##############################################################################
 # Primitives
+#
+# `Point` and `Tangent` differ in geometry, but the JAX infrastructure
+# primitives (broadcast, dtype conversion, scaling) act on the component
+# leaves alone and so are shared. `Coordinate` maps the same leaf function
+# over its base point and every fibre.
 
 
 @quax.register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p_absvec(operand: Point, /, *, shape: Shape, **kw: Any) -> Point:
+def broadcast_in_dim_p_absvec(
+    operand: Point | Tangent, /, *, shape: Shape, **kw: Any
+) -> Point | Tangent:
     """Broadcast in a dimension.
 
     >>> import quaxed.numpy as jnp
+    >>> import unxt as u
     >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
 
     >>> q = cx.Point.from_([1, 2, 3], "m")
     >>> print(q)
@@ -42,19 +75,29 @@ def broadcast_in_dim_p_absvec(operand: Point, /, *, shape: Shape, **kw: Any) -> 
     <Point: chart=Cart3D (x, y, z) [m]
         [[1 2 3]]>
 
+    >>> v = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> jnp.broadcast_to(v, (2, 3))["x"].shape
+    (2,)
+
     """
     c_shape = shape[:-1]
-    return replace(
-        operand, data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), operand.data)
-    )
+    return _map_data(operand, lambda v: jnp.broadcast_to(v, c_shape))
 
 
 @quax.register(jax.lax.convert_element_type_p)
-def convert_element_type_p_absvec(operand: Point, /, **kw: Any) -> Point:
+def convert_element_type_p_absvec(
+    operand: Point | Tangent, /, **kw: Any
+) -> Point | Tangent:
     """Convert the element type of a quantity.
 
     >>> import quaxed.lax as qlax
+    >>> import unxt as u
     >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
 
     >>> vec = cx.Point.from_([1, 2, 3], "m")
     >>> vec["x"].dtype
@@ -64,10 +107,16 @@ def convert_element_type_p_absvec(operand: Point, /, **kw: Any) -> Point:
     <Point: chart=Cart3D (x, y, z) [m]
         [1. 2. 3.]>
 
+    >>> v = cx.Tangent.from_(
+    ...     {"x": u.Q(1, "m/s"), "y": u.Q(2, "m/s"), "z": u.Q(3, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> qlax.convert_element_type(v, float)["x"].dtype
+    dtype('float64')
+
     """
     convert_p = quax.quaxify(jax.lax.convert_element_type_p.bind)
-    data = jtu.map(lambda v: convert_p(v, **kw), operand.data)
-    return replace(operand, data=data)
+    return _map_data(operand, lambda v: convert_p(v, **kw))
 
 
 @quax.register(jax.lax.eq_p)
@@ -170,31 +219,33 @@ def sub_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
 
 
 @quax.register(jax.lax.mul_p)
-def mul_p_absvecs(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> Point:
-    """Element-wise multiplication of a scalar and a point."""
-    data = jtu.map(lambda v: jnp.multiply(lhs, v), rhs.data, is_leaf=uq.is_any_quantity)
-    return replace(rhs, data=data)
+def mul_p_scalar_absvec(
+    lhs: int | float | Array, rhs: Point | Tangent, /, **kw: Any
+) -> Point | Tangent:
+    """Element-wise multiplication of a scalar and a vector."""
+    return _scale(rhs, lambda v: jnp.multiply(lhs, v))
 
 
 @quax.register(jax.lax.mul_p)
-def mul_p_vecs(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> Point:
-    """Element-wise multiplication of a point and a scalar."""
-    data = jtu.map(lambda v: jnp.multiply(v, rhs), lhs.data, is_leaf=uq.is_any_quantity)
-    return replace(lhs, data=data)
+def mul_p_absvec_scalar(
+    lhs: Point | Tangent, rhs: int | float | Array, /, **kw: Any
+) -> Point | Tangent:
+    """Element-wise multiplication of a vector and a scalar."""
+    return _scale(lhs, lambda v: jnp.multiply(v, rhs))
 
 
 @quax.register(jax.lax.div_p)
 def div_p_scalar_point(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> Point:
     """Element-wise division of a scalar by a point."""
-    data = jtu.map(lambda v: jnp.divide(lhs, v), rhs.data, is_leaf=uq.is_any_quantity)
-    return replace(rhs, data=data)
+    return _scale(rhs, lambda v: jnp.divide(lhs, v))
 
 
 @quax.register(jax.lax.div_p)
-def div_p_vecs(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> Point:
-    """Element-wise division of a point by a scalar."""
-    data = jtu.map(lambda v: jnp.divide(v, rhs), lhs.data, is_leaf=uq.is_any_quantity)
-    return replace(lhs, data=data)
+def div_p_absvec_scalar(
+    lhs: Point | Tangent, rhs: int | float | Array, /, **kw: Any
+) -> Point | Tangent:
+    """Element-wise division of a vector by a scalar."""
+    return _scale(lhs, lambda v: jnp.divide(v, rhs))
 
 
 ##############################################################################
@@ -203,59 +254,6 @@ def div_p_vecs(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> Point:
 # Tangent vectors live in a genuine linear (vector) space T_p M.  All
 # operations are component-wise — no Cartesian round-trip is needed or correct.
 ##############################################################################
-
-
-@quax.register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p_tangent(
-    operand: Tangent, /, *, shape: Shape, **kw: Any
-) -> Tangent:
-    """Broadcast a Tangent to a new shape.
-
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import unxt as u
-
-    >>> v = cx.Tangent.from_(
-    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
-    ...     cxc.cart3d, cxr.coord_vel,
-    ... )
-    >>> result = jnp.broadcast_to(v, (2, 3))
-    >>> result["x"].shape
-    (2,)
-
-    """
-    c_shape = shape[:-1]
-    return replace(
-        operand, data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), operand.data)
-    )
-
-
-@quax.register(jax.lax.convert_element_type_p)
-def convert_element_type_p_tangent(operand: Tangent, /, **kw: Any) -> Tangent:
-    """Convert the element type of all components in a Tangent.
-
-    >>> import quaxed.lax as qlax
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import unxt as u
-
-    >>> v = cx.Tangent.from_(
-    ...     {"x": u.Q(1, "m/s"), "y": u.Q(2, "m/s"), "z": u.Q(3, "m/s")},
-    ...     cxc.cart3d, cxr.coord_vel,
-    ... )
-    >>> v["x"].dtype
-    dtype('int64')
-
-    >>> qlax.convert_element_type(v, float)["x"].dtype
-    dtype('float64')
-
-    """
-    convert_p = quax.quaxify(jax.lax.convert_element_type_p.bind)
-    data = jtu.map(lambda v: convert_p(v, **kw), operand.data)
-    return replace(operand, data=data)
 
 
 @quax.register(jax.lax.eq_p)
@@ -285,9 +283,7 @@ def neg_p_tangent(operand: Tangent, /) -> Tangent:
     Q(-1., 'm / s')
 
     """
-    return replace(
-        operand, data=jtu.map(lambda v: -v, operand.data, is_leaf=uq.is_any_quantity)
-    )
+    return _scale(operand, lambda v: -v)
 
 
 @quax.register(jax.lax.add_p)
@@ -338,33 +334,6 @@ def sub_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
     return cast("Tangent", cxr.subtract(lhs, rhs))
 
 
-@quax.register(jax.lax.mul_p)
-def mul_p_scalar_tangent(
-    lhs: int | float | Array, rhs: Tangent, /, **kw: Any
-) -> Tangent:
-    """Scalar * Tangent — scale all components."""
-    data = jtu.map(lambda v: jnp.multiply(lhs, v), rhs.data, is_leaf=uq.is_any_quantity)
-    return replace(rhs, data=data)
-
-
-@quax.register(jax.lax.mul_p)
-def mul_p_tangent_scalar(
-    lhs: Tangent, rhs: int | float | Array, /, **kw: Any
-) -> Tangent:
-    """Tangent * scalar — scale all components."""
-    data = jtu.map(lambda v: jnp.multiply(v, rhs), lhs.data, is_leaf=uq.is_any_quantity)
-    return replace(lhs, data=data)
-
-
-@quax.register(jax.lax.div_p)
-def div_p_tangent_scalar(
-    lhs: Tangent, rhs: int | float | Array, /, **kw: Any
-) -> Tangent:
-    """Tangent / scalar — divide all components."""
-    data = jtu.map(lambda v: jnp.divide(v, rhs), lhs.data, is_leaf=uq.is_any_quantity)
-    return replace(lhs, data=data)
-
-
 ##############################################################################
 # Coordinate primitives
 #
@@ -400,18 +369,7 @@ def broadcast_in_dim_p_coordinate(
     # broadcast_in_dim is called by quax with the full batch+component shape;
     # the last axis is the component axis inside each vector — strip it.
     c_shape = shape[:-1]
-
-    new_point = replace(
-        operand.point,
-        data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), operand.point.data),
-    )
-    new_fields = {
-        name: replace(
-            vec, data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), vec.data)
-        )
-        for name, vec in operand.items()
-    }
-    return Coordinate._create_unchecked(new_point, new_fields)
+    return _map_bundle_data(operand, lambda v: jnp.broadcast_to(v, c_shape))
 
 
 @quax.register(jax.lax.convert_element_type_p)
@@ -438,15 +396,7 @@ def convert_element_type_p_coordinate(operand: Coordinate, /, **kw: Any) -> Coor
 
     """
     convert_p = quax.quaxify(jax.lax.convert_element_type_p.bind)
-
-    new_point = replace(
-        operand.point, data=jtu.map(lambda v: convert_p(v, **kw), operand.point.data)
-    )
-    new_fields = {
-        name: replace(vec, data=jtu.map(lambda v: convert_p(v, **kw), vec.data))
-        for name, vec in operand.items()
-    }
-    return Coordinate._create_unchecked(new_point, new_fields)
+    return _map_bundle_data(operand, lambda v: convert_p(v, **kw))
 
 
 @quax.register(jax.lax.eq_p)
