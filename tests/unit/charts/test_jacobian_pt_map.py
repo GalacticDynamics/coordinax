@@ -629,15 +629,24 @@ class TestJacobianPtMapAgreesWithJacfwd:
         forward: bool,
         data: st.DataObject,
     ) -> None:
-        """The analytic Jacobian matches jacfwd at an arbitrary point.
+        """The analytic Jacobian matches jacfwd at an arbitrary bounded point.
 
         Replaces eight single-point tests. Those covered six chart pairs but
         only ever at one hand-picked point each, and the two property tests
         that sat beside them covered just `cart3d -> sph3d` and
         `cart3d -> cyl3d` -- so `cart2d <-> polar2d` and the three reverse
         directions had no arbitrary-point coverage at all. This closes that:
-        every pair is now checked in both directions over its whole
-        non-singular domain.
+        every pair is checked in both directions.
+
+        "Arbitrary" means arbitrary within a deliberately narrow box, not the
+        whole non-singular domain: radii in [0.5, 8] m, polar angles in
+        (0.25, 2.875) rad, azimuths in [-3, 3] rad, Cartesian offsets in
+        [-8, 8] m. The bounds are not incidental. Comparing against `jacfwd`
+        at `atol=1e-4` needs operands whose float32 ULP is far below that, and
+        the check does fail on wide-magnitude points -- at ``y = 1.8e19 m`` the
+        ULP is ~2e12. So this trades range for the ability to assert agreement
+        numerically at all; the singular *directions* are covered, extreme
+        *scales* are not.
         """
         point = _draw_curvilinear_point(data, curv)
         if forward:
