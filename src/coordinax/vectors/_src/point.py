@@ -432,8 +432,9 @@ def from_(cls: type[Point], obj: Point, frame: cxf.AbstractReferenceFrame, /) ->
 
     An existing frame is replaced, not merged:
 
-    >>> cx.Point.from_(cx.Point.from_(d, cxf.alice), cxf.noframe).frame
-    NoFrame()
+    >>> p_alice = cx.Point.from_(d, cxf.alice)
+    >>> cx.Point.from_(p_alice, cxf.noframe).frame == cxf.noframe
+    True
 
     """
     return replace(obj, frame=frame)
