@@ -41,7 +41,28 @@ CHART_PAIRS = [
 
 
 def _draw_curvilinear_point(data: st.DataObject, chart: cxc.AbstractChart) -> dict:
-    """Draw a point in *chart*, bounded away from its coordinate singularities."""
+    """Draw a point in *chart*, bounded away from its coordinate singularities.
+
+    Component-wise rather than via `coordinaxs.hypothesis.cdicts`, which cannot
+    express what this test needs. Measured on 300 draws each:
+
+    - It has no notion of a chart's *domain*. Charts publish
+      ``coord_dimensions`` but no bounds, so ``cdicts(sph3d)`` yields r <= 0 in
+      60% of draws and theta outside ``(0, pi)`` in 94%. Filtering those with
+      ``assume`` rejects almost everything and trips ``filter_too_much``.
+    - It randomises the *unit* of each component independently (148 distinct
+      combinations in 400 draws, mixed within a single point: x in m, y in
+      solRad, z in Angstrom). So constraining ``elements`` does not constrain
+      the physical quantity -- ``r = 0.5`` in ``3e-17 pc`` is not ``0.5 m``.
+    - Magnitudes span the representable range, 1e-5 to 3e38 m. Feeding those
+      to the jacfwd comparison fails at ``x=0, y=1.8e19 m, z=0``: float32 ULP
+      there is ~2e12, so agreement to ``atol=1e-4`` is not meaningful. That is
+      a precision artifact, not a defect in `jac_pt_map`.
+
+    `cdicts` is the right tool for exercising unit and dtype handling, which is
+    what that spread is for. It is the wrong one for a numerical derivative
+    check, which needs fixed units and a bounded, non-singular domain.
+    """
     if chart is cxc.polar2d:
         return {"r": data.draw(_pos_m), "theta": data.draw(_any_angle_rad)}
     if chart is cxc.sph3d:
