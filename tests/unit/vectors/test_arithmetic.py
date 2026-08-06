@@ -440,6 +440,61 @@ class TestTangentMismatchedRep:
 
 
 # ===================================================================
+# Tangent mismatched chart → error
+# ===================================================================
+
+
+class TestTangentMismatchedChart:
+    """Adding/subtracting Tangents from different charts raises ValueError.
+
+    Regression test: `rep` (basis + semantic) does not include the chart, so a
+    guard that only checks `rep` lets through two Tangents from *different*
+    manifolds whenever their charts happen to name components the same way --
+    e.g. `GalileanCT` and `MinkowskiCT` both use ``(ct, x, y, z)``. Adding
+    their coordinate-basis components would silently produce a value with no
+    physical meaning instead of raising.
+    """
+
+    def _galilean_minkowski_vel(self) -> tuple:
+        data = {
+            "ct": u.Q(1.0, "m/s"),
+            "x": u.Q(2.0, "m/s"),
+            "y": u.Q(3.0, "m/s"),
+            "z": u.Q(4.0, "m/s"),
+        }
+        gal = cx.Tangent.from_(data, cxc.galileanct, cxr.coord_vel)
+        mink = cx.Tangent.from_(data, cxc.minkowskict, cxr.coord_vel)
+        return gal, mink
+
+    def test_same_rep_different_chart_same_keys(self) -> None:
+        """Sanity check: the two charts really do collide on component names."""
+        gal, mink = self._galilean_minkowski_vel()
+        assert gal.rep == mink.rep
+        assert gal.chart != mink.chart
+        assert set(gal.data) == set(mink.data)
+
+    def test_add_different_chart_raises(self) -> None:
+        gal, mink = self._galilean_minkowski_vel()
+        with pytest.raises(ValueError, match="Cannot add Tangent vectors"):
+            _ = gal + mink
+
+    def test_sub_different_chart_raises(self) -> None:
+        gal, mink = self._galilean_minkowski_vel()
+        with pytest.raises(ValueError, match="Cannot subtract Tangent vectors"):
+            _ = gal - mink
+
+    def test_cx_add_different_chart_raises(self) -> None:
+        gal, mink = self._galilean_minkowski_vel()
+        with pytest.raises(ValueError, match="Cannot add Tangent vectors"):
+            cxr.add(gal, mink)
+
+    def test_cx_subtract_different_chart_raises(self) -> None:
+        gal, mink = self._galilean_minkowski_vel()
+        with pytest.raises(ValueError, match="Cannot subtract Tangent vectors"):
+            cxr.subtract(gal, mink)
+
+
+# ===================================================================
 # Coordinate broadcast / convert (required for JAX JIT / vmap)
 # ===================================================================
 
