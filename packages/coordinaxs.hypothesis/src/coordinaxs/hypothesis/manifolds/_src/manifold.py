@@ -71,14 +71,23 @@ _NDIM_SUPPORT: Final[
     (cxm.EuclideanManifold, lambda _: True),
 )
 
+#: Concrete manifold types this module has no strategy for.
+#:
+#: Kept separate from `_NDIM_SUPPORT` because it is not a question of
+#: dimensionality: these cannot be drawn at *any* ndim.
+_NO_STRATEGY: Final[tuple[type[cxm.AbstractManifold], ...]] = (
+    cxm.NoManifold,
+    cxm.MinkowskiManifold,
+)
+
 
 def _manifold_class_supports_ndim(
     cls: type[cxm.AbstractManifold], ndim: int, /
 ) -> bool:
     """Whether *cls* can be drawn at *ndim*.
 
-    Types absent from `_NDIM_SUPPORT` (``NoManifold``, ``MinkowskiManifold``)
-    fall through to `True`, matching the previous ``AbstractManifold`` catch-all.
+    Types absent from `_NDIM_SUPPORT` fall through to `True`; add an entry when
+    adding a concrete manifold type whose dimensionality is restricted.
     """
     for base, supports in _NDIM_SUPPORT:
         if issubclass(cls, base):
@@ -163,7 +172,8 @@ def manifolds(
             exclude_abstract=True,
             exclude=exclude,
         )
-        if target_ndim is None or _manifold_class_supports_ndim(cls, target_ndim)
+        if not issubclass(cls, _NO_STRATEGY)
+        and (target_ndim is None or _manifold_class_supports_ndim(cls, target_ndim))
     )
     if not classes:
         assume(False)
@@ -234,6 +244,13 @@ def manifolds(
         raise ValueError(
             "When manifold_cls is provided, filter and exclude must be empty."
         )
+
+    if issubclass(manifold_cls, _NO_STRATEGY):
+        # Using the class as a filter would select it right back, land here
+        # again and recurse until hypothesis ran out of buffer and reported
+        # `Unsatisfiable`, with nothing pointing at the real cause.
+        msg = f"No manifold strategy is registered for {manifold_cls.__name__}."
+        raise NotImplementedError(msg)
 
     return draw(
         cast("Any", manifolds)(
