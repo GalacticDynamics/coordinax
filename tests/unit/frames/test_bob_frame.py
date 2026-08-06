@@ -190,55 +190,52 @@ class TestBobVelocityTransform:
         assert result == v
 
 
-class TestBobDisplacementInvariance:
-    """Displacements are invariant under the Alice ↔ Bob transform.
+class TestBobInvariance:
+    """Displacements and accelerations are unchanged by the Alice <-> Bob maps.
 
     Per spec (software-spec-bob):
-      Displacement: unchanged (both Translate and Boost are identity on displacements).
-    """
-
-    def test_alice_to_bob_displacement_invariant(self):
-        alice_to_bob = cxf.frame_transition(cxf.alice, cxf.bob)
-        d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
-        result = cxfm.act(alice_to_bob, None, d, cxc.cart3d, cxr.coord_disp)
-        assert result == d
-
-    def test_bob_to_alice_displacement_invariant(self):
-        bob_to_alice = cxf.frame_transition(cxf.bob, cxf.alice)
-        d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
-        result = cxfm.act(bob_to_alice, None, d, cxc.cart3d, cxr.coord_disp)
-        assert result == d
-
-    def test_translate_alone_displacement_invariant(self):
-        """The Translate component alone is identity on displacements."""
-        shift = cxfm.Translate.from_([100_000, 10_000, 0], "km")
-        d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
-        result = cxfm.act(shift, None, d, cxc.cart3d, cxr.coord_disp)
-        assert result == d
-
-    def test_boost_alone_displacement_invariant(self):
-        """The Boost component alone is identity on displacements."""
-        boost = cxfm.Boost.from_([269_813_212.2, 0, 0], "m/s")
-        d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
-        result = cxfm.act(boost, None, d, cxc.cart3d, cxr.coord_disp)
-        assert result == d
-
-
-class TestBobAccelerationInvariance:
-    """Accelerations are invariant under the Alice ↔ Bob transform.
-
-    Per spec (software-spec-bob):
+      Displacement: unchanged (both Translate and Boost are identity on
+      displacements).
       Acceleration: unchanged (Boost is identity on accelerations).
+
+    The two spec lines are one contract -- ``act`` is the identity on these
+    representations -- so they are one table. Written out per-transform, the
+    acceleration half had covered only the two composite transitions; the
+    cross product adds ``Translate`` and ``Boost`` alone, which is where the
+    spec's claim about `Boost` actually bites.
     """
 
-    def test_alice_to_bob_acceleration_invariant(self):
-        alice_to_bob = cxf.frame_transition(cxf.alice, cxf.bob)
-        a = {"x": u.Q(1.0, "m/s^2"), "y": u.Q(2.0, "m/s^2"), "z": u.Q(3.0, "m/s^2")}
-        result = cxfm.act(alice_to_bob, None, a, cxc.cart3d, cxr.coord_acc)
-        assert result == a
-
-    def test_bob_to_alice_acceleration_invariant(self):
-        bob_to_alice = cxf.frame_transition(cxf.bob, cxf.alice)
-        a = {"x": u.Q(1.0, "m/s^2"), "y": u.Q(2.0, "m/s^2"), "z": u.Q(3.0, "m/s^2")}
-        result = cxfm.act(bob_to_alice, None, a, cxc.cart3d, cxr.coord_acc)
-        assert result == a
+    @pytest.mark.parametrize(
+        "transform",
+        [
+            pytest.param(cxf.frame_transition(cxf.alice, cxf.bob), id="alice-to-bob"),
+            pytest.param(cxf.frame_transition(cxf.bob, cxf.alice), id="bob-to-alice"),
+            pytest.param(
+                cxfm.Translate.from_([100_000, 10_000, 0], "km"), id="translate-alone"
+            ),
+            pytest.param(
+                cxfm.Boost.from_([269_813_212.2, 0, 0], "m/s"), id="boost-alone"
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        ("rep", "value"),
+        [
+            pytest.param(
+                cxr.coord_disp,
+                {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")},
+                id="displacement",
+            ),
+            pytest.param(
+                cxr.coord_acc,
+                {
+                    "x": u.Q(1.0, "m/s^2"),
+                    "y": u.Q(2.0, "m/s^2"),
+                    "z": u.Q(3.0, "m/s^2"),
+                },
+                id="acceleration",
+            ),
+        ],
+    )
+    def test_act_is_the_identity(self, transform, rep, value) -> None:
+        assert cxfm.act(transform, None, value, cxc.cart3d, rep) == value
