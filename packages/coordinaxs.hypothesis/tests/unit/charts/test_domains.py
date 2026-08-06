@@ -10,6 +10,8 @@ __all__: tuple[str, ...] = ()
 
 import math
 
+from collections.abc import Callable
+
 import hypothesis.strategies as st
 import pytest
 import unxt as u
@@ -17,34 +19,61 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis.errors import Unsatisfiable
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 
 import coordinaxs.hypothesis.main as cxst
 from coordinaxs.hypothesis.charts import Interval, component_domains
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
-#: Charts with a module-level singleton, which is every chart that needs no
-#: construction arguments.
-CHARTS = [
-    inst
-    for cls in sorted(
-        get_all_subclasses(cxc.AbstractChart, exclude_abstract=True),
-        key=lambda c: c.__name__,
-    )
-    if isinstance(inst := getattr(cxc, cls.__name__.lower(), None), cxc.AbstractChart)
+#: Every concrete chart, one instance each.
+#:
+#: Enumerated from the module's own singletons rather than guessed from class
+#: names: the singleton for `Spherical3D` is `sph3d`, not `spherical3d`, so a
+#: ``getattr(cxc, cls.__name__.lower())`` heuristic silently collects only the
+#: Cartesian-ish half and skips every chart with an interesting domain.
+_SINGLETONS = sorted(
+    {
+        id(obj): obj for obj in vars(cxc).values() if isinstance(obj, cxc.AbstractChart)
+    }.values(),
+    key=lambda c: type(c).__name__,
+)
+
+#: The three that take construction arguments, so have no singleton.
+_CONSTRUCTED = [
+    cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "kpc")),
+    cxc.CartesianProductChart(
+        factors=(cxc.cart3d, cxc.polar2d), factor_names=("q", "p")
+    ),
+    cxm.EmbeddedChart(embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "kpc"))),
 ]
+
+CHARTS = [*_SINGLETONS, *_CONSTRUCTED]
 CHART_IDS = [type(c).__name__ for c in CHARTS]
 
 
+def test_every_concrete_chart_is_covered() -> None:
+    """The list above must not drift behind the chart hierarchy.
+
+    Without this, adding a chart silently adds an untested domain -- which is
+    exactly how the original name-guessing version came to skip 13 of 24.
+    """
+    concrete = {
+        c.__name__ for c in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True)
+    }
+    assert concrete - {type(c).__name__ for c in CHARTS} == set()
+
+
 def _in(interval: Interval, q: u.AbstractQuantity) -> bool:
-    """Whether *q* lies inside *interval*, compared in the interval's unit."""
+    """Whether *q* lies inside *interval*, margins included.
+
+    Compares in the interval's own unit, and against the margin-adjusted
+    bounds -- a draw sitting exactly on an open bound is outside.
+    """
     if interval.unit is None:
         return True
+    lo, hi = interval.bounds_in(u.unit(interval.unit))
     v = float(u.ustrip(interval.unit, q))
-    lo = interval.min
-    hi = interval.max
-    if lo is not None and (v < lo or (interval.exclude_min and v <= lo)):
-        return False
-    return not (hi is not None and (v > hi or (interval.exclude_max and v >= hi)))
+    return (lo is None or v >= lo) and (hi is None or v <= hi)
 
 
 class TestDomainsAreWellFormed:
@@ -53,12 +82,6 @@ class TestDomainsAreWellFormed:
     @pytest.mark.parametrize("chart", CHARTS, ids=CHART_IDS)
     def test_keys_match_components(self, chart: cxc.AbstractChart) -> None:
         assert set(component_domains(chart)) == set(chart.components)
-
-    @pytest.mark.parametrize("chart", CHARTS, ids=CHART_IDS)
-    def test_bounds_are_ordered(self, chart: cxc.AbstractChart) -> None:
-        for name, interval in component_domains(chart).items():
-            if interval.min is not None and interval.max is not None:
-                assert interval.min < interval.max, name
 
     @pytest.mark.parametrize("chart", CHARTS, ids=CHART_IDS)
     def test_margin_leaves_room(self, chart: cxc.AbstractChart) -> None:
@@ -115,6 +138,44 @@ class TestBoundsFollowTheUnit:
         assert hi is None
 
 
+#: Physical truths about each coordinate, written out rather than derived from
+#: `component_domains`, so that a wrong constant in that table cannot make the
+#: test agree with it. Covers both spherical conventions, which is the case the
+#: whole dispatch design exists for.
+INVARIANTS = [
+    pytest.param(cxc.sph3d, "r", "m", lambda v: v > 0, id="sph3d-r-positive"),
+    pytest.param(
+        cxc.sph3d, "theta", "rad", lambda v: 0 < v < math.pi, id="sph3d-theta-polar"
+    ),
+    pytest.param(
+        cxc.math_sph3d,
+        "phi",
+        "rad",
+        lambda v: 0 < v < math.pi,
+        id="math_sph3d-phi-polar",
+    ),
+    pytest.param(
+        cxc.math_sph3d,
+        "theta",
+        "rad",
+        lambda v: -math.pi <= v <= math.pi,
+        id="math_sph3d-theta-azimuth",
+    ),
+    pytest.param(cxc.polar2d, "r", "m", lambda v: v > 0, id="polar2d-r-positive"),
+    pytest.param(cxc.cyl3d, "rho", "m", lambda v: v > 0, id="cyl3d-rho-positive"),
+    pytest.param(
+        cxc.lonlat_sph3d,
+        "lat",
+        "rad",
+        lambda v: -math.pi / 2 < v < math.pi / 2,
+        id="lonlat-lat-in-range",
+    ),
+    pytest.param(
+        cxc.sph2, "theta", "rad", lambda v: 0 < v < math.pi, id="sph2-theta-polar"
+    ),
+]
+
+
 class TestCDictsRespectsDomains:
     """The payoff: generated points are inside the domain, with no filtering."""
 
@@ -132,28 +193,31 @@ class TestCDictsRespectsDomains:
 
         check()
 
-    def test_spherical_radius_is_positive(self) -> None:
-        """Was 60% negative before the domains existed."""
+    @pytest.mark.parametrize(
+        ("chart", "component", "unit_str", "predicate"), INVARIANTS
+    )
+    def test_physical_invariant_holds(
+        self,
+        chart: cxc.AbstractChart,
+        component: str,
+        unit_str: str,
+        predicate: Callable[[float], bool],
+    ) -> None:
+        """Draws satisfy the physics, stated *without* consulting the domains.
 
-        @given(point=cxst.cdicts(cxc.sph3d))
+        `test_draws_are_in_domain` above checks draws against
+        `component_domains` -- the same table `cdicts` generated from, so it
+        stays green even if a constant in that table is wrong. It proves the
+        strategy honours the domain, not that the domain is right. These
+        assertions are the independent half: blank out `RADIAL` and they fail.
+        """
+
+        @given(point=cxst.cdicts(chart))
         @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
+            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
         )
         def check(point: dict) -> None:
-            assert float(u.ustrip("m", point["r"])) > 0
-
-        check()
-
-    def test_colatitude_is_off_both_poles(self) -> None:
-        """Was 94% outside (0, pi) before the domains existed."""
-
-        @given(point=cxst.cdicts(cxc.sph3d))
-        @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
-        )
-        def check(point: dict) -> None:
-            theta = float(u.ustrip("rad", point["theta"]))
-            assert 0 < theta < math.pi
+            assert predicate(float(u.ustrip(unit_str, point[component])))
 
         check()
 

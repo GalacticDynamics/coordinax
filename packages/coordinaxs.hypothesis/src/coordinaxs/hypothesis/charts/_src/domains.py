@@ -46,77 +46,49 @@ class Interval:
         constrains a draw made in ``cycle``.
     min, max
         Bounds, or `None` for unbounded on that side.
-    exclude_min, exclude_max
-        Whether the corresponding bound is open.
     margin
-        How far to stay clear of an *excluded* bound, in ``unit``.
+        How far to stay clear of each finite bound, in ``unit``. A non-zero
+        margin is what "open interval" means here -- there is no separate
+        exclusive flag, because a bound excluded by zero distance is no use.
 
-        Strict inequality is not enough to be useful. ``theta = 1e-30 rad``
-        satisfies ``theta > 0`` and is still numerically *at* the pole: the
-        Jacobian there is singular to working precision. The margin is the
-        difference between mathematically legal and numerically usable, and it
-        is why filtering with ``assume`` cannot substitute for this -- the
-        rejection region is not measure-zero.
+        Strict inequality alone is not enough. ``theta = 1e-30 rad`` satisfies
+        ``theta > 0`` and is still numerically *at* the pole: the Jacobian
+        there is singular to working precision. The margin is the difference
+        between mathematically legal and numerically usable, and it is why
+        filtering with ``assume`` cannot substitute for this -- the rejection
+        region is not measure-zero.
 
     """
 
     unit: str | None = None
     min: float | None = None
     max: float | None = None
-    exclude_min: bool = False
-    exclude_max: bool = False
     margin: float = 0.0
 
     def bounds_in(self, unit: Any, /) -> tuple[float | None, float | None]:
-        """Return ``(lo, hi)`` expressed in *unit*, margins already applied.
-
-        Conversion is monotonic for every unit pair reachable here (they differ
-        by a positive scale factor), but the result is sorted anyway so that a
-        sign-flipping unit could not silently invert the interval.
-        """
+        """Return ``(lo, hi)`` expressed in *unit*, margins already applied."""
         if self.unit is None:
             return self.min, self.max
 
-        lo = (
-            None
-            if self.min is None
-            else self.min + (self.margin if self.exclude_min else 0.0)
-        )
-        hi = (
-            None
-            if self.max is None
-            else self.max - (self.margin if self.exclude_max else 0.0)
-        )
+        def to_unit(v: float | None, shift: float) -> float | None:
+            if v is None:
+                return None
+            return float(u.ustrip(unit, u.Q(v + shift, self.unit)))
 
-        def to_unit(v: float | None) -> float | None:
-            return None if v is None else float(u.ustrip(unit, u.Q(v, self.unit)))
-
-        lo, hi = to_unit(lo), to_unit(hi)
-        if lo is not None and hi is not None and lo > hi:
-            lo, hi = hi, lo
-        return lo, hi
+        return to_unit(self.min, self.margin), to_unit(self.max, -self.margin)
 
 
 #: Strictly positive radius. Unbounded above; `magnitude` caps it in practice.
-RADIAL = Interval("m", min=0.0, exclude_min=True, margin=1e-3)
+RADIAL = Interval("m", min=0.0, margin=1e-3)
 
 #: Polar / colatitude angle, open at both poles where the chart degenerates.
-POLAR = Interval(
-    "rad", min=0.0, max=math.pi, exclude_min=True, exclude_max=True, margin=0.05
-)
+POLAR = Interval("rad", min=0.0, max=math.pi, margin=0.05)
 
 #: Azimuth. Closed: no singularity at either end, they are the same ray.
 AZIMUTH = Interval("rad", min=-math.pi, max=math.pi)
 
 #: Latitude, open at the poles for the same reason as `POLAR`.
-LATITUDE = Interval(
-    "rad",
-    min=-math.pi / 2,
-    max=math.pi / 2,
-    exclude_min=True,
-    exclude_max=True,
-    margin=0.05,
-)
+LATITUDE = Interval("rad", min=-math.pi / 2, max=math.pi / 2, margin=0.05)
 
 #: Explicitly unconstrained.
 FREE = Interval()

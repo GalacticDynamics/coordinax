@@ -35,7 +35,7 @@ from coordinaxs.hypothesis.utils import (
 #: which is dimensionally fine but useless to any test that compares numbers:
 #: at 1.8e19 m a float32 ULP is ~2e12, so agreement to any absolute tolerance is
 #: meaningless. Pass ``magnitude=None`` to draw across the full range.
-DEFAULT_MAGNITUDE: float | tuple[float, float] = 1e3
+DEFAULT_MAGNITUDE = 1e3
 
 #: How a caller may specify element values: a strategy, a mapping of keyword
 #: arguments for `hypothesis.strategies.floats`, or nothing at all.
@@ -119,7 +119,7 @@ def _component_quantities(
         # degenerates at zero -- a radius, not a Cartesian offset, for which
         # x = 0 is an ordinary value. Applying it everywhere would carve a hole
         # out of the middle of every free axis.
-        if floor > 0 and interval.min == 0.0 and interval.exclude_min:
+        if floor > 0 and interval.min == 0.0 and interval.margin > 0:
             lo = floor if lo is None else max(lo, floor)
 
     width = 32 if dtype is jnp.float32 else 64
