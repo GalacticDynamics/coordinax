@@ -50,6 +50,26 @@ SemanticT = TypeVar(
 V = TypeVar("V", bound=HasShape, default=u.Q)
 
 
+def _leaf_shape(v: Any, /) -> tuple[int, ...]:
+    """Return the shape of a component leaf.
+
+    Falls back to `numpy.shape` for leaves without a `.shape` attribute (e.g.
+    a bare Python float from a unitless vector).
+    """
+    return v.shape if hasattr(v, "shape") else np.shape(v)
+
+
+def _leaf_dtype_arg(v: Any, /) -> Any:
+    """Return a `jax.numpy.result_type` argument for a leaf.
+
+    `.dtype` if present; otherwise the raw value itself. `result_type` accepts
+    bare Python scalars directly, weakly-typed, so this skips the "explicitly
+    requested dtype float64" warning that pre-extracting a dtype via
+    `numpy.result_type` would trigger under the default 32-bit config.
+    """
+    return v.dtype if hasattr(v, "dtype") else v
+
+
 class AbstractVector(
     ArrayValue,
     quax_blocks.LaxBinaryOpsMixin[Any, Any],  # TODO: type annotation
@@ -313,18 +333,15 @@ class AbstractVector(
         The shape is ``(*batch, n_components)`` and the dtype is promoted
         across the component leaves.
         """
-        # jax.numpy, not quaxed: `.shape`/`.dtype` are plain metadata read
-        # directly off each leaf, never array values needing quax dispatch.
         fvs = list(self.data.values())
-        shape = (*broadcast_shapes(*(v.shape for v in fvs)), len(fvs))
-        dtype = result_type(*(v.dtype for v in fvs))
+        shape = (*broadcast_shapes(*map(_leaf_shape, fvs)), len(fvs))
+        dtype = result_type(*map(_leaf_dtype_arg, fvs))
         return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-submodule]
 
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the batch shape of the vector."""
-        # jax.numpy, not quaxed: the args are plain shape tuples, never arrays.
-        return broadcast_shapes(*[v.shape for v in self.data.values()])
+        return broadcast_shapes(*map(_leaf_shape, self.data.values()))
 
     # ===============================================================
     # Array API
