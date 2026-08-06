@@ -158,6 +158,17 @@ class TestDistanceModulusAccuracyNearZeroPoint:
         assert float(got) == 0.0
 
 
+def _resolved_from_(cls, arg, /):
+    """Return the `from_` implementation plum selects for *arg*.
+
+    Reaching through ``__func__._f`` is the only way to `resolve_method`; plum
+    exposes no public accessor on a bound classmethod. Worth the private hop:
+    which overload gets selected is precisely what these tests exist to pin.
+    """
+    fn, _ = cls.from_.__func__._f.resolve_method((cls, arg))
+    return fn
+
+
 class TestParametricFromDispatch:
     """`from_` routes ParametricQuantity by type (optional unxts.parametric)."""
 
@@ -169,3 +180,23 @@ class TestParametricFromDispatch:
         expected = cxastro.DistanceModulus.from_(u.Q(value, unit), dtype=float)
         assert got.unit == expected.unit
         assert jnp.allclose(got.value, expected.value)
+
+    @pytest.mark.parametrize(("value", "unit"), [(1, "pc"), (1, "mas"), (1, "mag")])
+    def test_dispatches_by_type_not_by_dimension(self, value: float, unit: str) -> None:
+        """The parametric input selects a *different* overload than a plain one.
+
+        Behavioural equivalence alone cannot see this: if the parametric
+        registrations were dropped, a `PQ` would fall through to the
+        `AbstractQuantity` overload, branch on `u.dimension_of` and return the
+        very same answer -- the feature would be gone with every other
+        assertion still green.
+
+        Poisoning `u.dimension_of` does not work as a substitute.
+        `__check_init__` calls it to validate the *constructed* object, so the
+        call lands on both paths and the check fails even when dispatch is
+        correct.
+        """
+        pq = pytest.importorskip("unxts.parametric").PQ(value, unit)
+        parametric = _resolved_from_(cxastro.DistanceModulus, pq)
+        plain = _resolved_from_(cxastro.DistanceModulus, u.Q(value, unit))
+        assert parametric is not plain

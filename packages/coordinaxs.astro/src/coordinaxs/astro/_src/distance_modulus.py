@@ -218,7 +218,8 @@ def from_(
 # and other ``AbstractQuantity`` subclasses still fall through to the
 # dimension-branching dispatch. If the package is not installed this is a no-op.
 try:
-    from unxts.parametric import PQ
+    # Optional dependency: absent from the lint environment by design.
+    from unxts.parametric import PQ  # ty: ignore[unresolved-import]
 except ImportError:
     pass
 else:
