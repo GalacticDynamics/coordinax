@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
+import jax
 import pytest
 
 import quaxed.numpy as qnp
@@ -116,6 +117,35 @@ class TestPointIndexing:
         p0 = p[0]
         assert p0.chart == cxc.cart3d
         assert p0.frame == cxf.alice
+
+
+class TestPointJAXCompat:
+    """``.shape`` and ``.aval()`` work for both unitful and unitless components.
+
+    Regression: both were briefly broken for unitless (plain-float) leaves --
+    `.shape`/`.dtype` were read as attributes, which a bare Python `float`
+    doesn't have.
+    """
+
+    def test_shape_unitless_components(self):
+        p = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        assert p.shape == ()
+
+    def test_aval_unitless_components(self):
+        p = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        aval = p.aval()
+        assert aval.shape == (3,)
+
+    def test_aval_mixed_unitful_and_unitless_components(self):
+        p = cx.Point.from_({"x": 0.0, "y": u.Q(2.0, "m"), "z": 0.0}, cxc.cart3d)
+        aval = p.aval()
+        assert aval.shape == (3,)
+
+    def test_aval_under_eval_shape(self):
+        """`jax.eval_shape` needs `.aval()`; must work for unitless components."""
+        p = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
+        result = jax.eval_shape(lambda v: v * 2, p)
+        assert isinstance(result, cx.Point)
 
 
 class TestPointEquality:

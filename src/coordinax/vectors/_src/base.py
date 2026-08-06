@@ -15,7 +15,7 @@ import numpy as np
 import plum
 import quax_blocks
 import wadler_lindig as wl
-from jax.numpy import broadcast_shapes
+from jax.numpy import broadcast_shapes, result_type
 from quax import ArrayValue
 
 import dataclassish
@@ -48,6 +48,26 @@ SemanticT = TypeVar(
     "SemanticT", bound=cxr.AbstractSemanticKind, default=cxr.AbstractSemanticKind
 )
 V = TypeVar("V", bound=HasShape, default=u.Q)
+
+
+def _leaf_shape(v: Any, /) -> tuple[int, ...]:
+    """Return the shape of a component leaf.
+
+    Falls back to `numpy.shape` for leaves without a `.shape` attribute (e.g.
+    a bare Python float from a unitless vector).
+    """
+    return v.shape if hasattr(v, "shape") else np.shape(v)
+
+
+def _leaf_dtype_arg(v: Any, /) -> Any:
+    """Return a `jax.numpy.result_type` argument for a leaf.
+
+    `.dtype` if present; otherwise the raw value itself. `result_type` accepts
+    bare Python scalars directly, weakly-typed, so this skips the "explicitly
+    requested dtype float64" warning that pre-extracting a dtype via
+    `numpy.result_type` would trigger under the default 32-bit config.
+    """
+    return v.dtype if hasattr(v, "dtype") else v
 
 
 class AbstractVector(
@@ -313,16 +333,15 @@ class AbstractVector(
         The shape is ``(*batch, n_components)`` and the dtype is promoted
         across the component leaves.
         """
-        fvs = self.data.values()
-        shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
-        dtype = jnp.result_type(*map(jnp.dtype, fvs))
+        fvs = list(self.data.values())
+        shape = (*broadcast_shapes(*map(_leaf_shape, fvs)), len(fvs))
+        dtype = result_type(*map(_leaf_dtype_arg, fvs))
         return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-submodule]
 
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the batch shape of the vector."""
-        # jax.numpy, not quaxed: the args are plain shape tuples, never arrays.
-        return broadcast_shapes(*[v.shape for v in self.data.values()])
+        return broadcast_shapes(*map(_leaf_shape, self.data.values()))
 
     # ===============================================================
     # Array API
