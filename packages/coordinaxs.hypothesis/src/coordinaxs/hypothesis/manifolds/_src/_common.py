@@ -15,17 +15,6 @@ import coordinax.charts as cxc
 from coordinaxs.hypothesis.utils import get_all_subclasses
 
 
-def _is_zero_arg_constructible(
-    chart_cls: type[cxc.AbstractChart[Any, Any, Any]], /
-) -> bool:
-    """Return True if chart_cls can be instantiated with no arguments."""
-    try:
-        chart_cls()
-    except TypeError:
-        return False
-    return True
-
-
 @ft.cache
 def matching_chart_classes_for_ndim(
     ndim: int, /
@@ -39,8 +28,12 @@ def matching_chart_classes_for_ndim(
     classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
     for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
         cls = cast("type[cxc.AbstractChart[Any, Any, Any]]", cls)
-        if not _is_zero_arg_constructible(cls):
+        # One construction serves both questions: a `TypeError` means the class
+        # needs arguments, and otherwise the instance carries the ndim to check.
+        try:
+            chart = cls()
+        except TypeError:
             continue
-        if cls().ndim == ndim:
+        if chart.ndim == ndim:
             classes.append(cls)
     return tuple(classes)

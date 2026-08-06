@@ -117,7 +117,8 @@ def atlases(
     - **An abstract** ``AbstractAtlas`` **subclass**: treats the class as a
       filter and redispatches without a class argument.
     - **``EuclideanAtlas``**: returns a ``EuclideanAtlas(dim)`` with ``dim``
-      in ``[0, 3]``, constrained by ``ndim`` when given.
+      in ``[0, 3]``, pinned by ``ndim`` when given; hypothesis discards the
+      example if ``ndim`` falls outside that range.
     - **``HyperSphericalAtlas``**: returns a ``HyperSphericalAtlas()``. Only compatible
       with ``ndim=2``; hypothesis discards the example otherwise.
     - **``CustomAtlas``**: returns a ``CustomAtlas`` whose charts are drawn
@@ -459,8 +460,11 @@ def atlases(
 ) -> Any:
     """Draw a ``EuclideanAtlas`` with dimensionality in ``[0, 3]``.
 
-    If ``ndim`` is given, the atlas is constructed with that exact dimension
-    (clamped to ``[0, 3]``). Otherwise, the dimension is drawn uniformly.
+    If ``ndim`` is given, the atlas is constructed with exactly that dimension.
+    Values outside ``[0, 3]`` are discarded via `hypothesis.assume` rather than
+    clamped into range, so a request this strategy cannot satisfy shows up as an
+    unsatisfiable example instead of an atlas of the wrong dimensionality.
+    Otherwise, the dimension is drawn uniformly.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinaxs.hypothesis.manifolds as cxmst
