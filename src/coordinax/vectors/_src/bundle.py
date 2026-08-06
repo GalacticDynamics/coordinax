@@ -403,18 +403,21 @@ class Coordinate(AbstractVector):
         # Fibres sharing a chart (e.g. velocity and acceleration both stored
         # in the same non-base chart) share the base-point conversion too,
         # rather than recomputing it once per fibre.
-        new_fields: dict[str, Tangent] = {}
         at_in_chart: dict[cxc.AbstractChart, Point] = {}
+
+        def point_in_chart(chart: cxc.AbstractChart, /) -> Point:
+            if chart not in at_in_chart:
+                at_in_chart[chart] = cast("Point", cxr.cconvert(self.point, chart))
+            return at_in_chart[chart]
+
+        new_fields: dict[str, Tangent] = {}
         for name, vec in self._data.items():
             target = field_charts.get(name, to_chart)
-            if vec.chart == self.point.chart:
-                at = self.point
-            elif vec.chart not in at_in_chart:
-                at = at_in_chart[vec.chart] = cast(
-                    "Point", cxr.cconvert(self.point, vec.chart)
-                )
-            else:
-                at = at_in_chart[vec.chart]
+            at = (
+                self.point
+                if vec.chart == self.point.chart
+                else point_in_chart(vec.chart)
+            )
             new_fields[name] = cast(
                 "Tangent", cxr.cconvert(vec, target, at=at, usys=usys)
             )
