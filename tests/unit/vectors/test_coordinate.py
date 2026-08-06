@@ -451,14 +451,7 @@ class TestJAXCompat:
         assert pv0.shape == ()
 
     def test_batch_indexing_with_scalar_point_and_batched_fibre(self) -> None:
-        """pv[0] works when the point and a fibre have different shapes.
-
-        Regression test: `Coordinate.shape` broadcasts the point's shape
-        against every fibre's shape, so a single (unbatched) point paired with
-        a batched fibre is a supported case -- indexing must broadcast every
-        component to the *bundle's* shape, not the base point's own narrower
-        shape, before applying the index.
-        """
+        """pv[0] broadcasts point and fibre to the bundle shape first (regression)."""
         base = cxv.Point.from_([1.0, 2.0, 3.0], "m")  # unbatched: shape ()
         vel_data = {
             "x": u.Q(jnp.array([1.0, 2.0, 3.0]), "m/s"),

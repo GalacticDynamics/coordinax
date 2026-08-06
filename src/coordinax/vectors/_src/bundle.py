@@ -293,12 +293,8 @@ class Coordinate(AbstractVector):
         if isinstance(key, str):
             return self._data[key]
 
-        # Batch-indexing: broadcast every component (base point + all fields)
-        # to the *bundle's* shape before indexing -- fields need only be
-        # broadcast-compatible with the point (and each other), not
-        # identically shaped, e.g. a scalar `point` with a batched `velocity`
-        # fibre. Indexing each vector's own (narrower) data directly would
-        # raise on the unbatched leaves instead of indexing consistently.
+        # Broadcast point + fields to the bundle shape (not each vector's
+        # own) before indexing.
         shape = self.shape
         new_point = dataclassish.replace(
             self.point, data=broadcast_and_index_data(self.point.data, shape, key)

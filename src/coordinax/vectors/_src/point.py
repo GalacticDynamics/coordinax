@@ -151,10 +151,6 @@ class Point(
     def __getitem__(self, key: Any) -> "V | Point":  # ty: ignore[invalid-method-override]
         if isinstance(key, str):
             return self.data[key]
-        # Components need only be broadcast-*compatible* (that's what `.shape`
-        # promises), not identically shaped, so broadcast to `.shape` before
-        # indexing -- otherwise a batch index fails on any narrower leaf (e.g.
-        # a scalar component alongside a batched one).
         data = broadcast_and_index_data(self.data, self.shape, key)
         return replace(self, data=data)  # ty: ignore[invalid-return-type]
 

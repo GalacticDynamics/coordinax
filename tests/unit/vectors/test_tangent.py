@@ -546,13 +546,7 @@ class TestVectorShape:
         assert v[1]["y"].value == jnp.array(4)
 
     def test_index_with_scalar_and_batched_components(self):
-        """Indexing works when components have different (broadcastable) shapes.
-
-        Regression test: `.shape` is `broadcast_shapes(*(v.shape for v in
-        data.values()))`, so a scalar component alongside a batched one is a
-        supported, documented case -- indexing must broadcast each leaf to
-        `.shape` first, not index the raw (narrower) leaves directly.
-        """
+        """Scalar component broadcasts before indexing, doesn't crash (regression)."""
         data = {
             "x": u.Q([1.0, 2.0, 3.0], "m/s"),
             "y": u.Q(5.0, "m/s"),  # scalar: broadcasts against x

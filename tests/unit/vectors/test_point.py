@@ -96,13 +96,7 @@ class TestPointIndexing:
     """Batch indexing (``p[i]``) respects the broadcast ``.shape`` contract."""
 
     def test_index_with_scalar_and_batched_components(self):
-        """Indexing works when components have different (broadcastable) shapes.
-
-        Regression test: `.shape` is `broadcast_shapes(*(v.shape for v in
-        data.values()))`, so a scalar component alongside a batched one is a
-        supported, documented case -- indexing must broadcast each leaf to
-        `.shape` first, not index the raw (narrower) leaves directly.
-        """
+        """Scalar component broadcasts before indexing, doesn't crash (regression)."""
         p = cx.Point.from_(
             {"x": u.Q([1.0, 2.0, 3.0], "m"), "y": u.Q(5.0, "m"), "z": u.Q(0.0, "m")},
             cxc.cart3d,

@@ -637,19 +637,7 @@ class AbstractVector(
         return dataclassish.replace(new, frame=toframe)  # ty: ignore[invalid-return-type]
 
 
-# ===================================================================
-# Broadcast-aware batch indexing
-#
-# Shared by `Point.__getitem__`, `Tangent.__getitem__`, and
-# `Coordinate.__getitem__`. Component leaves are only required to be
-# *broadcast-compatible*, not identically shaped (that is the whole point of
-# `.shape` being `broadcast_shapes(*(v.shape for v in data.values()))`) — so a
-# leaf narrower than the target shape must be broadcast to it before an
-# integer/slice index is applied, or indexing raises on any leaf that doesn't
-# already carry the full batch shape (e.g. a scalar component alongside a
-# batched one).
-
-
+# Shared by Point/Tangent/Coordinate __getitem__.
 def broadcast_and_index_data(data: CDict, shape: Shape, key: Any, /) -> CDict:
     """Broadcast every leaf in ``data`` to ``shape``, then apply ``key``."""
     return {
