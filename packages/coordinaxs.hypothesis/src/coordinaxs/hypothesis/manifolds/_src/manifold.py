@@ -2,6 +2,8 @@
 
 __all__ = ("manifold_classes", "manifolds")
 
+import inspect
+
 from collections.abc import Callable
 from typing import Any, Final, cast
 
@@ -71,9 +73,8 @@ _NDIM_SUPPORT: Final[
     (cxm.EuclideanManifold, lambda _: True),
 )
 
-#: Concrete manifold types with no registered strategy; never offered as
-#: candidates. Separate from `_NDIM_SUPPORT`: these work at no ndim at all.
-_NO_STRATEGY: Final[tuple[type[cxm.AbstractManifold], ...]] = (
+#: Drawable by name only -- degenerate (no charts) or physics-pinned (ndim=4).
+_EXCLUDED_FROM_GENERIC_POOL: Final[tuple[type[cxm.AbstractManifold], ...]] = (
     cxm.NoManifold,
     cxm.MinkowskiManifold,
 )
@@ -170,7 +171,7 @@ def manifolds(
             exclude_abstract=True,
             exclude=exclude,
         )
-        if not issubclass(cls, _NO_STRATEGY)
+        if not issubclass(cls, _EXCLUDED_FROM_GENERIC_POOL)
         and (target_ndim is None or _manifold_class_supports_ndim(cls, target_ndim))
     )
     if not classes:
@@ -243,8 +244,9 @@ def manifolds(
             "When manifold_cls is provided, filter and exclude must be empty."
         )
 
-    if issubclass(manifold_cls, _NO_STRATEGY):
-        # Filtering on the class would select it right back and land here again.
+    if not inspect.isabstract(manifold_cls):
+        # Reachable only when no more specific overload matched, so
+        # redispatching here would re-select this method and recurse.
         msg = f"No manifold strategy is registered for {manifold_cls.__name__}."
         raise NotImplementedError(msg)
 
@@ -471,3 +473,57 @@ def manifolds(
     )
     factor_names = tuple(f"f{i}" for i in range(n_factors))
     return cxm.CartesianProductManifold(factors=factors, factor_names=factor_names)
+
+
+@plum.dispatch
+@strip_return_annotation
+@st.composite
+def manifolds(
+    draw: st.DrawFn,
+    M_cls: type[cxm.NoManifold],
+    /,
+    *,
+    filter: type | tuple[type, ...] | st.SearchStrategy = (),
+    exclude: tuple[type, ...] = (),
+    ndim: int | st.SearchStrategy | None = None,
+) -> Any:
+    """Draw ``NoManifold()`` (always 0-D); any other ``ndim`` is assumed away.
+
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinaxs.hypothesis.manifolds as cxmst
+
+    >>> none = cxmst.manifolds(cxm.NoManifold)
+
+    """
+    del M_cls
+    target_ndim = draw_if_strategy(draw, ndim)
+    if target_ndim is not None and target_ndim != 0:
+        assume(False)
+    return cxm.NoManifold()
+
+
+@plum.dispatch
+@strip_return_annotation
+@st.composite
+def manifolds(
+    draw: st.DrawFn,
+    M_cls: type[cxm.MinkowskiManifold],
+    /,
+    *,
+    filter: type | tuple[type, ...] | st.SearchStrategy = (),
+    exclude: tuple[type, ...] = (),
+    ndim: int | st.SearchStrategy | None = None,
+) -> Any:
+    """Draw ``MinkowskiManifold()`` (always 4-D); other ``ndim`` is assumed away.
+
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinaxs.hypothesis.manifolds as cxmst
+
+    >>> minkowski = cxmst.manifolds(cxm.MinkowskiManifold)
+
+    """
+    del M_cls
+    target_ndim = draw_if_strategy(draw, ndim)
+    if target_ndim is not None and target_ndim != 4:
+        assume(False)
+    return cxm.MinkowskiManifold()
