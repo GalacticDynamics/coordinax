@@ -92,6 +92,38 @@ def test_point_from_with_frame(args):
     assert p["z"] == u.Q(3.0, "km")
 
 
+class TestPointIndexing:
+    """Batch indexing (``p[i]``) respects the broadcast ``.shape`` contract."""
+
+    def test_index_with_scalar_and_batched_components(self):
+        """Indexing works when components have different (broadcastable) shapes.
+
+        Regression test: `.shape` is `broadcast_shapes(*(v.shape for v in
+        data.values()))`, so a scalar component alongside a batched one is a
+        supported, documented case -- indexing must broadcast each leaf to
+        `.shape` first, not index the raw (narrower) leaves directly.
+        """
+        p = cx.Point.from_(
+            {"x": u.Q([1.0, 2.0, 3.0], "m"), "y": u.Q(5.0, "m"), "z": u.Q(0.0, "m")},
+            cxc.cart3d,
+        )
+        assert p.shape == (3,)
+        p0 = p[0]
+        assert p0["x"] == u.Q(1.0, "m")
+        assert p0["y"] == u.Q(5.0, "m")
+        assert p0["z"] == u.Q(0.0, "m")
+
+    def test_index_preserves_chart_and_frame(self):
+        p = cx.Point.from_(
+            {"x": u.Q([1.0, 2.0], "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
+            cxc.cart3d,
+            cxf.alice,
+        )
+        p0 = p[0]
+        assert p0.chart == cxc.cart3d
+        assert p0.frame == cxf.alice
+
+
 class TestPointEquality:
     """``==`` accounts for the chart and frame, and never raises."""
 

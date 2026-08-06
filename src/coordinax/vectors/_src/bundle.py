@@ -27,6 +27,7 @@ import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .base import (
     AbstractVector,
+    broadcast_and_index_data,
     vector_comps_unit_docs,
     vector_values_str,
     vectorform_pdoc as _vec_vectorform_pdoc,
@@ -292,10 +293,22 @@ class Coordinate(AbstractVector):
         if isinstance(key, str):
             return self._data[key]
 
-        # Batch-indexing: delegate to Point/Tangent indexing so invalid
-        # indices raise consistently instead of silently skipping.
-        new_point = self.point[key]
-        new_fields = {k: v[key] for k, v in self._data.items()}
+        # Batch-indexing: broadcast every component (base point + all fields)
+        # to the *bundle's* shape before indexing -- fields need only be
+        # broadcast-compatible with the point (and each other), not
+        # identically shaped, e.g. a scalar `point` with a batched `velocity`
+        # fibre. Indexing each vector's own (narrower) data directly would
+        # raise on the unbatched leaves instead of indexing consistently.
+        shape = self.shape
+        new_point = dataclassish.replace(
+            self.point, data=broadcast_and_index_data(self.point.data, shape, key)
+        )
+        new_fields = {
+            name: dataclassish.replace(
+                vec, data=broadcast_and_index_data(vec.data, shape, key)
+            )
+            for name, vec in self._data.items()
+        }
         return Coordinate._create_unchecked(new_point, new_fields)
 
     def keys(self) -> KeysView[str]:

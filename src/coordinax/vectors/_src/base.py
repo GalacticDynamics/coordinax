@@ -29,8 +29,8 @@ import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
-from .custom_types import HasShape
-from coordinax.internal import pos_named_objs
+from .custom_types import HasShape, Shape
+from coordinax.internal import CDict, pos_named_objs
 
 if TYPE_CHECKING:
     from typing import Self
@@ -635,6 +635,27 @@ class AbstractVector(
         # Otherwise, apply the transformation and return a new point
         new = cxfm.act(op, t, self)
         return dataclassish.replace(new, frame=toframe)  # ty: ignore[invalid-return-type]
+
+
+# ===================================================================
+# Broadcast-aware batch indexing
+#
+# Shared by `Point.__getitem__`, `Tangent.__getitem__`, and
+# `Coordinate.__getitem__`. Component leaves are only required to be
+# *broadcast-compatible*, not identically shaped (that is the whole point of
+# `.shape` being `broadcast_shapes(*(v.shape for v in data.values()))`) — so a
+# leaf narrower than the target shape must be broadcast to it before an
+# integer/slice index is applied, or indexing raises on any leaf that doesn't
+# already carry the full batch shape (e.g. a scalar component alongside a
+# batched one).
+
+
+def broadcast_and_index_data(data: CDict, shape: Shape, key: Any, /) -> CDict:
+    """Broadcast every leaf in ``data`` to ``shape``, then apply ``key``."""
+    return {
+        k: (v if v.shape == shape else jnp.broadcast_to(v, shape))[key]
+        for k, v in data.items()
+    }
 
 
 # ===================================================================
