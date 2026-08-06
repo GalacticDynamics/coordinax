@@ -665,9 +665,12 @@ def act(
     # so as not to violate Tangent's at-chart requirement.
     kw_base = dict(kw)
     new_fields: dict[str, Any] = {}
+    point_data_cache: dict[Any, CDict] = {}
     for name, fibre in x._data.items():
         if "at" not in kw_base:
-            fibre_kw = {**kw_base, "at": _point_data_in(x.point, fibre.chart)}
+            if fibre.chart not in point_data_cache:
+                point_data_cache[fibre.chart] = _point_data_in(x.point, fibre.chart)
+            fibre_kw = {**kw_base, "at": point_data_cache[fibre.chart]}
         else:
             fibre_kw = kw_base
         new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
@@ -717,6 +720,16 @@ def _act_coordinate_jet(
     """
     point_chart = x.point.chart
 
+    # Point data expressed in a given fibre chart, memoized: several fibres
+    # (e.g. velocity and acceleration) commonly share a chart, so this avoids
+    # recomputing the same base-point conversion once per fibre.
+    point_data_cache: dict[Any, CDict] = {}
+
+    def point_data_in(chart: Any, /) -> CDict:
+        if chart not in point_data_cache:
+            point_data_cache[chart] = _point_data_in(x.point, chart)
+        return point_data_cache[chart]
+
     # Assemble the jet in the point's chart. Fibres in other charts are
     # converted in (and back out) via the Jacobian pushforward.
     jet: dict[int, CDict] = {0: x.point.data}
@@ -730,7 +743,7 @@ def _act_coordinate_jet(
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
-            at_f = _point_data_in(x.point, orig_chart)
+            at_f = point_data_in(orig_chart)
             f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
         if order in jet:
             msg = (
@@ -765,7 +778,7 @@ def _act_coordinate_jet(
             fibre.data,
             fibre.chart,
             fibre.rep,
-            at=_point_data_in(x.point, fibre.chart),
+            at=point_data_in(fibre.chart),
             usys=usys,
         )
         new_fields[name] = replace(fibre, data=data)
