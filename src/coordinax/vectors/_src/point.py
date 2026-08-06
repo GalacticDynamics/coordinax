@@ -400,28 +400,40 @@ def from_(
 
 # -------------------------------------
 # Frame-aware constructors
+#
+# Every constructor above also accepts a trailing `AbstractReferenceFrame`.
+# The frame is not part of the construction itself — it is attached to the
+# result — so each overload below builds the point from the leading arguments
+# and then rebinds the frame.
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[Point],
-    obj: Point,
-    frame: cxf.AbstractReferenceFrame,
-    /,
-) -> Point:
+def from_(cls: type[Point], obj: Point, frame: cxf.AbstractReferenceFrame, /) -> Point:
     """Construct a point from another point, replacing its frame.
 
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
+    Every constructor above also accepts a trailing frame, which is attached to
+    the constructed point:
 
-    >>> p = cx.Point.from_([1, 0, 0], "km")
-    >>> p2 = cx.Point.from_(p, cxf.alice)
-    >>> p2.frame
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.frames as cxf
+    >>> import coordinax.representations as cxr
+    >>> import unxt as u
+
+    >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+    >>> for args in [(cx.Point.from_(d),), (d,), (d, cxc.cart3d),
+    ...              (d, cxc.cart3d, cxr.point), ([1, 2, 3], "km")]:
+    ...     print(cx.Point.from_(*args, cxf.alice).frame)
+    Alice()
+    Alice()
+    Alice()
+    Alice()
     Alice()
 
-    >>> # Replace an existing frame
-    >>> p3 = cx.Point.from_(p2, cxf.noframe)
-    >>> p3.frame == cxf.noframe
+    An existing frame is replaced, not merged:
+
+    >>> p_alice = cx.Point.from_(d, cxf.alice)
+    >>> cx.Point.from_(p_alice, cxf.noframe).frame == cxf.noframe
     True
 
     """
@@ -429,28 +441,9 @@ def from_(
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[Point],
-    obj: Any,
-    frame: cxf.AbstractReferenceFrame,
-    /,
-) -> Point:
-    """Construct a point from any object with a frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
-    >>> import unxt as u
-
-    >>> p = cx.Point.from_(
-    ...     {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
-    ...     cxf.alice,
-    ... )
-    >>> p.frame
-    Alice()
-
-    """
-    p = cls.from_(obj)
-    return replace(p, frame=frame)
+def from_(cls: type[Point], obj: Any, frame: cxf.AbstractReferenceFrame, /) -> Point:
+    """Construct a point from any object, with a frame."""
+    return replace(cls.from_(obj), frame=frame)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -461,23 +454,8 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Point:
-    """Construct a point from an object, chart, and frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
-    >>> p = cx.Point.from_(d, cxc.cart3d, cxf.alice)
-    >>> p.chart
-    Cart3D(M=Rn(3))
-    >>> p.frame
-    Alice()
-
-    """
-    p = cls.from_(obj, chart)
-    return replace(p, frame=frame)
+    """Construct a point from an object and chart, with a frame."""
+    return replace(cls.from_(obj, chart), frame=frame)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -489,26 +467,8 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Point:
-    """Construct a point from an object, chart, representation, and frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import unxt as u
-
-    >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
-    >>> p = cx.Point.from_(d, cxc.cart3d, cxr.point, cxf.alice)
-    >>> p.chart
-    Cart3D(M=Rn(3))
-    >>> p.rep
-    point
-    >>> p.frame
-    Alice()
-
-    """
-    p = cls.from_(obj, chart, rep)
-    return replace(p, frame=frame)
+    """Construct a point from an object, chart, and representation, with a frame."""
+    return replace(cls.from_(obj, chart, rep), frame=frame)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -519,15 +479,5 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Point:
-    """Construct a point from an array, unit, and frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
-
-    >>> p = cx.Point.from_([1, 0, 0], "km", cxf.alice)
-    >>> p.frame
-    Alice()
-
-    """
-    p = cls.from_(obj, unit)
-    return replace(p, frame=frame)
+    """Construct a point from an array and unit, with a frame."""
+    return replace(cls.from_(obj, unit), frame=frame)

@@ -346,24 +346,8 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Tangent:
-    """Construct a Tangent from an array, unit, chart, Representation, and frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.frames as cxf
-
-    >>> v = cx.Tangent.from_(
-    ...     [1.0, 2.0, 3.0], "m/s", cxc.cart3d, cxr.coord_vel, cxf.alice
-    ... )
-    >>> v.basis == cxr.coord_basis
-    True
-    >>> v.frame
-    Alice()
-
-    """
-    v = cls.from_(u.Q(obj, u.unit(unit)), chart, rep)
-    return replace(v, frame=frame)
+    """Construct a Tangent from an array, unit, chart, Representation, and frame."""
+    return replace(cls.from_(u.Q(obj, u.unit(unit)), chart, rep), frame=frame)
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -425,6 +409,10 @@ def from_(
 
 # -----------------------------------------
 # Frame-aware constructors
+#
+# The frame is not part of the construction itself — it is attached to the
+# result — so each overload below builds the tangent from the leading
+# arguments and then rebinds the frame.
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -433,18 +421,26 @@ def from_(
 ) -> Tangent:
     """Construct a Tangent from another Tangent, replacing its frame.
 
+    Every constructor above also accepts a trailing frame, which is attached to
+    the constructed tangent:
+
     >>> import coordinax as cx
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import coordinax.frames as cxf
     >>> import unxt as u
 
-    >>> v = cx.Tangent.from_(
-    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
-    ...     cxc.cart3d, cxr.coord_basis, cxr.vel,
-    ... )
-    >>> v2 = cx.Tangent.from_(v, cxf.alice)
-    >>> v2.frame
+    >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
+    >>> for args in [(cx.Tangent.from_(d),), (d,), (d, cxc.cart3d),
+    ...              (d, cxc.cart3d, cxr.coord_basis, cxr.vel),
+    ...              ([1.0, 2.0, 3.0], "m/s"),
+    ...              ([1.0, 2.0, 3.0], "m/s", cxc.cart3d, cxr.coord_vel)]:
+    ...     print(cx.Tangent.from_(*args, cxf.alice).frame)
+    Alice()
+    Alice()
+    Alice()
+    Alice()
+    Alice()
     Alice()
 
     """
@@ -455,20 +451,8 @@ def from_(
 def from_(
     cls: type[Tangent], obj: Any, frame: cxf.AbstractReferenceFrame, /
 ) -> Tangent:
-    """Construct a Tangent from data with a frame (chart and rep inferred).
-
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
-    >>> import unxt as u
-
-    >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
-    >>> v = cx.Tangent.from_(d, cxf.alice)
-    >>> v.frame
-    Alice()
-
-    """
-    v = cls.from_(obj)
-    return replace(v, frame=frame)
+    """Construct a Tangent from data with a frame (chart and rep inferred)."""
+    return replace(cls.from_(obj), frame=frame)
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -479,21 +463,8 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Tangent:
-    """Construct a Tangent from data, chart, and frame (basis/semantic inferred).
-
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.frames as cxf
-    >>> import unxt as u
-
-    >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
-    >>> v = cx.Tangent.from_(d, cxc.cart3d, cxf.alice)
-    >>> v.frame
-    Alice()
-
-    """
-    v = cls.from_(obj, chart)
-    return replace(v, frame=frame)
+    """Construct a Tangent from data and chart, with a frame."""
+    return replace(cls.from_(obj, chart), frame=frame)
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -506,22 +477,8 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Tangent:
-    """Construct a Tangent from data, chart, basis, semantic, and frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.frames as cxf
-    >>> import unxt as u
-
-    >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
-    >>> v = cx.Tangent.from_(d, cxc.cart3d, cxr.coord_basis, cxr.vel, cxf.alice)
-    >>> v.frame
-    Alice()
-
-    """
-    v = cls.from_(obj, chart, basis, semantic)
-    return replace(v, frame=frame)
+    """Construct a Tangent from data, chart, basis, and semantic, with a frame."""
+    return replace(cls.from_(obj, chart, basis, semantic), frame=frame)
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -532,15 +489,5 @@ def from_(
     frame: cxf.AbstractReferenceFrame,
     /,
 ) -> Tangent:
-    """Construct a Tangent from an array, unit, and frame.
-
-    >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
-
-    >>> v = cx.Tangent.from_([1.0, 2.0, 3.0], "m/s", cxf.alice)
-    >>> v.frame
-    Alice()
-
-    """
-    v = cls.from_(obj, unit)
-    return replace(v, frame=frame)
+    """Construct a Tangent from an array and unit, with a frame."""
+    return replace(cls.from_(obj, unit), frame=frame)
