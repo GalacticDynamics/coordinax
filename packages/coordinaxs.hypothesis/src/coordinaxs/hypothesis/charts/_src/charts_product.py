@@ -24,12 +24,9 @@ from coordinaxs.hypothesis.utils import (
 ##############################################################################
 # Cartesian Products
 
-#: Concrete flat-key product chart classes.
+#: Concrete flat-key product chart classes, resolved once at import.
 #:
-#: Resolved once at import rather than inside the draw: `get_all_subclasses` is
-#: cached, so the `UserWarning` it emits when nothing matches could only ever
-#: fire on the first call, but `warnings.catch_warnings` was being entered on
-#: every draw to suppress it -- and it is not thread-safe.
+#: `warnings.catch_warnings` is not thread-safe, so it is not entered per draw.
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", UserWarning)
     _FLAT_PRODUCT_CLASSES: Final = get_all_subclasses(
@@ -39,11 +36,9 @@ with warnings.catch_warnings():
 
 #: Largest dimensionality a single product factor is drawn at.
 #:
-#: Factors come from `charts(filter=AbstractFixedComponentsChart, ndim=...)`,
-#: which is only densely populated up to 3-D: measured over 60 draws each, ndim
-#: 3 succeeds 60/60 while ndim 4 and 6 have exactly one chart apiece
-#: (``MinkowskiCT``, ``PoincarePolar6D``) and ndim 5 has none. Letting a factor
-#: ask for more than this mostly produces discards.
+#: `AbstractFixedComponentsChart` is densely populated only up to 3-D; above it
+#: there are at most one or two charts per dimension, so larger factors are
+#: mostly discards.
 FACTOR_NDIM_CAP: Final = 3
 
 
@@ -73,8 +68,8 @@ def _factor_dims(draw: st.DrawFn, /, *, n_factors: int, target_dim: int) -> list
     remaining = target_dim
     for i in range(n_factors - 1):
         factors_left_after = n_factors - i - 1
-        # Leave every later factor at least 1 dimension and at most the cap, so
-        # what remains is always a feasible budget for them.
+        # Bound this factor so what remains still fits the later ones at 1 to
+        # FACTOR_NDIM_CAP dimensions each.
         min_this = max(1, remaining - FACTOR_NDIM_CAP * factors_left_after)
         max_this = min(FACTOR_NDIM_CAP, remaining - factors_left_after)
         factor_dim = draw(st.integers(min_this, max_this))
@@ -127,17 +122,13 @@ def cartesian_product_factors(
         target_dim = ndim
     else:
         min_ndim = 1 if max_factors == 1 else max(2, min_factors)
-        # Each factor carries up to FACTOR_NDIM_CAP dimensions, so the reachable
-        # total is that times the factor count. The old bound was `min(6,
-        # max_factors)`, which capped the *total* by the factor *count* -- with
-        # the default max_factors=3 no product above 3-D was ever generated, so
-        # the 6-D `cart3d x cart3d` case was unreachable by default.
+        # Each factor carries at most FACTOR_NDIM_CAP dimensions, so that times
+        # the factor count is the largest total the factors can sum to.
         max_ndim = min(6, FACTOR_NDIM_CAP * max_factors)
         target_dim = draw(st.integers(min_ndim, max_ndim))
 
-    # Determine the number of factors. Beyond min/max_factors it must be able to
-    # partition target_dim into parts in [1, FACTOR_NDIM_CAP]: at least
-    # ceil(target_dim / cap) parts, and no more than target_dim of them.
+    # Enough factors to cover target_dim at FACTOR_NDIM_CAP each, few enough
+    # that every one can still take at least 1.
     min_n = max(min_factors, -(-target_dim // FACTOR_NDIM_CAP))
     max_n = min(target_dim, max_factors)
     assume(min_n <= max_n)

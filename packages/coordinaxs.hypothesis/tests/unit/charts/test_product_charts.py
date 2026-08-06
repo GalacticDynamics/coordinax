@@ -339,13 +339,45 @@ def test_product_charts_with_fixed_factors_and_ndim(
 class TestProductChartDimensionality:
     """The reachable total dimensionality, and the per-factor cap it implies."""
 
-    @pytest.mark.parametrize("ndim", [2, 3, 4, 5, 6])
-    def test_requested_ndim_is_reachable_and_exact(self, ndim: int) -> None:
-        """Every total in 2-6 is generated, with factor dims summing to it.
+    @pytest.mark.parametrize("max_factors", [2, 3])
+    def test_default_total_is_bounded_by_capacity_not_factor_count(
+        self, max_factors: int
+    ) -> None:
+        """Without ``ndim``, totals scale with what the factors can carry.
 
-        The total used to be bounded by `min(6, max_factors)` -- the factor
-        *count* -- so with the default ``max_factors=3`` nothing above 3-D was
-        ever produced and the 6-D ``cart3d x cart3d`` product was unreachable.
+        The bound was ``min(6, max_factors)``, which limited the total by the
+        *number* of factors instead of their capacity, so ``max_factors=3``
+        never produced a product above 3-D. Asserting on the default draw is
+        what makes this a regression test: passing ``ndim=`` explicitly bypasses
+        the bound entirely and so exercises none of it.
+        """
+        totals: set[int] = set()
+
+        @given(factors=cxstc.cartesian_product_factors(max_factors=max_factors))
+        @settings(max_examples=100, deadline=None)
+        def collect(factors: tuple[cxc.AbstractChart, ...]) -> None:
+            totals.add(sum(f.ndim for f in factors))
+
+        collect()
+        ceiling = min(6, cxstc.FACTOR_NDIM_CAP * max_factors)
+        assert max(totals) > max_factors, f"capped at the factor count: {totals}"
+        assert max(totals) == ceiling, f"never reached {ceiling}: {totals}"
+
+    @given(factors=cxstc.cartesian_product_factors())
+    def test_factor_dims_respect_the_cap(
+        self, factors: tuple[cxc.AbstractChart, ...]
+    ) -> None:
+        """No factor is asked for a dimensionality charts are sparse at."""
+        assert factors
+        assert all(1 <= f.ndim <= cxstc.FACTOR_NDIM_CAP for f in factors)
+
+    @pytest.mark.parametrize("ndim", [2, 3, 4, 5, 6])
+    def test_explicit_ndim_stays_satisfiable(self, ndim: int) -> None:
+        """The feasibility `assume` does not reject requests it can satisfy.
+
+        Guards this change rather than the original bug: constraining the factor
+        count to those that can partition ``target_dim`` could have made valid
+        ``ndim=`` requests unsatisfiable.
         """
 
         @given(chart=cxst.charts(cxc.AbstractCartesianProductChart, ndim=ndim))
@@ -355,15 +387,3 @@ class TestProductChartDimensionality:
             assert sum(f.ndim for f in chart.factors) == ndim
 
         check()
-
-    @given(factors=cxstc.cartesian_product_factors())
-    def test_factor_dims_respect_the_cap(
-        self, factors: tuple[cxc.AbstractChart, ...]
-    ) -> None:
-        """No factor is asked for a dimensionality charts are sparse at.
-
-        Fixed-component charts are only densely populated up to 3-D, so drawing
-        a 5-D factor is nearly all discards.
-        """
-        assert factors
-        assert all(1 <= f.ndim <= cxstc.FACTOR_NDIM_CAP for f in factors)
