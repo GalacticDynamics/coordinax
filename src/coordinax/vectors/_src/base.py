@@ -15,7 +15,7 @@ import numpy as np
 import plum
 import quax_blocks
 import wadler_lindig as wl
-from jax.numpy import broadcast_shapes
+from jax.numpy import broadcast_shapes, result_type
 from quax import ArrayValue
 
 import dataclassish
@@ -313,9 +313,11 @@ class AbstractVector(
         The shape is ``(*batch, n_components)`` and the dtype is promoted
         across the component leaves.
         """
-        fvs = self.data.values()
-        shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
-        dtype = jnp.result_type(*map(jnp.dtype, fvs))
+        # jax.numpy, not quaxed: `.shape`/`.dtype` are plain metadata read
+        # directly off each leaf, never array values needing quax dispatch.
+        fvs = list(self.data.values())
+        shape = (*broadcast_shapes(*(v.shape for v in fvs)), len(fvs))
+        dtype = result_type(*(v.dtype for v in fvs))
         return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-submodule]
 
     @property
