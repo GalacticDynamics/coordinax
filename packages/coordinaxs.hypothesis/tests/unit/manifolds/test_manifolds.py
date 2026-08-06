@@ -1,7 +1,9 @@
 """Tests for manifold strategies."""
 
 import hypothesis.strategies as st
-from hypothesis import given
+import pytest
+from hypothesis import given, settings
+from hypothesis.errors import Unsatisfiable
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
@@ -121,3 +123,59 @@ def test_custom_manifold_from_type_registration(M: cxm.CustomManifold) -> None:
     """st.from_type(CustomManifold) resolves to the registered strategy."""
     assert isinstance(M, cxm.CustomManifold)
     assert M.has_chart(M.default_chart())
+
+
+class TestNdimIsHonoured:
+    """``ndim=`` pins the dimensionality; it is never silently clamped."""
+
+    @pytest.mark.parametrize("ndim", [0, 1, 2, 3])
+    def test_euclidean_atlas_matches_requested_ndim(self, ndim: int) -> None:
+        """A supported ``ndim`` yields an atlas of exactly that dimensionality."""
+
+        @given(atlas=cxst.atlases(cxm.EuclideanAtlas, ndim=ndim))
+        @settings(max_examples=10, deadline=None)
+        def check(atlas: cxm.EuclideanAtlas) -> None:
+            assert atlas.ndim == ndim
+
+        check()
+
+    @pytest.mark.parametrize("ndim", [-1, 4, 5])
+    def test_euclidean_atlas_discards_unsupported_ndim(self, ndim: int) -> None:
+        """An unsupported ``ndim`` is discarded, not clamped into range.
+
+        ``max(0, min(target_ndim, 3))`` used to hand back a 3-D atlas for
+        ``ndim=5`` and a 0-D one for ``ndim=-1``, quietly violating the
+        documented contract.
+        """
+
+        @given(atlas=cxst.atlases(cxm.EuclideanAtlas, ndim=ndim))
+        @settings(max_examples=10, deadline=None)
+        def check(atlas: cxm.EuclideanAtlas) -> None:
+            pytest.fail(f"ndim={ndim} should be unsatisfiable, got {atlas!r}")
+
+        with pytest.raises(Unsatisfiable):
+            check()
+
+    @pytest.mark.parametrize("ndim", [1, 2, 3, 4, 5, 6])
+    def test_product_manifold_factor_dims_sum_to_ndim(self, ndim: int) -> None:
+        """Factor dimensionalities partition the requested total exactly."""
+
+        @given(M=cxst.manifolds(cxm.CartesianProductManifold, ndim=ndim))
+        @settings(max_examples=20, deadline=None)
+        def check(M: cxm.CartesianProductManifold) -> None:
+            assert sum(f.ndim for f in M.factors) == ndim
+            assert all(f.ndim >= 1 for f in M.factors)
+            assert M.ndim == ndim
+
+        check()
+
+    @pytest.mark.parametrize("ndim", [1, 2, 3, 4])
+    def test_product_atlas_factor_dims_sum_to_ndim(self, ndim: int) -> None:
+        """Same contract for the atlas-level product partition."""
+
+        @given(atlas=cxst.atlases(cxm.CartesianProductAtlas, ndim=ndim))
+        @settings(max_examples=20, deadline=None)
+        def check(atlas: cxm.CartesianProductAtlas) -> None:
+            assert sum(f.ndim for f in atlas.factors) == ndim
+
+        check()
