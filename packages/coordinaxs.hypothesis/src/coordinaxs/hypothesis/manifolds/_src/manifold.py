@@ -49,6 +49,10 @@ def manifold_classes(
 
 #: Which dimensionalities each concrete manifold type can be drawn at.
 #:
+#: Membership is also the record of which types are drawable at all: a type
+#: listed here has a `manifolds` dispatch below, and a type absent from it does
+#: not, so every draw of one is discarded.
+#:
 #: A plain table rather than `plum.dispatch`: these signatures are all
 #: ``type[X]``, which plum cannot treat as faithful, so its method cache was
 #: disabled and every call ran a full resolution -- 5555 of them per 200
@@ -73,17 +77,23 @@ _NDIM_SUPPORT: Final[
 
 
 def _manifold_class_supports_ndim(
-    cls: type[cxm.AbstractManifold], ndim: int, /
+    cls: type[cxm.AbstractManifold], ndim: int | None, /
 ) -> bool:
-    """Whether *cls* can be drawn at *ndim*.
+    """Whether *cls* can be drawn, at *ndim* when one is requested.
 
     Types absent from `_NDIM_SUPPORT` (``NoManifold``, ``MinkowskiManifold``)
-    fall through to `True`, matching the previous ``AbstractManifold`` catch-all.
+    are not drawable at any dimensionality: no `manifolds` dispatch is
+    registered for them, so selecting one only leads to the redispatch finding
+    an empty candidate pool and discarding the example. The catch-all used to
+    answer `True`, which put them in the pool on every draw and threw the
+    resulting examples away -- for ``ndim=5``, where they are two of the three
+    candidates, that was enough filtering to trip the ``filter_too_much``
+    health check.
     """
     for base, supports in _NDIM_SUPPORT:
         if issubclass(cls, base):
-            return supports(ndim)
-    return True
+            return ndim is None or supports(ndim)
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +173,7 @@ def manifolds(
             exclude_abstract=True,
             exclude=exclude,
         )
-        if target_ndim is None or _manifold_class_supports_ndim(cls, target_ndim)
+        if _manifold_class_supports_ndim(cls, target_ndim)
     )
     if not classes:
         assume(False)
@@ -410,9 +420,9 @@ def manifolds(
 
     The number of factors is drawn uniformly from 1 to 5. The total
     dimensionality of the product equals the sum of the factor dimensionalities.
-    When ``ndim`` is given it must be at least the number of factors (each
-    factor contributes at least 1 dimension); examples that cannot satisfy this
-    are discarded via ``hypothesis.assume``.
+    When ``ndim`` is given, each factor contributes at least 1 dimension, so the
+    factor count is drawn from ``[1, min(5, ndim)]``; ``ndim < 1`` admits no
+    product at all and is discarded via ``hypothesis.assume``.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinaxs.hypothesis.manifolds as cxmst
@@ -426,15 +436,17 @@ def manifolds(
     """
     target_ndim = draw_if_strategy(draw, ndim)
 
-    # Draw the number of factors: 1–5
-    n_factors = draw(st.integers(min_value=1, max_value=5))
-
-    # Each factor needs at least 1 dimension, so total_ndim >= n_factors.
-    if target_ndim is not None:
-        assume(target_ndim >= n_factors)
-        total_ndim = target_ndim
-    else:
+    # Each factor needs at least 1 dimension, so bound the factor count by the
+    # target up front rather than drawing 1-5 and rejecting the infeasible ones:
+    # at `ndim=1` that rejected four draws in five.
+    if target_ndim is None:
+        n_factors = draw(st.integers(min_value=1, max_value=5))
         total_ndim = draw(st.integers(min_value=n_factors, max_value=n_factors + 4))
+    else:
+        # No factor count works below 1 dimension; that request is unsatisfiable.
+        assume(target_ndim >= 1)
+        n_factors = draw(st.integers(min_value=1, max_value=min(5, target_ndim)))
+        total_ndim = target_ndim
 
     # Partition total_ndim into n_factors positive integers, drawing each factor
     # from the range that still leaves >= 1 dimension for every factor after it.
