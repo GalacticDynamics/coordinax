@@ -86,8 +86,8 @@ def roundtrip(p, from_chart, to_chart):
     return cxc.pt_map(p_out, to_chart, from_chart)
 
 
-class TestCartesianRoundTrip3D:
-    """cart3d → chart → cart3d ≈ identity for all 3-D non-Cartesian charts."""
+class TestCartesianRoundTrip:
+    """cart → curvilinear chart → cart ≈ identity, in 2-D and 3-D."""
 
     @pytest.mark.parametrize(
         "chart",
@@ -114,9 +114,13 @@ class TestCartesianRoundTrip3D:
         """Cart -> curv -> cart is the identity at an arbitrary point.
 
         The point is drawn in the *curvilinear* chart and mapped into the
-        Cartesian one, so it is off the poles and away from the origin by
-        construction. Drawing Cartesian components directly is what used to
-        require both a positive-z constraint and an `assume` excluding
+        Cartesian one, so it lands inside that chart's domain by construction --
+        clear of its coordinate singularities and of the origin, whichever those
+        are for the chart at hand.
+
+        Drawing Cartesian components directly put points on those singular sets,
+        which each chart then had to exclude by hand. `sph3d` is the worst of
+        them: it needed both a positive-z constraint and an `assume` against
         near-polar points, where ``arccos(z/r)`` rounds to zero in float32 and
         x, y are irretrievably lost.
         """
