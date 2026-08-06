@@ -117,7 +117,9 @@ test = [
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
   "sybil[pytest]>=8.0.0",
-  # the hypothesis annotation-strategy tests use ParametricQuantity["length"].
+  # the hypothesis annotation-strategy tests use ParametricQuantity["length"],
+  # and it is what makes `coordinaxs.astro`'s `[parametric]` extra -- and the
+  # registrations gated on it -- exercised rather than skipped.
   "unxts.parametric>=2.0",
 ]
 test-all = [{ include-group = "test" }]

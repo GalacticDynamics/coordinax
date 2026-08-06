@@ -751,6 +751,7 @@ name = "coordinaxs-astro"
 source = { editable = "packages/coordinaxs.astro" }
 dependencies = [
     { name = "coordinax" },
+    { name = "optional-dependencies" },
 ]
 
 [package.optional-dependencies]
@@ -762,6 +763,9 @@ hypothesis = [
     { name = "hypothesis" },
     { name = "unxts-hypothesis" },
 ]
+parametric = [
+    { name = "unxts-parametric" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -769,9 +773,11 @@ requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
+    { name = "optional-dependencies", specifier = ">=0.3.2" },
     { name = "unxts-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=2.0" },
+    { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
 ]
-provides-extras = ["astropy", "hypothesis"]
+provides-extras = ["astropy", "hypothesis", "parametric"]
 
 [[package]]
 name = "coordinaxs-curveframes"

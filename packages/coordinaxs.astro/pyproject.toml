@@ -18,7 +18,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24"]
+dependencies = ["coordinax>=0.24", "optional-dependencies>=0.3.2"]
 description = "Astronomy-specific reference frames for coordinax"
 dynamic = ["version"]
 license = "MIT"
@@ -38,6 +38,10 @@ hypothesis = [
   "hypothesis>=6.148.7",
   "unxts.hypothesis>=2.0",
 ]
+# Promotion rules between astro's distances and `unxts.parametric`'s
+# `ParametricQuantity`. Registered on import when installed, skipped otherwise:
+#   pip install "coordinaxs.astro[parametric]"
+parametric = ["unxts.parametric>=2.0"]
 
 [project.entry-points."coordinaxs.frames"]
 astro = "coordinaxs.astro._setup_package:coordinaxs_frames_exports"
