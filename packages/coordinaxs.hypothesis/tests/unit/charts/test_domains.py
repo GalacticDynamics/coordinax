@@ -339,6 +339,81 @@ class TestMagnitudeFloor:
         check()
 
 
+class TestMagnitudeFloorIsRadialOnly:
+    """The floor is a length scale, so it must not reach a bounded angle."""
+
+    def test_floor_does_not_move_a_polar_angle(self) -> None:
+        """`magnitude=(0.5, 8)` must not shove theta 0.5 *radians* off the pole.
+
+        Both `RADIAL` and `POLAR` start at zero, so a predicate keyed on that
+        alone catches the colatitude too and couples an angle to what the
+        caller meant as a length scale. Only `RADIAL` runs to infinity, and
+        that is the discriminator.
+        """
+        thetas = []
+
+        @given(point=cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
+        @settings(
+            max_examples=150, deadline=None, suppress_health_check=list(HealthCheck)
+        )
+        def collect(point: dict) -> None:
+            thetas.append(float(u.ustrip("rad", point["theta"])))
+
+        collect()
+        # Free to sit anywhere above its own margin, well below the 0.5 floor.
+        assert min(thetas) < 0.5
+
+    def test_floor_still_moves_the_radius(self) -> None:
+        """The counterpart: the coordinate the floor is actually for."""
+
+        @given(point=cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
+        @settings(
+            max_examples=150, deadline=None, suppress_health_check=list(HealthCheck)
+        )
+        def check(point: dict) -> None:
+            assert float(u.ustrip("m", point["r"])) >= 0.5 * (1 - 1e-6)
+
+        check()
+
+
+class TestMappingElementsAreSafe:
+    """Kwargs for the element strategy inherit the same safety defaults."""
+
+    def test_no_nan_or_infinity_when_bounds_are_absent(self) -> None:
+        """The hole a caller-supplied mapping used to open.
+
+        The domain bounds hide this whenever they are finite, so it only shows
+        with an unconstrained component *and* `magnitude=None` -- which was 193
+        non-finite draws in 300 before the defaults were applied.
+        """
+        values = []
+
+        @given(point=cxst.cdicts(cxc.cart3d, elements={}, magnitude=None))
+        @settings(
+            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
+        )
+        def collect(point: dict) -> None:
+            values.extend(float(u.ustrip("m", q)) for q in point.values())
+
+        collect()
+        assert all(math.isfinite(v) for v in values)
+
+    def test_caller_keys_still_win(self) -> None:
+        """The defaults fill gaps; they do not override an explicit choice."""
+
+        @given(
+            point=cxst.cdicts(cxc.cart3d, elements={"min_value": 1.0, "max_value": 2.0})
+        )
+        @settings(
+            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
+        )
+        def check(point: dict) -> None:
+            for q in point.values():
+                assert 1.0 <= float(u.ustrip("m", q)) <= 2.0
+
+        check()
+
+
 class TestElementsInteraction:
     """A caller-supplied `elements` is honoured but still held to the domain."""
 

@@ -115,11 +115,15 @@ def _component_quantities(
         lo = -cap if lo is None else max(lo, -cap)
         hi = cap if hi is None else min(hi, cap)
 
-        # A magnitude *floor* only means something where the coordinate
-        # degenerates at zero -- a radius, not a Cartesian offset, for which
-        # x = 0 is an ordinary value. Applying it everywhere would carve a hole
-        # out of the middle of every free axis.
-        if floor > 0 and interval.min == 0.0 and interval.margin > 0:
+        # The floor is for coordinates that run from the origin to infinity --
+        # radii. `min == 0 and max is None` is exactly that half-line.
+        #
+        # Testing `margin > 0` instead would also catch POLAR, whose colatitude
+        # starts at zero but stops at pi: `magnitude=(0.5, 8)` would then shove
+        # theta 0.5 *radians* off the pole, coupling an angle to what the
+        # caller meant as a length scale. A bounded coordinate has no use for a
+        # magnitude floor.
+        if floor > 0 and interval.min == 0.0 and interval.max is None:
             lo = floor if lo is None else max(lo, floor)
 
     width = 32 if dtype is jnp.float32 else 64
@@ -162,7 +166,22 @@ def _bounded_elements(
         )
 
     if isinstance(elements, Mapping):
-        merged: dict[str, Any] = {str(k): v for k, v in elements.items()}
+        # The caller's keys win, but anything they leave out takes the same
+        # defaults the built strategy uses. Without this the underlying
+        # strategy reverts to allowing NaN and infinity, which no chart
+        # coordinate wants and which the domain bounds only hide while they
+        # happen to be finite -- measured 193 non-finite draws in 300 with
+        # `magnitude=None`.
+        #
+        # No `width` here: this mapping is forwarded to the array-API
+        # `_from_dtype`, which takes the three `allow_*` flags but derives the
+        # width from the dtype and rejects the keyword outright.
+        merged: dict[str, Any] = {
+            "allow_nan": False,
+            "allow_infinity": False,
+            "allow_subnormal": False,
+            **{str(k): v for k, v in elements.items()},
+        }
         if lo is not None:
             merged["min_value"] = (
                 lo if merged.get("min_value") is None else max(merged["min_value"], lo)
