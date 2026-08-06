@@ -21,6 +21,7 @@ from hypothesis.extra.array_api import make_strategies_namespace
 
 import coordinax.charts as cxc
 
+from .charts import charts
 from .domains import FREE, Interval, component_domains
 from coordinaxs.hypothesis.utils import (
     CDict,
@@ -259,7 +260,11 @@ def cdicts(*args: Any, **kwargs: Any) -> CDict:
 @st.composite
 def cdicts(
     draw: st.DrawFn,
-    chart: st.SearchStrategy = st.deferred(lambda: cxc.charts()),  # ty: ignore[unresolved-attribute]
+    # `st.deferred` keeps the strategy lazy; the callable must name *this*
+    # package's `charts` strategy. It used to name `coordinax.charts.charts`,
+    # which does not exist, so the no-argument `cdicts()` raised AttributeError
+    # on its first draw.
+    chart: st.SearchStrategy = st.deferred(lambda: charts()),  # ty: ignore[missing-argument]
     /,
     **kwargs: Any,
 ) -> CDict:
@@ -351,7 +356,7 @@ def cdicts(
     data: CDict = {}
 
     for cname, cdim in zip(chart.components, chart.coord_dimensions, strict=True):
-        dim = u.dimension(cdim) if isinstance(cdim, str) and cdim is not None else cdim
+        dim = u.dimension(cdim) if isinstance(cdim, str) else cdim
         interval = domains.get(cname, FREE)
 
         # Draw the unit first, then express the domain *in that unit*. Passing

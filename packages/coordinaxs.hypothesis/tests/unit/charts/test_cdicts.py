@@ -110,3 +110,20 @@ class TestCDictValueControl:
         assert float(p["r"].value) > 0
         assert float(p["theta"].value) > 0
         assert float(p["phi"].value) > 0
+
+
+@given(p=cxst.cdicts())
+def test_cdicts_with_no_argument_draws_a_chart(
+    p: dict[str, u.AbstractQuantity],
+) -> None:
+    """``cdicts()`` draws its own chart when none is given.
+
+    The default was ``st.deferred(lambda: cxc.charts())`` -- `coordinax.charts`
+    has no ``charts`` attribute, so the first draw raised `AttributeError`. It
+    survived because `st.deferred` defers to draw time and the three docstring
+    examples covering this path only *define* their test functions, never call
+    them, so the doctests never drew from it.
+    """
+    assert isinstance(p, dict)
+    assert p
+    assert all(isinstance(v, u.AbstractQuantity) for v in p.values())
