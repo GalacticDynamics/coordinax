@@ -40,6 +40,17 @@ import coordinaxs.hypothesis.charts as cxcst
 import coordinaxs.hypothesis.representations as cxrst
 from coordinaxs.hypothesis.utils import draw_if_strategy, strip_return_annotation
 
+#: Charts the default ``vectors()`` draw skips, on top of what ``charts()``
+#: already excludes. Spelled as an extension rather than a bare ``exclude=``
+#: argument: that *replaces* the ``charts()`` default, which silently readmitted
+#: the 0-D and two-sphere charts it is meant to keep out.
+_VECTOR_CHART_EXCLUDE = (
+    cxc.Abstract0D,
+    cxc.SphericalTwoSphere,
+    cxc.Time1D,
+    cxm.EmbeddedChart,
+)
+
 
 @plum.dispatch.abstract
 def vectors(*args: Any, **kwargs: Any) -> cxv.Point:
@@ -77,7 +88,7 @@ st.register_type_strategy(cxv.Point, lambda _: vectors())  # ty: ignore[missing-
 @st.composite
 def vectors(
     draw: st.DrawFn,
-    chart: st.SearchStrategy = cxcst.charts(exclude=(cxc.Time1D, cxm.EmbeddedChart)),  # ty: ignore[missing-argument],
+    chart: st.SearchStrategy = cxcst.charts(exclude=_VECTOR_CHART_EXCLUDE),  # ty: ignore[missing-argument],
     /,
     **kw: Any,
 ) -> cxv.Point:
@@ -174,7 +185,11 @@ def vectors(draw: st.DrawFn, chart: cxc.AbstractChart, /, **kw: Any) -> cxv.Poin
     ... def test_cart3d(vec): ...
 
     """
-    rep = draw(cxrst.representations(check_valid=True))
+    # `Point.from_` accepts only `cxr.point`, so a tangent-geometry draw can
+    # never yield a point -- drawing across all geometries discarded ~60% of
+    # examples. Constrain to point geometry, whose valid basis and semantic
+    # kinds are both singletons, so this draws exactly the reps that can work.
+    rep = draw(cxrst.representations(geom_kind=cxr.PointGeometry()))
     try:
         return draw(vectors(chart, rep, **kw))  # ty: ignore[too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
