@@ -2,16 +2,12 @@
 
 __all__ = ("geometry_classes", "geometries")
 
-from typing import Final
-
 import hypothesis.strategies as st
 
 import coordinax.representations as cxr
 
 from ._common import draw_subclass
 from coordinaxs.hypothesis.utils import get_all_subclasses
-
-GEOMETRIES: Final = get_all_subclasses(cxr.AbstractGeometry, exclude_abstract=True)
 
 
 @st.composite
@@ -54,7 +50,11 @@ def geometry_classes(
 
     """
     return draw_subclass(
-        draw, GEOMETRIES, include=include, exclude=exclude, kind="geometry"
+        draw,
+        get_all_subclasses(cxr.AbstractGeometry, exclude_abstract=True),
+        include=include,
+        exclude=exclude,
+        kind="geometry",
     )  # ty: ignore[invalid-return-type]
 
 

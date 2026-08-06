@@ -10,11 +10,14 @@ concrete class, and the "no candidates left" error message.
 
 __all__: tuple[str, ...] = ()
 
+import importlib
+
+from collections.abc import Callable
 from types import SimpleNamespace
 
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 
 import coordinax.representations as cxr
 
@@ -118,3 +121,39 @@ class TestInstanceStrategies:
         assert isinstance(
             data.draw(kind.instances(include=(kind.sample,))), kind.sample
         )
+
+
+@pytest.mark.parametrize(
+    ("module_name", "strategy", "base", "keep"),
+    [
+        ("bases", cxrst.basis_classes, cxr.AbstractBasis, cxr.NoBasis),
+        ("geoms", cxrst.geometry_classes, cxr.AbstractGeometry, cxr.PointGeometry),
+        ("semantics", cxrst.semantic_classes, cxr.AbstractSemanticKind, cxr.Location),
+    ],
+)
+def test_candidates_are_resolved_per_draw_not_at_import(
+    monkeypatch: pytest.MonkeyPatch,
+    module_name: str,
+    strategy: Callable[[], st.SearchStrategy[type]],
+    base: type,
+    keep: type,
+) -> None:
+    """The candidate set is read at draw time, not frozen at import.
+
+    These strategies used to sample from a module-level constant resolved when
+    the module was first imported, so any subclass registered by a later import
+    was invisible forever -- and `get_all_subclasses.cache_clear()`, which the
+    rest of the package relies on, could not bring it back. Narrowing what
+    `get_all_subclasses` returns must therefore change what is drawn.
+    """
+    module = importlib.import_module(
+        f"coordinaxs.hypothesis.representations._src.{module_name}"
+    )
+    monkeypatch.setattr(module, "get_all_subclasses", lambda *a, **kw: (keep,))
+
+    @given(cls=strategy())
+    @settings(max_examples=25, deadline=None, database=None)
+    def check(cls: type) -> None:
+        assert cls is keep
+
+    check()
