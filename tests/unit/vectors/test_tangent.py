@@ -356,12 +356,6 @@ class TestVectorFromConstructors:
         assert v.basis == cxr.coord_basis
         assert v.semantic == cxr.vel
 
-    def test_from_dict_chart_basis_semantic_frame(self):
-        """Tangent.from_(dict, chart, basis, semantic, frame) sets frame."""
-        data = _cart3d_vel_data()
-        v = cx.Tangent.from_(data, cxc.cart3d, cxr.coord_basis, cxr.vel, cxf.alice)
-        assert v.frame == cxf.alice
-
     def test_from_array_unit_chart_basis_semantic(self):
         """Tangent.from_(array, unit, chart, basis, semantic) constructs correctly."""
         v = cx.Tangent.from_(
@@ -386,29 +380,39 @@ class TestVectorFromConstructors:
         with pytest.raises(TypeError):
             cx.Tangent.from_(data, cxc.cart3d, cxr.point)
 
-    def test_from_vector_frame_dispatch(self):
-        """Tangent.from_(vector, frame) sets frame on the vector."""
-        data = _cart3d_vel_data()
-        v = cx.Tangent.from_(data, cxc.cart3d, cxr.coord_basis, cxr.vel)
-        v2 = cx.Tangent.from_(v, cxf.alice)
-        assert v2.frame == cxf.alice
-        assert v2.basis == v.basis
-        assert v2.semantic == v.semantic
 
-    def test_from_any_frame_dispatch(self):
-        """Tangent.from_(dict, frame) infers chart/basis/semantic and sets frame."""
-        data = _cart3d_vel_data()
-        v = cx.Tangent.from_(data, cxf.alice)
-        assert isinstance(v, cx.Tangent)
-        assert v.frame == cxf.alice
+# Every ``Tangent.from_`` overload documented in ``tangent.py`` also accepts a
+# trailing frame; each row is the leading-argument shape for one such
+# overload, so that every dispatch signature is actually exercised.
+_VEL = cx.Tangent.from_(_cart3d_vel_data(), cxc.cart3d, cxr.coord_basis, cxr.vel)
 
-    def test_from_dict_chart_frame(self):
-        """Tangent.from_(dict, chart, frame) infers basis/semantic and sets frame."""
-        data = _cart3d_vel_data()
-        v = cx.Tangent.from_(data, cxc.cart3d, cxf.alice)
-        assert isinstance(v, cx.Tangent)
-        assert v.chart == cxc.cart3d
-        assert v.frame == cxf.alice
+TANGENT_FROM_WITH_FRAME_CASES = [
+    pytest.param((_VEL,), id="tangent"),
+    pytest.param((_cart3d_vel_data(),), id="dict"),
+    pytest.param((_cart3d_vel_data(), cxc.cart3d), id="dict-chart"),
+    pytest.param(
+        (_cart3d_vel_data(), cxc.cart3d, cxr.coord_basis, cxr.vel),
+        id="dict-chart-basis-semantic",
+    ),
+    pytest.param(([1.0, 2.0, 3.0], "m/s"), id="array-unit"),
+    pytest.param(
+        ([1.0, 2.0, 3.0], "m/s", cxc.cart3d, cxr.coord_vel), id="array-unit-chart-rep"
+    ),
+]
+
+
+@pytest.mark.parametrize("args", TANGENT_FROM_WITH_FRAME_CASES)
+def test_tangent_from_with_frame(args):
+    """Every ``Tangent.from_`` overload accepts a trailing frame."""
+    v = cx.Tangent.from_(*args, cxf.alice)
+    assert isinstance(v, cx.Tangent)
+    assert v.frame == cxf.alice
+    assert v.chart == cxc.cart3d
+    assert v.basis == cxr.coord_basis
+    assert v.semantic == cxr.vel
+    assert v["x"] == u.Q(1.0, "m/s")
+    assert v["y"] == u.Q(2.0, "m/s")
+    assert v["z"] == u.Q(3.0, "m/s")
 
 
 # ======================================================================

@@ -23,21 +23,8 @@ class TestPointFrame:
         p = cx.Point.from_([1, 0, 0], "km")
         assert p.frame == cxf.noframe
 
-    def test_from_array_unit_with_frame(self):
-        """Point.from_(array, unit, frame) sets frame."""
-        p = cx.Point.from_([1, 0, 0], "km", cxf.alice)
-        assert p.frame == cxf.alice
-
-    def test_from_vector_frame_dispatch(self):
-        """Point.from_(vector, frame) wraps vector data with given frame."""
-        vec = cx.Point.from_([1, 0, 0], "km")
-        p = cx.Point.from_(vec, cxf.alice)
-        assert p.frame == cxf.alice
-        assert p.data == vec.data
-        assert p.chart == vec.chart
-
     def test_from_point_frame_replaces_frame(self):
-        """Point.from_(point, frame) returns same data with new frame."""
+        """Point.from_(point, frame) replaces (not merges) an existing frame."""
         p1 = cx.Point.from_([1, 0, 0], "km", cxf.alice)
         p2 = cx.Point.from_(p1, cxf.noframe)
         assert p2.frame == cxf.noframe
@@ -76,6 +63,33 @@ class TestPointFrame:
             frame=cxf.alice,
         )
         assert isinstance(p.frame, cxf.AbstractReferenceFrame)
+
+
+# Every ``Point.from_`` overload documented in ``point.py`` also accepts a
+# trailing frame; each row is the leading-argument shape for one such
+# overload, so that every dispatch signature is actually exercised.
+_D = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+_POINT = cx.Point.from_(_D, cxc.cart3d)
+
+POINT_FROM_WITH_FRAME_CASES = [
+    pytest.param((_POINT,), id="point"),
+    pytest.param((_D,), id="dict"),
+    pytest.param((_D, cxc.cart3d), id="dict-chart"),
+    pytest.param((_D, cxc.cart3d, cxr.point), id="dict-chart-rep"),
+    pytest.param(([1.0, 2.0, 3.0], "km"), id="array-unit"),
+]
+
+
+@pytest.mark.parametrize("args", POINT_FROM_WITH_FRAME_CASES)
+def test_point_from_with_frame(args):
+    """Every ``Point.from_`` overload accepts a trailing frame."""
+    p = cx.Point.from_(*args, cxf.alice)
+    assert isinstance(p, cx.Point)
+    assert p.frame == cxf.alice
+    assert p.chart == cxc.cart3d
+    assert p["x"] == u.Q(1.0, "km")
+    assert p["y"] == u.Q(2.0, "km")
+    assert p["z"] == u.Q(3.0, "km")
 
 
 class TestPointEquality:
