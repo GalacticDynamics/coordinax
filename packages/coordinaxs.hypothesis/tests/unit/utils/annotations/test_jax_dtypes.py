@@ -10,7 +10,8 @@ from typing import Any
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
-from hypothesis import given, settings
+from hypothesis import find, settings
+from hypothesis.errors import NoSuchExample
 
 from coordinaxs.hypothesis.utils._src.annotations.dtypes import jax_honoured
 
@@ -19,22 +20,32 @@ from coordinaxs.hypothesis.utils._src.annotations.dtypes import jax_honoured
 X64 = jnp.empty(0, dtype=jnp.float64).dtype == jnp.dtype(jnp.float64)
 
 
+def _is_findable(dtypes: st.SearchStrategy[Any], target: Any, /) -> bool:
+    """Whether *target* can be drawn from *dtypes* at all."""
+    try:
+        find(
+            dtypes,
+            lambda dt: jnp.dtype(dt) == jnp.dtype(target),
+            settings=settings(database=None),
+        )
+    except NoSuchExample:
+        return False
+    return True
+
+
 def test_filter_tracks_the_runtime_not_the_declaration() -> None:
     """``float64`` survives the filter exactly when the runtime honours it.
 
-    Meaningful under either setting: with x64 on, float64 must still be drawn
-    (the filter must not over-prune); with it off, it must be dropped.
+    Meaningful under either setting: with x64 on, float64 must still be
+    reachable (the filter must not over-prune); with it off, it must be gone.
+
+    `hypothesis.find` rather than counting what `@given` happened to draw --
+    the question is whether a dtype is reachable *at all*, and `find` answers
+    that by searching rather than by sampling and hoping.
     """
-    drawn: set[Any] = set()
-
-    @given(dtype=jax_honoured(st.sampled_from([jnp.float32, jnp.float64])))
-    @settings(max_examples=50, deadline=None, database=None)
-    def collect(dtype: Any) -> None:
-        drawn.add(jnp.dtype(dtype))
-
-    collect()
-    assert jnp.dtype(jnp.float32) in drawn
-    assert (jnp.dtype(jnp.float64) in drawn) is X64
+    dtypes = jax_honoured(st.sampled_from([jnp.float32, jnp.float64]))
+    assert _is_findable(dtypes, jnp.float32)
+    assert _is_findable(dtypes, jnp.float64) is X64
 
 
 #: Draws `charts()` in a fresh interpreter and prints the count of hard errors.
