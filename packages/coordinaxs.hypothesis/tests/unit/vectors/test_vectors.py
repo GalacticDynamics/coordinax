@@ -130,3 +130,32 @@ class TestPointValueControl:
         """elements= with explicit bounds keeps all component magnitudes in range."""
         assert -10 <= vec.data["x"].ustrip("m") <= 10
         assert -10 <= vec.data["y"].ustrip("m") <= 10
+
+
+class TestDefaultDraw:
+    """Guards on what the no-argument ``vectors()`` draw generates."""
+
+    @given(rep=cxrst.representations(geom_kind=cxr.PointGeometry()))
+    def test_point_geometry_reps_are_exactly_the_accepted_rep(
+        self, rep: cxr.Representation
+    ) -> None:
+        """Every point-geometry rep is the one ``Point.from_`` accepts.
+
+        ``vectors(chart)`` relies on this: it draws under point geometry rather
+        than across all geometries, which is only lossless while the valid basis
+        and semantic kinds for point geometry stay singletons. If coordinax ever
+        adds a second of either, this fails and ``vectors`` needs revisiting.
+        """
+        assert rep == cxr.point
+
+    @given(vec=vector_strategy())
+    def test_default_draw_skips_excluded_charts(self, vec: cxv.Point) -> None:
+        """The default draw excludes 0-D, two-sphere, time and embedded charts.
+
+        ``exclude=`` replaces rather than extends the ``charts()`` default, so
+        naming only the extra classes silently readmitted the 0-D charts.
+        """
+        assert not isinstance(
+            vec.chart,
+            (cxc.Abstract0D, cxc.SphericalTwoSphere, cxc.Time1D, cxm.EmbeddedChart),
+        )
