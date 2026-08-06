@@ -22,6 +22,7 @@ import unxt as u
 import unxts.hypothesis as ust
 from hypothesis.extra.array_api import make_strategies_namespace
 
+from .dtypes import jax_honoured
 from .meta import Metadata
 from .wrap import AbstractNotIntrospectable
 
@@ -80,7 +81,7 @@ def strategy_for_annotation(
     ann: type[jax.Array], /, *, meta: Metadata
 ) -> st.SearchStrategy:
     strategy = xps.arrays(
-        dtype=meta.get("dtype", xps.scalar_dtypes()),
+        dtype=meta.get("dtype", jax_honoured(xps.scalar_dtypes())),
         shape=meta.get("shape", xps.array_shapes()),
     )
 
@@ -126,7 +127,7 @@ def strategy_for_annotation(
     strategy = ust.quantities(
         unit=dim,
         quantity_cls=quantity_cls,
-        dtype=meta.get("dtype", xps.scalar_dtypes()),
+        dtype=meta.get("dtype", jax_honoured(xps.scalar_dtypes())),
         shape=meta.get("shape", xps.array_shapes()),
         static_value=static_value,
     )
