@@ -15,6 +15,7 @@ import numpy as np
 import plum
 import quax_blocks
 import wadler_lindig as wl
+from jax.numpy import broadcast_shapes
 from quax import ArrayValue
 
 import dataclassish
@@ -320,7 +321,8 @@ class AbstractVector(
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the batch shape of the vector."""
-        return jnp.broadcast_shapes(*(v.shape for v in self.data.values()))
+        # jax.numpy, not quaxed: the args are plain shape tuples, never arrays.
+        return broadcast_shapes(*[v.shape for v in self.data.values()])
 
     # ===============================================================
     # Array API
