@@ -8,8 +8,10 @@ __all__ = (
     # Charts
     "chart_classes",
     "chart_init_kwargs",
+    "Interval",
     "charts",
     "charts_like",
+    "component_domains",
     "cdicts",
     # Manifolds
     "atlas_classes",
@@ -30,11 +32,13 @@ __all__ = (
 
 from coordinaxs.hypothesis.angles import angles
 from coordinaxs.hypothesis.charts import (
+    Interval,
     cdicts,
     chart_classes,
     chart_init_kwargs,
     charts,
     charts_like,
+    component_domains,
 )
 from coordinaxs.hypothesis.distances import distances
 from coordinaxs.hypothesis.manifolds import (
