@@ -2,7 +2,8 @@
 
 __all__ = ("manifold_classes", "manifolds")
 
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any, Final, cast
 
 import hypothesis.strategies as st
 import plum
@@ -12,36 +13,12 @@ import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 
 from . import atlas as atlas_strategies
+from ._common import matching_chart_classes_for_ndim
 from coordinaxs.hypothesis.utils import (
     draw_if_strategy,
     get_all_subclasses,
     strip_return_annotation,
 )
-
-
-def _is_zero_arg_constructible(
-    chart_cls: type[cxc.AbstractChart[Any, Any, Any]], /
-) -> bool:
-    """Return True if chart_cls can be instantiated with no arguments."""
-    try:
-        chart_cls()
-    except TypeError:
-        return False
-    return True
-
-
-def _matching_chart_classes_for_ndim(
-    ndim: int, /
-) -> tuple[type[cxc.AbstractChart[Any, Any, Any]], ...]:
-    """Return zero-arg chart classes with default instance ndim == target ndim."""
-    classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
-    for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
-        cls = cast("type[cxc.AbstractChart[Any, Any, Any]]", cls)
-        if not _is_zero_arg_constructible(cls):
-            continue
-        if cls().ndim == ndim:
-            classes.append(cls)
-    return tuple(classes)
 
 
 @st.composite
@@ -66,54 +43,46 @@ def manifold_classes(
 
 
 # ---------------------------------------------------------------------------
-# ndim-compatibility helper — extend by adding a new dispatch for each new
-# concrete manifold type.
+# ndim-compatibility helper — extend by adding an entry for each new concrete
+# manifold type.
 # ---------------------------------------------------------------------------
 
-
-@plum.dispatch
-def _manifold_class_supports_ndim(
-    cls: type[cxm.EuclideanManifold], ndim: int, /
-) -> bool:
-    """EuclideanManifold supports any dimensionality."""
-    return True
-
-
-@plum.dispatch
-def _manifold_class_supports_ndim(
-    cls: type[cxm.HyperSphericalManifold], ndim: int, /
-) -> bool:
-    """HyperSphericalManifold is always 2-D."""
-    return ndim == 2
-
-
-@plum.dispatch
-def _manifold_class_supports_ndim(
-    cls: type[cxm.EmbeddedManifold], ndim: int, /
-) -> bool:
-    """EmbeddedManifold: only the 2-D embedded two-sphere is currently generated."""
-    return ndim == 2
-
-
-@plum.dispatch
-def _manifold_class_supports_ndim(
-    cls: type[cxm.CartesianProductManifold], ndim: int, /
-) -> bool:
-    """CartesianProductManifold requires at least 1 dimension."""
-    return ndim >= 1
+#: Which dimensionalities each concrete manifold type can be drawn at.
+#:
+#: A plain table rather than `plum.dispatch`: these signatures are all
+#: ``type[X]``, which plum cannot treat as faithful, so its method cache was
+#: disabled and every call ran a full resolution -- 5555 of them per 200
+#: examples, because the no-argument dispatch tests the predicate against every
+#: candidate class on every draw and product manifolds recurse. Dispatch bought
+#: nothing here: the types are closed and local, and `issubclass` gives the same
+#: subtype fallthrough. The listed types are mutually disjoint, so order is not
+#: load-bearing; keep the most specific first anyway for anything added later.
+_NDIM_SUPPORT: Final[
+    tuple[tuple[type[cxm.AbstractManifold], Callable[[int], bool]], ...]
+] = (
+    # HyperSphericalManifold and EmbeddedManifold are always 2-D.
+    (cxm.HyperSphericalManifold, lambda ndim: ndim == 2),
+    (cxm.EmbeddedManifold, lambda ndim: ndim == 2),
+    # A product needs at least one factor, each contributing >= 1 dimension.
+    (cxm.CartesianProductManifold, lambda ndim: ndim >= 1),
+    # CustomManifold works only where matching zero-arg charts exist.
+    (cxm.CustomManifold, lambda ndim: bool(matching_chart_classes_for_ndim(ndim))),
+    # EuclideanManifold supports any dimensionality.
+    (cxm.EuclideanManifold, lambda _: True),
+)
 
 
-@plum.dispatch
-def _manifold_class_supports_ndim(cls: type[cxm.CustomManifold], ndim: int, /) -> bool:
-    """CustomManifold supports ndim when matching zero-arg charts exist."""
-    return len(_matching_chart_classes_for_ndim(ndim)) > 0
-
-
-@plum.dispatch
 def _manifold_class_supports_ndim(
     cls: type[cxm.AbstractManifold], ndim: int, /
 ) -> bool:
-    """Fallback: unknown manifold types are assumed to support any ndim."""
+    """Whether *cls* can be drawn at *ndim*.
+
+    Types absent from `_NDIM_SUPPORT` (``NoManifold``, ``MinkowskiManifold``)
+    fall through to `True`, matching the previous ``AbstractManifold`` catch-all.
+    """
+    for base, supports in _NDIM_SUPPORT:
+        if issubclass(cls, base):
+            return supports(ndim)
     return True
 
 
@@ -194,8 +163,7 @@ def manifolds(
             exclude_abstract=True,
             exclude=exclude,
         )
-        if target_ndim is None
-        or cast("Any", _manifold_class_supports_ndim)(cls, target_ndim)
+        if target_ndim is None or _manifold_class_supports_ndim(cls, target_ndim)
     )
     if not classes:
         assume(False)
@@ -468,23 +436,21 @@ def manifolds(
     else:
         total_ndim = draw(st.integers(min_value=n_factors, max_value=n_factors + 4))
 
-    # Partition total_ndim into n_factors positive integers via n_factors-1 cuts.
-    cuts = (
-        sorted(
-            draw(
-                st.lists(
-                    st.integers(1, total_ndim - 1),
-                    min_size=n_factors - 1,
-                    max_size=n_factors - 1,
-                    unique=True,
-                )
-            )
-        )
-        if n_factors > 1
-        else []
-    )
-    boundaries = [0, *cuts, total_ndim]
-    dims = [boundaries[i + 1] - boundaries[i] for i in range(n_factors)]
+    # Partition total_ndim into n_factors positive integers, drawing each factor
+    # from the range that still leaves >= 1 dimension for every factor after it.
+    # The previous form drew n_factors-1 *unique* cuts from `integers(1,
+    # total_ndim - 1)`; when total_ndim == n_factors that range holds exactly as
+    # many values as the list needs, so hypothesis had to rejection-sample its
+    # way to the single valid answer -- and total_ndim == n_factors is the
+    # common case whenever `ndim=` is pinned.
+    dims: list[int] = []
+    remaining = total_ndim
+    for i in range(n_factors - 1):
+        # Reserve >= 1 dimension for each factor still to be assigned after i.
+        dim_i = draw(st.integers(1, remaining - (n_factors - i - 1)))
+        dims.append(dim_i)
+        remaining -= dim_i
+    dims.append(remaining)  # last factor takes the rest, which is >= 1
 
     factors = tuple(
         draw(cast("Any", manifolds)(exclude=(cxm.CartesianProductManifold,), ndim=d))

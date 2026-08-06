@@ -4,7 +4,8 @@ __all__ = ("atlas_classes", "atlases")
 
 import inspect
 
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any, Final, cast
 
 import hypothesis.strategies as st
 import plum
@@ -13,6 +14,7 @@ from hypothesis import assume
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 
+from ._common import matching_chart_classes_for_ndim
 from coordinaxs.hypothesis.utils import (
     draw_if_strategy,
     get_all_subclasses,
@@ -115,7 +117,8 @@ def atlases(
     - **An abstract** ``AbstractAtlas`` **subclass**: treats the class as a
       filter and redispatches without a class argument.
     - **``EuclideanAtlas``**: returns a ``EuclideanAtlas(dim)`` with ``dim``
-      in ``[0, 3]``, constrained by ``ndim`` when given.
+      in ``[0, 3]``, pinned by ``ndim`` when given; hypothesis discards the
+      example if ``ndim`` falls outside that range.
     - **``HyperSphericalAtlas``**: returns a ``HyperSphericalAtlas()``. Only compatible
       with ``ndim=2``; hypothesis discards the example otherwise.
     - **``CustomAtlas``**: returns a ``CustomAtlas`` whose charts are drawn
@@ -249,58 +252,39 @@ def atlases(
 
 
 # ---------------------------------------------------------------------------
-# ndim-compatibility helper — extend by adding a new dispatch for each new
-# concrete atlas type.
+# ndim-compatibility helper — extend by adding an entry for each new concrete
+# atlas type.
 # ---------------------------------------------------------------------------
 
-
-@plum.dispatch
-def _atlas_class_supports_ndim(
-    cls: type[cxm.EuclideanAtlas],
-    ndim: int,
-    /,
-) -> bool:
-    """EuclideanAtlas supports dimensions 0-3."""
-    return ndim <= 3
-
-
-@plum.dispatch
-def _atlas_class_supports_ndim(
-    cls: type[cxm.HyperSphericalAtlas],
-    ndim: int,
-    /,
-) -> bool:
-    """HyperSphericalAtlas is always 2-D."""
-    return ndim == 2
-
-
-@plum.dispatch
-def _atlas_class_supports_ndim(
-    cls: type[cxm.CartesianProductAtlas],
-    ndim: int,
-    /,
-) -> bool:
-    """CartesianProductAtlas supports any positive dimensionality (≥1 factor)."""
-    return ndim >= 1
+#: Which dimensionalities each concrete atlas type can be drawn at.
+#:
+#: A plain table rather than `plum.dispatch`, for the same reason as
+#: `_NDIM_SUPPORT` in ``manifold.py``: ``type[X]`` signatures are unfaithful, so
+#: plum's method cache was disabled and every call ran a full resolution -- on a
+#: predicate consulted once per candidate class per draw. The listed types are
+#: mutually disjoint, so order is not load-bearing.
+_NDIM_SUPPORT: Final[
+    tuple[tuple[type[cxm.AbstractAtlas], Callable[[int], bool]], ...]
+] = (
+    # HyperSphericalAtlas is always 2-D.
+    (cxm.HyperSphericalAtlas, lambda ndim: ndim == 2),
+    # A product needs at least one factor, each contributing >= 1 dimension.
+    (cxm.CartesianProductAtlas, lambda ndim: ndim >= 1),
+    (cxm.CustomAtlas, lambda ndim: ndim >= 1),
+    # EuclideanAtlas is currently generated only for dimensions 0-3.
+    (cxm.EuclideanAtlas, lambda ndim: 0 <= ndim <= 3),
+)
 
 
-@plum.dispatch
-def _atlas_class_supports_ndim(
-    cls: type[cxm.CustomAtlas],
-    ndim: int,
-    /,
-) -> bool:
-    """CustomAtlas supports any positive dimensionality."""
-    return ndim >= 1
+def _atlas_class_supports_ndim(cls: type[cxm.AbstractAtlas], ndim: int, /) -> bool:
+    """Whether *cls* can be drawn at *ndim*.
 
-
-@plum.dispatch
-def _atlas_class_supports_ndim(
-    cls: type[cxm.AbstractAtlas],
-    ndim: int,
-    /,
-) -> bool:
-    """Fallback: unknown atlas types are assumed to support any ndim."""
+    Types absent from `_NDIM_SUPPORT` (``NoAtlas``, ``MinkowskiAtlas``) fall
+    through to `True`, matching the previous ``AbstractAtlas`` catch-all.
+    """
+    for base, supports in _NDIM_SUPPORT:
+        if issubclass(cls, base):
+            return supports(ndim)
     return True
 
 
@@ -476,8 +460,11 @@ def atlases(
 ) -> Any:
     """Draw a ``EuclideanAtlas`` with dimensionality in ``[0, 3]``.
 
-    If ``ndim`` is given, the atlas is constructed with that exact dimension
-    (clamped to ``[0, 3]``). Otherwise, the dimension is drawn uniformly.
+    If ``ndim`` is given, the atlas is constructed with exactly that dimension.
+    Values outside ``[0, 3]`` are discarded via `hypothesis.assume` rather than
+    clamped into range, so a request this strategy cannot satisfy shows up as an
+    unsatisfiable example instead of an atlas of the wrong dimensionality.
+    Otherwise, the dimension is drawn uniformly.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinaxs.hypothesis.manifolds as cxmst
@@ -496,7 +483,11 @@ def atlases(
     if target_ndim is None:
         dim = draw(st.integers(min_value=0, max_value=3))
     else:
-        dim = max(0, min(target_ndim, 3))
+        # Discard rather than clamp: `max(0, min(target_ndim, 3))` silently
+        # handed back a 3-D atlas for `ndim=5` (and a 0-D one for `ndim=-1`),
+        # breaking the documented promise that `ndim` pins the dimensionality.
+        assume(_atlas_class_supports_ndim(cxm.EuclideanAtlas, target_ndim))
+        dim = target_ndim
 
     # Construct
     return cxm.EuclideanAtlas(dim)
@@ -587,22 +578,13 @@ def atlases(
                 f"expected ndim={custom_ndim}."
             )
 
-    filtered_classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
-    for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
-        cls = cast("type[cxc.AbstractChart[Any, Any, Any]]", cls)
-        try:
-            chart = cls()
-        except TypeError:
-            continue
-        if chart.ndim == custom_ndim:
-            filtered_classes.append(cls)
-
+    filtered_classes = matching_chart_classes_for_ndim(custom_ndim)
     if not filtered_classes:
         assume(False)
 
     sampled_classes = draw(
         st.lists(
-            st.sampled_from(tuple(filtered_classes)),
+            st.sampled_from(filtered_classes),
             min_size=1,
             max_size=4,
             unique=True,
@@ -664,7 +646,10 @@ def atlases(
             dims.append(dim_i)
             remaining -= dim_i
 
-        assume(remaining == 0)
+        # No `assume(remaining == 0)`: on the last factor `factors_left_after`
+        # is 0, so min_this == max_this == remaining and the loop always lands
+        # exactly on the target. The feasibility `assume` above is what does the
+        # work.
 
     factors = tuple(
         draw(cast("Any", atlases)(exclude=(cxm.CartesianProductAtlas,), ndim=d))
