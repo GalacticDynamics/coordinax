@@ -133,9 +133,12 @@ def component_domains(chart: cxc.AbstractChart, /) -> dict[str, Interval]:
 # Radial
 
 
-@plum.dispatch
-def component_domains(chart: cxc.Radial1D, /) -> dict[str, Interval]:
-    return {"r": RADIAL}
+# `Radial1D` deliberately has no overload. Its docstring calls it "semantically
+# equivalent to Cart1D but uses `r` instead of `x`", and `pt_map` bears that
+# out: cart1d -> radial1d carries the sign through, so x = -5 m gives r = -5 m
+# and round-trips. Constraining it to r > 0 on the strength of the *name* would
+# silently halve the chart's domain -- the same trap as reading `theta` off a
+# name, in the other direction. It falls through to the unconstrained default.
 
 
 @plum.dispatch

@@ -118,6 +118,44 @@ class TestConventionsAreDistinguished:
         assert component_domains(cxc.polar2d)["theta"].min == pytest.approx(-math.pi)
 
 
+class TestRadial1DIsNotRadial:
+    """`Radial1D` names its coordinate `r` but is a relabelled `Cart1D`.
+
+    Its own docstring says "semantically equivalent to Cart1D but uses `r`
+    instead of `x`", and `pt_map` agrees: the sign carries through. Reading a
+    domain off the *name* would halve it -- the mirror image of the
+    `Spherical3D` / `MathSpherical3D` case, where the name is the same but the
+    meaning differs.
+    """
+
+    def test_domain_matches_cart1d(self) -> None:
+        assert (
+            component_domains(cxc.radial1d)["r"] == component_domains(cxc.cart1d)["x"]
+        )
+
+    def test_negative_r_round_trips(self) -> None:
+        """The behaviour that makes a positive-only domain wrong."""
+        there = cxc.pt_map({"x": u.Q(-5.0, "m")}, cxc.cart1d, cxc.radial1d)
+        back = cxc.pt_map(there, cxc.radial1d, cxc.cart1d)
+        assert float(u.ustrip("m", there["r"])) == pytest.approx(-5.0)
+        assert float(u.ustrip("m", back["x"])) == pytest.approx(-5.0)
+
+    def test_draws_reach_negative_values(self) -> None:
+        seen_negative = False
+
+        @given(point=cxst.cdicts(cxc.radial1d))
+        @settings(
+            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
+        )
+        def collect(point: dict) -> None:
+            nonlocal seen_negative
+            if float(u.ustrip("m", point["r"])) < 0:
+                seen_negative = True
+
+        collect()
+        assert seen_negative
+
+
 class TestBoundsFollowTheUnit:
     """Bounds are stated in one unit and must hold in whatever unit is drawn."""
 
