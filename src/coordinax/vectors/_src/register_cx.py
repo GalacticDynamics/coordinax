@@ -425,13 +425,38 @@ def subtract(lhs: Point, rhs: Point, /) -> Point:
     return replace(lhs, data=result_data)
 
 
+def _check_same_tangent_space(lhs: Tangent, rhs: Tangent, op_name: str, /) -> None:
+    """Check that two Tangents share a chart and representation.
+
+    Component-wise addition is only meaningful within a single tangent space:
+    same manifold *and* same chart (the coordinate basis vector fields differ
+    chart to chart, even when two charts happen to name their components the
+    same way -- e.g. Galilean and Minkowski spacetime charts both use ``(ct,
+    x, y, z)``), and same basis/semantic (``rep``).
+    """
+    if lhs.chart != rhs.chart:
+        msg = (
+            f"Cannot {op_name} Tangent vectors with different charts: "
+            f"{lhs.chart!r} vs {rhs.chart!r}."
+        )
+        raise ValueError(msg)
+    if lhs.rep != rhs.rep:
+        msg = (
+            f"Cannot {op_name} Tangent vectors with different representations: "
+            f"{lhs.rep!r} vs {rhs.rep!r}."
+        )
+        raise ValueError(msg)
+
+
 @plum.dispatch
 def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     """Add two tangent vectors component-wise.
 
     Tangent spaces are genuine vector spaces: addition is component-wise in any
     chart basis (no Cartesian round-trip is needed or correct).  Both operands
-    must share the same representation (chart + basis + semantic).
+    must share the same chart and representation (basis + semantic) -- adding
+    components from two different charts is meaningless even when the charts
+    happen to name their components the same way.
 
     >>> import unxt as u
     >>> import coordinax as cx
@@ -451,13 +476,7 @@ def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     Q(5., 'm / s')
 
     """
-    if lhs.rep != rhs.rep:
-        msg = (
-            f"Cannot add Tangent vectors with different representations: "
-            f"{lhs.rep!r} vs {rhs.rep!r}."
-        )
-        raise ValueError(msg)
-
+    _check_same_tangent_space(lhs, rhs, "add")
     data = jtu.map(jnp.add, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
     return replace(lhs, data=data)
 
@@ -468,7 +487,9 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
 
     Tangent spaces are genuine vector spaces: subtraction is component-wise in
     any chart basis (no Cartesian round-trip is needed or correct).  Both
-    operands must share the same representation (chart + basis + semantic).
+    operands must share the same chart and representation (basis + semantic)
+    -- subtracting components from two different charts is meaningless even
+    when the charts happen to name their components the same way.
 
     >>> import unxt as u
     >>> import coordinax as cx
@@ -488,13 +509,7 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     Q(3., 'm / s')
 
     """
-    if lhs.rep != rhs.rep:
-        msg = (
-            f"Cannot subtract Tangent vectors with different representations: "
-            f"{lhs.rep!r} vs {rhs.rep!r}."
-        )
-        raise ValueError(msg)
-
+    _check_same_tangent_space(lhs, rhs, "subtract")
     data = jtu.map(jnp.subtract, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
     return replace(lhs, data=data)
 
