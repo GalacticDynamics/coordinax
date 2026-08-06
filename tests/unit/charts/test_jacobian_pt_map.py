@@ -11,74 +11,36 @@ import jax.numpy as jnp
 import pytest
 from hypothesis import given, settings, strategies as st
 from numpy.testing import assert_allclose
-from strategies import (
-    any_angle_rad as _any_angle_rad,
-    any_m as _any_m,
-    polar_rad as _angle_rad,
-    pos_m as _pos_m,
-)
 
 import quaxed.numpy as qnp
 import unxt as u
 import unxts.linalg as ul
 
 import coordinax.charts as cxc
+import coordinaxs.hypothesis.main as cxst
 
 usys_si = u.unitsystems.si
 
 #: Chart pairs whose Jacobians are checked in both directions.
 #:
-#: Points are always drawn in the *curvilinear* member, where the singularities
-#: are simple to exclude (r > 0, theta away from the poles), then mapped into
-#: whichever chart the Jacobian is taken from. Drawing directly in the
-#: Cartesian member would need a rejection filter for the origin and the polar
-#: axis instead.
+#: Points are drawn in the *curvilinear* member and mapped into whichever chart
+#: the Jacobian is taken from. Drawing in the Cartesian member instead would
+#: need a rejection filter for the origin and the polar axis, which the
+#: curvilinear domains exclude by construction.
 CHART_PAIRS = [
     pytest.param(cxc.cart2d, cxc.polar2d, id="cart2d-polar2d"),
     pytest.param(cxc.cart3d, cxc.sph3d, id="cart3d-sph3d"),
     pytest.param(cxc.cart3d, cxc.cyl3d, id="cart3d-cyl3d"),
 ]
 
-
-def _draw_curvilinear_point(data: st.DataObject, chart: cxc.AbstractChart) -> dict:
-    """Draw a point in *chart*, bounded away from its coordinate singularities.
-
-    Component-wise rather than via `coordinaxs.hypothesis.cdicts`, which cannot
-    express what this test needs. Measured on 300 draws each:
-
-    - It has no notion of a chart's *domain*. Charts publish
-      ``coord_dimensions`` but no bounds, so ``cdicts(sph3d)`` yields r <= 0 in
-      60% of draws and theta outside ``(0, pi)`` in 94%. Filtering those with
-      ``assume`` rejects almost everything and trips ``filter_too_much``.
-    - It randomises the *unit* of each component independently (148 distinct
-      combinations in 400 draws, mixed within a single point: x in m, y in
-      solRad, z in Angstrom). So constraining ``elements`` does not constrain
-      the physical quantity -- ``r = 0.5`` in ``3e-17 pc`` is not ``0.5 m``.
-    - Magnitudes span the representable range, 1e-5 to 3e38 m. Feeding those
-      to the jacfwd comparison fails at ``x=0, y=1.8e19 m, z=0``: float32 ULP
-      there is ~2e12, so agreement to ``atol=1e-4`` is not meaningful. That is
-      a precision artifact, not a defect in `jac_pt_map`.
-
-    `cdicts` is the right tool for exercising unit and dtype handling, which is
-    what that spread is for. It is the wrong one for a numerical derivative
-    check, which needs fixed units and a bounded, non-singular domain.
-    """
-    if chart is cxc.polar2d:
-        return {"r": data.draw(_pos_m), "theta": data.draw(_any_angle_rad)}
-    if chart is cxc.sph3d:
-        return {
-            "r": data.draw(_pos_m),
-            "theta": data.draw(_angle_rad),
-            "phi": data.draw(_any_angle_rad),
-        }
-    if chart is cxc.cyl3d:
-        return {
-            "rho": data.draw(_pos_m),
-            "phi": data.draw(_any_angle_rad),
-            "z": data.draw(_any_m),
-        }
-    msg = f"no point strategy registered for {chart}"  # pragma: no cover
-    raise AssertionError(msg)  # pragma: no cover
+#: Keeps points well conditioned for a derivative comparison.
+#:
+#: The upper bound is the one that matters for `jacfwd` agreement at
+#: ``atol=1e-4``: a float32 ULP at ``1.8e19 m`` is ~2e12, so the assertion
+#: would be meaningless there. The lower bound matters just as much for the
+#: curvilinear charts, where Jacobian entries scale like ``1/r`` and are
+#: unusable as ``r`` approaches the origin.
+WELL_CONDITIONED = (0.5, 8.0)
 
 
 # ---------------------------------------------------------------------------
@@ -557,38 +519,29 @@ class TestJacobianPtMapCompositionProperty:
             err_msg=f"J_{{{c2}→{c1}}} @ J_{{{c1}→{c2}}} ≠ I",
         )
 
-    @given(r=_pos_m, theta=_angle_rad, phi=_any_angle_rad)
+    @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
+    @given(data=st.data())
     @settings(deadline=None)
-    def test_cart3d_sph3d_property(self, r, theta, phi) -> None:
-        """Property: J_{Sph→Cart} @ J_{Cart→Sph} = I for any non-singular point."""
-        p_sph = {"r": r, "theta": theta, "phi": phi}
-        p_cart = cxc.pt_map(p_sph, cxc.sph3d, cxc.cart3d)
-        J_fwd = cxc.jac_pt_map(p_cart, cxc.cart3d, cxc.sph3d)
-        J_inv = cxc.jac_pt_map(p_sph, cxc.sph3d, cxc.cart3d)
-        result = qnp.matmul(J_inv, J_fwd)
-        assert_allclose(result.value, jnp.eye(3), atol=1e-4)
+    def test_composition_is_the_identity(
+        self,
+        cart: cxc.AbstractChart,
+        curv: cxc.AbstractChart,
+        data: st.DataObject,
+    ) -> None:
+        """J_{curv->cart} @ J_{cart->curv} = I at an arbitrary point.
 
-    @given(r=_pos_m, phi=_any_angle_rad, z=_any_m)
-    @settings(deadline=None)
-    def test_cart3d_cyl3d_property(self, r, phi, z) -> None:
-        """Property: J_{Cyl→Cart} @ J_{Cart→Cyl} = I for any non-singular point."""
-        p_cyl = {"rho": r, "phi": phi, "z": z}
-        p_cart = cxc.pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
-        J_fwd = cxc.jac_pt_map(p_cart, cxc.cart3d, cxc.cyl3d)
-        J_inv = cxc.jac_pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
-        result = qnp.matmul(J_inv, J_fwd)
-        assert_allclose(result.value, jnp.eye(3), atol=1e-4)
+        One parametrized property in place of three that each hardcoded a
+        single pair, drawing from `cdicts` for the same reason as
+        `test_agrees_with_jacfwd`: the chart's own domain excludes the
+        singular directions, so no filtering is needed.
+        """
+        p_curv = data.draw(cxst.cdicts(curv, magnitude=WELL_CONDITIONED))
+        p_cart = cxc.pt_map(p_curv, curv, cart)
 
-    @given(r=_pos_m, theta=_any_angle_rad)
-    @settings(deadline=None)
-    def test_cart2d_polar2d_property(self, r, theta) -> None:
-        """Property: J_{Polar→Cart} @ J_{Cart→Polar} = I for r > 0."""
-        p_polar = {"r": r, "theta": theta}
-        p_cart = cxc.pt_map(p_polar, cxc.polar2d, cxc.cart2d)
-        J_fwd = cxc.jac_pt_map(p_cart, cxc.cart2d, cxc.polar2d)
-        J_inv = cxc.jac_pt_map(p_polar, cxc.polar2d, cxc.cart2d)
-        result = qnp.matmul(J_inv, J_fwd)
-        assert_allclose(result.value, jnp.eye(2), atol=1e-4)
+        j_fwd = cxc.jac_pt_map(p_cart, cart, curv)
+        j_inv = cxc.jac_pt_map(p_curv, curv, cart)
+
+        assert_allclose(qnp.matmul(j_inv, j_fwd).value, jnp.eye(curv.ndim), atol=1e-4)
 
 
 # ===========================================================================
@@ -638,17 +591,16 @@ class TestJacobianPtMapAgreesWithJacfwd:
         directions had no arbitrary-point coverage at all. This closes that:
         every pair is checked in both directions.
 
-        "Arbitrary" means arbitrary within a deliberately narrow box, not the
-        whole non-singular domain: radii in [0.5, 8] m, polar angles in
-        (0.25, 2.875) rad, azimuths in [-3, 3] rad, Cartesian offsets in
-        [-8, 8] m. The bounds are not incidental. Comparing against `jacfwd`
-        at `atol=1e-4` needs operands whose float32 ULP is far below that, and
-        the check does fail on wide-magnitude points -- at ``y = 1.8e19 m`` the
-        ULP is ~2e12. So this trades range for the ability to assert agreement
-        numerically at all; the singular *directions* are covered, extreme
-        *scales* are not.
+        Points come from `coordinaxs.hypothesis.cdicts`, which knows each
+        chart's domain -- r > 0, colatitude off both poles -- so no filtering
+        is needed and the singular *directions* are excluded by construction.
+        `WELL_CONDITIONED` bounds the scale on top of that.
+
+        "Arbitrary" therefore means arbitrary within that box, not across the
+        whole non-singular domain: extreme *scales* remain untested, and would
+        need a scale-aware tolerance rather than a wider strategy.
         """
-        point = _draw_curvilinear_point(data, curv)
+        point = data.draw(cxst.cdicts(curv, magnitude=WELL_CONDITIONED))
         if forward:
             self._check_agrees(cart, curv, cxc.pt_map(point, curv, cart), atol=1e-4)
         else:
