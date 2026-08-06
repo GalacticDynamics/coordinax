@@ -10,6 +10,7 @@ from .charts import *
 from .charts import charts
 from .charts_product import *
 from .classes import *
+from .domains import *
 from .extend import *
 from .utils import *
 from coordinaxs.hypothesis.utils import get_all_subclasses

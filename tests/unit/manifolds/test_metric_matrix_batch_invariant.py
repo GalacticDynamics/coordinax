@@ -42,12 +42,6 @@ CURVILINEAR = [
     (cxm.S2, cxc.sph2),
 ]
 
-# Bounded so squared lengths can't overflow into inf/nan noise; sign is
-# irrelevant (the metric depends on r**2 and sin/cos), so a plain range is fine.
-_coords = st.floats(
-    min_value=-100.0, max_value=100.0, allow_nan=False, allow_infinity=False, width=32
-)
-
 
 @given(data=st.data())
 @settings(deadline=None, max_examples=50)
@@ -55,7 +49,9 @@ def test_curvilinear_metric_batches_like_elementwise(data):
     """Batched diagonal equals the per-element unbatched diagonals."""
     manifold, chart = data.draw(st.sampled_from(CURVILINEAR))
     shape = data.draw(array_shapes(min_dims=1, max_dims=2, min_side=1, max_side=3))
-    point = data.draw(cxst.cdicts(chart, shape=shape, elements=_coords))
+    # No `elements`: the chart's own domain now bounds each coordinate, and
+    # the default magnitude keeps squared lengths clear of inf/nan noise.
+    point = data.draw(cxst.cdicts(chart, shape=shape))
 
     n = len(chart.components)
     gb = cxmapi.metric_matrix(manifold, point, chart).diagonal
