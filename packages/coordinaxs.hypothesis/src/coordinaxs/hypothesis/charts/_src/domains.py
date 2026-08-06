@@ -134,11 +134,6 @@ def component_domains(chart: cxc.AbstractChart, /) -> dict[str, Interval]:
 
 
 @plum.dispatch
-def component_domains(chart: cxc.Radial1D, /) -> dict[str, Interval]:
-    return {"r": RADIAL}
-
-
-@plum.dispatch
 def component_domains(chart: cxc.Polar2D, /) -> dict[str, Interval]:
     """`Polar2D` names its *azimuth* ``theta``, unlike `Spherical3D`."""
     return {"r": RADIAL, "theta": AZIMUTH}
