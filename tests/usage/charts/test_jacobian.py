@@ -19,19 +19,26 @@ __all__: tuple[str, ...] = ()
 import jax
 import jax.numpy as jnp
 import numpy as np
-from hypothesis import given, settings
-from strategies import (
-    any_angle_rad as _any_angle_rad,
-    any_m as _any_m,
-    polar_rad as _angle_rad,
-    pos_m as _pos_m,
-)
+import pytest
+from hypothesis import given, settings, strategies as st
 
 import quaxed.numpy as qnp
 import unxt as u
 import unxts.linalg as ul
 
 import coordinax.charts as cxc
+import coordinaxs.hypothesis.main as cxst
+
+#: Chart pairs whose Jacobians compose to the identity, in both members.
+CHART_PAIRS = [
+    pytest.param(cxc.cart2d, cxc.polar2d, id="cart2d-polar2d"),
+    pytest.param(cxc.cart3d, cxc.sph3d, id="cart3d-sph3d"),
+    pytest.param(cxc.cart3d, cxc.cyl3d, id="cart3d-cyl3d"),
+]
+
+#: Keeps points well conditioned for a derivative comparison -- see
+#: `tests/unit/charts/test_jacobian_pt_map.py`, which uses the same bound.
+WELL_CONDITIONED = (0.5, 8.0)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -172,37 +179,21 @@ class TestChainRuleViaCurriedForm:
         n = len(c1.components)
         np.testing.assert_allclose(result.value, jnp.eye(n), atol=atol)
 
-    def test_cart3d_sph3d_at_x1_y0_z0(self) -> None:
-        self._check_composition_identity(
-            cxc.cart3d,
-            cxc.sph3d,
-            {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")},
-        )
-
-    def test_cart3d_cyl3d_at_x1_y0_z0(self) -> None:
-        self._check_composition_identity(
-            cxc.cart3d,
-            cxc.cyl3d,
-            {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")},
-        )
-
-    def test_cart2d_polar2d_at_1_0(self) -> None:
-        self._check_composition_identity(
-            cxc.cart2d, cxc.polar2d, {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
-        )
-
-    @given(r=_pos_m, theta=_angle_rad, phi=_any_angle_rad)
+    @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
+    @given(data=st.data())
     @settings(deadline=None)
-    def test_cart3d_sph3d_property(self, r, theta, phi) -> None:
-        """Property: J_inv @ J_fwd = I for any non-singular Sph3D point."""
-        self._check_composition_identity(
-            cxc.sph3d, cxc.cart3d, {"r": r, "theta": theta, "phi": phi}, atol=1e-4
-        )
+    def test_composition_is_the_identity(
+        self,
+        cart: cxc.AbstractChart,
+        curv: cxc.AbstractChart,
+        data: st.DataObject,
+    ) -> None:
+        """J_{cart->curv} @ J_{curv->cart} = I at an arbitrary point.
 
-    @given(r=_pos_m, phi=_any_angle_rad, z=_any_m)
-    @settings(deadline=None)
-    def test_cart3d_cyl3d_property(self, r, phi, z) -> None:
-        """Property: J_inv @ J_fwd = I for any non-singular Cyl3D point."""
-        self._check_composition_identity(
-            cxc.cyl3d, cxc.cart3d, {"rho": r, "phi": phi, "z": z}, atol=1e-4
-        )
+        Replaces three single-point tests and two properties that between them
+        covered `cart2d-polar2d` at one hand-picked point only. Points come
+        from `coordinaxs.hypothesis.cdicts`, which knows each chart's domain,
+        so the singular directions are excluded without any filtering.
+        """
+        at_curv = data.draw(cxst.cdicts(curv, magnitude=WELL_CONDITIONED))
+        self._check_composition_identity(curv, cart, at_curv, atol=1e-4)

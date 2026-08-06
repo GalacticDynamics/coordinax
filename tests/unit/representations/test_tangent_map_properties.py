@@ -5,18 +5,18 @@ __all__: tuple[str, ...] = ()
 import jax.numpy as jnp
 import numpy as np
 from hypothesis import given, settings, strategies as st
-from strategies import (
-    any_angle_rad as _any_angle_rad,
-    any_m as _any_m,
-    polar_rad as _polar_rad,
-    pos_m as _pos_m,
-    v_elem as _v_elem,
-)
 
 import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.hypothesis.main as cxst
+
+#: Dimensionless tangent-vector components. Not a chart coordinate, so
+#: `cdicts` has nothing to say about it.
+_v_elem = st.floats(
+    min_value=-5, max_value=5, allow_nan=False, allow_subnormal=False, width=32
+)
 
 usys = u.unitsystems.si
 
@@ -53,12 +53,12 @@ class TestTangentMapRoundTripCart2dPolar2d:
     Here we check this end-to-end via two successive ``tangent_map`` calls.
     """
 
-    @given(r_=_pos_m, theta=_any_angle_rad, vx=_v_elem, vy=_v_elem)
+    @given(data=st.data(), vx=_v_elem, vy=_v_elem)
     @settings(deadline=None)
-    def test_round_trip(self, r_, theta, vx, vy) -> None:
+    def test_round_trip(self, data: st.DataObject, vx, vy) -> None:
         """Tangent map round-trip Cart2D → Polar2D → Cart2D recovers original v."""
-        # Base point starting in polar (guaranteed r > 0)
-        p_polar = {"r": r_, "theta": theta}
+        # Base point drawn in polar, where the domain guarantees r > 0.
+        p_polar = data.draw(cxst.cdicts(cxc.polar2d, magnitude=(0.5, 8.0)))
         p_cart = cxc.pt_map(p_polar, cxc.polar2d, cxc.cart2d)
 
         v_cart = {"x": jnp.array(vx), "y": jnp.array(vy)}
@@ -82,18 +82,12 @@ class TestTangentMapRoundTripCart2dPolar2d:
 class TestTangentMapRoundTripCart3dSph3d:
     r"""Round-trip invariant: Cart3D → Sph3D → Cart3D ≈ identity."""
 
-    @given(
-        r_=_pos_m,
-        theta=_polar_rad,  # away from poles
-        phi=_any_angle_rad,
-        vx=_v_elem,
-        vy=_v_elem,
-        vz=_v_elem,
-    )
+    @given(data=st.data(), vx=_v_elem, vy=_v_elem, vz=_v_elem)
     @settings(deadline=None)
-    def test_round_trip(self, r_, theta, phi, vx, vy, vz) -> None:
+    def test_round_trip(self, data: st.DataObject, vx, vy, vz) -> None:
         """Tangent map round-trip Cart3D → Sph3D → Cart3D recovers v."""
-        p_sph = {"r": r_, "theta": theta, "phi": phi}
+        # Drawn in spherical, whose domain keeps r > 0 and theta off the poles.
+        p_sph = data.draw(cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
         p_cart = cxc.pt_map(p_sph, cxc.sph3d, cxc.cart3d)
 
         v_cart = {"x": jnp.array(vx), "y": jnp.array(vy), "z": jnp.array(vz)}
@@ -116,18 +110,12 @@ class TestTangentMapRoundTripCart3dSph3d:
 class TestTangentMapRoundTripCart3dCyl3d:
     r"""Round-trip invariant: Cart3D → Cyl3D → Cart3D ≈ identity."""
 
-    @given(
-        rho=_pos_m,  # cylindrical radius — must be positive
-        phi=_any_angle_rad,
-        z=_any_m,
-        vx=_v_elem,
-        vy=_v_elem,
-        vz=_v_elem,
-    )
+    @given(data=st.data(), vx=_v_elem, vy=_v_elem, vz=_v_elem)
     @settings(deadline=None)
-    def test_round_trip(self, rho, phi, z, vx, vy, vz) -> None:
+    def test_round_trip(self, data: st.DataObject, vx, vy, vz) -> None:
         """Tangent map round-trip Cart3D → Cyl3D → Cart3D recovers v."""
-        p_cyl = {"rho": rho, "phi": phi, "z": z}
+        # Drawn in cylindrical, whose domain keeps rho > 0.
+        p_cyl = data.draw(cxst.cdicts(cxc.cyl3d, magnitude=(0.5, 8.0)))
         p_cart = cxc.pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
 
         v_cart = {"x": jnp.array(vx), "y": jnp.array(vy), "z": jnp.array(vz)}
@@ -240,9 +228,7 @@ class TestTangentMapLinearity:
     """
 
     @given(
-        r_=_pos_m,
-        theta=_polar_rad,
-        phi=_any_angle_rad,
+        data=st.data(),
         ux=_v_elem,
         uy=_v_elem,
         uz=_v_elem,
@@ -254,10 +240,10 @@ class TestTangentMapLinearity:
     )
     @settings(deadline=None)
     def test_linearity_cart3d_to_sph3d(
-        self, r_, theta, phi, ux, uy, uz, wx, wy, wz, a, b
+        self, data: st.DataObject, ux, uy, uz, wx, wy, wz, a, b
     ) -> None:
         """J(a·u + b·w) ≈ a·J(u) + b·J(w) for Cart3D → Sph3D."""
-        p_sph = {"r": r_, "theta": theta, "phi": phi}
+        p_sph = data.draw(cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
         p_cart = cxc.pt_map(p_sph, cxc.sph3d, cxc.cart3d)
 
         u_ = {"x": jnp.array(ux), "y": jnp.array(uy), "z": jnp.array(uz)}
