@@ -8,6 +8,7 @@ from hypothesis.errors import Unsatisfiable
 import coordinax.charts as cxc
 
 import coordinaxs.hypothesis.main as cxst
+from coordinaxs.hypothesis.charts._src import charts_product as cxstc
 
 
 class TestProductChartsBasic:
@@ -333,3 +334,36 @@ def test_product_charts_with_fixed_factors_and_ndim(
     # Verify total dimension
     expected_dim = sum(f.ndim for f in factor_charts)
     assert chart.ndim == expected_dim
+
+
+class TestProductChartDimensionality:
+    """The reachable total dimensionality, and the per-factor cap it implies."""
+
+    @pytest.mark.parametrize("ndim", [2, 3, 4, 5, 6])
+    def test_requested_ndim_is_reachable_and_exact(self, ndim: int) -> None:
+        """Every total in 2-6 is generated, with factor dims summing to it.
+
+        The total used to be bounded by `min(6, max_factors)` -- the factor
+        *count* -- so with the default ``max_factors=3`` nothing above 3-D was
+        ever produced and the 6-D ``cart3d x cart3d`` product was unreachable.
+        """
+
+        @given(chart=cxst.charts(cxc.AbstractCartesianProductChart, ndim=ndim))
+        @settings(max_examples=15, deadline=None)
+        def check(chart: cxc.AbstractCartesianProductChart) -> None:
+            assert chart.ndim == ndim
+            assert sum(f.ndim for f in chart.factors) == ndim
+
+        check()
+
+    @given(factors=cxstc.cartesian_product_factors())
+    def test_factor_dims_respect_the_cap(
+        self, factors: tuple[cxc.AbstractChart, ...]
+    ) -> None:
+        """No factor is asked for a dimensionality charts are sparse at.
+
+        Fixed-component charts are only densely populated up to 3-D, so drawing
+        a 5-D factor is nearly all discards.
+        """
+        assert factors
+        assert all(1 <= f.ndim <= cxstc.FACTOR_NDIM_CAP for f in factors)
