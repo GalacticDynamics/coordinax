@@ -30,6 +30,9 @@ T = TypeVar("T")
 
 xps = make_strategies_namespace(jnp)
 
+#: Default dtypes for array and quantity annotations that pin none themselves.
+SCALAR_DTYPES: Final = jax_honoured(xps.scalar_dtypes())
+
 # Fallback unit strategy for quantity annotations that pin no dimension.
 # ``ust.units()`` re-runs astropy's ``UnitBase.compose()`` on every draw, which is
 # uncached and costs ~0.25s for exotic dimensions (e.g. "molar heat capacity") --
@@ -81,7 +84,7 @@ def strategy_for_annotation(
     ann: type[jax.Array], /, *, meta: Metadata
 ) -> st.SearchStrategy:
     strategy = xps.arrays(
-        dtype=meta.get("dtype", jax_honoured(xps.scalar_dtypes())),
+        dtype=meta.get("dtype", SCALAR_DTYPES),
         shape=meta.get("shape", xps.array_shapes()),
     )
 
@@ -127,7 +130,7 @@ def strategy_for_annotation(
     strategy = ust.quantities(
         unit=dim,
         quantity_cls=quantity_cls,
-        dtype=meta.get("dtype", jax_honoured(xps.scalar_dtypes())),
+        dtype=meta.get("dtype", SCALAR_DTYPES),
         shape=meta.get("shape", xps.array_shapes()),
         static_value=static_value,
     )

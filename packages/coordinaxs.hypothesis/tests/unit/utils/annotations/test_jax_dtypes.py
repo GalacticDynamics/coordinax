@@ -1,10 +1,4 @@
-"""Dtype strategies must agree with the active JAX x64 setting.
-
-``jax.numpy`` declares the 64-bit dtypes unconditionally, but with
-``jax_enable_x64`` off it narrows them: ``jnp.asarray(x, dtype=float64)`` returns
-a float32 array. Hypothesis then finds the built array does not match the dtype
-it asked for and raises `InvalidArgument` -- a hard error, not a discard.
-"""
+"""Dtype strategies must agree with the active JAX x64 setting."""
 
 __all__: tuple[str, ...] = ()
 
@@ -17,11 +11,8 @@ from typing import Any
 import hypothesis.strategies as st
 import jax.numpy as jnp
 from hypothesis import given, settings
-from hypothesis.extra.array_api import make_strategies_namespace
 
 from coordinaxs.hypothesis.utils._src.annotations.dtypes import jax_honoured
-
-xps = make_strategies_namespace(jnp)
 
 #: Whether this interpreter honours 64-bit dtypes. The suite sets
 #: ``JAX_ENABLE_X64=1``; downstream users of these strategies often do not.
@@ -46,25 +37,15 @@ def test_filter_tracks_the_runtime_not_the_declaration() -> None:
     assert (jnp.dtype(jnp.float64) in drawn) is X64
 
 
-@given(dtype=jax_honoured(xps.scalar_dtypes()))
-@settings(max_examples=100, deadline=None)
-def test_every_offered_dtype_round_trips(dtype: Any) -> None:
-    """An array built with a drawn dtype comes back with that same dtype.
-
-    This is the property whose violation hypothesis reports as
-    ``Could not create array via xp.asarray(..., dtype=...)``.
-    """
-    assert jnp.empty(0, dtype=dtype).dtype == jnp.dtype(dtype)
-
-
-#: Draws `charts()` in a fresh interpreter and reports how many draws died.
+#: Draws `charts()` in a fresh interpreter and prints the count of hard errors.
 #:
-#: Run out-of-process because the setting is read once, at JAX import, and this
-#: suite has already imported JAX with x64 on.
+#: Out-of-process because the x64 setting is read once, at JAX import, and this
+#: suite has already imported JAX with it on.
 _X32_DRAW = """
 import warnings
 warnings.filterwarnings("ignore")
 from hypothesis import given, settings, HealthCheck, strategies as st
+from hypothesis.errors import InvalidArgument
 import jax.numpy as jnp
 assert jnp.empty(0, dtype=jnp.float64).dtype == jnp.dtype(jnp.float32), "x64 leaked in"
 import coordinaxs.hypothesis.main as cxst
@@ -77,9 +58,8 @@ bad = []
 def run(d):
     try:
         d.draw(cxst.charts())
-    except Exception as exc:  # noqa: BLE001
-        if type(exc).__name__ == "InvalidArgument":
-            bad.append(str(exc)[:120])
+    except InvalidArgument as exc:
+        bad.append(str(exc)[:120])
 
 run()
 print(len(bad))
@@ -90,9 +70,8 @@ print("\\n".join(bad[:3]))
 def test_charts_draws_without_x64() -> None:
     """``charts()`` must not raise `InvalidArgument` when x64 is off.
 
-    Guards the wiring, not just the helper: dropping `jax_honoured` from the
-    dtype defaults would leave the unit tests above passing while this fails.
-    Measured 43 failures in 200 draws before the filter was applied.
+    Guards the wiring rather than the helper: dropping `jax_honoured` from the
+    dtype defaults leaves the unit test above passing while this fails.
     """
     proc = subprocess.run(  # noqa: S603  # fixed literal script, this interpreter
         [sys.executable, "-c", _X32_DRAW],

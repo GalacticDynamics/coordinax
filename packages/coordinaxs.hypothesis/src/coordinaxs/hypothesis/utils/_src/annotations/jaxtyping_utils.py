@@ -169,31 +169,27 @@ def parse_jaxtyping_shape(
 
 
 JAXTYPING_DTYPE_TO_STRATEGY: Final[dict[Any, st.SearchStrategy[Any]]] = {
-    jaxtyping.Shaped: jax_honoured(xps.scalar_dtypes()),
-    jaxtyping.Bool: jax_honoured(xps.boolean_dtypes()),
-    jaxtyping.Key: jax_honoured(xps.unsigned_integer_dtypes()),
-    jaxtyping.Num: jax_honoured(xps.numeric_dtypes()),
-    jaxtyping.Inexact: st.one_of(
-        jax_honoured(xps.floating_dtypes()), jax_honoured(xps.complex_dtypes())
-    ),
-    jaxtyping.Float: jax_honoured(xps.floating_dtypes()),
-    jaxtyping.Complex: jax_honoured(xps.complex_dtypes()),
-    jaxtyping.Integer: jax_honoured(xps.integer_dtypes()),
-    jaxtyping.Int: jax_honoured(xps.integer_dtypes()),
-    jaxtyping.UInt: jax_honoured(xps.unsigned_integer_dtypes()),
-    jaxtyping.Real: st.one_of(
-        jax_honoured(xps.floating_dtypes()), jax_honoured(xps.integer_dtypes())
-    ),
+    jaxtyping.Shaped: xps.scalar_dtypes(),
+    jaxtyping.Bool: xps.boolean_dtypes(),
+    jaxtyping.Key: xps.unsigned_integer_dtypes(),
+    jaxtyping.Num: xps.numeric_dtypes(),
+    jaxtyping.Inexact: st.one_of(xps.floating_dtypes(), xps.complex_dtypes()),
+    jaxtyping.Float: xps.floating_dtypes(),
+    jaxtyping.Complex: xps.complex_dtypes(),
+    jaxtyping.Integer: xps.integer_dtypes(),
+    jaxtyping.Int: xps.integer_dtypes(),
+    jaxtyping.UInt: xps.unsigned_integer_dtypes(),
+    jaxtyping.Real: st.one_of(xps.floating_dtypes(), xps.integer_dtypes()),
 }
 
 
 def parse_jaxtyping_dtype(ann: jaxtyping.AbstractArray, /) -> st.SearchStrategy[Any]:
     # Process the dtype annotation. Shaped doesn't list out the full dtype
     # sets, so we need to specify the strategy, otherwise just select from
-    # the dtype enumeration. The enumeration is filtered too: it can name 64-bit
-    # dtypes that JAX narrows when x64 is off.
-    return JAXTYPING_DTYPE_TO_STRATEGY.get(
-        ann.dtype, jax_honoured(st.sampled_from(ann.dtypes))
+    # the dtype enumeration. Either way the result is filtered, since both can
+    # name 64-bit dtypes that JAX narrows when x64 is off.
+    return jax_honoured(
+        JAXTYPING_DTYPE_TO_STRATEGY.get(ann.dtype, st.sampled_from(ann.dtypes))
     )
 
 
