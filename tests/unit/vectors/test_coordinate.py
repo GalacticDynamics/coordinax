@@ -210,6 +210,46 @@ class TestChartAlignment:
         assert pv["velocity"].chart == cxc.sph3d
         assert pv["acceleration"].chart == cxc.sph3d
 
+    def test_cconvert_with_fields_sharing_a_non_base_chart(self) -> None:
+        """``cconvert`` is correct when multiple fibres share one non-base chart.
+
+        Regression test for a base-point-conversion cache keyed by fibre
+        chart: velocity and acceleration both sit in sph3d here (the base
+        point is cart3d), so cconvert must anchor *both* fibres' Jacobian
+        pushforward at the same correctly-converted point -- not silently
+        reuse a stale or wrong-chart conversion for the second fibre.
+        """
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
+        vel_sph = _make_sph_vel(1, 0, 0)
+        acc_sph = cx.Tangent.from_(
+            {
+                "r": u.Q(0.1, "m/s^2"),
+                "theta": u.Q(0, "rad/s^2"),
+                "phi": u.Q(0, "rad/s^2"),
+            },
+            cxc.sph3d,
+            cxr.coord_acc,
+        )
+        pv = Coordinate(point=base, velocity=vel_sph, acceleration=acc_sph)
+        pv_cart = pv.cconvert(cxc.cart3d)
+
+        # Each fibre converted alone (single-fibre Coordinate) must agree with
+        # the shared-cache multi-fibre conversion above.
+        vel_alone = Coordinate(point=base, velocity=vel_sph).cconvert(cxc.cart3d)
+        acc_alone = Coordinate(point=base, acceleration=acc_sph).cconvert(cxc.cart3d)
+
+        for comp in ("x", "y", "z"):
+            assert jnp.allclose(
+                pv_cart["velocity"][comp].value,
+                vel_alone["velocity"][comp].value,
+                atol=1e-10,
+            )
+            assert jnp.allclose(
+                pv_cart["acceleration"][comp].value,
+                acc_alone["acceleration"][comp].value,
+                atol=1e-10,
+            )
+
 
 # ---------------------------------------------------------------------------
 # TestMappingAPI

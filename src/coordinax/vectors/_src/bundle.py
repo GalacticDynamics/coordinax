@@ -400,13 +400,23 @@ class Coordinate(AbstractVector):
         # 2. Convert each field via tangent pushforward at self.point.
         # Express self.point in each fibre's current chart for the Jacobian;
         # this handles fibres that are in a different chart than self.point.
+        # Fibres sharing a chart (e.g. velocity and acceleration both stored
+        # in the same non-base chart) share the base-point conversion too,
+        # rather than recomputing it once per fibre.
+        at_in_chart: dict[cxc.AbstractChart, Point] = {}
+
+        def point_in_chart(chart: cxc.AbstractChart, /) -> Point:
+            if chart not in at_in_chart:
+                at_in_chart[chart] = cast("Point", cxr.cconvert(self.point, chart))
+            return at_in_chart[chart]
+
         new_fields: dict[str, Tangent] = {}
         for name, vec in self._data.items():
             target = field_charts.get(name, to_chart)
             at = (
                 self.point
                 if vec.chart == self.point.chart
-                else cast("Point", cxr.cconvert(self.point, vec.chart))
+                else point_in_chart(vec.chart)
             )
             new_fields[name] = cast(
                 "Tangent", cxr.cconvert(vec, target, at=at, usys=usys)

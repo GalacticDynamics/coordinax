@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 from dataclasses import replace
 
+from collections.abc import Callable
 from typing import Any, cast
 
 import jax.tree as jtu
@@ -665,9 +666,10 @@ def act(
     # so as not to violate Tangent's at-chart requirement.
     kw_base = dict(kw)
     new_fields: dict[str, Any] = {}
+    point_data_in = _cached_point_data_in(x.point)
     for name, fibre in x._data.items():
         if "at" not in kw_base:
-            fibre_kw = {**kw_base, "at": _point_data_in(x.point, fibre.chart)}
+            fibre_kw = {**kw_base, "at": point_data_in(fibre.chart)}
         else:
             fibre_kw = kw_base
         new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
@@ -699,6 +701,22 @@ def _point_data_in(point: Point, chart: Any, /) -> CDict:
     return cast("Point", cxr.cconvert(point, chart)).data
 
 
+def _cached_point_data_in(point: Point, /) -> Callable[[Any], CDict]:
+    """Return a memoized `_point_data_in(point, chart)`, keyed by chart.
+
+    Several fibres (e.g. velocity and acceleration) commonly share a chart,
+    so this avoids recomputing the same base-point conversion once per fibre.
+    """
+    cache: dict[Any, CDict] = {}
+
+    def point_data_in(chart: Any, /) -> CDict:
+        if chart not in cache:
+            cache[chart] = _point_data_in(point, chart)
+        return cache[chart]
+
+    return point_data_in
+
+
 def _act_coordinate_jet(
     op: cxfm.AbstractTransform,
     tau: Any,
@@ -716,6 +734,7 @@ def _act_coordinate_jet(
     transform by the frozen-tau pushforward at the base point.
     """
     point_chart = x.point.chart
+    point_data_in = _cached_point_data_in(x.point)
 
     # Assemble the jet in the point's chart. Fibres in other charts are
     # converted in (and back out) via the Jacobian pushforward.
@@ -730,7 +749,7 @@ def _act_coordinate_jet(
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
-            at_f = _point_data_in(x.point, orig_chart)
+            at_f = point_data_in(orig_chart)
             f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
         if order in jet:
             msg = (
@@ -765,7 +784,7 @@ def _act_coordinate_jet(
             fibre.data,
             fibre.chart,
             fibre.rep,
-            at=_point_data_in(x.point, fibre.chart),
+            at=point_data_in(fibre.chart),
             usys=usys,
         )
         new_fields[name] = replace(fibre, data=data)
