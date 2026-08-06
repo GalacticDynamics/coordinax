@@ -59,13 +59,17 @@ class TestBoostConstruction:
 
     def test_groups_is_affine(self, boost):
         # A Galilean boost is an affine (time-parameterized translation) map.
-        assert boost.groups() == frozenset((cxfm.AffineGroup, cxfm.DiffeomorphismGroup))
+        assert boost.groups() == frozenset(
+            (cxfm.groups.AffineGroup, cxfm.groups.DiffeomorphismGroup)
+        )
 
     def test_composed_groups_with_translate(self, boost):
         shift = cxfm.Translate.from_([1, 2, 3], "m")
         op = cxfm.Composed((shift, boost))
         # Least common supergroup of Euclidean (Translate) and Affine (Boost).
-        assert op.groups() == frozenset((cxfm.AffineGroup, cxfm.DiffeomorphismGroup))
+        assert op.groups() == frozenset(
+            (cxfm.groups.AffineGroup, cxfm.groups.DiffeomorphismGroup)
+        )
 
 
 # ============================================================================

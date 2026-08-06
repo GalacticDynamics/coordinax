@@ -50,18 +50,18 @@ out = cxfm.act(frame_op, None, v)
 
 ## Transformation Group Classes (Markers)
 
-Used for classification and dispatch; not instantiated directly:
+These live in the `coordinax.transforms.groups` sub-namespace, reached as `cxfm.groups.<Name>`. They are used for classification and dispatch, and are never instantiated:
 
-- `AbstractTransformGroup`
-- `IdentityGroup`
-- `DiffeomorphismGroup`
-- `AffineGroup`
-- `EuclideanGroup`
-- `OrthogonalGroup`
-- `SpecialOrthogonalGroup`
-- `LorentzGroup`
-- `ProperOrthochronousLorentzGroup`
-- `PoincareGroup`
+- `groups.AbstractTransformGroup`
+- `groups.IdentityGroup`
+- `groups.DiffeomorphismGroup`
+- `groups.AffineGroup`
+- `groups.EuclideanGroup`
+- `groups.OrthogonalGroup`
+- `groups.SpecialOrthogonalGroup`
+- `groups.LorentzGroup`
+- `groups.ProperOrthochronousLorentzGroup`
+- `groups.PoincareGroup`
 
 ```{eval-rst}
 
@@ -69,5 +69,9 @@ Used for classification and dispatch; not instantiated directly:
 
 .. automodule:: coordinax.transforms
     :exclude-members: aval, default, materialise, enable_materialise
+
+.. currentmodule:: coordinax.transforms.groups
+
+.. automodule:: coordinax.transforms.groups
 
 ```

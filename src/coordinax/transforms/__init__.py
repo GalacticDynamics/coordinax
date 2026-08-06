@@ -29,17 +29,6 @@ __all__: tuple[str, ...] = (
     "materialize_transform",
     "is_time_dependent",
     "tau_derivative",
-    # Groups
-    "AbstractTransformGroup",
-    "IdentityGroup",
-    "DiffeomorphismGroup",
-    "AffineGroup",
-    "EuclideanGroup",
-    "OrthogonalGroup",
-    "SpecialOrthogonalGroup",
-    "PoincareGroup",
-    "LorentzGroup",
-    "ProperOrthochronousLorentzGroup",
     # Transformations
     "AbstractTransform",
     "AbstractCompositeTransform",
@@ -52,9 +41,12 @@ __all__: tuple[str, ...] = (
     "Scale",
     "Shear",
     "identity",
+    # Sub-namespaces
+    "groups",
 )
 
 with install_import_hook("coordinax.transforms"):
+    from . import groups
     from ._src.actions import (
         AbstractCompositeTransform,
         AbstractTransform,
@@ -70,18 +62,6 @@ with install_import_hook("coordinax.transforms"):
         is_time_dependent,
         materialize_transform,
         tau_derivative,
-    )
-    from ._src.groups import (
-        AbstractTransformGroup,
-        AffineGroup,
-        DiffeomorphismGroup,
-        EuclideanGroup,
-        IdentityGroup,
-        LorentzGroup,
-        OrthogonalGroup,
-        PoincareGroup,
-        ProperOrthochronousLorentzGroup,
-        SpecialOrthogonalGroup,
     )
     from coordinaxs.api.transforms import act, act_jet, compose, pushforward, simplify
 

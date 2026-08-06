@@ -62,7 +62,7 @@ Transform operations and transform classes are in [`coordinax.transforms`](trans
 
 ### Transformation Group Classes (Markers)
 
-Transformation-group marker classes are in [`coordinax.transforms`](transforms.md).
+Transformation-group marker classes are in [`coordinax.transforms.groups`](transforms.md#transformation-group-classes-markers), reached as `cxfm.groups.<Name>`.
 
 ## Design & Integration
 
