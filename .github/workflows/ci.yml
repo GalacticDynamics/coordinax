@@ -180,8 +180,8 @@ jobs:
   status:
     name: CI Pass
     runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() }}
     needs: [format, tests_linux, tests_nonlinux, check_oldest, docs]
-    if: always()
     steps:
       - name: All required jobs passed
         uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
