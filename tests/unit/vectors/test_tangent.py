@@ -545,6 +545,22 @@ class TestVectorShape:
         assert v[1]["x"].value == jnp.array(2)
         assert v[1]["y"].value == jnp.array(4)
 
+    def test_index_with_scalar_and_batched_components(self):
+        """Scalar component broadcasts before indexing, doesn't crash (regression)."""
+        data = {
+            "x": u.Q([1.0, 2.0, 3.0], "m/s"),
+            "y": u.Q(5.0, "m/s"),  # scalar: broadcasts against x
+            "z": u.Q(0.0, "m/s"),  # scalar: broadcasts against x
+        }
+        v = cx.Tangent(
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
+        )
+        assert v.shape == (3,)
+        v0 = v[0]
+        assert v0["x"] == u.Q(1.0, "m/s")
+        assert v0["y"] == u.Q(5.0, "m/s")
+        assert v0["z"] == u.Q(0.0, "m/s")
+
 
 # ======================================================================
 # JAX compatibility

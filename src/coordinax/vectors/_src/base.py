@@ -29,8 +29,8 @@ import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
-from .custom_types import HasShape
-from coordinax.internal import pos_named_objs
+from .custom_types import HasShape, Shape
+from coordinax.internal import CDict, pos_named_objs
 
 if TYPE_CHECKING:
     from typing import Self
@@ -635,6 +635,15 @@ class AbstractVector(
         # Otherwise, apply the transformation and return a new point
         new = cxfm.act(op, t, self)
         return dataclassish.replace(new, frame=toframe)  # ty: ignore[invalid-return-type]
+
+
+# Shared by Point/Tangent/Coordinate __getitem__.
+def broadcast_and_index_data(data: CDict, shape: Shape, key: Any, /) -> CDict:
+    """Broadcast every leaf in ``data`` to ``shape``, then apply ``key``."""
+    return {
+        k: (v if v.shape == shape else jnp.broadcast_to(v, shape))[key]
+        for k, v in data.items()
+    }
 
 
 # ===================================================================

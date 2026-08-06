@@ -17,7 +17,7 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.representations as cxr
-from .base import AbstractVector
+from .base import AbstractVector, broadcast_and_index_data
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
 
@@ -151,7 +151,8 @@ class Point(
     def __getitem__(self, key: Any) -> "V | Point":  # ty: ignore[invalid-method-override]
         if isinstance(key, str):
             return self.data[key]
-        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type]
+        data = broadcast_and_index_data(self.data, self.shape, key)
+        return replace(self, data=data)  # ty: ignore[invalid-return-type]
 
 
 # ===================================================================

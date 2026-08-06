@@ -450,6 +450,23 @@ class TestJAXCompat:
         assert isinstance(pv0, Coordinate)
         assert pv0.shape == ()
 
+    def test_batch_indexing_with_scalar_point_and_batched_fibre(self) -> None:
+        """pv[0] broadcasts point and fibre to the bundle shape first (regression)."""
+        base = cxv.Point.from_([1.0, 2.0, 3.0], "m")  # unbatched: shape ()
+        vel_data = {
+            "x": u.Q(jnp.array([1.0, 2.0, 3.0]), "m/s"),
+            "y": u.Q(0.0, "m/s"),
+            "z": u.Q(0.0, "m/s"),
+        }
+        vel = cxv.Tangent.from_(vel_data, cxc.cart3d, cxr.coord_vel)
+        pv = Coordinate(point=base, velocity=vel)
+        assert pv.shape == (3,)
+
+        pv0 = pv[0]
+        assert pv0.shape == ()
+        assert pv0.point["x"] == u.Q(1.0, "m")
+        assert pv0["velocity"]["x"] == u.Q(1.0, "m/s")
+
     def test_vmap_cconvert(self) -> None:
         """Vmap over a Coordinate converts correctly."""
         base = cxv.Point.from_(jnp.ones((2, 3)), "m")
