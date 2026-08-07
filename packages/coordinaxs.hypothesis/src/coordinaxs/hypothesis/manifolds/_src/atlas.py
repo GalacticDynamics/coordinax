@@ -3,6 +3,7 @@
 __all__ = ("atlas_classes", "atlases")
 
 import inspect
+import math
 
 from collections.abc import Callable
 from typing import Any, Final, cast
@@ -285,7 +286,9 @@ def _atlas_class_supports_ndim(
 ) -> bool:
     """Whether *cls* can be drawn, at *ndim* when one is requested.
 
-    Types absent from `_NDIM_SUPPORT` (``NoAtlas``, ``MinkowskiAtlas``) are not
+    Matching is by `issubclass`, so a subclass of a listed base inherits that
+    base's entry rather than needing one of its own. Types matching no entry
+    (``NoAtlas``, ``MinkowskiAtlas``) are not
     drawable at any dimensionality: no `atlases` dispatch is registered for
     them, so selecting one only leads to the redispatch finding an empty
     candidate pool and discarding the example. The catch-all used to answer
@@ -647,7 +650,7 @@ def atlases(
         # n_factors <= target_ndim <= 3 * n_factors. Solve that for n_factors and
         # draw from the feasible range, rather than drawing 1-5 and rejecting:
         # at `ndim=1` only one of the five counts worked.
-        lo = max(1, -(-target_ndim // 3))
+        lo = max(1, math.ceil(target_ndim / 3))
         hi = min(5, target_ndim)
         if lo > hi:  # no factor count reaches this target
             assume(False)

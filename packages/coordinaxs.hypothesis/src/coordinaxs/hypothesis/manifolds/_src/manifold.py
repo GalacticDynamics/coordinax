@@ -43,15 +43,18 @@ def manifold_classes(
 
 
 # ---------------------------------------------------------------------------
-# ndim-compatibility helper — extend by adding an entry for each new concrete
-# manifold type.
+# ndim-compatibility helper — a new manifold type needs an entry only when no
+# existing entry's base already covers it.
 # ---------------------------------------------------------------------------
 
 #: Which dimensionalities each concrete manifold type can be drawn at.
 #:
-#: Membership is also the record of which types are drawable at all: a type
-#: listed here has a `manifolds` dispatch below, and a type absent from it does
-#: not, so every draw of one is discarded.
+#: This table is also the record of which types are drawable at all. Matching is
+#: by `issubclass`, so a type is drawable when it is a subclass of some entry's
+#: base -- it need not be listed in its own right, and a new subclass of a listed
+#: base inherits that entry (and must therefore be served by the same dispatch).
+#: A type matching no entry has no `manifolds` dispatch, so every draw of one is
+#: discarded.
 #:
 #: A plain table rather than `plum.dispatch`: these signatures are all
 #: ``type[X]``, which plum cannot treat as faithful, so its method cache was
@@ -81,7 +84,7 @@ def _manifold_class_supports_ndim(
 ) -> bool:
     """Whether *cls* can be drawn, at *ndim* when one is requested.
 
-    Types absent from `_NDIM_SUPPORT` (``NoManifold``, ``MinkowskiManifold``)
+    Types matching no `_NDIM_SUPPORT` base (``NoManifold``, ``MinkowskiManifold``)
     are not drawable at any dimensionality: no `manifolds` dispatch is
     registered for them, so selecting one only leads to the redispatch finding
     an empty candidate pool and discarding the example. The catch-all used to

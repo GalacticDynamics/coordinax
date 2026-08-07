@@ -184,21 +184,6 @@ class TestNdimIsHonoured:
         check()
 
 
-def _assert_drawable(strategy: st.SearchStrategy, cls: type) -> None:
-    """Draw a few examples from *strategy*, expecting instances of *cls*.
-
-    A separate function rather than an inline closure: `given` rejects default
-    arguments, and closing over a loop variable trips ``ruff``'s B023.
-    """
-
-    @given(obj=strategy)
-    @settings(max_examples=3, deadline=None)
-    def check(obj: object) -> None:
-        assert isinstance(obj, cls)
-
-    check()  # raises Unsatisfiable if `cls` has no registered strategy
-
-
 class TestOnlyDrawableClassesAreOffered:
     """The candidate pool never offers a class the redispatch cannot draw.
 
@@ -210,15 +195,30 @@ class TestOnlyDrawableClassesAreOffered:
     """
 
     @pytest.mark.parametrize("ndim", [None, 0, 1, 2, 3, 4, 5, 6])
-    def test_every_manifold_candidate_is_drawable(self, ndim: int | None) -> None:
-        """Each class the pool can select yields an instance, not a discard."""
+    @given(data=st.data())
+    @settings(max_examples=1, deadline=None)
+    def test_every_manifold_candidate_is_drawable(
+        self, ndim: int | None, data: st.DataObject
+    ) -> None:
+        """Each class the pool can select yields an instance, not a discard.
+
+        One `given` per ``ndim`` drawing every candidate once, rather than a
+        nested `given` per class: proving each class satisfiable needs a single
+        successful draw, and this way the count of hypothesis runs does not grow
+        with the class hierarchy. A class with no registered strategy filters
+        every draw, which surfaces as `Unsatisfiable`.
+        """
         for cls in get_all_subclasses(cxm.AbstractManifold, exclude_abstract=True):
             if _manifold_class_supports_ndim(cls, ndim):
-                _assert_drawable(cxst.manifolds(cls, ndim=ndim), cls)
+                assert isinstance(data.draw(cxst.manifolds(cls, ndim=ndim)), cls)
 
     @pytest.mark.parametrize("ndim", [None, 0, 1, 2, 3])
-    def test_every_atlas_candidate_is_drawable(self, ndim: int | None) -> None:
+    @given(data=st.data())
+    @settings(max_examples=1, deadline=None)
+    def test_every_atlas_candidate_is_drawable(
+        self, ndim: int | None, data: st.DataObject
+    ) -> None:
         """Same invariant one level down, for the atlas pool."""
         for cls in get_all_subclasses(cxm.AbstractAtlas, exclude_abstract=True):
             if _atlas_class_supports_ndim(cls, ndim):
-                _assert_drawable(cxst.atlases(cls, ndim=ndim), cls)
+                assert isinstance(data.draw(cxst.atlases(cls, ndim=ndim)), cls)
