@@ -14,6 +14,7 @@ import jax.numpy as jnp
 import plum
 from hypothesis.extra.array_api import make_strategies_namespace
 
+from .dtypes import honoured_dtypes
 from .meta import Metadata
 from .wrap import (
     RECOGNIZE_NONINTROSPECTABLE,
@@ -182,8 +183,11 @@ JAXTYPING_DTYPE_TO_STRATEGY: Final[dict[Any, st.SearchStrategy[Any]]] = {
 def parse_jaxtyping_dtype(ann: jaxtyping.AbstractArray, /) -> st.SearchStrategy[Any]:
     # Process the dtype annotation. Shaped doesn't list out the full dtype
     # sets, so we need to specify the strategy, otherwise just select from
-    # the dtype enumeration.
-    return JAXTYPING_DTYPE_TO_STRATEGY.get(ann.dtype, st.sampled_from(ann.dtypes))
+    # the dtype enumeration. Either way the result is filtered, since both can
+    # name 64-bit dtypes that JAX narrows when x64 is off.
+    return honoured_dtypes(
+        JAXTYPING_DTYPE_TO_STRATEGY.get(ann.dtype, st.sampled_from(ann.dtypes))
+    )
 
 
 def parse_jaxtyping_annotation(ann: jaxtyping.AbstractArray) -> "Metadata":
