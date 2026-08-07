@@ -751,6 +751,7 @@ name = "coordinaxs-astro"
 source = { editable = "packages/coordinaxs.astro" }
 dependencies = [
     { name = "coordinax" },
+    { name = "optional-dependencies" },
 ]
 
 [package.optional-dependencies]
@@ -762,6 +763,9 @@ hypothesis = [
     { name = "hypothesis" },
     { name = "unxts-hypothesis" },
 ]
+parametric = [
+    { name = "unxts-parametric" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -769,9 +773,11 @@ requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
+    { name = "optional-dependencies", specifier = ">=0.5.0" },
     { name = "unxts-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=2.0" },
+    { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
 ]
-provides-extras = ["astropy", "hypothesis"]
+provides-extras = ["astropy", "hypothesis", "parametric"]
 
 [[package]]
 name = "coordinaxs-curveframes"
@@ -1983,14 +1989,14 @@ wheels = [
 
 [[package]]
 name = "optional-dependencies"
-version = "0.4.0"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/9a/01c2aaee8ec00abe3dd51368c8a8c341b4352c1b23859d862edd62bd7ae5/optional_dependencies-0.4.0.tar.gz", hash = "sha256:8c2a764021ec47466a9c0375608d6976aa7f0d87f9a611e511ae70861edbd921", size = 68226, upload-time = "2025-09-03T03:32:23.117Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/89/67e3cbc57a0869231b589b39f8606c98bba81b91f3b72bd56be99040aa78/optional_dependencies-0.5.0.tar.gz", hash = "sha256:05edd224eaf1b7531a6e2ead85de2698dbc2f5edba445533dd7722f160602251", size = 80533, upload-time = "2026-08-07T00:40:23.063Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/1c/c03aa5a23a3320f8b2875e1ddf6db679412533d95da2ebee15bfe611c1e3/optional_dependencies-0.4.0-py3-none-any.whl", hash = "sha256:aa5e4c2939681cf6b5f38de9ed7cdd60647526076452c29fbe170335fe34bf4a", size = 8551, upload-time = "2025-09-03T03:32:22.124Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/81/aea272ab6faa04addb1045d54dece562a56e13200dd200d0cf71b034f7c9/optional_dependencies-0.5.0-py3-none-any.whl", hash = "sha256:320eb33710e5a38efc536141277c3d0da48a093aecfb15e3a7dc9491669c0821", size = 10102, upload-time = "2026-08-07T00:40:21.689Z" },
 ]
 
 [[package]]

@@ -18,12 +18,14 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24"]
-description = "Astronomy-specific reference frames for coordinax"
-dynamic = ["version"]
-license = "MIT"
-name = "coordinaxs.astro"
-readme = "README.md"
+# optional-dependencies >=0.5.0: earlier versions silently aliased enum members
+# that shared a version.
+dependencies    = ["coordinax>=0.24", "optional-dependencies>=0.5.0"]
+description     = "Astronomy-specific reference frames for coordinax"
+dynamic         = ["version"]
+license         = "MIT"
+name            = "coordinaxs.astro"
+readme          = "README.md"
 requires-python = ">=3.12"
 
 [project.optional-dependencies]
@@ -38,6 +40,8 @@ hypothesis = [
   "hypothesis>=6.148.7",
   "unxts.hypothesis>=2.0",
 ]
+# Promotion rules between astro's distances and `ParametricQuantity`.
+parametric = ["unxts.parametric>=2.0"]
 
 [project.entry-points."coordinaxs.frames"]
 astro = "coordinaxs.astro._setup_package:coordinaxs_frames_exports"
