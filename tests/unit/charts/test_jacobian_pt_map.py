@@ -131,52 +131,37 @@ class TestJacobianPtMapReturnType:
 
 
 class TestJacobianPtMapUnits:
-    """J[j, i].unit = to_chart_dim_j / from_chart_dim_i."""
+    """``J.unit[i, j] == to_chart_unit_i / from_chart_unit_j``, every cell.
 
-    def test_cart3d_to_sph3d_row0_dimensionless(self) -> None:
-        """J[r, *] : m/m → dimensionless (r row, x/y/z columns)."""
-        at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
-        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
-        # r has units m, x/y/z have units m → m/m = dimensionless
-        for i in range(3):
-            assert J.unit[0, i] == u.unit("") or J.unit[0, i] == u.unit("m/m"), (
-                f"J[r, {i}] unit should be dimensionless, got {J.unit[0, i]}"
-            )
+    The four hand-written checks this replaces each pinned one row or one
+    column of one pair at one hardcoded point -- so ``cart2d <-> polar2d`` had
+    no unit coverage at all, and no reverse direction but one was checked.
 
-    def test_cart3d_to_sph3d_rows1_and_2_are_rad_per_m(self) -> None:
-        """J[θ, *] and J[φ, *] : rad/m (angle output, length input)."""
-        at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
-        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
-        rad_per_m = u.unit("rad/m")
-        for i in range(3):
-            assert J.unit[1, i] == rad_per_m, (
-                f"J[θ, {i}] unit: expected rad/m, got {J.unit[1, i]}"
-            )
-            assert J.unit[2, i] == rad_per_m, (
-                f"J[φ, {i}] unit: expected rad/m, got {J.unit[2, i]}"
-            )
+    The expected unit is read off `pt_map`'s output rather than written out by
+    hand, so the assertion stays honest without a table of units to maintain:
+    `pt_map` and `jac_pt_map` do their unit bookkeeping independently.
+    """
 
-    def test_cart3d_to_cyl3d_phi_row_is_rad_per_m(self) -> None:
-        """J[φ, *] for Cyl3D : rad/m."""
-        at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
-        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d)
-        # cyl3d components: (rho=m, phi=rad, z=m); cart3d: (x=m, y=m, z=m)
-        # Row 1 (phi): rad output / m input → rad/m
-        for i in range(3):
-            assert J.unit[1, i] == u.unit("rad/m"), (
-                f"J[φ, {i}] should be rad/m, got {J.unit[1, i]}"
-            )
+    @pytest.mark.parametrize(("chart_a", "chart_b"), CHART_PAIRS)
+    @pytest.mark.parametrize("forward", [True, False], ids=["fwd", "rev"])
+    @given(data=st.data())
+    @settings(deadline=None, max_examples=10)
+    def test_every_cell_is_out_over_in(
+        self, chart_a, chart_b, forward, data: st.DataObject
+    ) -> None:
+        curv_pt = data.draw(cxst.cdicts(chart_b, magnitude=WELL_CONDITIONED))
+        from_chart, to_chart = (chart_a, chart_b) if forward else (chart_b, chart_a)
+        at = cxc.pt_map(curv_pt, chart_b, from_chart)
 
-    def test_sph3d_to_cart3d_theta_col_is_m_per_rad(self) -> None:
-        """J[*, θ] for Sph3D → Cart3D : m/rad (length output / angle input)."""
-        at = {"r": u.Q(1, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
-        J = cxc.jac_pt_map(at, cxc.sph3d, cxc.cart3d)
-        # cart3d: (x=m, y=m, z=m); sph3d: (r=m, theta=rad, phi=rad)
-        # Column 1 (theta): m output / rad input → m/rad
-        for j in range(3):
-            assert J.unit[j, 1] == u.unit("m/rad"), (
-                f"J[{j}, θ] should be m/rad, got {J.unit[j, 1]}"
-            )
+        J = cxc.jac_pt_map(at, from_chart, to_chart)
+        out = cxc.pt_map(at, from_chart, to_chart)
+
+        for i, out_comp in enumerate(to_chart.components):
+            for j, in_comp in enumerate(from_chart.components):
+                expected = out[out_comp].unit / at[in_comp].unit
+                assert J.unit[i, j] == expected, (
+                    f"J[{out_comp}, {in_comp}]: expected {expected}, got {J.unit[i, j]}"
+                )
 
 
 # ===========================================================================
