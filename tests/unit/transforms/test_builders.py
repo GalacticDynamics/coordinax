@@ -2,6 +2,7 @@
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 import unxt as u
 
@@ -102,3 +103,10 @@ def test_uniform_translation_differentiable_in_rate():
 
     # x(tau) = 1 (initial) + rate_x * tau; d/drate_x = tau * (km->m factor)
     assert jnp.allclose(jax.grad(y)(3.0), 2000.0, atol=1e-6)
+
+
+def test_rotation_about_axis_zero_axis_raises():
+    """A zero-length axis must fail loudly, not normalize to a NaN `R`."""
+    b = cxfm.RotationAboutAxis(u.Q(1, "rad/s"), axis=jnp.zeros(3))
+    with pytest.raises(Exception, match="must be non-zero"):
+        b(u.Q(1.0, "s"))

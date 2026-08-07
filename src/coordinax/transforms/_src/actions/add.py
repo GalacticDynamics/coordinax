@@ -291,8 +291,17 @@ def _prolong_slotwise(
     /,
     *,
     usys: Any = None,
+    ladder: "tuple[AbstractAdd, int] | None" = None,
 ) -> dict:
-    """Prolong slot-wise: each jet slot transforms by the ladder rule alone."""
+    """Prolong slot-wise: each jet slot transforms by the ladder rule alone.
+
+    ``ladder`` is the `TimeDep` fast path: ``(op0, k)`` with ``op0 = op``
+    materialized at ``tau`` and ``k`` its ladder order, both already computed
+    by the caller. Passing them lets each slot skip re-entering the `TimeDep`
+    tangent dispatch, which would re-materialize (a whole ODE solve for a
+    curve-frame builder) and re-derive ``k`` per slot. Without it each slot
+    goes through the ordinary `act`, which is what a static offset needs.
+    """
     # The jet supplies the base point, so fibre kicks (k >= 1) work even
     # cross-chart: `act` pushes the offset through the chart Jacobian at
     # jet[0] when needed. The anchor is only passed for tangent slots:
@@ -301,18 +310,25 @@ def _prolong_slotwise(
     # bare KeyError would otherwise mask the same guard prolong_jet gives.
     if 0 not in jet and any(m != 0 for m in jet):
         raise TypeError(_MSG_JET_SLOT0_MISSING)
-    return {
-        m: cxfmapi.act(
-            op,
-            tau,
-            slot,
-            chart,
-            _slot_rep(m),
-            usys=usys,
-            **({"at": jet[0]} if m else {}),
-        )
-        for m, slot in jet.items()
-    }
+
+    out: dict = {}
+    for m, slot in jet.items():
+        rep = _slot_rep(m)
+        anchor = {"at": jet[0]} if m else {}
+        if ladder is None:
+            out[m] = cxfmapi.act(op, tau, slot, chart, rep, usys=usys, **anchor)
+            continue
+        op0, k = ladder
+        if m == 0:
+            # Point geometry: `TimeDep`'s point rule is materialize-and-
+            # delegate, so acting with `op0` is the same call it would make.
+            out[m] = cxfmapi.act(op0, tau, slot, chart, rep, usys=usys)
+        elif m < k:
+            out[m] = slot  # lower-order fibres are untouched by the offset
+        else:
+            op_m = _fibre_ladder_op(cast("TimeDep", op), op0, tau, m - k, rep)
+            out[m] = cxfmapi.act(op_m, tau, slot, chart, rep, usys=usys, **anchor)
+    return out
 
 
 # ============================================================================
@@ -396,11 +412,6 @@ def _reject_composed_fibre_offset(op0: AbstractCompositeTransform, /) -> None:
         raise TypeError(_MSG_COMPOSED_FIBRE_OFFSET.format(cls=type(child).__name__))
 
 
-def _fibre_offset_order(op: TimeDep, tau: Any, /) -> int | None:
-    r"""Ladder order $k$ of ``op``'s materialized fibre offset, else `None`."""
-    return _ladder_order(op.materialize(tau))
-
-
 def _fibre_ladder_op(
     op: TimeDep, op0: AbstractAdd, tau: Any, n: int, rep: Any, /
 ) -> AbstractAdd:
@@ -415,11 +426,18 @@ def _fibre_ladder_op(
     needs it anyway to compute the ladder order) — reused here instead of
     calling ``op.materialize(tau)`` a second time.
     """
+    if n == 0:
+        # `tau_derivative(..., n=0)` is defined as `f(tau)`, i.e. a second
+        # materialize at the same tau. Reuse the caller's `op0` instead: for a
+        # builder like `BishopBuilder` that call is a whole ODE solve.
+        delta = op0.delta
+    else:
 
-    def delta_at(t: Any, /) -> CDict:
-        return cast("AbstractAdd", op.materialize(t)).delta
+        def delta_at(t: Any, /) -> CDict:
+            return cast("AbstractAdd", op.materialize(t)).delta
 
-    delta = tau_derivative(delta_at, tau, n=n)
+        delta = tau_derivative(delta_at, tau, n=n)
+
     return replace(op0, delta=delta, semantic_kind=rep.semantic_kind)
 
 
@@ -512,9 +530,15 @@ def act_jet(
     generic jet chain differentiates the point action, which a fibre offset
     does not have.
     """
-    if tau is None or _fibre_offset_order(op, tau) is None:
+    # Materialize at most once for the whole jet: `op0` is both the routing
+    # predicate's input and the base every slot's ladder op is built from.
+    op0 = None if tau is None else op.materialize(tau)
+    k = None if op0 is None else _ladder_order(op0)
+    if k is None:
         return prolong_jet(op, tau, jet, chart, usys=usys)
-    return _prolong_slotwise(op, tau, jet, chart, usys=usys)
+    return _prolong_slotwise(
+        op, tau, jet, chart, usys=usys, ladder=(cast("AbstractAdd", op0), k)
+    )
 
 
 # ============================================================================

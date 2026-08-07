@@ -37,7 +37,11 @@ class _FnBuilder(eqx.Module):
 
 @final
 class _ConstBuilder(eqx.Module):
-    """A constant family: returns the same transform for every tau."""
+    """A constant family: returns the same transform for every tau.
+
+    Only reachable through an EXPLICIT ``TimeDep @ static`` by the caller.
+    `simplify` deliberately does not build one — see `_merge`.
+    """
 
     op: AbstractTransform
 
@@ -364,17 +368,12 @@ def _try_matmul(a: Any, b: Any, /) -> AbstractTransform | None:
 
 @plum.dispatch
 def _merge(a: TimeDep, b: TimeDep, /) -> AbstractTransform | None:
-    """Merge two adjacent `TimeDep` transforms (``a`` applied first)."""
-    return _try_matmul(a, b)
+    """Merge two adjacent `TimeDep` transforms (``a`` applied first).
 
-
-@plum.dispatch
-def _merge(a: TimeDep, b: AbstractTransform, /) -> AbstractTransform | None:
-    """Merge a `TimeDep` with a constant transform (``a`` applied first)."""
-    return _try_matmul(a, b)
-
-
-@plum.dispatch
-def _merge(a: AbstractTransform, b: TimeDep, /) -> AbstractTransform | None:
-    """Merge a constant transform with a `TimeDep` (``a`` applied first)."""
+    A `TimeDep` next to a *static* transform is deliberately NOT merged: the
+    `_ComposedBuilder` `|` fallback would then return, at every tau, a
+    `Composed` that may contain a fibre offset -- exactly the spelling
+    `add.py` rejects. `Composed` already represents that pair correctly, so
+    `simplify` leaves it alone.
+    """
     return _try_matmul(a, b)

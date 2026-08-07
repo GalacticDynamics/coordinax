@@ -160,6 +160,38 @@ class TestBishopTau0:
         bt = cxfc.BishopBuilder(_circle_curve, initial_normal=n0)
         np.testing.assert_allclose(bt.normal1(u.Q(0.0, "s")).value, n0, atol=1e-6)
 
+    def test_backwards_transport_is_a_rotation(self):
+        """Tau < tau_0 must integrate backwards, not return NaN.
+
+        `odeint` integrates forward only, so a decreasing t_span silently
+        yields NaN. With the default tau_0=0 that broke *every* negative tau.
+        """
+        R = cxfc.BishopBuilder(_helix_curve).rotation_matrix(u.Q(-1.5, "s"))
+        assert jnp.all(jnp.isfinite(R))
+        np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
+        np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
+
+    def test_supplied_initial_normal_is_orthonormalized(self):
+        """A non-orthonormal `initial_normal` must not corrupt the frame.
+
+        The transport ODE conserves any error in U1_0 forever, so a supplied
+        vector that is not unit and normal-plane makes R not a rotation.
+        """
+        n0 = jnp.array([0.0, 1.0, 0.0])  # neither unit-normal to T nor unique
+        bt = cxfc.BishopBuilder(_helix_curve, initial_normal=n0)
+        R = bt.rotation_matrix(u.Q(1.0, "s"))
+        np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
+        np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
+
+    def test_initial_normal_parallel_to_tangent_raises(self):
+        """A degenerate `initial_normal` fails loudly rather than as NaN."""
+        # Tangent of the straight line at tau_0 = 0 is +x.
+        bt = cxfc.BishopBuilder(
+            _straight_line, initial_normal=jnp.array([2.0, 0.0, 0.0])
+        )
+        with pytest.raises(Exception, match="parallel to the tangent"):
+            bt.rotation_matrix(u.Q(1.0, "s"))
+
 
 # ── Opaque units ─────────────────────────────────────────────────────
 

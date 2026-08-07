@@ -54,6 +54,34 @@ import unxt as u
 from .base import AbstractCurveFrameBuilder, AbstractParallelTransportFrame, FrameT
 from .frenetserret import _normalize
 
+_MSG_PARALLEL_NORMAL = (
+    "`initial_normal` is parallel to the tangent at tau_0; it has no component "
+    "in the normal plane. Pass a vector that is not along the tangent, or leave "
+    "it `None` to have one chosen automatically."
+)
+
+
+def _orthonormalize(v: Any, T0_val: Any) -> Any:
+    r"""Gram--Schmidt ``v`` against the unit tangent, then normalise.
+
+    Raises (via `equinox.error_if`, so it also fires under ``jit``) when ``v``
+    is parallel to ``T0_val`` and the rejection vanishes.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from coordinaxs.curveframes._src.bishop import _orthonormalize
+
+    >>> T0 = jnp.array([1.0, 0.0, 0.0])
+    >>> _orthonormalize(jnp.array([2.0, 3.0, 0.0]), T0)
+    Array([0., 1., 0.], dtype=float64)
+
+    """
+    w = v - jnp.dot(v, T0_val) * T0_val
+    norm = jnp.linalg.norm(w)
+    w = eqx.error_if(w, norm < 1e-12, _MSG_PARALLEL_NORMAL)
+    return w / norm
+
 
 def _auto_initial_normal(T0_val: Any) -> Any:
     r"""Choose an initial normal vector via Gram--Schmidt projection.
@@ -98,11 +126,7 @@ def _auto_initial_normal(T0_val: Any) -> Any:
     abs_T0 = jnp.abs(T0_val)
     k = jnp.argmin(abs_T0)
     e_k = jnp.zeros(3).at[k].set(1.0)
-
-    # Gram--Schmidt: subtract the component along T0, then normalise.
-    proj = jnp.dot(e_k, T0_val) * T0_val
-    u1 = e_k - proj
-    return u1 / jnp.linalg.norm(u1)
+    return _orthonormalize(e_k, T0_val)
 
 
 @final
@@ -211,10 +235,16 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         tau_unit = self.tau_unit
         tau_0 = cast("u.AbstractQuantity", self.tau_0)
 
+        T0_val = self._tangent_at(tau_0).value
         if self.initial_normal is not None:
-            U1_0_val = jnp.asarray(self.initial_normal, dtype=float)
+            # A supplied vector is NOT trusted to be unit or normal-plane: the
+            # transport ODE conserves any error in it forever, so R would not
+            # be a rotation.  Gram--Schmidt it exactly as the auto path does.
+            U1_0_val = _orthonormalize(
+                jnp.asarray(self.initial_normal, dtype=float), T0_val
+            )
         else:
-            U1_0_val = _auto_initial_normal(self._tangent_at(tau_0).value)
+            U1_0_val = _auto_initial_normal(T0_val)
 
         # Pre-compute dT/dtau as a callable.  This avoids nesting AD inside
         # the ODE right-hand-side, which would be both slower and harder
@@ -237,8 +267,15 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         needs_ode = jnp.abs(tau_val - tau_0_val) > 0.0
 
         def _solve(_: Any) -> Any:
-            t_span = jnp.array([tau_0_val, tau_val])
-            result = odeint(ode_rhs, U1_0_val, t_span)
+            # `odeint` integrates FORWARD only: a decreasing `t_span` yields
+            # NaN.  Integrate the reversed field over s in [0, |dtau|] instead,
+            # which is the same solution for either sign of dtau.
+            dtau = tau_val - tau_0_val
+            sgn = jnp.sign(dtau)
+            s_span = jnp.stack([jnp.zeros_like(dtau), jnp.abs(dtau)])
+            result = odeint(
+                lambda y, s: sgn * ode_rhs(y, tau_0_val + sgn * s), U1_0_val, s_span
+            )
             return result[-1]  # solution at tau
 
         def _identity(_: Any) -> Any:
@@ -281,7 +318,32 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         return jnp.stack([T_val, U1_val, U2_val])
 
     # ---------------------------------------------------------------
-    # Convenience accessors (location, tangent inherited from the ABC)
+    # Convenience accessors (location inherited from the ABC)
+
+    def tangent(self, tau: Any, /) -> u.Q:
+        r"""Return the unit tangent vector $\mathbf{T}(\tau)$ (row 0 of R).
+
+        Overrides the base implementation, which would take row 0 of the full
+        rotation matrix — and so pay for the parallel-transport ODE solve that
+        only $\mathbf{U}_1$ needs. The tangent is just the normalised first
+        derivative; the value is identical.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        >>> def circle(tau):
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
+        ...                           jnp.zeros_like(t)]), "m")
+
+        >>> cxfc.BishopBuilder(circle).tangent(u.Q(0.0, "s"))
+        Q([-0.,  1.,  0.], '')
+
+        """
+        return u.Q(self._tangent_at(self._param(tau)).value, "")
 
     def normal1(self, tau: Any, /) -> u.Q:
         r"""First parallel-transported normal $\mathbf{U}_1(\tau)$ (row 1 of R).

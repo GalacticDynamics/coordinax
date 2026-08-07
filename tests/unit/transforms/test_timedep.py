@@ -431,3 +431,28 @@ def test_simplify_of_composed_translations_preserves_action():
         want = cxfm.act(pipe, tau, origin, cxc.cart3d, cxr.point)["x"]
         assert jnp.allclose(got.ustrip("km"), want.ustrip("km"))
         assert jnp.allclose(got.ustrip("km"), 3.0 * tau.ustrip("s"))
+
+
+def test_simplify_does_not_fold_a_static_neighbour_into_a_timedep():
+    """`simplify` must not turn a working pipeline into one that raises.
+
+    Folding a static fibre offset into a `_ComposedBuilder` makes the family
+    materialize to a `Composed` containing that offset -- exactly the spelling
+    `add.py` rejects. `Composed` already represents the pair correctly.
+    """
+    kick = cxfm.Translate(
+        {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
+        chart=cxc.cart3d,
+        semantic_kind=cxr.vel,
+    )
+    spin = cxfm.TimeDep(
+        cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
+    )
+    pipe = cxfm.Composed((kick, spin))
+    vel = {"x": u.Q(1.0, "km/s"), "y": u.Q(1.0, "km/s"), "z": u.Q(0.0, "km/s")}
+
+    def vel_x(op):
+        out = cxfm.act(op, u.Q(1.0, "s"), vel, cxc.cart3d, cxr.coord_vel, at=_AT)
+        return out["x"].ustrip("km/s")
+
+    assert jnp.allclose(vel_x(cxfm.simplify(pipe)), vel_x(pipe))

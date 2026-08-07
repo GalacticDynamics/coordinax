@@ -40,7 +40,8 @@ def _normalize(v: Any) -> Any:
     Parameters
     ----------
     v : array-like or Quantity
-        Input vector (any shape with last axis as the vector dimension).
+        A single vector (1-D).  The norm is taken over *all* axes, so batched
+        input is NOT supported; every caller here passes one 3-vector.
 
     Returns
     -------
@@ -176,6 +177,31 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         # ``Rotate`` expects a bare numerical array, not a ``Quantity``.
         return qnp.stack([t_vec, n_vec, b_vec]).value  # ty: ignore[unresolved-attribute]
+
+    def tangent(self, tau: Any, /) -> u.Q:
+        r"""Return the unit tangent vector $\mathbf{T}(\tau)$ (row 0 of R).
+
+        Overrides the base implementation, which would take row 0 of the full
+        rotation matrix — and so pay for $\boldsymbol{\gamma}''$, which only
+        $\mathbf{N}$ and $\mathbf{B}$ need. The value is identical.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        >>> def circle(tau):
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
+        ...                           jnp.zeros_like(t)]), "m")
+
+        >>> cxfc.FrenetSerretBuilder(circle).tangent(u.Q(0.0, "s"))
+        Q([-0.,  1.,  0.], '')
+
+        """
+        dcurve = u.experimental.jacfwd(self.curve, units=(self.tau_unit,))
+        return u.Q(_normalize(dcurve(self._param(tau).astype(float))).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
         r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).
