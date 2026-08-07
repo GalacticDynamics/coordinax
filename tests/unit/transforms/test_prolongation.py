@@ -85,32 +85,38 @@ class TestTauDerivative:
 # is_time_dependent
 
 
+def _moving_translate() -> cxfm.Parametric:
+    """A `Parametric` family wrapping a time-dependent `Translate`."""
+    return cxfm.Parametric.from_(
+        lambda t: cxfm.Translate(q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d)
+    )
+
+
 class TestIsTimeDependent:
-    """Unit tests for `is_time_dependent`."""
+    """Unit tests for `is_time_dependent`.
+
+    `is_time_dependent` is a declared trait (`AbstractTransform.is_time_dependent`),
+    not a leaf-callable scan: only `Parametric` (and anything composed from it,
+    or `Boost`, whose point action is intrinsically tau-dependent) reports
+    `True`.
+    """
 
     def test_static(self):
         assert not cxfm.is_time_dependent(cxfm.Translate.from_([1, 2, 3], "km"))
         assert not cxfm.is_time_dependent(cxfm.Identity())
         assert not cxfm.is_time_dependent(cxfm.Scale.from_factors([1.0, 2.0, 3.0]))
 
-    def test_callable_delta(self):
-        op = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
-        assert cxfm.is_time_dependent(op)
+    def test_parametric(self):
+        assert cxfm.is_time_dependent(_moving_translate())
 
     def test_composed(self):
         static = cxfm.Translate.from_([1, 2, 3], "km")
-        moving = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = _moving_translate()
         assert cxfm.is_time_dependent(static | moving)
         assert not cxfm.is_time_dependent(static | cxfm.Identity())
 
     def test_inverse_of_time_dependent(self):
-        moving = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = _moving_translate()
         assert cxfm.is_time_dependent(moving.inverse)
 
 
@@ -828,8 +834,8 @@ class TestNonCartesianOpChart:
         assert jnp.allclose(out["x"].value, 2.0)
 
     def test_is_time_dependent_non_transform_raises(self):
-        """Non-dataclass inputs get a clear TypeError, not a dataclasses one."""
-        with pytest.raises(TypeError, match="expects a transform"):
+        """Non-`AbstractTransform` inputs get a clear, informative `TypeError`."""
+        with pytest.raises(TypeError, match="expects an AbstractTransform"):
             cxfm.is_time_dependent(lambda t: t)
 
     def test_prolong_jet_mismatched_slot_keys_raises(self):

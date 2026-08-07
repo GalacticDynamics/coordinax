@@ -40,6 +40,7 @@ __all__: tuple[str, ...] = (
     "Reflect",
     "Scale",
     "Shear",
+    "Parametric",
     "identity",
     # Sub-namespaces
     "groups",
@@ -53,6 +54,7 @@ with install_import_hook("coordinax.transforms"):
         Boost,
         Composed,
         Identity,
+        Parametric,
         Reflect,
         Rotate,
         Scale,

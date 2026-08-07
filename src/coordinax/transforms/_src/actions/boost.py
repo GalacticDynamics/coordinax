@@ -97,6 +97,23 @@ class Boost(AbstractAdd):
         del cls
         return frozenset((AffineGroup, DiffeomorphismGroup))
 
+    @property
+    def is_time_dependent(self) -> bool:
+        """Boost's point action is ``delta * tau`` — intrinsically tau-dependent.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.charts as cxc
+        >>> import coordinax.transforms as cxfm
+
+        >>> dv = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+        >>> cxfm.Boost(dv, chart=cxc.cart3d).is_time_dependent
+        True
+
+        """
+        return True
+
 
 def _boost_displacement(op: Boost, /) -> Any:
     r"""Return the boost's displacement function $g(\tau) = \Delta v(\tau)\tau$."""
@@ -225,12 +242,9 @@ def act(
 ) -> CDict:
     """Boost tangent action (geometry-form): defer to the 5-arg ``act``.
 
-    The generic geometry-form funnel routes on ``is_time_dependent``, which is
-    ``False`` for a Boost with constant ``delta`` even though the boost's point
-    action ``x + dv*tau`` is tau-dependent; it would misroute to ``pushforward``
-    and drop the kinematic velocity shift. Boost's 5-arg ``act`` implements the
-    correct kinematic prolongation, so the geometry-form delegates to it,
-    keeping the two ``act`` forms identical by construction.
+    Boost's 5-arg ``act`` implements the kinematic prolongation directly (its
+    closed forms avoid the general jet machinery); the geometry-form
+    delegates to it so the two ``act`` forms are identical by construction.
     """
     del geom
     return cast("CDict", cxfmapi.act(op, tau, x, chart, rep, usys=usys, **kw))

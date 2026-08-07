@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Final, TypeVar, cast
 
 import equinox as eqx
 import jax.numpy as jnp
-import jax.tree as jtu
 import optype as op
 import plum
 import wadler_lindig as wl
@@ -71,6 +70,25 @@ class AbstractTransform(eqx.Module):
     def inverse(self) -> "AbstractTransform":
         """The inverse of the operator."""
         raise NotImplementedError  # pragma: no cover
+
+    @property
+    def is_time_dependent(self) -> bool:
+        """Whether the point action depends on the time parameter tau.
+
+        A declared trait, not a structural scan: subclasses whose point
+        action varies with tau (``Parametric``, ``Boost``) override this to
+        `True`; composites (``Composed``) override it to the disjunction of
+        their components. The default is `False`.
+
+        Examples
+        --------
+        >>> import coordinax.transforms as cxfm
+
+        >>> cxfm.Translate.from_([1, 2, 3], "km").is_time_dependent
+        False
+
+        """
+        return False
 
     def simplify(self) -> "AbstractTransform":
         """Simplify the operator.
@@ -324,63 +342,59 @@ OpT = TypeVar("OpT", bound=_DataclassBase)
 
 
 def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
-    r"""Evaluate time-dependent parameters of an operator at a given time.
+    r"""Evaluate the parametric parts of an operator at a given time.
 
-    This function materializes an operator by evaluating all callable
-    (time-dependent) parameters at the specified time ``tau``, returning
-    a new operator instance of the same type with purely numeric parameters.
+    This function materializes an operator by evaluating every `Parametric`
+    part of it — recursively, through `Composed` — at the specified time
+    ``tau``, returning a new operator with no remaining `Parametric` parts.
 
-    Mathematically, if an operator $\mathrm{Op}$ has parameters that depend on
+    Mathematically, if an operator $\mathrm{Op}$ has parts that depend on
     an affine parameter $\tau$, then:
 
     $$
     \mathrm{materialize\_transform}(\mathrm{Op}, \tau) \to \mathrm{Op}_\tau
     $$
 
-    where $\mathrm{Op}_\tau$ is the operator with all time-dependent parameters
+    where $\mathrm{Op}_\tau$ is the operator with all `Parametric` parts
     evaluated at $\tau$.
 
     Parameters
     ----------
     op : AbstractTransform
-        The operator to evaluate. May contain time-dependent parameters
-        (callables that take ``tau`` as argument).
+        The operator to evaluate. May contain `Parametric` parts, either
+        directly or as `Composed` components.
     tau : Any
-        The time/affine parameter at which to evaluate time-dependent
-        parameters. Typically a ``unxt.Quantity`` with time units.
+        The time/affine parameter at which to evaluate `Parametric` parts.
+        Typically a ``unxt.Quantity`` with time units.
 
     Returns
     -------
     AbstractTransform
-        A new operator of the same type with all time-dependent parameters
-        evaluated at ``tau``. If the operator has no time-dependent parameters,
-        returns a copy with equivalent parameters.
+        The operator with every `Parametric` part evaluated at ``tau``. An
+        operator with no `Parametric` parts is returned unchanged (the same
+        object).
 
     Notes
     -----
     This function is:
 
     - **Pure**: No side effects, safe for JAX tracing
-    - **Structure-preserving**: Returns same operator type
-    - **Pytree-compatible**: Uses ``equinox.partition`` / ``equinox.combine``
-
-    The implementation:
-
-    1. Partitions operator fields into callable (dynamic) and static
-    2. Evaluates dynamic fields at ``tau`` via ``jax.tree_util.tree_map``
-    3. Recombines into a new operator instance
+    - **Recursive**: Descends into `Composed` so nested `Parametric` parts
+      are also evaluated
 
     Examples
     --------
+    >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
 
     **Time-dependent operator:**
 
-    >>> op = cxfm.Translate(lambda t: cx.cdict(u.Q([t.ustrip("s"), 0, 0], "km")),
-    ...                    chart=cxc.cart3d)
+    >>> def build(tau):
+    ...     v = jnp.array([1.0, 0.0, 0.0]) * tau.ustrip("s")
+    ...     return cxfm.Translate.from_(v, "km")
+
+    >>> op = cxfm.Parametric.from_(build)
     >>> tau = u.Q(5.0, "s")
     >>> op_eval = cxfm.materialize_transform(op, tau)
     >>> op_eval.delta["x"]
@@ -388,10 +402,9 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
 
     **Static operator (no change):**
 
-    >>> op_static = cxfm.Translate(cx.cdict(u.Q([1, 2, 3], "km")), chart=cxc.cart3d)
-    >>> op_eval_static = cxfm.materialize_transform(op_static, tau)
-    >>> op_eval_static.delta["x"]
-    Q(1, 'km')
+    >>> op_static = cxfm.Translate.from_([1, 2, 3], "km")
+    >>> cxfm.materialize_transform(op_static, tau) is op_static
+    True
 
     **Identity operator:**
 
@@ -404,43 +417,27 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     act : Apply an operator to an input (calls ``materialize_transform`` internally)
 
     """
-    # Get all parameter values from the operator
-    # TODO: a more general implementation
-    params = {field.name: getattr(op, field.name) for field in dataclasses.fields(op)}
+    # Local imports to avoid a cycle (parametric.py imports base.py).
+    from .composite import AbstractCompositeTransform  # noqa: PLC0415
+    from .parametric import Parametric  # noqa: PLC0415
 
-    # Partition into callable (tau-dependent) and static parameters
-    dynamic, static = eqx.partition(params, filter_spec=callable)
-
-    # Materializing time-dependent parameters requires a time. Guarding here
-    # (the shared choke point) gives every operator an informative error
-    # instead of an arbitrary crash from inside the user's callable at
-    # p(None). Static operators have no dynamic leaves, so tau=None is fine.
-    if tau is None and any(leaf is not None for leaf in jtu.leaves(dynamic)):
-        msg = (
-            f"materialize_transform({type(op).__name__}, ...): the operator "
-            "has time-dependent (callable) parameters, which require a time "
-            "parameter; got tau=None."
-        )
-        raise TypeError(msg)
-
-    # Evaluate the dynamic parameters at the given tau
-    eval_dynamic = jtu.map(lambda p: p(tau), dynamic)
-
-    # Recombine the static and evaluated dynamic parameters
-    evaluated_params = eqx.combine(static, eval_dynamic)
-
-    # Create a new operator of the same type with the evaluated parameters
-    return type(op)(**evaluated_params)
+    if isinstance(op, Parametric):
+        inner = op.materialize(tau)  # raises TypeError on tau=None
+        return cast("OpT", materialize_transform(inner, tau))
+    if isinstance(op, AbstractCompositeTransform):
+        new = tuple(materialize_transform(t, tau) for t in op.transforms)
+        return cast("OpT", dataclasses.replace(op, transforms=new))
+    return op
 
 
 def is_time_dependent(op: Any, /) -> bool:
-    r"""Whether any parameter of the operator is a callable of ``tau``.
+    r"""Whether the operator's point action depends on the time parameter tau.
 
-    This is a static (trace-time) check mirroring the partition rule of
-    `materialize_transform`: an operator is time-dependent iff any leaf of its
-    dataclass-field values is callable. Composite operators (e.g. ``Composed``)
-    are time-dependent iff any of their component operators is, which follows
-    from the same rule since the components are pytree children.
+    This is a declared trait — `AbstractTransform.is_time_dependent` — not a
+    structural scan: it delegates to the operator's own property, which
+    subclasses override where their point action is intrinsically
+    tau-dependent (`Parametric`, `Boost`) or is a disjunction of their
+    components' (`Composed`).
 
     Parameters
     ----------
@@ -454,17 +451,14 @@ def is_time_dependent(op: Any, /) -> bool:
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-    >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
 
     >>> static = cxfm.Translate.from_([1, 2, 3], "km")
     >>> cxfm.is_time_dependent(static)
     False
 
-    >>> moving = cxfm.Translate(
-    ...     lambda t: cx.cdict(u.Q([t.ustrip("s"), 0, 0], "km")), chart=cxc.cart3d
+    >>> moving = cxfm.Parametric.from_(
+    ...     lambda t: cxfm.Translate.from_([1, 2, 3], "km")
     ... )
     >>> cxfm.is_time_dependent(moving)
     True
@@ -477,15 +471,7 @@ def is_time_dependent(op: Any, /) -> bool:
     False
 
     """
-    if not dataclasses.is_dataclass(op):
-        msg = (
-            "is_time_dependent expects a transform (a dataclass instance); "
-            f"got {type(op).__name__!r}."
-        )
+    if not isinstance(op, AbstractTransform):
+        msg = f"is_time_dependent expects an AbstractTransform, got {type(op)}"
         raise TypeError(msg)
-
-    # NOTE: no `is_leaf=callable` — operators themselves define __call__, and
-    # descending into composite operators as pytrees is exactly what makes
-    # this rule match `materialize_transform`'s eqx.partition(callable).
-    params = [getattr(op, field.name) for field in dataclasses.fields(op)]
-    return any(callable(leaf) for leaf in jtu.leaves(params))
+    return op.is_time_dependent

@@ -123,9 +123,26 @@ class TestBoostOnVelocity:
     def test_geom_form_matches_5arg_act(self, boost, vel_cdict):
         """6-arg geometry-form ``act`` must equal the 5-arg ``act``.
 
-        The generic geom-form funnel routes on ``is_time_dependent`` (False for
-        a static boost), which would misroute to ``pushforward`` and drop the
-        velocity shift. The two ``act`` forms must agree.
+        ``Boost.is_time_dependent`` is `True` even for a constant ``delta``
+        (the point action ``x + dv*tau`` is intrinsically tau-dependent). That
+        makes the *generic* geom-form funnel's routing decision correct in
+        principle, but the routing itself is not exercised by this test:
+        Boost's own 6-arg dispatch is more specific than the generic one and
+        always wins, unconditionally delegating to the 5-arg ``act`` below —
+        so this only pins that the two Boost-specific forms agree with each
+        other, not that the generic funnel now does the right thing with a
+        Boost.
+
+        TODO(#537): once `Boost._as_translate` stops synthesizing a bare
+        callable (Task 6: it returns `Parametric(UniformTranslation(dv))`
+        instead), add a test that routes a constant-``delta`` Boost's
+        velocity data through the *generic* funnel (bypassing this 6-arg
+        override, e.g. by calling the base `act(op: AbstractTransform, ...)`
+        dispatch directly) and asserts the result gains ``dv`` — pinning the
+        trait's routing *consequence*, not just its boolean value. Today that
+        call raises `ValueError` (`Translate.materialize` no longer
+        understands a bare closure, per this task's `materialize_transform`
+        rewrite), so the assertion cannot be written yet.
         """
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
         tau = jnp.array(0.0)
