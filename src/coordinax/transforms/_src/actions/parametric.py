@@ -48,13 +48,22 @@ class _ConstBuilder(eqx.Module):
 
 @final
 class _ComposedBuilder(eqx.Module):
-    """Pointwise-in-tau ``@`` of two families: ``(a @ b)(tau) = a(tau) @ b(tau)``."""
+    """Pointwise-in-tau composition: ``(a @ b)(tau) = a(tau) @ b(tau)``.
+
+    Only some transforms (e.g. `Rotate`) implement ``@``; everything else
+    composes with ``|``, which has the same order semantics. Falling back is
+    what keeps `simplify` semantics-preserving: it merges families with ``@``
+    without knowing whether the *materialized* values support it, so without
+    this the simplified pipeline would raise at materialize time.
+    """
 
     a: Callable[[Any], AbstractTransform]
     b: Callable[[Any], AbstractTransform]
 
     def __call__(self, tau: Any, /) -> AbstractTransform:
-        return self.a(tau) @ self.b(tau)  # ty: ignore[unsupported-operator]
+        a, b = self.a(tau), self.b(tau)
+        out = _try_matmul(a, b)
+        return a | b if out is None else out
 
 
 @final
@@ -111,7 +120,7 @@ class Parametric(AbstractTransform):
 
     @property
     def inverse(self) -> "Parametric":
-        """The pointwise inverse of the family: ``inv(tau) = builder(tau).inverse``.
+        """The pointwise inverse family, ``inv(tau) = builder(tau).inverse``.
 
         Examples
         --------

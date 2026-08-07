@@ -88,6 +88,33 @@ def test_td_translate_jet_generic(benchmark, jet):
     )
 
 
+def _moving_velocity_kick():
+    """A `Parametric` fibre offset (velocity kick growing linearly in tau).
+
+    Ladder order k=1 (identity point action): routes through `add.py`'s
+    ladder rule, not the generic tangent funnel. No other benchmark here
+    exercises that path.
+    """
+    return cxfm.Parametric.from_(
+        lambda t: cxfm.Translate(
+            {"x": u.Q(5.0, "km/s2") * t, "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+
+
+def test_td_fibre_offset_ladder_acc(benchmark):
+    op = _moving_velocity_kick()
+    a = q3(1.0, 1.0, 1.0, "km/s2")
+    _bench_jitted(
+        benchmark,
+        lambda tau, a_: cxfm.act(op, tau, a_, cxc.cart3d, cxr.coord_acc),
+        u.Q(2.0, "s"),
+        a,
+    )
+
+
 def test_td_rotate_jet_generic(benchmark):
     op = cxfm.Parametric(
         cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=jnp.asarray([0.0, 0.0, 1.0]))

@@ -4743,19 +4743,20 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `matrix : CDict` — the rotation matrix $Q$. Always constant; wrap in `Parametric` for a time-dependent path $R(\tau)$ (see [`Parametric`](#software-spec-transforms-parametric)).
-    - `chart : AbstractChart` — the chart in which `matrix` is expressed (static).
+    - `R : Array[N, N]` — the rotation matrix $R$. Always constant; wrap in `Parametric` for a time-dependent path $R(\tau)$ (see [`Parametric`](#software-spec-transforms-parametric)).
+    `R` is the only field: a `Rotate` is a bare matrix, with no chart of its
+    own. It acts on the Cartesian components of whatever chart the data is in.
 
     **Inverse:**
 
     ```text
-    rotate.inverse == Rotate(matrix.T, chart)
+    rotate.inverse == Rotate(R.T)
     ```
 
-    **Composition:** Two `Rotate` instances with the same chart combine by matrix multiplication of their `matrix` fields:
+    **Composition:** Two `Rotate` instances combine by matrix multiplication, via `@`:
 
     ```text
-    Rotate(Q1) + Rotate(Q2) == Rotate(Q2 @ Q1)
+    Rotate(R1) @ Rotate(R2) == Rotate(R2 @ R1)
     ```
 
 !!! info `Reflect`
@@ -4790,20 +4791,20 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `matrix : CDict` — the reflection matrix $Q$. Always constant; wrap in `Parametric` for time dependence (see [`Parametric`](#software-spec-transforms-parametric)).
-    - `chart : AbstractChart` — the chart in which `matrix` is expressed (static).
+    - `H : Array[N, N]` — the Householder reflection matrix $H_n$. Always constant; wrap in `Parametric` for time dependence (see [`Parametric`](#software-spec-transforms-parametric)).
+    `H` is the only field: a `Reflect` is a bare matrix, with no chart of its
+    own. It acts on the Cartesian components of whatever chart the data is in.
 
-    **Inverse:**
-
-    ```text
-    reflect.inverse == Reflect(matrix.T, chart)
-    ```
-
-    **Composition:** Two `Reflect` instances with the same chart combine by matrix multiplication of their `matrix` fields:
+    **Inverse:** a reflection is its own inverse ($H^2 = I$):
 
     ```text
-    Reflect(Q1) + Reflect(Q2) == Reflect(Q2 @ Q1)
+    reflect.inverse is reflect
     ```
+
+    **Composition:** `Reflect` implements no composition operator. Two
+    reflections compose to a *rotation* (determinant $(-1)^2 = +1$), not a
+    reflection, so there is no closed `Reflect @ Reflect`; pipe them with `|`
+    instead.
 
 (software-spec-transforms-scaling)=
 

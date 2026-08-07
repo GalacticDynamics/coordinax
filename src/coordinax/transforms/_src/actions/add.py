@@ -23,6 +23,7 @@ import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .composed import Composed
+from .composite import AbstractCompositeTransform
 from .custom_types import CDict
 from .identity import Identity, identity
 from .parametric import Parametric
@@ -42,6 +43,17 @@ _MSG_CALLABLE_DELTA = (
     "Parametric(UniformTranslation(rate, chart=...)) for a uniform drift, or "
     "Parametric.from_(lambda tau: {cls}(delta(tau), chart=...)) for an "
     "arbitrary one."
+)
+
+
+_MSG_COMPOSED_FIBRE_OFFSET = (
+    "a Parametric builder returned a composite containing a fibre offset "
+    "({cls} with semantic_kind of order >= 1). That spelling is not "
+    "supported: the fibre-offset ladder rule can only see an offset that is "
+    "the whole materialized transform, so the offset would be silently "
+    "dropped on tangent data. Put the Parametric INSIDE the composition "
+    "instead -- e.g. `static_part | Parametric(kick_builder)` rather than "
+    "`Parametric(lambda tau: static_part | kick(tau))`."
 )
 
 
@@ -331,7 +343,7 @@ def _generic_tangent_act() -> Any:
     """
     return cxfmapi.act.invoke(
         AbstractTransform,
-        Any,
+        object,  # the engine registers `tau: Any`; `invoke` wants a runtime type
         CDict,
         cxc.AbstractChart,
         cxr.TangentGeometry,
@@ -346,11 +358,42 @@ def _ladder_order(op0: Any, /) -> int | None:
     fibre offset (the additive family's routing predicate): an `AbstractAdd`
     whose ``semantic_kind`` order is $k \\geq 1$. Order-0 additives are real
     translations with a non-identity point action and are NOT fibre offsets.
+
+    A composite hiding a fibre offset is REJECTED rather than silently routed
+    to the funnel; see `_reject_composed_fibre_offset`.
     """
+    if isinstance(op0, AbstractCompositeTransform):
+        _reject_composed_fibre_offset(op0)
+        return None
     if not isinstance(op0, AbstractAdd):
+        return None
+    # `Boost` is deliberately excluded: its `delta` is a velocity, but its
+    # point action is `delta * tau`, NOT the identity — the funnel captures it
+    # by differentiation and MUST keep doing so. It falls through today only
+    # because it has no `semantic_kind` field; this check makes that
+    # intentional, so adding one for symmetry cannot silently reroute `Boost`
+    # onto the ladder path and lose its point action.
+    from .boost import Boost  # noqa: PLC0415  (boost.py imports AbstractAdd)
+
+    if isinstance(op0, Boost):
         return None
     k = getattr(op0, "semantic_kind", cxr.dpl).order
     return k if k >= 1 else None
+
+
+def _reject_composed_fibre_offset(op0: AbstractCompositeTransform, /) -> None:
+    """Raise if a materialized composite contains a fibre offset.
+
+    The fibre-offset carve-out below can only recognise a fibre offset as the
+    *whole* materialized value. A builder that returns ``Translate(shift) |
+    Translate(kick, semantic_kind=vel)`` hides one inside a composite, where
+    the generic funnel — blind to identity-point-action offsets by
+    construction — would silently drop it. Fail loudly instead.
+    """
+    for child in op0.transforms:
+        if _ladder_order(child) is None:
+            continue
+        raise TypeError(_MSG_COMPOSED_FIBRE_OFFSET.format(cls=type(child).__name__))
 
 
 def _fibre_offset_order(op: Parametric, tau: Any, /) -> int | None:

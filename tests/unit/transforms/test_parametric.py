@@ -338,3 +338,96 @@ def test_gamma_of_tau_velocity_transport():
     # frame origin moves along circle: at gamma=0, d/dt (r cos, r sin) = (0, r*rate)
     assert jnp.allclose(out["y"].ustrip("m/s"), 1.0, atol=1e-12)
     assert jnp.allclose(out["x"].ustrip("m/s"), 0.0, atol=1e-12)
+
+
+# ============================================================================
+# Regression: a builder returning a Composed that hides a fibre offset
+
+
+def _fibre_kick(t):
+    """A velocity kick growing at 5 km/s2 -- a ladder-order-1 fibre offset."""
+    return cxfm.Translate(
+        {"x": u.Q(5.0, "km/s2") * t, "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
+        chart=cxc.cart3d,
+        semantic_kind=cxr.vel,
+    )
+
+
+_ACC = {"x": u.Q(1.0, "km/s2"), "y": u.Q(1.0, "km/s2"), "z": u.Q(1.0, "km/s2")}
+_AT = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+_AT_VEL = {"x": u.Q(0.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+
+
+def _acc_x(op):
+    out = cxfm.act(
+        op, u.Q(2.0, "s"), _ACC, cxc.cart3d, cxr.coord_acc, at=_AT, at_vel=_AT_VEL
+    )
+    return out["x"].ustrip("km/s2")
+
+
+def test_supported_fibre_kick_spellings():
+    """The two supported spellings both pick up the kick's 5 km/s2 rate."""
+    bare = cxfm.Parametric.from_(_fibre_kick)
+    assert jnp.allclose(_acc_x(bare), 6.0)
+
+    shift = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+    assert jnp.allclose(_acc_x(shift | bare), 6.0)
+
+
+def test_builder_returning_composed_fibre_offset_raises():
+    """A fibre offset hidden inside a builder-returned `Composed` must be loud.
+
+    The ladder carve-out only recognises an offset that is the *whole*
+    materialized transform; inside a composite the generic funnel is blind to
+    it (identity point action) and would silently return acc unchanged. The
+    fix must raise, not quietly give 1.0.
+    """
+    shift = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+    op = cxfm.Parametric.from_(lambda t: shift | _fibre_kick(t))
+    with pytest.raises(TypeError, match="composite containing a fibre offset"):
+        _acc_x(op)
+
+
+def test_builder_returning_composed_fibre_offset_raises_on_jet():
+    """Same guard on the jet path (the `Coordinate`-bundle route)."""
+    shift = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+    op = cxfm.Parametric.from_(lambda t: shift | _fibre_kick(t))
+    jet = {0: _AT, 1: _AT_VEL, 2: _ACC}
+    with pytest.raises(TypeError, match="composite containing a fibre offset"):
+        cxfm.act_jet(op, u.Q(2.0, "s"), jet, cxc.cart3d)
+
+
+def test_builder_returning_composed_without_fibre_offset_is_fine():
+    """The guard fires only for fibre offsets: a point-acting Composed passes."""
+    shift = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+    op = cxfm.Parametric.from_(lambda t: shift | RotZ(OMEGA)(t))
+    assert jnp.isfinite(_acc_x(op))
+
+
+# ============================================================================
+# Regression: simplify must preserve semantics for non-`@` transforms
+
+
+def _drift(vx):
+    return cxfm.Parametric(
+        cxfm.UniformTranslation(
+            {"x": u.Q(vx, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
+            chart=cxc.cart3d,
+        )
+    )
+
+
+def test_simplify_of_composed_translations_preserves_action():
+    """`simplify` merges families with `@`; `Translate` has no `@`.
+
+    Without the `|` fallback in the composed builder this raises
+    ``TypeError: unsupported operand type(s) for @`` at materialize time.
+    """
+    pipe = _drift(1.0) | _drift(2.0)
+    simplified = cxfm.simplify(pipe)
+    origin = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+    for tau in (u.Q(0.0, "s"), u.Q(2.0, "s"), u.Q(-3.5, "s")):
+        got = cxfm.act(simplified, tau, origin, cxc.cart3d, cxr.point)["x"]
+        want = cxfm.act(pipe, tau, origin, cxc.cart3d, cxr.point)["x"]
+        assert jnp.allclose(got.ustrip("km"), want.ustrip("km"))
+        assert jnp.allclose(got.ustrip("km"), 3.0 * tau.ustrip("s"))

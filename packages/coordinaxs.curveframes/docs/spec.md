@@ -297,7 +297,7 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 | `BishopBuilder` | `@final` | Builder for the $(\mathbf{T},\mathbf{U}_1,\mathbf{U}_2)$ triad |
 | `BishopFrame` | `@final` | Bishop (rotation-minimising) curve frame |
 
-Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one of these builders — the same single mechanism for time dependence used everywhere else in `coordinax.transforms` (see [Parametric](../../../docs/spec.md#software-spec-transforms-parametric) in the root spec). `AbstractCurveFrameBuilder` is an `equinox.Module`, so every field is a genuine pytree leaf: differentiable and `vmap`-able, including the curve's own parameters when the curve is itself an `equinox.Module`.
+Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one of these builders — the same single mechanism for time dependence used everywhere else in `coordinax.transforms` (see {ref}`Parametric <software-spec-transforms-parametric>` in the root spec). `AbstractCurveFrameBuilder` is an `equinox.Module`, so every field is a genuine pytree leaf: differentiable and `vmap`-able, including the curve's own parameters when the curve is itself an `equinox.Module`.
 
 (curveframes-sw-abstract-curve-frame)=
 
@@ -355,7 +355,7 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
 
     JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `gamma` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `gamma`); use `eqx.filter_jit` in that case.
 
-    `act` dispatches on `Parametric(FrenetSerretBuilder(...))`, not on the builder directly — see [`Parametric`](../../../docs/spec.md#software-spec-transforms-parametric) in the root spec. `act(Parametric(F), tau, x)` materialises `F(tau)` and applies the resulting `Composed` transform.
+    `act` dispatches on `Parametric(FrenetSerretBuilder(...))`, not on the builder directly — see {ref}`Parametric <software-spec-transforms-parametric>` in the root spec. `act(Parametric(F), tau, x)` materialises `F(tau)` and applies the resulting `Composed` transform.
 
 (curveframes-sw-frenet-frame)=
 
