@@ -104,6 +104,24 @@ def get_all_subclasses(
     (optionally) filtering the results in {class}`coordinax`.  The return value
     is cached via {func}`functools.cache`.
 
+    .. warning::
+
+        The cache is keyed on the arguments only, while ``__subclasses__()`` is
+        mutable, so **the result depends on when the cache was first warmed**.
+        A subclass defined after that first call is absent until
+        `cache_clear`; one defined before it is present. Measured, for a
+        subclass declared at runtime::
+
+            warmed before it exists : 3 -> 3   (absent)
+            warmed after it exists  : 4        (present)
+
+        In a test session that ordering decides whether classes declared *by
+        tests* — fakes and stubs — are handed out by the strategies as though
+        they were library types. Do not "fix" this by dropping the cache: that
+        makes such classes visible always, which is strictly worse. Pinning the
+        candidate set at import, as ``bases``/``geoms``/``semantics`` do, is
+        what actually keeps them out.
+
     Parameters
     ----------
     base_class : type
