@@ -126,8 +126,8 @@ def atlases(
       dimensionality. The ``required_chart_classes`` argument pins specific
       chart types into the atlas.
     - **``CartesianProductAtlas``**: returns a ``CartesianProductAtlas``
-      built from two factor atlases whose dimensionalities sum to ``ndim``
-      (at least 2). ``CartesianProductAtlas`` is excluded from the factors.
+      built from 1-5 factor atlases whose dimensionalities sum to ``ndim``.
+      ``CartesianProductAtlas`` is excluded from the factors.
     - **``NoAtlas``**: returns ``NoAtlas()`` (always 0-D). By name only.
     - **``MinkowskiAtlas``**: returns ``MinkowskiAtlas()`` (always 4-D). By
       name only.
@@ -618,11 +618,11 @@ def atlases(
 ) -> Any:
     """Draw a ``CartesianProductAtlas`` with 1-5 non-product factor atlases.
 
-    The number of factors is drawn uniformly from 1 to 5. Each factor atlas is
-    drawn as a non-product atlas with ndim in ``[1, 3]``, and the total
-    dimensionality of the product equals the sum of those factor dimensionalities.
-    When ``ndim`` is given, the factor count is drawn from the range that admits
-    a partition into values in ``[1, 3]``; an ``ndim`` no factor count can reach
+    Each factor atlas is drawn as a non-product atlas with ndim in ``[1, 3]``,
+    and the total dimensionality of the product equals the sum of those factor
+    dimensionalities. Without ``ndim`` the factor count is drawn uniformly from
+    1 to 5. With ``ndim`` given it is drawn uniformly from the counts that admit
+    a partition into values in ``[1, 3]``; an ``ndim`` no count can reach
     (below 1, or above 15) is discarded via ``hypothesis.assume``.
 
     >>> import coordinax.manifolds as cxm

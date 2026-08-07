@@ -423,11 +423,12 @@ def manifolds(
 ) -> Any:
     """Draw a ``CartesianProductManifold`` with 1-5 non-product factor manifolds.
 
-    The number of factors is drawn uniformly from 1 to 5. The total
-    dimensionality of the product equals the sum of the factor dimensionalities.
-    When ``ndim`` is given, each factor contributes at least 1 dimension, so the
-    factor count is drawn from ``[1, min(5, ndim)]``; ``ndim < 1`` admits no
-    product at all and is discarded via ``hypothesis.assume``.
+    The total dimensionality of the product equals the sum of the factor
+    dimensionalities. Without ``ndim`` the factor count is drawn uniformly from
+    1 to 5. With ``ndim`` given, each factor contributes at least 1 dimension,
+    so the count is drawn uniformly from ``[1, min(5, ndim)]``, every value of
+    which admits a partition; ``ndim < 1`` admits no product at all and is
+    discarded via ``hypothesis.assume``.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinaxs.hypothesis.manifolds as cxmst
