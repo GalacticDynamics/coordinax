@@ -161,12 +161,25 @@ class TestDistanceModulusAccuracyNearZeroPoint:
 def _resolved_from_(cls, arg, /):
     """Return the `from_` implementation plum selects for *arg*.
 
-    Reaching through ``__func__._f`` is the only way to `resolve_method`; plum
-    exposes no public accessor on a bound classmethod. Worth the private hop:
-    which overload gets selected is precisely what these tests exist to pin.
+    `from_` is a `classmethod` wrapping a plum dispatcher, and how many
+    wrappers sit between it and the `Function` that can `resolve_method` is not
+    stable across Python versions: 3.12 nests
+    ``method -> _BoundFunction -> Function``, 3.13+ drops the outer one. Walk
+    the chain until something can resolve, rather than hardcoding the hops.
+
+    plum exposes no public accessor here, and which overload gets selected is
+    exactly what these tests exist to pin, so the private walk earns its keep.
     """
-    fn, _ = cls.from_.__func__._f.resolve_method((cls, arg))
-    return fn
+    f = cls.from_
+    for _ in range(5):
+        if hasattr(f, "resolve_method"):
+            fn, _ = f.resolve_method((cls, arg))
+            return fn
+        f = getattr(f, "__func__", None) or getattr(f, "_f", None)
+        if f is None:
+            break
+    msg = f"could not reach plum's dispatcher from {cls.__name__}.from_"
+    raise AssertionError(msg)
 
 
 class TestParametricFromDispatch:
