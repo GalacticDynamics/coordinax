@@ -798,26 +798,15 @@ class TestJacobianPtMapCDictArrayBranch:
 # ===========================================================================
 
 
-#: Magnitudes the scale-free properties are checked at, spanning 34 decades.
+#: Magnitudes for the scale-free properties, spanning 34 decades.
 #:
-#: `WELL_CONDITIONED` deliberately stays near 1 so an *absolute* tolerance on
-#: Jacobian entries means something, which leaves the arithmetic untested at
-#: the magnitudes real data arrives in -- parsecs, or metres between atoms.
-#:
-#: The range is bounded by float32, not by the charts, and the binding limit is
-#: *underflow at the top*: entries of ``J_{cart->sph}`` scale like ``1/r**2``,
-#: and ``1/r**2`` reaches float32's smallest normal at
-#: ``r = sqrt(1/tiny) = 9.2e18`` -- measured to fail there, well before
-#: ``r**2`` would overflow at ``sqrt(max) = 1.8e19``. At the bottom ``r**2``
-#: underflows below ``sqrt(tiny) = 1.1e-19``, and near-pole colatitudes shrink
-#: ``x`` and ``y`` further, so the floor sits above that at 1e-16.
-#:
-#: Each entry is drawn over ``[mag, 10*mag]``, so the tops and bottoms of those
-#: windows are what must stay inside [1e-16, 1e18]. Measured worst case across
-#: the whole angular domain is 2.6e-5, against ``atol=1e-4``.
-#:
-#: Not asserted as a boundary test: the limits move if JAX x64 is enabled, so
-#: pinning them would encode the dtype of the environment rather than the maths.
+#: Bounded by float32, not by the charts. `J_{cart->sph}` entries scale like
+#: ``1/r**2``, which underflows at ``sqrt(1/tiny) = 9.2e18`` -- *before*
+#: ``r**2`` overflows at ``sqrt(max) = 1.8e19``. The floor is 1e-16 rather than
+#: ``sqrt(tiny) = 1.1e-19`` because near-pole colatitudes shrink ``x`` and
+#: ``y``. Each entry draws over ``[mag, 10*mag]``, so those windows must stay
+#: inside [1e-16, 1e18]; worst measured error there is 2.6e-5 vs ``atol=1e-4``.
+#: Not asserted as a boundary test -- the limits move under JAX x64.
 EXTREME_MAGNITUDES = [
     pytest.param(1e-16, id="1e-16"),
     pytest.param(1e-11, id="1e-11"),
@@ -829,17 +818,10 @@ EXTREME_MAGNITUDES = [
 
 
 class TestJacobianPtMapAtExtremeScales:
-    r"""The scale-free properties, checked far from unit scale.
+    """Scale-free properties, checked far from unit scale.
 
-    Every other Jacobian test here pins points near 1 because it compares
-    entries against an absolute tolerance, and entries of these Jacobians
-    scale like ``r`` and ``1/r``. That leaves the arithmetic untested at the
-    magnitudes real data arrives in -- parsecs, or metres between atoms.
-
-    Both properties below are *dimensionless*, so they sidestep that: the
-    identity matrix is the identity matrix at any scale, and a relative error
-    is scale-free by construction. One flat tolerance therefore works across
-    all 36 decades, with no rtol/atol tradeoff to tune.
+    Every other Jacobian test here pins points near 1 to keep an absolute
+    tolerance meaningful. These two are dimensionless, so they need not.
     """
 
     @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
@@ -853,12 +835,7 @@ class TestJacobianPtMapAtExtremeScales:
         magnitude: float,
         data: st.DataObject,
     ) -> None:
-        """``J_{curv->cart} @ J_{cart->curv} = I``, at any magnitude.
-
-        The chain rule does not care how big the coordinates are, so this is
-        the same assertion `TestJacobianPtMapCompositionProperty` makes -- run
-        where the numbers are extreme rather than convenient.
-        """
+        """``J_{curv->cart} @ J_{cart->curv} = I``, at any magnitude."""
         p_curv = data.draw(cxst.cdicts(curv, magnitude=(magnitude, magnitude * 10.0)))
         p_cart = cxc.pt_map(p_curv, curv, cart)
 
@@ -871,14 +848,11 @@ class TestJacobianPtMapAtExtremeScales:
     def test_analytic_dispatch_agrees_with_jacfwd(self, magnitude: float) -> None:
         """The closed-form `Cart2D -> Polar2D` Jacobian matches autodiff.
 
-        This is the only pair with a hand-written Jacobian, and it is reached
-        only on *packed* input -- a cdict resolves to the generic branch, which
-        is ``jax.jacfwd(pt_map)`` itself and so cannot disagree with it. Passing
-        an array is what makes this an independent check rather than a
-        tautology.
+        Packed input on purpose: a cdict resolves to the generic branch, which
+        *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with it. Only
+        array/Quantity reaches the hand-written Jacobian.
 
-        Compared relatively: entries here scale like ``1/r``, so an absolute
-        tolerance would be vacuous at 1e18 and unmeetable at 1e-18.
+        Compared relatively -- entries scale like ``1/r``.
         """
         theta = 0.7
         at = jnp.asarray(
