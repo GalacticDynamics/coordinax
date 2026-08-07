@@ -388,3 +388,89 @@ jac_jit(at)
 ```
 
 Same runtime as the baseline. The idiomatic form also accepts quantity-valued dicts directly, without any manual unit management.
+
+</br>
+
+---
+
+## Parametric Transforms and JIT
+
+Time-dependent transforms are expressed with `Parametric(builder)`, where `builder` is usually an `equinox.Module` whose numeric fields (angular frequency, boost rate, ...) are pytree leaves. This changes how `jit` caching behaves compared to the closure-based pattern it replaces.
+
+A `builder` is an ordinary pytree: `jax.jit` (and `eqx.filter_jit`) key their compilation cache on **structure** — the pytree treedef — not on the identity of the Python object. Two `Parametric` operators built from the same builder _type_ retrace only once, no matter how many different parameter values are passed through:
+
+```{code-cell} ipython3
+import equinox as eqx
+import jax.numpy as jnp
+import unxt as u
+import coordinax.charts as cxc
+import coordinax.representations as cxr
+import coordinax.transforms as cxfm
+
+axis = jnp.array([0.0, 0.0, 1.0])
+x = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+
+traces = []
+
+
+@jax.jit
+def apply_at(op, tau):
+    traces.append(1)
+    return cxfm.act(op, tau, x, cxc.cart3d, cxr.point)["y"].ustrip("m")
+
+
+op_a = cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(30.0, "deg/s"), axis=axis))
+op_b = cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(60.0, "deg/s"), axis=axis))
+apply_at(op_a, u.Q(1.0, "s"))
+apply_at(op_b, u.Q(1.0, "s"))  # same builder structure -> no retrace
+
+print("structural retraces:", len(traces))
+```
+
+Contrast this with `Parametric.from_(fn)`, where `fn` is a **static** field: a fresh closure is a fresh object identity, and every fresh identity is a cache miss:
+
+```{code-cell} ipython3
+traces.clear()
+
+
+def make_fn(omega_deg):
+    def build(tau):
+        theta = jnp.deg2rad(omega_deg) * tau.ustrip("s")
+        ct, st = jnp.cos(theta), jnp.sin(theta)
+        R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+        return cxfm.Rotate(R)
+
+    return build
+
+
+op_c = cxfm.Parametric.from_(make_fn(30.0))
+op_d = cxfm.Parametric.from_(make_fn(60.0))  # a fresh closure -- different identity
+apply_at(op_c, u.Q(1.0, "s"))
+apply_at(op_d, u.Q(1.0, "s"))
+
+print("closure retraces:", len(traces))
+```
+
+**The array-leaf hashing cliff.** Structural caching is a property of how `op` is _passed into_ the jitted function — as a traced argument, whose leaves JAX inspects at trace time. It breaks down if a builder carrying array leaves is instead treated as _static_, which happens whenever it becomes part of the jitted function's identity rather than one of its arguments — most commonly by jitting a bound method directly. A builder whose fields are plain Python floats survives this because Python floats are hashable; a builder whose fields are `jax.Array`s or `Quantity`s is not:
+
+```{code-cell} ipython3
+class Builder(eqx.Module):
+    omega: float  # or a jax.Array
+
+    def __call__(self, tau):
+        return self.omega * tau
+
+
+b_float = Builder(1.0)  # plain Python float -- hashable
+print(jax.jit(b_float)(2.0))  # plain jax.jit works
+
+b_array = Builder(jnp.asarray(1.0))  # jax array leaf
+try:
+    jax.jit(b_array)(2.0)
+except TypeError as e:
+    print(f"TypeError: {e}")
+
+print(eqx.filter_jit(b_array)(2.0))  # eqx.filter_jit partitions leaves correctly
+```
+
+The fix is `eqx.filter_jit` (or `eqx.partition`/`eqx.combine` by hand) wherever a builder or transform carrying array leaves might be hashed as a static argument — it is a safe default for any code path that builds `Parametric` operators, since it behaves identically to `jax.jit` when every field happens to be hashable.

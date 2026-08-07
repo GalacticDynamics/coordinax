@@ -31,8 +31,8 @@ out = cxfm.act(frame_op, None, v)
 - `act_jet(transform, tau, jet, chart)`: joint action on a jet `{0: point, 1: velocity, 2: acceleration, ...}`
 - `simplify(transform)`: simplify transform structure
 - `compose(*transforms)`: compose transforms into `Composed`
-- `materialize_transform(transform, tau)`: materialize time-dependent transform parameters
-- `is_time_dependent(transform)`: whether any parameter is a callable of `tau`
+- `materialize_transform(transform, tau)`: evaluate every `Parametric` part of a transform at `tau`, returning a constant transform
+- `is_time_dependent(transform)`: declared trait — whether the transform's point action depends on `tau` (`True` for `Parametric` and `Boost`; the disjunction of children for `Composed`)
 - `tau_derivative(fn, tau, n=1)`: unit-aware n-th time derivative of a parameter function
 
 ## Transform Types
@@ -46,6 +46,9 @@ out = cxfm.act(frame_op, None, v)
 - `Scale`: Cartesian linear scaling
 - `Shear`: Cartesian linear shear
 - `Composed`: ordered transform composition
+- `Parametric`: a one-parameter family of transforms, `builder(tau) -> AbstractTransform` — the mechanism for all time-dependent transforms (see the [transforms guide](../guides/transforms.md#time-dependent-parameters))
+- `RotationAboutAxis`: built-in `Parametric` builder for uniform rotation about a fixed axis
+- `UniformTranslation`: built-in `Parametric` builder for straight-line motion at constant velocity
 - `identity`: convenience instance of `Identity`
 
 ## Transformation Group Classes (Markers)

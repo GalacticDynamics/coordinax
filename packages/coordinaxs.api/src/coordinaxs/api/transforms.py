@@ -23,7 +23,11 @@ def act(*args: Any, **kwargs: Any) -> Any:
     $$ x' = \mathcal{T}(\tau)(x) $$
 
     For tau-independent transforms, $\tau$ is ignored. For composite transforms
-    (e.g., ``Composed``), the component transforms are applied sequentially.
+    (e.g., ``Composed``), the component transforms are applied sequentially. Time
+    dependence itself is carried by exactly one wrapper, ``Parametric(builder)``,
+    where ``builder(tau) -> AbstractTransform``: every other transform holds only
+    constant parameters, and ``act`` on a ``Parametric`` materializes ``builder(tau)``
+    before applying it.
 
     Parameters
     ----------
@@ -37,7 +41,9 @@ def act(*args: Any, **kwargs: Any) -> Any:
 
     tau : Any
         Parameter for tau-dependent transforms. Pass ``None`` for
-        tau-independent transforms.
+        tau-independent transforms. Only ``Parametric`` (and composites
+        containing one) actually consume ``tau``; it materializes the wrapped
+        ``builder(tau)`` before applying it.
 
     x : Any
         The input to transform. Supported types depend on the transform:
@@ -125,7 +131,10 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
 
     Contrast with `act` on kinematic tangent data (velocity, acceleration,
     ...), which is the full *prolongation* and includes $\partial_\tau \phi$
-    terms for time-dependent transforms.
+    terms for time-dependent transforms. Those $\partial_\tau \phi$ terms only
+    arise when the transform is (or contains) a ``Parametric``, the sole
+    carrier of time dependence; `pushforward` deliberately ignores them by
+    holding $\tau$ fixed.
 
     Canonical signature::
 
@@ -177,7 +186,10 @@ def act_jet(*args: Any, **kwargs: Any) -> Any:
     This is the joint, order-consistent application of `act` to a full
     phase-space state — the natural verb for `coordinax.Coordinate` bundles
     and for time-dependent transforms, where higher slots depend on all
-    lower ones.
+    lower ones. Time dependence is always carried by a ``Parametric(builder)``
+    wrapper (or a composite containing one); a purely constant transform has
+    no $\partial_\tau \phi$ terms and `act_jet` reduces to applying the same
+    Jacobian to every jet slot.
 
     Canonical signature::
 

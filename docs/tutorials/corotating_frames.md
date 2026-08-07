@@ -36,7 +36,7 @@ time-derivative of the transformed trajectory — for any transform you define.
 
 The turntable spins counter-clockwise at $\omega = 2\ \text{rad}\,\text{s}^{-1}$ (chosen round for readable numbers). Expressing a lab point in the turntable's own axes rotates its coordinates by $-\omega t$, so the inertial → turntable operator is $R_z(-\omega t)$.
 
-The key move: pass a **callable** $\tau \mapsto \text{matrix}$ to `Rotate` instead of a fixed matrix. coordinax evaluates it at the time parameter on every `act`, and — crucially — differentiates through it to transform velocities and accelerations.
+The key move: wrap `cxfm.RotationAboutAxis(omega, axis=...)` in `Parametric` instead of building a fixed matrix. Coordinax evaluates the builder at the time parameter on every `act`, and — crucially — differentiates through it to transform velocities and accelerations. Passing a **negative** angular frequency gives exactly the $R_z(-\omega t)$ we want:
 
 ```pycon
 >>> import jax
@@ -47,27 +47,22 @@ The key move: pass a **callable** $\tau \mapsto \text{matrix}$ to `Rotate` inste
 >>> import coordinax.frames as cxf
 >>> import coordinax.transforms as cxfm
 >>> import coordinax.vectors as cxv
->>> from jaxtyping import Array, Real
 
 >>> OMEGA = 2.0  # rad / s
+>>> axis = jnp.array([0.0, 0.0, 1.0])
 
->>> def turntable_matrix(tau) -> Real[Array, "3 3"]:
-...     """Inertial -> turntable rotation R_z(-omega * t)."""
-...     angle = -OMEGA * tau.ustrip("s")
-...     c, s = jnp.cos(angle), jnp.sin(angle)
-...     return jnp.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
-...
+>>> turntable_builder = cxfm.RotationAboutAxis(u.Q(-OMEGA, "rad/s"), axis=axis)
 ```
 
-Wrap it in a `Rotate` operator and attach it to an inertial base frame to make the co-rotating frame:
+Wrap it in a `Parametric` operator and attach it to an inertial base frame to make the co-rotating frame:
 
 ```pycon
 >>> inertial = cxf.alice  # any inertial frame
->>> turntable = cxf.TransformedReferenceFrame(inertial, cxfm.Rotate(turntable_matrix))
+>>> turntable = cxf.TransformedReferenceFrame(inertial, cxfm.Parametric(turntable_builder))
 >>> op = cxf.frame_transition(inertial, turntable)
 ```
 
-`op` is the operator that carries data from the inertial frame into the turntable frame.
+`op` is the operator that carries data from the inertial frame into the turntable frame. Because `OMEGA` lives as the pytree leaf `turntable_builder.omega` rather than inside a Python closure, it is differentiable and `vmap`-able directly — see the [Time-Dependent Frames tutorial](./time_dependent_frames.md) for a worked example of differentiating an observed position with respect to a rotation rate exactly like this one.
 
 ## Step 2: The Puck's Phase-Space State
 
@@ -196,7 +191,7 @@ At the release instant the puck is at rest in the turntable frame ($\mathbf{v}_\
 
 | Goal | Code |
 | --- | --- |
-| Co-rotating frame | `TransformedReferenceFrame(inertial, Rotate(R_z(-ωt)))` |
+| Co-rotating frame | `TransformedReferenceFrame(inertial, Parametric(RotationAboutAxis(-ω, axis=...)))` |
 | Phase-space state | `Coordinate(point, velocity=Tangent(..., vel), acceleration=Tangent(..., acc))` |
 | Transform state | `cxfm.act(op, tau, state, usys=...)` |
 | Rotating-frame acceleration | `out["acceleration"]` — the fictitious force per unit mass |

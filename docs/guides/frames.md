@@ -235,10 +235,10 @@ R = jnp.array(
 t2 = cxfm.Rotate(R)
 
 # Compose: apply t1 first, then t2
-composed = t2 | t1
+composed = t1 | t2
 ```
 
-**Evaluation order** (right-to-left):
+**Evaluation order** (left-to-right, like a Unix shell pipe):
 
 $$
 \text{result} = T_2(T_1(x))
@@ -460,10 +460,10 @@ print(position_rotating.data)  # Different coordinates, same point
 
 ```python
 # RIGHT: apply t1 first, then t2
-result = t2 | t1
+result = t1 | t2
 
 # WRONG: this applies t2 first
-result = t1 | t2  # Different!
+result = t2 | t1  # Different!
 ```
 
 ### 2. Active vs Passive

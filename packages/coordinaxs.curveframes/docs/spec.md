@@ -90,33 +90,6 @@ $$
 \mathbf{p} = R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau).
 $$
 
-Expressing the inverse as a `FrenetSerretBuilder` with its own location / tangent / normal / binormal fields:
-
-$$
-\boldsymbol{\gamma}_{\text{inv}}(\tau)
-  = -R(\tau)\,\boldsymbol{\gamma}(\tau),
-$$
-
-$$
-\mathbf{T}_{\text{inv}}(\tau)
-  = \text{column 0 of } R(\tau)
-  = \bigl(T_0,\; N_0,\; B_0\bigr),
-$$
-
-$$
-\mathbf{N}_{\text{inv}}(\tau)
-  = \text{column 1 of } R(\tau)
-  = \bigl(T_1,\; N_1,\; B_1\bigr),
-$$
-
-$$
-\mathbf{B}_{\text{inv}}(\tau)
-  = \text{column 2 of } R(\tau)
-  = \bigl(T_2,\; N_2,\; B_2\bigr),
-$$
-
-where the subscripts denote Cartesian component indices.
-
 **Double-inverse identity.** Because $(R^T)^T = R$:
 
 $$
@@ -125,23 +98,28 @@ $$
 
 ### Applying the Transform
 
-Every `FrenetSerretBuilder` instance — whether forward or inverse — stores its own location, tangent, normal, and binormal fields. The **uniform act formula** for any such instance is:
+A `FrenetSerretBuilder` does not store $\boldsymbol{\gamma}$, $\mathbf{T}$, $\mathbf{N}$, $\mathbf{B}$ as separate fields. It stores the curve $\boldsymbol{\gamma}$ itself (and `tau_unit`), and builds the rigid-body transform on demand:
 
 $$
-\text{act}(F, \tau, \mathbf{p})
-  = R_F(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}_F(\tau)\bigr),
+F(\tau) = \mathrm{Translate}\bigl(-\boldsymbol{\gamma}(\tau)\bigr)\;\big|\;\mathrm{Rotate}\bigl(R(\tau)\bigr),
 $$
 
-where $R_F = [\mathbf{T}_F;\,\mathbf{N}_F;\,\mathbf{B}_F]$ (rows) and $\boldsymbol{\gamma}_F$ are the fields of the instance $F$.
-
-**Verification for the inverse instance.** Substituting the inverse fields into the uniform formula recovers the mathematical inverse:
+evaluated left-to-right (translate, then rotate), so applying $F(\tau)$ to a point $\mathbf{p}$ gives exactly the forward-transform formula:
 
 $$
-R_{\text{inv}}(\mathbf{p}' - \boldsymbol{\gamma}_{\text{inv}})
-  = R^T \mathbf{p}' + \boldsymbol{\gamma},
+\text{act}(F(\tau), \mathbf{p}) = R(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}(\tau)\bigr).
 $$
 
-which is exactly the inverse transform defined above.
+The `FrenetSerretBuilder` itself is wrapped in a `coordinax.transforms.Parametric`, `Parametric(F)`, which is what `act(op, tau, p)` actually dispatches on: `act` calls `F(tau)` to materialise the rigid-body transform, then applies it.
+
+**Inversion is generic, not builder-specific.** `Parametric(F).inverse` does not construct a second `FrenetSerretBuilder` with swapped fields; it wraps `F` in a pointwise-inverse combinator whose `__call__(tau)` returns `F(tau).inverse`. Inverting the composed `Translate(-\gamma) | Rotate(R)` reverses order and inverts each factor:
+
+$$
+F(\tau)^{-1} = \mathrm{Rotate}\bigl(R(\tau)\bigr)^{-1} \;\big|\; \mathrm{Translate}\bigl(-\boldsymbol{\gamma}(\tau)\bigr)^{-1}
+  = \mathrm{Rotate}\bigl(R^T(\tau)\bigr) \;\big|\; \mathrm{Translate}\bigl(\boldsymbol{\gamma}(\tau)\bigr),
+$$
+
+which applied to $\mathbf{p}'$ (rotate, then translate) gives exactly $R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau)$ — the inverse transform above. Because this combinator is an involution, `Parametric(F).inverse.inverse.builder is F` — no closure chain accumulates no matter how many times `.inverse` is taken.
 
 (curveframes-math-frenet-ref-frame)=
 
@@ -265,43 +243,24 @@ $$
 \mathbf{p} = R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau).
 $$
 
-The inverse fields expressed as a `BishopBuilder`:
-
-$$
-\boldsymbol{\gamma}_{\text{inv}}(\tau)
-  = -R(\tau)\,\boldsymbol{\gamma}(\tau),
-$$
-
-$$
-\mathbf{T}_{\text{inv}}(\tau)
-  = \text{column 0 of } R(\tau)
-  = \bigl(T_0,\; U_{1,0},\; U_{2,0}\bigr),
-$$
-
-$$
-\mathbf{U}_{1,\text{inv}}(\tau)
-  = \text{column 1 of } R(\tau)
-  = \bigl(T_1,\; U_{1,1},\; U_{2,1}\bigr),
-$$
-
-$$
-\mathbf{U}_{2,\text{inv}}(\tau)
-  = \text{column 2 of } R(\tau)
-  = \bigl(T_2,\; U_{1,2},\; U_{2,2}\bigr).
-$$
-
 **Double-inverse identity.** $(R^T)^T = R$, so $\bigl(B^{-1}\bigr)^{-1} = B$.
 
 ### Applying the Transform
 
-The **uniform act formula** is identical in form to the Frenet–Serret case:
+Exactly as for `FrenetSerretBuilder` ({ref}`curveframes-math-frenet-transform`): a `BishopBuilder` stores the curve $\boldsymbol{\gamma}$ (and `tau_unit`, `tau_0`, `initial_normal`), not $\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2$ as separate fields, and builds
 
 $$
-\text{act}(B, \tau, \mathbf{p})
-  = R_B(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}_B(\tau)\bigr),
+B(\tau) = \mathrm{Translate}\bigl(-\boldsymbol{\gamma}(\tau)\bigr)\;\big|\;\mathrm{Rotate}\bigl(R(\tau)\bigr),
+\qquad R = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2] \text{ (rows)}
 $$
 
-where $R_B = [\mathbf{T}_B;\,\mathbf{U}_{1,B};\,\mathbf{U}_{2,B}]$ (rows).
+on demand, wrapped in `Parametric(B)`. The **uniform act formula** is identical in form to the Frenet–Serret case:
+
+$$
+\text{act}(B(\tau), \mathbf{p}) = R(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}(\tau)\bigr).
+$$
+
+Inversion is the same generic `Parametric` pointwise-inverse combinator described for `FrenetSerretBuilder` — there is no separate `BishopBuilder` for the inverse direction, and `Parametric(B).inverse.inverse.builder is B`.
 
 (curveframes-math-bishop-ref-frame)=
 
@@ -332,10 +291,13 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 | Symbol | Kind | Description |
 | --- | --- | --- |
 | `AbstractParallelTransportFrame` | `abstract` | Base class for curve-attached orthonormal frames |
-| `FrenetSerretBuilder` | `@final` | $\tau$-dependent rigid-body curve-frame transform |
+| `AbstractCurveFrameBuilder` | `abstract` | `equinox.Module` builder ABC: `tau -> Translate(-gamma) \| Rotate(R)` |
+| `FrenetSerretBuilder` | `@final` | Builder for the $(\mathbf{T},\mathbf{N},\mathbf{B})$ triad |
 | `FrenetSerretFrame` | `@final` | Frenet–Serret curve-attached reference frame |
-| `BishopBuilder` | `@final` | $\tau$-dependent rotation-minimising transform |
+| `BishopBuilder` | `@final` | Builder for the $(\mathbf{T},\mathbf{U}_1,\mathbf{U}_2)$ triad |
 | `BishopFrame` | `@final` | Bishop (rotation-minimising) curve frame |
+
+Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one of these builders — the same single mechanism for time dependence used everywhere else in `coordinax.transforms` (see [Parametric](../../../docs/spec.md#software-spec-transforms-parametric) in the root spec). `AbstractCurveFrameBuilder` is an `equinox.Module`, so every field is a genuine pytree leaf: differentiable and `vmap`-able, including the curve's own parameters when the curve is itself an `equinox.Module`.
 
 (curveframes-sw-abstract-curve-frame)=
 
@@ -343,56 +305,57 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
     Abstract base class for curve-attached orthonormal frames in 3D.
 
-    Inherits from `coordinax.frames.AbstractTransformedReferenceFrame[FrameT]` and therefore carries two inherited fields:
+    Inherits from `coordinax.frames.AbstractTransformedReferenceFrame[FrameT]` and therefore carries three fields:
 
     - `base_frame : FrameT` — the ambient reference frame relative to which the curve frame is defined.
-    - `xop : AbstractTransform` — the transform operator from the base frame to this frame.
+    - `xop : Parametric` — the forward transform (base frame → curve frame), wrapping an `AbstractCurveFrameBuilder`.
+    - `xop_inv : Parametric` — the pre-computed inverse of `xop` (curve frame → base frame).
 
     `AbstractParallelTransportFrame` is **not instantiable directly**; concrete subclasses (e.g. `FrenetSerretFrame`, `BishopFrame`) must be `@final`.
 
     Because `AbstractParallelTransportFrame` IS-A `AbstractTransformedReferenceFrame`, the generic `frame_transition` dispatches registered for `AbstractTransformedReferenceFrame` apply automatically. No additional frame-transition dispatches are needed for concrete curve-frame subclasses.
 
+    The evolution parameter $\tau$ is **not** stored on the frame object. It is supplied at evaluation time when a frame-transition operator is applied to coordinates via `act(op, tau, x)`.
+
+(curveframes-sw-abstract-builder)=
+
+!!! info `AbstractCurveFrameBuilder`
+
+    Abstract `equinox.Module` base class for curve-frame builders: `tau -> Translate(-gamma) | Rotate(R)`. This is what a `Parametric` wraps; it is not itself a `coordinax.transforms.AbstractTransform`.
+
+    Fields (declared `eqx.AbstractVar`, defined by concrete subclasses):
+
+    - `curve : Callable[[Any], Any]` — the curve $\gamma \mapsto \boldsymbol{\gamma}(\gamma)$, mapping a parameter `Quantity` to a Cartesian 3-vector `Quantity`. A pytree leaf: make `curve` itself an `equinox.Module` to get differentiable/vmappable curve parameters.
+    - `tau_unit : unxt.AbstractUnit` — physical unit of the curve parameter. **Static**: it selects the differentiation units, not a numeric value.
+    - `gamma : Any` — an optional *fixed* curve parameter. When `None` (the default), $\tau$ itself is the curve parameter — the classic moving-frame usage. When set, the frame sits at the fixed point $\boldsymbol{\gamma}(\gamma)$ and is $\tau$-independent: a frame *field* along the curve, differentiable and `vmap`-able in `gamma`.
+
+    Methods:
+
+    - `rotation_matrix(tau) -> Array` — **abstract**, implemented by concrete subclasses; the $3\times3$ rotation matrix $R$ whose rows are the frame vectors.
+    - `__call__(tau) -> Composed` — builds `Translate(-gamma(param)) | Rotate(rotation_matrix(tau))`, where `param` is `tau` or the fixed `gamma`.
+    - `location(tau)`, `tangent(tau)` — convenience accessors; `location` evaluates $\boldsymbol{\gamma}$ at the resolved parameter, `tangent` returns row 0 of `rotation_matrix(tau)`.
+
 (curveframes-sw-frenet-transform)=
 
 !!! info `FrenetSerretBuilder`
 
-    A `@final` subclass of `coordinax.transforms.AbstractTransform` representing a $\tau$-dependent rigid-body curve-frame transform.
+    A `@final` subclass of `AbstractCurveFrameBuilder` computing the $(\mathbf{T}, \mathbf{N}, \mathbf{B})$ triad.
 
-    Fields:
+    Fields (in addition to the ABC's `curve`, `tau_unit`, `gamma`): none — `FrenetSerretBuilder` adds no fields beyond the base class.
 
-    - `location : Callable[[Any], Any]` — $\tau \mapsto \boldsymbol{\gamma}(\tau)$, the curve position.
-    - `tangent : Callable[[Any], Any]` — $\tau \mapsto \mathbf{T}(\tau)$, the unit tangent vector.
-    - `normal : Callable[[Any], Any]` — $\tau \mapsto \mathbf{N}(\tau)$, the unit normal vector.
-    - `binormal : Callable[[Any], Any]` — $\tau \mapsto \mathbf{B}(\tau)$, the unit binormal vector.
-    - `curve : Callable[[Any], Any]` — the original curve callable, stored for inverse reconstruction.
-    - `tau_unit : unxt.AbstractUnit` — the physical unit of the curve parameter $\tau$.
+    - `curve : Callable[[Any], Any]` — the constructing curve.
+    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter, used by `unxt.experimental.jacfwd` to compute unit-correct derivatives. Defaults to `"s"`. Static.
+    - `gamma : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
 
-    All primary fields (`location`, `tangent`, `normal`, `binormal`) are **lazy**: they are $\tau$-dependent callables, not pre-evaluated arrays. Evaluating a field at a concrete $\tau$ value triggers JAX computation.
+    `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{N}; \mathbf{B}]$: unit-aware first and second derivatives of `curve` via `unxt.experimental.jacfwd`, then $\mathbf{T} = \gamma'/\lVert\gamma'\rVert$, Gram–Schmidt rejection of $\gamma''$ onto $\mathbf{T}$ normalised to give $\mathbf{N}$, and $\mathbf{B} = \mathbf{T}\times\mathbf{N}$.
 
-    The `curve` field stores the original curve callable passed to `from_curve`. For a forward transform, `location is curve` (identity). For an inverse transform, `location` is a derived closure and `location is not curve`.
+    Convenience accessors: `normal(tau)` (row 1), `binormal(tau)` (row 2); `location(tau)`, `tangent(tau)` are inherited from `AbstractCurveFrameBuilder`.
 
-    Constructors:
+    Constructed directly — `FrenetSerretBuilder(curve, tau_unit="s", gamma=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
 
-    - `from_curve(curve, /, tau_unit="s")` — Constructs the full Frenet–Serret transform from a curve callable using JAX automatic differentiation. `curve` is a function $\tau \mapsto \text{Quantity}[(3,)]$. `tau_unit` (default `"s"`) specifies the unit of $\tau$ for differentiation. First and second derivatives are obtained via `unxt.experimental.jacfwd(curve, units=(tau_unit,))`, which correctly tracks physical units through forward-mode AD. The unit normal $\mathbf{N}$ is computed via Gram–Schmidt orthogonalisation: project out the tangent component from $\boldsymbol{\gamma}''$, then normalise. Sets `curve = curve` and `tau_unit = u.unit(tau_unit)`.
-    - `from_(curve)` — Plum multiple-dispatch constructor. Dispatches on `Callable` and delegates to `from_curve(curve)` with default `tau_unit="s"`.
+    JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `gamma` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `gamma`); use `eqx.filter_jit` in that case.
 
-    `inverse` property:
-
-    - Returns a new `FrenetSerretBuilder` representing the inverse rigid-body transform, computed lazily from the stored callable fields.
-    - **Forward case** (`location is curve`): the inverse fields are computed as closures over `self.location`, `self.tangent`, `self.normal`, `self.binormal`. The returned instance carries the same `curve` and `tau_unit`.
-    - **Inverse case** (`location is not curve`): the double-inverse is detected via identity comparison. Instead of accumulating another layer of closures, `inverse` reconstructs the forward transform cleanly by calling `from_curve(self.curve, tau_unit=self.tau_unit)`.
-    - This guarantees a **two-step cycle**: forward ↔ inverse, with no closure chain accumulation regardless of how many times `.inverse` is called.
-
-    JAX compatibility:
-
-    - All fields are pure-function closures; the transform is a valid JAX PyTree (via Equinox).
-    - `location`, `tangent`, `normal`, `binormal` (and their inverses) are compatible with `jax.jit` and `jax.vmap`.
-    - Fields should operate on **scalar** $\tau$ values; batching is achieved via `jax.vmap`.
-
-    `act` dispatches:
-
-    - `act(op: FrenetSerretBuilder, tau, x: AbstractQuantity, chart, rep)` — evaluates the frame fields at $\tau$ and applies the uniform formula $R(\tau)(x - \gamma(\tau))$. Works for both forward and inverse instances.
-    - `act(op: FrenetSerretBuilder, tau, x: CDict, chart, rep)` — extracts the component dictionary into a Quantity array, applies the transform, and repacks into a CDict.
+    `act` dispatches on `Parametric(FrenetSerretBuilder(...))`, not on the builder directly — see [`Parametric`](../../../docs/spec.md#software-spec-transforms-parametric) in the root spec. `act(Parametric(F), tau, x)` materialises `F(tau)` and applies the resulting `Composed` transform.
 
 (curveframes-sw-frenet-frame)=
 
@@ -403,20 +366,21 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
     Fields (all inherited):
 
     - `base_frame : FrameT` — the ambient reference frame (e.g. `Alice()`).
-    - `xop : FrenetSerretBuilder` — the $\tau$-dependent rigid-body transform from the base frame to the curve frame.
+    - `xop : Parametric` — the $\tau$-dependent rigid-body transform from the base frame to the curve frame, wrapping a `FrenetSerretBuilder`.
+    - `xop_inv : Parametric` — its pre-computed inverse, `xop.inverse`.
 
-    The `xop` field is constrained to `FrenetSerretBuilder`. At evaluation time, the evolution parameter $\tau$ is passed via `act(op, tau, x)`, not stored on the frame.
+    At evaluation time, the evolution parameter $\tau$ is passed via `act(op, tau, x)`, not stored on the frame.
 
     Constructors:
 
-    - `FrenetSerretFrame(base_frame, xop)` — direct construction from a base frame and a pre-built `FrenetSerretBuilder`.
-    - `from_curve(base_frame, curve, /, tau_unit="s")` — convenience constructor that calls `FrenetSerretBuilder.from_curve(curve, tau_unit=tau_unit)` and wraps the result.
+    - `FrenetSerretFrame(base_frame, xop, xop_inv)` — direct construction from a base frame and a `Parametric`-wrapped `FrenetSerretBuilder` (forward and inverse).
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, gamma)`, wraps it in `Parametric`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
     - Handled entirely by the generic `AbstractTransformedReferenceFrame` dispatches in `coordinax.frames`.
     - `frame_transition(base, fs_frame)` returns `(base → base_frame) | xop`.
-    - `frame_transition(fs_frame, base)` returns `xop.inverse | (base_frame → base)`.
+    - `frame_transition(fs_frame, base)` returns `xop_inv | (base_frame → base)`.
     - `frame_transition(fs_frame_1, fs_frame_2)` composes through both base frames.
 
     Usage pattern:
@@ -445,45 +409,25 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
 !!! info `BishopBuilder`
 
-    A `@final` subclass of `coordinax.transforms.AbstractTransform` representing a $\tau$-dependent rotation-minimising curve-frame transform.
+    A `@final` subclass of `AbstractCurveFrameBuilder` computing the $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ triad via parallel transport.
 
-    Fields:
+    Fields (the ABC's `curve`, `tau_unit`, `gamma`, plus two more):
 
-    - `location : Callable[[Any], Any]` — $\tau \mapsto \boldsymbol{\gamma}(\tau)$, the curve position.
-    - `tangent : Callable[[Any], Any]` — $\tau \mapsto \mathbf{T}(\tau)$, the unit tangent vector.
-    - `normal1 : Callable[[Any], Any]` — $\tau \mapsto \mathbf{U}_1(\tau)$, the first normal vector (parallel-transported).
-    - `normal2 : Callable[[Any], Any]` — $\tau \mapsto \mathbf{U}_2(\tau)$, the second normal vector ($\mathbf{T} \times \mathbf{U}_1$).
-    - `curve : Callable[[Any], Any]` — the original curve callable, stored for inverse reconstruction.
-    - `tau_unit : unxt.AbstractUnit` — the physical unit of $\tau$.
-    - `tau_0 : unxt.AbstractQuantity` — the reference parameter value at which the initial frame is defined.
-    - `initial_normal : jax.Array | None` — the initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector).  Stored for double-inverse reconstruction.  `None` when auto-chosen.
+    - `curve : Callable[[Any], Any]` — the constructing curve.
+    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter. Defaults to `"s"`. Static.
+    - `gamma : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
+    - `tau_0 : unxt.AbstractQuantity | None` — reference parameter where the initial frame is defined (a leaf). `None` is resolved to `Q(0.0, tau_unit)` by `__post_init__`.
+    - `initial_normal : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `None` for auto-selection via Gram–Schmidt.
 
-    All primary fields are **lazy** callables.  The `normal1` and `normal2` fields internally solve the parallel-transport ODE from `tau_0` to the requested $\tau$ using `jax.experimental.ode.odeint`.
+    `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{U}_1; \mathbf{U}_2]$: $\mathbf{T}$ from the unit-aware first derivative of `curve`; $\mathbf{U}_1$ by solving the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1\cdot\mathbf{T}')\,\mathbf{T}$ from `tau_0` to the resolved parameter via `jax.experimental.ode.odeint` (skipped via `jax.lax.cond` when the parameter equals `tau_0`); $\mathbf{U}_2 = \mathbf{T}\times\mathbf{U}_1$.
 
-    The `curve` field stores the original curve callable.  For a forward transform, `location is curve`.  For an inverse, `location is not curve`.
+    Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 
-    Constructors:
+    Constructed directly — `BishopBuilder(curve, tau_unit="s", gamma=None, tau_0=None, initial_normal=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
-    - `from_curve(curve, /, tau_unit="s", *, tau_0=None, initial_normal=None)` — Constructs the Bishop transform from a curve callable.  `curve` is a function $\tau \mapsto \text{Quantity}[(3,)]$.  `tau_unit` specifies the unit of $\tau$.  `tau_0` (default `Q(0.0, tau_unit)`) is the reference parameter.  `initial_normal` (default `None`) is a dimensionless 3-vector for $\mathbf{U}_{1,0}$; when `None`, one is auto-chosen via Gram–Schmidt.  The unit tangent $\mathbf{T}$ is computed via `unxt.experimental.jacfwd`.  The parallel-transport ODE is solved via `jax.experimental.ode.odeint`.
-    - `from_(curve)` — Plum multiple-dispatch constructor.  Dispatches on `Callable` and delegates to `from_curve(curve)` with defaults.
+    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `gamma`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` is static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
-    `inverse` property:
-
-    - Returns a new `BishopBuilder` representing the inverse rigid-body transform.
-    - **Forward case** (`location is curve`): inverse fields are closures over the forward fields.
-    - **Inverse case** (`location is not curve`): double-inverse detected; reconstructs forward via `from_curve(self.curve, tau_unit=self.tau_unit, tau_0=self.tau_0, initial_normal=self.initial_normal)`.
-    - Guarantees a **two-step cycle** with no closure accumulation.
-
-    JAX compatibility:
-
-    - All fields are pure-function closures; the transform is a valid JAX PyTree.
-    - Compatible with `jax.jit` and `jax.vmap`.
-    - Fields operate on **scalar** $\tau$; batching via `jax.vmap`.
-
-    `act` dispatches:
-
-    - `act(op: BishopBuilder, tau, x: AbstractQuantity, chart, rep)` — same uniform formula as FrenetSerretBuilder: $R(\tau)(x - \gamma(\tau))$ where $R = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2]$.
-    - `act(op: BishopBuilder, tau, x: CDict, chart, rep)` — extract → transform → repack.
+    `act` dispatches on `Parametric(BishopBuilder(...))`, identically to `FrenetSerretBuilder`.
 
 (curveframes-sw-bishop-frame)=
 
@@ -494,14 +438,13 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
     Fields (all inherited):
 
     - `base_frame : FrameT` — the ambient reference frame (e.g. `Alice()`).
-    - `xop : BishopBuilder` — the $\tau$-dependent rotation-minimising transform from the base frame to the curve frame.
-
-    The `xop` field is constrained to `BishopBuilder`.
+    - `xop : Parametric` — the $\tau$-dependent rotation-minimising transform from the base frame to the curve frame, wrapping a `BishopBuilder`.
+    - `xop_inv : Parametric` — its pre-computed inverse, `xop.inverse`.
 
     Constructors:
 
-    - `BishopFrame(base_frame, xop)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, tau_0=None, initial_normal=None)` — convenience constructor that calls `BishopBuilder.from_curve(...)` and wraps the result.
+    - `BishopFrame(base_frame, xop, xop_inv)` — direct construction.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)`, wraps it in `Parametric`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 

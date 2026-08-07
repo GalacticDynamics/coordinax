@@ -5,6 +5,7 @@ A circle in the $xy$-plane is a special curve: the Frenet–Serret frame, the Bi
 **Why they coincide.** On a planar circle with constant curvature $\kappa$ and zero torsion, the Frenet–Serret angular velocity equals the parallel-transport angular velocity, which in turn equals the constant rate of a rigid rotation about $+z$. In general these three differ, but for a circle they collapse to a single thing.
 
 ```pycon
+>>> import equinox as eqx
 >>> import jax.numpy as jnp
 >>> import numpy as np
 
@@ -56,7 +57,7 @@ The Bishop frame $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is obtained by paral
 
 A rigid rotation by angle $\tau$ about the $z$-axis, centred on $\gamma(\tau)$, is defined without any curve-frame machinery — just a `Translate` and a `Rotate`:
 
-```pycon
+````pycon
 >>> def neg_gamma(tau: u.Q) -> u.Q:
 ...     """Translate by -gamma(tau)."""
 ...     return cxc.cdict(-circle(tau), cxc.cart3d)
@@ -72,11 +73,18 @@ A rigid rotation by angle $\tau$ about the $z$-axis, centred on $\gamma(\tau)$, 
 ...     return jnp.array([[-st, ct, 0.0], [-ct, -st, 0.0], [0.0, 0.0, 1.0]])
 ...
 
->>> xop = cxfm.Parametric.from_(
-...     lambda tau: cxfm.Translate(neg_gamma(tau), chart=cxc.cart3d)
-... ) | cxfm.Parametric.from_(lambda tau: cxfm.Rotate(R_z(tau)))
+A real `equinox.Module` builder, rather than `Parametric.from_(lambda ...)`, keeps this differentiable/vmappable and avoids the recompile-per-closure cost of wrapping a bare function (see [Writing a Builder](../../../docs/guides/transforms.md#writing-a-builder)):
+
+```pycon
+>>> class Corotate(eqx.Module):
+...     """tau -> Translate(-gamma(tau)) | Rotate(R_z(tau))."""
+...     def __call__(self, tau: u.Q) -> cxfm.Composed:
+...         return cxfm.Translate(neg_gamma(tau), chart=cxc.cart3d) | cxfm.Rotate(R_z(tau))
+...
+
+>>> xop = cxfm.Parametric(Corotate())
 >>> corot_frame = cxf.TransformedReferenceFrame(cxf.alice, xop)
-```
+````
 
 ## Step 3: Compare the Rotation Matrices
 
