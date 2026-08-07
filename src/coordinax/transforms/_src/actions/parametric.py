@@ -284,7 +284,32 @@ def pushforward(
     at: CDict | None = None,
     usys: OptUSys = None,
 ) -> CDict:
-    """Frozen-tau pushforward: materialize at tau, then push forward."""
+    r"""Frozen-$\tau$ pushforward: materialize at tau, then push forward.
+
+    Examples
+    --------
+    >>> import equinox as eqx
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> class RotZ(eqx.Module):
+    ...     omega: u.AbstractQuantity
+    ...     def __call__(self, tau):
+    ...         th = (self.omega * tau).ustrip("rad")
+    ...         st, ct = jnp.sin(th), jnp.cos(th)
+    ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+    ...         return cxfm.Rotate(R)
+
+    >>> op = cxfm.Parametric(RotZ(u.Q(90, "deg/s")))
+    >>> v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> out = cxfm.pushforward(op, u.Q(1.0, "s"), v, cxc.cart3d, cxr.coord_vel)
+    >>> out["y"].round(3)
+    Q(1., 'm / s')
+
+    """
     return cast(
         "CDict",
         cxfmapi.pushforward(op.materialize(tau), tau, v, chart, rep, at=at, usys=usys),

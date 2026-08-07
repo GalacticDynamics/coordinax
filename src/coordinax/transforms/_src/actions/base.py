@@ -451,6 +451,8 @@ def is_time_dependent(op: Any, /) -> bool:
 
     Examples
     --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
     >>> static = cxfm.Translate.from_([1, 2, 3], "km")
@@ -458,7 +460,9 @@ def is_time_dependent(op: Any, /) -> bool:
     False
 
     >>> moving = cxfm.Parametric.from_(
-    ...     lambda t: cxfm.Translate.from_([1, 2, 3], "km")
+    ...     lambda t: cxfm.Translate.from_(
+    ...         jnp.asarray([1.0, 0.0, 0.0]) * u.ustrip("s", t), "km"
+    ...     )
     ... )
     >>> cxfm.is_time_dependent(moving)
     True

@@ -55,16 +55,30 @@ def test_rotation_about_axis_differentiable_in_phase():
 
 
 def test_rotation_about_axis_differentiable_in_axis():
+    """Gradient w.r.t. the axis *direction*, not just its scale.
+
+    Varying only ``axis = [0, 0, axis_z]`` (the old form of this test) varies
+    the axis's scale, which `RotationAboutAxis.__call__` normalizes away, so
+    that gradient is analytically and empirically exactly 0.0 -- an
+    `assert jnp.isfinite(grad)` would pass trivially even with a
+    `stop_gradient` on the axis path. Varying ``ax_x`` instead tilts the axis
+    direction, so the resulting rotation -- and hence the gradient -- actually
+    depends on it.
+    """
     omega = u.Q(90.0, "deg/s")
 
-    def y(axis_z):
-        axis = jnp.array([0.0, 0.0, axis_z])
+    def y(ax_x):
+        axis = jnp.array([ax_x, 0.0, 1.0])
         op = cxfm.Parametric(cxfm.RotationAboutAxis(omega, axis=axis))
         out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
         return out["y"].ustrip("m")
 
-    grad = jax.grad(y)(1.0)
-    assert jnp.isfinite(grad)
+    ax_x0 = 0.4  # away from 0.0: the gradient there vanishes by symmetry
+    grad = jax.grad(y)(ax_x0)
+    eps = 1e-5
+    finite_diff = (y(ax_x0 + eps) - y(ax_x0 - eps)) / (2 * eps)
+    assert not jnp.allclose(grad, 0.0, atol=1e-8)
+    assert jnp.allclose(grad, finite_diff, atol=1e-4)
 
 
 def test_uniform_translation():

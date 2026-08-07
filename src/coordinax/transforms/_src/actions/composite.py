@@ -72,12 +72,21 @@ class AbstractCompositeTransform(AbstractTransform):
 
         Examples
         --------
+        >>> import jax.numpy as jnp
         >>> import coordinax.transforms as cxfm
 
         >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
         >>> pipe = cxfm.Composed((shift, cxfm.Identity()))
         >>> pipe.is_time_dependent
         False
+
+        A `Parametric` component makes the whole composite time-dependent:
+
+        >>> moving = cxfm.Parametric.from_(
+        ...     lambda t: cxfm.Translate.from_(jnp.asarray([1.0, 0.0, 0.0]) * t, "km")
+        ... )
+        >>> cxfm.Composed((shift, moving)).is_time_dependent
+        True
 
         """
         return any(op.is_time_dependent for op in self.transforms)

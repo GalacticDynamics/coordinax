@@ -96,6 +96,75 @@ class TestTranslateSemanticKindField:
 # ============================================================================
 
 
+class TestCallableDeltaRejected:
+    """A callable ``delta`` (the deleted API) must fail LOUDLY, never silently.
+
+    ``delta`` is a plain `dict` field with no coercion, so without an explicit
+    check a function sails through ``__init__``. Two layers reject it: runtime
+    type-checking (enabled only by this project's pytest config) and
+    `AbstractAdd.__check_init__` (always on — the only guard library users
+    get). Under pytest the type-checker fires FIRST and raises
+    `jaxtyping.TypeCheckError`, which is not a `TypeError`, so the
+    ``__check_init__`` guard is unreachable via normal construction here and
+    is exercised directly below. Deleting ``__check_init__`` must fail
+    ``test_check_init_guard_rejects_callable_delta``.
+    """
+
+    @staticmethod
+    def _delta_fn(t):
+        return {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+
+    @staticmethod
+    def _bypassing_typecheck(cls_, delta):
+        """Build ``cls`` with a raw ``delta``, bypassing the __init__ typecheck."""
+        obj = object.__new__(cls_)
+        template = cls_(
+            {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")},
+            chart=cxc.cart3d,
+        )
+        for field, value in vars(template).items():
+            object.__setattr__(obj, field, value)
+        object.__setattr__(obj, "delta", delta)
+        return obj
+
+    @pytest.mark.parametrize(
+        "cls", [cxfm.Translate, cxfm.Boost], ids=lambda c: c.__name__
+    )
+    def test_check_init_guard_rejects_callable_delta(self, cls):
+        """THE guard: `__check_init__` itself, called directly."""
+        bad = self._bypassing_typecheck(cls, self._delta_fn)
+        with pytest.raises(TypeError, match="must be a component dict, not a callable"):
+            bad.__check_init__()
+
+    @pytest.mark.parametrize(
+        "cls", [cxfm.Translate, cxfm.Boost], ids=lambda c: c.__name__
+    )
+    def test_guard_message_names_the_replacement(self, cls):
+        bad = self._bypassing_typecheck(cls, self._delta_fn)
+        with pytest.raises(TypeError, match="Parametric"):
+            bad.__check_init__()
+
+    @pytest.mark.parametrize(
+        "cls", [cxfm.Translate, cxfm.Boost], ids=lambda c: c.__name__
+    )
+    def test_construction_rejects_callable_delta(self, cls):
+        """Belt-and-braces: the old spelling does not construct, either way.
+
+        This one passes on the type-checker alone, so it does NOT guard
+        ``__check_init__``; it pins that no construction path is silent.
+        """
+        with pytest.raises(Exception, match="delta"):
+            cls(self._delta_fn, chart=cxc.cart3d)
+
+    def test_rotate_callable_matrix_also_rejected(self):
+        """`Rotate` has no analogous hole: `jnp.asarray` rejects a function."""
+        with pytest.raises(Exception):  # noqa: B017, PT011
+            cxfm.Rotate(lambda t: t)
+
+
+# ============================================================================
+
+
 class TestTranslateDisplacementSemantic:
     """Translate with semantic_kind=dpl (default) shifts points only.
 

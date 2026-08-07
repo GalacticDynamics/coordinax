@@ -208,3 +208,133 @@ def test_materialize_transform():
 def test_materialize_transform_tau_none_raises():
     with pytest.raises(TypeError, match="tau"):
         cxfm.materialize_transform(cxfm.Parametric(RotZ(OMEGA)), None)
+
+
+# ============================================================================
+# Non-commuting composition order (carried finding: same-axis compositions
+# commute, so they cannot pin the operand order of `@`/`_merge`).
+
+
+def test_matmul_noncommuting_axes_pins_apply_order():
+    """`(a @ b).R == b.R @ a.R` (a applied first), pinned with axes that don't commute.
+
+    `test_matmul_parametric_parametric_is_pointwise` and
+    `test_merge_two_parametrics_in_composed` compose only same-axis `RotZ`
+    builders, which commute -- a reversed-operand-order bug in
+    `_ComposedBuilder`/`_merge` would pass every test in this file anyway.
+    Rotations about *different* axes do not commute, so this pins the actual
+    order against `Rotate.__matmul__`'s documented convention. The final
+    assertion is the sanity check: if the two orders agreed, the axes chosen
+    here would still commute and this test would be exactly as blind as the
+    ones it supplements.
+    """
+    a = cxfm.Parametric(
+        cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
+    )
+    b = cxfm.Parametric(
+        cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([1.0, 0.0, 0.0]))
+    )
+    tau = u.Q(1.0, "s")
+    Ra, Rb = a.materialize(tau).R, b.materialize(tau).R
+
+    R_ab = (a @ b).materialize(tau).R
+    R_ba = (b @ a).materialize(tau).R
+
+    assert jnp.allclose(R_ab, Rb @ Ra, atol=1e-12)
+    assert jnp.allclose(R_ba, Ra @ Rb, atol=1e-12)
+    # Sanity check: the two orders must actually disagree, or these axes
+    # commute and neither assertion above has any signal.
+    assert not jnp.allclose(R_ab, R_ba, atol=1e-6)
+
+
+# ============================================================================
+# Direct pushforward test (carried finding: `Parametric.pushforward` was only
+# ever reached transitively, never exercised directly).
+
+
+def test_pushforward_frozen_tau():
+    """`Parametric.pushforward` freezes tau, materializes, then pushes forward."""
+    op = cxfm.Parametric(RotZ(OMEGA))
+    tau = u.Q(1.0, "s")
+    v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    out = cxfm.pushforward(op, tau, v, cxc.cart3d, cxr.coord_vel)
+    want = cxfm.pushforward(op.materialize(tau), tau, v, cxc.cart3d, cxr.coord_vel)
+    assert jnp.allclose(out["y"].ustrip("m/s"), want["y"].ustrip("m/s"), atol=1e-12)
+    # omega=pi/2 rad/s, tau=1s: a 90 deg rotation sends (1,0,0) -> (0,1,0).
+    assert jnp.allclose(out["y"].ustrip("m/s"), 1.0, atol=1e-12)
+    assert jnp.allclose(out["x"].ustrip("m/s"), 0.0, atol=1e-12)
+
+
+# ============================================================================
+# gamma-as-leaf: a second (curvilinear) parameter living as a builder field,
+# differentiable and vmappable -- something the OLD `Array | Callable` design
+# could not express.
+
+
+class CircleFrame(eqx.Module):
+    """Frame translated to a point on a circle of radius r at angle gamma.
+
+    gamma is a builder leaf: differentiate/vmap it directly.
+    """
+
+    r: u.AbstractQuantity
+    gamma: jax.Array  # radians, raw
+
+    def __call__(self, tau):
+        del tau
+        delta = {
+            "x": self.r * jnp.cos(self.gamma),
+            "y": self.r * jnp.sin(self.gamma),
+            "z": self.r * 0,
+        }
+        return cxfm.Translate(delta, chart=cxc.cart3d)
+
+
+class MovingAlongCircle(eqx.Module):
+    """gamma = gamma(tau): time-dependent curvilinear frame."""
+
+    r: u.AbstractQuantity
+    gamma_rate: u.AbstractQuantity  # rad/s
+
+    def __call__(self, tau):
+        g = (self.gamma_rate * tau).ustrip("rad")
+        return CircleFrame(self.r, g)(None)
+
+
+def test_gamma_as_leaf_gradient():
+    """d/dgamma of the frame origin's x is -r sin(gamma)."""
+
+    def x_of(gamma):
+        op = cxfm.Parametric(CircleFrame(u.Q(2.0, "m"), gamma))
+        origin = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        out = cxfm.act(op, u.Q(0.0, "s"), origin, cxc.cart3d, cxr.point)
+        return out["x"].ustrip("m")
+
+    g0 = jnp.pi / 3
+    assert jnp.allclose(jax.grad(x_of)(g0), -2.0 * jnp.sin(g0), atol=1e-12)
+
+
+def test_vmap_over_gamma_frame_field():
+    gammas = jnp.linspace(0.0, jnp.pi, 8)
+
+    def x_of(gamma):
+        op = cxfm.Parametric(CircleFrame(u.Q(1.0, "m"), gamma))
+        origin = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        return cxfm.act(op, u.Q(0.0, "s"), origin, cxc.cart3d, cxr.point)["x"].ustrip(
+            "m"
+        )
+
+    assert jnp.allclose(jax.vmap(x_of)(gammas), jnp.cos(gammas), atol=1e-12)
+
+
+def test_gamma_of_tau_velocity_transport():
+    """The gamma-dot term: comoving-point velocity is an r*gamma_rate tangent."""
+    op = cxfm.Parametric(MovingAlongCircle(u.Q(2.0, "m"), u.Q(0.5, "rad/s")))
+    at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    v = {"x": u.Q(0.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    out = cxfm.act(
+        op, u.Q(0.0, "s"), v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at
+    )
+    # frame origin moves along circle: at gamma=0, d/dt (r cos, r sin) = (0, r*rate)
+    assert jnp.allclose(out["y"].ustrip("m/s"), 1.0, atol=1e-12)
+    assert jnp.allclose(out["x"].ustrip("m/s"), 0.0, atol=1e-12)

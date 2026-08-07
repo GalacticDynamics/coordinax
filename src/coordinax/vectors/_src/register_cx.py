@@ -633,10 +633,10 @@ def act(
     A time-dependent transform prolongs the whole bundle jointly: a uniformly
     moving translation boosts the velocity fibre by its rate:
 
-    >>> delta = lambda t: {"x": u.Q(3.0, "m/s") * t, "y": u.Q(0.0, "m"),
-    ...                    "z": u.Q(0.0, "m")}
-    >>> op = cx.Translate(delta, chart=cxc.cart3d)
-    >>> out = cx.act(op, u.Q(2.0, "s"), pv)
+    >>> import coordinax.transforms as cxfm
+    >>> rate = {"x": u.Q(3.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> moving = cxfm.Parametric(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> out = cx.act(moving, u.Q(2.0, "s"), pv)
     >>> out.point.data["x"], out["velocity"].data["x"]
     (Q(7., 'm'), Q(4., 'm / s'))
 

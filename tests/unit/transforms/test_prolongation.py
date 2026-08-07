@@ -284,20 +284,71 @@ class TestFastPathEqualsGeneric:
 
     def test_vel_kick_translate_vs_generic_fibre_law(self):
         """TD vel-kick Translate: acc gains delta-dot (hand rule)."""
-        kick = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(5.0, "km/s2") * t,
-                "y": u.Q(0.0, "km/s"),
-                "z": u.Q(0.0, "km/s"),
-            },
-            chart=cxc.cart3d,
-            semantic_kind=cxr.vel,
+        kick = cxfm.Parametric.from_(
+            lambda t: cxfm.Translate(
+                {
+                    "x": u.Q(5.0, "km/s2") * t,
+                    "y": u.Q(0.0, "km/s"),
+                    "z": u.Q(0.0, "km/s"),
+                },
+                chart=cxc.cart3d,
+                semantic_kind=cxr.vel,
+            )
         )
         tau = u.Q(2.0, "s")
         a = q3(1.0, 1.0, 1.0, "km/s2")
         out = cxfm.act(kick, tau, a, cxc.cart3d, cxr.coord_acc)
         assert jnp.allclose(u.ustrip("km/s2", out["x"]), 6.0)
         assert jnp.allclose(u.ustrip("km/s2", out["y"]), 1.0)
+
+    def test_point_acting_parametrics_stay_on_the_generic_funnel(self):
+        r"""Guard: the fibre-offset carve-out must not swallow point actions.
+
+        The ladder rule for `Parametric`-wrapped *fibre* offsets (ladder order
+        $k \geq 1$, identity point action) bypasses the generic tangent
+        funnel. If that predicate is ever widened to a transform with a real
+        point action, the funnel's differentiation — and with it the $\dot R
+        x$ / $\dot\gamma$ terms — is silently lost. These two pin that the
+        point-acting families still get those terms.
+
+        Both halves must DISCRIMINATE, i.e. fail under a widened predicate. In
+        a flat, matching chart the ladder rule and the funnel agree
+        numerically, so the order-0 half deliberately uses a non-flat (
+        spherical) data chart, where the point-Jacobian coupling is in play and
+        the two answers genuinely differ.
+        """
+        # A time-dependent ROTATION: the velocity must gain the Rdot x term.
+        rot = rot_z_op()
+        at = q3(1.0, 0.0, 0.0, "m")
+        v = q3(0.0, 0.0, 0.0, "m/s")
+        out = cxfm.act(rot, u.Q(0.0, "s"), v, cxc.cart3d, cxr.coord_vel, at=at)
+        # omega z-hat x x-hat = y-hat: zero without the funnel's derivative.
+        assert jnp.allclose(u.ustrip("m/s", out["y"]), 1.0, atol=1e-8)
+
+        # A time-dependent order-0 TRANSLATE is NOT a fibre offset either: it
+        # has a real point action, so it must reach the generic funnel. On a
+        # spherical data chart the componentwise ladder rule would give a
+        # materially different (wrong) answer, so this pins the k=0 boundary.
+        moving = uniform_translate(3.0)
+        tau = u.Q(2.0, "s")
+        usys = u.unitsystems.si
+        sph_at = {
+            "r": u.Q(5.0, "km"),
+            "theta": u.Q(1.0, "rad"),
+            "phi": u.Q(0.5, "rad"),
+        }
+        sph_v = {
+            "r": u.Q(0.3, "km/s"),
+            "theta": u.Q(0.01, "rad/s"),
+            "phi": u.Q(0.02, "rad/s"),
+        }
+        out_t = cxfm.act(
+            moving, tau, sph_v, cxc.sph3d, cxr.coord_vel, at=sph_at, usys=usys
+        )
+        gen = prolong_jet(moving, tau, {0: sph_at, 1: sph_v}, cxc.sph3d, usys=usys)
+        for k in out_t:
+            unit = u.unit_of(gen[1][k])
+            assert jnp.allclose(u.ustrip(unit, out_t[k]), gen[1][k].value, rtol=1e-6)
 
 
 # ============================================================================

@@ -25,9 +25,24 @@ from .base import AbstractTransform
 from .composed import Composed
 from .custom_types import CDict
 from .identity import Identity, identity
-from .prolong import _MSG_JET_SLOT0_MISSING, prolong_jet, pushforward_generic
+from .parametric import Parametric
+from .prolong import (
+    _MSG_JET_SLOT0_MISSING,
+    prolong_jet,
+    pushforward_generic,
+    tau_derivative,
+)
 from .utils import is_componentwise_offset
 from coordinax.internal import jax_scalar_handler, pos_named_objs
+
+_MSG_CALLABLE_DELTA = (
+    "{cls}.delta must be a component dict, not a callable. Time-dependent "
+    "offsets are no longer expressed by passing a function: wrap a builder in "
+    "coordinax.transforms.Parametric instead, e.g. "
+    "Parametric(UniformTranslation(rate, chart=...)) for a uniform drift, or "
+    "Parametric.from_(lambda tau: {cls}(delta(tau), chart=...)) for an "
+    "arbitrary one."
+)
 
 
 class AbstractAdd(AbstractTransform):
@@ -53,6 +68,24 @@ class AbstractAdd(AbstractTransform):
 
     right_add: bool = eqx.field(default=True, static=True)
     """Whether to add on the right (x + offset) or left (offset + x)."""
+
+    def __check_init__(self) -> None:
+        """Reject a callable ``delta`` at construction.
+
+        ``delta`` is a plain `dict` field with no coercion, so a function would
+        otherwise sail through ``__init__`` and only fail somewhere downstream.
+        Runtime type-checking rejects it too, but that is enabled only under
+        this project's pytest configuration — for library users this guard is
+        the ONLY construction-time rejection, so it must not be removed on the
+        grounds that the type annotation "already covers it".
+
+        No doctest here: under the doctest runner the type-checker preempts
+        this method, so an example would demonstrate the wrong error. See
+        ``tests/unit/transforms/test_translate.py::TestCallableDeltaRejected``,
+        which calls this method directly.
+        """
+        if callable(self.delta):
+            raise TypeError(_MSG_CALLABLE_DELTA.format(cls=type(self).__name__))
 
     def _combine_offsets(self, other_offset: CDict) -> CDict:
         """Combine this offset with another via addition."""
@@ -231,30 +264,214 @@ def act_jet(
 
     """
     if is_componentwise_offset(op, chart):
-        # The jet supplies the base point, so fibre kicks (k >= 1) work even
-        # cross-chart: `act` pushes the offset through the chart Jacobian at
-        # jet[0] when needed. The anchor is only passed for tangent slots:
-        # slot 0 IS the point, so a strict point dispatch need not accept it.
-        # Any tangent slot indexes jet[0], so require it explicitly here — a
-        # bare KeyError would otherwise mask the same guard prolong_jet gives.
-        if 0 not in jet and any(m != 0 for m in jet):
-            raise TypeError(_MSG_JET_SLOT0_MISSING)
-        return {
-            m: cxfmapi.act(
-                op,
-                tau,
-                slot,
-                chart,
-                _slot_rep(m),
-                usys=usys,
-                **({"at": jet[0]} if m else {}),
-            )
-            for m, slot in jet.items()
-        }
+        return _prolong_slotwise(op, tau, jet, chart, usys=usys)
 
     # A point-active offset (ladder order 0) outside the flat matching case
     # is fully captured by the point action — use the generic prolongation.
     return prolong_jet(op, tau, jet, chart, usys=usys)
+
+
+def _prolong_slotwise(
+    op: AbstractTransform,
+    tau: Any,
+    jet: dict,
+    chart: cxc.AbstractChart,
+    /,
+    *,
+    usys: Any = None,
+) -> dict:
+    """Prolong slot-wise: each jet slot transforms by the ladder rule alone."""
+    # The jet supplies the base point, so fibre kicks (k >= 1) work even
+    # cross-chart: `act` pushes the offset through the chart Jacobian at
+    # jet[0] when needed. The anchor is only passed for tangent slots:
+    # slot 0 IS the point, so a strict point dispatch need not accept it.
+    # Any tangent slot indexes jet[0], so require it explicitly here — a
+    # bare KeyError would otherwise mask the same guard prolong_jet gives.
+    if 0 not in jet and any(m != 0 for m in jet):
+        raise TypeError(_MSG_JET_SLOT0_MISSING)
+    return {
+        m: cxfmapi.act(
+            op,
+            tau,
+            slot,
+            chart,
+            _slot_rep(m),
+            usys=usys,
+            **({"at": jet[0]} if m else {}),
+        )
+        for m, slot in jet.items()
+    }
+
+
+# ============================================================================
+# Time-dependent FIBRE offsets: `Parametric` wrapping an additive kick.
+#
+# A fibre offset (ladder order k >= 1) has an IDENTITY point action, so the
+# generic tangent funnel in prolong.py — which recovers time dependence by
+# differentiating the point action — has nothing to differentiate and is
+# provably blind to it (it would silently return the data unchanged). The
+# rules below are the ladder rule that `translate.py` applies to a static
+# fibre offset, re-homed for the `Parametric` families that now carry all
+# time dependence.
+#
+# THE PREDICATE IS LOAD-BEARING. It must fire ONLY for additive fibre offsets.
+# Everything else — in particular every point-acting transform, where the
+# funnel's differentiation supplies the dR/dtau and dgamma/dtau terms this
+# whole design exists to capture — must fall through to the funnel unchanged.
+
+
+@ft.cache
+def _generic_tangent_act() -> Any:
+    """Return the engine's generic tangent ``act`` (``prolong.py``), lazily.
+
+    The `Parametric` rule below dispatches strictly more specifically than the
+    engine's, so a non-fibre `Parametric` can only get the engine's behaviour by
+    invoking it explicitly. Resolved on first call (and cached) because the
+    registration does not exist at this module's import time.
+    """
+    return cxfmapi.act.invoke(
+        AbstractTransform,
+        Any,
+        CDict,
+        cxc.AbstractChart,
+        cxr.TangentGeometry,
+        cxr.Representation,
+    )
+
+
+def _ladder_order(op0: Any, /) -> int | None:
+    r"""Ladder order $k$ of a materialized fibre offset, else `None`.
+
+    Mirrors `~coordinax.transforms.is_componentwise_offset`'s notion of a
+    fibre offset (the additive family's routing predicate): an `AbstractAdd`
+    whose ``semantic_kind`` order is $k \\geq 1$. Order-0 additives are real
+    translations with a non-identity point action and are NOT fibre offsets.
+    """
+    if not isinstance(op0, AbstractAdd):
+        return None
+    k = getattr(op0, "semantic_kind", cxr.dpl).order
+    return k if k >= 1 else None
+
+
+def _fibre_offset_order(op: Parametric, tau: Any, /) -> int | None:
+    r"""Ladder order $k$ of ``op``'s materialized fibre offset, else `None`."""
+    return _ladder_order(op.materialize(tau))
+
+
+def _fibre_ladder_op(
+    op: Parametric, op0: AbstractAdd, tau: Any, n: int, rep: Any, /
+) -> AbstractAdd:
+    r"""Materialize ``op`` with its offset replaced by $d^n\delta/d\tau^n$.
+
+    The $n$-th $\tau$-derivative of a ladder-order-$k$ offset is a tangent
+    object of order $k + n = m$, so it is stamped with the data's own
+    ``semantic_kind``; the existing static `act` then applies it (including
+    the cross-chart Jacobian push) as a matching-order kick.
+
+    ``op0`` is ``op`` already materialized at ``tau`` by the caller (which
+    needs it anyway to compute the ladder order) — reused here instead of
+    calling ``op.materialize(tau)`` a second time.
+    """
+
+    def delta_at(t: Any, /) -> CDict:
+        return cast("AbstractAdd", op.materialize(t)).delta
+
+    delta = tau_derivative(delta_at, tau, n=n)
+    return replace(op0, delta=delta, semantic_kind=rep.semantic_kind)
+
+
+@plum.dispatch
+def act(
+    op: Parametric,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    geom: cxr.TangentGeometry,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    at_vel: CDict | None = None,
+    usys: Any = None,
+    **kw: Any,
+) -> CDict:
+    r"""Tangent action of a `Parametric`, with the fibre-offset ladder rule.
+
+    A `Parametric` family whose value is a fibre offset (ladder order
+    $k \geq 1$) applies the ladder rule directly: order-$m$ data gains
+    $d^{m-k}\delta/d\tau^{m-k}$. Every other `Parametric` — in particular
+    every point-acting one — defers to the generic funnel, which recovers its
+    time dependence by differentiating the point action.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    A velocity kick that grows at 5 km/s2 shifts accelerations by its rate:
+
+    >>> kick = cxfm.Parametric.from_(lambda t: cxfm.Translate(
+    ...     {"x": u.Q(5.0, "km/s2") * t, "y": u.Q(0.0, "km/s"),
+    ...      "z": u.Q(0.0, "km/s")},
+    ...     chart=cxc.cart3d, semantic_kind=cxr.vel))
+    >>> a = {"x": u.Q(1.0, "km/s2"), "y": u.Q(1.0, "km/s2"), "z": u.Q(1.0, "km/s2")}
+    >>> out = cxfm.act(kick, u.Q(2.0, "s"), a, cxc.cart3d, cxr.coord_acc)
+    >>> out["x"]
+    Q(6., 'km / s2')
+
+    """
+    m = cast("int", rep.semantic_kind.order)
+
+    # Displacements (m=0) and a missing tau are the funnel's business: it owns
+    # the frozen-tau pushforward and the shared tau=None error. Materialize at
+    # most once here: `op0` doubles as the routing predicate's input and (on
+    # the fibre-offset path) the base for `_fibre_ladder_op`, so it is not
+    # re-materialized there.
+    op0 = None
+    k = None
+    if tau is not None and m != 0:
+        op0 = op.materialize(tau)
+        k = _ladder_order(op0)
+    if k is None:
+        # Reach the generic funnel itself, not a copy of it. This dispatch is
+        # strictly more specific than prolong.py's, so without the explicit
+        # invoke every `Parametric` tangent act would bypass the engine — and
+        # any future change there (a new anchor check, a units policy) would
+        # silently not apply to the one type that carries all time dependence.
+        return cast(
+            "CDict",
+            _generic_tangent_act()(
+                op, tau, x, chart, geom, rep, at=at, at_vel=at_vel, usys=usys, **kw
+            ),
+        )
+
+    # Lower-order fibres are untouched by a higher-order offset.
+    if m < k:
+        return x
+
+    op_m = _fibre_ladder_op(op, cast("AbstractAdd", op0), tau, m - k, rep)
+    return cast("CDict", cxfmapi.act(op_m, tau, x, chart, rep, at=at, usys=usys, **kw))
+
+
+@plum.dispatch
+def act_jet(
+    op: Parametric,
+    tau: Any,
+    jet: dict,
+    chart: cxc.AbstractChart,
+    /,
+    *,
+    usys: Any = None,
+) -> dict:
+    """Prolong a `Parametric`; fibre offsets go slot-wise, the rest generic.
+
+    The jet path needs the same fibre-offset carve-out as ``act`` above: the
+    generic jet chain differentiates the point action, which a fibre offset
+    does not have.
+    """
+    if tau is None or _fibre_offset_order(op, tau) is None:
+        return prolong_jet(op, tau, jet, chart, usys=usys)
+    return _prolong_slotwise(op, tau, jet, chart, usys=usys)
 
 
 # ============================================================================
