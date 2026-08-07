@@ -16,7 +16,7 @@ from .custom_types import CDict, OptUSys
 from coordinax.transforms._src import groups
 
 _MSG_TAU_REQUIRED = (
-    "the parametric transform {op} requires a time parameter; got tau=None."
+    "the time-dependent transform {op} requires a time parameter; got tau=None."
 )
 
 

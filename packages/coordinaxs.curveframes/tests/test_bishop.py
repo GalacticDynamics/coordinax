@@ -9,11 +9,15 @@ parameters, which only a parallel-transported frame has.
 
 __all__: tuple[str, ...] = ()
 
+import dataclasses
+
+import diffrax as dfx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from diffraxtra import DiffEqSolver
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
@@ -306,3 +310,303 @@ class TestBishopHelix:
         )
         p_rec = cxfm.act(op.inverse, tau, p_fwd)
         np.testing.assert_allclose(p_rec.ustrip("km"), p.ustrip("km"), atol=1e-3)
+
+
+# ── Configurable diffrax solve ───────────────────────────────────────
+
+
+class ParametricHelix(eqx.Module):
+    """A helix whose radius is a differentiable array leaf."""
+
+    radius: jax.Array
+
+    def __call__(self, tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.ustrip("s")
+        return u.Q(
+            jnp.stack([self.radius * jnp.cos(t), self.radius * jnp.sin(t), 0.3 * t]),
+            "km",
+        )
+
+
+def _orthonormality_error(R: jax.Array) -> float:
+    """Worst-case ``|R R^T - I|``, the observable the tolerances control."""
+    return float(jnp.max(jnp.abs(R @ R.T - jnp.eye(3))))
+
+
+#: The default solve configuration, reached the way a user reaches it. The
+#: builder's field is `static=True`, so `equinox.tree_at` cannot descend into
+#: it (a static field is not a leaf) -- `dataclasses.replace` is the move.
+_DEFAULT_SOLVE = cxfc.BishopBuilder(helix).diffeqsolver
+
+
+def _configured(**kw: object) -> cxfc.BishopBuilder:
+    """A helix builder whose solve config overrides only ``kw``.
+
+    Everything not named keeps its default -- which for ``adjoint`` is the
+    whole point; see `test_partial_override_preserves_the_direct_adjoint`.
+    """
+    return dataclasses.replace(
+        cxfc.BishopBuilder(helix),
+        diffeqsolver=dataclasses.replace(_DEFAULT_SOLVE, **kw),
+    )
+
+
+class TestBishopSolveConfiguration:
+    """The `diffrax` knobs live in one builder field, and they take effect.
+
+    They were module-level constants, so the defaults are pinned against
+    measured values rather than re-derived -- a change in any of them has to
+    be a deliberate edit to this file.
+    """
+
+    def test_defaults_are_the_previous_constants(self):
+        """The defaults reproduce the module-level constants they replaced."""
+        solve = cxfc.BishopBuilder(helix).diffeqsolver
+        assert isinstance(solve, DiffEqSolver)
+        assert solve.solver == dfx.Tsit5()
+        assert solve.adjoint == dfx.DirectAdjoint()
+        assert solve.stepsize_controller == dfx.PIDController(rtol=1e-10, atol=1e-10)
+        assert solve.max_steps == 16384
+
+    @pytest.mark.parametrize("tau_val", [0.0, 1.0, -1.5, 7.0])
+    def test_default_accuracy_oracle(self, tau_val: float):
+        """Pinned values: the default solve is orthonormal to ~1e-11.
+
+        Measured at ``float64`` on the 0.3-pitch helix; the same solve is
+        accurate to 9.403e-12 out at ``|tau| = 60``, where it also stays
+        inside the 16384-step budget (~20 steps per unit of ``|dtau|``).
+        """
+        R = cxfc.BishopBuilder(helix).rotation_matrix(u.Q(tau_val, "s"))
+        assert _orthonormality_error(R) < 1e-11
+        np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-11)
+
+    def test_partial_override_preserves_the_direct_adjoint(self):
+        """`dataclasses.replace` keeps every knob it is not told to change.
+
+        This is the ergonomic that makes one aggregate field safe. A
+        `DiffEqSolver` built from scratch takes `diffrax`'s own defaults --
+        including `RecursiveCheckpointAdjoint`, which silently kills forward
+        mode. Deriving from the default cannot do that, and the derived
+        builder still does tangent propagation.
+        """
+        bt = _configured(stepsize_controller=dfx.PIDController(rtol=1e-6, atol=1e-6))
+        assert bt.diffeqsolver.adjoint == dfx.DirectAdjoint()
+        assert bt.diffeqsolver.solver == dfx.Tsit5()
+        assert bt.diffeqsolver.max_steps == 16384
+        assert bt.diffeqsolver.stepsize_controller.rtol == 1e-6
+
+        # The contrast: forgetting the adjoint when building from scratch.
+        scratch = DiffEqSolver(
+            solver=dfx.Tsit5(),
+            stepsize_controller=dfx.PIDController(rtol=1e-6, atol=1e-6),
+            max_steps=16384,
+        )
+        assert not isinstance(scratch.adjoint, dfx.DirectAdjoint)
+
+        # ...and forward mode survives the derived one.
+        op = cxfm.TimeDep(bt)
+        tau = u.Q(0.7, "s")
+        cxfm.act(op, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=AT)
+
+    def test_the_solve_config_is_static(self):
+        """Static, so the builder's pytree stays about the curve.
+
+        A `DiffEqSolver` is hashable and contributes no *array* leaves, so
+        nothing that belongs in a buffer is frozen into the treedef. Left
+        dynamic, `jax.tree_util.tree_map` over the builder would rescale the
+        tolerances and the step budget along with the curve parameters.
+        """
+        bt = _configured(
+            max_steps=999,
+            stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3),
+        )
+        # Configuring the solve adds no leaves: the `DiffEqSolver` carries ten
+        # of its own (floats, ints, a bool, a function) once it is dynamic.
+        assert len(jax.tree.leaves(bt)) == len(
+            jax.tree.leaves(cxfc.BishopBuilder(helix))
+        )
+
+        # So a tree_map over the curve parameters cannot reach the config.
+        doubled = jax.tree.map(lambda x: 2 * x if eqx.is_array(x) else x, bt)
+        assert doubled.diffeqsolver.max_steps == 999
+        assert doubled.diffeqsolver.stepsize_controller.rtol == 1e-3
+
+    def test_loose_tolerances_are_measurably_worse(self):
+        """A deliberately loose controller degrades orthonormality by ~1e9.
+
+        The assertion is two-sided: the loose solve must be *far* worse than
+        the default, which is what proves the field is read rather than
+        merely accepted.
+        """
+        tau = u.Q(7.0, "s")
+        default = cxfc.BishopBuilder(helix).rotation_matrix(tau)
+        loose = _configured(
+            stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3)
+        ).rotation_matrix(tau)
+
+        assert _orthonormality_error(default) < 1e-11
+        assert _orthonormality_error(loose) > 1e-5
+        # ...and the frames genuinely differ, not just their error estimates.
+        assert float(jnp.max(jnp.abs(loose - default))) > 1e-4
+
+    def test_alternative_solver_agrees_with_the_default(self):
+        """A different solver is a different integrator, not a different answer."""
+        tau = u.Q(7.0, "s")
+        default = cxfc.BishopBuilder(helix).rotation_matrix(tau)
+        dopri = _configured(solver=dfx.Dopri5()).rotation_matrix(tau)
+        np.testing.assert_allclose(dopri, default, atol=1e-9)
+
+    def test_max_steps_is_a_real_budget(self):
+        """Too small a budget raises rather than silently truncating."""
+        bt = _configured(max_steps=4)
+        with pytest.raises(Exception, match="maximum number of solver steps"):
+            bt.rotation_matrix(u.Q(7.0, "s"))
+
+    def test_customised_builder_survives_jit_grad_and_vmap(self):
+        """A non-default config keeps the builder a working pytree."""
+        tau = u.Q(0.7, "s")
+        solve = dataclasses.replace(
+            _DEFAULT_SOLVE,
+            solver=dfx.Dopri5(),
+            stepsize_controller=dfx.PIDController(rtol=1e-8, atol=1e-8),
+        )
+
+        def build(r: jax.Array) -> cxfc.BishopBuilder:
+            return cxfc.BishopBuilder(ParametricHelix(r), diffeqsolver=solve)
+
+        one = jnp.asarray(1.0)
+
+        # jit
+        eager = build(one).rotation_matrix(tau)
+        jitted = eqx.filter_jit(lambda b, t: b.rotation_matrix(t))(build(one), tau)
+        np.testing.assert_allclose(jitted, eager, atol=1e-9)
+
+        # grad w.r.t. a curve parameter, against central differences
+        got = eqx.filter_grad(lambda r: build(r).rotation_matrix(tau)[1, 2])(one)
+        h = 1e-5
+        want = (
+            build(one + h).rotation_matrix(tau)[1, 2]
+            - build(one - h).rotation_matrix(tau)[1, 2]
+        ) / (2 * h)
+        np.testing.assert_allclose(got, want, rtol=1e-6)
+
+        # vmap over a batch of builders sharing the static config
+        radii = jnp.asarray([0.5, 1.0, 2.0])
+        batched = eqx.filter_vmap(lambda r: build(r).rotation_matrix(tau))(radii)
+        assert batched.shape == (3, 3, 3)
+        for i, r in enumerate(radii):
+            np.testing.assert_allclose(
+                batched[i], build(r).rotation_matrix(tau), atol=1e-9
+            )
+
+    def test_tangent_act_works_with_the_default_adjoint(self):
+        """`DirectAdjoint` still does forward mode on a customised builder.
+
+        This is the capability the default exists to protect: it is why
+        `RecursiveCheckpointAdjoint` -- `diffrax`'s own default, and so
+        `DiffEqSolver`'s -- is *not* this builder's default.
+        """
+        tau = u.Q(0.7, "s")
+        op = cxfm.TimeDep(_configured(solver=dfx.Dopri5()))
+
+        got = cxfm.act(op, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=AT)
+        jet = cxfm.act_jet(op, tau, {0: AT, 1: VEL}, cxc.cart3d)
+        for k in AT:
+            np.testing.assert_allclose(
+                jet[1][k].ustrip("km/s"), got[k].ustrip("km/s"), atol=1e-10
+            )
+
+    def test_recursive_checkpoint_adjoint_trades_forward_mode_for_speed(self):
+        """The documented trade-off, asserted so the docstring cannot rot.
+
+        `RecursiveCheckpointAdjoint` is a `jax.custom_vjp`: reverse mode keeps
+        working (and agrees with the default), but forward mode -- and so the
+        whole tangent/jet capability -- is gone.
+        """
+        tau = u.Q(0.7, "s")
+        rca = dfx.RecursiveCheckpointAdjoint()
+
+        with pytest.raises(TypeError, match="custom_vjp"):
+            cxfm.act(
+                cxfm.TimeDep(_configured(adjoint=rca)),
+                tau,
+                VEL,
+                cxc.cart3d,
+                cxr.tangent_geom,
+                cxr.coord_vel,
+                at=AT,
+            )
+
+        # Reverse mode is unaffected, and matches the default adjoint.
+        def dR(adjoint: dfx.AbstractAdjoint) -> jax.Array:
+            return eqx.filter_grad(
+                lambda r: cxfc.BishopBuilder(
+                    ParametricHelix(r),
+                    diffeqsolver=dataclasses.replace(_DEFAULT_SOLVE, adjoint=adjoint),
+                ).rotation_matrix(tau)[1, 2]
+            )(jnp.asarray(1.0))
+
+        np.testing.assert_allclose(dR(rca), dR(dfx.DirectAdjoint()), rtol=1e-9)
+
+    def test_backsolve_adjoint_is_unusable_in_both_modes(self):
+        """`BacksolveAdjoint` drops *both* modes, not just reverse.
+
+        The docstring table used to claim ``forward: yes`` for it. It is
+        ``no``/``no``: the reparametrised right-hand side closes over ``dtau``
+        and ``tau_0_val``, so `BacksolveAdjoint`'s backwards solve raises
+        JAX's ``CustomVJPException`` ("...with respect to a closed-over
+        value") whichever way it is differentiated. Nothing else in the suite
+        instantiates it, so without this the table can rot again.
+        """
+        tau = u.Q(0.7, "s")
+        bs = dfx.BacksolveAdjoint()
+
+        # Forward: `act` on tangent data.
+        with pytest.raises(Exception, match="closed-over value"):
+            cxfm.act(
+                cxfm.TimeDep(_configured(adjoint=bs)),
+                tau,
+                VEL,
+                cxc.cart3d,
+                cxr.tangent_geom,
+                cxr.coord_vel,
+                at=AT,
+            )
+
+        # Reverse: `grad` w.r.t. a curve parameter.
+        with pytest.raises(Exception, match="closed-over value"):
+            eqx.filter_grad(
+                lambda r: cxfc.BishopBuilder(
+                    ParametricHelix(r),
+                    diffeqsolver=dataclasses.replace(_DEFAULT_SOLVE, adjoint=bs),
+                ).rotation_matrix(tau)[1, 2]
+            )(jnp.asarray(1.0))
+
+        # ...and it is the reparametrisation, not the curve: a bare-function
+        # curve carries no array leaves at all and fails identically.
+        with pytest.raises(Exception, match="closed-over value"):
+            eqx.filter_grad(
+                lambda t: _configured(adjoint=bs).rotation_matrix(u.Q(t, "s"))[1, 2]
+            )(jnp.asarray(0.7))
+
+    def test_from_curve_forwards_the_diffeqsolver(self):
+        """The frame constructor reaches the solve config, not just the builder.
+
+        `BishopFrame.from_curve` forwards every other builder field, so a
+        ``diffeqsolver`` it dropped would leave the documented entry point
+        silently stuck on the default. Asserted by *effect*: the same loose
+        controller that degrades accuracy on the builder must degrade it here.
+        """
+        tau = u.Q(7.0, "s")
+        loose = dataclasses.replace(
+            _DEFAULT_SOLVE, stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3)
+        )
+        frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, diffeqsolver=loose)
+
+        assert frame.xop.builder.diffeqsolver is loose
+        assert _orthonormality_error(frame.xop.builder.rotation_matrix(tau)) > 1e-5
+
+        # The default path is untouched.
+        default = cxfc.BishopFrame.from_curve(cxf.Alice(), helix)
+        assert default.xop.builder.diffeqsolver == _DEFAULT_SOLVE
+        assert _orthonormality_error(default.xop.builder.rotation_matrix(tau)) < 1e-11

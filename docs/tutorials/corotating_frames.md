@@ -197,4 +197,4 @@ At the release instant the puck is at rest in the turntable frame ($\mathbf{v}_\
 | Rotating-frame acceleration | `out["acceleration"]` — the fictitious force per unit mass |
 | Sweep over time | `jax.vmap` the transition over the advancing state |
 
-The lesson: coordinax's transforms only need a **point action** ($\mathbf{x} \mapsto R(\tau)\,\mathbf{x}$). Velocities, accelerations, and hence the Coriolis and centrifugal forces come for free from the kinematic prolongation (`act`/`prolong`) — see the [transforms guide](../guides/transforms.md#time-dependence-couples-the-ladder-kinematic-prolongation) for the machinery.
+The lesson: coordinax's transforms only need a **point action** ($\mathbf{x} \mapsto R(\tau)\,\mathbf{x}$). Velocities, accelerations, and hence the Coriolis and centrifugal forces come for free from the kinematic prolongation (`act`/`act_jet`) — see the [transforms guide](../guides/transforms.md#time-dependence-couples-the-ladder-kinematic-prolongation) for the machinery.

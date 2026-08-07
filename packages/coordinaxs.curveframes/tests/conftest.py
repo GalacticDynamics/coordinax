@@ -71,7 +71,12 @@ def inverse_rotation(builder: object, tau: u.AbstractQuantity) -> object:
     The rows of this matrix are the inverse frame's triad, i.e. the *columns*
     of the forward R.
     """
-    return cxfm.TimeDep(builder).inverse.evaluate_at(tau)[0].R
+    # The forward family is ``Translate(-gamma) | Rotate(R)``, so its inverse
+    # reverses the pipe and the rotation lands first. Pin that ordering: a
+    # silent reversal would otherwise surface as an opaque AttributeError.
+    inv = cxfm.TimeDep(builder).inverse.evaluate_at(tau)[0]
+    assert isinstance(inv, cxfm.Rotate)
+    return inv.R
 
 
 # ===================================================================

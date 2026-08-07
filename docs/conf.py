@@ -208,6 +208,12 @@ nitpick_ignore_regex = [
     (r"py:.*", r"wadler_lindig\..*"),
     (r"py:.*", r"unxt_hypothesis\..*"),
     (r"py:.*", r"optype\..*"),
+    # `diffrax` is a MkDocs site with no objects.inv, and the annotations that
+    # leak into signatures are its private `_solver` / `_adjoint` /
+    # `_step_size_controller` paths, which a public inventory would not carry
+    # anyway.  `diffraxtra` (`BishopBuilder.diffeqsolver`) publishes none either.
+    (r"py:.*", r"diffrax\..*"),
+    (r"py:.*", r"diffraxtra\..*"),
     # ``unxts.linalg`` (unxt v2 heterogeneous-unit linalg) publishes no
     # objects.inv, so neither the module (``:mod:`unxts.linalg```)
     # nor its members (``unxts.linalg.QuantityMatrix``) resolve.

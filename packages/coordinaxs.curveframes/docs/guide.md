@@ -53,7 +53,7 @@ def helix(tau: u.Q) -> u.Q:
 fs_transform = cxfc.FrenetSerretBuilder(helix)
 ```
 
-`from_curve` uses `unxt.experimental.jacfwd` to compute unit-correct first and second derivatives of the curve, then builds the tangent, normal, and binormal closures via Gram–Schmidt orthogonalisation.
+`FrenetSerretBuilder` uses `unxt.experimental.jacfwd` to compute unit-correct first and second derivatives of the curve, then derives the tangent, normal, and binormal via Gram–Schmidt orthogonalisation. Nothing is precomputed: `tangent`, `normal`, and `binormal` are methods on the builder, each evaluated at the $\tau$ you pass it.
 
 Evaluate the fields at a specific $\tau$:
 
@@ -65,13 +65,13 @@ fs_transform.tangent(tau)  # unit vector along curve velocity
 
 ### The `tau_unit` Parameter
 
-By default `from_curve` assumes $\tau$ has units of seconds. If your parameter has different units (e.g. radians, years), pass `tau_unit`:
+By default the builder assumes $\tau$ has units of seconds. If your parameter has different units (e.g. radians, years), pass `tau_unit`:
 
 ```python
 fs_rad = cxfc.FrenetSerretBuilder(helix, tau_unit="rad")
 ```
 
-This affects only the automatic differentiation step — the returned callables still accept any `Quantity` with compatible dimensions.
+This affects only the automatic differentiation step — the builder's methods still accept any `Quantity` with compatible dimensions.
 
 ### Inversion
 
@@ -244,6 +244,8 @@ The **Bishop transform** (also called rotation-minimising or parallel-transport 
 | `tau_0` | reference parameter where the initial frame is defined (a leaf); `None` resolves to `Q(0.0, tau_unit)` |
 | `initial_normal` | initial $\mathbf{U}_{1,0}$ (a leaf), or `None` for Gram–Schmidt auto-selection |
 
+…plus `diffeqsolver`, a single [`diffraxtra.DiffEqSolver`](https://github.com/GalacticDynamics/diffraxtra) holding the whole `diffrax` configuration — solver, step-size controller, adjoint, step budget — covered in [Configuring the solve](#configuring-the-solve). It is a _static_ field, so it adds no pytree leaves and a `jax.tree.map` over the curve's parameters cannot reach it.
+
 As with `FrenetSerretBuilder`, the tangent and normals are not stored — `normal1(tau)`/`normal2(tau)` compute $\mathbf{U}_1(\tau)$ (by solving the parallel-transport ODE from `tau_0`) and $\mathbf{U}_2(\tau) = \mathbf{T}\times\mathbf{U}_1$ on every call.
 
 ### How the Bishop Frame Differs from Frenet–Serret
@@ -274,13 +276,11 @@ def helix(tau: u.Q) -> u.Q:
 bt = cxfc.BishopBuilder(helix)
 ```
 
-`from_curve` automatically:
+`BishopBuilder` automatically:
 
 1. Computes $\mathbf{T}$ via JAX autodiff
 2. Chooses an initial normal $\mathbf{U}_{1,0}$ via Gram–Schmidt (unless you supply one)
 3. Solves the parallel-transport ODE with [`diffrax`](https://docs.kidger.site/diffrax/)
-
-The solve uses `diffrax.DirectAdjoint`, so it is differentiable in both modes: reverse mode for gradients with respect to curve parameters, and forward mode for propagating tangent data and jets.
 
 Evaluate at a specific $\tau$:
 
@@ -292,9 +292,49 @@ bt.normal1(tau)  # parallel-transported U1
 bt.normal2(tau)  # T x U1
 ```
 
+(configuring-the-solve)=
+
+### Configuring the Solve
+
+The whole solve lives in one field, `diffeqsolver`, a `diffraxtra.DiffEqSolver`. Its defaults — `Tsit5`, `PIDController(rtol=1e-10, atol=1e-10)`, `DirectAdjoint`, `max_steps=16384` — hold orthonormality to $\sim 9 \times 10^{-12}$ out to $|\tau| = 60$ on the helix above.
+
+**Change one knob by deriving from the default, not by building a `DiffEqSolver` from scratch.** `dataclasses.replace` keeps every field you do not name:
+
+```python
+import dataclasses
+
+import diffrax as dfx
+
+bt = cxfc.BishopBuilder(helix)
+fast = dataclasses.replace(
+    bt,
+    diffeqsolver=dataclasses.replace(
+        bt.diffeqsolver, stepsize_controller=dfx.PIDController(rtol=1e-6, atol=1e-6)
+    ),
+)
+type(fast.diffeqsolver.adjoint).__name__  # 'DirectAdjoint'
+```
+
+`equinox.tree_at` works on the `DiffEqSolver` too, but not through the builder — a `static=True` field is not a pytree leaf.
+
+Why it matters: `DiffEqSolver`'s _own_ field defaults are read off `diffrax.diffeqsolve`'s signature, so `DiffEqSolver(dfx.Tsit5(), stepsize_controller=…)` silently picks up `RecursiveCheckpointAdjoint` — the one adjoint that disables tangent and jet propagation. Deriving from `bt.diffeqsolver` cannot do that.
+
+**Choosing an adjoint** is the one knob that changes what the frame can _do_, not just how fast it does it. The default is `DirectAdjoint` rather than `diffrax`'s own default because `act` on tangent data and `act_jet` differentiate the solve in _forward_ mode:
+
+| Adjoint                      | forward (AD) | reverse (AD) | speed   |
+| ---------------------------- | ------------ | ------------ | ------- |
+| `DirectAdjoint` (default)    | yes          | yes          | slowest |
+| `RecursiveCheckpointAdjoint` | **no**       | yes          | fastest |
+| `ForwardMode`                | yes          | **no**       | fast    |
+| `BacksolveAdjoint`           | **no**       | **no**       | fast    |
+
+`BacksolveAdjoint` is unusable here in _either_ mode: the reparametrised ODE right-hand side closes over $\Delta\tau$ and $\tau_0$, which its backwards solve cannot carry, so both directions raise JAX's `CustomVJPException` ("…with respect to a closed-over value"). That is a property of the reparametrisation, not of the curve — it fails the same way for a curve written as a bare function with no array leaves at all, so there is no way to write the curve that recovers it.
+
+For `RecursiveCheckpointAdjoint`, "forward: no" means tangent and jet propagation raise `TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function` — accurate, but it never names the adjoint you chose. Reach for it only when you want `grad` and nothing else.
+
 ### Controlling the Initial Normal
 
-By default, `from_curve` picks the standard basis vector least aligned with $\mathbf{T}(\tau_0)$ via Gram–Schmidt. You can provide an explicit initial normal:
+By default, the builder picks the standard basis vector least aligned with $\mathbf{T}(\tau_0)$ via Gram–Schmidt. You can provide an explicit initial normal:
 
 ```python
 bt_custom = cxfc.BishopBuilder(helix, initial_normal=jnp.array([0.0, 0.0, 1.0]))
