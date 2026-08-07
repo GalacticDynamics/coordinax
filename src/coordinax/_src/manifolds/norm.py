@@ -14,6 +14,7 @@ from unxt.quantity import is_any_quantity
 
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
+from ._utils import require_positive_definite
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.charts import Cart0D, Cart1D, Cart2D, Cart3D, CartND
 from coordinax._src.custom_types import CDict, OptUSys
@@ -215,7 +216,21 @@ def norm(
     >>> cxm.norm(v, metric, cxc.sph2, at=at)
     Q(0.61237244, 'rad / s')
 
+    An indefinite metric has no real-valued norm and is rejected rather than
+    silently returning ``nan``:
+
+    >>> v4 = {"ct": u.Q(5.0, "m"), "x": u.Q(1.0, "m"),
+    ...       "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> at4 = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+    >>> try:
+    ...     cxm.norm(v4, cxm.MinkowskiMetric(), cxc.minkowskict, at=at4)
+    ... except NotImplementedError as e:
+    ...     print(str(e)[:52])
+    norm() supports only positive-definite metrics, but
+
     """
+    require_positive_definite(metric, "norm")
+
     keys = chart.components
     qty_flags = [is_any_quantity(val) for val in v.values()]
     if any(qty_flags) and not all(qty_flags):
@@ -351,6 +366,7 @@ def norm(
             "(no unit information). "
             "Example: pass `usys=unxt.unitsystems.si`."
         )
+    require_positive_definite(metric, "norm")
     mm = cxmapi.metric_matrix(chart.M, at, chart)
     return array_norm(mm.to_dense().matrix, v)  # ty: ignore[unresolved-attribute]
 

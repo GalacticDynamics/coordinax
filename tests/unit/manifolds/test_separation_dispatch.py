@@ -1,6 +1,7 @@
 """Tests for the separation() manifold API dispatches."""
 
 import jax.numpy as jnp
+import pytest
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -58,3 +59,37 @@ class TestSeparationDispatches:
         d = cxm.separation(cxc.cart3d, a, b).ustrip("m")
         assert bool(qnp.isclose(d[0], 5.0))
         assert bool(qnp.isclose(d[1], qnp.sqrt(2.0)))
+
+
+class TestIndefiniteMetricSeparation:
+    """`separation` inherits `norm`'s guard instead of returning ``nan``.
+
+    Regression: a timelike pair used to yield ``Distance(nan, 'm')`` while a
+    spacelike pair yielded a plausible number, so the failure was invisible
+    unless you happened to probe a timelike interval.
+    """
+
+    @staticmethod
+    def _event(ct, x):
+        return {
+            "ct": u.Q(ct, "m"),
+            "x": u.Q(x, "m"),
+            "y": u.Q(0.0, "m"),
+            "z": u.Q(0.0, "m"),
+        }
+
+    @pytest.mark.parametrize(
+        ("kind", "ct", "x"),
+        [("timelike", 5.0, 1.0), ("spacelike", 1.0, 5.0), ("null", 3.0, 3.0)],
+    )
+    def test_raises_rather_than_returning_nan(self, kind, ct, x):
+        del kind
+        origin = self._event(0.0, 0.0)
+        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
+            cxm.separation(cxc.minkowskict, origin, self._event(ct, x))
+
+    def test_euclidean_separation_is_unaffected(self):
+        """Positive control: the common Riemannian path is untouched."""
+        a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+        assert bool(qnp.isclose(cxm.separation(cxc.cart3d, a, b).ustrip("m"), 5.0))

@@ -7,7 +7,59 @@ from jaxtyping import Array
 import unxt as u
 import unxts.linalg as ul
 
+from coordinax._src.base import AbstractMetricField
+
 DMLS = u.unit("")
+
+
+def require_positive_definite(metric: AbstractMetricField, fname: str, /) -> None:
+    r"""Raise `NotImplementedError` unless *metric* is positive-definite.
+
+    A Riemannian magnitude $\sqrt{v^\top G v}$ is real-valued only when $G$ is
+    positive-definite.  Under an indefinite (pseudo-Riemannian) metric such as
+    `~coordinax.manifolds.MinkowskiMetric`, $v^\top G v$ is *negative* for
+    timelike vectors, so the square root evaluates to ``nan`` -- a wrong answer
+    wearing the costume of a real one.  Callers get a loud failure instead.
+
+    Parameters
+    ----------
+    metric
+        The metric field to check, via its ``signature``.
+    fname
+        Name of the calling function, used in the error message.
+
+    Examples
+    --------
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinax._src.manifolds._utils import require_positive_definite
+
+    A Riemannian metric passes silently:
+
+    >>> require_positive_definite(cxm.FlatMetric(3), "norm") is None
+    True
+
+    An indefinite one does not:
+
+    >>> try:
+    ...     require_positive_definite(cxm.MinkowskiMetric(), "norm")
+    ... except NotImplementedError as e:
+    ...     print(e)
+    norm() supports only positive-definite metrics, but MinkowskiMetric has
+    signature (-1, 1, 1, 1), which is pseudo-Riemannian (indefinite). Under such
+    a metric `sqrt(v^T G v)` is `nan` for timelike vectors rather than a
+    meaningful magnitude.
+
+    """
+    if all(s > 0 for s in metric.signature):
+        return
+    msg = (
+        f"{fname}() supports only positive-definite metrics, but "
+        f"{type(metric).__name__} has signature {tuple(metric.signature)}, which "
+        "is pseudo-Riemannian (indefinite). Under such a metric "
+        "`sqrt(v^T G v)` is `nan` for timelike vectors rather than a "
+        "meaningful magnitude."
+    )
+    raise NotImplementedError(msg)
 
 
 def as_quantity_matrix(x: ul.QM | Array, /) -> ul.QM:
