@@ -3,11 +3,13 @@
 __all__: tuple[str, ...] = ()
 
 import itertools
+import math
 
 import jaxtyping
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 import pytest
 from hypothesis import given, settings, strategies as st
 from numpy.testing import assert_allclose
@@ -789,3 +791,82 @@ class TestJacobianPtMapCDictArrayBranch:
         at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
         with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
             cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
+
+
+# ===========================================================================
+# Extreme scales
+# ===========================================================================
+
+
+#: Magnitudes for the scale-free properties, spanning 34 decades.
+#:
+#: Bounded by float32, not by the charts. `J_{cart->sph}` entries scale like
+#: ``1/r**2``, which underflows at ``sqrt(1/tiny) = 9.2e18`` -- *before*
+#: ``r**2`` overflows at ``sqrt(max) = 1.8e19``. The floor is 1e-16 rather than
+#: ``sqrt(tiny) = 1.1e-19`` because near-pole colatitudes shrink ``x`` and
+#: ``y``. Each entry draws over ``[mag, 10*mag]``, so those windows must stay
+#: inside [1e-16, 1e18]; worst measured error there is 2.6e-5 vs ``atol=1e-4``.
+#: Not asserted as a boundary test -- the limits move under JAX x64.
+EXTREME_MAGNITUDES = [
+    pytest.param(1e-16, id="1e-16"),
+    pytest.param(1e-11, id="1e-11"),
+    pytest.param(1e-6, id="1e-6"),
+    pytest.param(1e6, id="1e6"),
+    pytest.param(1e11, id="1e11"),
+    pytest.param(1e17, id="1e17"),
+]
+
+
+class TestJacobianPtMapAtExtremeScales:
+    """Scale-free properties, checked far from unit scale.
+
+    Every other Jacobian test here pins points near 1 to keep an absolute
+    tolerance meaningful. These two are dimensionless, so they need not.
+    """
+
+    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
+    @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
+    @given(data=st.data())
+    @settings(deadline=None, max_examples=5)
+    def test_composition_is_the_identity(
+        self,
+        cart: cxc.AbstractChart,
+        curv: cxc.AbstractChart,
+        magnitude: float,
+        data: st.DataObject,
+    ) -> None:
+        """``J_{curv->cart} @ J_{cart->curv} = I``, at any magnitude."""
+        p_curv = data.draw(cxst.cdicts(curv, magnitude=(magnitude, magnitude * 10.0)))
+        p_cart = cxc.pt_map(p_curv, curv, cart)
+
+        j_fwd = cxc.jac_pt_map(p_cart, cart, curv)
+        j_inv = cxc.jac_pt_map(p_curv, curv, cart)
+
+        assert_allclose(qnp.matmul(j_inv, j_fwd).value, jnp.eye(curv.ndim), atol=1e-4)
+
+    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
+    def test_analytic_dispatch_agrees_with_jacfwd(self, magnitude: float) -> None:
+        """The closed-form `Cart2D -> Polar2D` Jacobian matches autodiff.
+
+        Packed input on purpose: a cdict resolves to the generic branch, which
+        *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with it. Only
+        array/Quantity reaches the hand-written Jacobian.
+
+        Compared relatively, with no ``atol`` -- entries scale like ``1/r``, so
+        any absolute floor is vacuous at 1e18 and unmeetable at 1e-18. At
+        ``theta = 0.7`` no entry is ever exactly zero, so a relative
+        comparison of the full matrix is well defined.
+        """
+        theta = 0.7
+        at = jnp.asarray(
+            [magnitude * math.cos(theta), magnitude * math.sin(theta)],
+            dtype=jnp.float32,
+        )
+
+        got = np.asarray(cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys_si))
+        expected = np.asarray(
+            jax.jacfwd(cxc.pt_map(None, cxc.cart2d, cxc.polar2d, usys=usys_si))(at)
+        )
+
+        assert np.all(np.isfinite(got))
+        assert_allclose(got, expected, rtol=1e-5)
