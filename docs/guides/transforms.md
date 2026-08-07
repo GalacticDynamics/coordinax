@@ -348,7 +348,7 @@ same_rot = cxfm.evaluate_at(static_rot, tau)  # returns the same static Rotate o
 
 ## Writing a Builder
 
-A builder is any `tau -> AbstractTransform` callable — a plain function, an `eqx.Partial`, or (most often) an `equinox.Module`. Whichever you pick, its $\tau$-dependence is differentiated by `act`/`act_jet`; the choice only decides which _other_ parameters are pytree leaves. Three rules:
+A builder is any `tau -> AbstractTransform` callable — a plain function, an `eqx.Partial`, or (most often) an `equinox.Module`. Whichever you pick, its $\tau$-dependence is differentiated by `act`/`act_jet`; the choice only decides which _other_ parameters are pytree leaves. Two rules:
 
 **Structure constancy.** `builder(tau)` must return the same operator type / pytree structure for every `tau` — required for `jit`, `vmap`, and `jvp` to trace through it. A builder that returns `Rotate` for one `tau` and `Translate` for another breaks tracing; JAX raises its own structure-mismatch error if you get this wrong.
 
@@ -370,20 +370,6 @@ class CircleFrame(eqx.Module):
 ```
 
 `d/dgamma` is then an ordinary gradient of the operator pytree, and `jax.vmap` over `gamma` produces a frame field along the curve in one call.
-
-**`eqx.Partial` as a zero-boilerplate builder.** For a plain function plus some leaf arguments you want bound (and differentiable), skip writing a `Module` and use `eqx.Partial`:
-
-```python
-def build(rate, tau):
-    delta = {k: v * tau for k, v in rate.items()}
-    return cxfm.Translate(delta, chart=cxc.cart3d)
-
-
-rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-op = cxfm.TimeDep(eqx.Partial(build, rate))
-```
-
-`rate` is bound as a pytree leaf of the `Partial`, so it is differentiable and vmappable exactly like a hand-written `Module` field. `cxfm.TimeDep.from_(build, rate)` is the same thing without naming `eqx.Partial` yourself; note `tau` must be the builder's **last** parameter either way. A `Partial` also carries the function itself as a leaf, so apply it under `eqx.filter_jit` rather than plain `jax.jit`.
 
 ## JAX Integration
 
@@ -469,8 +455,6 @@ Concretely:
 - a time-dependent `Translate` with offset $\delta(\tau)$ shifts velocities by $\dot\delta(\tau)$ and accelerations by $\ddot\delta(\tau)$;
 - a time-dependent `Rotate` $R(\tau)$ gives $v' = R v + \dot R\,x$ and the full Coriolis/centrifugal acceleration law;
 - `Boost` is the Galilean boost: points move by $\Delta v\,\tau$ (a time is **required** for point data), velocities shift by $\Delta v$. The fibre-only velocity kick that leaves points fixed is `Translate(..., semantic_kind=cxr.vel)`.
-
-Because the $\dot R\,x$-style terms depend on the base point, acting a time-dependent transform on a _lone_ velocity or acceleration requires the anchor keywords `at=` (and `at_vel=` for accelerations) — or act on a `Coordinate` bundle, which supplies the whole jet automatically.
 
 ### The Three Verbs
 

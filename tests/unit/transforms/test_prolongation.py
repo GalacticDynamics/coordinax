@@ -4,6 +4,8 @@ The keystone property tested throughout: every hand-written fast path must
 equal the generic autodiff prolongation of the operator's point action.
 """
 
+from typing import ClassVar
+
 import jax
 import pytest
 from hypothesis import given, settings, strategies as st
@@ -122,6 +124,10 @@ class TestIsTimeDependent:
 
     def test_timedep(self):
         assert cxfm.is_time_dependent(uniform_translate(1.0))
+
+    def test_boost(self):
+        # Boost's point action is delta*tau even for a constant delta.
+        assert cxfm.is_time_dependent(cxfm.Boost.from_([1.0, 0, 0], "km/s"))
 
     def test_composed(self):
         static = cxfm.Translate.from_([1, 2, 3], "km")
@@ -672,6 +678,79 @@ class TestFibreKickProlong:
         assert jnp.allclose(u.ustrip("km", out[0]["x"]), 4.0)  # x + dv*tau
         assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 1.5)  # v + dv
         assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 0.1)  # a unchanged
+
+
+# ============================================================================
+# Jet slots above the named tangent semantic-kind ladder
+
+
+class TestJetSlotsAboveLadder:
+    """The additive routes prolong to any jet order, like the generic engine.
+
+    The tangent semantic-kind ladder is only *named* up to `Acceleration`
+    (order 2), but a jet has a slot at every order. The additive fast paths
+    must not inherit that naming limit: the generic engine names no kinds and
+    prolongs to any order, so they would otherwise have less capability than
+    the very engine they exist to shortcut.
+    """
+
+    JET: ClassVar = {
+        0: q3(1.0, 1.0, 1.0, "km"),
+        1: q3(1.0, 1.0, 1.0, "km/s"),
+        2: q3(1.0, 1.0, 1.0, "km/s2"),
+        3: q3(1.0, 1.0, 1.0, "km/s3"),
+        4: q3(1.0, 1.0, 1.0, "km/s4"),
+    }
+
+    @pytest.mark.parametrize("top", [3, 4])
+    def test_translate_matches_generic(self, top):
+        """A k=0 offset: the slot-wise route equals the generic prolongation."""
+        op = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+        jet = {m: self.JET[m] for m in range(top + 1)}
+        fast = cxfm.act_jet(op, None, jet, cxc.cart3d)
+        generic = prolong_jet(op, None, jet, cxc.cart3d)
+        for m in jet:
+            assert allclose_cdict(fast[m], generic[m], self.JET[m]["x"].unit)
+
+    @pytest.mark.parametrize("top", [3, 4])
+    def test_static_fibre_kick_leaves_upper_slots(self, top):
+        """A static offset only touches its own rung; upper slots pass through."""
+        kick = cxfm.Translate(
+            q3(100.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d, semantic_kind=cxr.vel
+        )
+        jet = {m: self.JET[m] for m in range(top + 1)}
+        out = cxfm.act_jet(kick, None, jet, cxc.cart3d)
+        assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 101.0)
+        for m in range(2, top + 1):
+            assert allclose_cdict(out[m], jet[m], self.JET[m]["x"].unit)
+
+    def test_timedep_fibre_kick_ladder_to_order_4(self):
+        r"""A `TimeDep` fibre kick keeps climbing: slot $m$ gains $d^{m-1}\delta$.
+
+        With $\delta(\tau) = A\tau^3$ ($A = 1$ km/s4) at $\tau = 2$ s the
+        contributions are $\delta = 8$, $\dot\delta = 12$, $\ddot\delta = 12$
+        and $\dddot\delta = 6$ -- the last two live on slots the ladder has no
+        name for.
+        """
+        kick = cxfm.TimeDep.from_(
+            lambda t: cxfm.Translate(
+                {
+                    "x": u.Q(1.0, "km/s4") * t**3,
+                    "y": u.Q(0.0, "km/s"),
+                    "z": u.Q(0.0, "km/s"),
+                },
+                chart=cxc.cart3d,
+                semantic_kind=cxr.vel,
+            )
+        )
+        out = cxfm.act_jet(kick, u.Q(2.0, "s"), self.JET, cxc.cart3d)
+        assert jnp.allclose(u.ustrip("km", out[0]["x"]), 1.0)
+        for m, gain in enumerate([8.0, 12.0, 12.0, 6.0], start=1):
+            unit = self.JET[m]["x"].unit
+            assert out[m]["x"].unit == unit
+            assert jnp.allclose(u.ustrip(unit, out[m]["x"]), 1.0 + gain)
+            # untouched components stay untouched
+            assert jnp.allclose(u.ustrip(unit, out[m]["y"]), 1.0)
 
 
 # ============================================================================

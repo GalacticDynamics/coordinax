@@ -150,6 +150,21 @@ def _jvp(fn: Callable[..., Any], primals: Any, tangents: Any, /) -> Any:
     return jax.jvp(fn, primals, tangents)
 
 
+def _is_eval_shape_arg(x: Any, /) -> bool:
+    """Whether ``x`` can be passed to `jax.eval_shape` as an *argument*.
+
+    `jax.eval_shape` abstracts every pytree leaf of its arguments, so a leaf
+    that is not array-like makes the call fail. The case that matters here is
+    a raw function leaf: an `equinox.Partial` builder, or a curve-frame
+    builder holding the curve. Such an operator has to be captured in a
+    closure instead.
+    """
+    return all(
+        hasattr(leaf, "shape") or isinstance(leaf, int | float | complex)
+        for leaf in jtu.leaves(x)
+    )
+
+
 def _eval_shape_or_call(f: Callable[..., Any], /, *args: Any) -> Any:
     """Discover output structure/units via `jax.eval_shape`, else a real call.
 
@@ -167,7 +182,9 @@ def _eval_shape_or_call(f: Callable[..., Any], /, *args: Any) -> Any:
 # tau_derivative: unit-aware d^n/dtau^n of a callable parameter
 
 
-def tau_derivative(f: Callable[[Any], Any], tau: Any, /, *, n: int = 1) -> Any:
+def tau_derivative(
+    f: Callable[[Any], Any], tau: Any, /, *, n: int = 1, f_tau: Any = None
+) -> Any:
     r"""Compute the ``n``-th derivative of ``f`` with respect to ``tau``.
 
     ``f`` is a callable of a single (possibly unitful) time parameter,
@@ -180,6 +197,12 @@ def tau_derivative(f: Callable[[Any], Any], tau: Any, /, *, n: int = 1) -> Any:
     output units are recorded from one structural evaluation, the computation
     runs on stripped raw values through nested `jax.jvp`, and the units are
     re-attached afterwards.
+
+    ``f_tau`` is ``f(tau)``, when the caller already has it. Only its tree
+    structure and per-leaf units are read, so passing it replaces the
+    structural probe of ``f`` entirely -- worth doing when that probe is not
+    free (a fresh closure misses `jax.eval_shape`'s trace cache, and a
+    non-traceable ``f`` is evaluated for real).
 
     Notes
     -----
@@ -216,8 +239,9 @@ def tau_derivative(f: Callable[[Any], Any], tau: Any, /, *, n: int = 1) -> Any:
     tau_val, tau_unit = _tau_value_unit(tau)
 
     # Discover the output structure and per-leaf units without a full
-    # evaluation where possible (eval_shape preserves static unit metadata).
-    y0 = _eval_shape_or_call(f, tau)
+    # evaluation where possible (eval_shape preserves static unit metadata),
+    # or skip the discovery entirely when the caller supplies ``f(tau)``.
+    y0 = _eval_shape_or_call(f, tau) if f_tau is None else f_tau
     leaves0, treedef = jtu.flatten(y0, is_leaf=is_any_quantity)
     units = [u.unit_of(leaf) for leaf in leaves0]
 
@@ -298,6 +322,24 @@ def pushforward_generic(
     )
 
 
+def _act_point(
+    op: AbstractTransform,
+    tau: Any,
+    q: CDict,
+    chart: cxc.AbstractChart,
+    usys: OptUSys,
+    /,
+) -> CDict:
+    """Apply the point action, from a stable module-level callable.
+
+    `jax.eval_shape` keys its trace cache on the callable's *identity*, so a
+    freshly-created closure misses it on every call. Everything this needs is
+    taken as an argument rather than captured, which keeps the identity stable
+    across calls and lets the cache do its job.
+    """
+    return cast("CDict", cxfmapi.act(op, tau, q, chart, cxr.point, usys=usys))
+
+
 def _point_act_units(
     op: AbstractTransform,
     tau: Any,
@@ -313,9 +355,20 @@ def _point_act_units(
     them without evaluating the action; a real evaluation is the fallback for
     non-traceable actions.
     """
-    y0 = _eval_shape_or_call(
-        lambda q: cxfmapi.act(op, tau, q, chart, cxr.point, usys=usys), q0
-    )
+    if _is_eval_shape_arg(op):
+        # `_act_point` is a stable callable and everything it needs is an
+        # argument, so `eval_shape`'s trace cache hits instead of retracing
+        # the action on every call.
+        y0 = _eval_shape_or_call(_act_point, op, tau, q0, chart, usys)
+    else:
+        # `op` cannot be an `eval_shape` argument, so capture it in a closure
+        # instead. The fresh closure misses the cache every call, but that is
+        # still far cheaper than the alternative: `op` here carries a raw
+        # function leaf -- an `eqx.Partial` builder, or a curve-frame builder
+        # whose real evaluation is an ODE solve.
+        y0 = _eval_shape_or_call(
+            lambda q: cxfmapi.act(op, tau, q, chart, cxr.point, usys=usys), q0
+        )
     return _cdict_units(cast("CDict", y0))
 
 

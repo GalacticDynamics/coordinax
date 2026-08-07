@@ -124,43 +124,23 @@ def _rot_at_scaled(omega, tau, *, scale):
 
 
 def test_from_binds_extra_args_into_partial():
-    """``from_(fn, *args)`` binds into a dynamic `eqx.Partial`, not a static wrap."""
-    omega = u.Q(1.0, "rad/s")
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")  # "A JAX array is being set as static!"
-        op = cxfm.TimeDep.from_(_rot_at, omega)
+    """``from_(fn, *args)`` binds into a dynamic `eqx.Partial`, not a static wrap.
 
+    The `eqx.tree_equal` is the whole claim: the result is *identical* to the
+    hand-written `Partial`, whose dynamic leaves, gradients and `jit` caching
+    `test_from_pytree_callable_is_not_wrapped_static` (and its `jit` companion)
+    already pin.
+    """
+    omega = u.Q(1.0, "rad/s")
+    op = cxfm.TimeDep.from_(_rot_at, omega)
     assert isinstance(op.builder, eqx.Partial)
-    assert any(
-        leaf is omega
-        for leaf in jax.tree.leaves(op, is_leaf=u.quantity.is_any_quantity)
-    )
-    assert any(
-        jnp.array_equal(leaf, omega.value)
-        for leaf in jax.tree.leaves(eqx.filter(op, eqx.is_array))
-    )
-    # d/domega sin(omega * 1s) at omega = 1 rad/s -- nonzero on the stored op
-    grad = eqx.filter_grad(_y_at_1s)(op)
-    assert jnp.allclose(grad.builder.args[0].value, jnp.cos(1.0), atol=1e-12)
+    assert eqx.tree_equal(op, cxfm.TimeDep.from_(eqx.Partial(_rot_at, omega)))
 
 
 def test_from_binds_keywords_into_partial():
     op = cxfm.TimeDep.from_(_rot_at_scaled, u.Q(1.0, "rad/s"), scale=jnp.asarray(2.0))
     assert jnp.allclose(_y_at_1s(op), jnp.sin(2.0), atol=1e-12)
     assert jnp.allclose(op.builder.keywords["scale"], 2.0)
-
-
-def test_from_bound_args_jit_caches_on_structure():
-    traces = []
-
-    @eqx.filter_jit
-    def f(op):
-        traces.append(1)
-        return _y_at_1s(op)
-
-    f(cxfm.TimeDep.from_(_rot_at, u.Q(1.0, "rad/s")))
-    f(cxfm.TimeDep.from_(_rot_at, u.Q(2.0, "rad/s")))
-    assert len(traces) == 1
 
 
 def test_jit_caches_on_structure():
@@ -177,22 +157,8 @@ def test_jit_caches_on_structure():
     assert len(traces) == 1
 
 
-TAUS = [u.Q(0.3, "s"), u.Q(1.0, "s"), u.Q(2.5, "s")]
-
-
 def _act_pt(op, tau):
     return cxfm.act(op, tau, X, cxc.cart3d, cxr.point)
-
-
-def test_matmul_timedep_timedep_is_pointwise():
-    a = cxfm.TimeDep(rot_z(u.Q(0.3, "rad/s")))
-    b = cxfm.TimeDep(rot_z(u.Q(0.5, "rad/s")))
-    ab = a @ b
-    assert isinstance(ab, cxfm.TimeDep)
-    for tau in TAUS:
-        want = _act_pt(a.evaluate_at(tau) @ b.evaluate_at(tau), tau)
-        got = _act_pt(ab, tau)
-        assert jnp.allclose(got["y"].ustrip("m"), want["y"].ustrip("m"), atol=1e-12)
 
 
 def test_matmul_timedep_constant_both_orders():
@@ -223,18 +189,6 @@ def test_simplify_timedep_is_identity_op():
     assert cxfm.simplify(a) is a
 
 
-def test_is_time_dependent_trait():
-    assert cxfm.is_time_dependent(cxfm.TimeDep(rot_z(OMEGA)))
-    assert not cxfm.is_time_dependent(cxfm.Rotate(jnp.eye(3)))
-    # Boost's point action is delta*tau even for constant delta: True now.
-    boost = cxfm.Boost.from_([1.0, 0, 0], "km/s")
-    assert cxfm.is_time_dependent(boost)
-    # Composed: any child
-    pipe = cxfm.Rotate(jnp.eye(3)) | cxfm.TimeDep(rot_z(OMEGA))
-    assert cxfm.is_time_dependent(pipe)
-    assert not cxfm.is_time_dependent(cxfm.Rotate(jnp.eye(3)) | cxfm.Identity())
-
-
 def test_evaluate_at():
     op = cxfm.TimeDep(rot_z(OMEGA))
     tau = u.Q(1.0, "s")
@@ -260,10 +214,9 @@ def test_evaluate_at_tau_none_raises():
 def test_matmul_noncommuting_axes_pins_apply_order():
     """`(a @ b).R == b.R @ a.R` (a applied first), pinned with axes that don't commute.
 
-    `test_matmul_timedep_timedep_is_pointwise` and
     `test_simplify.py::test_time_dependent_rotations_merge_pointwise_under_matmul`
-    compose only same-axis `rot_z` builders, which commute -- a reversed-operand
-    bug in `_ComposedBuilder` would pass every test in this file anyway.
+    composes only same-axis builders, which commute -- a reversed-operand bug in
+    `_ComposedBuilder` would pass it anyway.
     Rotations about *different* axes do not commute, so this pins the actual
     order against `Rotate.__matmul__`'s documented convention. The final
     assertion is the sanity check: if the two orders agreed, the axes chosen
@@ -393,12 +346,13 @@ def _acc_x(op):
 
 
 def test_supported_fibre_kick_spellings():
-    """The two supported spellings both pick up the kick's 5 km/s2 rate."""
-    bare = cxfm.TimeDep.from_(_fibre_kick)
-    assert jnp.allclose(_acc_x(bare), 6.0)
+    """A kick composed *behind* a static shift still picks up its 5 km/s2 rate.
 
+    The bare-kick spelling is covered by `test_prolongation.py::
+    test_vel_kick_translate_vs_generic_fibre_law` and by `add.py::act`'s doctest.
+    """
     shift = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
-    assert jnp.allclose(_acc_x(shift | bare), 6.0)
+    assert jnp.allclose(_acc_x(shift | cxfm.TimeDep.from_(_fibre_kick)), 6.0)
 
 
 def test_builder_returning_composed_fibre_offset_raises():

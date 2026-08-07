@@ -221,12 +221,24 @@ def from_(cls: type[AbstractAdd], x: ArrayLike, unit: str) -> AbstractAdd:
 
 @ft.cache
 def _slot_rep(m: int, /) -> Any:
-    """Return the coordinate-basis representation for jet slot ``m`` (cached)."""
+    """Coordinate-basis representation for jet slot ``m``, or `None` above the ladder.
+
+    A jet has a slot at every derivative order, but the tangent semantic-kind
+    ladder is only *named* up to `~coordinax.representations.Acceleration`
+    (order 2). Slots above the top rung therefore have no representation; the
+    callers below apply the ladder rule directly, which needs only the integer
+    order. Returning `None` rather than raising keeps the additive routes at
+    parity with the generic jet engine, which names no kinds at all and
+    prolongs to any order.
+    """
     if m == 0:
         return cxr.point
     kind: cxr.AbstractTangentSemanticKind = cxr.vel
     while kind.order < m:
-        kind = kind.derivative()
+        try:
+            kind = kind.derivative()
+        except ValueError:
+            return None
     return cxr.Representation(cxr.tangent_geom, cxr.coord_basis, kind)
 
 
@@ -309,7 +321,14 @@ def _prolong_slotwise(
         rep = _slot_rep(m)
         anchor = {"at": jet[0]} if m else {}
         if ladder is None:
-            out[m] = cxfmapi.act(op, tau, slot, chart, rep, usys=usys, **anchor)
+            # A static offset only contributes to its own rung, and its
+            # `semantic_kind` is a named kind, so its order k <= 2 < m for
+            # every unnamed slot: those slots are untouched.
+            out[m] = (
+                slot
+                if rep is None
+                else cxfmapi.act(op, tau, slot, chart, rep, usys=usys, **anchor)
+            )
             continue
         op0, k = ladder
         if m == 0:
@@ -319,7 +338,7 @@ def _prolong_slotwise(
         else:
             op_ = cast("TimeDep", op)
             out[m] = _ladder_act(
-                op_, op0, k, tau, slot, chart, rep, usys=usys, **anchor
+                op_, op0, k, tau, m, slot, chart, rep, usys=usys, **anchor
             )
     return out
 
@@ -397,7 +416,7 @@ def _reject_composed_fibre_offset(op0: AbstractCompositeTransform, /) -> None:
 
 
 def _fibre_ladder_op(
-    op: TimeDep, op0: AbstractAdd, tau: Any, n: int, rep: Any, /
+    op: TimeDep, op0: AbstractAdd, tau: Any, n: int, kind: Any, /
 ) -> AbstractAdd:
     r"""Materialize ``op`` with its offset replaced by $d^n\delta/d\tau^n$.
 
@@ -420,9 +439,14 @@ def _fibre_ladder_op(
         def delta_at(t: Any, /) -> CDict:
             return cast("AbstractAdd", op.evaluate_at(t)).delta
 
-        delta = tau_derivative(delta_at, tau, n=n)
+        # ``op0.delta`` IS ``delta_at(tau)`` -- same builder, same tau -- so it
+        # already carries the structure and units `tau_derivative` would
+        # otherwise discover by probing ``delta_at``. Hand it over: the probe
+        # would re-enter the builder through a fresh closure, which misses
+        # `jax.eval_shape`'s trace cache every time.
+        delta = tau_derivative(delta_at, tau, n=n, f_tau=op0.delta)
 
-    return replace(op0, delta=delta, semantic_kind=rep.semantic_kind)
+    return replace(op0, delta=delta, semantic_kind=kind)
 
 
 def _ladder_act(
@@ -430,6 +454,7 @@ def _ladder_act(
     op0: AbstractAdd,
     k: int,
     tau: Any,
+    m: int,
     x: CDict,
     chart: cxc.AbstractChart,
     rep: Any,
@@ -439,13 +464,19 @@ def _ladder_act(
     r"""Fibre-offset ladder rule: order-$m$ data gains $d^{m-k}\delta/d\tau^{m-k}$.
 
     ``op0`` is ``op`` already materialized at ``tau`` and ``k`` its ladder
-    order, both supplied by the caller so neither is recomputed here.
+    order, both supplied by the caller so neither is recomputed here. ``rep``
+    is slot $m$'s representation, or `None` for a slot above the named ladder.
     """
-    m = cast("int", rep.semantic_kind.order)
     if m < k:
         return x  # lower-order fibres are untouched by a higher-order offset
-    op_m = _fibre_ladder_op(op, op0, tau, m - k, rep)
-    return cast("CDict", cxfmapi.act(op_m, tau, x, chart, rep, **kw))
+    # The rung label is not arithmetic: `act` adds the kick when the offset's
+    # rung matches the rep's, and the cross-chart Jacobian push ignores the
+    # semantic kind entirely. So for an unnamed slot, label BOTH sides with
+    # the offset's own rung ($k \geq 1$, always named) -- same match, same
+    # values, no invented kind.
+    act_rep = _slot_rep(k) if rep is None else rep
+    op_m = _fibre_ladder_op(op, op0, tau, m - k, act_rep.semantic_kind)
+    return cast("CDict", cxfmapi.act(op_m, tau, x, chart, act_rep, **kw))
 
 
 @plum.dispatch
@@ -514,7 +545,7 @@ def act(
         )
 
     op0_ = cast("AbstractAdd", op0)
-    return _ladder_act(op, op0_, k, tau, x, chart, rep, at=at, usys=usys, **kw)
+    return _ladder_act(op, op0_, k, tau, m, x, chart, rep, at=at, usys=usys, **kw)
 
 
 @plum.dispatch
