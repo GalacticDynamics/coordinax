@@ -178,11 +178,7 @@ def from_(cls: type[Point], obj: Point, /) -> Point:
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
-    cls: type[Point],
-    obj: Any,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
+    cls: type[Point], obj: Any, chart: cxc.AbstractChart, rep: cxr.Representation, /
 ) -> Point:
     """Construct a vector from an object, and chart and rep info.
 

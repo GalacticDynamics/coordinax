@@ -1,10 +1,6 @@
 """Base classes for operators on coordinates."""
 
-__all__ = (
-    "AbstractTransform",
-    "is_time_dependent",
-    "materialize_transform",
-)
+__all__ = ("AbstractTransform", "is_time_dependent", "materialize_transform")
 
 import abc
 import dataclasses

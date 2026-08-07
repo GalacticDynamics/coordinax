@@ -166,8 +166,7 @@ def act(
         # (delta(tau) = dv*tau) implements the ladder rule, the flat-chart
         # gating, and the generic fallback with anchors (at=, at_vel=).
         return cast(
-            "CDict",
-            cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw),
+            "CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw)
         )
 
     # --- Point input: x + dv * tau, via the Translate ladder machinery.

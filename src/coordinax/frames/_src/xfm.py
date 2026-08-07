@@ -1,9 +1,6 @@
 """Transformations on Frames."""
 
-__all__ = (
-    "AbstractTransformedReferenceFrame",
-    "TransformedReferenceFrame",
-)
+__all__ = ("AbstractTransformedReferenceFrame", "TransformedReferenceFrame")
 
 from typing import Generic, final
 from typing_extensions import TypeVar

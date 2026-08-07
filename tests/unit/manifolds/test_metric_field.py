@@ -17,9 +17,7 @@ import pytest
 import unxt as u
 
 import coordinax.manifolds as cxm
-from coordinax._src.metric.field import (
-    RoundMetric as DynamicRoundMetric,
-)
+from coordinax._src.metric.field import RoundMetric as DynamicRoundMetric
 
 # ---------------------------------------------------------------------------
 # Fixtures: every concrete AbstractMetricField subtype from the public API

@@ -33,8 +33,7 @@ from .base import AbstractParallelTransportFrame
 
 @plum.dispatch
 def frame_transition(
-    from_frame: cxf.AbstractReferenceFrame,
-    to_frame: AbstractParallelTransportFrame,
+    from_frame: cxf.AbstractReferenceFrame, to_frame: AbstractParallelTransportFrame
 ) -> AbstractTransform:
     r"""Return the composite transform operator *to* a curve frame.
 
@@ -85,8 +84,7 @@ def frame_transition(
 
 @plum.dispatch
 def frame_transition(
-    from_frame: AbstractParallelTransportFrame,
-    to_frame: cxf.AbstractReferenceFrame,
+    from_frame: AbstractParallelTransportFrame, to_frame: cxf.AbstractReferenceFrame
 ) -> AbstractTransform:
     r"""Return the composite transform operator *from* a curve frame.
 
@@ -123,8 +121,7 @@ def frame_transition(
 
 @plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
 def frame_transition(
-    from_frame: AbstractParallelTransportFrame,
-    to_frame: AbstractParallelTransportFrame,
+    from_frame: AbstractParallelTransportFrame, to_frame: AbstractParallelTransportFrame
 ) -> AbstractTransform:
     r"""Return the composite transform operator between two curve frames.
 

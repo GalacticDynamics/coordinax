@@ -65,11 +65,7 @@ def test_static_rotate_vel(benchmark, jet):
 
 def _moving_translate():
     return cxfm.Translate(
-        lambda t: {
-            "x": u.Q(3.0, "km/s") * t,
-            "y": u.Q(0.0, "km"),
-            "z": u.Q(0.0, "km"),
-        },
+        lambda t: {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
         chart=cxc.cart3d,
     )
 
@@ -101,10 +97,7 @@ def test_td_rotate_jet_generic(benchmark):
         return jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
 
     op = cxfm.Rotate.from_(rot_z)
-    jet2 = {
-        0: q3(1.0, 2.0, 3.0, "m"),
-        1: q3(0.5, -0.5, 0.0, "m/s"),
-    }
+    jet2 = {0: q3(1.0, 2.0, 3.0, "m"), 1: q3(0.5, -0.5, 0.0, "m/s")}
     _bench_jitted(
         benchmark,
         lambda tau, jet_: cxfm.act_jet(op, tau, jet_, cxc.cart3d),

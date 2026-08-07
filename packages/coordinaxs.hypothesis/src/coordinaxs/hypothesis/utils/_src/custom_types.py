@@ -1,10 +1,6 @@
 """Internal custom types."""
 
-__all__ = (
-    "Shape",
-    "CKey",
-    "CDict",
-)
+__all__ = ("Shape", "CKey", "CDict")
 
 from typing import TYPE_CHECKING, Any, TypeAlias
 

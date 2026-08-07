@@ -32,12 +32,7 @@ from .base import AbstractVector
 
 @plum.dispatch
 def equivalent(
-    a: AbstractVector,
-    b: AbstractVector,
-    /,
-    *,
-    rtol: float = 1e-5,
-    atol: float = 1e-8,
+    a: AbstractVector, b: AbstractVector, /, *, rtol: float = 1e-5, atol: float = 1e-8
 ) -> Any:
     """Whether two vectors denote the same geometric point.
 

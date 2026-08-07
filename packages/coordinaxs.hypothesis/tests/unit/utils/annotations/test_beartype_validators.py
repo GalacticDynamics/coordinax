@@ -51,9 +51,7 @@ def test_multiple_validators(data):
     """Test that multiple Beartype validators can be combined."""
     # Define an annotated type with multiple validators
     BoundedLength = Annotated[
-        PQ["length"],
-        Is[lambda x: x.value > 0],
-        Is[lambda x: x.value < 100],
+        PQ["length"], Is[lambda x: x.value > 0], Is[lambda x: x.value < 100]
     ]
 
     # Build a strategy for this type

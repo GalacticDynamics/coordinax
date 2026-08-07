@@ -370,12 +370,7 @@ def act(
 
 @plum.dispatch
 def act_jet(
-    op: Composed,
-    tau: Any,
-    jet: dict,
-    chart: cxc.AbstractChart,
-    /,
-    **kw: object,
+    op: Composed, tau: Any, jet: dict, chart: cxc.AbstractChart, /, **kw: object
 ) -> dict:
     """Prolong a Composed transform: fold the prolongations left-to-right.
 

@@ -76,12 +76,7 @@ def scale_factors(
 
 @plum.dispatch
 def scale_factors(
-    metric: PullbackMetric,
-    chart: AbstractChart,
-    /,
-    *,
-    at: CDict,
-    usys: OptUSys = None,
+    metric: PullbackMetric, chart: AbstractChart, /, *, at: CDict, usys: OptUSys = None
 ) -> ul.QM:
     """Return scale factors for a pullback (induced) metric.
 
@@ -140,9 +135,7 @@ def scale_factors(
         )
         raise NotImplementedError(msg)
     M = EmbeddedManifold(
-        intrinsic=embed_map.intrinsic.M,
-        ambient=ambient,
-        embed_map=embed_map,
+        intrinsic=embed_map.intrinsic.M, ambient=ambient, embed_map=embed_map
     )
     mm = cxmapi.metric_matrix(M, at, chart)
     return as_quantity_matrix(mm.matrix).diag()  # ty: ignore[unresolved-attribute]

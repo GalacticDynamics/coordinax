@@ -6,15 +6,7 @@
 
 """
 
-__all__ = (
-    "Abstract1D",
-    "Cart1D",
-    "cart1d",
-    "Radial1D",
-    "radial1d",
-    "Time1D",
-    "time1d",
-)
+__all__ = ("Abstract1D", "Cart1D", "cart1d", "Radial1D", "radial1d", "Time1D", "time1d")
 
 import dataclasses
 

@@ -329,10 +329,7 @@ _SHORT_NAME_URLS: dict[str, str] = {
 
 
 def _resolve_short_names(
-    app: Sphinx,
-    env: BuildEnvironment,
-    node: Element,
-    contnode: Element,
+    app: Sphinx, env: BuildEnvironment, node: Element, contnode: Element
 ) -> Node | None:
     """Resolve known bare short names to external documentation links."""
     if node.get("refdomain") != "py":
@@ -366,10 +363,7 @@ def _py_suffix_index(
 
 
 def _resolve_internal_short_names(
-    app: Sphinx,
-    env: BuildEnvironment,
-    node: Element,
-    contnode: Element,
+    app: Sphinx, env: BuildEnvironment, node: Element, contnode: Element
 ) -> Node | None:
     """Resolve a bare short name to a coordinax object of the same name.
 
@@ -433,12 +427,7 @@ def _display_math_repl(match: "re.Match[str]") -> str:
 
 
 def _convert_dollar_math(
-    app: Sphinx,
-    what: str,
-    name: str,
-    obj: object,
-    options: object,
-    lines: list[str],
+    app: Sphinx, what: str, name: str, obj: object, options: object, lines: list[str]
 ) -> None:
     """Rewrite ``$...$`` / ``$$...$$`` maths in docstrings to RST math."""
     # Restrict to this project's own docstrings: ``$`` reliably means math only
@@ -477,12 +466,7 @@ _QUAX_VALUE_SOURCES = ("quax", "unxt")
 
 
 def _clean_quax_value_docstrings(
-    app: Sphinx,
-    what: str,
-    name: str,
-    obj: object,
-    options: object,
-    lines: list[str],
+    app: Sphinx, what: str, name: str, obj: object, options: object, lines: list[str]
 ) -> None:
     """Replace the quax-materialisation members' MkDocs docstrings with clean RST.
 

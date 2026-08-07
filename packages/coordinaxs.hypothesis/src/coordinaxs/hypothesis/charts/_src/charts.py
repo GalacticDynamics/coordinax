@@ -199,10 +199,7 @@ def charts(
 
 @plum.dispatch
 def strategy_for_annotation(
-    ann: type[cxc.AbstractChart],
-    /,
-    *,
-    meta: annotations.Metadata,
+    ann: type[cxc.AbstractChart], /, *, meta: annotations.Metadata
 ) -> st.SearchStrategy:
     """Strategy for chart-typed annotations.
 

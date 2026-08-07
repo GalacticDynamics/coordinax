@@ -537,10 +537,7 @@ class TestNormJAXCompatSphere:
         metric = cxm.RoundMetric(ndim=2)
         at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         magnitudes = jnp.array([1, 2, 3])
-        v_batch = {
-            "theta": u.Q(magnitudes, "rad/s"),
-            "phi": u.Q(jnp.zeros(3), "rad/s"),
-        }
+        v_batch = {"theta": u.Q(magnitudes, "rad/s"), "phi": u.Q(jnp.zeros(3), "rad/s")}
         results = jax.vmap(lambda v: cxm.norm(v, metric, cxc.sph2, at=at))(v_batch)
         assert qnp.allclose(results, u.Q(magnitudes, "rad/s"), atol=u.Q(1e-5, "rad/s"))
 

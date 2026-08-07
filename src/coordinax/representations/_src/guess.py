@@ -231,11 +231,7 @@ def guess_basis_kind(obj: AbstractBasis, /) -> AbstractBasis:
 # Mapping from dimension to basis kind
 DIM_TO_BASIS_MAP: dict[
     u.AbstractDimension | tuple[u.AbstractDimension, ...], AbstractBasis
-] = {
-    LENGTH: no_basis,
-    ANGLE: no_basis,
-    (ANGLE, LENGTH): no_basis,
-}
+] = {LENGTH: no_basis, ANGLE: no_basis, (ANGLE, LENGTH): no_basis}
 
 
 @plum.dispatch

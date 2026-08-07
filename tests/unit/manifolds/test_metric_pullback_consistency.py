@@ -265,10 +265,7 @@ class TestNonCanonicalTwoSphereMetric:
 
     @pytest.mark.parametrize(
         ("chart", "keys"),
-        [
-            (cxc.lonlat_sph2, ("lon", "lat")),
-            (cxc.math_sph2, ("theta", "phi")),
-        ],
+        [(cxc.lonlat_sph2, ("lon", "lat")), (cxc.math_sph2, ("theta", "phi"))],
     )
     def test_scale_factors_match_metric_diagonal(self, chart, keys):
         """They must agree with the diagonal of the full metric."""

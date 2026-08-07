@@ -10,10 +10,7 @@ This module defines the two abstract base classes on which the entire
 
 """
 
-__all__ = (
-    "AbstractParallelTransportFrame",
-    "AbstractParallelTransportTransform",
-)
+__all__ = ("AbstractParallelTransportFrame", "AbstractParallelTransportTransform")
 
 import abc
 

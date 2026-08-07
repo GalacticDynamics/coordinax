@@ -1576,7 +1576,7 @@ def pt_map(
     *(
         (u.AbstractQuantity, EuclideanManifold, typ, EuclideanManifold, typ)
         for typ in (Cart0D, Cart1D, Radial1D, Time1D, Cart2D, Cart3D, CartND)
-    ),
+    )
 )
 def pt_map(
     q: u.AbstractQuantity,

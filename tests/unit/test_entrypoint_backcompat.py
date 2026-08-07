@@ -178,9 +178,7 @@ def test_frames_provider_not_callable_raises(monkeypatch: Any) -> None:
     """An entry point that loads to a non-callable is rejected."""
     ep = _FakeEntryPoint("bad", provider=42)  # load() returns a non-callable
     monkeypatch.setattr(
-        cxf,
-        "entry_points",
-        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
+        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
     )
     with pytest.raises(TypeError, match="is not callable"):
         cxf._load_optional_frame_exports()
@@ -191,9 +189,7 @@ def test_frames_exports_not_mapping_raises(monkeypatch: Any) -> None:
     """A provider that returns a non-mapping is rejected."""
     ep = _FakeEntryPoint("bad", provider=lambda: [1, 2, 3])
     monkeypatch.setattr(
-        cxf,
-        "entry_points",
-        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
+        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
     )
     with pytest.raises(TypeError, match="must return a mapping"):
         cxf._load_optional_frame_exports()
@@ -204,9 +200,7 @@ def test_frames_non_string_export_name_raises(monkeypatch: Any) -> None:
     """A non-string export name is rejected."""
     ep = _FakeEntryPoint("bad", exports={123: object()})
     monkeypatch.setattr(
-        cxf,
-        "entry_points",
-        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
+        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
     )
     with pytest.raises(TypeError, match="non-string export name"):
         cxf._load_optional_frame_exports()
@@ -256,9 +250,7 @@ def test_frames_exports_land_in_module_globals(monkeypatch: Any) -> None:
     sentinel = object()
     ep = _FakeEntryPoint("plugin", exports={"_InjectedFrame": sentinel})
     monkeypatch.setattr(
-        cxf,
-        "entry_points",
-        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
+        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
     )
     cxf._load_optional_frame_exports()
     assert cxf._InjectedFrame is sentinel  # cleaned up by the fixture

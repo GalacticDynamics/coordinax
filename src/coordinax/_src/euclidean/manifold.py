@@ -1,14 +1,6 @@
 """Euclidean manifolds."""
 
-__all__ = (
-    "EuclideanManifold",
-    "Rn",
-    "R0",
-    "R1",
-    "R2",
-    "R3",
-    "RN",
-)
+__all__ = ("EuclideanManifold", "Rn", "R0", "R1", "R2", "R3", "RN")
 
 import dataclasses
 

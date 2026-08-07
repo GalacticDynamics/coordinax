@@ -209,9 +209,7 @@ class TestFrameTransformProperties:
 
 
 def _astropy_icrs_to_gcf_phase_space(
-    xyz_pc: Iterable[float],
-    vxyz_kms: Iterable[float],
-    frame: cxastro.Galactocentric,
+    xyz_pc: Iterable[float], vxyz_kms: Iterable[float], frame: cxastro.Galactocentric
 ):
     x, y, z = xyz_pc
     vx, vy, vz = vxyz_kms
@@ -490,10 +488,7 @@ def test_galactocentric_spherical_velocity_fibre():
     # reference: same input with a Cartesian velocity fibre
     vel_cart = cx.cconvert(vel_sph, cx.cart3d, at=pt.data, usys=usys)
     out_ref = cx.act(
-        op,
-        None,
-        cxv.Coordinate(cx.cconvert(pt, cx.cart3d), vel=vel_cart),
-        usys=usys,
+        op, None, cxv.Coordinate(cx.cconvert(pt, cx.cart3d), vel=vel_cart), usys=usys
     )
     out_v = cx.cconvert(
         out._data["vel"],
