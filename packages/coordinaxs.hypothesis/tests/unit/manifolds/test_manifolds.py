@@ -185,36 +185,68 @@ class TestNdimIsHonoured:
         check()
 
 
-class TestOnlyDrawableCandidatesAreSelected:
-    """Classes with no registered strategy are never offered as candidates."""
+class TestExcludedFromGenericPoolAreStillExplicitlyDrawable:
+    """`NoAtlas`, `MinkowskiAtlas`, `NoManifold`, `MinkowskiManifold`.
+
+    These are excluded from the generic no-argument pool (they are
+    degenerate/fixed rather than "just another atlas/manifold"), but each has
+    its own strategy and is drawable by requesting it explicitly.
+    """
 
     @pytest.mark.parametrize(
-        ("cls", "strategy"),
+        ("cls", "strategy", "expected_ndim"),
         [
-            (cxm.NoAtlas, cxst.atlases),
-            (cxm.MinkowskiAtlas, cxst.atlases),
-            (cxm.NoManifold, cxst.manifolds),
-            (cxm.MinkowskiManifold, cxst.manifolds),
+            (cxm.NoAtlas, cxst.atlases, 0),
+            (cxm.MinkowskiAtlas, cxst.atlases, 4),
+            (cxm.NoManifold, cxst.manifolds, 0),
+            (cxm.MinkowskiManifold, cxst.manifolds, 4),
         ],
     )
     @given(data=st.data())
-    def test_requesting_one_directly_says_so(
+    def test_requesting_one_directly_succeeds(
         self,
         cls: type,
         strategy: Callable[..., st.SearchStrategy[object]],
+        expected_ndim: int,
         data: st.DataObject,
     ) -> None:
-        """Asking for one by name raises, naming the class."""
-        with pytest.raises(NotImplementedError, match=cls.__name__):
-            data.draw(strategy(cls))
+        """Asking for one by name draws an instance of exactly that class."""
+        obj = data.draw(strategy(cls))
+        assert isinstance(obj, cls)
+        assert obj.ndim == expected_ndim
+
+    @pytest.mark.parametrize(
+        ("cls", "strategy", "bad_ndim"),
+        [
+            (cxm.NoAtlas, cxst.atlases, 1),
+            (cxm.MinkowskiAtlas, cxst.atlases, 3),
+            (cxm.NoManifold, cxst.manifolds, 1),
+            (cxm.MinkowskiManifold, cxst.manifolds, 3),
+        ],
+    )
+    def test_requesting_one_with_wrong_ndim_is_unsatisfiable(
+        self,
+        cls: type,
+        strategy: Callable[..., st.SearchStrategy[object]],
+        bad_ndim: int,
+    ) -> None:
+        """A ``ndim`` other than the type's fixed dimensionality is discarded."""
+
+        @given(obj=strategy(cls, ndim=bad_ndim))
+        @settings(max_examples=10, deadline=None)
+        def check(obj: object) -> None:
+            pytest.fail(f"ndim={bad_ndim} should be unsatisfiable, got {obj!r}")
+
+        with pytest.raises(Unsatisfiable):
+            check()
 
     @given(atlas=cxst.atlases())
-    def test_drawn_atlases_all_have_strategies(self, atlas: object) -> None:
-        """No draw yields a type the module has no strategy for."""
+    def test_drawn_atlases_never_include_excluded_types(self, atlas: object) -> None:
+        """The generic no-argument pool never yields these sentinel/fixed types."""
         assert not isinstance(atlas, (cxm.NoAtlas, cxm.MinkowskiAtlas))
 
     @given(M=cxst.manifolds())
-    def test_drawn_manifolds_all_have_strategies(self, M: object) -> None:
+    def test_drawn_manifolds_never_include_excluded_types(self, M: object) -> None:
         """Same for manifolds."""
         assert not isinstance(M, (cxm.NoManifold, cxm.MinkowskiManifold))
 
@@ -244,8 +276,7 @@ class TestOnlyDrawableCandidatesAreSelected:
     ) -> None:
         """A type with no `_NDIM_SUPPORT` entry is treated as unrestricted.
 
-        Which is why `_NO_STRATEGY` has to be a separate gate: this predicate
-        answers "at which ndim", not "can it be drawn at all", and would wave
-        these two through at every ndim.
+        Which is why `_EXCLUDED_FROM_GENERIC_POOL` is a separate gate: this
+        predicate answers "at which ndim", not "belongs in the generic pool".
         """
         assert supports_ndim(cls, 3) is True

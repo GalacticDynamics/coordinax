@@ -128,6 +128,9 @@ def atlases(
     - **``CartesianProductAtlas``**: returns a ``CartesianProductAtlas``
       built from two factor atlases whose dimensionalities sum to ``ndim``
       (at least 2). ``CartesianProductAtlas`` is excluded from the factors.
+    - **``NoAtlas``**: returns ``NoAtlas()`` (always 0-D). By name only.
+    - **``MinkowskiAtlas``**: returns ``MinkowskiAtlas()`` (always 4-D). By
+      name only.
 
     Parameters
     ----------
@@ -142,7 +145,8 @@ def atlases(
           subtree.
         - A **concrete** subclass of ``AbstractAtlas``: draw an instance of
           exactly that class (``EuclideanAtlas``, ``HyperSphericalAtlas``,
-          ``CustomAtlas``, ``CartesianProductAtlas``).
+          ``CustomAtlas``, ``CartesianProductAtlas``, ``NoAtlas``,
+          ``MinkowskiAtlas``).
 
     filter
         Restrict the pool of atlas classes to those that are subclasses of
@@ -228,6 +232,8 @@ def atlases(
     >>> custom = cxmst.atlases(cxm.CustomAtlas)
     >>> product = cxmst.atlases(cxm.CartesianProductAtlas)
     >>> product_4d = cxmst.atlases(cxm.CartesianProductAtlas, ndim=4)
+    >>> none = cxmst.atlases(cxm.NoAtlas)
+    >>> minkowski = cxmst.atlases(cxm.MinkowskiAtlas)
 
     Require specific chart classes in a ``CustomAtlas``:
 
@@ -270,17 +276,14 @@ _NDIM_SUPPORT: Final[
     (cxm.HyperSphericalAtlas, lambda ndim: ndim == 2),
     # A product needs at least one factor, each contributing >= 1 dimension.
     (cxm.CartesianProductAtlas, lambda ndim: ndim >= 1),
-    # A CustomAtlas is assembled from zero-argument charts of the target
-    # dimensionality, so it exists at exactly the dimensionalities those charts
-    # do -- there are none at ndim 5 or 7. Mirrors the `CustomManifold` entry.
+    # A CustomAtlas exists only at dims where zero-arg charts do.
     (cxm.CustomAtlas, lambda ndim: bool(matching_chart_classes_for_ndim(ndim))),
     # EuclideanAtlas is currently generated only for dimensions 0-3.
     (cxm.EuclideanAtlas, lambda ndim: 0 <= ndim <= 3),
 )
 
-#: Concrete atlas types with no registered strategy; never offered as
-#: candidates. Separate from `_NDIM_SUPPORT`: these work at no ndim at all.
-_NO_STRATEGY: Final[tuple[type[cxm.AbstractAtlas], ...]] = (
+#: Drawable by name only -- degenerate (no charts) or physics-pinned (ndim=4).
+_EXCLUDED_FROM_GENERIC_POOL: Final[tuple[type[cxm.AbstractAtlas], ...]] = (
     cxm.NoAtlas,
     cxm.MinkowskiAtlas,
 )
@@ -346,7 +349,7 @@ def atlases(
     classes = tuple(
         cls
         for cls in all_classes
-        if not issubclass(cls, _NO_STRATEGY)
+        if not issubclass(cls, _EXCLUDED_FROM_GENERIC_POOL)
         and (target_ndim is None or _atlas_class_supports_ndim(cls, target_ndim))
         and (not required_chart_classes or issubclass(cls, cxm.CustomAtlas))
     )
@@ -663,3 +666,55 @@ def atlases(
     )
     factor_names = tuple(f"f{i}" for i in range(n_factors))
     return cxm.CartesianProductAtlas(factors=factors, factor_names=factor_names)
+
+
+@plum.dispatch
+@strip_return_annotation
+@st.composite
+def atlases(
+    draw: st.DrawFn,
+    atlas_cls: type[cxm.NoAtlas],
+    /,
+    *,
+    filter: type | tuple[type, ...] | st.SearchStrategy = (),
+    exclude: tuple[type, ...] = (),
+    ndim: int | st.SearchStrategy | None = None,
+) -> Any:
+    """Draw ``NoAtlas()`` (always 0-D); any other ``ndim`` is assumed away.
+
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinaxs.hypothesis.manifolds as cxmst
+
+    >>> none = cxmst.atlases(cxm.NoAtlas)
+
+    """
+    target_ndim = draw_if_strategy(draw, ndim)
+    if target_ndim is not None and target_ndim != 0:
+        assume(False)
+    return cxm.NoAtlas()
+
+
+@plum.dispatch
+@strip_return_annotation
+@st.composite
+def atlases(
+    draw: st.DrawFn,
+    atlas_cls: type[cxm.MinkowskiAtlas],
+    /,
+    *,
+    filter: type | tuple[type, ...] | st.SearchStrategy = (),
+    exclude: tuple[type, ...] = (),
+    ndim: int | st.SearchStrategy | None = None,
+) -> Any:
+    """Draw ``MinkowskiAtlas()`` (always 4-D); any other ``ndim`` is assumed away.
+
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinaxs.hypothesis.manifolds as cxmst
+
+    >>> minkowski = cxmst.atlases(cxm.MinkowskiAtlas)
+
+    """
+    target_ndim = draw_if_strategy(draw, ndim)
+    if target_ndim is not None and target_ndim != 4:
+        assume(False)
+    return cxm.MinkowskiAtlas()
