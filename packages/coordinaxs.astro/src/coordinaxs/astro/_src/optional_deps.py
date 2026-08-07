@@ -16,7 +16,7 @@ class OptDeps(OptionalDependencyEnum):  # type: ignore[misc]  # pylint: disable=
     installed *version*, so any two sharing one -- every pair of uninstalled
     dependencies, and the co-released ``unxts.*`` packages, which usually share
     a version -- silently collapsed into a single `enum.Enum` member reporting
-    the wrong package's state. 0.4.1 keys members so they stay distinct, hence
+    the wrong package's state. 0.5.0 keys members so they stay distinct, hence
     the floor in ``pyproject.toml``.
     """
 

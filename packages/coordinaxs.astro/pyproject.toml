@@ -18,9 +18,11 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-# optional-dependencies >=0.4.1: earlier versions keyed enum members on the
-# installed version, silently aliasing any two members that shared one.
-dependencies    = ["coordinax>=0.24", "optional-dependencies>=0.4.1"]
+# optional-dependencies >=0.5.0: earlier versions keyed enum members on the
+# installed version, silently aliasing any two members that shared one. (The
+# same fix ships in 0.4.1, but that is the 0.4.x maintenance line; 0.5.0 is
+# mainline.)
+dependencies    = ["coordinax>=0.24", "optional-dependencies>=0.5.0"]
 description     = "Astronomy-specific reference frames for coordinax"
 dynamic         = ["version"]
 license         = "MIT"

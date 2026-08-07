@@ -773,7 +773,7 @@ requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
     { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
-    { name = "optional-dependencies", specifier = ">=0.4.1" },
+    { name = "optional-dependencies", specifier = ">=0.5.0" },
     { name = "unxts-hypothesis", marker = "extra == 'hypothesis'", specifier = ">=2.0" },
     { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
 ]
@@ -1989,14 +1989,14 @@ wheels = [
 
 [[package]]
 name = "optional-dependencies"
-version = "0.4.1"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/42/8344ac009b7ba239b5bd82387aa5ab459dd7f706b80d73692ca6e31a2c95/optional_dependencies-0.4.1.tar.gz", hash = "sha256:8f71acbef015b08945e78fa531630290375d089d06de1d475567634991cb8160", size = 85720, upload-time = "2026-08-07T00:31:45.722Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/89/67e3cbc57a0869231b589b39f8606c98bba81b91f3b72bd56be99040aa78/optional_dependencies-0.5.0.tar.gz", hash = "sha256:05edd224eaf1b7531a6e2ead85de2698dbc2f5edba445533dd7722f160602251", size = 80533, upload-time = "2026-08-07T00:40:23.063Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/a3/7810502242eba30a288c0e79c5a395c1ec6ed41a4eab6e5b3c8e3cf4ee20/optional_dependencies-0.4.1-py3-none-any.whl", hash = "sha256:f1ceb198a9154f6bdbf6295df663b4b91edebe5dc3d8678c03df3fbb985c1545", size = 10132, upload-time = "2026-08-07T00:31:44.53Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/81/aea272ab6faa04addb1045d54dece562a56e13200dd200d0cf71b034f7c9/optional_dependencies-0.5.0-py3-none-any.whl", hash = "sha256:320eb33710e5a38efc536141277c3d0da48a093aecfb15e3a7dc9491669c0821", size = 10102, upload-time = "2026-08-07T00:40:21.689Z" },
 ]
 
 [[package]]
