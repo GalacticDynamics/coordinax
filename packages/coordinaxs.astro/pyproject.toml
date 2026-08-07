@@ -18,12 +18,14 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24", "optional-dependencies>=0.3.2"]
-description = "Astronomy-specific reference frames for coordinax"
-dynamic = ["version"]
-license = "MIT"
-name = "coordinaxs.astro"
-readme = "README.md"
+# optional-dependencies >=0.4.1: earlier versions keyed enum members on the
+# installed version, silently aliasing any two members that shared one.
+dependencies    = ["coordinax>=0.24", "optional-dependencies>=0.4.1"]
+description     = "Astronomy-specific reference frames for coordinax"
+dynamic         = ["version"]
+license         = "MIT"
+name            = "coordinaxs.astro"
+readme          = "README.md"
 requires-python = ">=3.12"
 
 [project.optional-dependencies]
