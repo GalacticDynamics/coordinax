@@ -852,7 +852,10 @@ class TestJacobianPtMapAtExtremeScales:
         *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with it. Only
         array/Quantity reaches the hand-written Jacobian.
 
-        Compared relatively -- entries scale like ``1/r``.
+        Compared relatively, with no ``atol`` -- entries scale like ``1/r``, so
+        any absolute floor is vacuous at 1e18 and unmeetable at 1e-18. At
+        ``theta = 0.7`` no entry is ever exactly zero, so a relative
+        comparison of the full matrix is well defined.
         """
         theta = 0.7
         at = jnp.asarray(
@@ -866,5 +869,4 @@ class TestJacobianPtMapAtExtremeScales:
         )
 
         assert np.all(np.isfinite(got))
-        nonzero = expected != 0
-        assert_allclose(got[nonzero], expected[nonzero], rtol=1e-5)
+        assert_allclose(got, expected, rtol=1e-5)
