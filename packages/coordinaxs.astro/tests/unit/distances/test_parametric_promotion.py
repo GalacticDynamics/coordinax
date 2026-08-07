@@ -38,13 +38,7 @@ def test_promotes_to_parametric_quantity(distance: u.AbstractQuantity) -> None:
 
 @DISTANCES
 def test_arithmetic_is_order_independent(distance: u.AbstractQuantity) -> None:
-    """Both operand orders give a `ParametricQuantity`.
-
-    Without the promotion rule, ``distance * pq`` dispatched to the
-    distance-returning multiply and raised on the dimension check, while
-    ``pq * distance`` succeeded -- the operand order decided whether the
-    expression worked at all.
-    """
+    """Both operand orders give a `ParametricQuantity`."""
     pq = PQ(1.0, "rad")
     assert isinstance(distance * pq, ParametricQuantity)
     assert isinstance(pq * distance, ParametricQuantity)
