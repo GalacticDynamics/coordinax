@@ -484,3 +484,11 @@ class TestAdditionIsClosed:
             lambda a, b: (cxd.Distance(a, "m") + cxd.Distance(b, "m")).value
         )(jnp.arange(3.0), jnp.arange(3.0))
         assert jnp.array_equal(out, jnp.asarray([0.0, 2.0, 4.0]))
+
+
+class TestFromUnsupportedDimension:
+    """`from_` rejects a dimension it has no branch for."""
+
+    def test_raises_valueerror(self) -> None:
+        with pytest.raises(ValueError, match="cannot build a Distance"):
+            cxd.Distance.from_(u.Q(1.0, "s"))

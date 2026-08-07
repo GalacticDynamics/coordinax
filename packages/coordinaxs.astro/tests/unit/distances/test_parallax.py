@@ -4,7 +4,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 
 import unxt as u
 
@@ -84,3 +84,29 @@ class TestConversionEndpoints:
         plx = cxastro.Parallax.from_(q)
         assert jnp.allclose(plx.ustrip("rad"), expected)
         assert jnp.all(plx.value >= 0)
+
+    @given(plx=cxastrost.parallaxes())
+    @settings(deadline=None)
+    def test_pytree_roundtrip(self, plx: cxastro.Parallax) -> None:
+        """Parallax survives PyTree flatten/unflatten."""
+        flat, tree = jax.tree.flatten(plx)
+        restored = jax.tree.unflatten(tree, flat)
+        assert type(restored) is type(plx)
+        assert restored.unit == plx.unit
+        assert jnp.array_equal(restored.value, plx.value)
+
+    @given(plx=cxastrost.parallaxes())
+    @settings(deadline=None)
+    def test_jit_identity(self, plx: cxastro.Parallax) -> None:
+        """JIT-compiled identity preserves Parallax."""
+        result = jax.jit(lambda x: x)(plx)
+        assert type(result) is type(plx)
+        assert jnp.array_equal(result.value, plx.value)
+
+
+class TestFromUnsupportedDimension:
+    """`from_` rejects a dimension it has no branch for."""
+
+    def test_raises_valueerror(self) -> None:
+        with pytest.raises(ValueError, match="cannot build a Parallax"):
+            cxastro.Parallax.from_(u.Q(1.0, "s"))

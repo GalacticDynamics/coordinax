@@ -142,6 +142,31 @@ def from_(
     return jnp.asarray(dm, **kw)  # ty: ignore[invalid-return-type]
 
 
+def _from_length(
+    cls: type[DistanceModulus], q: u.AbstractQuantity, /, **kw: Any
+) -> DistanceModulus:
+    """Distance modulus from a length (distance)."""
+    dm = _distance_modulus_from_pc(q.ustrip("pc"))
+    return cls(jnp.asarray(dm, **kw), "mag")
+
+
+def _from_angle(
+    cls: type[DistanceModulus], q: u.AbstractQuantity, /, **kw: Any
+) -> DistanceModulus:
+    """Distance modulus from an angle (parallax)."""
+    d = parallax_base_length / jnp.tan(q)  # [AU]
+    dm = _distance_modulus_from_pc(d.ustrip("pc"))
+    return cls(jnp.asarray(dm, **kw), "mag")
+
+
+def _from_mag(
+    cls: type[DistanceModulus], q: u.AbstractQuantity, /, **kw: Any
+) -> DistanceModulus:
+    """Distance modulus from a magnitude (already a distance modulus)."""
+    unit = u.unit_of(q)
+    return cls(jnp.asarray(u.ustrip(unit, q), **kw), unit)
+
+
 @DistanceModulus.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
     cls: type[DistanceModulus], q: u.AbstractQuantity, /, **kw: Any
@@ -176,24 +201,22 @@ def from_(
 
     """
     dim = u.dimension_of(q)
-
     if dim == LENGTH:  # distance
-        dm = _distance_modulus_from_pc(q.ustrip("pc"))
-        return cls(jnp.asarray(dm, **kw), "mag")
-
+        return _from_length(cls, q, **kw)
     if dim == ANGLE:  # parallax
-        d = parallax_base_length / jnp.tan(q)  # [AU]
-        dm = _distance_modulus_from_pc(d.ustrip("pc"))
-        return cls(jnp.asarray(dm, **kw), "mag")
-
+        return _from_angle(cls, q, **kw)
     if dim == MAGNITUDE:  # already a distance modulus (magnitude)
-        unit = u.unit_of(q)
-        return cls(jnp.asarray(u.ustrip(unit, q), **kw), unit)
-
+        return _from_mag(cls, q, **kw)
     msg = f"cannot build a DistanceModulus from a quantity with dimension {dim}"
     raise ValueError(msg)
 
 
+# When the optional ``unxts.parametric`` package is installed, also register
+# static type-dispatched overloads on its parametric ``Quantity`` classes: a
+# ``ParametricQuantity["length"|"angle"|"mag"]`` is routed by type (plum prefers
+# these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
+# and other ``AbstractQuantity`` subclasses still fall through to the
+# dimension-branching dispatch. If the package is not installed this is a no-op.
 @cxd.Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[cxd.Distance], dm: DistanceModulus, /, **kw: Any) -> cxd.Distance:
     """Compute distance from distance modulus.

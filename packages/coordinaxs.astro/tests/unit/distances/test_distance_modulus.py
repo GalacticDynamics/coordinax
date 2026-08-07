@@ -156,3 +156,11 @@ class TestDistanceModulusAccuracyNearZeroPoint:
         """dm(10 pc) is exactly 0, not merely close to it."""
         got = cxastro.DistanceModulus.from_(u.Q(10.0, "pc")).ustrip("mag")
         assert float(got) == 0.0
+
+
+class TestFromUnsupportedDimension:
+    """`from_` rejects a dimension it has no branch for."""
+
+    def test_raises_valueerror(self) -> None:
+        with pytest.raises(ValueError, match="cannot build a DistanceModulus"):
+            cxastro.DistanceModulus.from_(u.Q(1.0, "s"))
