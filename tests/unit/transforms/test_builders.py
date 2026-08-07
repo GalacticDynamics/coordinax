@@ -1,4 +1,4 @@
-"""Tests for the built-in Parametric builders."""
+"""Tests for the built-in TimeDep builders."""
 
 import jax
 import jax.numpy as jnp
@@ -31,7 +31,7 @@ def test_rotation_about_axis_differentiable_in_omega():
     axis = jnp.array([0.0, 0.0, 1.0])
 
     def y(omega_val):
-        op = cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(omega_val, "rad/s"), axis=axis))
+        op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(omega_val, "rad/s"), axis=axis))
         out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
         return out["y"].ustrip("m")
 
@@ -42,7 +42,7 @@ def test_rotation_about_axis_differentiable_in_phase():
     axis = jnp.array([0.0, 0.0, 1.0])
 
     def y(phase_val):
-        op = cxfm.Parametric(
+        op = cxfm.TimeDep(
             cxfm.RotationAboutAxis(
                 u.Q(0.0, "rad/s"), axis=axis, phase=u.Q(phase_val, "rad")
             )
@@ -69,7 +69,7 @@ def test_rotation_about_axis_differentiable_in_axis():
 
     def y(ax_x):
         axis = jnp.array([ax_x, 0.0, 1.0])
-        op = cxfm.Parametric(cxfm.RotationAboutAxis(omega, axis=axis))
+        op = cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))
         out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
         return out["y"].ustrip("m")
 
@@ -96,7 +96,7 @@ def test_uniform_translation_differentiable_in_rate():
             "y": u.Q(0.0, "km/s"),
             "z": u.Q(0.0, "km/s"),
         }
-        op = cxfm.Parametric(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+        op = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
         out = cxfm.act(op, u.Q(2.0, "s"), X, cxc.cart3d, cxr.point)
         return out["x"].ustrip("m")
 

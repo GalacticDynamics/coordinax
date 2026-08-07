@@ -413,7 +413,7 @@ def prolong_jet(
     >>> import coordinax.transforms as cxfm
 
     >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> op = cxfm.Parametric(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> op = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
     >>> jet = {
     ...     0: {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
     ...     1: {"x": u.Q(0.0, "km/s"), "y": u.Q(1.0, "km/s"), "z": u.Q(0.0, "km/s")},

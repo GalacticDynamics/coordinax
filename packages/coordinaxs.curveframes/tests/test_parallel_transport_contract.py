@@ -7,9 +7,9 @@ inverse semantics, `frame_transition` integration, JAX compatibility -- so
 those are asserted once here, parametrized over both types via the `pt_case`
 fixture.
 
-The builders are wrapped by `coordinax.transforms.Parametric`: the builder
+The builders are wrapped by `coordinax.transforms.TimeDep`: the builder
 carries the frame *fields* (``location``, ``tangent``, ...) and the
-`Parametric` carries the *transform* algebra (``act``, ``inverse``,
+`TimeDep` carries the *transform* algebra (``act``, ``inverse``,
 ``materialize``). Both halves are exercised here.
 
 Closed-form values live in `test_frenet_serret.py` / `test_bishop.py`.
@@ -52,7 +52,7 @@ def inverse_rotation(builder: object, tau: u.AbstractQuantity) -> object:
     The rows of this matrix are the inverse frame's triad, i.e. the *columns*
     of the forward R.
     """
-    return cxfm.Parametric(builder).inverse.materialize(tau)[0].R
+    return cxfm.TimeDep(builder).inverse.materialize(tau)[0].R
 
 
 # ===================================================================
@@ -133,9 +133,9 @@ class TestTriad:
 class TestInverse:
     """The inverse frame fields satisfy R^T semantics."""
 
-    def test_inverse_is_parametric(self, pt_case: SimpleNamespace) -> None:
-        """`.inverse` is itself a `Parametric` family."""
-        assert isinstance(pt_case.xop.inverse, cxfm.Parametric)
+    def test_inverse_is_timedep(self, pt_case: SimpleNamespace) -> None:
+        """`.inverse` is itself a `TimeDep` family."""
+        assert isinstance(pt_case.xop.inverse, cxfm.TimeDep)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_inverse_orthonormality(
@@ -237,7 +237,7 @@ class TestJAX:
 
 
 class TestConstructors:
-    """A builder is built from a bare curve; the frame wraps it in Parametric."""
+    """A builder is built from a bare curve; the frame wraps it in TimeDep."""
 
     def test_builder_from_bare_curve(self, pt_case: SimpleNamespace, curve) -> None:
         built = pt_case.builder_cls(curve)
@@ -258,7 +258,7 @@ class TestConstructors:
         xop = pt_case.xop
         frame = pt_case.frame_cls(base_frame=cxf.Alice(), xop=xop, xop_inv=xop.inverse)
         assert isinstance(frame.base_frame, cxf.Alice)
-        assert isinstance(frame.xop, cxfm.Parametric)
+        assert isinstance(frame.xop, cxfm.TimeDep)
         assert isinstance(frame.xop.builder, pt_case.builder_cls)
 
     def test_frame_from_curve_accepts_tau_unit(
@@ -268,8 +268,8 @@ class TestConstructors:
         assert frame.xop.builder.tau_unit == u.unit("yr")
 
     def test_frame_xop_wraps_a_matching_builder(self, pt_case: SimpleNamespace) -> None:
-        """`xop` is a `Parametric` wrapping this type's builder."""
-        assert isinstance(pt_case.frame.xop, cxfm.Parametric)
+        """`xop` is a `TimeDep` wrapping this type's builder."""
+        assert isinstance(pt_case.frame.xop, cxfm.TimeDep)
         assert isinstance(pt_case.frame.xop.builder, pt_case.builder_cls)
 
 

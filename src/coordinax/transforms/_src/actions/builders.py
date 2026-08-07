@@ -1,4 +1,4 @@
-"""Built-in builders for `Parametric` transforms."""
+"""Built-in builders for `TimeDep` transforms."""
 
 __all__ = ("RotationAboutAxis", "UniformTranslation")
 
@@ -41,7 +41,7 @@ class RotationAboutAxis(eqx.Module):
     >>> import coordinax.transforms as cxfm
 
     >>> b = cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
-    >>> op = cxfm.Parametric(b)
+    >>> op = cxfm.TimeDep(b)
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = op(u.Q(1.0, "s"), q)
     >>> out["y"].round(3)

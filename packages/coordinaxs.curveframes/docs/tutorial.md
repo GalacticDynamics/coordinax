@@ -357,10 +357,10 @@ Q(1., 's')
 ## Step 6: Inverse and Double-Inverse
 
 ```pycon
->>> bt_op = cxfm.Parametric(bt)
+>>> bt_op = cxfm.TimeDep(bt)
 >>> bt_inv = bt_op.inverse
 >>> bt_inv
-Parametric(...)
+TimeDep(...)
 ```
 
 Double-inversion recovers the original:

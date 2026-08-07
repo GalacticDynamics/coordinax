@@ -86,12 +86,12 @@ def test_different_semantic_kind_translates_do_not_merge() -> None:
 
 
 def test_time_dependent_rotations_merge_pointwise() -> None:
-    """Two `Parametric` rotations merge into one, pointwise in tau."""
+    """Two `TimeDep` rotations merge into one, pointwise in tau."""
     zhat = jnp.asarray([0.0, 0.0, 1.0])
-    td = cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
+    td = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
 
     out = cxfm.simplify(cxfm.Composed((td, td)))
-    assert isinstance(out, cxfm.Parametric)
+    assert isinstance(out, cxfm.TimeDep)
 
     # ...and the merged family acts as the sequential application at a sample tau.
     tau = u.Q(0.7, "s")

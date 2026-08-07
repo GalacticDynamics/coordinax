@@ -1,6 +1,6 @@
-"""Parametric (tau-dependent) transform wrapper."""
+"""TimeDep (tau-dependent) transform wrapper."""
 
-__all__ = ("Parametric",)
+__all__ = ("TimeDep",)
 
 from collections.abc import Callable
 from typing import Any, cast, final
@@ -77,7 +77,7 @@ class _InverseBuilder(eqx.Module):
 
 
 @final
-class Parametric(AbstractTransform):
+class TimeDep(AbstractTransform):
     r"""A one-parameter family of transforms: ``builder(tau) -> transform``.
 
     The builder is typically an `equinox.Module` whose ``__call__(tau)``
@@ -102,7 +102,7 @@ class Parametric(AbstractTransform):
     ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
     ...         return cxfm.Rotate(R)
 
-    >>> op = cxfm.Parametric(RotZ(u.Q(jnp.pi / 2, "rad/s")))
+    >>> op = cxfm.TimeDep(RotZ(u.Q(jnp.pi / 2, "rad/s")))
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = op(u.Q(1.0, "s"), q)
     >>> out["y"].round(3)
@@ -119,7 +119,7 @@ class Parametric(AbstractTransform):
         return frozenset((groups.DiffeomorphismGroup,))
 
     @property
-    def inverse(self) -> "Parametric":
+    def inverse(self) -> "TimeDep":
         """The pointwise inverse family, ``inv(tau) = builder(tau).inverse``.
 
         Examples
@@ -137,19 +137,19 @@ class Parametric(AbstractTransform):
         ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
         ...         return cxfm.Rotate(R)
 
-        >>> op = cxfm.Parametric(RotZ(u.Q(jnp.pi / 2, "rad/s")))
+        >>> op = cxfm.TimeDep(RotZ(u.Q(jnp.pi / 2, "rad/s")))
         >>> op.inverse.inverse.builder is op.builder  # involution unwraps
         True
 
         """
         b = self.builder
         if isinstance(b, _InverseBuilder):  # involution unwraps
-            return Parametric(b.builder)
-        return Parametric(_InverseBuilder(b))
+            return TimeDep(b.builder)
+        return TimeDep(_InverseBuilder(b))
 
     @property
     def is_time_dependent(self) -> bool:
-        """A `Parametric` transform is, by construction, time-dependent."""
+        """A `TimeDep` transform is, by construction, time-dependent."""
         return True
 
     def materialize(self, tau: Any, /) -> AbstractTransform:
@@ -160,7 +160,7 @@ class Parametric(AbstractTransform):
 
     def _as_builder(self, other: Any, /) -> Callable[[Any], AbstractTransform] | None:
         """Coerce ``other`` to a builder for `@`, or `None` if it cannot."""
-        if isinstance(other, Parametric):
+        if isinstance(other, TimeDep):
             return other.builder
         if isinstance(other, AbstractTransform):
             return _ConstBuilder(other)
@@ -186,32 +186,32 @@ class Parametric(AbstractTransform):
         ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
         ...         return cxfm.Rotate(R)
 
-        >>> a = cxfm.Parametric(RotZ(u.Q(0.3, "rad/s")))
-        >>> b = cxfm.Parametric(RotZ(u.Q(0.5, "rad/s")))
+        >>> a = cxfm.TimeDep(RotZ(u.Q(0.3, "rad/s")))
+        >>> b = cxfm.TimeDep(RotZ(u.Q(0.5, "rad/s")))
         >>> ab = a @ b
-        >>> isinstance(ab, cxfm.Parametric)
+        >>> isinstance(ab, cxfm.TimeDep)
         True
 
         """
         ob = self._as_builder(other)
         if ob is None:
             return NotImplemented
-        return Parametric(_ComposedBuilder(self.builder, ob))
+        return TimeDep(_ComposedBuilder(self.builder, ob))
 
     def __rmatmul__(self, other: Any, /) -> Any:
         """Pointwise composition with `self` applied second."""
         ob = self._as_builder(other)
         if ob is None:
             return NotImplemented
-        return Parametric(_ComposedBuilder(ob, self.builder))
+        return TimeDep(_ComposedBuilder(ob, self.builder))
 
 
 # ============================================================================
 # Constructors
 
 
-@Parametric.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Parametric], fn: Callable[[Any], Any], /) -> Parametric:
+@TimeDep.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(cls: type[TimeDep], fn: Callable[[Any], Any], /) -> TimeDep:
     """Wrap a bare ``tau -> transform`` function (static, non-differentiable).
 
     Examples
@@ -223,7 +223,7 @@ def from_(cls: type[Parametric], fn: Callable[[Any], Any], /) -> Parametric:
     >>> def build(t) -> cxfm.Rotate:
     ...     return cxfm.Rotate(jnp.eye(3))
 
-    >>> op = cxfm.Parametric.from_(build)
+    >>> op = cxfm.TimeDep.from_(build)
     >>> op(u.Q(1.0, "s"), {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")})
     {'x': Q(1., 'm'), 'y': Q(0., 'm'), 'z': Q(0., 'm')}
 
@@ -243,7 +243,7 @@ def from_(cls: type[Parametric], fn: Callable[[Any], Any], /) -> Parametric:
 
 @plum.dispatch
 def act(
-    op: Parametric,
+    op: TimeDep,
     tau: Any,
     x: CDict,
     chart: cxc.AbstractChart,
@@ -271,7 +271,7 @@ def act(
     ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
     ...         return cxfm.Rotate(R)
 
-    >>> op = cxfm.Parametric(RotZ(u.Q(jnp.pi / 2, "rad/s")))
+    >>> op = cxfm.TimeDep(RotZ(u.Q(jnp.pi / 2, "rad/s")))
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = cxfm.act(op, u.Q(1.0, "s"), q, cxc.cart3d, cxr.point)
     >>> out["y"].round(3)
@@ -283,7 +283,7 @@ def act(
 
 @plum.dispatch
 def pushforward(
-    op: Parametric,
+    op: TimeDep,
     tau: Any,
     v: CDict,
     chart: cxc.AbstractChart,
@@ -312,7 +312,7 @@ def pushforward(
     ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
     ...         return cxfm.Rotate(R)
 
-    >>> op = cxfm.Parametric(RotZ(u.Q(90, "deg/s")))
+    >>> op = cxfm.TimeDep(RotZ(u.Q(90, "deg/s")))
     >>> v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
     >>> out = cxfm.pushforward(op, u.Q(1.0, "s"), v, cxc.cart3d, cxr.coord_vel)
     >>> out["y"].round(3)
@@ -330,8 +330,8 @@ def pushforward(
 
 
 @plum.dispatch
-def simplify(op: Parametric, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
-    """Pass a `Parametric` through unchanged (its value is unknown until tau).
+def simplify(op: TimeDep, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
+    """Pass a `TimeDep` through unchanged (its value is unknown until tau).
 
     Examples
     --------
@@ -344,7 +344,7 @@ def simplify(op: Parametric, /, *, approx: bool = True, **kw: Any) -> AbstractTr
     ...     def __call__(self, tau):
     ...         return cxfm.identity
 
-    >>> op = cxfm.Parametric(RotZ(u.Q(1.0, "rad/s")))
+    >>> op = cxfm.TimeDep(RotZ(u.Q(1.0, "rad/s")))
     >>> cxfm.simplify(op) is op
     True
 
@@ -363,18 +363,18 @@ def _try_matmul(a: Any, b: Any, /) -> AbstractTransform | None:
 
 
 @plum.dispatch
-def _merge(a: Parametric, b: Parametric, /) -> AbstractTransform | None:
-    """Merge two adjacent `Parametric` transforms (``a`` applied first)."""
+def _merge(a: TimeDep, b: TimeDep, /) -> AbstractTransform | None:
+    """Merge two adjacent `TimeDep` transforms (``a`` applied first)."""
     return _try_matmul(a, b)
 
 
 @plum.dispatch
-def _merge(a: Parametric, b: AbstractTransform, /) -> AbstractTransform | None:
-    """Merge a `Parametric` with a constant transform (``a`` applied first)."""
+def _merge(a: TimeDep, b: AbstractTransform, /) -> AbstractTransform | None:
+    """Merge a `TimeDep` with a constant transform (``a`` applied first)."""
     return _try_matmul(a, b)
 
 
 @plum.dispatch
-def _merge(a: AbstractTransform, b: Parametric, /) -> AbstractTransform | None:
-    """Merge a constant transform with a `Parametric` (``a`` applied first)."""
+def _merge(a: AbstractTransform, b: TimeDep, /) -> AbstractTransform | None:
+    """Merge a constant transform with a `TimeDep` (``a`` applied first)."""
     return _try_matmul(a, b)

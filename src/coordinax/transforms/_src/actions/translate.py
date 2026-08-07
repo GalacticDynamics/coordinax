@@ -72,7 +72,7 @@ class Translate(AbstractAdd):
       $m = k$ gains $\delta$. The componentwise rule is definitional (the
       point action is the identity), independent of chart flatness.
 
-    A time-dependent translation is a `~coordinax.transforms.Parametric`
+    A time-dependent translation is a `~coordinax.transforms.TimeDep`
     family of `Translate` operators (e.g. built by
     `~coordinax.transforms.UniformTranslation`); its
     $d^{m-k}\delta/d\tau^{m-k}$ prolongation terms are recovered by the
@@ -99,10 +99,10 @@ class Translate(AbstractAdd):
         {'x': Q(-1, 'km'), 'y': Q(-2, 'km'), 'z': Q(-3, 'km')}, chart=Cart3D(M=Rn(3))
     )
 
-    Time-dependent translation — a `~coordinax.transforms.Parametric` family:
+    Time-dependent translation — a `~coordinax.transforms.TimeDep` family:
 
     >>> rate = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
-    >>> moving = cxfm.Parametric(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> moving = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
 
     >>> t = u.Q(10, "s")
     >>> x = cx.cdict(u.Q([0.0, 0.0, 0.0], "m"))
@@ -315,11 +315,11 @@ def act(
     >>> cxfm.act(shift, None, v, cxc.cart3d, cxr.coord_vel)
     {'x': Q(1., 'km / s'), 'y': Q(0., 'km / s'), 'z': Q(0., 'km / s')}
 
-    But a time-dependent translate — a `~coordinax.transforms.Parametric`
+    But a time-dependent translate — a `~coordinax.transforms.TimeDep`
     family — boosts velocities by its rate (the kinematic prolongation):
 
     >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> moving = cxfm.Parametric(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> moving = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
     >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> out = cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel, at=at)
     >>> out["x"].round(3)
@@ -358,7 +358,7 @@ def act(
 
     # Contribution: d^(m-k) delta / dtau^(m-k). `delta` is constant, so every
     # tau-derivative of it vanishes and only the matching order m == k gains
-    # anything. (A time-dependent offset is a `Parametric` family, whose
+    # anything. (A time-dependent offset is a `TimeDep` family, whose
     # higher-order terms come from the generic tangent funnel.)
     if m != k:
         return x

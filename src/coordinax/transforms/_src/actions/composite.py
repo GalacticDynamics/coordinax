@@ -80,9 +80,9 @@ class AbstractCompositeTransform(AbstractTransform):
         >>> pipe.is_time_dependent
         False
 
-        A `Parametric` component makes the whole composite time-dependent:
+        A `TimeDep` component makes the whole composite time-dependent:
 
-        >>> moving = cxfm.Parametric.from_(
+        >>> moving = cxfm.TimeDep.from_(
         ...     lambda t: cxfm.Translate.from_(jnp.asarray([1.0, 0.0, 0.0]) * t, "km")
         ... )
         >>> cxfm.Composed((shift, moving)).is_time_dependent

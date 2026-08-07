@@ -53,7 +53,7 @@ def _circle_curve_yr(tau: u.Q) -> u.Q:
 
 def _inverse_rotation(builder: cxfc.AbstractCurveFrameBuilder, tau: u.Q):
     """Rotation matrix of the inverse family at ``tau`` (i.e. R^T)."""
-    return cxfm.Parametric(builder).inverse.materialize(tau)[0].R
+    return cxfm.TimeDep(builder).inverse.materialize(tau)[0].R
 
 
 @pytest.fixture
@@ -121,7 +121,7 @@ class TestFrenetSerretInverseValues:
         gamma = circle_fs.location(tau)
         expected = u.Q(R.T @ p.ustrip("km"), "km") + gamma
 
-        got = cxfm.act(cxfm.Parametric(circle_fs).inverse, tau, p)
+        got = cxfm.act(cxfm.TimeDep(circle_fs).inverse, tau, p)
         np.testing.assert_allclose(got.ustrip("km"), expected.ustrip("km"), atol=1e-5)
 
 
@@ -146,7 +146,7 @@ class TestFrenetSerretOpaqueUnits:
 
     def test_inverse_maps_origin_to_curve(self, circle_yr_fs: cxfc.FrenetSerretBuilder):
         """For the yr-circle at tau=0 the curve is at (5, 0, 0) km."""
-        inv = cxfm.Parametric(circle_yr_fs).inverse
+        inv = cxfm.TimeDep(circle_yr_fs).inverse
         got = cxfm.act(inv, u.Q(0.0, "yr"), u.Q(jnp.array([0.0, 0.0, 0.0]), "km"))
         np.testing.assert_allclose(got.ustrip("km"), [5, 0, 0], atol=1e-3)
 
@@ -156,6 +156,6 @@ class TestFrenetSerretAct:
 
     def test_act_forward_off_curve(self, circle_fs: cxfc.FrenetSerretBuilder):
         """At tau=0, p=(2,0,0) km => delta=(1,0,0) => R @ delta = (0,-1,0) km."""
-        op = cxfm.Parametric(circle_fs)
+        op = cxfm.TimeDep(circle_fs)
         result = cxfm.act(op, u.Q(0, "s"), u.Q(jnp.array([2.0, 0.0, 0.0]), "km"))
         np.testing.assert_allclose(result.ustrip("km"), [0, -1, 0], atol=1e-6)

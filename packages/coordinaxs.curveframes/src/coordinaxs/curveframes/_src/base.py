@@ -6,7 +6,7 @@ This module defines the two abstract base classes on which the entire
 * `AbstractParallelTransportFrame` — a curve-attached orthonormal reference
   frame that integrates with the ``coordinax.frames`` frame-transition system.
 * `AbstractCurveFrameBuilder` — the `equinox.Module` builder that a
-  `coordinax.transforms.Parametric` wraps: ``builder(tau)`` returns the
+  `coordinax.transforms.TimeDep` wraps: ``builder(tau)`` returns the
   rigid-body transform ``Translate(-gamma) | Rotate(R)`` at that parameter.
 
 """
@@ -49,7 +49,7 @@ class AbstractParallelTransportFrame(cxf.AbstractTransformedReferenceFrame[Frame
 
     - ``base_frame`` — the ambient reference frame (e.g. ``Alice()``).
     - ``xop`` — the forward transform (base → curve frame), a
-      `coordinax.transforms.Parametric` wrapping an
+      `coordinax.transforms.TimeDep` wrapping an
       `AbstractCurveFrameBuilder`.
     - ``xop_inv`` — pre-computed inverse of ``xop`` (curve frame → base).
 

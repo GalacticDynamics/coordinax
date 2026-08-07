@@ -41,7 +41,7 @@ class AbstractLinearTransform(AbstractTransform):
     A subclass provides its (constant) matrix via the `_raw_matrix` property;
     this base owns the matrix validation and every point-geometry ``act``
     path. A time-dependent linear map is a
-    `~coordinax.transforms.Parametric` family of these operators.
+    `~coordinax.transforms.TimeDep` family of these operators.
     """
 
     @property

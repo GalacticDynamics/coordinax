@@ -115,10 +115,10 @@ class Rotate(AbstractLinearTransform):
        [-1,  0,  0]], 'm')
 
     ``R`` is always a constant matrix. A time-dependent rotation is a
-    `~coordinax.transforms.Parametric` family of `Rotate` operators — e.g.
+    `~coordinax.transforms.TimeDep` family of `Rotate` operators — e.g.
     built by `~coordinax.transforms.RotationAboutAxis`:
 
-    >>> R_op = cxfm.Parametric(
+    >>> R_op = cxfm.TimeDep(
     ...     cxfm.RotationAboutAxis(u.Q(45, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
     ... )
 
@@ -512,7 +512,7 @@ def act(
     $\dot R$ terms: tangent data of every ladder order $m$ transforms by the
     same Jacobian pushforward $v \mapsto R v$ (a rotation is linear, so its
     differential is itself). Hence there is no order distinction here — a
-    time-dependent rotation is a `~coordinax.transforms.Parametric` family,
+    time-dependent rotation is a `~coordinax.transforms.TimeDep` family,
     whose tangent data routes through the generic funnel in ``prolong.py``,
     which differentiates this point action to recover the $\dot R$ terms.
 
@@ -526,7 +526,7 @@ def act(
 
     A uniformly rotating frame (angular speed 1 rad/s about z):
 
-    >>> op = cxfm.Parametric(
+    >>> op = cxfm.TimeDep(
     ...     cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=jnp.asarray([0., 0., 1.]))
     ... )
 

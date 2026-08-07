@@ -24,9 +24,9 @@ def act(*args: Any, **kwargs: Any) -> Any:
 
     For tau-independent transforms, $\tau$ is ignored. For composite transforms
     (e.g., ``Composed``), the component transforms are applied sequentially. Time
-    dependence itself is carried by exactly one wrapper, ``Parametric(builder)``,
+    dependence itself is carried by exactly one wrapper, ``TimeDep(builder)``,
     where ``builder(tau) -> AbstractTransform``: every other transform holds only
-    constant parameters, and ``act`` on a ``Parametric`` materializes ``builder(tau)``
+    constant parameters, and ``act`` on a ``TimeDep`` materializes ``builder(tau)``
     before applying it.
 
     Parameters
@@ -41,7 +41,7 @@ def act(*args: Any, **kwargs: Any) -> Any:
 
     tau : Any
         Parameter for tau-dependent transforms. Pass ``None`` for
-        tau-independent transforms. Only ``Parametric`` (and composites
+        tau-independent transforms. Only ``TimeDep`` (and composites
         containing one) actually consume ``tau``; it materializes the wrapped
         ``builder(tau)`` before applying it.
 
@@ -132,7 +132,7 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
     Contrast with `act` on kinematic tangent data (velocity, acceleration,
     ...), which is the full *prolongation* and includes $\partial_\tau \phi$
     terms for time-dependent transforms. Those $\partial_\tau \phi$ terms only
-    arise when the transform is (or contains) a ``Parametric``, the sole
+    arise when the transform is (or contains) a ``TimeDep``, the sole
     carrier of time dependence; `pushforward` deliberately ignores them by
     holding $\tau$ fixed.
 
@@ -155,7 +155,7 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
     one (the Jacobian of a translation is the identity):
 
     >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> op = cxfm.Parametric(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> op = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
     >>> d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(0.0, "km")}
     >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> cxfm.pushforward(op, u.Q(5.0, "s"), d, cxc.cart3d, cxr.coord_disp, at=at)
@@ -186,7 +186,7 @@ def act_jet(*args: Any, **kwargs: Any) -> Any:
     This is the joint, order-consistent application of `act` to a full
     phase-space state — the natural verb for `coordinax.Coordinate` bundles
     and for time-dependent transforms, where higher slots depend on all
-    lower ones. Time dependence is always carried by a ``Parametric(builder)``
+    lower ones. Time dependence is always carried by a ``TimeDep(builder)``
     wrapper (or a composite containing one); a purely constant transform has
     no $\partial_\tau \phi$ terms and `act_jet` reduces to applying the same
     Jacobian to every jet slot.

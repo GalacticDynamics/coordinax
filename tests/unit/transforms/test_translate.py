@@ -141,7 +141,7 @@ class TestCallableDeltaRejected:
     )
     def test_guard_message_names_the_replacement(self, cls):
         bad = self._bypassing_typecheck(cls, self._delta_fn)
-        with pytest.raises(TypeError, match="Parametric"):
+        with pytest.raises(TypeError, match="TimeDep"):
             bad.__check_init__()
 
     @pytest.mark.parametrize(

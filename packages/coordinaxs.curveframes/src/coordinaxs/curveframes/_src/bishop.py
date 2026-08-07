@@ -26,7 +26,7 @@ Both classes are ``@final`` (no further subclassing).
 Key design choices
 ------------------
 * **Lazy evaluation** — the ODE is solved only when a concrete $\tau$ is
-  requested, i.e. when the `Parametric` family is materialized.
+  requested, i.e. when the `TimeDep` family is materialized.
 * **Auto initial normal** — when no ``initial_normal`` is supplied, one is
   chosen automatically via Gram--Schmidt against the tangent at $\tau_0$.
 
@@ -344,7 +344,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     """Bishop (rotation-minimising) curve-attached reference frame.
 
     A reference frame defined relative to a base frame by a
-    `coordinax.transforms.Parametric` wrapping a `BishopBuilder`.  At each
+    `coordinax.transforms.TimeDep` wrapping a `BishopBuilder`.  At each
     parameter value ``tau``, the frame is centred at the curve position with
     axes ``(T, U1, U2)`` obtained via parallel transport.
 
@@ -358,10 +358,10 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     ----------
     base_frame : AbstractReferenceFrame
         The ambient reference frame.
-    xop : Parametric
+    xop : TimeDep
         The tau-dependent rotation-minimising transform from ``base_frame`` to
         this frame.
-    xop_inv : Parametric
+    xop_inv : TimeDep
         Its inverse.
 
     Examples
@@ -397,8 +397,8 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     """
 
     base_frame: FrameT
-    xop: cxfm.Parametric
-    xop_inv: cxfm.Parametric
+    xop: cxfm.TimeDep
+    xop_inv: cxfm.TimeDep
 
     @classmethod
     def from_curve(
@@ -452,5 +452,5 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
 
         """
         builder = BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)
-        xop = cxfm.Parametric(builder)
+        xop = cxfm.TimeDep(builder)
         return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)

@@ -26,34 +26,34 @@ from .composed import Composed
 from .composite import AbstractCompositeTransform
 from .custom_types import CDict
 from .identity import Identity, identity
-from .parametric import Parametric
 from .prolong import (
     _MSG_JET_SLOT0_MISSING,
     prolong_jet,
     pushforward_generic,
     tau_derivative,
 )
+from .timedep import TimeDep
 from .utils import is_componentwise_offset
 from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 _MSG_CALLABLE_DELTA = (
     "{cls}.delta must be a component dict, not a callable. Time-dependent "
     "offsets are no longer expressed by passing a function: wrap a builder in "
-    "coordinax.transforms.Parametric instead, e.g. "
-    "Parametric(UniformTranslation(rate, chart=...)) for a uniform drift, or "
-    "Parametric.from_(lambda tau: {cls}(delta(tau), chart=...)) for an "
+    "coordinax.transforms.TimeDep instead, e.g. "
+    "TimeDep(UniformTranslation(rate, chart=...)) for a uniform drift, or "
+    "TimeDep.from_(lambda tau: {cls}(delta(tau), chart=...)) for an "
     "arbitrary one."
 )
 
 
 _MSG_COMPOSED_FIBRE_OFFSET = (
-    "a Parametric builder returned a composite containing a fibre offset "
+    "a TimeDep builder returned a composite containing a fibre offset "
     "({cls} with semantic_kind of order >= 1). That spelling is not "
     "supported: the fibre-offset ladder rule can only see an offset that is "
     "the whole materialized transform, so the offset would be silently "
-    "dropped on tangent data. Put the Parametric INSIDE the composition "
-    "instead -- e.g. `static_part | Parametric(kick_builder)` rather than "
-    "`Parametric(lambda tau: static_part | kick(tau))`."
+    "dropped on tangent data. Put the TimeDep INSIDE the composition "
+    "instead -- e.g. `static_part | TimeDep(kick_builder)` rather than "
+    "`TimeDep(lambda tau: static_part | kick(tau))`."
 )
 
 
@@ -66,7 +66,7 @@ class AbstractAdd(AbstractTransform):
     Common features:
     - Addition of two operators combines their offsets
     - Negation inverts the offset
-    - Time-dependent offsets: wrap in `~coordinax.transforms.Parametric`
+    - Time-dependent offsets: wrap in `~coordinax.transforms.TimeDep`
     - Chart-aware representation
     """
 
@@ -316,14 +316,14 @@ def _prolong_slotwise(
 
 
 # ============================================================================
-# Time-dependent FIBRE offsets: `Parametric` wrapping an additive kick.
+# Time-dependent FIBRE offsets: `TimeDep` wrapping an additive kick.
 #
 # A fibre offset (ladder order k >= 1) has an IDENTITY point action, so the
 # generic tangent funnel in prolong.py — which recovers time dependence by
 # differentiating the point action — has nothing to differentiate and is
 # provably blind to it (it would silently return the data unchanged). The
 # rules below are the ladder rule that `translate.py` applies to a static
-# fibre offset, re-homed for the `Parametric` families that now carry all
+# fibre offset, re-homed for the `TimeDep` families that now carry all
 # time dependence.
 #
 # THE PREDICATE IS LOAD-BEARING. It must fire ONLY for additive fibre offsets.
@@ -336,8 +336,8 @@ def _prolong_slotwise(
 def _generic_tangent_act() -> Any:
     """Return the engine's generic tangent ``act`` (``prolong.py``), lazily.
 
-    The `Parametric` rule below dispatches strictly more specifically than the
-    engine's, so a non-fibre `Parametric` can only get the engine's behaviour by
+    The `TimeDep` rule below dispatches strictly more specifically than the
+    engine's, so a non-fibre `TimeDep` can only get the engine's behaviour by
     invoking it explicitly. Resolved on first call (and cached) because the
     registration does not exist at this module's import time.
     """
@@ -396,13 +396,13 @@ def _reject_composed_fibre_offset(op0: AbstractCompositeTransform, /) -> None:
         raise TypeError(_MSG_COMPOSED_FIBRE_OFFSET.format(cls=type(child).__name__))
 
 
-def _fibre_offset_order(op: Parametric, tau: Any, /) -> int | None:
+def _fibre_offset_order(op: TimeDep, tau: Any, /) -> int | None:
     r"""Ladder order $k$ of ``op``'s materialized fibre offset, else `None`."""
     return _ladder_order(op.materialize(tau))
 
 
 def _fibre_ladder_op(
-    op: Parametric, op0: AbstractAdd, tau: Any, n: int, rep: Any, /
+    op: TimeDep, op0: AbstractAdd, tau: Any, n: int, rep: Any, /
 ) -> AbstractAdd:
     r"""Materialize ``op`` with its offset replaced by $d^n\delta/d\tau^n$.
 
@@ -425,7 +425,7 @@ def _fibre_ladder_op(
 
 @plum.dispatch
 def act(
-    op: Parametric,
+    op: TimeDep,
     tau: Any,
     x: CDict,
     chart: cxc.AbstractChart,
@@ -438,11 +438,11 @@ def act(
     usys: Any = None,
     **kw: Any,
 ) -> CDict:
-    r"""Tangent action of a `Parametric`, with the fibre-offset ladder rule.
+    r"""Tangent action of a `TimeDep`, with the fibre-offset ladder rule.
 
-    A `Parametric` family whose value is a fibre offset (ladder order
+    A `TimeDep` family whose value is a fibre offset (ladder order
     $k \geq 1$) applies the ladder rule directly: order-$m$ data gains
-    $d^{m-k}\delta/d\tau^{m-k}$. Every other `Parametric` — in particular
+    $d^{m-k}\delta/d\tau^{m-k}$. Every other `TimeDep` — in particular
     every point-acting one — defers to the generic funnel, which recovers its
     time dependence by differentiating the point action.
 
@@ -453,7 +453,7 @@ def act(
 
     A velocity kick that grows at 5 km/s2 shifts accelerations by its rate:
 
-    >>> kick = cxfm.Parametric.from_(lambda t: cxfm.Translate(
+    >>> kick = cxfm.TimeDep.from_(lambda t: cxfm.Translate(
     ...     {"x": u.Q(5.0, "km/s2") * t, "y": u.Q(0.0, "km/s"),
     ...      "z": u.Q(0.0, "km/s")},
     ...     chart=cxc.cart3d, semantic_kind=cxr.vel))
@@ -478,7 +478,7 @@ def act(
     if k is None:
         # Reach the generic funnel itself, not a copy of it. This dispatch is
         # strictly more specific than prolong.py's, so without the explicit
-        # invoke every `Parametric` tangent act would bypass the engine — and
+        # invoke every `TimeDep` tangent act would bypass the engine — and
         # any future change there (a new anchor check, a units policy) would
         # silently not apply to the one type that carries all time dependence.
         return cast(
@@ -498,7 +498,7 @@ def act(
 
 @plum.dispatch
 def act_jet(
-    op: Parametric,
+    op: TimeDep,
     tau: Any,
     jet: dict,
     chart: cxc.AbstractChart,
@@ -506,7 +506,7 @@ def act_jet(
     *,
     usys: Any = None,
 ) -> dict:
-    """Prolong a `Parametric`; fibre offsets go slot-wise, the rest generic.
+    """Prolong a `TimeDep`; fibre offsets go slot-wise, the rest generic.
 
     The jet path needs the same fibre-offset carve-out as ``act`` above: the
     generic jet chain differentiates the point action, which a fibre offset

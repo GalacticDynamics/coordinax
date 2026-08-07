@@ -73,7 +73,7 @@ A rigid rotation by angle $\tau$ about the $z$-axis, centred on $\gamma(\tau)$, 
 ...     return jnp.array([[-st, ct, 0.0], [-ct, -st, 0.0], [0.0, 0.0, 1.0]])
 ...
 
-A real `equinox.Module` builder, rather than `Parametric.from_(lambda ...)`, keeps this differentiable/vmappable and avoids the recompile-per-closure cost of wrapping a bare function (see [Writing a Builder](../../../docs/guides/transforms.md#writing-a-builder)):
+A real `equinox.Module` builder, rather than `TimeDep.from_(lambda ...)`, keeps this differentiable/vmappable and avoids the recompile-per-closure cost of wrapping a bare function (see [Writing a Builder](../../../docs/guides/transforms.md#writing-a-builder)):
 
 ```pycon
 >>> class Corotate(eqx.Module):
@@ -82,7 +82,7 @@ A real `equinox.Module` builder, rather than `Parametric.from_(lambda ...)`, kee
 ...         return cxfm.Translate(neg_gamma(tau), chart=cxc.cart3d) | cxfm.Rotate(R_z(tau))
 ...
 
->>> xop = cxfm.Parametric(Corotate())
+>>> xop = cxfm.TimeDep(Corotate())
 >>> corot_frame = cxf.TransformedReferenceFrame(cxf.alice, xop)
 ````
 

@@ -36,7 +36,7 @@ time-derivative of the transformed trajectory — for any transform you define.
 
 The turntable spins counter-clockwise at $\omega = 2\ \text{rad}\,\text{s}^{-1}$ (chosen round for readable numbers). Expressing a lab point in the turntable's own axes rotates its coordinates by $-\omega t$, so the inertial → turntable operator is $R_z(-\omega t)$.
 
-The key move: wrap `cxfm.RotationAboutAxis(omega, axis=...)` in `Parametric` instead of building a fixed matrix. Coordinax evaluates the builder at the time parameter on every `act`, and — crucially — differentiates through it to transform velocities and accelerations. Passing a **negative** angular frequency gives exactly the $R_z(-\omega t)$ we want:
+The key move: wrap `cxfm.RotationAboutAxis(omega, axis=...)` in `TimeDep` instead of building a fixed matrix. Coordinax evaluates the builder at the time parameter on every `act`, and — crucially — differentiates through it to transform velocities and accelerations. Passing a **negative** angular frequency gives exactly the $R_z(-\omega t)$ we want:
 
 ```pycon
 >>> import jax
@@ -54,11 +54,11 @@ The key move: wrap `cxfm.RotationAboutAxis(omega, axis=...)` in `Parametric` ins
 >>> turntable_builder = cxfm.RotationAboutAxis(u.Q(-OMEGA, "rad/s"), axis=axis)
 ```
 
-Wrap it in a `Parametric` operator and attach it to an inertial base frame to make the co-rotating frame:
+Wrap it in a `TimeDep` operator and attach it to an inertial base frame to make the co-rotating frame:
 
 ```pycon
 >>> inertial = cxf.alice  # any inertial frame
->>> turntable = cxf.TransformedReferenceFrame(inertial, cxfm.Parametric(turntable_builder))
+>>> turntable = cxf.TransformedReferenceFrame(inertial, cxfm.TimeDep(turntable_builder))
 >>> op = cxf.frame_transition(inertial, turntable)
 ```
 
@@ -191,7 +191,7 @@ At the release instant the puck is at rest in the turntable frame ($\mathbf{v}_\
 
 | Goal | Code |
 | --- | --- |
-| Co-rotating frame | `TransformedReferenceFrame(inertial, Parametric(RotationAboutAxis(-ω, axis=...)))` |
+| Co-rotating frame | `TransformedReferenceFrame(inertial, TimeDep(RotationAboutAxis(-ω, axis=...)))` |
 | Phase-space state | `Coordinate(point, velocity=Tangent(..., vel), acceleration=Tangent(..., acc))` |
 | Transform state | `cxfm.act(op, tau, state, usys=...)` |
 | Rotating-frame acceleration | `out["acceleration"]` — the fictitious force per unit mass |

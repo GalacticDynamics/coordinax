@@ -11,12 +11,12 @@ import unxt as u
 import coordinaxs.curveframes as cxfc
 
 
-def _fs() -> cxfm.Parametric:
+def _fs() -> cxfm.TimeDep:
     def circle(tau):
         t = tau.ustrip("s")
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.0 * t]), "km")
 
-    return cxfm.Parametric(cxfc.FrenetSerretBuilder(circle, u.unit("s")))
+    return cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, u.unit("s")))
 
 
 class TestTangentAnchorThreading:

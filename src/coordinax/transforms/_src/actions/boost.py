@@ -16,7 +16,7 @@ import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
 from .builders import UniformTranslation
 from .custom_types import CDict, OptUSys
-from .parametric import Parametric
+from .timedep import TimeDep
 from .utils import is_componentwise_offset
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
 
@@ -41,7 +41,7 @@ class Boost(AbstractAdd):
     invariant.
 
     Equivalently, ``Boost(dv)`` is the uniform time-dependent translation
-    ``Parametric(UniformTranslation(dv))`` — the closed forms here are the
+    ``TimeDep(UniformTranslation(dv))`` — the closed forms here are the
     prolongation of exactly that point action.
 
     Contrast with ``Translate(semantic_kind=vel)``: that operator is a pure
@@ -109,9 +109,9 @@ class Boost(AbstractAdd):
         return True
 
 
-def _as_translate(op: Boost, /) -> Parametric:
+def _as_translate(op: Boost, /) -> TimeDep:
     r"""Return the equivalent displacement family: $\delta(\tau) = \Delta v\,\tau$."""
-    return Parametric(UniformTranslation(op.delta, chart=op.chart))
+    return TimeDep(UniformTranslation(op.delta, chart=op.chart))
 
 
 # ============================================================================

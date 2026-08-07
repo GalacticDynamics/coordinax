@@ -76,7 +76,7 @@ class AbstractTransform(eqx.Module):
         """Whether the point action depends on the time parameter tau.
 
         A declared trait, not a structural scan: subclasses whose point
-        action varies with tau (``Parametric``, ``Boost``) override this to
+        action varies with tau (``TimeDep``, ``Boost``) override this to
         `True`; composites (``Composed``) override it to the disjunction of
         their components. The default is `False`.
 
@@ -344,9 +344,9 @@ OpT = TypeVar("OpT", bound=_DataclassBase)
 def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     r"""Evaluate the parametric parts of an operator at a given time.
 
-    This function materializes an operator by evaluating every `Parametric`
+    This function materializes an operator by evaluating every `TimeDep`
     part of it — recursively, through `Composed` — at the specified time
-    ``tau``, returning a new operator with no remaining `Parametric` parts.
+    ``tau``, returning a new operator with no remaining `TimeDep` parts.
 
     Mathematically, if an operator $\mathrm{Op}$ has parts that depend on
     an affine parameter $\tau$, then:
@@ -355,23 +355,23 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     \mathrm{materialize\_transform}(\mathrm{Op}, \tau) \to \mathrm{Op}_\tau
     $$
 
-    where $\mathrm{Op}_\tau$ is the operator with all `Parametric` parts
+    where $\mathrm{Op}_\tau$ is the operator with all `TimeDep` parts
     evaluated at $\tau$.
 
     Parameters
     ----------
     op : AbstractTransform
-        The operator to evaluate. May contain `Parametric` parts, either
+        The operator to evaluate. May contain `TimeDep` parts, either
         directly or as `Composed` components.
     tau : Any
-        The time/affine parameter at which to evaluate `Parametric` parts.
+        The time/affine parameter at which to evaluate `TimeDep` parts.
         Typically a ``unxt.Quantity`` with time units.
 
     Returns
     -------
     AbstractTransform
-        The operator with every `Parametric` part evaluated at ``tau``. An
-        operator with no `Parametric` parts is returned unchanged (the same
+        The operator with every `TimeDep` part evaluated at ``tau``. An
+        operator with no `TimeDep` parts is returned unchanged (the same
         object).
 
     Notes
@@ -379,7 +379,7 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     This function is:
 
     - **Pure**: No side effects, safe for JAX tracing
-    - **Recursive**: Descends into `Composed` so nested `Parametric` parts
+    - **Recursive**: Descends into `Composed` so nested `TimeDep` parts
       are also evaluated
 
     Examples
@@ -394,7 +394,7 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     ...     v = jnp.array([1.0, 0.0, 0.0]) * tau.ustrip("s")
     ...     return cxfm.Translate.from_(v, "km")
 
-    >>> op = cxfm.Parametric.from_(build)
+    >>> op = cxfm.TimeDep.from_(build)
     >>> tau = u.Q(5.0, "s")
     >>> op_eval = cxfm.materialize_transform(op, tau)
     >>> op_eval.delta["x"]
@@ -417,11 +417,11 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     act : Apply an operator to an input (calls ``materialize_transform`` internally)
 
     """
-    # Local imports to avoid a cycle (parametric.py imports base.py).
+    # Local imports to avoid a cycle (timedep.py imports base.py).
     from .composite import AbstractCompositeTransform  # noqa: PLC0415
-    from .parametric import Parametric  # noqa: PLC0415
+    from .timedep import TimeDep  # noqa: PLC0415
 
-    if isinstance(op, Parametric):
+    if isinstance(op, TimeDep):
         inner = op.materialize(tau)  # raises TypeError on tau=None
         return cast("OpT", materialize_transform(inner, tau))
     if isinstance(op, AbstractCompositeTransform):
@@ -436,7 +436,7 @@ def is_time_dependent(op: Any, /) -> bool:
     This is a declared trait — `AbstractTransform.is_time_dependent` — not a
     structural scan: it delegates to the operator's own property, which
     subclasses override where their point action is intrinsically
-    tau-dependent (`Parametric`, `Boost`) or is a disjunction of their
+    tau-dependent (`TimeDep`, `Boost`) or is a disjunction of their
     components' (`Composed`).
 
     Parameters
@@ -459,7 +459,7 @@ def is_time_dependent(op: Any, /) -> bool:
     >>> cxfm.is_time_dependent(static)
     False
 
-    >>> moving = cxfm.Parametric.from_(
+    >>> moving = cxfm.TimeDep.from_(
     ...     lambda t: cxfm.Translate.from_(
     ...         jnp.asarray([1.0, 0.0, 0.0]) * u.ustrip("s", t), "km"
     ...     )

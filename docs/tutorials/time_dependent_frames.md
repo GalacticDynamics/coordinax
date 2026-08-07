@@ -2,7 +2,7 @@
 
 This tutorial walks through building a rotating reference frame whose relationship to an inertial frame changes over time. You will learn how to:
 
-- Make a transform's parameters depend on time via `Parametric`
+- Make a transform's parameters depend on time via `TimeDep`
 - Wrap a time-dependent operator in a `TransformedReferenceFrame`
 - Apply `frame_transition` and `act` with an evolution parameter $\tau$
 - JIT-compile and vectorize over time (and over the physical rate) with JAX
@@ -69,14 +69,14 @@ Inverting the transition takes us back:
 
 Now we make the rotation angle grow linearly with time, using Earth's real sidereal rotation rate.
 
-The key idea: instead of passing a numeric matrix to `Rotate`, wrap a **builder** in `Parametric`. Coordinax calls the builder at every `act` invocation, passing the time parameter, and builds a fresh `Rotate` at that instant. `cxfm.RotationAboutAxis(omega, axis=...)` is the built-in builder for exactly this — uniform rotation about a fixed axis:
+The key idea: instead of passing a numeric matrix to `Rotate`, wrap a **builder** in `TimeDep`. Coordinax calls the builder at every `act` invocation, passing the time parameter, and builds a fresh `Rotate` at that instant. `cxfm.RotationAboutAxis(omega, axis=...)` is the built-in builder for exactly this — uniform rotation about a fixed axis:
 
 ```pycon
 >>> SIDEREAL_DAY = u.Q(23.9345, "hr")
 >>> omega = u.Q(360.0, "deg") / SIDEREAL_DAY
 >>> axis = jnp.array([0.0, 0.0, 1.0])
 
->>> rotating_op = cxfm.Parametric(cxfm.RotationAboutAxis(omega, axis=axis))
+>>> rotating_op = cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))
 ```
 
 Unlike a hand-written closure, `omega` here is an ordinary field of `rotating_op.builder` — a pytree leaf. That is what makes it differentiable and `vmap`-able later in this tutorial, without any special handling.
@@ -162,7 +162,7 @@ star_q = u.Q([1.0, 0.0, 0.0], "kpc")
 
 
 def transition_for(omega):
-    op = cxfm.Parametric(cxfm.RotationAboutAxis(omega, axis=axis))
+    op = cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))
     frame = cxf.TransformedReferenceFrame(inertial, op)
     return cxf.frame_transition(inertial, frame)
 
@@ -235,14 +235,14 @@ by_rate = jax.jit(jax.vmap(lambda om: star_in_frame(transition_for(om), tau_fixe
 
 ## Step 9: Differentiating Through the Frame
 
-The physical payoff of `Parametric` over the old `Rotate(callable)` design: because `omega` is a differentiable pytree leaf all the way from the builder through `Rotate`'s matrix construction, `jax.grad` differentiates straight through frame construction and `act`. No special-casing, no finite differences.
+The physical payoff of `TimeDep` over the old `Rotate(callable)` design: because `omega` is a differentiable pytree leaf all the way from the builder through `Rotate`'s matrix construction, `jax.grad` differentiates straight through frame construction and `act`. No special-casing, no finite differences.
 
 Here we ask: how sensitive is the star's observed $y$-coordinate (in the body frame, one hour in) to Earth's spin rate?
 
 ```python
 def star_y_in_body_frame(omega_deg_per_hr):
     om = u.Q(omega_deg_per_hr, "deg/hr")
-    op = cxfm.Parametric(cxfm.RotationAboutAxis(om, axis=axis))
+    op = cxfm.TimeDep(cxfm.RotationAboutAxis(om, axis=axis))
     frame = cxf.TransformedReferenceFrame(inertial, op)
     xf = cxf.frame_transition(inertial, frame)
     out = cxfm.act(xf, u.Q(3600.0, "s"), star_q)
@@ -281,7 +281,7 @@ ONE_AU = u.Q(1.495978707e8, "km")
 ORBITAL_PERIOD = u.Q(365.25 * 86400.0, "s")
 omega_orbit = u.Q(2 * jnp.pi, "rad") / ORBITAL_PERIOD
 
-orbital_shift = cxfm.Parametric(OrbitalDrift(ONE_AU, omega_orbit))
+orbital_shift = cxfm.TimeDep(OrbitalDrift(ONE_AU, omega_orbit))
 ```
 
 At $\tau = 0$ the orbit builder returns a zero displacement (`sin(0) = 0`, `1 - cos(0) = 0`); as $\tau$ grows, Earth's centre traces out the circle, with initial velocity $\text{radius} \times \omega_\text{orbit} \approx 29.78\;\text{km}\,\text{s}^{-1}$ tangent to the orbit — matching Earth's known mean orbital speed. Because `radius` and `omega_orbit` are ordinary pytree leaves of `OrbitalDrift`, this builder is just as differentiable and `vmap`-able as `RotationAboutAxis` was above.
@@ -307,8 +307,8 @@ star_combined = cxfm.act(xform_combined, tau_1s, star_q)
 | Step | Code |
 | --- | --- |
 | Static frame rotation | `TransformedReferenceFrame(base, Rotate(R_matrix))` |
-| Time-dep. rotation (built-in) | `Parametric(RotationAboutAxis(omega, axis=...))` |
-| Time-dep. translation (custom) | `Parametric(my_eqx_module_builder)` |
+| Time-dep. rotation (built-in) | `TimeDep(RotationAboutAxis(omega, axis=...))` |
+| Time-dep. translation (custom) | `TimeDep(my_eqx_module_builder)` |
 | Build frame | `TransformedReferenceFrame(inertial, rotating_op)` |
 | Get transition | `xform = frame_transition(from_frame, to_frame)` |
 | Apply at time $t$ | `act(xform, tau, vector)` |

@@ -58,7 +58,7 @@ _W = jnp.array([1.0, -2.0, 0.5])
 
 def _readout(builder: cxfc.AbstractCurveFrameBuilder) -> jax.Array:
     """Scalar readout: a fixed linear functional of P in the curve frame."""
-    return jnp.dot(_W, cxfm.act(cxfm.Parametric(builder), TAU, P).ustrip("km"))
+    return jnp.dot(_W, cxfm.act(cxfm.TimeDep(builder), TAU, P).ustrip("km"))
 
 
 # ===================================================================
@@ -142,7 +142,7 @@ class TestFixedGamma:
 
     def test_gamma_frame_is_tau_independent(self):
         gamma = u.Q(0.7, "s")
-        op = cxfm.Parametric(cxfc.FrenetSerretBuilder(_circle, "s", gamma))
+        op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle, "s", gamma))
 
         a = cxfm.act(op, u.Q(0.0, "s"), P).ustrip("km")
         b = cxfm.act(op, u.Q(3.1, "s"), P).ustrip("km")
@@ -150,8 +150,8 @@ class TestFixedGamma:
 
     def test_gamma_frame_matches_the_moving_frame_at_gamma(self):
         gamma = u.Q(0.7, "s")
-        fixed = cxfm.Parametric(cxfc.FrenetSerretBuilder(_circle, "s", gamma))
-        moving = cxfm.Parametric(cxfc.FrenetSerretBuilder(_circle))
+        fixed = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle, "s", gamma))
+        moving = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle))
 
         assert jnp.allclose(
             cxfm.act(fixed, u.Q(0.0, "s"), P).ustrip("km"),
@@ -164,7 +164,7 @@ class TestFixedGamma:
         gammas = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
 
         def at_gamma(g):
-            op = cxfm.Parametric(cxfc.FrenetSerretBuilder(_circle, "s", g))
+            op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle, "s", g))
             return cxfm.act(op, u.Q(0.0, "s"), P)
 
         batched = jax.vmap(at_gamma)(gammas).ustrip("km")
@@ -191,8 +191,8 @@ class TestFixedGamma:
 
     def test_bishop_gamma_frame(self):
         gamma = u.Q(0.7, "s")
-        fixed = cxfm.Parametric(cxfc.BishopBuilder(_circle, "s", gamma))
-        moving = cxfm.Parametric(cxfc.BishopBuilder(_circle))
+        fixed = cxfm.TimeDep(cxfc.BishopBuilder(_circle, "s", gamma))
+        moving = cxfm.TimeDep(cxfc.BishopBuilder(_circle))
 
         assert jnp.allclose(
             cxfm.act(fixed, u.Q(2.0, "s"), P).ustrip("km"),

@@ -110,16 +110,16 @@ $$
 \text{act}(F(\tau), \mathbf{p}) = R(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}(\tau)\bigr).
 $$
 
-The `FrenetSerretBuilder` itself is wrapped in a `coordinax.transforms.Parametric`, `Parametric(F)`, which is what `act(op, tau, p)` actually dispatches on: `act` calls `F(tau)` to materialise the rigid-body transform, then applies it.
+The `FrenetSerretBuilder` itself is wrapped in a `coordinax.transforms.TimeDep`, `TimeDep(F)`, which is what `act(op, tau, p)` actually dispatches on: `act` calls `F(tau)` to materialise the rigid-body transform, then applies it.
 
-**Inversion is generic, not builder-specific.** `Parametric(F).inverse` does not construct a second `FrenetSerretBuilder` with swapped fields; it wraps `F` in a pointwise-inverse combinator whose `__call__(tau)` returns `F(tau).inverse`. Inverting the composed `Translate(-\gamma) | Rotate(R)` reverses order and inverts each factor:
+**Inversion is generic, not builder-specific.** `TimeDep(F).inverse` does not construct a second `FrenetSerretBuilder` with swapped fields; it wraps `F` in a pointwise-inverse combinator whose `__call__(tau)` returns `F(tau).inverse`. Inverting the composed `Translate(-\gamma) | Rotate(R)` reverses order and inverts each factor:
 
 $$
 F(\tau)^{-1} = \mathrm{Rotate}\bigl(R(\tau)\bigr)^{-1} \;\big|\; \mathrm{Translate}\bigl(-\boldsymbol{\gamma}(\tau)\bigr)^{-1}
   = \mathrm{Rotate}\bigl(R^T(\tau)\bigr) \;\big|\; \mathrm{Translate}\bigl(\boldsymbol{\gamma}(\tau)\bigr),
 $$
 
-which applied to $\mathbf{p}'$ (rotate, then translate) gives exactly $R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau)$ — the inverse transform above. Because this combinator is an involution, `Parametric(F).inverse.inverse.builder is F` — no closure chain accumulates no matter how many times `.inverse` is taken.
+which applied to $\mathbf{p}'$ (rotate, then translate) gives exactly $R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau)$ — the inverse transform above. Because this combinator is an involution, `TimeDep(F).inverse.inverse.builder is F` — no closure chain accumulates no matter how many times `.inverse` is taken.
 
 (curveframes-math-frenet-ref-frame)=
 
@@ -254,13 +254,13 @@ B(\tau) = \mathrm{Translate}\bigl(-\boldsymbol{\gamma}(\tau)\bigr)\;\big|\;\math
 \qquad R = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2] \text{ (rows)}
 $$
 
-on demand, wrapped in `Parametric(B)`. The **uniform act formula** is identical in form to the Frenet–Serret case:
+on demand, wrapped in `TimeDep(B)`. The **uniform act formula** is identical in form to the Frenet–Serret case:
 
 $$
 \text{act}(B(\tau), \mathbf{p}) = R(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}(\tau)\bigr).
 $$
 
-Inversion is the same generic `Parametric` pointwise-inverse combinator described for `FrenetSerretBuilder` — there is no separate `BishopBuilder` for the inverse direction, and `Parametric(B).inverse.inverse.builder is B`.
+Inversion is the same generic `TimeDep` pointwise-inverse combinator described for `FrenetSerretBuilder` — there is no separate `BishopBuilder` for the inverse direction, and `TimeDep(B).inverse.inverse.builder is B`.
 
 (curveframes-math-bishop-ref-frame)=
 
@@ -297,7 +297,7 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 | `BishopBuilder` | `@final` | Builder for the $(\mathbf{T},\mathbf{U}_1,\mathbf{U}_2)$ triad |
 | `BishopFrame` | `@final` | Bishop (rotation-minimising) curve frame |
 
-Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one of these builders — the same single mechanism for time dependence used everywhere else in `coordinax.transforms` (see {ref}`Parametric <software-spec-transforms-parametric>` in the root spec). `AbstractCurveFrameBuilder` is an `equinox.Module`, so every field is a genuine pytree leaf: differentiable and `vmap`-able, including the curve's own parameters when the curve is itself an `equinox.Module`.
+Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of these builders — the same single mechanism for time dependence used everywhere else in `coordinax.transforms` (see {ref}`TimeDep <software-spec-transforms-timedep>` in the root spec). `AbstractCurveFrameBuilder` is an `equinox.Module`, so every field is a genuine pytree leaf: differentiable and `vmap`-able, including the curve's own parameters when the curve is itself an `equinox.Module`.
 
 (curveframes-sw-abstract-curve-frame)=
 
@@ -308,8 +308,8 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
     Inherits from `coordinax.frames.AbstractTransformedReferenceFrame[FrameT]` and therefore carries three fields:
 
     - `base_frame : FrameT` — the ambient reference frame relative to which the curve frame is defined.
-    - `xop : Parametric` — the forward transform (base frame → curve frame), wrapping an `AbstractCurveFrameBuilder`.
-    - `xop_inv : Parametric` — the pre-computed inverse of `xop` (curve frame → base frame).
+    - `xop : TimeDep` — the forward transform (base frame → curve frame), wrapping an `AbstractCurveFrameBuilder`.
+    - `xop_inv : TimeDep` — the pre-computed inverse of `xop` (curve frame → base frame).
 
     `AbstractParallelTransportFrame` is **not instantiable directly**; concrete subclasses (e.g. `FrenetSerretFrame`, `BishopFrame`) must be `@final`.
 
@@ -321,7 +321,7 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
 
 !!! info `AbstractCurveFrameBuilder`
 
-    Abstract `equinox.Module` base class for curve-frame builders: `tau -> Translate(-gamma) | Rotate(R)`. This is what a `Parametric` wraps; it is not itself a `coordinax.transforms.AbstractTransform`.
+    Abstract `equinox.Module` base class for curve-frame builders: `tau -> Translate(-gamma) | Rotate(R)`. This is what a `TimeDep` wraps; it is not itself a `coordinax.transforms.AbstractTransform`.
 
     Fields (declared `eqx.AbstractVar`, defined by concrete subclasses):
 
@@ -355,7 +355,7 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
 
     JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `gamma` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `gamma`); use `eqx.filter_jit` in that case.
 
-    `act` dispatches on `Parametric(FrenetSerretBuilder(...))`, not on the builder directly — see {ref}`Parametric <software-spec-transforms-parametric>` in the root spec. `act(Parametric(F), tau, x)` materialises `F(tau)` and applies the resulting `Composed` transform.
+    `act` dispatches on `TimeDep(FrenetSerretBuilder(...))`, not on the builder directly — see {ref}`TimeDep <software-spec-transforms-timedep>` in the root spec. `act(TimeDep(F), tau, x)` materialises `F(tau)` and applies the resulting `Composed` transform.
 
 (curveframes-sw-frenet-frame)=
 
@@ -366,15 +366,15 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
     Fields (all inherited):
 
     - `base_frame : FrameT` — the ambient reference frame (e.g. `Alice()`).
-    - `xop : Parametric` — the $\tau$-dependent rigid-body transform from the base frame to the curve frame, wrapping a `FrenetSerretBuilder`.
-    - `xop_inv : Parametric` — its pre-computed inverse, `xop.inverse`.
+    - `xop : TimeDep` — the $\tau$-dependent rigid-body transform from the base frame to the curve frame, wrapping a `FrenetSerretBuilder`.
+    - `xop_inv : TimeDep` — its pre-computed inverse, `xop.inverse`.
 
     At evaluation time, the evolution parameter $\tau$ is passed via `act(op, tau, x)`, not stored on the frame.
 
     Constructors:
 
-    - `FrenetSerretFrame(base_frame, xop, xop_inv)` — direct construction from a base frame and a `Parametric`-wrapped `FrenetSerretBuilder` (forward and inverse).
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, gamma)`, wraps it in `Parametric`, and sets `xop_inv = xop.inverse`.
+    - `FrenetSerretFrame(base_frame, xop, xop_inv)` — direct construction from a base frame and a `TimeDep`-wrapped `FrenetSerretBuilder` (forward and inverse).
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, gamma)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
@@ -427,7 +427,7 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
 
     JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `gamma`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` is static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
-    `act` dispatches on `Parametric(BishopBuilder(...))`, identically to `FrenetSerretBuilder`.
+    `act` dispatches on `TimeDep(BishopBuilder(...))`, identically to `FrenetSerretBuilder`.
 
 (curveframes-sw-bishop-frame)=
 
@@ -438,13 +438,13 @@ Every curve frame is built from a `coordinax.transforms.Parametric` wrapping one
     Fields (all inherited):
 
     - `base_frame : FrameT` — the ambient reference frame (e.g. `Alice()`).
-    - `xop : Parametric` — the $\tau$-dependent rotation-minimising transform from the base frame to the curve frame, wrapping a `BishopBuilder`.
-    - `xop_inv : Parametric` — its pre-computed inverse, `xop.inverse`.
+    - `xop : TimeDep` — the $\tau$-dependent rotation-minimising transform from the base frame to the curve frame, wrapping a `BishopBuilder`.
+    - `xop_inv : TimeDep` — its pre-computed inverse, `xop.inverse`.
 
     Constructors:
 
     - `BishopFrame(base_frame, xop, xop_inv)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)`, wraps it in `Parametric`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 

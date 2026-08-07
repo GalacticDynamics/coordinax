@@ -10,12 +10,12 @@ from .constants import *
 from .custom_types import *
 from .identity import *
 from .linear import *
-from .parametric import *
 from .prolong import *
 from .reflect import *
 from .register_apply import *
 from .rotate import *
 from .scale import *
 from .shear import *
+from .timedep import *
 from .translate import *
 from .utils import *

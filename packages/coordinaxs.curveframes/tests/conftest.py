@@ -1,7 +1,7 @@
 """Shared curves and fixtures for the `coordinaxs.curveframes` tests.
 
 The Frenet-Serret and Bishop frames are two implementations of
-`AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.Parametric`, so
+`AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.TimeDep`, so
 most of what the suite checks is the *contract* they share rather than anything
 specific to either. The curves and the per-type spec live here so that contract
 can be written once (`test_parallel_transport_contract.py`) and each type's
@@ -140,7 +140,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     """Every parallel-transport frame type, on the unit circle.
 
     Yields a namespace of ``builder`` (the `AbstractCurveFrameBuilder`),
-    ``xop`` (the `coordinax.transforms.Parametric` wrapping it), ``frame``,
+    ``xop`` (the `coordinax.transforms.TimeDep` wrapping it), ``frame``,
     ``tol`` (the per-assertion tolerance table above) and ``fields`` -- a
     callable ``(builder, tau) -> (e0, e1, e2)`` returning that type's three
     frame fields in right-handed order, so contract tests can be written
@@ -156,7 +156,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
         name=request.param,
         builder=builder,
         builder_cls=spec.builder_cls,
-        xop=cxfm.Parametric(builder),
+        xop=cxfm.TimeDep(builder),
         frame=spec.frame_cls.from_curve(cxf.Alice(), circle),
         frame_cls=spec.frame_cls,
         triad=spec.triad,

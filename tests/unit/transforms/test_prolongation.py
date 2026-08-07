@@ -38,12 +38,12 @@ def allclose_cdict(a, b, unit, atol=1e-10):
 ZHAT = jnp.asarray([0.0, 0.0, 1.0])
 
 
-def rot_z_op() -> cxfm.Parametric:
-    """Uniform rotation about z at 1 rad/s, as a `Parametric` family."""
-    return cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=ZHAT))
+def rot_z_op() -> cxfm.TimeDep:
+    """Uniform rotation about z at 1 rad/s, as a `TimeDep` family."""
+    return cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=ZHAT))
 
 
-def _rot_z_raw_op() -> cxfm.Parametric:
+def _rot_z_raw_op() -> cxfm.TimeDep:
     """Rotation about z at 1 rad per unit of a raw (unitless) tau."""
 
     def build(t):
@@ -52,12 +52,12 @@ def _rot_z_raw_op() -> cxfm.Parametric:
             jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
         )
 
-    return cxfm.Parametric.from_(build)
+    return cxfm.TimeDep.from_(build)
 
 
-def uniform_translate(vx, unit="km/s", chart=cxc.cart3d) -> cxfm.Parametric:
-    """A `Parametric` uniform translation along +x at rate ``vx``."""
-    return cxfm.Parametric(cxfm.UniformTranslation(q3(vx, 0.0, 0.0, unit), chart=chart))
+def uniform_translate(vx, unit="km/s", chart=cxc.cart3d) -> cxfm.TimeDep:
+    """A `TimeDep` uniform translation along +x at rate ``vx``."""
+    return cxfm.TimeDep(cxfm.UniformTranslation(q3(vx, 0.0, 0.0, unit), chart=chart))
 
 
 # ============================================================================
@@ -102,9 +102,9 @@ class TestTauDerivative:
 # is_time_dependent
 
 
-def _moving_translate() -> cxfm.Parametric:
-    """A `Parametric` family wrapping a time-dependent `Translate`."""
-    return cxfm.Parametric.from_(
+def _moving_translate() -> cxfm.TimeDep:
+    """A `TimeDep` family wrapping a time-dependent `Translate`."""
+    return cxfm.TimeDep.from_(
         lambda t: cxfm.Translate(q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d)
     )
 
@@ -113,7 +113,7 @@ class TestIsTimeDependent:
     """Unit tests for `is_time_dependent`.
 
     `is_time_dependent` is a declared trait (`AbstractTransform.is_time_dependent`),
-    not a leaf-callable scan: only `Parametric` (and anything composed from it,
+    not a leaf-callable scan: only `TimeDep` (and anything composed from it,
     or `Boost`, whose point action is intrinsically tau-dependent) reports
     `True`.
     """
@@ -123,7 +123,7 @@ class TestIsTimeDependent:
         assert not cxfm.is_time_dependent(cxfm.Identity())
         assert not cxfm.is_time_dependent(cxfm.Scale.from_factors([1.0, 2.0, 3.0]))
 
-    def test_parametric(self):
+    def test_timedep(self):
         assert cxfm.is_time_dependent(_moving_translate())
 
     def test_composed(self):
@@ -147,7 +147,7 @@ class TestPhysics:
     def test_falling_frame(self):
         """Delta = 1/2 g t^2 => vel += g t, acc += g."""
         g = u.Q(9.8, "m/s2")
-        op = cxfm.Parametric.from_(
+        op = cxfm.TimeDep.from_(
             lambda t: cxfm.Translate(
                 {"x": 0.5 * g * t**2, "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
                 chart=cxc.cart3d,
@@ -198,10 +198,10 @@ class TestPhysics:
         assert jnp.allclose(u.ustrip("m/s2", out["y"]), 0.0, atol=1e-6)
 
     def test_boost_equals_prolonged_translate(self):
-        """Boost(dv) == prolongation of Parametric(UniformTranslation(dv))."""
+        """Boost(dv) == prolongation of TimeDep(UniformTranslation(dv))."""
         dv = q3(1.5, -0.5, 2.0, "km/s")
         boost = cxfm.Boost(dv, chart=cxc.cart3d)
-        td = cxfm.Parametric(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
+        td = cxfm.TimeDep(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
         tau = u.Q(3.0, "s")
         jet = {
             0: q3(1.0, 2.0, 3.0, "km"),
@@ -225,7 +225,7 @@ class TestFastPathEqualsGeneric:
     r"""Hand-written fast paths must equal the generic autodiff rule.
 
     `Rotate`'s time-dependent closed form no longer exists (its matrix is
-    always constant, and time dependence lives in `Parametric`), so its case
+    always constant, and time dependence lives in `TimeDep`), so its case
     below pins the generic prolongation against the *hand-derived* closed
     form $v' = R v + \dot R x$ instead — same numeric oracle.
     """
@@ -245,7 +245,7 @@ class TestFastPathEqualsGeneric:
             val = c0 + c1 * ts + c2 * ts**2
             return {"x": u.Q(val, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
 
-        op = cxfm.Parametric.from_(lambda t: cxfm.Translate(delta(t), chart=cxc.cart3d))
+        op = cxfm.TimeDep.from_(lambda t: cxfm.Translate(delta(t), chart=cxc.cart3d))
         tq = u.Q(tau, "s")
         jet = {
             0: q3(1.0, 2.0, 3.0, "km"),
@@ -263,7 +263,7 @@ class TestFastPathEqualsGeneric:
     @given(tau=st.floats(0.0, 6.0))
     @settings(max_examples=20, deadline=None)
     def test_rotate_prolongation_vs_closed_form(self, tau):
-        """Parametric-rotate prolongation == the closed form v' = R v + Rdot x."""
+        """TimeDep-rotate prolongation == the closed form v' = R v + Rdot x."""
         op = rot_z_op()
         tq = u.Q(tau, "s")
         at = q3(1.0, -2.0, 0.5, "m")
@@ -284,7 +284,7 @@ class TestFastPathEqualsGeneric:
 
     def test_vel_kick_translate_vs_generic_fibre_law(self):
         """TD vel-kick Translate: acc gains delta-dot (hand rule)."""
-        kick = cxfm.Parametric.from_(
+        kick = cxfm.TimeDep.from_(
             lambda t: cxfm.Translate(
                 {
                     "x": u.Q(5.0, "km/s2") * t,
@@ -301,10 +301,10 @@ class TestFastPathEqualsGeneric:
         assert jnp.allclose(u.ustrip("km/s2", out["x"]), 6.0)
         assert jnp.allclose(u.ustrip("km/s2", out["y"]), 1.0)
 
-    def test_point_acting_parametrics_stay_on_the_generic_funnel(self):
+    def test_point_acting_timedeps_stay_on_the_generic_funnel(self):
         r"""Guard: the fibre-offset carve-out must not swallow point actions.
 
-        The ladder rule for `Parametric`-wrapped *fibre* offsets (ladder order
+        The ladder rule for `TimeDep`-wrapped *fibre* offsets (ladder order
         $k \geq 1$, identity point action) bypasses the generic tangent
         funnel. If that predicate is ever widened to a transform with a real
         point action, the funnel's differentiation — and with it the $\dot R
@@ -388,7 +388,7 @@ class TestStructure:
 
     def test_prolong_composed_equals_sequential(self):
         opA = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
-        opB = cxfm.Parametric(
+        opB = cxfm.TimeDep(
             cxfm.UniformTranslation(q3(0.0, 2.0, 0.0, "km/s"), chart=cxc.cart3d)
         )
         tau = u.Q(2.0, "s")
@@ -456,7 +456,7 @@ class TestBatchingAndJit:
 
     def test_vmap_over_tau(self):
         g = u.Q(2.0, "m/s2")
-        moving = cxfm.Parametric.from_(
+        moving = cxfm.TimeDep.from_(
             lambda t: cxfm.Translate(
                 {"x": 0.5 * g * t**2, "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
                 chart=cxc.cart3d,
@@ -504,7 +504,7 @@ class TestErrors:
             )
 
     def test_td_rotate_pushforward_requires_tau(self):
-        """Materializing a `Parametric` without tau raises informatively."""
+        """Materializing a `TimeDep` without tau raises informatively."""
         op = rot_z_op()
         d = q3(1.0, 0.0, 0.0, "m")
         with pytest.raises(TypeError, match="requires a time parameter"):
@@ -513,15 +513,15 @@ class TestErrors:
             cxfm.act(op, None, d, cxc.cart3d, cxr.point)
 
     def test_td_translate_point_requires_tau(self):
-        """A `Parametric` point action without tau raises informatively."""
+        """A `TimeDep` point action without tau raises informatively."""
         moving = uniform_translate(1.0)
         p = q3(0.0, 0.0, 0.0, "km")
         with pytest.raises(TypeError, match="requires a time parameter"):
             cxfm.act(moving, None, p, cxc.cart3d, cxr.point)
 
     def test_td_vel_kick_matching_order_requires_tau(self):
-        """A `Parametric` vel-kick on velocity data also needs tau."""
-        kick = cxfm.Parametric.from_(
+        """A `TimeDep` vel-kick on velocity data also needs tau."""
+        kick = cxfm.TimeDep.from_(
             lambda t: cxfm.Translate(
                 q3(t.ustrip("s"), 0.0, 0.0, "km/s"),
                 chart=cxc.cart3d,
@@ -724,7 +724,7 @@ class TestUnitPreservation:
         Myr when the data's time base is Myr.
         """
         g = u.Q(1.0, "kpc/Myr2")
-        moving = cxfm.Parametric.from_(
+        moving = cxfm.TimeDep.from_(
             lambda t: cxfm.Translate(
                 {"x": 0.5 * g * t**2, "y": u.Q(0.0, "kpc"), "z": u.Q(0.0, "kpc")},
                 chart=cxc.cart3d,
@@ -788,9 +788,7 @@ class TestNonCartesianOpChart:
                 "phi": u.Q(0.02 * s, "rad"),
             }
 
-        return cxfm.Parametric.from_(
-            lambda t: cxfm.Translate(delta(t), chart=cxc.sph3d)
-        )
+        return cxfm.TimeDep.from_(lambda t: cxfm.Translate(delta(t), chart=cxc.sph3d))
 
     def test_td_velocity_matches_generic(self):
         """Act on velocity equals the generic prolongation of the point action."""
@@ -840,7 +838,7 @@ class TestNonCartesianOpChart:
     def test_cartesian_ladder_unaffected(self):
         """A Cartesian-chart TD delta still adds its rate to velocities.
 
-        Time dependence now lives in `Parametric`, so this goes through the
+        Time dependence now lives in `TimeDep`, so this goes through the
         generic tangent funnel (which needs the base point); the physics
         oracle is unchanged: v + ddelta/dtau = 1 + 3 = 4 km/s.
         """
@@ -934,7 +932,7 @@ class TestNonCartesianOpChart:
         fast = cxfm.act(
             boost, tau, a, cxc.sph3d, cxr.coord_acc, at=self.sph_at, at_vel=v, usys=usys
         )
-        td = cxfm.Parametric(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
+        td = cxfm.TimeDep(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
         gen = prolong_jet(td, tau, {0: self.sph_at, 1: v, 2: a}, cxc.sph3d, usys=usys)
         for k in fast:
             unit = u.unit_of(gen[2][k])

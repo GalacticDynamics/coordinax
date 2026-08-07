@@ -114,7 +114,7 @@ class TestBishopOnStraightLine:
 
     def test_frame_construction(self, line_bishop_frame: cxfc.BishopFrame):
         assert isinstance(line_bishop_frame, cxfc.BishopFrame)
-        assert isinstance(line_bishop_frame.xop, cxfm.Parametric)
+        assert isinstance(line_bishop_frame.xop, cxfm.TimeDep)
         assert isinstance(line_bishop_frame.xop.builder, cxfc.BishopBuilder)
 
     def test_frame_transition_roundtrip(self, line_bishop_frame: cxfc.BishopFrame):
@@ -182,7 +182,7 @@ class TestBishopOpaqueUnits:
 
     def test_inverse_maps_origin_to_curve(self, circle_yr_bishop: cxfc.BishopBuilder):
         """For the yr-circle at tau=0 the curve is at (5, 0, 0) km."""
-        inv = cxfm.Parametric(circle_yr_bishop).inverse
+        inv = cxfm.TimeDep(circle_yr_bishop).inverse
         got = cxfm.act(inv, u.Q(0.0, "yr"), u.Q(jnp.array([0.0, 0.0, 0.0]), "km"))
         np.testing.assert_allclose(got.ustrip("km"), [5, 0, 0], atol=1e-3)
 
@@ -235,7 +235,7 @@ class TestBishopHelix:
         diff = p - g
         p_fwd = qnp.stack([qnp.sum(T * diff), qnp.sum(U1 * diff), qnp.sum(U2 * diff)])
 
-        op = cxfm.Parametric(helix_bishop)
+        op = cxfm.TimeDep(helix_bishop)
         np.testing.assert_allclose(
             cxfm.act(op, tau, p).ustrip("km"), p_fwd.ustrip("km"), atol=1e-3
         )
@@ -245,7 +245,7 @@ class TestBishopHelix:
     def test_jit_act(self, helix_bishop: cxfc.BishopBuilder):
         """`act` on an ODE-carrying builder is jittable via `eqx.filter_jit`."""
         tau, p = u.Q(1.0, "s"), u.Q(jnp.array([2.0, -1.0, 3.0]), "km")
-        op = cxfm.Parametric(helix_bishop)
+        op = cxfm.TimeDep(helix_bishop)
         np.testing.assert_allclose(
             _jit_act(op, tau, p).ustrip("km"),
             cxfm.act(op, tau, p).ustrip("km"),

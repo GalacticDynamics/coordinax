@@ -62,7 +62,7 @@ def test_static_rotate_vel(benchmark, jet):
 
 
 def _moving_translate():
-    return cxfm.Parametric(
+    return cxfm.TimeDep(
         cxfm.UniformTranslation(q3(3.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
     )
 
@@ -89,13 +89,13 @@ def test_td_translate_jet_generic(benchmark, jet):
 
 
 def _moving_velocity_kick():
-    """A `Parametric` fibre offset (velocity kick growing linearly in tau).
+    """A `TimeDep` fibre offset (velocity kick growing linearly in tau).
 
     Ladder order k=1 (identity point action): routes through `add.py`'s
     ladder rule, not the generic tangent funnel. No other benchmark here
     exercises that path.
     """
-    return cxfm.Parametric.from_(
+    return cxfm.TimeDep.from_(
         lambda t: cxfm.Translate(
             {"x": u.Q(5.0, "km/s2") * t, "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
             chart=cxc.cart3d,
@@ -116,7 +116,7 @@ def test_td_fibre_offset_ladder_acc(benchmark):
 
 
 def test_td_rotate_jet_generic(benchmark):
-    op = cxfm.Parametric(
+    op = cxfm.TimeDep(
         cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=jnp.asarray([0.0, 0.0, 1.0]))
     )
     jet2 = {0: q3(1.0, 2.0, 3.0, "m"), 1: q3(0.5, -0.5, 0.0, "m/s")}
@@ -198,7 +198,7 @@ class TestTraceTime:
 
     def test_trace_td_act_jet_2jet(self, benchmark, jet):
         # A genuinely non-uniform (quadratic) delta: a bare-function family.
-        op = cxfm.Parametric.from_(
+        op = cxfm.TimeDep.from_(
             lambda t: cxfm.Translate(
                 {
                     "x": 0.5 * u.Q(2.0, "km/s2") * t**2,

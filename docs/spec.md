@@ -988,7 +988,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
-| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `Parametric`, `RotationAboutAxis`, `UniformTranslation`, `identity`, </br> `groups` |
+| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `TimeDep`, `RotationAboutAxis`, `UniformTranslation`, `identity`, </br> `groups` |
 | `coordinax.transforms.groups` | `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
 
@@ -1576,7 +1576,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
 !!! info `GalileanCT` and `galileanct`
 
-    Parametric 4D Galilean spacetime chart combining a fixed `time1d` factor with a user-supplied spatial chart.
+    TimeDep 4D Galilean spacetime chart combining a fixed `time1d` factor with a user-supplied spatial chart.
 
     `GalileanCT` is a final `AbstractFlatCartesianProductChart` (a product chart) with a configurable spatial factor. The time component is always `"ct"` (coordinate time scaled by the speed of light), and the spatial components are determined by the `spatial_chart` argument.
 
@@ -4704,7 +4704,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `delta : CDict` — the offset. Its physical dimension follows `semantic_kind` (length for `dpl`, speed for `vel`, ...). Always constant; wrap in `Parametric` for time dependence (see [`Parametric`](#software-spec-transforms-parametric)).
+    - `delta : CDict` — the offset. Its physical dimension follows `semantic_kind` (length for `dpl`, speed for `vel`, ...). Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
     - `semantic_kind : AbstractTangentSemanticKind` (default `dpl`) — the ladder order $k$ of the offset.
     - `right_add : bool` (default `True`) — whether to compute $x + \Delta x$ (``True``) or $\Delta x + x$ (``False``).
@@ -4743,7 +4743,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `R : Array[N, N]` — the rotation matrix $R$. Always constant; wrap in `Parametric` for a time-dependent path $R(\tau)$ (see [`Parametric`](#software-spec-transforms-parametric)).
+    - `R : Array[N, N]` — the rotation matrix $R$. Always constant; wrap in `TimeDep` for a time-dependent path $R(\tau)$ (see [`TimeDep`](#software-spec-transforms-timedep)).
     `R` is the only field: a `Rotate` is a bare matrix, with no chart of its
     own. It acts on the Cartesian components of whatever chart the data is in.
 
@@ -4791,7 +4791,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `H : Array[N, N]` — the Householder reflection matrix $H_n$. Always constant; wrap in `Parametric` for time dependence (see [`Parametric`](#software-spec-transforms-parametric)).
+    - `H : Array[N, N]` — the Householder reflection matrix $H_n$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     `H` is the only field: a `Reflect` is a bare matrix, with no chart of its
     own. It acts on the Cartesian components of whatever chart the data is in.
 
@@ -4826,7 +4826,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `factor : float` — the scaling factor $s$. Always constant; wrap in `Parametric` for time dependence (see [`Parametric`](#software-spec-transforms-parametric)).
+    - `factor : float` — the scaling factor $s$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
 
     **Inverse:**
@@ -4859,7 +4859,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `factor : float` — the shear factor $k$. Always constant; wrap in `Parametric` for time dependence (see [`Parametric`](#software-spec-transforms-parametric)).
+    - `factor : float` — the shear factor $k$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
 
     **Inverse:**
@@ -4874,16 +4874,16 @@ Each group corresponds to a set of transformations preserving a particular geome
     Shear(k1) + Shear(k2) == Shear(k1 + k2)
     ```
 
-(software-spec-transforms-parametric)=
+(software-spec-transforms-timedep)=
 
-!!! info `Parametric`
+!!! info `TimeDep`
 
-    A **Parametric** transform is a one-parameter family of transforms: `builder(tau) -> AbstractTransform`. It is the single, uniform mechanism for time dependence — every other transform (`Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`) holds only constant parameters.
+    A **TimeDep** transform is a one-parameter family of transforms: `builder(tau) -> AbstractTransform`. It is the single, uniform mechanism for time dependence — every other transform (`Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`) holds only constant parameters.
 
     **Defining rule (the "materialize" rule):**
 
     $$
-    \mathrm{act}(\mathrm{Parametric}(b), \tau, x, \ldots) = \mathrm{act}(b(\tau), \tau, x, \ldots),
+    \mathrm{act}(\mathrm{TimeDep}(b), \tau, x, \ldots) = \mathrm{act}(b(\tau), \tau, x, \ldots),
     $$
 
     registered once, generically, for every `(geom, rep)` funnel `AbstractTransform` supports. The materialized operator `b(tau)` receives the *same* $\tau$: if `b(tau)` itself has a $\tau$-dependent point action (e.g. it returns a `Boost`), the chain rule through both paths is handled by the kinematic-prolongation engine's joint $(\tau, x)$ jvp.
@@ -4893,33 +4893,33 @@ Each group corresponds to a set of transformations preserving a particular geome
     - `builder(tau) -> AbstractTransform`, for unitful or raw $\tau$ (the builder decides what it accepts; the built-in builders accept a `unxt.Quantity` time).
     - Must be JAX-traceable in $\tau$.
     - Must return the same *structure* (operator type / pytree treedef) for every $\tau$ — required for `jit`, `vmap`, and `jvp` to trace through it.
-    - `builder` is not called with `tau=None`: `act(Parametric(b), None, x)` raises `TypeError`.
+    - `builder` is not called with `tau=None`: `act(TimeDep(b), None, x)` raises `TypeError`.
 
-    Typically `builder` is an `equinox.Module` whose fields (angular frequency, phase, boost rate, curve parameters, ...) are pytree leaves — differentiable and vmappable by construction, since constructing the operator inside `__call__` is ordinary pytree arithmetic. `Parametric.from_(fn)` wraps a bare `tau -> AbstractTransform` function instead, as a **static** field: anything the function closes over is a non-differentiable trace-time constant, and a fresh closure forces a `jit` recompile.
+    Typically `builder` is an `equinox.Module` whose fields (angular frequency, phase, boost rate, curve parameters, ...) are pytree leaves — differentiable and vmappable by construction, since constructing the operator inside `__call__` is ordinary pytree arithmetic. `TimeDep.from_(fn)` wraps a bare `tau -> AbstractTransform` function instead, as a **static** field: anything the function closes over is a non-differentiable trace-time constant, and a fresh closure forces a `jit` recompile.
 
     **Fields:**
 
     - `builder : Callable[[tau], AbstractTransform]` — the family. A pytree child, usually an `equinox.Module`.
 
-    **Trait:** `Parametric.is_time_dependent` is always `True`.
+    **Trait:** `TimeDep.is_time_dependent` is always `True`.
 
     **Inverse:** the pointwise inverse of the family, `inv(tau) = builder(tau).inverse`; double inversion unwraps back to the original builder.
 
     ```text
-    Parametric(b).inverse.inverse.builder is b
+    TimeDep(b).inverse.inverse.builder is b
     ```
 
     **Algebra (pointwise-in-$\tau$, written once, reusing the constant-operator algebra):**
 
-    - `Parametric(a) @ Parametric(b)` → `Parametric` of the composed builder: `(a @ b)(tau) = a(tau) @ b(tau)`.
-    - `Parametric(a) @ constant_op` (and the mirror) → the constant is wrapped in a builder that returns it for any $\tau$, then composed as above.
-    - `simplify(Parametric(b))` returns the operator unchanged — its value is unknown until $\tau$ is supplied.
-    - `_merge` **merges** two adjacent `Parametric` transforms — and a `Parametric` with a constant transform — pointwise into a single `Parametric` of the composed builder. This holds for `simplify` on a `Composed` chain: two adjacent time-dependent transforms collapse into one `Parametric`, not left as an un-simplified pair.
+    - `TimeDep(a) @ TimeDep(b)` → `TimeDep` of the composed builder: `(a @ b)(tau) = a(tau) @ b(tau)`.
+    - `TimeDep(a) @ constant_op` (and the mirror) → the constant is wrapped in a builder that returns it for any $\tau$, then composed as above.
+    - `simplify(TimeDep(b))` returns the operator unchanged — its value is unknown until $\tau$ is supplied.
+    - `_merge` **merges** two adjacent `TimeDep` transforms — and a `TimeDep` with a constant transform — pointwise into a single `TimeDep` of the composed builder. This holds for `simplify` on a `Composed` chain: two adjacent time-dependent transforms collapse into one `TimeDep`, not left as an un-simplified pair.
 
     **Built-in builders:**
 
     - `RotationAboutAxis(omega, axis, phase=0)` — `__call__(tau) -> Rotate`, uniform rotation about a fixed axis: $\theta(\tau) = \omega\tau + \phi$.
-    - `UniformTranslation(rate, chart=...)` — `__call__(tau) -> Translate(rate * tau)`. `Boost(dv) ≡ Parametric(UniformTranslation(dv))` (see [`Boost`](#software-spec-transforms-boost)).
+    - `UniformTranslation(rate, chart=...)` — `__call__(tau) -> Translate(rate * tau)`. `Boost(dv) ≡ TimeDep(UniformTranslation(dv))` (see [`Boost`](#software-spec-transforms-boost)).
 
 (software-spec-transforms-boost)=
 
@@ -4942,7 +4942,7 @@ Each group corresponds to a set of transformations preserving a particular geome
     B_{\Delta v}(\ddot{x}) = \ddot{x}.
     $$
 
-    Equivalently, `Boost(dv) ≡ Parametric(UniformTranslation(dv))`. Contrast with `Translate(semantic_kind=vel)` — a fibre-only velocity *kick* that shifts velocities without moving points.
+    Equivalently, `Boost(dv) ≡ TimeDep(UniformTranslation(dv))`. Contrast with `Translate(semantic_kind=vel)` — a fibre-only velocity *kick* that shifts velocities without moving points.
 
     **Fields:**
 

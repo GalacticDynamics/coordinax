@@ -75,14 +75,14 @@ This affects only the automatic differentiation step — the returned callables 
 
 ### Inversion
 
-The builder itself has no `.inverse` — wrap it in `Parametric` first, whose `.inverse` reverses the mapping pointwise in $\tau$:
+The builder itself has no `.inverse` — wrap it in `TimeDep` first, whose `.inverse` reverses the mapping pointwise in $\tau$:
 
 ```python
-fs_op = cxfm.Parametric(fs_transform)
+fs_op = cxfm.TimeDep(fs_transform)
 fs_inv = fs_op.inverse
 ```
 
-The inverse is another `Parametric` family whose builder inverts pointwise in $\tau$. Double-inversion recovers the original: `fs_op.inverse.inverse.builder is fs_op.builder`.
+The inverse is another `TimeDep` family whose builder inverts pointwise in $\tau$. Double-inversion recovers the original: `fs_op.inverse.inverse.builder is fs_op.builder`.
 
 ## Building a Frenet–Serret Frame
 
@@ -113,7 +113,7 @@ This is equivalent to the direct construction above.
 `FrenetSerretFrame` inherits three fields from `AbstractTransformedReferenceFrame`:
 
 - `base_frame` — the ambient reference frame (e.g. `Alice()`).
-- `xop` — the `Parametric` family (wrapping a `FrenetSerretBuilder`) connecting base frame to curve frame.
+- `xop` — the `TimeDep` family (wrapping a `FrenetSerretBuilder`) connecting base frame to curve frame.
 - `xop_inv` — its pre-computed inverse, `xop.inverse`.
 
 The evolution parameter $\tau$ is **not** stored on the frame. It is supplied at evaluation time when applying the transform via `act`.
@@ -320,10 +320,10 @@ bt_line.normal1(u.Q(5.0, "s"))  # well-defined unit vector
 
 ### Inversion
 
-Like `FrenetSerretBuilder`, wrap `BishopBuilder` in `Parametric` to get `.inverse`:
+Like `FrenetSerretBuilder`, wrap `BishopBuilder` in `TimeDep` to get `.inverse`:
 
 ```python
-bt_op = cxfm.Parametric(bt)
+bt_op = cxfm.TimeDep(bt)
 bt_inv = bt_op.inverse
 ```
 
@@ -389,7 +389,7 @@ class Helix(eqx.Module):
 
 def readout(radius):
     builder = cxfc.FrenetSerretBuilder(Helix(radius))
-    op = cxfm.Parametric(builder)
+    op = cxfm.TimeDep(builder)
     p = u.Q(jnp.array([2.0, 1.0, -0.5]), "km")
     out = cxfm.act(op, u.Q(0.4, "s"), p)
     return out.ustrip("km")[0]
@@ -416,7 +416,7 @@ gammas = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
 
 
 def at_gamma(g):
-    op = cxfm.Parametric(cxfc.FrenetSerretBuilder(circle, "s", g))
+    op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", g))
     return cxfm.act(op, u.Q(0.0, "s"), p)
 
 
@@ -432,4 +432,4 @@ Curve frames follow coordinax's **active transformation** convention. `act(op, t
 
 ### Scalar-First Design
 
-`rotation_matrix`, `__call__`, and the convenience accessors operate on scalar $\tau$ and scalar-component vectors — a builder's fields hold a single curve, not a batch of curves. Batching over $\tau$, over `gamma`, or over a curve's own parameters is achieved by `jax.vmap`-ing the builder or the `Parametric` operator, not by passing shaped arrays into the builder's fields. This keeps the builder implementation simple and composes cleanly with all JAX transformations.
+`rotation_matrix`, `__call__`, and the convenience accessors operate on scalar $\tau$ and scalar-component vectors — a builder's fields hold a single curve, not a batch of curves. Batching over $\tau$, over `gamma`, or over a curve's own parameters is achieved by `jax.vmap`-ing the builder or the `TimeDep` operator, not by passing shaped arrays into the builder's fields. This keeps the builder implementation simple and composes cleanly with all JAX transformations.
