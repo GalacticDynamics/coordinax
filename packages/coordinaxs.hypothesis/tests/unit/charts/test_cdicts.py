@@ -1,7 +1,10 @@
 """Tests for coordinaxs-hypothesis strategies."""
 
+import math
+
+import pytest
 import unxt as u
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 
 import coordinax.charts as cxc
 
@@ -127,3 +130,44 @@ def test_cdicts_with_no_argument_draws_a_chart(
     assert isinstance(p, dict)
     assert p
     assert all(isinstance(v, u.AbstractQuantity) for v in p.values())
+
+
+class TestMagnitudeLeavesBoundedComponentsAlone:
+    """`magnitude` scales the *unbounded* coordinates and nothing else."""
+
+    #: Under `POLAR`'s 0.05 rad lower bound, so a cap of 0.01 leaves nothing.
+    TINY = (1e-3, 1e-2)
+
+    @pytest.mark.parametrize(
+        "chart",
+        [
+            pytest.param(cxc.sph3d, id="sph3d"),
+            pytest.param(cxc.math_sph3d, id="math_sph3d"),
+            pytest.param(cxc.lonlat_sph3d, id="lonlat_sph3d"),
+            pytest.param(cxc.cyl3d, id="cyl3d"),
+            pytest.param(cxc.polar2d, id="polar2d"),
+        ],
+    )
+    def test_a_tiny_magnitude_is_drawable(self, chart) -> None:
+        """Regression: this used to raise `InvalidArgument`, not just filter."""
+
+        @given(p=cxst.cdicts(chart, magnitude=self.TINY))
+        @settings(max_examples=5, deadline=None)
+        def check(p) -> None:
+            assert set(p) == set(chart.components)
+
+        check()
+
+    @given(p=cxst.cdicts(cxc.sph3d, magnitude=(1e-12, 1e-11)))
+    @settings(max_examples=20, deadline=None)
+    def test_radius_reaches_the_requested_scale(self, p) -> None:
+        """An explicit floor replaces RADIAL's absolute 1e-3 m margin."""
+        r = float(u.ustrip("m", p["r"]))
+        assert 1e-12 <= r <= 1e-11
+
+    @given(p=cxst.cdicts(cxc.sph3d, magnitude=(1e-12, 1e-11)))
+    @settings(max_examples=20, deadline=None)
+    def test_angles_keep_their_own_domain(self, p) -> None:
+        """Theta stays a colatitude even when the length scale is 1e-12 m."""
+        theta = float(u.ustrip("rad", p["theta"]))
+        assert 0.0 < theta < math.pi

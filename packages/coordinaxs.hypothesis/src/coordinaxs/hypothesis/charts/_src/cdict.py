@@ -113,19 +113,19 @@ def _component_quantities(
         if canon is not None:
             floor = float(u.ustrip(unit, u.Q(floor, canon)))
             cap = float(u.ustrip(unit, u.Q(cap, canon)))
-        lo = -cap if lo is None else max(lo, -cap)
-        hi = cap if hi is None else min(hi, cap)
+        # Only where the domain is open: a bounded coordinate has no use for a
+        # magnitude, and a cap under its lower bound empties it outright --
+        # `magnitude=(1e-3, 1e-2)` left POLAR needing `0.05 <= theta <= 0.01`.
+        if lo is None:
+            lo = -cap
+        if hi is None:
+            hi = cap
 
-        # The floor is for coordinates that run from the origin to infinity --
-        # radii. `min == 0 and max is None` is exactly that half-line.
-        #
-        # Testing `margin > 0` instead would also catch POLAR, whose colatitude
-        # starts at zero but stops at pi: `magnitude=(0.5, 8)` would then shove
-        # theta 0.5 *radians* off the pole, coupling an angle to what the
-        # caller meant as a length scale. A bounded coordinate has no use for a
-        # magnitude floor.
+        # `min == 0 and max is None` is a radial half-line, where `lo` is only
+        # RADIAL's absolute 1e-3 m margin. An explicit floor states the scale
+        # of the problem, so it replaces that default; clamping barred sub-mm.
         if floor > 0 and interval.min == 0.0 and interval.max is None:
-            lo = floor if lo is None else max(lo, floor)
+            lo = floor
 
     width = 32 if dtype is jnp.float32 else 64
     lo = _snap_inward(lo, width, up=True)
