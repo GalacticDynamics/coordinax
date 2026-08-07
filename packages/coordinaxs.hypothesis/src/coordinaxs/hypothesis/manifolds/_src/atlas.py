@@ -270,17 +270,27 @@ _NDIM_SUPPORT: Final[
     (cxm.HyperSphericalAtlas, lambda ndim: ndim == 2),
     # A product needs at least one factor, each contributing >= 1 dimension.
     (cxm.CartesianProductAtlas, lambda ndim: ndim >= 1),
-    (cxm.CustomAtlas, lambda ndim: ndim >= 1),
+    # A CustomAtlas is assembled from zero-argument charts of the target
+    # dimensionality, so it exists at exactly the dimensionalities those charts
+    # do -- there are none at ndim 5 or 7. Mirrors the `CustomManifold` entry.
+    (cxm.CustomAtlas, lambda ndim: bool(matching_chart_classes_for_ndim(ndim))),
     # EuclideanAtlas is currently generated only for dimensions 0-3.
     (cxm.EuclideanAtlas, lambda ndim: 0 <= ndim <= 3),
+)
+
+#: Concrete atlas types with no registered strategy; never offered as
+#: candidates. Separate from `_NDIM_SUPPORT`: these work at no ndim at all.
+_NO_STRATEGY: Final[tuple[type[cxm.AbstractAtlas], ...]] = (
+    cxm.NoAtlas,
+    cxm.MinkowskiAtlas,
 )
 
 
 def _atlas_class_supports_ndim(cls: type[cxm.AbstractAtlas], ndim: int, /) -> bool:
     """Whether *cls* can be drawn at *ndim*.
 
-    Types absent from `_NDIM_SUPPORT` (``NoAtlas``, ``MinkowskiAtlas``) fall
-    through to `True`, matching the previous ``AbstractAtlas`` catch-all.
+    Types absent from `_NDIM_SUPPORT` fall through to `True`; add an entry when
+    adding a concrete atlas type whose dimensionality is restricted.
     """
     for base, supports in _NDIM_SUPPORT:
         if issubclass(cls, base):
@@ -336,7 +346,8 @@ def atlases(
     classes = tuple(
         cls
         for cls in all_classes
-        if (target_ndim is None or _atlas_class_supports_ndim(cls, target_ndim))
+        if not issubclass(cls, _NO_STRATEGY)
+        and (target_ndim is None or _atlas_class_supports_ndim(cls, target_ndim))
         and (not required_chart_classes or issubclass(cls, cxm.CustomAtlas))
     )
     if not classes:
@@ -430,10 +441,10 @@ def atlases(
         raise ValueError(msg)
 
     if not inspect.isabstract(atlas_cls):
-        kwargs: dict[str, Any] = {"ndim": ndim}
-        if issubclass(atlas_cls, cxm.CustomAtlas):
-            kwargs["required_chart_classes"] = required_chart_classes
-        return draw(cast("Any", atlases)(atlas_cls, **kwargs))
+        # Reachable only when no more specific overload matched, so
+        # redispatching here would re-select this method and recurse.
+        msg = f"No atlas strategy is registered for {atlas_cls.__name__}."
+        raise NotImplementedError(msg)
 
     # Draw and redispatch
     return draw(

@@ -1,5 +1,7 @@
 """Tests for manifold strategies."""
 
+from collections.abc import Callable
+
 import hypothesis.strategies as st
 import pytest
 from hypothesis import given, settings
@@ -9,6 +11,8 @@ import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 
 import coordinaxs.hypothesis.main as cxst
+from coordinaxs.hypothesis.manifolds._src.atlas import _atlas_class_supports_ndim
+from coordinaxs.hypothesis.manifolds._src.manifold import _manifold_class_supports_ndim
 
 
 @given(atlas_cls=cxst.atlas_classes())
@@ -156,7 +160,7 @@ class TestNdimIsHonoured:
         with pytest.raises(Unsatisfiable):
             check()
 
-    @pytest.mark.parametrize("ndim", [1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("ndim", [1, 2, 3, 4, 5, 6, 7])
     def test_product_manifold_factor_dims_sum_to_ndim(self, ndim: int) -> None:
         """Factor dimensionalities partition the requested total exactly."""
 
@@ -179,3 +183,69 @@ class TestNdimIsHonoured:
             assert sum(f.ndim for f in atlas.factors) == ndim
 
         check()
+
+
+class TestOnlyDrawableCandidatesAreSelected:
+    """Classes with no registered strategy are never offered as candidates."""
+
+    @pytest.mark.parametrize(
+        ("cls", "strategy"),
+        [
+            (cxm.NoAtlas, cxst.atlases),
+            (cxm.MinkowskiAtlas, cxst.atlases),
+            (cxm.NoManifold, cxst.manifolds),
+            (cxm.MinkowskiManifold, cxst.manifolds),
+        ],
+    )
+    @given(data=st.data())
+    def test_requesting_one_directly_says_so(
+        self,
+        cls: type,
+        strategy: Callable[..., st.SearchStrategy[object]],
+        data: st.DataObject,
+    ) -> None:
+        """Asking for one by name raises, naming the class."""
+        with pytest.raises(NotImplementedError, match=cls.__name__):
+            data.draw(strategy(cls))
+
+    @given(atlas=cxst.atlases())
+    def test_drawn_atlases_all_have_strategies(self, atlas: object) -> None:
+        """No draw yields a type the module has no strategy for."""
+        assert not isinstance(atlas, (cxm.NoAtlas, cxm.MinkowskiAtlas))
+
+    @given(M=cxst.manifolds())
+    def test_drawn_manifolds_all_have_strategies(self, M: object) -> None:
+        """Same for manifolds."""
+        assert not isinstance(M, (cxm.NoManifold, cxm.MinkowskiManifold))
+
+    @pytest.mark.parametrize(
+        ("ndim", "supported"),
+        [(1, True), (2, True), (3, True), (4, True), (5, False), (7, False)],
+    )
+    def test_custom_atlas_support_tracks_available_charts(
+        self, ndim: int, supported: bool
+    ) -> None:
+        """``CustomAtlas`` supports only dimensionalities with zero-arg charts.
+
+        Spelled out, not recomputed from `matching_chart_classes_for_ndim` --
+        that is what the predicate calls, so it would assert itself.
+        """
+        assert _atlas_class_supports_ndim(cxm.CustomAtlas, ndim) is supported
+
+    @pytest.mark.parametrize(
+        ("supports_ndim", "cls"),
+        [
+            (_atlas_class_supports_ndim, cxm.MinkowskiAtlas),
+            (_manifold_class_supports_ndim, cxm.MinkowskiManifold),
+        ],
+    )
+    def test_types_absent_from_the_table_default_to_supported(
+        self, supports_ndim: Callable[[type, int], bool], cls: type
+    ) -> None:
+        """A type with no `_NDIM_SUPPORT` entry is treated as unrestricted.
+
+        Which is why `_NO_STRATEGY` has to be a separate gate: this predicate
+        answers "at which ndim", not "can it be drawn at all", and would wave
+        these two through at every ndim.
+        """
+        assert supports_ndim(cls, 3) is True
