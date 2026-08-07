@@ -15,13 +15,19 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import coordinax.charts as cxc
 import coordinax.frames as cxf
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
 from .conftest import circle, helix, straight_line
+
+#: Base point and velocity for the tangent/jet tests, as component dicts.
+AT = {"x": u.Q(2.0, "km"), "y": u.Q(-1.0, "km"), "z": u.Q(3.0, "km")}
+VEL = {"x": u.Q(0.1, "km/s"), "y": u.Q(0.2, "km/s"), "z": u.Q(-0.3, "km/s")}
 
 # ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -131,14 +137,41 @@ class TestBishopTau0:
         np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
         np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
 
-    def test_initial_normal_parallel_to_tangent_raises(self):
-        """A degenerate `initial_normal` fails loudly rather than as NaN."""
+    @pytest.mark.parametrize(
+        "n0",
+        [
+            [2.0, 0.0, 0.0],  # plainly parallel
+            [1e-12, 0.0, 0.0],  # parallel *and* tiny: still no normal component
+            [0.0, 0.0, 0.0],  # no direction at all
+        ],
+    )
+    def test_initial_normal_parallel_to_tangent_raises(self, n0):
+        """A degenerate `initial_normal` fails loudly rather than as NaN.
+
+        The guard is on the rejection *relative* to ``|v|``, so shrinking a
+        parallel vector must not sneak it past.
+        """
         # Tangent of the straight line at tau_0 = 0 is +x.
-        bt = cxfc.BishopBuilder(
-            straight_line, initial_normal=jnp.array([2.0, 0.0, 0.0])
-        )
+        bt = cxfc.BishopBuilder(straight_line, initial_normal=jnp.array(n0))
         with pytest.raises(Exception, match="parallel to the tangent"):
             bt.rotation_matrix(u.Q(1.0, "s"))
+
+    def test_small_initial_normal_is_a_direction_not_a_magnitude(self):
+        """A valid but tiny `initial_normal` must not be rejected.
+
+        `_orthonormalize` is homogeneous of degree zero in its input, so
+        ``1e-12 * n`` and ``n`` are the *same* initial condition. An absolute
+        threshold on the rejection wrongly called the scaled-down one
+        degenerate.
+        """
+        tau = u.Q(1.0, "s")
+        unit = cxfc.BishopBuilder(helix, initial_normal=jnp.array([0.0, 0.0, 1.0]))
+        tiny = cxfc.BishopBuilder(helix, initial_normal=jnp.array([0.0, 0.0, 1e-12]))
+
+        R_tiny = tiny.rotation_matrix(tau)
+        np.testing.assert_allclose(R_tiny, unit.rotation_matrix(tau), atol=1e-12)
+        np.testing.assert_allclose(R_tiny @ R_tiny.T, jnp.eye(3), atol=1e-10)
+        np.testing.assert_allclose(jnp.linalg.det(R_tiny), 1.0, atol=1e-10)
 
 
 # ── JAX ──────────────────────────────────────────────────────────────
@@ -150,6 +183,84 @@ class TestBishopJAX:
     def test_jit_normal1(self, circle_bishop: cxfc.BishopBuilder):
         U1 = eqx.filter_jit(circle_bishop.normal1)(u.Q(0.5, "s"))
         assert jnp.allclose(jnp.linalg.norm(U1.value), 1, atol=1e-4)
+
+
+class TestBishopTangentPropagation:
+    r"""The transport solve must be differentiable in **forward** mode.
+
+    `act` on tangent data and `act_jet` prolong the point action with
+    ``jax.jvp``. A `jax.custom_vjp` integrator -- which is what
+    ``jax.experimental.ode.odeint`` and `diffrax`'s *default*
+    `RecursiveCheckpointAdjoint` both are -- cannot be ``jvp``-ed at all, so
+    the whole capability was unavailable on Bishop frames while the shared
+    contract (which runs on the circle) never reached this path.
+
+    The helix is the 3-D, non-zero-torsion case, and ``tau = 0`` is the
+    degenerate ``tau == tau_0`` point where a solve over ``[tau_0, tau]``
+    takes zero steps and silently reports ``d/dtau = 0``.
+    """
+
+    @pytest.mark.parametrize("tau_val", [0.0, 1.0, -0.8])
+    def test_act_on_velocity_matches_finite_differences(
+        self, helix_bishop: cxfc.BishopBuilder, tau_val: float
+    ):
+        """Slot 1 is the total tau-derivative of the point action."""
+        tau = u.Q(tau_val, "s")
+        op = cxfm.TimeDep(helix_bishop)
+
+        got = cxfm.act(op, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=AT)
+
+        h = u.Q(1e-4, "s")
+
+        def y(t):
+            x = {k: AT[k] + VEL[k] * (t - tau) for k in AT}
+            return cxfm.act(op, t, x, cxc.cart3d, cxr.point)
+
+        plus, minus = y(tau + h), y(tau - h)
+        for k in AT:
+            want = ((plus[k] - minus[k]) / (2 * h)).ustrip("km/s")
+            np.testing.assert_allclose(
+                got[k].ustrip("km/s"), want, rtol=1e-5, atol=1e-6, err_msg=k
+            )
+
+    @pytest.mark.parametrize("tau_val", [0.0, 1.0, -0.8])
+    def test_tangent_axis_agrees_with_frenet_serret(self, tau_val: float):
+        """Row 0 of R is the unit tangent for *both* frames, exactly.
+
+        Bishop and Frenet-Serret differ only in the normal plane, so the
+        component of the prolonged velocity along the shared tangent axis must
+        agree to solver accuracy -- an oracle that needs no finite differences.
+        """
+        tau = u.Q(tau_val, "s")
+        bishop = cxfm.TimeDep(cxfc.BishopBuilder(helix))
+        frenet = cxfm.TimeDep(cxfc.FrenetSerretBuilder(helix))
+
+        kw = {"at": AT}
+        got = cxfm.act(
+            bishop, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, **kw
+        )
+        want = cxfm.act(
+            frenet, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, **kw
+        )
+        np.testing.assert_allclose(
+            got["x"].ustrip("km/s"), want["x"].ustrip("km/s"), rtol=1e-8, atol=1e-9
+        )
+
+    def test_act_jet_agrees_with_act_on_the_velocity_slot(
+        self, helix_bishop: cxfc.BishopBuilder
+    ):
+        """The two entry points into the prolongation must not diverge."""
+        tau = u.Q(0.7, "s")
+        op = cxfm.TimeDep(helix_bishop)
+
+        jet = cxfm.act_jet(op, tau, {0: AT, 1: VEL}, cxc.cart3d)
+        single = cxfm.act(
+            op, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=AT
+        )
+        for k in AT:
+            np.testing.assert_allclose(
+                jet[1][k].ustrip("km/s"), single[k].ustrip("km/s"), atol=1e-10
+            )
 
 
 # ── Helix (3D curve) ─────────────────────────────────────────────────

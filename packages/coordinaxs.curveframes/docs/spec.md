@@ -419,7 +419,9 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     - `tau_0 : unxt.AbstractQuantity | None` — reference parameter where the initial frame is defined (a leaf). `None` is resolved to `Q(0.0, tau_unit)` by `__post_init__`.
     - `initial_normal : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `None` for auto-selection via Gram–Schmidt.
 
-    `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{U}_1; \mathbf{U}_2]$: $\mathbf{T}$ from the unit-aware first derivative of `curve`; $\mathbf{U}_1$ by solving the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1\cdot\mathbf{T}')\,\mathbf{T}$ from `tau_0` to the resolved parameter via `jax.experimental.ode.odeint` (skipped via `jax.lax.cond` when the parameter equals `tau_0`); $\mathbf{U}_2 = \mathbf{T}\times\mathbf{U}_1$.
+    `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{U}_1; \mathbf{U}_2]$: $\mathbf{T}$ from the unit-aware first derivative of `curve`; $\mathbf{U}_1$ by solving the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1\cdot\mathbf{T}')\,\mathbf{T}$ from `tau_0` to the resolved parameter via `diffrax.diffeqsolve` (`Tsit5`, `PIDController(rtol=1e-10, atol=1e-10)`, `DirectAdjoint`); $\mathbf{U}_2 = \mathbf{T}\times\mathbf{U}_1$.
+
+    The solve is reparametrized onto $s \in [0, 1]$ with $\tau(s) = \tau_0 + s\,(\tau - \tau_0)$, so $\tau$ enters through the vector field rather than the integration bound. This makes backward transport ($\tau < \tau_0$) and the degenerate $\tau = \tau_0$ fall out of the same expression, and — critically — keeps $d/d\tau$ of the solve non-zero at $\tau = \tau_0$. `DirectAdjoint` is required: it is the only `diffrax` adjoint differentiable in *both* modes, and forward mode is what `act` on tangent data and `act_jet` need.
 
     Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 

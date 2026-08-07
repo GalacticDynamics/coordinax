@@ -278,7 +278,9 @@ bt = cxfc.BishopBuilder(helix)
 
 1. Computes $\mathbf{T}$ via JAX autodiff
 2. Chooses an initial normal $\mathbf{U}_{1,0}$ via Gram–Schmidt (unless you supply one)
-3. Solves the parallel-transport ODE with `jax.experimental.ode.odeint`
+3. Solves the parallel-transport ODE with [`diffrax`](https://docs.kidger.site/diffrax/)
+
+The solve uses `diffrax.DirectAdjoint`, so it is differentiable in both modes: reverse mode for gradients with respect to curve parameters, and forward mode for propagating tangent data and jets.
 
 Evaluate at a specific $\tau$:
 
@@ -316,6 +318,29 @@ def line(tau):
 
 bt_line = cxfc.BishopBuilder(line)
 bt_line.normal1(u.Q(5.0, "s"))  # well-defined unit vector
+```
+
+### Propagating Velocities and Jets
+
+A curve frame is $\tau$-dependent, so transforming a velocity is a _kinematic prolongation_, not a frozen-$\tau$ pushforward: the result picks up the $\dot{R}$ and $\dot{\gamma}$ terms. This works identically for both frame types.
+
+```python
+import coordinax.charts as cxc
+import coordinax.representations as cxr
+
+at = {"x": u.Q(2.0, "km"), "y": u.Q(-1.0, "km"), "z": u.Q(3.0, "km")}
+vel = {"x": u.Q(0.1, "km/s"), "y": u.Q(0.2, "km/s"), "z": u.Q(-0.3, "km/s")}
+bishop_op = cxfm.TimeDep(bt)
+
+cxfm.act(
+    bishop_op, u.Q(0.7, "s"), vel, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at
+)
+```
+
+`act_jet` does the same for a whole jet at once, returning every slot:
+
+```python
+cxfm.act_jet(bishop_op, u.Q(0.7, "s"), {0: at, 1: vel}, cxc.cart3d)
 ```
 
 ### Inversion

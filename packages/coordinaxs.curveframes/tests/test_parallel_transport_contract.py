@@ -25,7 +25,9 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import coordinax.charts as cxc
 import coordinax.frames as cxf
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
@@ -34,6 +36,10 @@ import coordinaxs.curveframes as cxfc
 from .conftest import circle, inverse_rotation
 
 TAUS = [0, 0.5, 1, 2.5, jnp.pi]
+
+#: Base point and velocity for the tangent/jet contract, as component dicts.
+AT = {"x": u.Q(2.0, "km"), "y": u.Q(-1.0, "km"), "z": u.Q(3.0, "km")}
+VEL = {"x": u.Q(0.1, "km/s"), "y": u.Q(0.2, "km/s"), "z": u.Q(-0.3, "km/s")}
 
 
 @eqx.filter_jit
@@ -346,6 +352,127 @@ class TestAct:
         np.testing.assert_allclose(
             results.ustrip("km"), eager, atol=pt_case.tol.plumbing
         )
+
+
+# ===================================================================
+# Tangent data and jets
+
+
+def _prolongation_by_finite_differences(
+    xop: cxfm.TimeDep, tau: u.AbstractQuantity, h: float = 1e-4
+) -> dict:
+    r"""The order-1 prolongation of ``xop``, by central differences.
+
+    The first prolongation is the total $\tau$-derivative of the *point*
+    action along the straight-line curve through `AT` with velocity `VEL`,
+    so it can be recovered from point actions alone -- no autodiff, and
+    therefore a genuinely independent oracle for `act`/`act_jet`.
+    """
+
+    def y(t: u.AbstractQuantity) -> dict:
+        dt = t - tau
+        x = {k: AT[k] + VEL[k] * dt for k in AT}
+        return cxfm.act(xop, t, x, cxc.cart3d, cxr.point)
+
+    dtau = u.Q(h, "s")
+    plus, minus = y(tau + dtau), y(tau - dtau)
+    return {k: (plus[k] - minus[k]) / (2 * dtau) for k in AT}
+
+
+class TestTangentAndJet:
+    r"""Tangent data and jets propagate through the $\tau$-dependent family.
+
+    A curve frame is time-dependent, so ``act`` on a velocity is the
+    *kinematic prolongation*, not the frozen-$\tau$ pushforward: it must pick
+    up the $\dot R$ and $\dot\gamma$ terms. That path funnels through
+    ``jax.jvp`` of the point action, which is why it is a distinct capability
+    from the point action itself -- and why it must be exercised for *both*
+    frame types.
+    """
+
+    @pytest.mark.parametrize("tau_val", [0.0, 0.7, 2.0])
+    def test_act_on_velocity_matches_finite_differences(
+        self, pt_case: SimpleNamespace, tau_val: float
+    ) -> None:
+        """``act`` on tangent data is the total tau-derivative it claims to be."""
+        tau = u.Q(tau_val, "s")
+        got = cxfm.act(
+            pt_case.xop, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=AT
+        )
+        want = _prolongation_by_finite_differences(pt_case.xop, tau)
+        for k in AT:
+            np.testing.assert_allclose(
+                got[k].ustrip("km/s"),
+                want[k].ustrip("km/s"),
+                rtol=1e-5,
+                atol=1e-6,
+                err_msg=f"component {k}",
+            )
+
+    @pytest.mark.parametrize("tau_val", [0.0, 0.7, 2.0])
+    def test_act_jet_matches_finite_differences(
+        self, pt_case: SimpleNamespace, tau_val: float
+    ) -> None:
+        """``act_jet`` slot 1 agrees with the same oracle; slot 0 is the point."""
+        tau = u.Q(tau_val, "s")
+        out = cxfm.act_jet(pt_case.xop, tau, {0: AT, 1: VEL}, cxc.cart3d)
+
+        point = cxfm.act(pt_case.xop, tau, AT, cxc.cart3d, cxr.point)
+        want = _prolongation_by_finite_differences(pt_case.xop, tau)
+        for k in AT:
+            np.testing.assert_allclose(
+                out[0][k].ustrip("km"),
+                point[k].ustrip("km"),
+                atol=pt_case.tol.field,
+                err_msg=f"slot 0, component {k}",
+            )
+            np.testing.assert_allclose(
+                out[1][k].ustrip("km/s"),
+                want[k].ustrip("km/s"),
+                rtol=1e-5,
+                atol=1e-6,
+                err_msg=f"slot 1, component {k}",
+            )
+
+    def test_act_on_velocity_is_not_the_pushforward(
+        self, pt_case: SimpleNamespace
+    ) -> None:
+        r"""Discriminator: the frozen-tau pushforward gives a *different* answer.
+
+        Without the $\dot R$/$\dot\gamma$ terms the two would coincide, so
+        this pins that the prolongation is actually being taken.
+        """
+        tau = u.Q(0.7, "s")
+        prolonged = cxfm.act(
+            pt_case.xop, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=AT
+        )
+        frozen = cxfm.pushforward(
+            pt_case.xop, tau, VEL, cxc.cart3d, cxr.coord_vel, at=AT
+        )
+        assert not np.allclose(
+            [prolonged[k].ustrip("km/s") for k in AT],
+            [frozen[k].ustrip("km/s") for k in AT],
+            atol=1e-3,
+        )
+
+    def test_act_on_velocity_jit(self, pt_case: SimpleNamespace) -> None:
+        """The tangent path is JIT-compatible."""
+        tau = u.Q(0.7, "s")
+        kw = {"at": AT}
+        eager = cxfm.act(
+            pt_case.xop, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, **kw
+        )
+        jitted = eqx.filter_jit(
+            lambda op: cxfm.act(
+                op, tau, VEL, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, **kw
+            )
+        )(pt_case.xop)
+        for k in AT:
+            np.testing.assert_allclose(
+                jitted[k].ustrip("km/s"),
+                eager[k].ustrip("km/s"),
+                atol=pt_case.tol.plumbing,
+            )
 
 
 # ===================================================================

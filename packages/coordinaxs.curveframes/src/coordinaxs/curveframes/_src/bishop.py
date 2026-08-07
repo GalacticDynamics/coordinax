@@ -19,7 +19,10 @@ $$ \frac{d\mathbf{U}_i}{d\tau}
 $$
 
 starting from an initial orthonormal pair at a reference parameter $\tau_0$.
-The ODE is integrated numerically using {func}`jax.experimental.ode.odeint`.
+The ODE is integrated numerically with `diffrax`, using a `diffrax.DirectAdjoint`
+so the solve is differentiable in **both** modes: reverse-mode for gradients
+w.r.t. curve parameters, and forward-mode for the tangent/jet propagation that
+`coordinax.transforms.act` and `coordinax.transforms.act_jet` need.
 
 Both classes are ``@final`` (no further subclassing).
 
@@ -43,16 +46,34 @@ from collections.abc import Callable
 from jaxtyping import Array
 from typing import Any, cast, final
 
+import diffrax as dfx
 import equinox as eqx
-import jax
 import jax.numpy as jnp
-from jax.experimental.ode import odeint
 
 import coordinax.transforms as cxfm
 import unxt as u
 
 from .base import AbstractCurveFrameBuilder, AbstractParallelTransportFrame, FrameT
 from .frenetserret import _normalize
+
+#: Integrator for the parallel-transport ODE.  `DirectAdjoint` is the only
+#: adjoint that is differentiable in *both* modes: the default
+#: `RecursiveCheckpointAdjoint` (like `jax.experimental.ode.odeint`) is a
+#: `custom_vjp` and so cannot be `jvp`-ed, which is exactly what the tangent /
+#: jet machinery does; `BacksolveAdjoint` breaks reverse mode here because the
+#: right-hand side closes over the curve's array leaves; and `ForwardMode`
+#: gives up reverse mode.  At these tolerances orthonormality of the resulting
+#: R holds to ~8e-12 over ``|tau| <= 60`` on a helix, against ~9e-9 for the
+#: `odeint` solve this replaces.
+_SOLVER = dfx.Tsit5()
+_ADJOINT = dfx.DirectAdjoint()
+_STEPSIZE_CONTROLLER = dfx.PIDController(rtol=1e-10, atol=1e-10)
+#: Raised from `diffrax`'s default of 4096, which is tight: a unit-radius helix
+#: at the tolerances above takes ~20 steps per unit of ``|tau - tau_0|``, so the
+#: default caps transport at ``|dtau| ~ 200``.  Measured to cost nothing in
+#: either compile or run time.  A longer transport raises rather than silently
+#: truncating.
+_MAX_STEPS = 16384
 
 _MSG_PARALLEL_NORMAL = (
     "`initial_normal` is parallel to the tangent at tau_0; it has no component "
@@ -65,7 +86,10 @@ def _orthonormalize(v: Any, T0_val: Any) -> Any:
     r"""Gram--Schmidt ``v`` against the unit tangent, then normalise.
 
     Raises (via `equinox.error_if`, so it also fires under ``jit``) when ``v``
-    is parallel to ``T0_val`` and the rejection vanishes.
+    is parallel to ``T0_val`` and the rejection vanishes.  The test is on the
+    rejection *relative* to ``|v|``, so it measures the angle between the two
+    vectors rather than the length of ``v``: the result is exactly homogeneous
+    of degree zero in ``v``, and a small-but-valid ``v`` must not be rejected.
 
     Examples
     --------
@@ -76,10 +100,16 @@ def _orthonormalize(v: Any, T0_val: Any) -> Any:
     >>> _orthonormalize(jnp.array([2.0, 3.0, 0.0]), T0)
     Array([0., 1., 0.], dtype=float64)
 
+    Scaling ``v`` down does not change the answer:
+
+    >>> _orthonormalize(jnp.array([0.0, 0.0, 1e-12]), T0)
+    Array([0., 0., 1.], dtype=float64)
+
     """
     w = v - jnp.dot(v, T0_val) * T0_val
     norm = jnp.linalg.norm(w)
-    w = eqx.error_if(w, norm < 1e-12, _MSG_PARALLEL_NORMAL)
+    # `<=`, not `<`, so that an all-zero `v` (threshold 0) still raises.
+    w = eqx.error_if(w, norm <= 1e-12 * jnp.linalg.norm(v), _MSG_PARALLEL_NORMAL)
     return w / norm
 
 
@@ -213,9 +243,20 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         r"""Compute $\mathbf{U}_1$ via ODE integration from $\tau_0$.
 
         Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1
-        \cdot \mathbf{T}')\,\mathbf{T}$ using
-        ``jax.experimental.ode.odeint``.  When the parameter equals $\tau_0$,
-        the ODE is skipped via ``jax.lax.cond`` (identity path).
+        \cdot \mathbf{T}')\,\mathbf{T}$ with `diffrax.diffeqsolve`, over the
+        rescaled parameter $s \in [0, 1]$ with $\tau(s) = \tau_0 + s\,\Delta$,
+        $\Delta = \tau - \tau_0$.
+
+        The rescaling is what makes the solve differentiable in $\tau$
+        everywhere.  Integrating over $[\tau_0, \tau]$ directly puts $\tau$ in
+        the integration *bound*, and at $\tau = \tau_0$ the solver loop takes
+        zero steps: the value is right but $d/d\tau$ comes back as $0$ instead
+        of the true $-(\mathbf{U}_{1,0} \cdot \mathbf{T}'_0)\,\mathbf{T}_0$,
+        silently corrupting every tangent/jet propagation at the (very common)
+        default $\tau_0 = 0$.  Over $s \in [0, 1]$ the interval is always
+        unit-length and $\tau$ enters through the vector field instead, so its
+        derivative survives.  Both signs of $\Delta$ are handled by the same
+        expression -- no forward-only workaround is needed.
         """
         tau_unit = self.tau_unit
         tau_0 = cast("u.AbstractQuantity", self.tau_0)
@@ -236,37 +277,32 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # for JAX to trace.
         dTangent_fn = u.experimental.jacfwd(self._tangent_at, units=(tau_unit,))
 
-        tau_val = g.ustrip(tau_unit)
-        tau_0_val = tau_0.ustrip(tau_unit)
+        tau_val = jnp.asarray(g.ustrip(tau_unit), dtype=float)
+        tau_0_val = jnp.asarray(tau_0.ustrip(tau_unit), dtype=float)
 
-        def ode_rhs(U1_flat: Any, t_scalar: Any) -> Any:
-            """Right-hand side of the parallel-transport ODE."""
-            t_q = u.Q(t_scalar, tau_unit)
+        dtau = tau_val - tau_0_val
+
+        def ode_rhs(s: Any, U1_flat: Any, args: Any) -> Any:
+            """Right-hand side in the rescaled parameter ``s``."""
+            del args
+            t_q = u.Q(tau_0_val + s * dtau, tau_unit)
             T_val = self._tangent_at(t_q).value
             dT_val = dTangent_fn(t_q).value
-            # Project U1 onto dT, negate, then scale by T.
-            return -jnp.dot(U1_flat, dT_val) * T_val
+            # Project U1 onto dT, negate, then scale by T -- and by dtau/ds.
+            return -dtau * jnp.dot(U1_flat, dT_val) * T_val
 
-        # Use lax.cond to branch: when tau == tau_0, return initial
-        # normal directly (avoids zero-length ODE integration).
-        needs_ode = jnp.abs(tau_val - tau_0_val) > 0.0
-
-        def _solve(_: Any) -> Any:
-            # `odeint` integrates FORWARD only: a decreasing `t_span` yields
-            # NaN.  Integrate the reversed field over s in [0, |dtau|] instead,
-            # which is the same solution for either sign of dtau.
-            dtau = tau_val - tau_0_val
-            sgn = jnp.sign(dtau)
-            s_span = jnp.stack([jnp.zeros_like(dtau), jnp.abs(dtau)])
-            result = odeint(
-                lambda y, s: sgn * ode_rhs(y, tau_0_val + sgn * s), U1_0_val, s_span
-            )
-            return result[-1]  # solution at tau
-
-        def _identity(_: Any) -> Any:
-            return U1_0_val
-
-        U1_val = jax.lax.cond(needs_ode, _solve, _identity, None)
+        sol = dfx.diffeqsolve(
+            dfx.ODETerm(ode_rhs),
+            _SOLVER,
+            t0=0.0,
+            t1=1.0,
+            dt0=None,
+            y0=U1_0_val,
+            stepsize_controller=_STEPSIZE_CONTROLLER,
+            adjoint=_ADJOINT,
+            max_steps=_MAX_STEPS,
+        )
+        U1_val = sol.ys[-1]
         # Re-normalise for numerical safety.
         return U1_val / jnp.linalg.norm(U1_val)
 
