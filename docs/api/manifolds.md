@@ -47,7 +47,12 @@ ang = cxm.angle_between(cxc.cart3d, uvec, vvec, at=at)
 - `guess_manifold`: infer a manifold from manifold/chart/data inputs
 - `scale_factors`: return the metric diagonal in a chart at a base point
 - `angle_between`: return the metric angle between two tangent-vector CDicts
-- `norm`: compute the Riemannian norm $\|v\|_g = \sqrt{g_p(v,v)}$ of a tangent vector in a chart
+- `norm`: compute the Riemannian norm $\|v\|_g = \sqrt{g_p(v,v)}$ of a tangent vector in a chart. Requires a **positive-definite** metric; raises `NotImplementedError` for an indefinite one (e.g. Minkowski), where the square root would be `nan`
+- `separation`: straight-line distance between two points (the `norm` of their coordinate difference); same positive-definiteness requirement
+- `interval`: signed squared interval $\Delta s^2 = \Delta x^\top G\,\Delta x$. Defined for **every** metric, including indefinite ones: the squared `separation` when Riemannian, and the causal invariant when Lorentzian
+- `causal_character`: classify a pair of events as `"timelike"`, `"null"`, or `"spacelike"` (Lorentzian metrics; returns a `str`, so not `jit`-able)
+- `proper_time`: elapsed proper time between two timelike-separated events
+- `proper_distance`: proper distance between two spacelike-separated events
 - `pt_embed`: embed intrinsic coordinates into ambient coordinates
 - `pt_project`: project ambient coordinates back to intrinsic chart coordinates
 - `pt_map`: manifold-related re-export of point realization map

@@ -21,6 +21,7 @@ import unxt as u
 import coordinax.distances as cxd
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
+from ._utils import require_positive_definite
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 
@@ -80,6 +81,10 @@ def separation(
     Distance(5., 'm')
 
     """
+    # Check here as well as in `norm`, purely so the message names the function
+    # the caller actually invoked; otherwise `separation` reports a `norm` error.
+    require_positive_definite(metric, "separation")
+
     chart.check_data(a, keys=True, values=False)
     chart.check_data(b, keys=True, values=False)
     diff = {k: b[k] - a[k] for k in chart.components}
