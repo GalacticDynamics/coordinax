@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given, settings
+from hypothesis import find, given, settings
 from hypothesis.errors import Unsatisfiable
 
 import coordinax.charts as cxc
@@ -249,3 +249,61 @@ class TestOnlyDrawableCandidatesAreSelected:
         these two through at every ndim.
         """
         assert supports_ndim(cls, 3) is True
+
+
+class TestFactorCountIsDrawnFeasible:
+    """``n_factors`` is drawn from the feasible range, not drawn then rejected.
+
+    Both product strategies used to draw 1-5 factors and `assume` the count
+    against the target. That discarded ``1 - feasible/5`` of all draws -- four
+    in five at ``ndim=1`` -- and biased the survivors toward few-factor
+    products, since a small target only ever admits the small counts.
+    """
+
+    @pytest.mark.parametrize(("ndim", "counts"), [(1, [1]), (2, [1, 2]), (5, [1, 5])])
+    def test_manifold_factor_counts_are_reachable(
+        self, ndim: int, counts: list[int]
+    ) -> None:
+        """Every factor count a product of this ``ndim`` admits is drawable."""
+        strategy = cxst.manifolds(cxm.CartesianProductManifold, ndim=ndim)
+        for n in counts:
+            find(strategy, lambda M, n=n: len(M.factors) == n)
+
+    @pytest.mark.parametrize(("ndim", "counts"), [(1, [1]), (6, [2, 5]), (15, [5])])
+    def test_atlas_factor_counts_are_reachable(
+        self, ndim: int, counts: list[int]
+    ) -> None:
+        """Same for atlases, whose factors are capped at 3 dimensions each.
+
+        ``ndim=6`` cannot be a 1-factor product (no 6-D factor atlas) and
+        ``ndim=15`` only fits as 5 factors of 3 -- the bounds the ``lo``/``hi``
+        arithmetic has to get right.
+        """
+        strategy = cxst.atlases(cxm.CartesianProductAtlas, ndim=ndim)
+        for n in counts:
+            find(strategy, lambda a, n=n: len(a.factors) == n)
+
+    @pytest.mark.parametrize(
+        ("strategy_for", "cls", "ndim"),
+        [
+            (cxst.manifolds, cxm.CartesianProductManifold, 0),
+            (cxst.manifolds, cxm.CartesianProductManifold, -1),
+            (cxst.atlases, cxm.CartesianProductAtlas, 0),
+            (cxst.atlases, cxm.CartesianProductAtlas, 16),
+        ],
+    )
+    def test_unreachable_ndim_is_unsatisfiable(
+        self, strategy_for: Callable[..., st.SearchStrategy], cls: type, ndim: int
+    ) -> None:
+        """An ``ndim`` no factor count reaches is discarded, never clamped.
+
+        The atlas ceiling is 15: five factors of at most 3 dimensions each.
+        """
+
+        @given(obj=strategy_for(cls, ndim=ndim))
+        @settings(max_examples=5, deadline=None)
+        def check(obj: object) -> None:
+            pytest.fail(f"ndim={ndim} should be unsatisfiable, got {obj!r}")
+
+        with pytest.raises(Unsatisfiable):
+            check()
