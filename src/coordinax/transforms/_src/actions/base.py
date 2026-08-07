@@ -391,6 +391,11 @@ def evaluate_at(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
         return cast("OpT", evaluate_at(inner, tau))
     if isinstance(op, AbstractCompositeTransform):
         new = tuple(evaluate_at(t, tau) for t in op.transforms)
+        # Honour the same-object contract above: a composite whose children are
+        # all constant has nothing to evaluate, so rebuilding it would allocate
+        # a new pipeline that compares equal to the one handed in.
+        if all(n is o for n, o in zip(new, op.transforms, strict=True)):
+            return op
         return cast("OpT", dataclasses.replace(op, transforms=new))
     return op
 

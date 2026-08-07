@@ -28,6 +28,7 @@ from .custom_types import CDict
 from .identity import Identity, identity
 from .prolong import (
     _MSG_JET_SLOT0_MISSING,
+    _slot_jet,
     prolong_jet,
     pushforward_generic,
     tau_derivative,
@@ -521,21 +522,13 @@ def act(
     """
     m = cast("int", rep.semantic_kind.order)
 
-    # Displacements (m=0) and a missing tau are the funnel's business: it owns
-    # the frozen-tau pushforward and the shared tau=None error. Materialize at
-    # most once here: `op0` doubles as the routing predicate's input and (on
-    # the fibre-offset path) the base for `_fibre_ladder_op`, so it is not
-    # re-materialized there.
-    op0 = None
-    k = None
-    if tau is not None and m != 0:
-        op0 = op.evaluate_at(tau)
-        k = _ladder_order(op0)
-    if k is None:
-        # Reach the generic funnel itself, not a copy of it. This dispatch is
+    if tau is None or m == 0:
+        # Displacements (m=0) and a missing tau are the funnel's business: it
+        # owns the frozen-tau pushforward and the shared tau=None error. Reach
+        # the generic funnel itself, not a copy of it: this dispatch is
         # strictly more specific than prolong.py's, so without the explicit
-        # invoke every `TimeDep` tangent act would bypass the engine — and
-        # any future change there (a new anchor check, a units policy) would
+        # invoke every `TimeDep` tangent act would bypass the engine — and any
+        # future change there (a new anchor check, a units policy) would
         # silently not apply to the one type that carries all time dependence.
         return cast(
             "CDict",
@@ -544,19 +537,27 @@ def act(
             ),
         )
 
-    op0_ = cast("AbstractAdd", op0)
-    return _ladder_act(op, op0_, k, tau, m, x, chart, rep, at=at, usys=usys, **kw)
+    # Materialize once: `op0` is both the routing predicate's input and (on the
+    # fibre-offset path) the base for `_fibre_ladder_op`.
+    op0 = op.evaluate_at(tau)
+    k = _ladder_order(op0)
+    if k is None:
+        # Generic prolongation, entered one level down. The funnel's own body
+        # would only re-test `m == 0` and time-dependence — both settled above
+        # — before calling `prolong_slot`, whose `act_jet` dispatch hop lands
+        # back in this module's `act_jet` and re-runs the probe just above. A
+        # second materialization is a whole ODE solve for a curve-frame
+        # builder, so assemble the jet with the engine's own validator and
+        # call the engine's jet function directly.
+        jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel)
+        return prolong_jet(op, tau, jet, chart, usys=usys)[m]
+
+    return _ladder_act(op, op0, k, tau, m, x, chart, rep, at=at, usys=usys, **kw)
 
 
 @plum.dispatch
 def act_jet(
-    op: TimeDep,
-    tau: Any,
-    jet: dict,
-    chart: cxc.AbstractChart,
-    /,
-    *,
-    usys: Any = None,
+    op: TimeDep, tau: Any, jet: dict, chart: cxc.AbstractChart, /, *, usys: Any = None
 ) -> dict:
     """Prolong a `TimeDep`; fibre offsets go slot-wise, the rest generic.
 

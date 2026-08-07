@@ -74,11 +74,7 @@ def test_uniform_translation():
 
 def test_uniform_translation_differentiable_in_rate():
     def y(rate_x):
-        rate = {
-            "x": u.Q(rate_x, "km/s"),
-            "y": u.Q(0.0, "km/s"),
-            "z": u.Q(0.0, "km/s"),
-        }
+        rate = {"x": u.Q(rate_x, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
         op = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
         out = cxfm.act(op, u.Q(2.0, "s"), X, cxc.cart3d, cxr.point)
         return out["x"].ustrip("m")

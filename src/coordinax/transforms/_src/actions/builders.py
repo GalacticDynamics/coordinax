@@ -70,13 +70,7 @@ class RotationAboutAxis(eqx.Module):
         # of `axis`, matching the style used for time-dependent R in the
         # `Rotate` docstring.
         zero = 0.0 * n[0]
-        K = jnp.array(
-            [
-                [zero, -n[2], n[1]],
-                [n[2], zero, -n[0]],
-                [-n[1], n[0], zero],
-            ]
-        )
+        K = jnp.array([[zero, -n[2], n[1]], [n[2], zero, -n[0]], [-n[1], n[0], zero]])
         eye = jnp.eye(3)
         ct, st = jnp.cos(theta), jnp.sin(theta)
         R = eye * ct + st * K + (1 - ct) * jnp.outer(n, n)

@@ -75,8 +75,7 @@ class TestFrenetSerretInverseValues:
     """The inverse frame fields are the columns of R (see module docstring)."""
 
     @pytest.mark.parametrize(
-        ("row", "expected"),
-        [(0, [0, -1, 0]), (1, [1, 0, 0]), (2, [0, 0, 1])],
+        ("row", "expected"), [(0, [0, -1, 0]), (1, [1, 0, 0]), (2, [0, 0, 1])]
     )
     def test_inverse_field_at_zero(
         self, circle_fs: cxfc.FrenetSerretBuilder, row: int, expected: list[float]
@@ -111,10 +110,7 @@ class TestFrenetSerretOpaqueUnits:
         ("field", "expected"), [("normal", [-1, 0, 0]), ("binormal", [0, 0, 1])]
     )
     def test_field_at_zero(
-        self,
-        circle_yr_fs: cxfc.FrenetSerretBuilder,
-        field: str,
-        expected: list[float],
+        self, circle_yr_fs: cxfc.FrenetSerretBuilder, field: str, expected: list[float]
     ):
         got = getattr(circle_yr_fs, field)(u.Q(0, "yr"))
         np.testing.assert_allclose(got.value, expected, atol=1e-5)

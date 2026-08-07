@@ -664,6 +664,42 @@ def act(
     return prolong_slot(op, tau, x, chart, m, at=at, at_vel=at_vel, usys=usys)
 
 
+def _slot_jet(
+    op: AbstractTransform,
+    tau: Any,
+    x: CDict,
+    m: int,
+    /,
+    *,
+    at: CDict | None,
+    at_vel: CDict | None,
+) -> JetDict:
+    """Validate the lower jet slots and assemble the jet for an order-``m`` slot.
+
+    Split out of `prolong_slot` so a caller that already knows it wants the
+    *generic* prolongation can assemble the jet and call `prolong_jet`
+    directly, skipping the ``act_jet`` dispatch hop (see ``add.py``'s
+    ``TimeDep`` tangent rule).
+    """
+    if tau is None:
+        raise TypeError(_MSG_TAU_REQUIRED.format(op=type(op).__name__))
+    if at is None:
+        raise TypeError(_MSG_AT_REQUIRED.format(verb="act", op=type(op).__name__, m=m))
+
+    jet: JetDict = {0: at, m: x}
+    if m >= 2:
+        if at_vel is None:
+            raise TypeError(_MSG_AT_VEL_REQUIRED.format(op=type(op).__name__, m=m))
+        jet[1] = at_vel
+    if m > 2:
+        msg = (
+            f"act on order-{m} tangent data requires jet slots 1..{m - 1}; "
+            "use coordinax.transforms.act_jet with a full jet instead."
+        )
+        raise TypeError(msg)
+    return jet
+
+
 def prolong_slot(
     op: AbstractTransform,
     tau: Any,
@@ -683,23 +719,7 @@ def prolong_slot(
     returns the transformed slot. Shared by the generic tangent rule and by
     operator fast paths that fall back to the generic prolongation.
     """
-    if tau is None:
-        raise TypeError(_MSG_TAU_REQUIRED.format(op=type(op).__name__))
-    if at is None:
-        raise TypeError(_MSG_AT_REQUIRED.format(verb="act", op=type(op).__name__, m=m))
-
-    jet: JetDict = {0: at, m: x}
-    if m >= 2:
-        if at_vel is None:
-            raise TypeError(_MSG_AT_VEL_REQUIRED.format(op=type(op).__name__, m=m))
-        jet[1] = at_vel
-    if m > 2:
-        msg = (
-            f"act on order-{m} tangent data requires jet slots 1..{m - 1}; "
-            "use coordinax.transforms.act_jet with a full jet instead."
-        )
-        raise TypeError(msg)
-
+    jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel)
     out = cast("JetDict", cxfmapi.act_jet(op, tau, jet, chart, usys=usys))
     return out[m]
 

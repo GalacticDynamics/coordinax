@@ -1,12 +1,6 @@
 """TimeDep (tau-dependent) transform wrapper."""
 
-__all__ = (
-    "ComposedBuilder",
-    "ConstBuilder",
-    "FnBuilder",
-    "InverseBuilder",
-    "TimeDep",
-)
+__all__ = ("ComposedBuilder", "ConstBuilder", "FnBuilder", "InverseBuilder", "TimeDep")
 
 from collections.abc import Callable
 from typing import Any, cast, final

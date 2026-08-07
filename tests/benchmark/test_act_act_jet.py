@@ -1,7 +1,10 @@
 """Benchmarks for `act`/`act_jet` steady-state (jit-compiled) performance.
 
-Run with: uv run --no-project pytest tests/benchmark --benchmark-only
+Run with: uv run --no-sync pytest tests/benchmark --benchmark-only
 (requires the ``benchmark`` extra: pytest-benchmark).
+
+The eager curve-frame cases — where the cost of *materializing* a `TimeDep`
+family dominates, which nothing here can see — live in ``test_curveframes.py``.
 """
 
 import jax

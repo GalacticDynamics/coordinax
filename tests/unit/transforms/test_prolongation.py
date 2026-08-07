@@ -37,11 +37,7 @@ def allclose_cdict(a, b, unit, atol=1e-10):
 
 
 SPH_AT = {"r": u.Q(5.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
-SPH_V = {
-    "r": u.Q(0.3, "km/s"),
-    "theta": u.Q(0.01, "rad/s"),
-    "phi": u.Q(0.02, "rad/s"),
-}
+SPH_V = {"r": u.Q(0.3, "km/s"), "theta": u.Q(0.01, "rad/s"), "phi": u.Q(0.02, "rad/s")}
 
 
 def rot_z_op() -> cxfm.TimeDep:
@@ -776,10 +772,7 @@ class TestUnitPreservation:
     def test_prolong_preserves_time_units(self):
         """Jet slots come back in the data's own time base."""
         op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-        jet = {
-            0: q3(1.0, 0.0, 0.0, "kpc"),
-            1: q3(1.0, 0.0, 0.0, "kpc/Myr"),
-        }
+        jet = {0: q3(1.0, 0.0, 0.0, "kpc"), 1: q3(1.0, 0.0, 0.0, "kpc/Myr")}
         out = cxfm.act_jet(op, None, jet, cxc.cart3d)
         assert out[1]["y"].unit == u.unit("kpc/Myr")
         assert jnp.allclose(out[1]["y"].value, 1.0)
@@ -797,10 +790,7 @@ class TestUnitPreservation:
                 chart=cxc.cart3d,
             )
         )
-        jet = {
-            0: {k: u.Q(0.0, "kpc") for k in "xyz"},
-            1: q3(1.0, 0.0, 0.0, "kpc/Myr"),
-        }
+        jet = {0: {k: u.Q(0.0, "kpc") for k in "xyz"}, 1: q3(1.0, 0.0, 0.0, "kpc/Myr")}
         out_myr = cxfm.act_jet(moving, u.Q(2.0, "Myr"), jet, cxc.cart3d)
         out_s = cxfm.act_jet(moving, u.Q(2.0, "Myr").uconvert("s"), jet, cxc.cart3d)
         # v' = v + g*tau = 1 + 2 = 3 kpc/Myr, regardless of tau's unit

@@ -1577,7 +1577,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
 !!! info `GalileanCT` and `galileanct`
 
-    TimeDep 4D Galilean spacetime chart combining a fixed `time1d` factor with a user-supplied spatial chart.
+    Parametric 4D Galilean spacetime chart combining a fixed `time1d` factor with a user-supplied spatial chart.
 
     `GalileanCT` is a final `AbstractFlatCartesianProductChart` (a product chart) with a configurable spatial factor. The time component is always `"ct"` (coordinate time scaled by the speed of light), and the spatial components are determined by the `spatial_chart` argument.
 

@@ -417,8 +417,7 @@ class TestBishopSolveConfiguration:
         tolerances and the step budget along with the curve parameters.
         """
         bt = _configured(
-            max_steps=999,
-            stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3),
+            max_steps=999, stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3)
         )
         # Configuring the solve adds no leaves: the `DiffEqSolver` carries ten
         # of its own (floats, ints, a bool, a function) once it is dynamic.

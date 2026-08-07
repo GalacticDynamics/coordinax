@@ -429,12 +429,7 @@ def _translate_point_cdict(
         # Push delta through the Jacobian into Cartesian.
         at_in_op_chart = cxc.pt_map(x_cart, cart, op.chart, usys=usys)
         delta_cart = cxr.tangent_map(  # ty: ignore[missing-argument]
-            op.delta,
-            op.chart,
-            cxr.coord_disp,
-            cart,
-            at=at_in_op_chart,
-            usys=usys,
+            op.delta, op.chart, cxr.coord_disp, cart, at=at_in_op_chart, usys=usys
         )
 
     x_cart2 = jtu.map(

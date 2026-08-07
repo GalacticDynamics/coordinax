@@ -43,7 +43,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install
-        run: uv sync --no-default-groups --group test --extra benchmark --locked
+        # `curveframes` is needed by `tests/benchmark/test_curveframes.py`; it
+        # is the flagship `TimeDep` consumer and the only builder in the
+        # project expensive enough to expose a redundant materialization.
+        run: uv sync --no-default-groups --group test --extra benchmark --extra
+          curveframes --locked
 
       - name: Run benchmarks
         uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
