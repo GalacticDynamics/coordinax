@@ -988,7 +988,8 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
-| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
+| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `identity`, </br> `groups` |
+| `coordinax.transforms.groups` | `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
 
 </br>
@@ -4459,7 +4460,7 @@ Frame objects in `coordinax.frames` depend on `coordinax.transforms` for operato
 
 ### Transformation Groups
 
-Transformation groups classify families of coordinate transformations that preserve particular geometric structures. In _coordinax_, these are represented by subclasses of `AbstractTransformGroup`.
+Transformation groups classify families of coordinate transformations that preserve particular geometric structures. In _coordinax_, these are represented by subclasses of `AbstractTransformGroup`, which live in the `coordinax.transforms.groups` sub-namespace and are reached as `cxfm.groups.<Name>`.
 
 A transformation-group class identifies the **structural category** of a transformation (for example affine, orthogonal, or Lorentz). These classes do **not** represent concrete group elements. Instead they are used to
 

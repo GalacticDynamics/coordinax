@@ -43,7 +43,7 @@ In `coordinax`, this is an **active** transformation: applying the operator move
 
 ## Transformation Groups: Mathematical Classification
 
-Transformations are classified by the **geometric structures they preserve**. This classification lives in **transformation groups**.
+Transformations are classified by the **geometric structures they preserve**. This classification lives in **transformation groups**: marker classes in the `coordinax.transforms.groups` sub-namespace, reached as `cxfm.groups.<Name>` and returned by each transform's `groups()` classmethod.
 
 ### Group Hierarchy (ASCII Tree)
 
