@@ -10,7 +10,7 @@ fixture.
 The builders are wrapped by `coordinax.transforms.TimeDep`: the builder
 carries the frame *fields* (``location``, ``tangent``, ...) and the
 `TimeDep` carries the *transform* algebra (``act``, ``inverse``,
-``materialize``). Both halves are exercised here.
+``evaluate_at``). Both halves are exercised here.
 
 Closed-form values live in `test_frenet_serret.py` / `test_bishop.py`.
 """

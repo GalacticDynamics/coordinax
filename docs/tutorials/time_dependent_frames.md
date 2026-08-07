@@ -312,7 +312,7 @@ star_combined = cxfm.act(xform_combined, tau_1s, star_q)
 | Build frame | `TransformedReferenceFrame(inertial, rotating_op)` |
 | Get transition | `xform = frame_transition(from_frame, to_frame)` |
 | Apply at time $t$ | `act(xform, tau, vector)` |
-| Inspect at time t | `materialize_transform(op, tau)` |
+| Inspect at time t | `evaluate_at(op, tau)` |
 | Invert | `frame_transition(to_frame, from_frame)` |
 | JIT with structural caching | `eqx.filter_jit` on a function taking `(xform, tau)` as arguments |
 | Avoid the array-leaf cliff | `eqx.filter_jit`, not plain `jax.jit`, on a builder/operator directly |

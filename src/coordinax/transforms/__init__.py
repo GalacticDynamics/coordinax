@@ -26,7 +26,7 @@ __all__: tuple[str, ...] = (
     "pushforward",
     "simplify",
     "compose",
-    "materialize_transform",
+    "evaluate_at",
     "is_time_dependent",
     "tau_derivative",
     # Transformations
@@ -64,9 +64,9 @@ with install_import_hook("coordinax.transforms"):
         TimeDep,
         Translate,
         UniformTranslation,
+        evaluate_at,
         identity,
         is_time_dependent,
-        materialize_transform,
         tau_derivative,
     )
     from coordinaxs.api.transforms import act, act_jet, compose, pushforward, simplify

@@ -31,7 +31,7 @@ out = cxfm.act(frame_op, None, v)
 - `act_jet(transform, tau, jet, chart)`: joint action on a jet `{0: point, 1: velocity, 2: acceleration, ...}`
 - `simplify(transform)`: simplify transform structure
 - `compose(*transforms)`: compose transforms into `Composed`
-- `materialize_transform(transform, tau)`: evaluate every `TimeDep` part of a transform at `tau`, returning a constant transform
+- `evaluate_at(transform, tau)`: evaluate every `TimeDep` part of a transform at `tau`, returning a constant transform
 - `is_time_dependent(transform)`: declared trait — whether the transform's point action depends on `tau` (`True` for `TimeDep` and `Boost`; the disjunction of children for `Composed`)
 - `tau_derivative(fn, tau, n=1)`: unit-aware n-th time derivative of a parameter function
 
@@ -46,7 +46,7 @@ out = cxfm.act(frame_op, None, v)
 - `Scale`: Cartesian linear scaling
 - `Shear`: Cartesian linear shear
 - `Composed`: ordered transform composition
-- `TimeDep`: a one-parameter family of transforms, `builder(tau) -> AbstractTransform` — the mechanism for all time-dependent transforms (see the [transforms guide](../guides/transforms.md#time-dependent-parameters))
+- `TimeDep`: a one-parameter family of transforms, `builder(tau) -> AbstractTransform` — the mechanism for all time-dependent transforms (see the [transforms guide](../guides/transforms.md#time-dependent-parameters)). `TimeDep.from_(fn, *args, **kw)` builds one from a user-defined function, binding `args`/`kw` as differentiable leaves (`fn` takes `tau` **last**)
 - `RotationAboutAxis`: built-in `TimeDep` builder for uniform rotation about a fixed axis
 - `UniformTranslation`: built-in `TimeDep` builder for straight-line motion at constant velocity
 - `identity`: convenience instance of `Identity`

@@ -26,7 +26,7 @@ Both classes are ``@final`` (no further subclassing).
 Key design choices
 ------------------
 * **Lazy evaluation** — the ODE is solved only when a concrete $\tau$ is
-  requested, i.e. when the `TimeDep` family is materialized.
+  requested, i.e. when the `TimeDep` family is evaluated.
 * **Auto initial normal** — when no ``initial_normal`` is supplied, one is
   chosen automatically via Gram--Schmidt against the tangent at $\tau_0$.
 

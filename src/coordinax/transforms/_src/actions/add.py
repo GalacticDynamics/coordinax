@@ -408,7 +408,7 @@ def _fibre_ladder_op(
 
     ``op0`` is ``op`` already materialized at ``tau`` by the caller (which
     needs it anyway to compute the ladder order) — reused here instead of
-    calling ``op.materialize(tau)`` a second time.
+    calling ``op.evaluate_at(tau)`` a second time.
     """
     if n == 0:
         # `tau_derivative(..., n=0)` is defined as `f(tau)`, i.e. a second
@@ -418,7 +418,7 @@ def _fibre_ladder_op(
     else:
 
         def delta_at(t: Any, /) -> CDict:
-            return cast("AbstractAdd", op.materialize(t)).delta
+            return cast("AbstractAdd", op.evaluate_at(t)).delta
 
         delta = tau_derivative(delta_at, tau, n=n)
 
@@ -498,7 +498,7 @@ def act(
     op0 = None
     k = None
     if tau is not None and m != 0:
-        op0 = op.materialize(tau)
+        op0 = op.evaluate_at(tau)
         k = _ladder_order(op0)
     if k is None:
         # Reach the generic funnel itself, not a copy of it. This dispatch is
@@ -535,7 +535,7 @@ def act_jet(
     """
     # Materialize at most once for the whole jet: `op0` is both the routing
     # predicate's input and the base every slot's ladder op is built from.
-    op0 = None if tau is None else op.materialize(tau)
+    op0 = None if tau is None else op.evaluate_at(tau)
     k = None if op0 is None else _ladder_order(op0)
     if k is None:
         return prolong_jet(op, tau, jet, chart, usys=usys)

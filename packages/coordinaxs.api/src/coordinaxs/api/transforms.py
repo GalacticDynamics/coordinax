@@ -26,7 +26,7 @@ def act(*args: Any, **kwargs: Any) -> Any:
     (e.g., ``Composed``), the component transforms are applied sequentially. Time
     dependence itself is carried by exactly one wrapper, ``TimeDep(builder)``,
     where ``builder(tau) -> AbstractTransform``: every other transform holds only
-    constant parameters, and ``act`` on a ``TimeDep`` materializes ``builder(tau)``
+    constant parameters, and ``act`` on a ``TimeDep`` evaluates ``builder(tau)``
     before applying it.
 
     Parameters
@@ -42,7 +42,7 @@ def act(*args: Any, **kwargs: Any) -> Any:
     tau : Any
         Parameter for tau-dependent transforms. Pass ``None`` for
         tau-independent transforms. Only ``TimeDep`` (and composites
-        containing one) actually consume ``tau``; it materializes the wrapped
+        containing one) actually consume ``tau``; it evaluates the wrapped
         ``builder(tau)`` before applying it.
 
     x : Any

@@ -427,7 +427,7 @@ apply_at(op_b, u.Q(1.0, "s"))  # same builder structure -> no retrace
 print("structural retraces:", len(traces))
 ```
 
-Contrast this with `TimeDep.from_(fn)`, where `fn` is a **static** field: a fresh closure is a fresh object identity, and every fresh identity is a cache miss:
+Contrast this with `TimeDep.from_(fn)` for a bare function, which cannot be a pytree leaf and so is stored in a **static** field: a fresh closure is a fresh object identity, and every fresh identity is a cache miss:
 
 ```{code-cell} ipython3
 traces.clear()
@@ -449,6 +449,33 @@ apply_at(op_c, u.Q(1.0, "s"))
 apply_at(op_d, u.Q(1.0, "s"))
 
 print("closure retraces:", len(traces))
+```
+
+Binding the varying parameter with `eqx.Partial` instead of closing over it restores structural caching without writing a `Module`: `from_` leaves an already-pytree callable unwrapped, so the bound value stays a dynamic leaf. Since a `Partial` also carries the _function_ as a leaf, apply it under `eqx.filter_jit` rather than plain `jax.jit`:
+
+```{code-cell} ipython3
+traces.clear()
+
+
+def build_at(omega_deg, tau):
+    theta = jnp.deg2rad(omega_deg) * tau.ustrip("s")
+    ct, st = jnp.cos(theta), jnp.sin(theta)
+    R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+    return cxfm.Rotate(R)
+
+
+@eqx.filter_jit
+def apply_at_filtered(op, tau):
+    traces.append(1)
+    return cxfm.act(op, tau, x, cxc.cart3d, cxr.point)["y"].ustrip("m")
+
+
+op_e = cxfm.TimeDep.from_(eqx.Partial(build_at, jnp.asarray(30.0)))
+op_f = cxfm.TimeDep.from_(eqx.Partial(build_at, jnp.asarray(60.0)))
+apply_at_filtered(op_e, u.Q(1.0, "s"))
+apply_at_filtered(op_f, u.Q(1.0, "s"))
+
+print("eqx.Partial retraces:", len(traces))
 ```
 
 **The array-leaf hashing cliff.** Structural caching is a property of how `op` is _passed into_ the jitted function — as a traced argument, whose leaves JAX inspects at trace time. It breaks down if a builder carrying array leaves is instead treated as _static_, which happens whenever it becomes part of the jitted function's identity rather than one of its arguments — most commonly by jitting a bound method directly. A builder whose fields are plain Python floats survives this because Python floats are hashable; a builder whose fields are `jax.Array`s or `Quantity`s is not:

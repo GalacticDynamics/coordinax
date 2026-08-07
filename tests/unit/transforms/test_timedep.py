@@ -1,5 +1,7 @@
 """Unit tests for cxfm.TimeDep."""
 
+import warnings
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -73,6 +75,94 @@ def test_from_bare_function_is_static():
     assert jnp.allclose(out["x"].ustrip("m"), 1.0)
 
 
+def _rot_at(omega, tau):
+    """A ``(params, tau)`` builder to be bound with `eqx.Partial`."""
+    return rot_z(omega)(tau)
+
+
+def _y_at_1s(op):
+    return cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)["y"].ustrip("m")
+
+
+def test_from_pytree_callable_is_not_wrapped_static():
+    """`from_` must leave an already-pytree callable's leaves dynamic.
+
+    Wrapping an `eqx.Partial` in the static `_FnBuilder` would destroy its
+    bound leaves -- losing gradients and the `jit` cache -- and equinox
+    warns about it.
+    """
+    omega = u.Q(1.0, "rad/s")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # "A JAX array is being set as static!"
+        op = cxfm.TimeDep.from_(eqx.Partial(_rot_at, omega))
+
+    assert any(
+        leaf is omega
+        for leaf in jax.tree.leaves(op, is_leaf=u.quantity.is_any_quantity)
+    )
+    # d/domega sin(omega * 1s) at omega = 1 rad/s
+    grad = eqx.filter_grad(_y_at_1s)(op)
+    assert jnp.allclose(grad.builder.args[0].value, jnp.cos(1.0), atol=1e-12)
+
+
+def test_from_pytree_callable_jit_caches_on_structure():
+    traces = []
+
+    @eqx.filter_jit
+    def f(op):
+        traces.append(1)
+        return _y_at_1s(op)
+
+    f(cxfm.TimeDep.from_(eqx.Partial(_rot_at, u.Q(1.0, "rad/s"))))
+    f(cxfm.TimeDep.from_(eqx.Partial(_rot_at, u.Q(2.0, "rad/s"))))
+    assert len(traces) == 1
+
+
+def _rot_at_scaled(omega, tau, *, scale):
+    """A ``(param, tau, *, kwarg)`` builder: ``tau`` before keyword-only args."""
+    return rot_z(omega * scale)(tau)
+
+
+def test_from_binds_extra_args_into_partial():
+    """``from_(fn, *args)`` binds into a dynamic `eqx.Partial`, not a static wrap."""
+    omega = u.Q(1.0, "rad/s")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # "A JAX array is being set as static!"
+        op = cxfm.TimeDep.from_(_rot_at, omega)
+
+    assert isinstance(op.builder, eqx.Partial)
+    assert any(
+        leaf is omega
+        for leaf in jax.tree.leaves(op, is_leaf=u.quantity.is_any_quantity)
+    )
+    assert any(
+        jnp.array_equal(leaf, omega.value)
+        for leaf in jax.tree.leaves(eqx.filter(op, eqx.is_array))
+    )
+    # d/domega sin(omega * 1s) at omega = 1 rad/s -- nonzero on the stored op
+    grad = eqx.filter_grad(_y_at_1s)(op)
+    assert jnp.allclose(grad.builder.args[0].value, jnp.cos(1.0), atol=1e-12)
+
+
+def test_from_binds_keywords_into_partial():
+    op = cxfm.TimeDep.from_(_rot_at_scaled, u.Q(1.0, "rad/s"), scale=jnp.asarray(2.0))
+    assert jnp.allclose(_y_at_1s(op), jnp.sin(2.0), atol=1e-12)
+    assert jnp.allclose(op.builder.keywords["scale"], 2.0)
+
+
+def test_from_bound_args_jit_caches_on_structure():
+    traces = []
+
+    @eqx.filter_jit
+    def f(op):
+        traces.append(1)
+        return _y_at_1s(op)
+
+    f(cxfm.TimeDep.from_(_rot_at, u.Q(1.0, "rad/s")))
+    f(cxfm.TimeDep.from_(_rot_at, u.Q(2.0, "rad/s")))
+    assert len(traces) == 1
+
+
 def test_jit_caches_on_structure():
     traces = []
 
@@ -100,7 +190,7 @@ def test_matmul_timedep_timedep_is_pointwise():
     ab = a @ b
     assert isinstance(ab, cxfm.TimeDep)
     for tau in TAUS:
-        want = _act_pt(a.materialize(tau) @ b.materialize(tau), tau)
+        want = _act_pt(a.evaluate_at(tau) @ b.evaluate_at(tau), tau)
         got = _act_pt(ab, tau)
         assert jnp.allclose(got["y"].ustrip("m"), want["y"].ustrip("m"), atol=1e-12)
 
@@ -111,7 +201,7 @@ def test_matmul_timedep_constant_both_orders():
     for combo in (a @ c, c @ a):
         assert isinstance(combo, cxfm.TimeDep)
     tau = u.Q(1.0, "s")
-    want = _act_pt(a.materialize(tau) @ c, tau)
+    want = _act_pt(a.evaluate_at(tau) @ c, tau)
     got = _act_pt(a @ c, tau)
     assert jnp.allclose(got["x"].ustrip("m"), want["x"].ustrip("m"), atol=1e-12)
 
@@ -145,21 +235,21 @@ def test_is_time_dependent_trait():
     assert not cxfm.is_time_dependent(cxfm.Rotate(jnp.eye(3)) | cxfm.Identity())
 
 
-def test_materialize_transform():
+def test_evaluate_at():
     op = cxfm.TimeDep(rot_z(OMEGA))
     tau = u.Q(1.0, "s")
-    mat = cxfm.materialize_transform(op, tau)
+    mat = cxfm.evaluate_at(op, tau)
     assert isinstance(mat, cxfm.Rotate)
     static = cxfm.Rotate(jnp.eye(3))
-    assert cxfm.materialize_transform(static, tau) is static
+    assert cxfm.evaluate_at(static, tau) is static
     pipe = static | op
-    mpipe = cxfm.materialize_transform(pipe, tau)
+    mpipe = cxfm.evaluate_at(pipe, tau)
     assert isinstance(mpipe.transforms[1], cxfm.Rotate)
 
 
-def test_materialize_transform_tau_none_raises():
+def test_evaluate_at_tau_none_raises():
     with pytest.raises(TypeError, match="tau"):
-        cxfm.materialize_transform(cxfm.TimeDep(rot_z(OMEGA)), None)
+        cxfm.evaluate_at(cxfm.TimeDep(rot_z(OMEGA)), None)
 
 
 # ============================================================================
@@ -171,9 +261,9 @@ def test_matmul_noncommuting_axes_pins_apply_order():
     """`(a @ b).R == b.R @ a.R` (a applied first), pinned with axes that don't commute.
 
     `test_matmul_timedep_timedep_is_pointwise` and
-    `test_simplify.py::test_time_dependent_rotations_merge_pointwise` compose
-    only same-axis `rot_z` builders, which commute -- a reversed-operand bug in
-    `_ComposedBuilder`/`_merge` would pass every test in this file anyway.
+    `test_simplify.py::test_time_dependent_rotations_merge_pointwise_under_matmul`
+    compose only same-axis `rot_z` builders, which commute -- a reversed-operand
+    bug in `_ComposedBuilder` would pass every test in this file anyway.
     Rotations about *different* axes do not commute, so this pins the actual
     order against `Rotate.__matmul__`'s documented convention. The final
     assertion is the sanity check: if the two orders agreed, the axes chosen
@@ -187,10 +277,10 @@ def test_matmul_noncommuting_axes_pins_apply_order():
         cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([1.0, 0.0, 0.0]))
     )
     tau = u.Q(1.0, "s")
-    Ra, Rb = a.materialize(tau).R, b.materialize(tau).R
+    Ra, Rb = a.evaluate_at(tau).R, b.evaluate_at(tau).R
 
-    R_ab = (a @ b).materialize(tau).R
-    R_ba = (b @ a).materialize(tau).R
+    R_ab = (a @ b).evaluate_at(tau).R
+    R_ba = (b @ a).evaluate_at(tau).R
 
     assert jnp.allclose(R_ab, Rb @ Ra, atol=1e-12)
     assert jnp.allclose(R_ba, Ra @ Rb, atol=1e-12)
@@ -210,7 +300,7 @@ def test_pushforward_frozen_tau():
     tau = u.Q(1.0, "s")
     v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
     out = cxfm.pushforward(op, tau, v, cxc.cart3d, cxr.coord_vel)
-    want = cxfm.pushforward(op.materialize(tau), tau, v, cxc.cart3d, cxr.coord_vel)
+    want = cxfm.pushforward(op.evaluate_at(tau), tau, v, cxc.cart3d, cxr.coord_vel)
     assert jnp.allclose(out["y"].ustrip("m/s"), want["y"].ustrip("m/s"), atol=1e-12)
     # omega=pi/2 rad/s, tau=1s: a 90 deg rotation sends (1,0,0) -> (0,1,0).
     assert jnp.allclose(out["y"].ustrip("m/s"), 1.0, atol=1e-12)
@@ -359,16 +449,22 @@ def _drift(vx):
     )
 
 
-def test_simplify_of_composed_translations_preserves_action():
-    """`simplify` merges families with `@`; `Translate` has no `@`.
-
-    Without the `|` fallback in the composed builder this raises
-    ``TypeError: unsupported operand type(s) for @`` at materialize time.
-    """
+@pytest.mark.parametrize(
+    "combine",
+    [
+        pytest.param(cxfm.simplify, id="simplify"),
+        # `Translate` has no `@`, so the pointwise builder takes its `|`
+        # fallback; without it this raises ``TypeError: unsupported operand
+        # type(s) for @`` at materialize time.
+        pytest.param(lambda p: p.transforms[0] @ p.transforms[1], id="matmul"),
+    ],
+)
+def test_composed_translations_preserve_action(combine):
+    """Both `simplify` and an explicit `@` must preserve the pipeline's action."""
     pipe = _drift(1.0) | _drift(2.0)
-    simplified = cxfm.simplify(pipe)
+    combined = combine(pipe)
     for tau in (u.Q(0.0, "s"), u.Q(2.0, "s"), u.Q(-3.5, "s")):
-        got = cxfm.act(simplified, tau, ORIGIN_KM, cxc.cart3d, cxr.point)["x"]
+        got = cxfm.act(combined, tau, ORIGIN_KM, cxc.cart3d, cxr.point)["x"]
         want = cxfm.act(pipe, tau, ORIGIN_KM, cxc.cart3d, cxr.point)["x"]
         assert jnp.allclose(got.ustrip("km"), want.ustrip("km"))
         assert jnp.allclose(got.ustrip("km"), 3.0 * tau.ustrip("s"))

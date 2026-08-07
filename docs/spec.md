@@ -988,7 +988,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
-| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `TimeDep`, `RotationAboutAxis`, `UniformTranslation`, `identity`, </br> `groups` |
+| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `evaluate_at`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `TimeDep`, `RotationAboutAxis`, `UniformTranslation`, `identity`, </br> `groups` |
 | `coordinax.transforms.groups` | `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
 
@@ -4880,13 +4880,13 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     A **TimeDep** transform is a one-parameter family of transforms: `builder(tau) -> AbstractTransform`. It is the single, uniform mechanism for time dependence — every other transform (`Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`) holds only constant parameters.
 
-    **Defining rule (the "materialize" rule):**
+    **Defining rule (the "evaluate-at" rule):**
 
     $$
     \mathrm{act}(\mathrm{TimeDep}(b), \tau, x, \ldots) = \mathrm{act}(b(\tau), \tau, x, \ldots),
     $$
 
-    registered once, generically, for every `(geom, rep)` funnel `AbstractTransform` supports. The materialized operator `b(tau)` receives the *same* $\tau$: if `b(tau)` itself has a $\tau$-dependent point action (e.g. it returns a `Boost`), the chain rule through both paths is handled by the kinematic-prolongation engine's joint $(\tau, x)$ jvp.
+    registered once, generically, for every `(geom, rep)` funnel `AbstractTransform` supports. The evaluated operator `b(tau)` receives the *same* $\tau$: if `b(tau)` itself has a $\tau$-dependent point action (e.g. it returns a `Boost`), the chain rule through both paths is handled by the kinematic-prolongation engine's joint $(\tau, x)$ jvp.
 
     **Builder contract:**
 
@@ -4895,7 +4895,9 @@ Each group corresponds to a set of transformations preserving a particular geome
     - Must return the same *structure* (operator type / pytree treedef) for every $\tau$ — required for `jit`, `vmap`, and `jvp` to trace through it.
     - `builder` is not called with `tau=None`: `act(TimeDep(b), None, x)` raises `TypeError`.
 
-    Typically `builder` is an `equinox.Module` whose fields (angular frequency, phase, boost rate, curve parameters, ...) are pytree leaves — differentiable and vmappable by construction, since constructing the operator inside `__call__` is ordinary pytree arithmetic. `TimeDep.from_(fn)` wraps a bare `tau -> AbstractTransform` function instead, as a **static** field: anything the function closes over is a non-differentiable trace-time constant, and a fresh closure forces a `jit` recompile.
+    Typically `builder` is an `equinox.Module` whose fields (angular frequency, phase, boost rate, curve parameters, ...) are pytree leaves — differentiable and vmappable by construction, since constructing the operator inside `__call__` is ordinary pytree arithmetic. `TimeDep.from_(fn)` accepts any `tau -> AbstractTransform` callable, including a plain function or lambda.
+
+    $\tau$ is a **call-time argument**, never a stored parameter, so a builder's $\tau$-dependence is always differentiated by the kinematic-prolongation engine regardless of how the builder is spelled — a bare lambda returning $\mathrm{Translate}(\dot\delta\,\tau)$ still contributes $\dot\delta$ to a transformed velocity. The storage question is only about the builder's *other* parameters. A bare function cannot be a pytree leaf, so it is stored in a **static** field: anything it closes over is then a trace-time constant (unless the closure is built inside the traced function, capturing a tracer), and a fresh closure forces a `jit` recompile. A callable that is already a pytree — an `equinox.Module`, notably an `equinox.Partial` binding some parameters — is used as the builder unwrapped, keeping its leaves dynamic. `TimeDep.from_(fn, *args, **kw)` binds `args`/`kw` with `equinox.Partial` (so `fn` must take `tau` **last**), which is how a user-defined function keeps differentiable, `jit`-cached parameters without becoming a `Module`.
 
     **Fields:**
 
@@ -4914,7 +4916,7 @@ Each group corresponds to a set of transformations preserving a particular geome
     - `TimeDep(a) @ TimeDep(b)` → `TimeDep` of the composed builder: `(a @ b)(tau) = a(tau) @ b(tau)`.
     - `TimeDep(a) @ constant_op` (and the mirror) → the constant is wrapped in a builder that returns it for any $\tau$, then composed as above.
     - `simplify(TimeDep(b))` returns the operator unchanged — its value is unknown until $\tau$ is supplied.
-    - `_merge` **merges** two adjacent `TimeDep` transforms — and a `TimeDep` with a constant transform — pointwise into a single `TimeDep` of the composed builder. This holds for `simplify` on a `Composed` chain: two adjacent time-dependent transforms collapse into one `TimeDep`, not left as an un-simplified pair.
+    - `simplify` on a `Composed` chain **does not** fold `TimeDep` transforms together — neither with each other nor with a constant transform. Pointwise composition falls back to `|` whenever the evaluated transforms do not implement `@`, which for a fibre offset materializes a `Composed` holding an order-$\ge 1$ offset — the spelling the fibre-offset ladder rule rejects. `Composed` already represents such a pair correctly, so `simplify` leaves it alone; only an explicit `@` by the caller composes pointwise.
 
     **Built-in builders:**
 

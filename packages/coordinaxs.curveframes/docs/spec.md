@@ -110,7 +110,7 @@ $$
 \text{act}(F(\tau), \mathbf{p}) = R(\tau)\bigl(\mathbf{p} - \boldsymbol{\gamma}(\tau)\bigr).
 $$
 
-The `FrenetSerretBuilder` itself is wrapped in a `coordinax.transforms.TimeDep`, `TimeDep(F)`, which is what `act(op, tau, p)` actually dispatches on: `act` calls `F(tau)` to materialise the rigid-body transform, then applies it.
+The `FrenetSerretBuilder` itself is wrapped in a `coordinax.transforms.TimeDep`, `TimeDep(F)`, which is what `act(op, tau, p)` actually dispatches on: `act` calls `F(tau)` to evaluate the rigid-body transform, then applies it.
 
 **Inversion is generic, not builder-specific.** `TimeDep(F).inverse` does not construct a second `FrenetSerretBuilder` with swapped fields; it wraps `F` in a pointwise-inverse combinator whose `__call__(tau)` returns `F(tau).inverse`. Inverting the composed `Translate(-\gamma) | Rotate(R)` reverses order and inverts each factor:
 
@@ -355,7 +355,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `gamma` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `gamma`); use `eqx.filter_jit` in that case.
 
-    `act` dispatches on `TimeDep(FrenetSerretBuilder(...))`, not on the builder directly — see {ref}`TimeDep <software-spec-transforms-timedep>` in the root spec. `act(TimeDep(F), tau, x)` materialises `F(tau)` and applies the resulting `Composed` transform.
+    `act` dispatches on `TimeDep(FrenetSerretBuilder(...))`, not on the builder directly — see {ref}`TimeDep <software-spec-transforms-timedep>` in the root spec. `act(TimeDep(F), tau, x)` evaluates `F(tau)` and applies the resulting `Composed` transform.
 
 (curveframes-sw-frenet-frame)=
 

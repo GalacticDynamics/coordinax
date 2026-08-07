@@ -1,6 +1,6 @@
 """Base classes for operators on coordinates."""
 
-__all__ = ("AbstractTransform", "is_time_dependent", "materialize_transform")
+__all__ = ("AbstractTransform", "is_time_dependent", "evaluate_at")
 
 import abc
 import dataclasses
@@ -333,7 +333,7 @@ def from_(cls: type[AbstractTransform], obj: AbstractTransform, /) -> AbstractTr
 
 
 # =============================================================================
-# materialize_transform: Materialization of time-dependent parameters
+# evaluate_at: Materialization of time-dependent parameters
 
 # NB: kept as a module-level TypeVar rather than PEP 695 syntax (UP047): the
 # inlined type parameter renders as an unresolved `py:class` cross-reference in
@@ -341,7 +341,7 @@ def from_(cls: type[AbstractTransform], obj: AbstractTransform, /) -> AbstractTr
 OpT = TypeVar("OpT", bound=_DataclassBase)
 
 
-def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
+def evaluate_at(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     r"""Evaluate every `TimeDep` part of an operator at time ``tau``.
 
     Descends recursively through `Composed`; an operator with no `TimeDep`
@@ -361,20 +361,20 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
 
     >>> op = cxfm.TimeDep.from_(build)
     >>> tau = u.Q(5.0, "s")
-    >>> op_eval = cxfm.materialize_transform(op, tau)
+    >>> op_eval = cxfm.evaluate_at(op, tau)
     >>> op_eval.delta["x"]
     Q(5., 'km')
 
     **Static operator (no change):**
 
     >>> op_static = cxfm.Translate.from_([1, 2, 3], "km")
-    >>> cxfm.materialize_transform(op_static, tau) is op_static
+    >>> cxfm.evaluate_at(op_static, tau) is op_static
     True
 
     **Identity operator:**
 
     >>> identity = cxfm.Identity()
-    >>> cxfm.materialize_transform(identity, tau)
+    >>> cxfm.evaluate_at(identity, tau)
     Identity()
 
     See Also
@@ -387,10 +387,10 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
     from .timedep import TimeDep  # noqa: PLC0415
 
     if isinstance(op, TimeDep):
-        inner = op.materialize(tau)  # raises TypeError on tau=None
-        return cast("OpT", materialize_transform(inner, tau))
+        inner = op.evaluate_at(tau)  # raises TypeError on tau=None
+        return cast("OpT", evaluate_at(inner, tau))
     if isinstance(op, AbstractCompositeTransform):
-        new = tuple(materialize_transform(t, tau) for t in op.transforms)
+        new = tuple(evaluate_at(t, tau) for t in op.transforms)
         return cast("OpT", dataclasses.replace(op, transforms=new))
     return op
 
