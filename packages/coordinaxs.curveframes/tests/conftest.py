@@ -1,11 +1,11 @@
 """Shared curves and fixtures for the `coordinaxs.curveframes` tests.
 
 The Frenet-Serret and Bishop frames are two implementations of
-`AbstractParallelTransportTransform`, so most of what the suite checks is the
-*contract* they share rather than anything specific to either. The curves and
-the per-type spec live here so that contract can be written once
-(`test_parallel_transport_contract.py`) and each type's closed-form values
-stay in its own module.
+`AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.Parametric`, so
+most of what the suite checks is the *contract* they share rather than anything
+specific to either. The curves and the per-type spec live here so that contract
+can be written once (`test_parallel_transport_contract.py`) and each type's
+closed-form values stay in its own module.
 """
 
 __all__: tuple[str, ...] = ()
@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 import coordinax.frames as cxf
+import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 
@@ -122,12 +123,12 @@ TOLERANCES = {
 
 PARALLEL_TRANSPORT_TYPES = {
     "frenet-serret": SimpleNamespace(
-        transform_cls=cxfc.FrenetSerretTransform,
+        builder_cls=cxfc.FrenetSerretBuilder,
         frame_cls=cxfc.FrenetSerretFrame,
         triad=("tangent", "normal", "binormal"),
     ),
     "bishop": SimpleNamespace(
-        transform_cls=cxfc.BishopTransform,
+        builder_cls=cxfc.BishopBuilder,
         frame_cls=cxfc.BishopFrame,
         triad=("tangent", "normal1", "normal2"),
     ),
@@ -138,21 +139,26 @@ PARALLEL_TRANSPORT_TYPES = {
 def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     """Every parallel-transport frame type, on the unit circle.
 
-    Yields a namespace of ``transform``, ``frame``, ``tol`` (the per-assertion
-    tolerance table above) and ``fields`` -- a callable
-    ``(transform, tau) -> (e0, e1, e2)`` returning that type's three frame
-    fields in right-handed order, so contract tests can be written without
-    naming ``binormal`` or ``normal2``.
+    Yields a namespace of ``builder`` (the `AbstractCurveFrameBuilder`),
+    ``xop`` (the `coordinax.transforms.Parametric` wrapping it), ``frame``,
+    ``tol`` (the per-assertion tolerance table above) and ``fields`` -- a
+    callable ``(builder, tau) -> (e0, e1, e2)`` returning that type's three
+    frame fields in right-handed order, so contract tests can be written
+    without naming ``binormal`` or ``normal2``.
     """
     spec = PARALLEL_TRANSPORT_TYPES[request.param]
+    builder = spec.builder_cls(circle)
 
-    def fields(transform: object, tau: u.AbstractQuantity) -> tuple:
-        return tuple(getattr(transform, name)(tau) for name in spec.triad)
+    def fields(bldr: object, tau: u.AbstractQuantity) -> tuple:
+        return tuple(getattr(bldr, name)(tau) for name in spec.triad)
 
     return SimpleNamespace(
         name=request.param,
-        transform=spec.transform_cls.from_curve(circle),
+        builder=builder,
+        builder_cls=spec.builder_cls,
+        xop=cxfm.Parametric(builder),
         frame=spec.frame_cls.from_curve(cxf.Alice(), circle),
+        frame_cls=spec.frame_cls,
         triad=spec.triad,
         tol=SimpleNamespace(**TOLERANCES[request.param]),
         fields=fields,
@@ -163,61 +169,3 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
 def curve():
     """The unit-circle curve function itself (for constructor tests)."""
     return circle
-
-
-# ===================================================================
-# Single-type fixtures (closed-form value tests)
-
-
-@pytest.fixture
-def circle_fs() -> cxfc.FrenetSerretTransform:
-    """Frenet-Serret transform on the unit circle."""
-    return cxfc.FrenetSerretTransform.from_curve(circle)
-
-
-@pytest.fixture
-def circle_yr_fs() -> cxfc.FrenetSerretTransform:
-    """Frenet-Serret transform on the opaque-unit (yr) circle."""
-    return cxfc.FrenetSerretTransform.from_curve(circle_yr, tau_unit="yr")
-
-
-@pytest.fixture
-def circle_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on the unit circle."""
-    return cxfc.BishopTransform.from_curve(circle)
-
-
-@pytest.fixture
-def line_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on a straight line (kappa=0)."""
-    return cxfc.BishopTransform.from_curve(straight_line)
-
-
-@pytest.fixture
-def helix_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on a helix."""
-    return cxfc.BishopTransform.from_curve(helix)
-
-
-@pytest.fixture
-def circle_yr_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on the opaque-unit (yr) circle."""
-    return cxfc.BishopTransform.from_curve(circle_yr, tau_unit="yr")
-
-
-@pytest.fixture
-def circle_fs_frame() -> cxfc.FrenetSerretFrame:
-    """Frenet-Serret frame on the unit circle, relative to Alice."""
-    return cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
-
-
-@pytest.fixture
-def circle_bishop_frame() -> cxfc.BishopFrame:
-    """Bishop frame on the unit circle, relative to Alice."""
-    return cxfc.BishopFrame.from_curve(cxf.Alice(), circle)
-
-
-@pytest.fixture
-def line_bishop_frame() -> cxfc.BishopFrame:
-    """Bishop frame on a straight line, relative to Alice."""
-    return cxfc.BishopFrame.from_curve(cxf.Alice(), straight_line)

@@ -90,7 +90,7 @@ $$
 \mathbf{p} = R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau).
 $$
 
-Expressing the inverse as a `FrenetSerretTransform` with its own location / tangent / normal / binormal fields:
+Expressing the inverse as a `FrenetSerretBuilder` with its own location / tangent / normal / binormal fields:
 
 $$
 \boldsymbol{\gamma}_{\text{inv}}(\tau)
@@ -125,7 +125,7 @@ $$
 
 ### Applying the Transform
 
-Every `FrenetSerretTransform` instance — whether forward or inverse — stores its own location, tangent, normal, and binormal fields. The **uniform act formula** for any such instance is:
+Every `FrenetSerretBuilder` instance — whether forward or inverse — stores its own location, tangent, normal, and binormal fields. The **uniform act formula** for any such instance is:
 
 $$
 \text{act}(F, \tau, \mathbf{p})
@@ -265,7 +265,7 @@ $$
 \mathbf{p} = R^T(\tau)\,\mathbf{p}' + \boldsymbol{\gamma}(\tau).
 $$
 
-The inverse fields expressed as a `BishopTransform`:
+The inverse fields expressed as a `BishopBuilder`:
 
 $$
 \boldsymbol{\gamma}_{\text{inv}}(\tau)
@@ -332,9 +332,9 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 | Symbol | Kind | Description |
 | --- | --- | --- |
 | `AbstractParallelTransportFrame` | `abstract` | Base class for curve-attached orthonormal frames |
-| `FrenetSerretTransform` | `@final` | $\tau$-dependent rigid-body curve-frame transform |
+| `FrenetSerretBuilder` | `@final` | $\tau$-dependent rigid-body curve-frame transform |
 | `FrenetSerretFrame` | `@final` | Frenet–Serret curve-attached reference frame |
-| `BishopTransform` | `@final` | $\tau$-dependent rotation-minimising transform |
+| `BishopBuilder` | `@final` | $\tau$-dependent rotation-minimising transform |
 | `BishopFrame` | `@final` | Bishop (rotation-minimising) curve frame |
 
 (curveframes-sw-abstract-curve-frame)=
@@ -354,7 +354,7 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
 (curveframes-sw-frenet-transform)=
 
-!!! info `FrenetSerretTransform`
+!!! info `FrenetSerretBuilder`
 
     A `@final` subclass of `coordinax.transforms.AbstractTransform` representing a $\tau$-dependent rigid-body curve-frame transform.
 
@@ -378,7 +378,7 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
     `inverse` property:
 
-    - Returns a new `FrenetSerretTransform` representing the inverse rigid-body transform, computed lazily from the stored callable fields.
+    - Returns a new `FrenetSerretBuilder` representing the inverse rigid-body transform, computed lazily from the stored callable fields.
     - **Forward case** (`location is curve`): the inverse fields are computed as closures over `self.location`, `self.tangent`, `self.normal`, `self.binormal`. The returned instance carries the same `curve` and `tau_unit`.
     - **Inverse case** (`location is not curve`): the double-inverse is detected via identity comparison. Instead of accumulating another layer of closures, `inverse` reconstructs the forward transform cleanly by calling `from_curve(self.curve, tau_unit=self.tau_unit)`.
     - This guarantees a **two-step cycle**: forward ↔ inverse, with no closure chain accumulation regardless of how many times `.inverse` is called.
@@ -391,8 +391,8 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
     `act` dispatches:
 
-    - `act(op: FrenetSerretTransform, tau, x: AbstractQuantity, chart, rep)` — evaluates the frame fields at $\tau$ and applies the uniform formula $R(\tau)(x - \gamma(\tau))$. Works for both forward and inverse instances.
-    - `act(op: FrenetSerretTransform, tau, x: CDict, chart, rep)` — extracts the component dictionary into a Quantity array, applies the transform, and repacks into a CDict.
+    - `act(op: FrenetSerretBuilder, tau, x: AbstractQuantity, chart, rep)` — evaluates the frame fields at $\tau$ and applies the uniform formula $R(\tau)(x - \gamma(\tau))$. Works for both forward and inverse instances.
+    - `act(op: FrenetSerretBuilder, tau, x: CDict, chart, rep)` — extracts the component dictionary into a Quantity array, applies the transform, and repacks into a CDict.
 
 (curveframes-sw-frenet-frame)=
 
@@ -403,14 +403,14 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
     Fields (all inherited):
 
     - `base_frame : FrameT` — the ambient reference frame (e.g. `Alice()`).
-    - `xop : FrenetSerretTransform` — the $\tau$-dependent rigid-body transform from the base frame to the curve frame.
+    - `xop : FrenetSerretBuilder` — the $\tau$-dependent rigid-body transform from the base frame to the curve frame.
 
-    The `xop` field is constrained to `FrenetSerretTransform`. At evaluation time, the evolution parameter $\tau$ is passed via `act(op, tau, x)`, not stored on the frame.
+    The `xop` field is constrained to `FrenetSerretBuilder`. At evaluation time, the evolution parameter $\tau$ is passed via `act(op, tau, x)`, not stored on the frame.
 
     Constructors:
 
-    - `FrenetSerretFrame(base_frame, xop)` — direct construction from a base frame and a pre-built `FrenetSerretTransform`.
-    - `from_curve(base_frame, curve, /, tau_unit="s")` — convenience constructor that calls `FrenetSerretTransform.from_curve(curve, tau_unit=tau_unit)` and wraps the result.
+    - `FrenetSerretFrame(base_frame, xop)` — direct construction from a base frame and a pre-built `FrenetSerretBuilder`.
+    - `from_curve(base_frame, curve, /, tau_unit="s")` — convenience constructor that calls `FrenetSerretBuilder.from_curve(curve, tau_unit=tau_unit)` and wraps the result.
 
     Frame transitions:
 
@@ -443,7 +443,7 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
 (curveframes-sw-bishop-transform)=
 
-!!! info `BishopTransform`
+!!! info `BishopBuilder`
 
     A `@final` subclass of `coordinax.transforms.AbstractTransform` representing a $\tau$-dependent rotation-minimising curve-frame transform.
 
@@ -469,7 +469,7 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
     `inverse` property:
 
-    - Returns a new `BishopTransform` representing the inverse rigid-body transform.
+    - Returns a new `BishopBuilder` representing the inverse rigid-body transform.
     - **Forward case** (`location is curve`): inverse fields are closures over the forward fields.
     - **Inverse case** (`location is not curve`): double-inverse detected; reconstructs forward via `from_curve(self.curve, tau_unit=self.tau_unit, tau_0=self.tau_0, initial_normal=self.initial_normal)`.
     - Guarantees a **two-step cycle** with no closure accumulation.
@@ -482,8 +482,8 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 
     `act` dispatches:
 
-    - `act(op: BishopTransform, tau, x: AbstractQuantity, chart, rep)` — same uniform formula as FrenetSerretTransform: $R(\tau)(x - \gamma(\tau))$ where $R = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2]$.
-    - `act(op: BishopTransform, tau, x: CDict, chart, rep)` — extract → transform → repack.
+    - `act(op: BishopBuilder, tau, x: AbstractQuantity, chart, rep)` — same uniform formula as FrenetSerretBuilder: $R(\tau)(x - \gamma(\tau))$ where $R = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2]$.
+    - `act(op: BishopBuilder, tau, x: CDict, chart, rep)` — extract → transform → repack.
 
 (curveframes-sw-bishop-frame)=
 
@@ -494,14 +494,14 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
     Fields (all inherited):
 
     - `base_frame : FrameT` — the ambient reference frame (e.g. `Alice()`).
-    - `xop : BishopTransform` — the $\tau$-dependent rotation-minimising transform from the base frame to the curve frame.
+    - `xop : BishopBuilder` — the $\tau$-dependent rotation-minimising transform from the base frame to the curve frame.
 
-    The `xop` field is constrained to `BishopTransform`.
+    The `xop` field is constrained to `BishopBuilder`.
 
     Constructors:
 
     - `BishopFrame(base_frame, xop)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, tau_0=None, initial_normal=None)` — convenience constructor that calls `BishopTransform.from_curve(...)` and wraps the result.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, tau_0=None, initial_normal=None)` — convenience constructor that calls `BishopBuilder.from_curve(...)` and wraps the result.
 
     Frame transitions:
 

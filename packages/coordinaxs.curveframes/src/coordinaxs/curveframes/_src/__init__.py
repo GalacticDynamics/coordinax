@@ -6,12 +6,10 @@ implementation modules:
 - {mod}`.base` — abstract base classes.
 - {mod}`.frenetserret` — Frenet--Serret transform and frame.
 - {mod}`.bishop` — Bishop (rotation-minimising) transform and frame.
-- {mod}`.register_act` — ``act`` dispatch registrations.
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
 """
 
 from .base import *
 from .bishop import *
 from .frenetserret import *
-from .register_act import *
 from .register_frames import *

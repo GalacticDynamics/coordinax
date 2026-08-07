@@ -92,16 +92,16 @@ Extract the rotation matrix from each transform:
 >>> for tau in taus:
 ...     R_fs = jnp.stack(
 ...         [
-...             fs_frame.xop.tangent(tau).value,
-...             fs_frame.xop.normal(tau).value,
-...             fs_frame.xop.binormal(tau).value,
+...             fs_frame.xop.builder.tangent(tau).value,
+...             fs_frame.xop.builder.normal(tau).value,
+...             fs_frame.xop.builder.binormal(tau).value,
 ...         ]
 ...     )
 ...     R_bp = jnp.stack(
 ...         [
-...             bishop_frame.xop.tangent(tau).value,
-...             bishop_frame.xop.normal1(tau).value,
-...             bishop_frame.xop.normal2(tau).value,
+...             bishop_frame.xop.builder.tangent(tau).value,
+...             bishop_frame.xop.builder.normal1(tau).value,
+...             bishop_frame.xop.builder.normal2(tau).value,
 ...         ]
 ...     )
 ...     R_co = R_z(tau)
@@ -176,8 +176,8 @@ Let's verify on a helix that the three frames **disagree**:
 ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "km")
 ...
 
->>> fs_helix = cxfc.FrenetSerretTransform.from_curve(helix)
->>> bp_helix = cxfc.BishopTransform.from_curve(
+>>> fs_helix = cxfc.FrenetSerretBuilder(helix)
+>>> bp_helix = cxfc.BishopBuilder(
 ...     helix,
 ...     initial_normal=jnp.array([-1.0, 0.0, 0.0]),
 ... )

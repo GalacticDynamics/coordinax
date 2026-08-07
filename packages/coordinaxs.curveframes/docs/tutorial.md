@@ -42,12 +42,12 @@ At $\tau = 0$ the curve is at $(1, 0, 0)$ km; at $\tau = \pi/2$ it is at $(0, 1,
 
 ## Step 2: Build the Transform
 
-`FrenetSerretTransform.from_curve` computes the Frenet–Serret frame fields automatically via JAX autodiff:
+`FrenetSerretBuilder.from_curve` computes the Frenet–Serret frame fields automatically via JAX autodiff:
 
 ```pycon
->>> fs_xform = cxfc.FrenetSerretTransform.from_curve(circle)
+>>> fs_xform = cxfc.FrenetSerretBuilder(circle)
 >>> fs_xform
-FrenetSerretTransform(...)
+FrenetSerretBuilder(...)
 ```
 
 Check the frame at $\tau = 0$. For a unit-speed circle, $\mathbf{T}$ points along $+y$, $\mathbf{N}$ points along $-x$, and $\mathbf{B}$ points along $+z$:
@@ -76,7 +76,7 @@ Attach the transform to Alice's frame:
 >>> fs_frame.base_frame
 Alice()
 
->>> isinstance(fs_frame.xop, cxfc.FrenetSerretTransform)
+>>> isinstance(fs_frame.xop.builder, cxfc.FrenetSerretBuilder)
 True
 ```
 
@@ -164,7 +164,7 @@ The full chain `Alice → FS → Alex → FS → Alice` is the identity for any 
 
 ## Step 8: JIT Compilation
 
-Because the transform fields are pure-function closures (static PyTree leaves), JIT compilation works directly:
+The builder is an `equinox.Module` and the frame is a valid PyTree, so JIT compilation works directly:
 
 ```pycon
 >>> op = cxf.frame_transition(cxf.Alice(), fs_frame)
@@ -203,7 +203,7 @@ Each row is the curve-frame representation of `p_test` at a different $\tau$. Co
 | Step | What you did                                          |
 | ---- | ----------------------------------------------------- |
 | 1    | Defined a circle curve `tau -> Quantity[(3,)]`        |
-| 2    | Built `FrenetSerretTransform` via `from_curve`        |
+| 2    | Built `FrenetSerretBuilder` via `from_curve`          |
 | 3    | Wrapped it in a `FrenetSerretFrame` relative to Alice |
 | 4–5  | Transformed points to/from the curve frame            |
 | 6    | Evaluated at different $\tau$ values                  |
@@ -244,9 +244,9 @@ Define a helix with a vertical drift:
 Build the Bishop transform:
 
 ```pycon
->>> bt = cxfc.BishopTransform.from_curve(helix)
+>>> bt = cxfc.BishopBuilder(helix)
 >>> bt
-BishopTransform(...)
+BishopBuilder(...)
 ```
 
 Evaluate the triad at $\tau = 0$:
@@ -290,7 +290,7 @@ The Frenet–Serret frame is **singular** on a straight line (zero curvature). T
 ...     return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
 ...
 
->>> bt_line = cxfc.BishopTransform.from_curve(line)
+>>> bt_line = cxfc.BishopBuilder(line)
 ```
 
 The normals are well-defined unit vectors at any $\tau$:
@@ -315,7 +315,7 @@ Attach the Bishop transform to Alice's frame:
 >>> b_frame.base_frame
 Alice()
 
->>> isinstance(b_frame.xop, cxfc.BishopTransform)
+>>> isinstance(b_frame.xop.builder, cxfc.BishopBuilder)
 True
 ```
 
@@ -341,9 +341,7 @@ Transform a point at the curve origin to the Bishop frame:
 Specify an explicit initial normal:
 
 ```pycon
->>> bt_custom = cxfc.BishopTransform.from_curve(
-...     helix, initial_normal=jnp.array([0.0, 0.0, 1.0])
-... )
+>>> bt_custom = cxfc.BishopBuilder(helix, initial_normal=jnp.array([0.0, 0.0, 1.0]))
 >>> U1_custom = bt_custom.normal1(tau0)
 >>> np.testing.assert_allclose(jnp.linalg.norm(U1_custom.value), 1.0, atol=1e-5)
 ```
@@ -351,7 +349,7 @@ Specify an explicit initial normal:
 Shift the reference parameter:
 
 ```pycon
->>> bt_shifted = cxfc.BishopTransform.from_curve(helix, tau_0=u.Q(1.0, "s"))
+>>> bt_shifted = cxfc.BishopBuilder(helix, tau_0=u.Q(1.0, "s"))
 >>> bt_shifted.tau_0
 Q(1., 's')
 ```
@@ -359,17 +357,17 @@ Q(1., 's')
 ## Step 6: Inverse and Double-Inverse
 
 ```pycon
->>> bt_inv = bt.inverse
+>>> bt_op = cxfm.Parametric(bt)
+>>> bt_inv = bt_op.inverse
 >>> bt_inv
-BishopTransform(...)
+Parametric(...)
 ```
 
 Double-inversion recovers the original:
 
 ```pycon
->>> loc_orig = bt.location(tau0)
->>> loc_double = bt.inverse.inverse.location(tau0)
->>> np.testing.assert_allclose(loc_double.value, loc_orig.value, atol=1e-5)
+>>> bt_op.inverse.inverse.builder is bt_op.builder
+True
 ```
 
 ## Step 7: Three-Frame Chain — Alice ↔ Bishop ↔ Alex
@@ -430,7 +428,7 @@ vmap over $\tau$:
 
 | Step | What you did                                 |
 | ---- | -------------------------------------------- |
-| 1    | Built a `BishopTransform` on a helix         |
+| 1    | Built a `BishopBuilder` on a helix           |
 | 2    | Verified it works on a straight line         |
 | 3    | Built a `BishopFrame` and transformed points |
 | 4    | Verified the round-trip                      |

@@ -3,8 +3,8 @@ r"""Bishop (rotation-minimising) curve-frame data types.
 This module provides the concrete implementations of the Bishop
 (parallel-transport, rotation-minimising) curve-frame apparatus:
 
-* `BishopTransform` — a $\tau$-dependent rigid-body transform that decomposes
-  into ``Translate(-\gamma) | Rotate([T; U1; U2])``.
+* `BishopBuilder` — an `equinox.Module` mapping $\tau$ to the rigid-body
+  transform ``Translate(-\gamma) | Rotate([T; U1; U2])``.
 * `BishopFrame` — a curve-attached reference frame whose axes are $(\mathbf{T},
   \mathbf{U}_1, \mathbf{U}_2)$ obtained by parallel transport along the curve.
 
@@ -25,10 +25,8 @@ Both classes are ``@final`` (no further subclassing).
 
 Key design choices
 ------------------
-* **Lazy evaluation** — all frame vectors are $\tau$-dependent callables.  The
-  ODE is solved only when a concrete $\tau$ is requested.
-* **Double-inverse efficiency** — same two-step cycle as
-  ``FrenetSerretTransform``.
+* **Lazy evaluation** — the ODE is solved only when a concrete $\tau$ is
+  requested, i.e. when the `Parametric` family is materialized.
 * **Auto initial normal** — when no ``initial_normal`` is supplied, one is
   chosen automatically via Gram--Schmidt against the tangent at $\tau_0$.
 
@@ -39,24 +37,21 @@ coordinaxs.curveframes._src.base : Abstract base classes.
 
 """
 
-__all__ = ("BishopFrame", "BishopTransform")
+__all__ = ("BishopBuilder", "BishopFrame")
 
 from collections.abc import Callable
+from jaxtyping import Array
 from typing import Any, cast, final
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax.experimental.ode import odeint
 
-import coordinax.charts as cxc
 import coordinax.transforms as cxfm
 import unxt as u
 
-from .base import (
-    AbstractParallelTransportFrame,
-    AbstractParallelTransportTransform,
-    FrameT,
-)
+from .base import AbstractCurveFrameBuilder, AbstractParallelTransportFrame, FrameT
 from .frenetserret import _normalize
 
 
@@ -111,8 +106,8 @@ def _auto_initial_normal(T0_val: Any) -> Any:
 
 
 @final
-class BishopTransform(AbstractParallelTransportTransform):
-    r"""Transform defined by a Bishop (rotation-minimising) frame along a curve.
+class BishopBuilder(AbstractCurveFrameBuilder):
+    r"""Bishop (rotation-minimising) frame family along a curve.
 
     The Bishop frame attaches an orthonormal triad $(\mathbf{T}, \mathbf{U}_1,
     \mathbf{U}_2)$ to each point of a smooth space curve $\gamma(\tau)$ via
@@ -125,24 +120,24 @@ class BishopTransform(AbstractParallelTransportTransform):
     Unlike the Frenet-Serret frame, the Bishop frame is well-defined even when
     the curvature vanishes ($\kappa = 0$).
 
-    Internally decomposes the transform $\mathbf{p}' = R(\tau)(\mathbf{p} -
-    \boldsymbol{\gamma}(\tau))$ into ``Translate(-gamma) | Rotate(R)`` where $R
-    = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2]$.
+    Calling the builder at $\tau$ returns ``Translate(-gamma) | Rotate(R)`` with
+    $R = [\mathbf{T};\,\mathbf{U}_1;\,\mathbf{U}_2]$.
 
     Parameters
     ----------
-    translate : Translate
-        Tau-dependent translation (callable delta = ``-gamma``).
-    rotate : Rotate
-        Tau-dependent rotation (callable R = ``stack([T, U1, U2])``).
     curve : Callable
-        The original constructing curve.
-    tau_unit : AbstractUnit
-        Unit of the curve parameter.
-    tau_0 : AbstractQuantity
-        Reference parameter value where the initial frame is defined.
-    initial_normal : Any
-        Initial U1 vector at tau_0 (dimensionless jax array, or None for auto).
+        A function ``tau -> Quantity[float, (3,)]``.  Make it an
+        `equinox.Module` for differentiable curve parameters.
+    tau_unit : AbstractUnit or str, optional
+        Unit of the curve parameter.  Defaults to ``"s"``.
+    gamma : optional
+        A fixed curve parameter; see `AbstractCurveFrameBuilder`.
+    tau_0 : Quantity, optional
+        Reference parameter where the initial frame is defined.  Defaults to
+        ``Q(0.0, tau_unit)``.
+    initial_normal : array-like, optional
+        Dimensionless 3-vector for $\mathbf{U}_{1,0}$.  When `None`,
+        auto-chosen via Gram--Schmidt against the tangent at ``tau_0``.
 
     Examples
     --------
@@ -156,16 +151,8 @@ class BishopTransform(AbstractParallelTransportTransform):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-    Build the transform from the curve:
-
-    >>> bt = cxfc.BishopTransform.from_curve(helix)
-    >>> bt
-    BishopTransform(...)
-
-    Evaluate the location at tau=0:
-
-    >>> loc = bt.location(u.Q(0.0, "s"))
-    >>> loc
+    >>> bt = cxfc.BishopBuilder(helix)
+    >>> bt.location(u.Q(0.0, "s"))
     Q([1., 0., 0.], 'm')
 
     The Bishop frame works on a straight line (where Frenet-Serret is singular):
@@ -175,23 +162,128 @@ class BishopTransform(AbstractParallelTransportTransform):
     ...     return u.Q(jnp.stack([t, jnp.zeros_like(t),
     ...                           jnp.zeros_like(t)]), "m")
 
-    >>> bt_line = cxfc.BishopTransform.from_curve(line)
-    >>> U1 = bt_line.normal1(u.Q(5.0, "s"))
+    >>> U1 = cxfc.BishopBuilder(line).normal1(u.Q(5.0, "s"))
     >>> jnp.sqrt(jnp.sum(U1.value**2))
     Array(1., dtype=float64)
 
     """
 
-    tau_0: u.AbstractQuantity
-    """Reference parameter value where the initial frame is defined."""
+    curve: Callable[[Any], Any]
+    """The constructing curve."""
 
-    initial_normal: Any
+    tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
+        default=u.unit("s"), static=True, converter=u.unit
+    )
+    """The unit of the curve parameter tau."""
+
+    gamma: Any = None
+    """Optional fixed curve parameter (a leaf); `None` means "use tau"."""
+
+    tau_0: u.AbstractQuantity | None = None
+    """Reference parameter value where the initial frame is defined (a leaf).
+
+    `None` is resolved to ``Q(0.0, tau_unit)`` by ``__post_init__``.
+    """
+
+    initial_normal: Any = None
     """Initial U1 vector at tau_0 (dimensionless jax array, or None for auto)."""
 
-    # ---------------------------------------------------------------
-    # Convenience accessors (tangent inherited from ABC)
+    def __post_init__(self) -> None:
+        """Resolve a `None` ``tau_0`` to zero in ``tau_unit`` (a pytree leaf)."""
+        if self.tau_0 is None:
+            self.tau_0 = u.Q(0.0, self.tau_unit)
 
-    def normal1(self, tau: Any) -> Any:
+    # ---------------------------------------------------------------
+
+    def _tangent_at(self, g: Any, /) -> u.AbstractQuantity:
+        r"""Compute unit tangent $\mathbf{T} = \gamma'/\|\gamma'\|$."""
+        dcurve = u.experimental.jacfwd(self.curve, units=(self.tau_unit,))
+        return _normalize(dcurve(g.astype(float)))
+
+    def _solve_U1(self, g: Any, /) -> Array:
+        r"""Compute $\mathbf{U}_1$ via ODE integration from $\tau_0$.
+
+        Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1
+        \cdot \mathbf{T}')\,\mathbf{T}$ using
+        ``jax.experimental.ode.odeint``.  When the parameter equals $\tau_0$,
+        the ODE is skipped via ``jax.lax.cond`` (identity path).
+        """
+        tau_unit = self.tau_unit
+        tau_0 = cast("u.AbstractQuantity", self.tau_0)
+
+        if self.initial_normal is not None:
+            U1_0_val = jnp.asarray(self.initial_normal, dtype=float)
+        else:
+            U1_0_val = _auto_initial_normal(self._tangent_at(tau_0).value)
+
+        # Pre-compute dT/dtau as a callable.  This avoids nesting AD inside
+        # the ODE right-hand-side, which would be both slower and harder
+        # for JAX to trace.
+        dTangent_fn = u.experimental.jacfwd(self._tangent_at, units=(tau_unit,))
+
+        tau_val = g.ustrip(tau_unit)
+        tau_0_val = tau_0.ustrip(tau_unit)
+
+        def ode_rhs(U1_flat: Any, t_scalar: Any) -> Any:
+            """Right-hand side of the parallel-transport ODE."""
+            t_q = u.Q(t_scalar, tau_unit)
+            T_val = self._tangent_at(t_q).value
+            dT_val = dTangent_fn(t_q).value
+            # Project U1 onto dT, negate, then scale by T.
+            return -jnp.dot(U1_flat, dT_val) * T_val
+
+        # Use lax.cond to branch: when tau == tau_0, return initial
+        # normal directly (avoids zero-length ODE integration).
+        needs_ode = jnp.abs(tau_val - tau_0_val) > 0.0
+
+        def _solve(_: Any) -> Any:
+            t_span = jnp.array([tau_0_val, tau_val])
+            result = odeint(ode_rhs, U1_0_val, t_span)
+            return result[-1]  # solution at tau
+
+        def _identity(_: Any) -> Any:
+            return U1_0_val
+
+        U1_val = jax.lax.cond(needs_ode, _solve, _identity, None)
+        # Re-normalise for numerical safety.
+        return U1_val / jnp.linalg.norm(U1_val)
+
+    def rotation_matrix(self, tau: Any, /) -> Array:
+        r"""Compute the rotation $R = [T;\,U_1;\,U_2]$.
+
+        Steps:
+
+        1. Evaluate the tangent $\mathbf{T}$ from the first derivative.
+        2. Solve the parallel-transport ODE for $\mathbf{U}_1$.
+        3. Cross product: $\mathbf{U}_2 = \mathbf{T} \times \mathbf{U}_1$.
+        4. Stack rows into a $3 \times 3$ matrix.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        >>> def circle(tau: u.Q) -> u.Q:
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
+        ...                           jnp.zeros_like(t)]), "m")
+
+        >>> R = cxfc.BishopBuilder(circle).rotation_matrix(u.Q(0.0, "s"))
+        >>> bool(jnp.allclose(R @ R.T, jnp.eye(3), atol=1e-6))
+        True
+
+        """
+        g = self._param(tau)
+        T_val = self._tangent_at(g).value
+        U1_val = self._solve_U1(g)
+        U2_val = jnp.cross(T_val, U1_val)
+        return jnp.stack([T_val, U1_val, U2_val])
+
+    # ---------------------------------------------------------------
+    # Convenience accessors (location, tangent inherited from the ABC)
+
+    def normal1(self, tau: Any, /) -> u.Q:
         r"""First parallel-transported normal $\mathbf{U}_1(\tau)$ (row 1 of R).
 
         This vector is obtained by solving the parallel-transport ODE from the
@@ -199,16 +291,6 @@ class BishopTransform(AbstractParallelTransportTransform):
         rotation-minimising: the angular velocity of the frame about the tangent
         is zero.
 
-        Parameters
-        ----------
-        tau : Quantity
-            The evolution parameter value.
-
-        Returns
-        -------
-        Quantity
-            Dimensionless unit vector of shape ``(3,)``.
-
         Examples
         --------
         >>> import jax.numpy as jnp
@@ -220,32 +302,20 @@ class BishopTransform(AbstractParallelTransportTransform):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> bt = cxfc.BishopTransform.from_curve(circle)
-        >>> U1 = bt.normal1(u.Q(0.0, "s"))
+        >>> U1 = cxfc.BishopBuilder(circle).normal1(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U1.value))
         1.0
 
         """
-        R = self._rotation_matrix(tau)
-        return u.Q(R[1], "")
+        return u.Q(self.rotation_matrix(tau)[1], "")
 
-    def normal2(self, tau: Any) -> Any:
+    def normal2(self, tau: Any, /) -> u.Q:
         r"""Second normal $\mathbf{U}_2(\tau) = \mathbf{T} \times \mathbf{U}_1$.
 
         The second normal completes the right-handed orthonormal triad.  It is
         computed as the cross product of the tangent and the first normal, so it
         is automatically perpendicular to both.
 
-        Parameters
-        ----------
-        tau : Quantity
-            The evolution parameter value.
-
-        Returns
-        -------
-        Quantity
-            Dimensionless unit vector of shape ``(3,)``.
-
         Examples
         --------
         >>> import jax.numpy as jnp
@@ -257,245 +327,12 @@ class BishopTransform(AbstractParallelTransportTransform):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> bt = cxfc.BishopTransform.from_curve(circle)
-        >>> U2 = bt.normal2(u.Q(0.0, "s"))
+        >>> U2 = cxfc.BishopBuilder(circle).normal2(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U2.value))
         1.0
 
         """
-        R = self._rotation_matrix(tau)
-        return u.Q(R[2], "")
-
-    # ---------------------------------------------------------------
-    # Constructors
-
-    @classmethod
-    def from_curve(
-        cls,
-        curve: Callable[[Any], Any],
-        /,
-        tau_unit: u.AbstractUnit | str = "s",
-        *,
-        tau_0: u.AbstractQuantity | None = None,
-        initial_normal: Any | None = None,
-    ) -> "BishopTransform":
-        r"""Construct a Bishop transform from a curve callable.
-
-        Given a smooth curve $\gamma(\tau)$ in 3D Euclidean space, computes the
-        Bishop frame $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ as tau-dependent
-        callables.  The tangent is obtained via JAX automatic differentiation.
-        The normal vectors are computed by solving the parallel-transport ODE
-        using ``jax.experimental.ode.odeint``.
-
-        Parameters
-        ----------
-        curve : Callable[[Any], Any]
-            A function ``tau -> Quantity[float, (3,)]``.
-        tau_unit : str, optional
-            Unit of the curve parameter.  Defaults to ``"s"``.
-        tau_0 : Quantity, optional
-            Reference parameter for the initial frame.  Defaults to ``Q(0.0,
-            tau_unit)``.
-        initial_normal : array-like, optional
-            Dimensionless 3-vector for $\mathbf{U}_{1,0}$.  When ``None``,
-            auto-chosen via Gram-Schmidt.
-
-        Returns
-        -------
-        BishopTransform
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> import unxt as u
-        >>> import coordinaxs.curveframes as cxfc
-
-        A circle in the xy-plane:
-
-        >>> def circle(tau: u.Q) -> u.Q:
-        ...     t = tau.ustrip("s")
-        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
-        ...                           jnp.zeros_like(t)]), "m")
-
-        >>> bt = cxfc.BishopTransform.from_curve(circle)
-
-        The tangent at tau=0 points in the y-direction:
-
-        >>> T = bt.tangent(u.Q(0.0, "s"))
-        >>> jnp.allclose(T.value, jnp.array([0., 1., 0.]), atol=1e-5)
-        Array(True, dtype=bool)
-
-        Custom tau_0:
-
-        >>> bt2 = cxfc.BishopTransform.from_curve(circle, tau_0=u.Q(1.0, "s"))
-        >>> bt2.tau_0
-        Q(1., 's')
-
-        """
-        tau_unit = cast("u.AbstractUnit", u.unit(tau_unit))
-        if tau_0 is None:
-            tau_0 = u.Q(0.0, tau_unit)
-
-        # Unit-aware derivative
-        dcurve = u.experimental.jacfwd(curve, units=(tau_unit,))
-
-        def tangent_fn(tau: u.AbstractQuantity) -> u.AbstractQuantity:
-            r"""Compute unit tangent $\mathbf{T} = \gamma'/\|\gamma'\|$."""
-            return _normalize(dcurve(tau.astype(float)))
-
-        # Compute initial tangent and normal at the reference parameter.
-        T0 = tangent_fn(tau_0)  # dimensionless unit vector
-        T0_val = T0.value  # dimensionless plain array
-
-        if initial_normal is not None:
-            U1_0_val = jnp.asarray(initial_normal, dtype=float)
-        else:
-            U1_0_val = _auto_initial_normal(T0_val)
-
-        # Store the initial normal for double-inverse reconstruction.
-        # ``None`` means "auto-chosen via Gram--Schmidt".
-        stored_initial_normal = initial_normal  # None for auto
-
-        # Pre-compute dT/dtau as a callable.  This avoids nesting AD inside
-        # the ODE right-hand-side, which would be both slower and harder
-        # for JAX to trace.
-        dTangent_fn = u.experimental.jacfwd(tangent_fn, units=(tau_unit,))
-
-        def _solve_U1(tau: u.AbstractQuantity) -> Any:
-            r"""Compute $\mathbf{U}_1(\tau)$ via ODE integration from $\tau_0$.
-
-            Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau =
-            -(\mathbf{U}_1 \cdot \mathbf{T}')\,\mathbf{T}$ using
-            ``jax.experimental.ode.odeint``.  When $\tau = \tau_0$, the ODE is
-            skipped via ``jax.lax.cond`` (identity path).
-            """
-            tau_val = tau.ustrip(tau_unit)
-            tau_0_val = tau_0.ustrip(tau_unit)
-
-            def ode_rhs(U1_flat: Any, t_scalar: Any) -> Any:
-                """Right-hand side of the parallel-transport ODE."""
-                t_q = u.Q(t_scalar, tau_unit)
-                T_val = tangent_fn(t_q).value
-                dT_val = dTangent_fn(t_q).value
-                # Project U1 onto dT, negate, then scale by T.
-                return -jnp.dot(U1_flat, dT_val) * T_val
-
-            # Use lax.cond to branch: when tau == tau_0, return initial
-            # normal directly (avoids zero-length ODE integration).
-            needs_ode = jnp.abs(tau_val - tau_0_val) > 0.0  # ty: ignore[unsupported-operator]
-
-            def _solve(_: Any) -> Any:
-                t_span = jnp.array([tau_0_val, tau_val])
-                result = odeint(ode_rhs, U1_0_val, t_span)
-                return result[-1]  # solution at tau
-
-            def _identity(_: Any) -> Any:
-                return U1_0_val
-
-            U1_val = jax.lax.cond(needs_ode, _solve, _identity, None)
-            # Re-normalise for numerical safety.
-            return U1_val / jnp.linalg.norm(U1_val)
-
-        def rotation_matrix_fn(tau: u.AbstractQuantity) -> Any:
-            r"""Compute the rotation $R = [T;\,U_1;\,U_2]$.
-
-            Steps:
-
-            1. Evaluate the tangent $\mathbf{T}$ from the first derivative.
-            2. Solve the parallel-transport ODE for $\mathbf{U}_1$.
-            3. Cross product: $\mathbf{U}_2 = \mathbf{T} \times \mathbf{U}_1$.
-            4. Stack rows into a $3 \times 3$ matrix.
-            """
-            T_val = tangent_fn(tau).value
-            U1_val = _solve_U1(tau)
-            U2_val = jnp.cross(T_val, U1_val)
-            return jnp.stack([T_val, U1_val, U2_val])
-
-        def neg_gamma_fn(tau: u.AbstractQuantity) -> Any:
-            r"""Compute $-\boldsymbol{\gamma}(\tau)$ as a ``CDict``.
-
-            The translation step of the forward transform subtracts the curve
-            position, packed into a component dictionary.
-            """
-            return cxc.cdict(-curve(tau), cxc.cart3d)
-
-        translate = cxfm.Parametric.from_(
-            lambda tau: cxfm.Translate(neg_gamma_fn(tau), chart=cxc.cart3d)
-        )
-        rotate = cxfm.Parametric.from_(lambda tau: cxfm.Rotate(rotation_matrix_fn(tau)))
-
-        return cls(  # ty: ignore[missing-argument]
-            translate=translate,
-            rotate=rotate,
-            curve=curve,
-            tau_unit=tau_unit,
-            _is_forward=True,
-            tau_0=tau_0,
-            initial_normal=stored_initial_normal,
-        )
-
-    # ---------------------------------------------------------------
-    # Inverse helpers
-
-    def _build_inverse(self) -> "BishopTransform":
-        """Build the inverse BishopTransform.
-
-        Constructs a new instance with transposed rotation and rotated
-        translation, keeping ``_is_forward=False`` so that a subsequent
-        ``.inverse`` call will trigger the clean-rebuild path.  Preserves
-        ``tau_0`` and ``initial_normal`` for double-inverse reconstruction.
-        """
-        return BishopTransform(  # ty: ignore[missing-argument]
-            translate=self._make_inverse_translate(),
-            rotate=self._make_inverse_rotate(),
-            curve=self.curve,
-            tau_unit=self.tau_unit,
-            _is_forward=False,
-            tau_0=self.tau_0,
-            initial_normal=self.initial_normal,
-        )
-
-    def _rebuild_forward(self) -> "BishopTransform":
-        """Reconstruct the forward transform from the stored curve.
-
-        Called when ``.inverse`` is invoked on an already-inverse instance
-        (double-inverse).  Delegates to ``from_curve`` with the stored ``tau_0``
-        and ``initial_normal``, avoiding closure accumulation.
-        """
-        return BishopTransform.from_curve(
-            self.curve,
-            tau_unit=self.tau_unit,
-            tau_0=self.tau_0,
-            initial_normal=self.initial_normal,
-        )
-
-
-# ============================================================================
-# Constructors
-
-
-@BishopTransform.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[BishopTransform], curve: Callable[[Any], Any], /
-) -> BishopTransform:
-    """Construct a BishopTransform from a curve callable.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinaxs.curveframes as cxfc
-
-    >>> def helix(tau: u.Q) -> u.Q:
-    ...     t = tau.ustrip("s")
-    ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
-
-    >>> bt = cxfc.BishopTransform.from_(helix)
-    >>> bt.location(u.Q(0.0, "s"))
-    Q([1., 0., 0.], 'm')
-
-    """
-    return cls.from_curve(curve)
+        return u.Q(self.rotation_matrix(tau)[2], "")
 
 
 #####################################################################
@@ -506,9 +343,10 @@ def from_(
 class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     """Bishop (rotation-minimising) curve-attached reference frame.
 
-    A reference frame defined relative to a base frame by a `BishopTransform`.
-    At each parameter value ``tau``, the frame is centred at the curve position
-    with axes ``(T, U1, U2)`` obtained via parallel transport.
+    A reference frame defined relative to a base frame by a
+    `coordinax.transforms.Parametric` wrapping a `BishopBuilder`.  At each
+    parameter value ``tau``, the frame is centred at the curve position with
+    axes ``(T, U1, U2)`` obtained via parallel transport.
 
     Unlike `FrenetSerretFrame`, this frame is well-defined even at
     zero-curvature points.
@@ -520,9 +358,11 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     ----------
     base_frame : AbstractReferenceFrame
         The ambient reference frame.
-    xop : BishopTransform
+    xop : Parametric
         The tau-dependent rotation-minimising transform from ``base_frame`` to
         this frame.
+    xop_inv : Parametric
+        Its inverse.
 
     Examples
     --------
@@ -543,7 +383,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     >>> b_frame.base_frame
     Alice()
 
-    >>> isinstance(b_frame.xop, cxfc.BishopTransform)
+    >>> isinstance(b_frame.xop.builder, cxfc.BishopBuilder)
     True
 
     Get the frame transition operator and apply at tau=0:
@@ -557,8 +397,8 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     """
 
     base_frame: FrameT
-    xop: BishopTransform
-    xop_inv: BishopTransform
+    xop: cxfm.Parametric
+    xop_inv: cxfm.Parametric
 
     @classmethod
     def from_curve(
@@ -568,6 +408,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         /,
         tau_unit: u.AbstractUnit | str = "s",
         *,
+        gamma: Any = None,
         tau_0: u.AbstractQuantity | None = None,
         initial_normal: Any | None = None,
     ) -> "BishopFrame[FrameT]":
@@ -581,6 +422,9 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
             A function ``tau -> Quantity[float, (3,)]``.
         tau_unit : str, optional
             Unit of the curve parameter for differentiation.
+        gamma : optional
+            A fixed curve parameter; when given the frame is a fixed frame
+            *field* along the curve rather than a moving frame.
         tau_0 : Quantity, optional
             Reference parameter.  Defaults to ``Q(0.0, tau_unit)``.
         initial_normal : array-like, optional
@@ -607,7 +451,6 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         Alice()
 
         """
-        xop = BishopTransform.from_curve(
-            curve, tau_unit=tau_unit, tau_0=tau_0, initial_normal=initial_normal
-        )
+        builder = BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)
+        xop = cxfm.Parametric(builder)
         return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)
