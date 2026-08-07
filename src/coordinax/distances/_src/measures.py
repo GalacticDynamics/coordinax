@@ -11,6 +11,7 @@ import equinox as eqx
 
 import quaxed.numpy as jnp
 import unxt as u
+from optional_dependencies.utils import is_installed
 
 from .base import AbstractDistance
 from .constants import ANGLE, LENGTH, MAGNITUDE
@@ -163,12 +164,9 @@ def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
 # these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
 # and other ``AbstractQuantity`` subclasses still fall through to the
 # dimension-branching dispatch. If the package is not installed this is a no-op.
-try:
-    # Optional dependency: absent from the lint environment by design.
+if is_installed("unxts.parametric"):
+    # Absent from the lint environment by design.
     from unxts.parametric import PQ  # ty: ignore[unresolved-import]
-except ImportError:
-    pass
-else:
 
     @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
     def from_(cls: type[Distance], q: PQ["length"], /, **kw: Any) -> Distance:

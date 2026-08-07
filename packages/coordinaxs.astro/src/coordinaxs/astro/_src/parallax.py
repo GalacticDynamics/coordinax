@@ -12,6 +12,7 @@ import plum
 
 import quaxed.numpy as jnp
 import unxt as u
+from optional_dependencies.utils import is_installed
 
 import coordinax.distances as cxd
 from .constants import ANGLE, LENGTH, MAGNITUDE
@@ -188,12 +189,9 @@ def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
 # these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
 # and other ``AbstractQuantity`` subclasses still fall through to the
 # dimension-branching dispatch. If the package is not installed this is a no-op.
-try:
-    # Optional dependency: absent from the lint environment by design.
+if is_installed("unxts.parametric"):
+    # Absent from the lint environment by design.
     from unxts.parametric import PQ  # ty: ignore[unresolved-import]
-except ImportError:
-    pass
-else:
 
     @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
     def from_(cls: type[Parallax], q: PQ["angle"], /, **kw: Any) -> Parallax:

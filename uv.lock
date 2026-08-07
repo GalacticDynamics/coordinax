@@ -615,7 +615,7 @@ requires-dist = [
     { name = "jax", specifier = ">=0.6.0" },
     { name = "jaxlib", specifier = ">=0.6.0" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
-    { name = "optional-dependencies", specifier = ">=0.3.2" },
+    { name = "optional-dependencies", specifier = ">=0.5.0" },
     { name = "optype", specifier = ">=0.17.0" },
     { name = "plum", marker = "python_full_version < '3.14'", specifier = ">=2.8.0" },
     { name = "plum", marker = "python_full_version >= '3.14'", specifier = ">=2.9.0" },

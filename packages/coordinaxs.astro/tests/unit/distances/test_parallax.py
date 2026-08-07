@@ -159,3 +159,11 @@ class TestParametricFromDispatch:
         parametric = _resolved_from_(cxastro.Parallax, pq)
         plain = _resolved_from_(cxastro.Parallax, u.Q(value, unit))
         assert parametric is not plain
+
+
+class TestFromUnsupportedDimension:
+    """`from_` rejects a dimension it has no branch for."""
+
+    def test_raises_valueerror(self) -> None:
+        with pytest.raises(ValueError, match="cannot build a Parallax"):
+            cxastro.Parallax.from_(u.Q(1.0, "s"))
