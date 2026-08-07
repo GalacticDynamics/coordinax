@@ -229,8 +229,6 @@ def norm(
     norm() supports only positive-definite metrics, but
 
     """
-    require_positive_definite(metric, "norm")
-
     keys = chart.components
     qty_flags = [is_any_quantity(val) for val in v.values()]
     if any(qty_flags) and not all(qty_flags):
@@ -242,6 +240,11 @@ def norm(
 
     if metric != chart.M.metric:
         raise ValueError("Metric-level dispatch: metric must match chart's metric")
+
+    # After the match check, so a mismatched *indefinite* metric still reports the
+    # mismatch rather than the definiteness. Guards `chart.M.metric` because that
+    # is what `metric_matrix` below actually uses.
+    require_positive_definite(chart.M.metric, "norm")
 
     if not is_qty and usys is None:
         raise TypeError(
@@ -366,7 +369,11 @@ def norm(
             "(no unit information). "
             "Example: pass `usys=unxt.unitsystems.si`."
         )
-    require_positive_definite(metric, "norm")
+    # Guards `chart.M.metric`, not the `metric` argument: this overload builds
+    # the matrix from `chart.M` and has no match check, so checking the argument
+    # would let `norm(v, FlatMetric(4), minkowskict, ...)` past the guard and
+    # straight back to the `nan` this guard exists to prevent.
+    require_positive_definite(chart.M.metric, "norm")
     mm = cxmapi.metric_matrix(chart.M, at, chart)
     return array_norm(mm.to_dense().matrix, v)  # ty: ignore[unresolved-attribute]
 

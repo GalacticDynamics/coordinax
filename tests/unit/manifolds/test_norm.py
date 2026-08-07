@@ -669,6 +669,35 @@ class TestIndefiniteMetricsAreRejected:
         assert "MinkowskiMetric" in str(exc.value)
         assert "(-1, 1, 1, 1)" in str(exc.value)
 
+    def test_mismatched_metric_reports_the_mismatch_not_the_signature(self):
+        """Ordering: an invalid call is diagnosed as invalid, not as indefinite.
+
+        The definiteness guard runs *after* the metric/chart match check, so
+        passing an indefinite metric that also does not belong to the chart
+        reports the mismatch — the actual defect in the call.
+        """
+        v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+        at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+        with pytest.raises(ValueError, match="must match chart"):
+            cxm.norm(v, cxm.MinkowskiMetric(), cxc.cart3d, at=at)
+
+    def test_guard_follows_the_metric_actually_used(self):
+        """A positive-definite *argument* cannot smuggle an indefinite chart past.
+
+        The packed-array overload builds its matrix from ``chart.M`` and has no
+        match check, so guarding the ``metric`` argument would let this call
+        through to the very ``nan`` the guard exists to prevent.
+        """
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
+            cxm.norm(
+                jnp.array([5.0, 1.0, 0.0, 0.0]),
+                cxm.FlatMetric(4),
+                cxc.minkowskict,
+                at=at,
+                usys=u.unitsystems.si,
+            )
+
     def test_positive_definite_metrics_still_work(self):
         """Positive control: the guard does not disturb Riemannian metrics."""
         v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}

@@ -81,7 +81,10 @@ def angle_between(
     Angle(1.57079633, 'rad')
 
     """
-    require_positive_definite(metric, "angle_between")
+    # Guards `chart.M.metric` rather than the `metric` argument: the matrix below
+    # comes from `chart.M`, so checking the argument would validate one metric
+    # while computing with another.
+    require_positive_definite(chart.M.metric, "angle_between")
 
     chart.check_data(at, keys=True, values=False)
     chart.check_data(uvec, keys=True, values=False)
