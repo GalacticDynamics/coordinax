@@ -14,6 +14,7 @@ from dataclassish import replace
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+from .conftest import ZHAT
 
 
 def _xyz(d):
@@ -87,16 +88,17 @@ def test_different_semantic_kind_translates_do_not_merge() -> None:
 
 def test_time_dependent_rotations_merge_pointwise() -> None:
     """Two `TimeDep` rotations merge into one, pointwise in tau."""
-    zhat = jnp.asarray([0.0, 0.0, 1.0])
-    td = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
+    # Distinct rates, so a merge that dropped one operand would be caught.
+    a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
+    b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
 
-    out = cxfm.simplify(cxfm.Composed((td, td)))
+    out = cxfm.simplify(cxfm.Composed((a, b)))
     assert isinstance(out, cxfm.TimeDep)
 
     # ...and the merged family acts as the sequential application at a sample tau.
     tau = u.Q(0.7, "s")
     p = _point()
-    np.testing.assert_allclose(_xyz(out(tau, p)), _xyz(td(tau, td(tau, p))), atol=1e-12)
+    np.testing.assert_allclose(_xyz(out(tau, p)), _xyz(b(tau, a(tau, p))), atol=1e-12)
 
 
 # ===================================================================

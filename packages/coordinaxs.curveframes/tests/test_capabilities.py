@@ -20,6 +20,7 @@ import coordinax.transforms as cxfm
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
+from .conftest import circle
 
 TAU = u.Q(0.4, "s")
 P = u.Q(jnp.array([2.0, 1.0, -0.5]), "km")
@@ -68,11 +69,21 @@ def _readout(builder: cxfc.AbstractCurveFrameBuilder) -> jax.Array:
 class TestGradThroughCurveParameter:
     """The curve's own parameters are differentiable pytree leaves."""
 
-    def test_grad_is_nonzero_and_matches_finite_differences(self):
+    @pytest.mark.parametrize(
+        ("builder_cls", "h", "rtol", "atol"),
+        [
+            (cxfc.FrenetSerretBuilder, 1e-5, 1e-5, 1e-7),
+            # Bishop's ODE path is differentiable too, at integrator accuracy.
+            (cxfc.BishopBuilder, 1e-4, 1e-3, 1e-5),
+        ],
+    )
+    def test_grad_is_nonzero_and_matches_finite_differences(
+        self, builder_cls, h, rtol, atol
+    ):
         r0 = 1.5
 
         def loss(radius):
-            return _readout(cxfc.FrenetSerretBuilder(Helix(radius)))
+            return _readout(builder_cls(Helix(radius)))
 
         g = jax.grad(loss)(r0)
 
@@ -80,9 +91,8 @@ class TestGradThroughCurveParameter:
         assert abs(float(g)) > 1e-3
 
         # ... and agree with a central difference.
-        h = 1e-5
         fd = (loss(r0 + h) - loss(r0 - h)) / (2 * h)
-        assert jnp.allclose(g, fd, rtol=1e-5, atol=1e-7)
+        assert jnp.allclose(g, fd, rtol=rtol, atol=atol)
 
     def test_grad_through_the_whole_builder_pytree(self):
         """`jax.grad` over the builder returns a gradient in ``curve.radius``."""
@@ -113,28 +123,9 @@ class TestGradThroughCurveParameter:
         with pytest.raises((UserWarning, TypeError, ValueError)):
             jax.grad(loss)(1.5)
 
-    def test_grad_through_bishop_curve_parameter(self):
-        """Bishop's ODE path is differentiable in the curve parameter too."""
-        r0 = 1.5
-
-        def loss(radius):
-            return _readout(cxfc.BishopBuilder(Helix(radius)))
-
-        g = jax.grad(loss)(r0)
-        assert abs(float(g)) > 1e-3
-
-        h = 1e-4
-        fd = (loss(r0 + h) - loss(r0 - h)) / (2 * h)
-        assert jnp.allclose(g, fd, rtol=1e-3, atol=1e-5)
-
 
 # ===================================================================
 # (b) Fixed gamma: a frame *field* along the curve
-
-
-def _circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
-    t = tau.ustrip("s")
-    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
 
 class TestFixedGamma:
@@ -142,21 +133,30 @@ class TestFixedGamma:
 
     def test_gamma_frame_is_tau_independent(self):
         gamma = u.Q(0.7, "s")
-        op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle, "s", gamma))
+        op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", gamma))
 
         a = cxfm.act(op, u.Q(0.0, "s"), P).ustrip("km")
         b = cxfm.act(op, u.Q(3.1, "s"), P).ustrip("km")
         assert jnp.allclose(a, b, atol=1e-10)
 
-    def test_gamma_frame_matches_the_moving_frame_at_gamma(self):
+    @pytest.mark.parametrize(
+        ("builder_cls", "tau_val", "atol"),
+        [
+            (cxfc.FrenetSerretBuilder, 0.0, 1e-10),
+            (cxfc.BishopBuilder, 2.0, 1e-6),  # ODE, so looser
+        ],
+    )
+    def test_gamma_frame_matches_the_moving_frame_at_gamma(
+        self, builder_cls, tau_val, atol
+    ):
         gamma = u.Q(0.7, "s")
-        fixed = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle, "s", gamma))
-        moving = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle))
+        fixed = cxfm.TimeDep(builder_cls(circle, "s", gamma))
+        moving = cxfm.TimeDep(builder_cls(circle))
 
         assert jnp.allclose(
-            cxfm.act(fixed, u.Q(0.0, "s"), P).ustrip("km"),
+            cxfm.act(fixed, u.Q(tau_val, "s"), P).ustrip("km"),
             cxfm.act(moving, gamma, P).ustrip("km"),
-            atol=1e-10,
+            atol=atol,
         )
 
     def test_vmap_over_gamma(self):
@@ -164,7 +164,7 @@ class TestFixedGamma:
         gammas = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
 
         def at_gamma(g):
-            op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(_circle, "s", g))
+            op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", g))
             return cxfm.act(op, u.Q(0.0, "s"), P)
 
         batched = jax.vmap(at_gamma)(gammas).ustrip("km")
@@ -178,7 +178,7 @@ class TestFixedGamma:
         """``gamma`` is a leaf, so the frame field is differentiable in it."""
 
         def loss(g):
-            builder = cxfc.FrenetSerretBuilder(_circle, "s", u.Q(g, "s"))
+            builder = cxfc.FrenetSerretBuilder(circle, "s", u.Q(g, "s"))
             return _readout(builder)
 
         g0 = 0.7
@@ -189,20 +189,9 @@ class TestFixedGamma:
         fd = (loss(g0 + h) - loss(g0 - h)) / (2 * h)
         assert jnp.allclose(grad, fd, rtol=1e-5, atol=1e-7)
 
-    def test_bishop_gamma_frame(self):
-        gamma = u.Q(0.7, "s")
-        fixed = cxfm.TimeDep(cxfc.BishopBuilder(_circle, "s", gamma))
-        moving = cxfm.TimeDep(cxfc.BishopBuilder(_circle))
-
-        assert jnp.allclose(
-            cxfm.act(fixed, u.Q(2.0, "s"), P).ustrip("km"),
-            cxfm.act(moving, gamma, P).ustrip("km"),
-            atol=1e-6,
-        )
-
     def test_frame_from_curve_accepts_gamma(self):
         gamma = u.Q(0.7, "s")
-        frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), _circle, gamma=gamma)
+        frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, gamma=gamma)
         assert frame.xop.builder.gamma is gamma
 
         op = cxf.frame_transition(cxf.Alice(), frame)

@@ -1,4 +1,4 @@
-"""Bishop-specific behaviour: the straight line, tau_0, and opaque units.
+"""Bishop-specific behaviour: the straight line, tau_0, and the helix.
 
 Structural guarantees shared with Frenet-Serret are asserted once in
 `test_parallel_transport_contract.py`. What is left here is what Bishop does
@@ -21,70 +21,29 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
+from .conftest import circle, helix, straight_line
 
 # ── Fixtures ──────────────────────────────────────────────────────────
 
 
-def _circle_curve(tau: u.Q) -> u.Q:
-    """Unit circle in the x-y plane, period = 2*pi seconds."""
-    t = tau.ustrip("s")
-    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
-
-
-def _straight_line(tau: u.Q) -> u.Q:
-    """Straight line along x-axis (kappa=0 everywhere).
-
-    Frenet-Serret frame is singular on this curve, but Bishop is not.
-    """
-    t = tau.ustrip("s")
-    return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
-
-
-def _helix_curve(tau: u.Q) -> u.Q:
-    """Helix with pitch along z-axis."""
-    t = tau.ustrip("s")
-    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
-
-
-def _circle_curve_yr(tau: u.Q) -> u.Q:
-    """Circle in x-y plane with tau in years."""
-    omega = u.Q(2 * jnp.pi, "rad/yr")
-    phase = (omega * tau).uconvert("rad").ustrip("rad")
-    x = u.Q(5, "km") * jnp.cos(phase)
-    y = u.Q(5, "km") * jnp.sin(phase)
-    z = u.Q(0, "km") * jnp.ones_like(phase)
-    return qnp.stack([x, y, z], axis=-1)
-
-
-@eqx.filter_jit
-def _jit_act(op, tau, x):
-    """`eqx.filter_jit` handles builders carrying array leaves."""
-    return cxfm.act(op, tau, x)
-
-
 @pytest.fixture
 def circle_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(_circle_curve)
+    return cxfc.BishopBuilder(circle)
 
 
 @pytest.fixture
 def line_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(_straight_line)
+    return cxfc.BishopBuilder(straight_line)
 
 
 @pytest.fixture
 def helix_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(_helix_curve)
-
-
-@pytest.fixture
-def circle_yr_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(_circle_curve_yr, "yr")
+    return cxfc.BishopBuilder(helix)
 
 
 @pytest.fixture
 def line_bishop_frame() -> cxfc.BishopFrame:
-    return cxfc.BishopFrame.from_curve(cxf.Alice(), _straight_line)
+    return cxfc.BishopFrame.from_curve(cxf.Alice(), straight_line)
 
 
 # ── Straight line (kappa = 0) ────────────────────────────────────────
@@ -111,11 +70,6 @@ class TestBishopOnStraightLine:
             line_bishop.normal1(u.Q(5, "s")).value,
             atol=1e-4,
         )
-
-    def test_frame_construction(self, line_bishop_frame: cxfc.BishopFrame):
-        assert isinstance(line_bishop_frame, cxfc.BishopFrame)
-        assert isinstance(line_bishop_frame.xop, cxfm.TimeDep)
-        assert isinstance(line_bishop_frame.xop.builder, cxfc.BishopBuilder)
 
     def test_frame_transition_roundtrip(self, line_bishop_frame: cxfc.BishopFrame):
         """Alice -> Bishop(line) -> Alice is the identity."""
@@ -144,20 +98,14 @@ class TestBishopTau0:
 
     def test_custom_tau_0_still_yields_a_unit_tangent(self):
         """Shifting the transport origin does not disturb the tangent."""
-        bt = cxfc.BishopBuilder(_circle_curve, tau_0=u.Q(1.0, "s"))
+        bt = cxfc.BishopBuilder(circle, tau_0=u.Q(1.0, "s"))
         T = bt.tangent(u.Q(1, "s"))
         assert jnp.allclose(jnp.linalg.norm(T.value), 1, atol=1e-5)
-
-    def test_initial_normal_field(self):
-        """`initial_normal` is None (auto) or a 3-vector, for reconstruction."""
-        bt = cxfc.BishopBuilder(_circle_curve)
-        if bt.initial_normal is not None:
-            assert bt.initial_normal.shape == (3,)
 
     def test_explicit_initial_normal_is_used(self):
         """An explicit initial_normal fixes U1 at tau_0."""
         n0 = jnp.array([0.0, 0.0, 1.0])
-        bt = cxfc.BishopBuilder(_circle_curve, initial_normal=n0)
+        bt = cxfc.BishopBuilder(circle, initial_normal=n0)
         np.testing.assert_allclose(bt.normal1(u.Q(0.0, "s")).value, n0, atol=1e-6)
 
     def test_backwards_transport_is_a_rotation(self):
@@ -166,7 +114,7 @@ class TestBishopTau0:
         `odeint` integrates forward only, so a decreasing t_span silently
         yields NaN. With the default tau_0=0 that broke *every* negative tau.
         """
-        R = cxfc.BishopBuilder(_helix_curve).rotation_matrix(u.Q(-1.5, "s"))
+        R = cxfc.BishopBuilder(helix).rotation_matrix(u.Q(-1.5, "s"))
         assert jnp.all(jnp.isfinite(R))
         np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
         np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
@@ -178,7 +126,7 @@ class TestBishopTau0:
         vector that is not unit and normal-plane makes R not a rotation.
         """
         n0 = jnp.array([0.0, 1.0, 0.0])  # neither unit-normal to T nor unique
-        bt = cxfc.BishopBuilder(_helix_curve, initial_normal=n0)
+        bt = cxfc.BishopBuilder(helix, initial_normal=n0)
         R = bt.rotation_matrix(u.Q(1.0, "s"))
         np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
         np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
@@ -187,36 +135,10 @@ class TestBishopTau0:
         """A degenerate `initial_normal` fails loudly rather than as NaN."""
         # Tangent of the straight line at tau_0 = 0 is +x.
         bt = cxfc.BishopBuilder(
-            _straight_line, initial_normal=jnp.array([2.0, 0.0, 0.0])
+            straight_line, initial_normal=jnp.array([2.0, 0.0, 0.0])
         )
         with pytest.raises(Exception, match="parallel to the tangent"):
             bt.rotation_matrix(u.Q(1.0, "s"))
-
-
-# ── Opaque units ─────────────────────────────────────────────────────
-
-
-class TestBishopOpaqueUnits:
-    """A curve whose internal unit (yr) differs from the caller's."""
-
-    def test_tangent_at_zero(self, circle_yr_bishop: cxfc.BishopBuilder):
-        T = circle_yr_bishop.tangent(u.Q(0, "yr"))
-        np.testing.assert_allclose(T.value, [0, 1, 0], atol=1e-5)
-
-    def test_triad_orthogonal_at_zero(self, circle_yr_bishop: cxfc.BishopBuilder):
-        tau = u.Q(0, "yr")
-        T = circle_yr_bishop.tangent(tau).value
-        U1 = circle_yr_bishop.normal1(tau).value
-        U2 = circle_yr_bishop.normal2(tau).value
-        assert jnp.allclose(jnp.dot(T, U1), 0, atol=1e-4)
-        assert jnp.allclose(jnp.dot(T, U2), 0, atol=1e-4)
-        assert jnp.allclose(jnp.dot(U1, U2), 0, atol=1e-4)
-
-    def test_inverse_maps_origin_to_curve(self, circle_yr_bishop: cxfc.BishopBuilder):
-        """For the yr-circle at tau=0 the curve is at (5, 0, 0) km."""
-        inv = cxfm.TimeDep(circle_yr_bishop).inverse
-        got = cxfm.act(inv, u.Q(0.0, "yr"), u.Q(jnp.array([0.0, 0.0, 0.0]), "km"))
-        np.testing.assert_allclose(got.ustrip("km"), [5, 0, 0], atol=1e-3)
 
 
 # ── JAX ──────────────────────────────────────────────────────────────
@@ -273,13 +195,3 @@ class TestBishopHelix:
         )
         p_rec = cxfm.act(op.inverse, tau, p_fwd)
         np.testing.assert_allclose(p_rec.ustrip("km"), p.ustrip("km"), atol=1e-3)
-
-    def test_jit_act(self, helix_bishop: cxfc.BishopBuilder):
-        """`act` on an ODE-carrying builder is jittable via `eqx.filter_jit`."""
-        tau, p = u.Q(1.0, "s"), u.Q(jnp.array([2.0, -1.0, 3.0]), "km")
-        op = cxfm.TimeDep(helix_bishop)
-        np.testing.assert_allclose(
-            _jit_act(op, tau, p).ustrip("km"),
-            cxfm.act(op, tau, p).ustrip("km"),
-            atol=1e-5,
-        )

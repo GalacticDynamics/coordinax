@@ -84,26 +84,11 @@ def _orthonormalize(v: Any, T0_val: Any) -> Any:
 
 
 def _auto_initial_normal(T0_val: Any) -> Any:
-    r"""Choose an initial normal vector via Gram--Schmidt projection.
+    r"""Choose an initial unit normal to the unit tangent $\mathbf{T}_0$.
 
-    Given the unit tangent $\mathbf{T}_0$ at the reference parameter $\tau_0$,
-    this function selects the standard basis vector $\mathbf{e}_k$ that is
-    **least aligned** with $\mathbf{T}_0$ (i.e. $k = \arg\min_j\, |\mathbf{T}_0
-    \cdot \mathbf{e}_j|$), then projects out the tangent component and
-    normalises the result.
-
-    This guarantees a numerically stable initial normal even when $\mathbf{T}_0$
-    is closely aligned with one of the coordinate axes.
-
-    Parameters
-    ----------
-    T0_val : array-like, shape ``(3,)``
-        Dimensionless unit tangent vector at $\tau_0$.
-
-    Returns
-    -------
-    array, shape ``(3,)``
-        Dimensionless unit normal $\mathbf{U}_{1,0}$.
+    Gram--Schmidt against the standard basis vector least aligned with
+    $\mathbf{T}_0$, which keeps the rejection well-conditioned even when
+    $\mathbf{T}_0$ nearly coincides with a coordinate axis.
 
     Examples
     --------

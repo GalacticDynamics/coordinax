@@ -31,6 +31,7 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
+from .conftest import circle, inverse_rotation
 
 TAUS = [0, 0.5, 1, 2.5, jnp.pi]
 
@@ -46,15 +47,6 @@ def jit_act(op: object, tau: object, x: object) -> object:
     return cxfm.act(op, tau, x)
 
 
-def inverse_rotation(builder: object, tau: u.AbstractQuantity) -> object:
-    """Rotation matrix of the inverse family at ``tau`` (i.e. R^T).
-
-    The rows of this matrix are the inverse frame's triad, i.e. the *columns*
-    of the forward R.
-    """
-    return cxfm.TimeDep(builder).inverse.materialize(tau)[0].R
-
-
 # ===================================================================
 # Frame fields
 
@@ -65,7 +57,7 @@ class TestTriad:
     def test_location_is_the_curve(self, pt_case: SimpleNamespace) -> None:
         """The location field is gamma itself: gamma(0) = (1,0,0) km."""
         loc = pt_case.builder.location(u.Q(0, "s"))
-        np.testing.assert_allclose(loc.value, [1, 0, 0], atol=pt_case.tol.location)
+        np.testing.assert_allclose(loc.value, [1, 0, 0], atol=pt_case.tol.tight)
 
     def test_location_matches_curve_off_zero(self, pt_case: SimpleNamespace) -> None:
         """`location` is the curve, evaluated -- not a copy of it."""
@@ -73,18 +65,18 @@ class TestTriad:
         np.testing.assert_allclose(
             pt_case.builder.location(tau).value,
             pt_case.builder.curve(tau).value,
-            atol=pt_case.tol.location,
+            atol=pt_case.tol.tight,
         )
 
-    def test_tangent_at_zero(self, pt_case: SimpleNamespace) -> None:
-        """At tau=0 on the unit circle, T = (0, 1, 0)."""
-        T = pt_case.builder.tangent(u.Q(0, "s"))
-        np.testing.assert_allclose(T.value, [0, 1, 0], atol=pt_case.tol.field)
-
-    def test_tangent_at_pi_over_2(self, pt_case: SimpleNamespace) -> None:
-        """At tau=pi/2, T = (-1, 0, 0)."""
-        T = pt_case.builder.tangent(u.Q(jnp.pi / 2, "s"))
-        np.testing.assert_allclose(T.value, [-1, 0, 0], atol=pt_case.tol.field)
+    @pytest.mark.parametrize(
+        ("tau_val", "expected"), [(0, [0, 1, 0]), (jnp.pi / 2, [-1, 0, 0])]
+    )
+    def test_tangent_value(
+        self, pt_case: SimpleNamespace, tau_val: float, expected: list[float]
+    ) -> None:
+        """On the unit circle T = (0,1,0) at tau=0 and (-1,0,0) at tau=pi/2."""
+        T = pt_case.builder.tangent(u.Q(tau_val, "s"))
+        np.testing.assert_allclose(T.value, expected, atol=pt_case.tol.field)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_unit_length(self, pt_case: SimpleNamespace, tau_val: float) -> None:
@@ -101,9 +93,9 @@ class TestTriad:
         e0, e1, e2 = (
             e.value for e in pt_case.fields(pt_case.builder, u.Q(tau_val, "s"))
         )
-        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.tol.orthogonality)
-        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.tol.orthogonality)
-        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.tol.orthogonality)
+        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.tol.field)
+        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.tol.field)
+        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.tol.field)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_right_handed(self, pt_case: SimpleNamespace, tau_val: float) -> None:
@@ -111,9 +103,7 @@ class TestTriad:
         e0, e1, e2 = (
             e.value for e in pt_case.fields(pt_case.builder, u.Q(tau_val, "s"))
         )
-        np.testing.assert_allclose(
-            jnp.cross(e0, e1), e2, atol=pt_case.tol.orthogonality
-        )
+        np.testing.assert_allclose(jnp.cross(e0, e1), e2, atol=pt_case.tol.field)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_rotation_matrix_rows_are_the_triad(
@@ -141,14 +131,21 @@ class TestInverse:
     def test_inverse_orthonormality(
         self, pt_case: SimpleNamespace, tau_val: float
     ) -> None:
-        """The inverse triad is itself orthonormal."""
+        """The inverse triad is itself orthonormal.
+
+        Not fully subsumed by `test_inverse_rotation_is_transpose` plus the
+        forward triad's orthonormality: chaining those two bounds (each good
+        to `tol.field`) only guarantees this one to a small constant multiple
+        of `tol.field`, via the triangle inequality on the dot products.
+        """
         Rinv = inverse_rotation(pt_case.builder, u.Q(tau_val, "s"))
         e0, e1, e2 = Rinv[0], Rinv[1], Rinv[2]
-        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.tol.orthogonality)
-        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.tol.orthogonality)
-        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.tol.orthogonality)
+        atol = 3 * pt_case.tol.field
+        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=atol)
+        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=atol)
+        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=atol)
         for v in (e0, e1, e2):
-            assert jnp.allclose(jnp.linalg.norm(v), 1, atol=pt_case.tol.orthogonality)
+            assert jnp.allclose(jnp.linalg.norm(v), 1, atol=atol)
 
     @pytest.mark.parametrize("tau_val", TAUS)
     def test_inverse_rotation_is_transpose(
@@ -182,12 +179,12 @@ class TestInverse:
         np.testing.assert_allclose(
             cxfm.act(xop, tau, p).ustrip("km"),
             p_fwd.ustrip("km"),
-            atol=pt_case.tol.transform_roundtrip,
+            atol=pt_case.tol.loose,
         )
 
         p_rec = cxfm.act(xop.inverse, tau, p_fwd)
         np.testing.assert_allclose(
-            p_rec.ustrip("km"), p.ustrip("km"), atol=pt_case.tol.transform_roundtrip
+            p_rec.ustrip("km"), p.ustrip("km"), atol=pt_case.tol.loose
         )
 
     @pytest.mark.parametrize("tau_val", [0, 1, jnp.pi])
@@ -201,7 +198,7 @@ class TestInverse:
         np.testing.assert_allclose(
             cxfm.act(xop.inverse.inverse, tau, p).ustrip("km"),
             cxfm.act(xop, tau, p).ustrip("km"),
-            atol=pt_case.tol.double_inverse,
+            atol=pt_case.tol.field,
         )
 
     def test_inverse_jit(self, pt_case: SimpleNamespace) -> None:
@@ -209,9 +206,7 @@ class TestInverse:
         got = jit_act(
             pt_case.xop.inverse, u.Q(0.0, "s"), u.Q(jnp.array([0.0, 0.0, 0.0]), "km")
         )
-        np.testing.assert_allclose(
-            got.ustrip("km"), [1, 0, 0], atol=pt_case.tol.act_roundtrip
-        )
+        np.testing.assert_allclose(got.ustrip("km"), [1, 0, 0], atol=pt_case.tol.field)
 
 
 # ===================================================================
@@ -239,38 +234,58 @@ class TestJAX:
 class TestConstructors:
     """A builder is built from a bare curve; the frame wraps it in TimeDep."""
 
-    def test_builder_from_bare_curve(self, pt_case: SimpleNamespace, curve) -> None:
-        built = pt_case.builder_cls(curve)
+    def test_builder_from_bare_curve(self, pt_case: SimpleNamespace) -> None:
+        built = pt_case.builder_cls(circle)
         np.testing.assert_allclose(
-            built.location(u.Q(0, "s")).value, [1, 0, 0], atol=pt_case.tol.location
+            built.location(u.Q(0, "s")).value, [1, 0, 0], atol=pt_case.tol.tight
         )
 
-    def test_frame_is_parallel_transport_frame(self, pt_case: SimpleNamespace) -> None:
-        assert isinstance(pt_case.frame, cxfc.AbstractParallelTransportFrame)
+    def test_frame_is_well_typed(self, pt_case: SimpleNamespace) -> None:
+        """Both construction routes give a frame wrapping this type's builder.
 
-    def test_frame_is_transformed_reference_frame(
-        self, pt_case: SimpleNamespace
-    ) -> None:
-        assert isinstance(pt_case.frame, cxf.AbstractTransformedReferenceFrame)
-
-    def test_frame_direct_construction(self, pt_case: SimpleNamespace) -> None:
-        """A frame can be built from base_frame + xop + xop_inv."""
+        `from_curve` (``pt_case.frame``) and the direct
+        ``base_frame + xop + xop_inv`` constructor must agree on every
+        structural claim.
+        """
         xop = pt_case.xop
-        frame = pt_case.frame_cls(base_frame=cxf.Alice(), xop=xop, xop_inv=xop.inverse)
-        assert isinstance(frame.base_frame, cxf.Alice)
-        assert isinstance(frame.xop, cxfm.TimeDep)
-        assert isinstance(frame.xop.builder, pt_case.builder_cls)
+        direct = pt_case.frame_cls(base_frame=cxf.Alice(), xop=xop, xop_inv=xop.inverse)
+        for frame in (pt_case.frame, direct):
+            assert isinstance(frame, cxfc.AbstractParallelTransportFrame)
+            assert isinstance(frame, cxf.AbstractTransformedReferenceFrame)
+            assert isinstance(frame.base_frame, cxf.Alice)
+            assert isinstance(frame.xop, cxfm.TimeDep)
+            assert isinstance(frame.xop.builder, pt_case.builder_cls)
 
-    def test_frame_from_curve_accepts_tau_unit(
-        self, pt_case: SimpleNamespace, curve
-    ) -> None:
-        frame = pt_case.frame_cls.from_curve(cxf.Alice(), curve, tau_unit="yr")
+    def test_frame_from_curve_accepts_tau_unit(self, pt_case: SimpleNamespace) -> None:
+        frame = pt_case.frame_cls.from_curve(cxf.Alice(), circle, tau_unit="yr")
         assert frame.xop.builder.tau_unit == u.unit("yr")
 
-    def test_frame_xop_wraps_a_matching_builder(self, pt_case: SimpleNamespace) -> None:
-        """`xop` is a `TimeDep` wrapping this type's builder."""
-        assert isinstance(pt_case.frame.xop, cxfm.TimeDep)
-        assert isinstance(pt_case.frame.xop.builder, pt_case.builder_cls)
+
+# ===================================================================
+# Opaque units
+
+
+class TestOpaqueUnits:
+    """A curve whose internal unit (yr) differs from the caller's."""
+
+    def test_tau_unit_is_stored(self, pt_case: SimpleNamespace) -> None:
+        assert pt_case.yr_builder.tau_unit == u.unit("yr")
+
+    def test_tangent_at_zero(self, pt_case: SimpleNamespace) -> None:
+        T = pt_case.yr_builder.tangent(u.Q(0, "yr"))
+        np.testing.assert_allclose(T.value, [0, 1, 0], atol=pt_case.tol.field)
+
+    def test_triad_orthogonal_at_zero(self, pt_case: SimpleNamespace) -> None:
+        e0, e1, e2 = (e.value for e in pt_case.fields(pt_case.yr_builder, u.Q(0, "yr")))
+        assert jnp.allclose(jnp.dot(e0, e1), 0, atol=pt_case.tol.field)
+        assert jnp.allclose(jnp.dot(e0, e2), 0, atol=pt_case.tol.field)
+        assert jnp.allclose(jnp.dot(e1, e2), 0, atol=pt_case.tol.field)
+
+    def test_inverse_maps_origin_to_curve(self, pt_case: SimpleNamespace) -> None:
+        """For the yr-circle at tau=0 the curve is at (5, 0, 0) km."""
+        inv = cxfm.TimeDep(pt_case.yr_builder).inverse
+        got = cxfm.act(inv, u.Q(0.0, "yr"), u.Q(jnp.array([0.0, 0.0, 0.0]), "km"))
+        np.testing.assert_allclose(got.ustrip("km"), [5, 0, 0], atol=pt_case.tol.loose)
 
 
 # ===================================================================
@@ -280,46 +295,46 @@ class TestConstructors:
 class TestAct:
     """Active-transform semantics on a bare Quantity."""
 
-    def test_point_on_curve_maps_to_origin(self, pt_case: SimpleNamespace, arr) -> None:
+    def test_point_on_curve_maps_to_origin(self, pt_case: SimpleNamespace) -> None:
         """A point at gamma(0) has delta = 0, so it maps to (0,0,0)."""
         p = u.Q(jnp.array([1, 0, 0]), "km")
         result = cxfm.act(pt_case.xop, u.Q(0, "s"), p)
-        np.testing.assert_allclose(arr(result, "km"), [0, 0, 0], atol=pt_case.tol.act)
+        np.testing.assert_allclose(
+            result.ustrip("km"), [0, 0, 0], atol=pt_case.tol.field
+        )
 
-    def test_inverse_maps_origin_back_to_curve(
-        self, pt_case: SimpleNamespace, arr
-    ) -> None:
+    def test_inverse_maps_origin_back_to_curve(self, pt_case: SimpleNamespace) -> None:
         """The curve-frame origin at tau=0 maps back to gamma(0)."""
         result = cxfm.act(
             pt_case.xop.inverse, u.Q(0, "s"), u.Q(jnp.array([0, 0, 0]), "km")
         )
         np.testing.assert_allclose(
-            arr(result, "km"), [1, 0, 0], atol=pt_case.tol.act_roundtrip
+            result.ustrip("km"), [1, 0, 0], atol=pt_case.tol.field
         )
 
-    def test_act_inverse_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
+    def test_act_inverse_roundtrip(self, pt_case: SimpleNamespace) -> None:
         tau, p = u.Q(0.5, "s"), u.Q(jnp.array([3, -1, 2]), "km")
         fwd = cxfm.act(pt_case.xop, tau, p)
         back = cxfm.act(pt_case.xop.inverse, tau, fwd)
         np.testing.assert_allclose(
-            arr(back, "km"), arr(p, "km"), atol=pt_case.tol.act_roundtrip
+            back.ustrip("km"), p.ustrip("km"), atol=pt_case.tol.field
         )
 
     def test_different_tau_gives_different_result(
-        self, pt_case: SimpleNamespace, arr
+        self, pt_case: SimpleNamespace
     ) -> None:
         """The frame rotates along the curve, so tau matters."""
         p = u.Q(jnp.array([2, 0, 0]), "km")
         r1 = cxfm.act(pt_case.xop, u.Q(0, "s"), p)
         r2 = cxfm.act(pt_case.xop, u.Q(1, "s"), p)
-        assert not np.allclose(arr(r1, "km"), arr(r2, "km"), atol=1e-3)
+        assert not np.allclose(r1.ustrip("km"), r2.ustrip("km"), atol=1e-3)
 
-    def test_act_jit(self, pt_case: SimpleNamespace, arr) -> None:
+    def test_act_jit(self, pt_case: SimpleNamespace) -> None:
         tau, p = u.Q(0, "s"), u.Q(jnp.array([2, 0, 0]), "km")
         eager = cxfm.act(pt_case.xop, tau, p)
         jitted = jit_act(pt_case.xop, tau, p)
         np.testing.assert_allclose(
-            arr(jitted, "km"), arr(eager, "km"), atol=pt_case.tol.plumbing
+            jitted.ustrip("km"), eager.ustrip("km"), atol=pt_case.tol.plumbing
         )
 
     def test_act_vmap_over_tau(self, pt_case: SimpleNamespace) -> None:
@@ -327,7 +342,10 @@ class TestAct:
         p = u.Q(jnp.array([2, 0, 0]), "km")
         xop = pt_case.xop
         results = jax.vmap(lambda t: cxfm.act(xop, t, p))(taus)
-        assert results.shape == (5, 3)
+        eager = [cxfm.act(xop, taus[i], p).ustrip("km") for i in range(len(taus))]
+        np.testing.assert_allclose(
+            results.ustrip("km"), eager, atol=pt_case.tol.plumbing
+        )
 
 
 # ===================================================================
@@ -349,17 +367,17 @@ class TestFrameTransition:
         )
         assert isinstance(op, cxfm.AbstractTransform)
 
-    def test_alice_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
+    def test_alice_roundtrip(self, pt_case: SimpleNamespace) -> None:
         """Alice -> curve frame -> Alice is the identity."""
         tau, p = u.Q(0.5, "s"), u.Q(jnp.array([3, -1, 2]), "km")
         fwd = cxf.frame_transition(cxf.Alice(), pt_case.frame)
         bwd = cxf.frame_transition(pt_case.frame, cxf.Alice())
         back = cxfm.act(bwd, tau, cxfm.act(fwd, tau, p))
         np.testing.assert_allclose(
-            arr(back, "km"), arr(p, "km"), atol=pt_case.tol.chain
+            back.ustrip("km"), p.ustrip("km"), atol=pt_case.tol.field
         )
 
-    def test_alex_chain_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
+    def test_alex_chain_roundtrip(self, pt_case: SimpleNamespace) -> None:
         """Curve frame -> Alex -> curve frame is the identity."""
         tau, p = u.Q(0, "s"), u.Q(jnp.array([2, 0, 0]), "km")
         frame = pt_case.frame
@@ -367,10 +385,10 @@ class TestFrameTransition:
         p_alex = cxfm.act(cxf.frame_transition(frame, cxf.Alex()), tau, p_frame)
         p_back = cxfm.act(cxf.frame_transition(cxf.Alex(), frame), tau, p_alex)
         np.testing.assert_allclose(
-            arr(p_back, "km"), arr(p_frame, "km"), atol=pt_case.tol.chain
+            p_back.ustrip("km"), p_frame.ustrip("km"), atol=pt_case.tol.field
         )
 
-    def test_full_chain_roundtrip(self, pt_case: SimpleNamespace, arr) -> None:
+    def test_full_chain_roundtrip(self, pt_case: SimpleNamespace) -> None:
         """Alice -> frame -> Alex -> frame -> Alice recovers the original."""
         tau, p = u.Q(0.3, "s"), u.Q(jnp.array([5, -2, 1]), "km")
         frame = pt_case.frame
@@ -381,17 +399,17 @@ class TestFrameTransition:
         op4 = cxf.frame_transition(frame, cxf.Alice())
         back = cxfm.act(op4, tau, cxfm.act(op3, tau, p_alex))
         np.testing.assert_allclose(
-            arr(back, "km"), arr(p, "km"), atol=pt_case.tol.full_chain
+            back.ustrip("km"), p.ustrip("km"), atol=pt_case.tol.loose
         )
 
     def test_transition_matches_direct_transform(
-        self, pt_case: SimpleNamespace, arr
+        self, pt_case: SimpleNamespace
     ) -> None:
         """`frame_transition(Alice, frame)` applies the same map as the xop."""
         tau, p = u.Q(0.5, "s"), u.Q(jnp.array([2, 1, 0]), "km")
         op = cxf.frame_transition(cxf.Alice(), pt_case.frame)
         np.testing.assert_allclose(
-            arr(cxfm.act(op, tau, p), "km"),
-            arr(cxfm.act(pt_case.xop, tau, p), "km"),
+            cxfm.act(op, tau, p).ustrip("km"),
+            cxfm.act(pt_case.xop, tau, p).ustrip("km"),
             atol=pt_case.tol.plumbing,
         )

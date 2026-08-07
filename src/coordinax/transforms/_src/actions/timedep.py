@@ -93,20 +93,12 @@ class TimeDep(AbstractTransform):
 
     Examples
     --------
-    >>> import equinox as eqx
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
-    >>> class RotZ(eqx.Module):
-    ...     omega: u.AbstractQuantity
-    ...     def __call__(self, tau):
-    ...         th = (self.omega * tau).ustrip("rad")
-    ...         st, ct = jnp.sin(th), jnp.cos(th)
-    ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-    ...         return cxfm.Rotate(R)
-
-    >>> op = cxfm.TimeDep(RotZ(u.Q(jnp.pi / 2, "rad/s")))
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = op(u.Q(1.0, "s"), q)
     >>> out["y"].round(3)
@@ -128,20 +120,12 @@ class TimeDep(AbstractTransform):
 
         Examples
         --------
-        >>> import equinox as eqx
         >>> import jax.numpy as jnp
         >>> import unxt as u
         >>> import coordinax.transforms as cxfm
 
-        >>> class RotZ(eqx.Module):
-        ...     omega: u.AbstractQuantity
-        ...     def __call__(self, tau):
-        ...         th = (self.omega * tau).ustrip("rad")
-        ...         st, ct = jnp.sin(th), jnp.cos(th)
-        ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-        ...         return cxfm.Rotate(R)
-
-        >>> op = cxfm.TimeDep(RotZ(u.Q(jnp.pi / 2, "rad/s")))
+        >>> zhat = jnp.array([0.0, 0.0, 1.0])
+        >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
         >>> op.inverse.inverse.builder is op.builder  # involution unwraps
         True
 
@@ -175,23 +159,13 @@ class TimeDep(AbstractTransform):
 
         Examples
         --------
-        >>> import equinox as eqx
         >>> import jax.numpy as jnp
         >>> import unxt as u
-        >>> import coordinax.charts as cxc
-        >>> import coordinax.representations as cxr
         >>> import coordinax.transforms as cxfm
 
-        >>> class RotZ(eqx.Module):
-        ...     omega: u.AbstractQuantity
-        ...     def __call__(self, tau):
-        ...         th = (self.omega * tau).ustrip("rad")
-        ...         st, ct = jnp.sin(th), jnp.cos(th)
-        ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-        ...         return cxfm.Rotate(R)
-
-        >>> a = cxfm.TimeDep(RotZ(u.Q(0.3, "rad/s")))
-        >>> b = cxfm.TimeDep(RotZ(u.Q(0.5, "rad/s")))
+        >>> zhat = jnp.array([0.0, 0.0, 1.0])
+        >>> a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=zhat))
+        >>> b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=zhat))
         >>> ab = a @ b
         >>> isinstance(ab, cxfm.TimeDep)
         True
@@ -260,22 +234,14 @@ def act(
 
     Examples
     --------
-    >>> import equinox as eqx
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import coordinax.transforms as cxfm
 
-    >>> class RotZ(eqx.Module):
-    ...     omega: u.AbstractQuantity
-    ...     def __call__(self, tau):
-    ...         th = (self.omega * tau).ustrip("rad")
-    ...         st, ct = jnp.sin(th), jnp.cos(th)
-    ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-    ...         return cxfm.Rotate(R)
-
-    >>> op = cxfm.TimeDep(RotZ(u.Q(jnp.pi / 2, "rad/s")))
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = cxfm.act(op, u.Q(1.0, "s"), q, cxc.cart3d, cxr.point)
     >>> out["y"].round(3)
@@ -301,22 +267,14 @@ def pushforward(
 
     Examples
     --------
-    >>> import equinox as eqx
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
     >>> import coordinax.transforms as cxfm
 
-    >>> class RotZ(eqx.Module):
-    ...     omega: u.AbstractQuantity
-    ...     def __call__(self, tau):
-    ...         th = (self.omega * tau).ustrip("rad")
-    ...         st, ct = jnp.sin(th), jnp.cos(th)
-    ...         R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-    ...         return cxfm.Rotate(R)
-
-    >>> op = cxfm.TimeDep(RotZ(u.Q(90, "deg/s")))
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
     >>> v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
     >>> out = cxfm.pushforward(op, u.Q(1.0, "s"), v, cxc.cart3d, cxr.coord_vel)
     >>> out["y"].round(3)
@@ -339,16 +297,12 @@ def simplify(op: TimeDep, /, *, approx: bool = True, **kw: Any) -> AbstractTrans
 
     Examples
     --------
-    >>> import equinox as eqx
+    >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
-    >>> class RotZ(eqx.Module):
-    ...     omega: u.AbstractQuantity
-    ...     def __call__(self, tau):
-    ...         return cxfm.identity
-
-    >>> op = cxfm.TimeDep(RotZ(u.Q(1.0, "rad/s")))
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
     >>> cxfm.simplify(op) is op
     True
 

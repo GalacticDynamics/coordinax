@@ -576,6 +576,30 @@ def act(
       by the $m$-th prolongation, which requires the lower jet slots: the base
       point ``at`` and, for $m = 2$, the velocity ``at_vel``.
 
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    A uniformly rotating frame (angular speed 1 rad/s about z):
+
+    >>> op = cxfm.TimeDep(
+    ...     cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=jnp.asarray([0., 0., 1.]))
+    ... )
+
+    At tau=0 the rotation is the identity but the velocity still gains the
+    $\dot R x$ (angular) term:
+
+    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> v = {"x": u.Q(0.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> out = cxfm.act(op, u.Q(0.0, "s"), v, cxc.cart3d, cxr.tangent_geom,
+    ...                cxr.coord_vel, at=at)
+    >>> out["y"].round(3)
+    Q(1., 'm / s')
+
     """
     del kw
     m = rep.semantic_kind.order

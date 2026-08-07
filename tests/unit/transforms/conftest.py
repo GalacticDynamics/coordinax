@@ -121,3 +121,17 @@ EXPECTED_ROTATE = (0, 1, 0)  # 90° z-rotation
 EXPECTED_REFLECT = (-1, 0, 0)  # reflection across yz-plane
 EXPECTED_TRANSLATE = (2, 0, 0)  # +1 km in x
 EXPECTED_COMPOSED = (0, 2, 0)  # translate then rotate
+
+
+# ===================================================================
+# Shared CDict constants for the TimeDep / builder tests
+
+ZHAT = jnp.asarray([0.0, 0.0, 1.0])
+X_M = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+ORIGIN_M = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+ORIGIN_KM = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+
+
+def rot_z(omega):
+    """Uniform rotation about z: a builder with ``omega`` as a leaf."""
+    return cxfm.RotationAboutAxis(omega, axis=ZHAT)

@@ -84,17 +84,10 @@ class AbstractAdd(AbstractTransform):
     def __check_init__(self) -> None:
         """Reject a callable ``delta`` at construction.
 
-        ``delta`` is a plain `dict` field with no coercion, so a function would
-        otherwise sail through ``__init__`` and only fail somewhere downstream.
-        Runtime type-checking rejects it too, but that is enabled only under
-        this project's pytest configuration — for library users this guard is
-        the ONLY construction-time rejection, so it must not be removed on the
-        grounds that the type annotation "already covers it".
-
-        No doctest here: under the doctest runner the type-checker preempts
-        this method, so an example would demonstrate the wrong error. See
-        ``tests/unit/transforms/test_translate.py::TestCallableDeltaRejected``,
-        which calls this method directly.
+        NOTE: keep this. ``delta`` is an uncoerced `dict` field, so this is the
+        only construction-time rejection library users get; the runtime
+        type-check that also catches it is on only under this project's pytest
+        config. Guarded by ``test_translate.py::TestCallableDeltaRejected``.
         """
         if callable(self.delta):
             raise TypeError(_MSG_CALLABLE_DELTA.format(cls=type(self).__name__))
@@ -308,7 +301,7 @@ def _prolong_slotwise(
     # slot 0 IS the point, so a strict point dispatch need not accept it.
     # Any tangent slot indexes jet[0], so require it explicitly here — a
     # bare KeyError would otherwise mask the same guard prolong_jet gives.
-    if 0 not in jet and any(m != 0 for m in jet):
+    if jet and 0 not in jet:
         raise TypeError(_MSG_JET_SLOT0_MISSING)
 
     out: dict = {}
@@ -323,11 +316,11 @@ def _prolong_slotwise(
             # Point geometry: `TimeDep`'s point rule is materialize-and-
             # delegate, so acting with `op0` is the same call it would make.
             out[m] = cxfmapi.act(op0, tau, slot, chart, rep, usys=usys)
-        elif m < k:
-            out[m] = slot  # lower-order fibres are untouched by the offset
         else:
-            op_m = _fibre_ladder_op(cast("TimeDep", op), op0, tau, m - k, rep)
-            out[m] = cxfmapi.act(op_m, tau, slot, chart, rep, usys=usys, **anchor)
+            op_ = cast("TimeDep", op)
+            out[m] = _ladder_act(
+                op_, op0, k, tau, slot, chart, rep, usys=usys, **anchor
+            )
     return out
 
 
@@ -352,10 +345,8 @@ def _prolong_slotwise(
 def _generic_tangent_act() -> Any:
     """Return the engine's generic tangent ``act`` (``prolong.py``), lazily.
 
-    The `TimeDep` rule below dispatches strictly more specifically than the
-    engine's, so a non-fibre `TimeDep` can only get the engine's behaviour by
-    invoking it explicitly. Resolved on first call (and cached) because the
-    registration does not exist at this module's import time.
+    Resolved on first call (and cached): the registration does not exist at
+    this module's import time.
     """
     return cxfmapi.act.invoke(
         AbstractTransform,
@@ -383,16 +374,9 @@ def _ladder_order(op0: Any, /) -> int | None:
         return None
     if not isinstance(op0, AbstractAdd):
         return None
-    # `Boost` is deliberately excluded: its `delta` is a velocity, but its
-    # point action is `delta * tau`, NOT the identity — the funnel captures it
-    # by differentiation and MUST keep doing so. It falls through today only
-    # because it has no `semantic_kind` field; this check makes that
-    # intentional, so adding one for symmetry cannot silently reroute `Boost`
-    # onto the ladder path and lose its point action.
-    from .boost import Boost  # noqa: PLC0415  (boost.py imports AbstractAdd)
-
-    if isinstance(op0, Boost):
-        return None
+    # `Boost` has no `semantic_kind`, so it reads as order 0 and falls through
+    # to the funnel — which is required: its point action is `delta * tau`, not
+    # the identity, and only differentiation captures it.
     k = getattr(op0, "semantic_kind", cxr.dpl).order
     return k if k >= 1 else None
 
@@ -439,6 +423,29 @@ def _fibre_ladder_op(
         delta = tau_derivative(delta_at, tau, n=n)
 
     return replace(op0, delta=delta, semantic_kind=rep.semantic_kind)
+
+
+def _ladder_act(
+    op: "TimeDep",
+    op0: AbstractAdd,
+    k: int,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    rep: Any,
+    /,
+    **kw: Any,
+) -> CDict:
+    r"""Fibre-offset ladder rule: order-$m$ data gains $d^{m-k}\delta/d\tau^{m-k}$.
+
+    ``op0`` is ``op`` already materialized at ``tau`` and ``k`` its ladder
+    order, both supplied by the caller so neither is recomputed here.
+    """
+    m = cast("int", rep.semantic_kind.order)
+    if m < k:
+        return x  # lower-order fibres are untouched by a higher-order offset
+    op_m = _fibre_ladder_op(op, op0, tau, m - k, rep)
+    return cast("CDict", cxfmapi.act(op_m, tau, x, chart, rep, **kw))
 
 
 @plum.dispatch
@@ -506,12 +513,8 @@ def act(
             ),
         )
 
-    # Lower-order fibres are untouched by a higher-order offset.
-    if m < k:
-        return x
-
-    op_m = _fibre_ladder_op(op, cast("AbstractAdd", op0), tau, m - k, rep)
-    return cast("CDict", cxfmapi.act(op_m, tau, x, chart, rep, at=at, usys=usys, **kw))
+    op0_ = cast("AbstractAdd", op0)
+    return _ladder_act(op, op0_, k, tau, x, chart, rep, at=at, usys=usys, **kw)
 
 
 @plum.dispatch

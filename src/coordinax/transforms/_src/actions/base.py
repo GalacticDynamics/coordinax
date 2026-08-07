@@ -342,45 +342,10 @@ OpT = TypeVar("OpT", bound=_DataclassBase)
 
 
 def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
-    r"""Evaluate the parametric parts of an operator at a given time.
+    r"""Evaluate every `TimeDep` part of an operator at time ``tau``.
 
-    This function materializes an operator by evaluating every `TimeDep`
-    part of it — recursively, through `Composed` — at the specified time
-    ``tau``, returning a new operator with no remaining `TimeDep` parts.
-
-    Mathematically, if an operator $\mathrm{Op}$ has parts that depend on
-    an affine parameter $\tau$, then:
-
-    $$
-    \mathrm{materialize\_transform}(\mathrm{Op}, \tau) \to \mathrm{Op}_\tau
-    $$
-
-    where $\mathrm{Op}_\tau$ is the operator with all `TimeDep` parts
-    evaluated at $\tau$.
-
-    Parameters
-    ----------
-    op : AbstractTransform
-        The operator to evaluate. May contain `TimeDep` parts, either
-        directly or as `Composed` components.
-    tau : Any
-        The time/affine parameter at which to evaluate `TimeDep` parts.
-        Typically a ``unxt.Quantity`` with time units.
-
-    Returns
-    -------
-    AbstractTransform
-        The operator with every `TimeDep` part evaluated at ``tau``. An
-        operator with no `TimeDep` parts is returned unchanged (the same
-        object).
-
-    Notes
-    -----
-    This function is:
-
-    - **Pure**: No side effects, safe for JAX tracing
-    - **Recursive**: Descends into `Composed` so nested `TimeDep` parts
-      are also evaluated
+    Descends recursively through `Composed`; an operator with no `TimeDep`
+    parts is returned unchanged (the same object).
 
     Examples
     --------
@@ -414,7 +379,7 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
 
     See Also
     --------
-    act : Apply an operator to an input (calls ``materialize_transform`` internally)
+    act : Apply an operator to an input.
 
     """
     # Local imports to avoid a cycle (timedep.py imports base.py).

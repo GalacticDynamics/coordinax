@@ -17,10 +17,8 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
-from .base import is_time_dependent
 from .composed import Composed
 from .custom_types import CDict, OptUSys
-from .prolong import prolong_slot
 from .utils import is_componentwise_offset
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -349,7 +347,10 @@ def act(
     # gains base-point-dependent coupling terms — defer to the generic
     # autodiff engine (which requires the base point 'at').
     if not is_componentwise_offset(op, chart):
-        return _act_translate_nonflat(op, tau, x, chart, rep, m, kw, usys)
+        return cast(
+            "CDict",
+            cxfmapi.pushforward(op, tau, x, chart, rep, at=kw.get("at"), usys=usys),
+        )
 
     # Displacements are same-tau point differences (never gain dtau terms and
     # the Jacobian of a flat translation is the identity).
@@ -403,28 +404,6 @@ def _kick_delta_in_chart(
     kick_rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, op.semantic_kind)
     return cxr.tangent_map(  # ty: ignore[missing-argument]
         delta, op.chart, kick_rep, chart, at=at_in_op_chart, usys=usys
-    )
-
-
-def _act_translate_nonflat(
-    op: Translate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    m: int,
-    kw: dict[str, Any],
-    usys: OptUSys,
-    /,
-) -> CDict:
-    """Generic-engine fallback for a k=0 offset that is not a flat translation."""
-    if m == 0 or not is_time_dependent(op):
-        return cast(
-            "CDict",
-            cxfmapi.pushforward(op, tau, x, chart, rep, at=kw.get("at"), usys=usys),
-        )
-    return prolong_slot(
-        op, tau, x, chart, m, at=kw.get("at"), at_vel=kw.get("at_vel"), usys=usys
     )
 
 

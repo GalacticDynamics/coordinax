@@ -9,49 +9,31 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+from .conftest import X_M as X, ZHAT
 
-X = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
 
-
-def test_rotation_about_axis_matches_euler():
-    b = cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
-    R_t1 = b(u.Q(1.0, "s")).R
+@pytest.mark.parametrize(
+    ("omega", "phase"),
+    [(u.Q(90, "deg/s"), u.Q(0, "deg")), (u.Q(0, "deg/s"), u.Q(90, "deg"))],
+)
+def test_rotation_about_axis_matches_euler(omega, phase):
+    """Theta = omega*tau + phase: both terms reach the same 90 deg rotation."""
+    b = cxfm.RotationAboutAxis(omega, axis=ZHAT, phase=phase)
     want = cxfm.Rotate.from_euler("z", u.Q(90, "deg")).R
-    assert jnp.allclose(R_t1, want, atol=1e-12)
+    assert jnp.allclose(b(u.Q(1.0, "s")).R, want, atol=1e-12)
 
 
-def test_rotation_about_axis_phase():
-    b = cxfm.RotationAboutAxis(
-        u.Q(0, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]), phase=u.Q(90, "deg")
-    )
-    want = cxfm.Rotate.from_euler("z", u.Q(90, "deg")).R
-    assert jnp.allclose(b(u.Q(3.0, "s")).R, want, atol=1e-12)
+@pytest.mark.parametrize("field", ["omega", "phase"])
+def test_rotation_about_axis_differentiable_in_theta_terms(field):
+    """d/dtheta sin(theta) at theta=0 is 1, via either theta term."""
 
-
-def test_rotation_about_axis_differentiable_in_omega():
-    axis = jnp.array([0.0, 0.0, 1.0])
-
-    def y(omega_val):
-        op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(omega_val, "rad/s"), axis=axis))
+    def y(val):
+        kw = {"omega": u.Q(0.0, "rad/s"), "phase": u.Q(0.0, "rad")}
+        kw[field] = u.Q(val, "rad/s" if field == "omega" else "rad")
+        op = cxfm.TimeDep(cxfm.RotationAboutAxis(axis=ZHAT, **kw))
         out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
         return out["y"].ustrip("m")
 
-    assert jnp.allclose(jax.grad(y)(0.0), 1.0, atol=1e-12)
-
-
-def test_rotation_about_axis_differentiable_in_phase():
-    axis = jnp.array([0.0, 0.0, 1.0])
-
-    def y(phase_val):
-        op = cxfm.TimeDep(
-            cxfm.RotationAboutAxis(
-                u.Q(0.0, "rad/s"), axis=axis, phase=u.Q(phase_val, "rad")
-            )
-        )
-        out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
-        return out["y"].ustrip("m")
-
-    # d/dphase sin(phase) at phase=0 is cos(0) = 1
     assert jnp.allclose(jax.grad(y)(0.0), 1.0, atol=1e-12)
 
 

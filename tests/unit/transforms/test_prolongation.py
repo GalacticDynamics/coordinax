@@ -4,8 +4,6 @@ The keystone property tested throughout: every hand-written fast path must
 equal the generic autodiff prolongation of the operator's point action.
 """
 
-from typing import ClassVar
-
 import jax
 import pytest
 from hypothesis import given, settings, strategies as st
@@ -18,6 +16,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
+from .conftest import rot_z
 from coordinax.transforms._src.actions.prolong import prolong_jet
 from coordinax.transforms._src.actions.utils import is_flat_chart
 
@@ -35,12 +34,17 @@ def allclose_cdict(a, b, unit, atol=1e-10):
     )
 
 
-ZHAT = jnp.asarray([0.0, 0.0, 1.0])
+SPH_AT = {"r": u.Q(5.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+SPH_V = {
+    "r": u.Q(0.3, "km/s"),
+    "theta": u.Q(0.01, "rad/s"),
+    "phi": u.Q(0.02, "rad/s"),
+}
 
 
 def rot_z_op() -> cxfm.TimeDep:
     """Uniform rotation about z at 1 rad/s, as a `TimeDep` family."""
-    return cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=ZHAT))
+    return cxfm.TimeDep(rot_z(u.Q(1.0, "rad/s")))
 
 
 def _rot_z_raw_op() -> cxfm.TimeDep:
@@ -102,13 +106,6 @@ class TestTauDerivative:
 # is_time_dependent
 
 
-def _moving_translate() -> cxfm.TimeDep:
-    """A `TimeDep` family wrapping a time-dependent `Translate`."""
-    return cxfm.TimeDep.from_(
-        lambda t: cxfm.Translate(q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d)
-    )
-
-
 class TestIsTimeDependent:
     """Unit tests for `is_time_dependent`.
 
@@ -124,16 +121,16 @@ class TestIsTimeDependent:
         assert not cxfm.is_time_dependent(cxfm.Scale.from_factors([1.0, 2.0, 3.0]))
 
     def test_timedep(self):
-        assert cxfm.is_time_dependent(_moving_translate())
+        assert cxfm.is_time_dependent(uniform_translate(1.0))
 
     def test_composed(self):
         static = cxfm.Translate.from_([1, 2, 3], "km")
-        moving = _moving_translate()
+        moving = uniform_translate(1.0)
         assert cxfm.is_time_dependent(static | moving)
         assert not cxfm.is_time_dependent(static | cxfm.Identity())
 
     def test_inverse_of_time_dependent(self):
-        moving = _moving_translate()
+        moving = uniform_translate(1.0)
         assert cxfm.is_time_dependent(moving.inverse)
 
 
@@ -332,20 +329,10 @@ class TestFastPathEqualsGeneric:
         moving = uniform_translate(3.0)
         tau = u.Q(2.0, "s")
         usys = u.unitsystems.si
-        sph_at = {
-            "r": u.Q(5.0, "km"),
-            "theta": u.Q(1.0, "rad"),
-            "phi": u.Q(0.5, "rad"),
-        }
-        sph_v = {
-            "r": u.Q(0.3, "km/s"),
-            "theta": u.Q(0.01, "rad/s"),
-            "phi": u.Q(0.02, "rad/s"),
-        }
         out_t = cxfm.act(
-            moving, tau, sph_v, cxc.sph3d, cxr.coord_vel, at=sph_at, usys=usys
+            moving, tau, SPH_V, cxc.sph3d, cxr.coord_vel, at=SPH_AT, usys=usys
         )
-        gen = prolong_jet(moving, tau, {0: sph_at, 1: sph_v}, cxc.sph3d, usys=usys)
+        gen = prolong_jet(moving, tau, {0: SPH_AT, 1: SPH_V}, cxc.sph3d, usys=usys)
         for k in out_t:
             unit = u.unit_of(gen[1][k])
             assert jnp.allclose(u.ustrip(unit, out_t[k]), gen[1][k].value, rtol=1e-6)
@@ -697,8 +684,8 @@ class TestUnitPreservation:
     def test_pushforward_preserves_time_units(self):
         """A kpc/Myr velocity pushes forward to kpc/Myr, not kpc/s."""
         op = cxfm.Scale.from_factors([2.0, 2.0, 2.0])
-        v = {k: u.Q(x, "kpc/Myr") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
-        at = {k: u.Q(x, "kpc") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        v = q3(1.0, 0.0, 0.0, "kpc/Myr")
+        at = q3(1.0, 0.0, 0.0, "kpc")
         out = cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
         assert out["x"].unit == u.unit("kpc/Myr")
         assert jnp.allclose(out["x"].value, 2.0)
@@ -707,11 +694,8 @@ class TestUnitPreservation:
         """Jet slots come back in the data's own time base."""
         op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
         jet = {
-            0: {k: u.Q(x, "kpc") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)},
-            1: {
-                k: u.Q(x, "kpc/Myr")
-                for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)
-            },
+            0: q3(1.0, 0.0, 0.0, "kpc"),
+            1: q3(1.0, 0.0, 0.0, "kpc/Myr"),
         }
         out = cxfm.act_jet(op, None, jet, cxc.cart3d)
         assert out[1]["y"].unit == u.unit("kpc/Myr")
@@ -732,10 +716,7 @@ class TestUnitPreservation:
         )
         jet = {
             0: {k: u.Q(0.0, "kpc") for k in "xyz"},
-            1: {
-                k: u.Q(v, "kpc/Myr")
-                for k, v in zip("xyz", (1.0, 0.0, 0.0), strict=False)
-            },
+            1: q3(1.0, 0.0, 0.0, "kpc/Myr"),
         }
         out_myr = cxfm.act_jet(moving, u.Q(2.0, "Myr"), jet, cxc.cart3d)
         out_s = cxfm.act_jet(moving, u.Q(2.0, "Myr").uconvert("s"), jet, cxc.cart3d)
@@ -767,17 +748,6 @@ class TestUnitPreservation:
 class TestNonCartesianOpChart:
     """k=0 Translate with delta in a non-Cartesian chart."""
 
-    sph_at: ClassVar = {
-        "r": u.Q(5.0, "km"),
-        "theta": u.Q(1.0, "rad"),
-        "phi": u.Q(0.5, "rad"),
-    }
-    sph_v: ClassVar = {
-        "r": u.Q(0.3, "km/s"),
-        "theta": u.Q(0.01, "rad/s"),
-        "phi": u.Q(0.02, "rad/s"),
-    }
-
     @staticmethod
     def _td_op():
         def delta(t):
@@ -795,12 +765,8 @@ class TestNonCartesianOpChart:
         op = self._td_op()
         tau = u.Q(2.0, "s")
         usys = u.unitsystems.si
-        fast = cxfm.act(
-            op, tau, self.sph_v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
-        )
-        gen = prolong_jet(
-            op, tau, {0: self.sph_at, 1: self.sph_v}, cxc.sph3d, usys=usys
-        )
+        fast = cxfm.act(op, tau, SPH_V, cxc.sph3d, cxr.coord_vel, at=SPH_AT, usys=usys)
+        gen = prolong_jet(op, tau, {0: SPH_AT, 1: SPH_V}, cxc.sph3d, usys=usys)
         for k in fast:
             unit = u.unit_of(gen[1][k])
             assert jnp.allclose(u.ustrip(unit, fast[k]), gen[1][k].value, rtol=1e-6)
@@ -816,9 +782,7 @@ class TestNonCartesianOpChart:
             chart=cxc.sph3d,
         )
         usys = u.unitsystems.si
-        out = cxfm.act(
-            op, None, self.sph_v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
-        )
+        out = cxfm.act(op, None, SPH_V, cxc.sph3d, cxr.coord_vel, at=SPH_AT, usys=usys)
         # the phi-offset rotates the frame axes at the point: r-vel changes
         assert not jnp.allclose(u.ustrip("km/s", out["r"]), 0.3)
 
@@ -829,7 +793,7 @@ class TestNonCartesianOpChart:
             cxfm.act(
                 op,
                 u.Q(2.0, "s"),
-                self.sph_v,
+                SPH_V,
                 cxc.sph3d,
                 cxr.coord_vel,
                 usys=u.unitsystems.si,
@@ -868,15 +832,13 @@ class TestNonCartesianOpChart:
         }
         # static: NOT identity in spherical components
         op = cxfm.Translate.from_([100.0, 0.0, 0.0], "km")
-        out = cxfm.act(op, None, v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys)
+        out = cxfm.act(op, None, v, cxc.sph3d, cxr.coord_vel, at=SPH_AT, usys=usys)
         assert not jnp.allclose(u.ustrip("km/s", out["r"]), 0.3)
         # TD: computes (previously raised ValueError) and equals generic
         op_td = uniform_translate(3.0)
         tau = u.Q(2.0, "s")
-        fast = cxfm.act(
-            op_td, tau, v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
-        )
-        gen = prolong_jet(op_td, tau, {0: self.sph_at, 1: v}, cxc.sph3d, usys=usys)
+        fast = cxfm.act(op_td, tau, v, cxc.sph3d, cxr.coord_vel, at=SPH_AT, usys=usys)
+        gen = prolong_jet(op_td, tau, {0: SPH_AT, 1: v}, cxc.sph3d, usys=usys)
         for k in fast:
             unit = u.unit_of(gen[1][k])
             assert jnp.allclose(u.ustrip(unit, fast[k]), gen[1][k].value, rtol=1e-6)
@@ -884,10 +846,8 @@ class TestNonCartesianOpChart:
     def test_order2_unit_preservation(self):
         """Acceleration units survive the exact rational time-unit root."""
         op = cxfm.Scale.from_factors([2.0, 2.0, 2.0])
-        a = {
-            k: u.Q(x, "kpc/Myr2") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)
-        }
-        at = {k: u.Q(x, "kpc") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        a = q3(1.0, 0.0, 0.0, "kpc/Myr2")
+        at = q3(1.0, 0.0, 0.0, "kpc")
         out = cxfm.pushforward(op, None, a, cxc.cart3d, cxr.coord_acc, at=at)
         assert out["x"].unit == u.unit("kpc/Myr2")
         assert jnp.allclose(out["x"].value, 2.0)
@@ -914,7 +874,7 @@ class TestNonCartesianOpChart:
         forwards the anchors.
         """
         usys = u.unitsystems.si
-        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        dv = q3(1.0, 0.0, 0.0, "km/s")
         boost = cxfm.Boost(dv, chart=cxc.cart3d)
         a = {
             "r": u.Q(0.0, "km/s2"),
@@ -930,10 +890,10 @@ class TestNonCartesianOpChart:
         with pytest.raises(TypeError, match="requires the base point"):
             cxfm.act(boost, tau, a, cxc.sph3d, cxr.coord_acc, usys=usys)
         fast = cxfm.act(
-            boost, tau, a, cxc.sph3d, cxr.coord_acc, at=self.sph_at, at_vel=v, usys=usys
+            boost, tau, a, cxc.sph3d, cxr.coord_acc, at=SPH_AT, at_vel=v, usys=usys
         )
         td = cxfm.TimeDep(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
-        gen = prolong_jet(td, tau, {0: self.sph_at, 1: v, 2: a}, cxc.sph3d, usys=usys)
+        gen = prolong_jet(td, tau, {0: SPH_AT, 1: v, 2: a}, cxc.sph3d, usys=usys)
         for k in fast:
             unit = u.unit_of(gen[2][k])
             assert jnp.allclose(
@@ -955,7 +915,7 @@ class TestFibreKickCrossChart:
     def test_kick_on_spherical_velocity_matches_tangent_map(self):
         """Cartesian vel-kick on spherical velocity == Jacobian-mapped add."""
         usys = u.unitsystems.si
-        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        dv = q3(1.0, 0.0, 0.0, "km/s")
         kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
         at = {"r": u.Q(5.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
         v = {
@@ -977,7 +937,7 @@ class TestFibreKickCrossChart:
 
     def test_kick_cross_chart_requires_at(self):
         """Without the base point the cross-chart kick raises informatively."""
-        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        dv = q3(1.0, 0.0, 0.0, "km/s")
         kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
         v = {
             "r": u.Q(0.3, "km/s"),
@@ -989,7 +949,7 @@ class TestFibreKickCrossChart:
 
     def test_kick_rejects_bare_arrays(self):
         """Unitless arrays are ambiguous under a kick: rejected, not no-op'd."""
-        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        dv = q3(1.0, 0.0, 0.0, "km/s")
         kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
         arr = jnp.asarray([1.0, 0.0, 0.0])
         with pytest.raises(TypeError, match="ambiguous"):
@@ -1140,7 +1100,7 @@ class TestLinearOpsUnderNewVerbs:
     def test_kick_cross_chart_in_jet(self):
         """Prolong supplies at=jet[0], so cross-chart kicks work in jets."""
         usys = u.unitsystems.si
-        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        dv = q3(1.0, 0.0, 0.0, "km/s")
         kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
         jet = {
             0: {"r": u.Q(5.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")},
