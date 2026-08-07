@@ -113,26 +113,17 @@ def _component_quantities(
         if canon is not None:
             floor = float(u.ustrip(unit, u.Q(floor, canon)))
             cap = float(u.ustrip(unit, u.Q(cap, canon)))
-        # The cap says how large an *unbounded* coordinate may get; its whole
-        # rationale is float32 resolution at huge values. A coordinate its own
-        # domain already bounds has no use for it -- a colatitude stops at pi
-        # either way -- and clamping one couples an angle to what the caller
-        # meant as a length scale. Worse, a cap below such a domain's lower
-        # bound empties it: `magnitude=(1e-3, 1e-2)` used to leave POLAR
-        # needing `0.05 <= theta <= 0.01` and `cdicts` raised `InvalidArgument`
-        # for every chart carrying a colatitude.
+        # Only where the domain is open: a bounded coordinate has no use for a
+        # magnitude, and a cap under its lower bound empties it outright --
+        # `magnitude=(1e-3, 1e-2)` left POLAR needing `0.05 <= theta <= 0.01`.
         if lo is None:
             lo = -cap
         if hi is None:
             hi = cap
 
-        # The floor is for coordinates that run from the origin to infinity --
-        # radii. `min == 0 and max is None` is exactly that half-line, and
-        # `lo` is then just RADIAL's stand-off margin. An explicit floor is the
-        # caller stating the scale of the problem, so it *replaces* that
-        # default rather than being clamped by it: the margin is an absolute
-        # 1e-3 m, so `max(lo, floor)` would silently make every radius below a
-        # millimetre undrawable no matter what magnitude was asked for.
+        # `min == 0 and max is None` is a radial half-line, where `lo` is only
+        # RADIAL's absolute 1e-3 m margin. An explicit floor states the scale
+        # of the problem, so it replaces that default; clamping barred sub-mm.
         if floor > 0 and interval.min == 0.0 and interval.max is None:
             lo = floor
 

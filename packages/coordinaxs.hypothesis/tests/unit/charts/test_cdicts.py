@@ -133,16 +133,9 @@ def test_cdicts_with_no_argument_draws_a_chart(
 
 
 class TestMagnitudeLeavesBoundedComponentsAlone:
-    """`magnitude` scales the *unbounded* coordinates and nothing else.
+    """`magnitude` scales the *unbounded* coordinates and nothing else."""
 
-    Its whole rationale is float32 resolution at large values, so a coordinate
-    its own domain already bounds -- a colatitude stops at pi either way -- has
-    no use for it. Clamping one couples an angle to what the caller meant as a
-    length scale.
-    """
-
-    #: Small enough that clamping an angle by it empties the angle's domain.
-    #: `POLAR` needs ``theta >= 0.05 rad``, so a cap of 0.01 leaves nothing.
+    #: Under `POLAR`'s 0.05 rad lower bound, so a cap of 0.01 leaves nothing.
     TINY = (1e-3, 1e-2)
 
     @pytest.mark.parametrize(
@@ -156,11 +149,7 @@ class TestMagnitudeLeavesBoundedComponentsAlone:
         ],
     )
     def test_a_tiny_magnitude_is_drawable(self, chart) -> None:
-        """Regression: a cap under 0.05 used to empty every angular domain.
-
-        `cdicts` raised `InvalidArgument` outright -- not a filtered draw, an
-        unsatisfiable one -- for any chart carrying a bounded angle.
-        """
+        """Regression: this used to raise `InvalidArgument`, not just filter."""
 
         @given(p=cxst.cdicts(chart, magnitude=self.TINY))
         @settings(max_examples=5, deadline=None)
@@ -172,12 +161,7 @@ class TestMagnitudeLeavesBoundedComponentsAlone:
     @given(p=cxst.cdicts(cxc.sph3d, magnitude=(1e-12, 1e-11)))
     @settings(max_examples=20, deadline=None)
     def test_radius_reaches_the_requested_scale(self, p) -> None:
-        """An explicit floor replaces RADIAL's stand-off margin.
-
-        The margin is an absolute ``1e-3 m``. Clamping the floor by it made
-        every radius below a millimetre undrawable however small a magnitude
-        was asked for.
-        """
+        """An explicit floor replaces RADIAL's absolute 1e-3 m margin."""
         r = float(u.ustrip("m", p["r"]))
         assert 1e-12 <= r <= 1e-11
 
