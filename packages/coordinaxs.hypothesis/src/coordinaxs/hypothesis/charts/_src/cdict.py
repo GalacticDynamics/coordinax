@@ -17,7 +17,6 @@ import numpy as np
 import plum
 import unxt as u
 import unxts.hypothesis as ust
-from hypothesis.extra.array_api import make_strategies_namespace
 
 import coordinax.charts as cxc
 
@@ -195,10 +194,6 @@ def _bounded_elements(
         return (lo is None or v >= lo) and (hi is None or v <= hi)
 
     return elements.filter(_in_domain)
-
-
-# Create array API strategies namespace for JAX
-xps = make_strategies_namespace(jnp)
 
 
 @plum.dispatch.abstract

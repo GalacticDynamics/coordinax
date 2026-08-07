@@ -13,15 +13,11 @@ from typing import Any, cast
 import hypothesis.strategies as st
 import jax.numpy as jnp
 import plum
-from hypothesis.extra.array_api import make_strategies_namespace
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 
 from coordinaxs.hypothesis.utils import CDict, draw_if_strategy, strip_return_annotation
-
-# Create array API strategies namespace for JAX
-xps = make_strategies_namespace(jnp)
 
 
 @plum.dispatch.multi(
