@@ -12,7 +12,6 @@ import plum
 
 import quaxed.numpy as jnp
 import unxt as u
-from optional_dependencies.utils import is_installed
 
 import coordinax.distances as cxd
 from .constants import ANGLE, LENGTH, MAGNITUDE
@@ -189,26 +188,6 @@ def from_(cls: type[Parallax], q: u.AbstractQuantity, /, **kw: Any) -> Parallax:
 # these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
 # and other ``AbstractQuantity`` subclasses still fall through to the
 # dimension-branching dispatch. If the package is not installed this is a no-op.
-if is_installed("unxts.parametric"):
-    # Absent from the lint environment by design.
-    from unxts.parametric import PQ  # ty: ignore[unresolved-import]
-
-    @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(cls: type[Parallax], q: PQ["angle"], /, **kw: Any) -> Parallax:
-        """Construct a parallax from a parametric angle quantity."""
-        return _from_angle(cls, q, **kw)
-
-    @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(cls: type[Parallax], q: PQ["length"], /, **kw: Any) -> Parallax:
-        """Construct a parallax from a parametric length (distance) quantity."""
-        return _from_length(cls, q, **kw)
-
-    @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(cls: type[Parallax], q: PQ["mag"], /, **kw: Any) -> Parallax:
-        """Construct a parallax from a parametric magnitude quantity."""
-        return _from_mag(cls, q, **kw)
-
-
 @cxd.Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[cxd.Distance], p: Parallax, /, **kw: Any) -> cxd.Distance:
     """Compute distance from parallax.

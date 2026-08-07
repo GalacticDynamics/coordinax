@@ -14,7 +14,6 @@ from quax import register
 
 import quaxed.numpy as jnp
 import unxt as u
-from optional_dependencies.utils import is_installed
 
 import coordinax.distances as cxd
 from .constants import ANGLE, LENGTH, MAGNITUDE
@@ -218,32 +217,6 @@ def from_(
 # these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
 # and other ``AbstractQuantity`` subclasses still fall through to the
 # dimension-branching dispatch. If the package is not installed this is a no-op.
-if is_installed("unxts.parametric"):
-    # Absent from the lint environment by design.
-    from unxts.parametric import PQ  # ty: ignore[unresolved-import]
-
-    @DistanceModulus.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(
-        cls: type[DistanceModulus], q: PQ["length"], /, **kw: Any
-    ) -> DistanceModulus:
-        """Construct a distance modulus from a parametric length quantity."""
-        return _from_length(cls, q, **kw)
-
-    @DistanceModulus.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(
-        cls: type[DistanceModulus], q: PQ["angle"], /, **kw: Any
-    ) -> DistanceModulus:
-        """Construct a distance modulus from a parametric angle (parallax)."""
-        return _from_angle(cls, q, **kw)
-
-    @DistanceModulus.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(
-        cls: type[DistanceModulus], q: PQ["mag"], /, **kw: Any
-    ) -> DistanceModulus:
-        """Construct a distance modulus from a parametric magnitude quantity."""
-        return _from_mag(cls, q, **kw)
-
-
 @cxd.Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[cxd.Distance], dm: DistanceModulus, /, **kw: Any) -> cxd.Distance:
     """Compute distance from distance modulus.

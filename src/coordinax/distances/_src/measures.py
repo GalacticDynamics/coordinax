@@ -11,7 +11,6 @@ import equinox as eqx
 
 import quaxed.numpy as jnp
 import unxt as u
-from optional_dependencies.utils import is_installed
 
 from .base import AbstractDistance
 from .constants import ANGLE, LENGTH, MAGNITUDE
@@ -156,29 +155,3 @@ def from_(cls: type[Distance], q: u.AbstractQuantity, /, **kw: Any) -> Distance:
         return _from_mag(cls, q, **kw)
     msg = f"cannot build a Distance from a quantity with dimension {dim}"
     raise ValueError(msg)
-
-
-# When the optional ``unxts.parametric`` package is installed, also register
-# static type-dispatched overloads on its parametric ``Quantity`` classes: a
-# ``ParametricQuantity["length"|"angle"|"mag"]`` is routed by type (plum prefers
-# these over the ``AbstractQuantity`` catch-all above). Plain ``unxt.Quantity``
-# and other ``AbstractQuantity`` subclasses still fall through to the
-# dimension-branching dispatch. If the package is not installed this is a no-op.
-if is_installed("unxts.parametric"):
-    # Absent from the lint environment by design.
-    from unxts.parametric import PQ  # ty: ignore[unresolved-import]
-
-    @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(cls: type[Distance], q: PQ["length"], /, **kw: Any) -> Distance:
-        """Construct a distance from a parametric length quantity."""
-        return _from_length(cls, q, **kw)
-
-    @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(cls: type[Distance], q: PQ["angle"], /, **kw: Any) -> Distance:
-        """Construct a distance from a parametric angle (parallax) quantity."""
-        return _from_angle(cls, q, **kw)
-
-    @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-    def from_(cls: type[Distance], q: PQ["mag"], /, **kw: Any) -> Distance:
-        """Construct a distance from a parametric magnitude quantity."""
-        return _from_mag(cls, q, **kw)
