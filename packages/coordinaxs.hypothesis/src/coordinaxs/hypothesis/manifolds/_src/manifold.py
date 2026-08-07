@@ -71,10 +71,8 @@ _NDIM_SUPPORT: Final[
     (cxm.EuclideanManifold, lambda _: True),
 )
 
-#: Concrete manifold types this module has no strategy for.
-#:
-#: Kept separate from `_NDIM_SUPPORT` because it is not a question of
-#: dimensionality: these cannot be drawn at *any* ndim.
+#: Concrete manifold types with no registered strategy; never offered as
+#: candidates. Separate from `_NDIM_SUPPORT`: these work at no ndim at all.
 _NO_STRATEGY: Final[tuple[type[cxm.AbstractManifold], ...]] = (
     cxm.NoManifold,
     cxm.MinkowskiManifold,
@@ -246,9 +244,7 @@ def manifolds(
         )
 
     if issubclass(manifold_cls, _NO_STRATEGY):
-        # Using the class as a filter would select it right back, land here
-        # again and recurse until hypothesis ran out of buffer and reported
-        # `Unsatisfiable`, with nothing pointing at the real cause.
+        # Filtering on the class would select it right back and land here again.
         msg = f"No manifold strategy is registered for {manifold_cls.__name__}."
         raise NotImplementedError(msg)
 

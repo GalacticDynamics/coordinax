@@ -11,9 +11,7 @@ import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 
 import coordinaxs.hypothesis.main as cxst
-from coordinaxs.hypothesis.manifolds._src.atlas import (
-    _atlas_class_supports_ndim,
-)
+from coordinaxs.hypothesis.manifolds._src.atlas import _atlas_class_supports_ndim
 
 
 @given(atlas_cls=cxst.atlas_classes())
@@ -205,22 +203,17 @@ class TestOnlyDrawableCandidatesAreSelected:
         strategy: Callable[..., st.SearchStrategy[object]],
         data: st.DataObject,
     ) -> None:
-        """Asking for one by name raises, naming the class.
-
-        It used to redispatch to the overload it was already in and recurse
-        until hypothesis ran out of buffer, surfacing as `Unsatisfiable` with
-        nothing pointing at the cause.
-        """
+        """Asking for one by name raises, naming the class."""
         with pytest.raises(NotImplementedError, match=cls.__name__):
             data.draw(strategy(cls))
 
     @given(atlas=cxst.atlases())
-    def test_drawn_atlases_are_never_strategy_less(self, atlas: object) -> None:
+    def test_drawn_atlases_all_have_strategies(self, atlas: object) -> None:
         """No draw yields a type the module has no strategy for."""
         assert not isinstance(atlas, (cxm.NoAtlas, cxm.MinkowskiAtlas))
 
     @given(M=cxst.manifolds())
-    def test_drawn_manifolds_are_never_strategy_less(self, M: object) -> None:
+    def test_drawn_manifolds_all_have_strategies(self, M: object) -> None:
         """Same for manifolds."""
         assert not isinstance(M, (cxm.NoManifold, cxm.MinkowskiManifold))
 
@@ -233,8 +226,7 @@ class TestOnlyDrawableCandidatesAreSelected:
     ) -> None:
         """``CustomAtlas`` supports only dimensionalities with zero-arg charts.
 
-        The expectations are spelled out rather than recomputed from
-        `matching_chart_classes_for_ndim`, which is what the predicate itself
-        calls -- otherwise this would assert the implementation against itself.
+        Spelled out, not recomputed from `matching_chart_classes_for_ndim` --
+        that is what the predicate calls, so it would assert itself.
         """
         assert _atlas_class_supports_ndim(cxm.CustomAtlas, ndim) is supported

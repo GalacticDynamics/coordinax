@@ -278,10 +278,8 @@ _NDIM_SUPPORT: Final[
     (cxm.EuclideanAtlas, lambda ndim: 0 <= ndim <= 3),
 )
 
-#: Concrete atlas types this module has no strategy for.
-#:
-#: Kept separate from `_NDIM_SUPPORT` because it is not a question of
-#: dimensionality: these cannot be drawn at *any* ndim.
+#: Concrete atlas types with no registered strategy; never offered as
+#: candidates. Separate from `_NDIM_SUPPORT`: these work at no ndim at all.
 _NO_STRATEGY: Final[tuple[type[cxm.AbstractAtlas], ...]] = (
     cxm.NoAtlas,
     cxm.MinkowskiAtlas,
@@ -443,10 +441,8 @@ def atlases(
         raise ValueError(msg)
 
     if not inspect.isabstract(atlas_cls):
-        # Only reachable when no more specific overload matched, since plum
-        # picks the most specific one -- so redispatching here selected this
-        # same method again and recursed until hypothesis ran out of buffer and
-        # reported `Unsatisfiable`, with nothing pointing at the real cause.
+        # Reachable only when no more specific overload matched, so
+        # redispatching here would re-select this method and recurse.
         msg = f"No atlas strategy is registered for {atlas_cls.__name__}."
         raise NotImplementedError(msg)
 
