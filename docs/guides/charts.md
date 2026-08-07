@@ -215,6 +215,8 @@ The coordinate-change chain rule states that composing two Jacobians gives the J
 True
 ```
 
+All four components carry **length** units — the time coordinate is $ct$ — which is what keeps the metric dimensionless and lets a Lorentz boost be an ordinary dimensionless matrix. Because the metric is indefinite, `norm` and `separation` refuse this chart; use `interval`, `proper_time`, and `causal_character` instead. See the [Special Relativity tutorial](../tutorials/special_relativity.md).
+
 **Galilean spacetime** (`galileanct`) is a parametric product chart `time1d × spatial_chart`. The default spatial chart is `cart3d`, giving components `(ct, x, y, z)`:
 
 ```{code-block} python

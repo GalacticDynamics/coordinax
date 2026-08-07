@@ -116,6 +116,7 @@ DiffeomorphismGroup
 - Math: $\Lambda^T \eta \Lambda = \eta$ (preserves Minkowski metric)
 - Use: relativistic coordinate transformations
 - Examples: reference frames moving at relativistic speeds
+- Implemented by: {class}`~coordinax.transforms.LorentzBoost` (a boost, which is in the proper orthochronous subgroup below). Lorentz transformations that reverse space or time orientation have no operator yet.
 
 #### **Proper Orthochronous Lorentz Group**
 
@@ -124,6 +125,7 @@ DiffeomorphismGroup
 - Math: Lorentz transforms with $\det(\Lambda) = +1$ and forward time-direction
 - Use: real-world relativistic transformations
 - Examples: actual spacecraft boosts, particle collision frames
+- Implemented by: {class}`~coordinax.transforms.LorentzBoost`, which reports membership of this group. See the [Special Relativity tutorial](../tutorials/special_relativity.md).
 
 #### **Poincaré Group**
 
@@ -132,6 +134,7 @@ DiffeomorphismGroup
 - Math: Semidirect product of Lorentz group and spacetime translation
 - Use: most general relativistic frame transitions
 - Examples: combining boosts and general spacetime repositioning
+- Implemented by: no dedicated operator. A `Composed` of a {class}`~coordinax.transforms.LorentzBoost` with a spacetime {class}`~coordinax.transforms.Translate` is a Poincaré element, but nothing currently reports membership of this group directly.
 
 ### Why Groups Matter
 
