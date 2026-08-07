@@ -41,6 +41,7 @@ out = cxfm.act(frame_op, None, v)
 - `Identity`: null transform
 - `Translate`: additive offset on the semantic-kind ladder (displacement by default; a velocity kick with `semantic_kind=vel`)
 - `Boost`: Galilean boost (moves points by `dv * tau`, shifts velocities by `dv`)
+- `LorentzBoost`: Lorentz boost of Minkowski spacetime (linear map `X -> Λ X` on `MinkowskiCT` four-vectors; reduces to `Boost` as `beta -> 0`)
 - `Rotate`: pure rotation
 - `Reflect`: Householder hyperplane reflection
 - `Scale`: Cartesian linear scaling
