@@ -277,7 +277,7 @@ LonLatSpherical3DDims = tuple[Ang, Ang, Len]
 @jtu.register_static
 @chart_dataclass_decorator
 class LonLatSpherical3D(
-    AbstractSpherical3D[MT, LonLatSphericalKeys, LonLatSpherical3DDims],
+    AbstractSpherical3D[MT, LonLatSphericalKeys, LonLatSpherical3DDims]
 ):
     r"""Longitude-latitude spherical coordinates.
 

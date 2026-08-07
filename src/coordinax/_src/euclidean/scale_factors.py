@@ -21,12 +21,7 @@ DMLS = u.unit("")
 
 @plum.dispatch
 def scale_factors(
-    metric: FlatMetric,
-    chart: AbstractChart,
-    /,
-    *,
-    at: CDict,
-    usys: OptUSys = None,
+    metric: FlatMetric, chart: AbstractChart, /, *, at: CDict, usys: OptUSys = None
 ) -> ul.QM:
     """Compute only the Euclidean metric diagonal instead of forming ``J.T @ J``.
 

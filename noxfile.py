@@ -142,10 +142,7 @@ def test(s: nox.Session, /) -> None:
     # This session installs the `workspace` extra (interop included), so the
     # interop order-independence tests must run, not silently skip.
     s.run(
-        "pytest",
-        *ignore_args,
-        *posargs,
-        env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"},
+        "pytest", *ignore_args, *posargs, env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"}
     )
     # s.notify("pytest_benchmark", posargs=s.posargs)
 

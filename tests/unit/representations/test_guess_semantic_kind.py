@@ -224,10 +224,7 @@ class TestWithChart:
 
     @pytest.mark.parametrize(
         ("guess", "expected"),
-        [
-            (cxr.guess_geometry_kind, cxr.point_geom),
-            (cxr.guess_rep, cxr.point),
-        ],
+        [(cxr.guess_geometry_kind, cxr.point_geom), (cxr.guess_rep, cxr.point)],
         ids=["geometry_kind", "rep"],
     )
     def test_matching_keys(self, guess, expected) -> None:

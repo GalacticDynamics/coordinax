@@ -89,12 +89,7 @@ def test_parse_version_tag(validate_tag, tag: str, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    ("stdout", "exists"),
-    [
-        ("v1.0.0\n", True),
-        ("\n", False),
-    ],
-    ids=["found", "absent"],
+    ("stdout", "exists"), [("v1.0.0\n", True), ("\n", False)], ids=["found", "absent"]
 )
 def test_check_coordinator_tag_exists(validate_tag, fake_git, stdout, exists) -> None:
     with fake_git(stdout):

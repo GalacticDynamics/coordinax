@@ -156,7 +156,4 @@ _load_optional_frame_exports()
 
 
 # clean up namespace
-del (
-    install_import_hook,
-    Final,
-)
+del (install_import_hook, Final)

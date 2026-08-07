@@ -72,8 +72,7 @@ class Galactocentric(AbstractSpaceFrame):
     #: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
     #: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
     galcen_v_sun: cxv.Tangent = eqx.field(  # ty: ignore[invalid-assignment]
-        converter=Unless(cxv.Tangent, cxv.Tangent.from_),
-        default=GALCEN_V_SUN_DEFAULT,
+        converter=Unless(cxv.Tangent, cxv.Tangent.from_), default=GALCEN_V_SUN_DEFAULT
     )
 
     # --------

@@ -137,12 +137,7 @@ def _component_quantities(
 
 
 def _bounded_elements(
-    elements: Elements,
-    /,
-    *,
-    lo: float | None,
-    hi: float | None,
-    width: int,
+    elements: Elements, /, *, lo: float | None, hi: float | None, width: int
 ) -> Elements:
     """Confine *elements* to ``[lo, hi]``, however it was supplied.
 

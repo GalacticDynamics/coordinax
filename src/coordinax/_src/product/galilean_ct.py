@@ -26,8 +26,7 @@ from coordinax._src.custom_types import CDict, Ds, Ks
 from coordinax._src.euclidean.manifold import R1, R3
 
 galilean_spacetime: Final = CartesianProductManifold(
-    factors=(R1, R3),
-    factor_names=("ct", "space"),
+    factors=(R1, R3), factor_names=("ct", "space")
 )
 r"""The 4-dimensional Galilean spacetime manifold, $\mathbb{R} \times \mathbb{R}^3$."""
 

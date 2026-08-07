@@ -183,10 +183,7 @@ class TestChainRuleViaCurriedForm:
     @given(data=st.data())
     @settings(deadline=None)
     def test_composition_is_the_identity(
-        self,
-        cart: cxc.AbstractChart,
-        curv: cxc.AbstractChart,
-        data: st.DataObject,
+        self, cart: cxc.AbstractChart, curv: cxc.AbstractChart, data: st.DataObject
     ) -> None:
         """J_{cart->curv} @ J_{curv->cart} = I at an arbitrary point.
 

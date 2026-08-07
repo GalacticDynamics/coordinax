@@ -718,12 +718,7 @@ def _cached_point_data_in(point: Point, /) -> Callable[[Any], CDict]:
 
 
 def _act_coordinate_jet(
-    op: cxfm.AbstractTransform,
-    tau: Any,
-    x: Coordinate,
-    /,
-    *,
-    usys: OptUSys = None,
+    op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, *, usys: OptUSys = None
 ) -> Coordinate:
     """Act a time-dependent transform on a Coordinate via joint prolongation.
 

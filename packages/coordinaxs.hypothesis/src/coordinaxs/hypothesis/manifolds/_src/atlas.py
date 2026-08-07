@@ -583,12 +583,7 @@ def atlases(
         assume(False)
 
     sampled_classes = draw(
-        st.lists(
-            st.sampled_from(filtered_classes),
-            min_size=1,
-            max_size=4,
-            unique=True,
-        )
+        st.lists(st.sampled_from(filtered_classes), min_size=1, max_size=4, unique=True)
     )
     classes = tuple(dict.fromkeys((*sampled_classes, *required_chart_classes)))
     default_cls = draw(st.sampled_from(classes))

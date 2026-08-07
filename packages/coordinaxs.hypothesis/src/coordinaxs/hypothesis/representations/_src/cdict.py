@@ -65,11 +65,7 @@ def cdicts(
 @strip_return_annotation
 @st.composite
 def cdicts(
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    **kwargs: Any,
+    draw: st.DrawFn, chart: cxc.AbstractChart, rep: cxr.Representation, /, **kwargs: Any
 ) -> CDict:
     """Generate a CDict for a chart and full ``Representation`` descriptor.
 

@@ -370,6 +370,11 @@ namespace-packages = [
   "packages/coordinaxs.interop.astropy/src/coordinaxs/interop",
 ]
 
+[tool.ruff.format]
+# Collapse a call or signature onto one line whenever it fits, instead of
+# leaving it exploded because it happens to end in a trailing comma.
+skip-magic-trailing-comma = true
+
 [tool.ruff.lint]
 extend-select = ["ALL"]
 ignore = [

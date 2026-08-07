@@ -195,12 +195,7 @@ def from_(
 
 
 @cxd.Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[cxd.Distance],
-    dm: DistanceModulus,
-    /,
-    **kw: Any,
-) -> cxd.Distance:
+def from_(cls: type[cxd.Distance], dm: DistanceModulus, /, **kw: Any) -> cxd.Distance:
     """Compute distance from distance modulus.
 
     >>> import coordinax.distances as cxd

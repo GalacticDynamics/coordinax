@@ -4,9 +4,7 @@ __all__ = ("Abstract4D",)
 
 from typing import Any, Literal as L, override  # noqa: N817
 
-from coordinax._src.base import (
-    AbstractDimensionalFlag,
-)
+from coordinax._src.base import AbstractDimensionalFlag
 
 
 class Abstract4D(AbstractDimensionalFlag, n=4):

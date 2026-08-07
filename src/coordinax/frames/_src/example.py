@@ -175,9 +175,7 @@ bob = Bob()
 
 @plum.dispatch.multi((Alice, Alice), (Alex, Alex), (Bob, Bob))
 def frame_transition(
-    from_frame: AbstractReferenceFrame,
-    to_frame: AbstractReferenceFrame,
-    /,
+    from_frame: AbstractReferenceFrame, to_frame: AbstractReferenceFrame, /
 ) -> cxfm.Identity:
     """Return an identity operator for frames that are the same.
 

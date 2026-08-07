@@ -203,7 +203,7 @@ SphericalTwoSphereDims = tuple[Ang, Ang]
 @jtu.register_static
 @chart_dataclass_decorator
 class SphericalTwoSphere(
-    AbstractSphericalTwoSphere[MT, SphericalTwoSphereKeys, SphericalTwoSphereDims],
+    AbstractSphericalTwoSphere[MT, SphericalTwoSphereKeys, SphericalTwoSphereDims]
 ):
     r"""Intrinsic chart on the unit two-sphere with components ``(theta, phi)``.
 

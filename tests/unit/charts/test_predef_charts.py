@@ -203,9 +203,7 @@ def _strict_dimension_component(chart: cxc.AbstractChart) -> str:
 
 
 @pytest.mark.parametrize(
-    ("chart", "cls"),
-    [(p[1], p[2]) for p in _CHART_PARAMS],
-    ids=_CHART_IDS,
+    ("chart", "cls"), [(p[1], p[2]) for p in _CHART_PARAMS], ids=_CHART_IDS
 )
 def test_predef_chart_type(chart, cls) -> None:
     """Each predefined chart is an instance of its declared class."""
@@ -224,9 +222,7 @@ def test_predef_chart_is_abstract_chart(chart) -> None:
 
 
 @pytest.mark.parametrize(
-    ("chart", "expected"),
-    [(p[1], p[3]) for p in _CHART_PARAMS],
-    ids=_CHART_IDS,
+    ("chart", "expected"), [(p[1], p[3]) for p in _CHART_PARAMS], ids=_CHART_IDS
 )
 def test_predef_chart_components(chart, expected) -> None:
     """Components matches the expected tuple."""
@@ -234,9 +230,7 @@ def test_predef_chart_components(chart, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    ("chart", "expected"),
-    [(p[1], p[4]) for p in _CHART_PARAMS],
-    ids=_CHART_IDS,
+    ("chart", "expected"), [(p[1], p[4]) for p in _CHART_PARAMS], ids=_CHART_IDS
 )
 def test_predef_chart_coord_dimensions(chart, expected) -> None:
     """coord_dimensions matches the expected tuple."""
@@ -244,9 +238,7 @@ def test_predef_chart_coord_dimensions(chart, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    ("chart", "expected_ndim"),
-    [(p[1], p[5]) for p in _CHART_PARAMS],
-    ids=_CHART_IDS,
+    ("chart", "expected_ndim"), [(p[1], p[5]) for p in _CHART_PARAMS], ids=_CHART_IDS
 )
 def test_predef_chart_ndim(chart, expected_ndim) -> None:
     """Ndim matches the expected value and is consistent with components."""
@@ -261,9 +253,7 @@ def test_predef_chart_ndim(chart, expected_ndim) -> None:
 
 
 @pytest.mark.parametrize(
-    ("chart", "cls"),
-    [(p[1], p[2]) for p in _CHART_PARAMS],
-    ids=_CHART_IDS,
+    ("chart", "cls"), [(p[1], p[2]) for p in _CHART_PARAMS], ids=_CHART_IDS
 )
 def test_predef_chart_equals_fresh_instance(chart, cls) -> None:
     """The predefined instance equals a freshly constructed instance."""
@@ -276,9 +266,7 @@ def test_predef_chart_equals_fresh_instance(chart, cls) -> None:
 
 
 @pytest.mark.parametrize(
-    ("chart", "cls"),
-    [(p[1], p[2]) for p in _CHART_PARAMS],
-    ids=_CHART_IDS,
+    ("chart", "cls"), [(p[1], p[2]) for p in _CHART_PARAMS], ids=_CHART_IDS
 )
 def test_predef_chart_repr_contains_class_name(chart, cls) -> None:
     """Repr includes the class name."""

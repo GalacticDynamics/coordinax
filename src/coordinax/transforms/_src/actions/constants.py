@@ -1,9 +1,6 @@
 """Internal custom types for coordinax."""
 
-__all__ = (
-    "LENGTH",
-    "SPEED",
-)
+__all__ = ("LENGTH", "SPEED")
 
 import unxt as u
 

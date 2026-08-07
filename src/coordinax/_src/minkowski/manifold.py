@@ -1,9 +1,6 @@
 """Minkowski spacetime manifold."""
 
-__all__ = (
-    "MinkowskiManifold",
-    "minkowski4d",
-)
+__all__ = ("MinkowskiManifold", "minkowski4d")
 
 import dataclasses
 

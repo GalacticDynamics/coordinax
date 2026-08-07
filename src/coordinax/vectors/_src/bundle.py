@@ -589,11 +589,7 @@ def from_(cls: type[Coordinate], p: Point, /) -> Coordinate:
 
 @Coordinate.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
-    cls: type[Coordinate],
-    data: Mapping[str, Any],
-    /,
-    *,
-    point: Point | None = None,
+    cls: type[Coordinate], data: Mapping[str, Any], /, *, point: Point | None = None
 ) -> Coordinate:
     """Create a ``Coordinate`` from a mapping of named objects.
 

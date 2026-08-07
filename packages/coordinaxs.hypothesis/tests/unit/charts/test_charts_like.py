@@ -25,10 +25,7 @@ TEMPLATES = [
 @pytest.mark.parametrize(("template", "ndim", "bases"), TEMPLATES)
 @given(data=st.data())
 def test_charts_like_matches_template(
-    template: cxc.AbstractChart,
-    ndim: int,
-    bases: tuple[type, ...],
-    data: st.DataObject,
+    template: cxc.AbstractChart, ndim: int, bases: tuple[type, ...], data: st.DataObject
 ) -> None:
     """Every draw shares the template's dimensionality and base classes."""
     chart = data.draw(cxst.charts_like(template))

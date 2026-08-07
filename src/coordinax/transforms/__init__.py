@@ -106,9 +106,7 @@ def _load_optional_transform_exports() -> None:
             )
         eps = sorted(current + legacy, key=lambda ep: ep.name)
         exported = load_exports(
-            eps,
-            group=_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP,
-            noun="transform export",
+            eps, group=_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP, noun="transform export"
         )
         globals().update(exported)
     finally:
@@ -117,7 +115,4 @@ def _load_optional_transform_exports() -> None:
 
 _load_optional_transform_exports()
 
-del (
-    install_import_hook,
-    Final,
-)
+del (install_import_hook, Final)

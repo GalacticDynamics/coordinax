@@ -49,10 +49,7 @@ RECOGNIZE_NONINTROSPECTABLE.append(
 
 @plum.dispatch
 def strategy_for_annotation(
-    ann: JaxtypingNotIntrospectable,
-    /,
-    *,
-    meta: Metadata,
+    ann: JaxtypingNotIntrospectable, /, *, meta: Metadata
 ) -> st.SearchStrategy:
     """Unwrap and parse."""
     if not (

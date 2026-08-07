@@ -11,10 +11,7 @@ import plum
 
 from .atlas import MinkowskiAtlas
 from .manifold import MinkowskiManifold
-from coordinax._src.base import (
-    AbstractFixedComponentsChart,
-    chart_dataclass_decorator,
-)
+from coordinax._src.base import AbstractFixedComponentsChart, chart_dataclass_decorator
 from coordinax._src.charts.d4 import Abstract4D
 from coordinax._src.custom_types import Len
 

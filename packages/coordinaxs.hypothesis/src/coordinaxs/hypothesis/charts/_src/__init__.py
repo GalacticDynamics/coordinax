@@ -19,8 +19,7 @@ from coordinaxs.hypothesis.utils import get_all_subclasses
 # Note: Pass the callable, not an invoked strategy
 st.register_type_strategy(cxc.AbstractChart, lambda _: charts())  # ty: ignore[missing-argument]
 st.register_type_strategy(
-    cxc.CartesianProductChart,
-    lambda _: charts(cxc.CartesianProductChart),
+    cxc.CartesianProductChart, lambda _: charts(cxc.CartesianProductChart)
 )
 
 for flag_cls in get_all_subclasses(cxc.AbstractDimensionalFlag, exclude_abstract=False):

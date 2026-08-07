@@ -22,11 +22,7 @@ from coordinaxs.hypothesis.utils import (
 
 @plum.dispatch.abstract
 def chart_init_kwargs(
-    draw: st.DrawFn,
-    chart_class: Any,
-    /,
-    *,
-    ndim: int | None | st.SearchStrategy = None,
+    draw: st.DrawFn, chart_class: Any, /, *, ndim: int | None | st.SearchStrategy = None
 ) -> dict[str, Any]:
     """Strategy to draw initialization kwargs for a chart class.
 

@@ -37,10 +37,7 @@ RECOGNIZE_NONINTROSPECTABLE.append((isannotated, AnnotatedNotIntrospectable))
 
 @plum.dispatch
 def strategy_for_annotation(
-    ann: AnnotatedNotIntrospectable,
-    /,
-    *,
-    meta: Metadata,
+    ann: AnnotatedNotIntrospectable, /, *, meta: Metadata
 ) -> st.SearchStrategy:
     """Unwrap and parse."""
     # Unpack Annotated type
