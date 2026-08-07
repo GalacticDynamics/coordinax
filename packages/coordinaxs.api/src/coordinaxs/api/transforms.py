@@ -155,7 +155,7 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
     one (the Jacobian of a translation is the identity):
 
     >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> op = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> op = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
     >>> d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(0.0, "km")}
     >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> cxfm.pushforward(op, u.Q(5.0, "s"), d, cxc.cart3d, cxr.coord_disp, at=at)

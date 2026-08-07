@@ -47,34 +47,54 @@ out = cxfm.act(frame_op, None, v)
 - `Shear`: Cartesian linear shear
 - `Composed`: ordered transform composition
 - `TimeDep`: a one-parameter family of transforms, `builder(tau) -> AbstractTransform` — the mechanism for all time-dependent transforms (see the [transforms guide](../guides/transforms.md#time-dependent-parameters)). `TimeDep.from_(fn, *args, **kw)` builds one from a user-defined function, binding `args`/`kw` as differentiable leaves (`fn` takes `tau` **last**)
-- `RotationAboutAxis`: built-in `TimeDep` builder for uniform rotation about a fixed axis
-- `UniformTranslation`: built-in `TimeDep` builder for straight-line motion at constant velocity
 - `identity`: convenience instance of `Identity`
 
-## Transformation Group Classes (Markers)
+(transforms-builders)=
 
-These live in the `coordinax.transforms.groups` sub-namespace, reached as `cxfm.groups.<Name>`. They are used for classification and dispatch, and are never instantiated:
+## `coordinax.transforms.builders`
 
-- `groups.AbstractTransformGroup`
-- `groups.IdentityGroup`
-- `groups.DiffeomorphismGroup`
-- `groups.AffineGroup`
-- `groups.EuclideanGroup`
-- `groups.OrthogonalGroup`
-- `groups.SpecialOrthogonalGroup`
-- `groups.LorentzGroup`
-- `groups.ProperOrthochronousLorentzGroup`
-- `groups.PoincareGroup`
+A builder is a one-parameter family `builder(tau) -> AbstractTransform`. It is **not** a transform: it has no `act`, no `inverse`, no `@` — only the `TimeDep` wrapping it does. That is why builders have their own namespace.
+
+Built-in families you construct yourself:
+
+- `cxfm.builders.RotationAboutAxis`: uniform rotation about a fixed axis
+- `cxfm.builders.UniformTranslation`: straight-line motion at constant velocity
+
+Builders the algebra _returns_ — you receive these rather than construct them, but they show up in `repr`, `jax.tree` paths, and tracing errors:
+
+- `cxfm.builders.FnBuilder`: wraps a bare function, from `TimeDep.from_(fn)` (static field; see its docstring for the differentiable alternative)
+- `cxfm.builders.ConstBuilder`: constant family `b(tau) = op`, from `TimeDep @ static_transform`
+- `cxfm.builders.ComposedBuilder`: pointwise composition `(a @ b)(tau) = a(tau) @ b(tau)`, from `TimeDep @ TimeDep`
+- `cxfm.builders.InverseBuilder`: pointwise inverse `b(tau).inverse`, from `TimeDep.inverse`
+
+(transforms-groups)=
+
+## `coordinax.transforms.groups`
+
+Transformation-group marker classes, used for classification and dispatch; not instantiated directly:
+
+- `cxfm.groups.AbstractTransformGroup`
+- `cxfm.groups.IdentityGroup`
+- `cxfm.groups.DiffeomorphismGroup`
+- `cxfm.groups.AffineGroup`
+- `cxfm.groups.EuclideanGroup`
+- `cxfm.groups.OrthogonalGroup`
+- `cxfm.groups.SpecialOrthogonalGroup`
+- `cxfm.groups.LorentzGroup`
+- `cxfm.groups.ProperOrthochronousLorentzGroup`
+- `cxfm.groups.PoincareGroup`
 
 ```{eval-rst}
 
 .. currentmodule:: coordinax.transforms
 
 .. automodule:: coordinax.transforms
+    :exclude-members: aval, default, materialise, enable_materialise, builders, groups
+
+.. automodule:: coordinax.transforms.builders
     :exclude-members: aval, default, materialise, enable_materialise
 
-.. currentmodule:: coordinax.transforms.groups
-
 .. automodule:: coordinax.transforms.groups
+    :exclude-members: aval, default, materialise, enable_materialise
 
 ```

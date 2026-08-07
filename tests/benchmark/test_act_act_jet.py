@@ -63,7 +63,7 @@ def test_static_rotate_vel(benchmark, jet):
 
 def _moving_translate():
     return cxfm.TimeDep(
-        cxfm.UniformTranslation(q3(3.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
+        cxfm.builders.UniformTranslation(q3(3.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
     )
 
 
@@ -117,7 +117,9 @@ def test_td_fibre_offset_ladder_acc(benchmark):
 
 def test_td_rotate_jet_generic(benchmark):
     op = cxfm.TimeDep(
-        cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=jnp.asarray([0.0, 0.0, 1.0]))
+        cxfm.builders.RotationAboutAxis(
+            u.Q(1.0, "rad/s"), axis=jnp.asarray([0.0, 0.0, 1.0])
+        )
     )
     jet2 = {0: q3(1.0, 2.0, 3.0, "m"), 1: q3(0.5, -0.5, 0.0, "m/s")}
     _bench_jitted(

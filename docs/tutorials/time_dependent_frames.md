@@ -69,14 +69,14 @@ Inverting the transition takes us back:
 
 Now we make the rotation angle grow linearly with time, using Earth's real sidereal rotation rate.
 
-The key idea: instead of passing a numeric matrix to `Rotate`, wrap a **builder** in `TimeDep`. Coordinax calls the builder at every `act` invocation, passing the time parameter, and builds a fresh `Rotate` at that instant. `cxfm.RotationAboutAxis(omega, axis=...)` is the built-in builder for exactly this — uniform rotation about a fixed axis:
+The key idea: instead of passing a numeric matrix to `Rotate`, wrap a **builder** in `TimeDep`. Coordinax calls the builder at every `act` invocation, passing the time parameter, and builds a fresh `Rotate` at that instant. `cxfm.builders.RotationAboutAxis(omega, axis=...)` is the built-in builder for exactly this — uniform rotation about a fixed axis:
 
 ```pycon
 >>> SIDEREAL_DAY = u.Q(23.9345, "hr")
 >>> omega = u.Q(360.0, "deg") / SIDEREAL_DAY
 >>> axis = jnp.array([0.0, 0.0, 1.0])
 
->>> rotating_op = cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))
+>>> rotating_op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(omega, axis=axis))
 ```
 
 Unlike a hand-written closure, `omega` here is an ordinary field of `rotating_op.builder` — a pytree leaf. That is what makes it differentiable and `vmap`-able later in this tutorial, without any special handling.
@@ -162,7 +162,7 @@ star_q = u.Q([1.0, 0.0, 0.0], "kpc")
 
 
 def transition_for(omega):
-    op = cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))
+    op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(omega, axis=axis))
     frame = cxf.TransformedReferenceFrame(inertial, op)
     return cxf.frame_transition(inertial, frame)
 
@@ -242,7 +242,7 @@ Here we ask: how sensitive is the star's observed $y$-coordinate (in the body fr
 ```python
 def star_y_in_body_frame(omega_deg_per_hr):
     om = u.Q(omega_deg_per_hr, "deg/hr")
-    op = cxfm.TimeDep(cxfm.RotationAboutAxis(om, axis=axis))
+    op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(om, axis=axis))
     frame = cxf.TransformedReferenceFrame(inertial, op)
     xf = cxf.frame_transition(inertial, frame)
     out = cxfm.act(xf, u.Q(3600.0, "s"), star_q)
@@ -307,7 +307,7 @@ star_combined = cxfm.act(xform_combined, tau_1s, star_q)
 | Step | Code |
 | --- | --- |
 | Static frame rotation | `TransformedReferenceFrame(base, Rotate(R_matrix))` |
-| Time-dep. rotation (built-in) | `TimeDep(RotationAboutAxis(omega, axis=...))` |
+| Time-dep. rotation (built-in) | `TimeDep(builders.RotationAboutAxis(omega, axis=...))` |
 | Time-dep. translation (custom) | `TimeDep(my_eqx_module_builder)` |
 | Build frame | `TransformedReferenceFrame(inertial, rotating_op)` |
 | Get transition | `xform = frame_transition(from_frame, to_frame)` |

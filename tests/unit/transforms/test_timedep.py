@@ -87,7 +87,7 @@ def _y_at_1s(op):
 def test_from_pytree_callable_is_not_wrapped_static():
     """`from_` must leave an already-pytree callable's leaves dynamic.
 
-    Wrapping an `eqx.Partial` in the static `_FnBuilder` would destroy its
+    Wrapping an `eqx.Partial` in the static `FnBuilder` would destroy its
     bound leaves -- losing gradients and the `jit` cache -- and equinox
     warns about it.
     """
@@ -216,7 +216,7 @@ def test_matmul_noncommuting_axes_pins_apply_order():
 
     `test_simplify.py::test_time_dependent_rotations_merge_pointwise_under_matmul`
     composes only same-axis builders, which commute -- a reversed-operand bug in
-    `_ComposedBuilder` would pass it anyway.
+    `ComposedBuilder` would pass it anyway.
     Rotations about *different* axes do not commute, so this pins the actual
     order against `Rotate.__matmul__`'s documented convention. The final
     assertion is the sanity check: if the two orders agreed, the axes chosen
@@ -224,10 +224,14 @@ def test_matmul_noncommuting_axes_pins_apply_order():
     ones it supplements.
     """
     a = cxfm.TimeDep(
-        cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
+        cxfm.builders.RotationAboutAxis(
+            u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0])
+        )
     )
     b = cxfm.TimeDep(
-        cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([1.0, 0.0, 0.0]))
+        cxfm.builders.RotationAboutAxis(
+            u.Q(90, "deg/s"), axis=jnp.array([1.0, 0.0, 0.0])
+        )
     )
     tau = u.Q(1.0, "s")
     Ra, Rb = a.evaluate_at(tau).R, b.evaluate_at(tau).R
@@ -396,7 +400,7 @@ def test_builder_returning_composed_without_fibre_offset_is_fine():
 
 def _drift(vx):
     return cxfm.TimeDep(
-        cxfm.UniformTranslation(
+        cxfm.builders.UniformTranslation(
             {"x": u.Q(vx, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
             chart=cxc.cart3d,
         )
@@ -427,7 +431,7 @@ def test_composed_translations_preserve_action(combine):
 def test_simplify_does_not_fold_a_static_neighbour_into_a_timedep():
     """`simplify` must not turn a working pipeline into one that raises.
 
-    Folding a static fibre offset into a `_ComposedBuilder` makes the family
+    Folding a static fibre offset into a `ComposedBuilder` makes the family
     materialize to a `Composed` containing that offset -- exactly the spelling
     `add.py` rejects. `Composed` already represents the pair correctly.
     """
@@ -437,7 +441,9 @@ def test_simplify_does_not_fold_a_static_neighbour_into_a_timedep():
         semantic_kind=cxr.vel,
     )
     spin = cxfm.TimeDep(
-        cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
+        cxfm.builders.RotationAboutAxis(
+            u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0])
+        )
     )
     pipe = cxfm.Composed((kick, spin))
     vel = {"x": u.Q(1.0, "km/s"), "y": u.Q(1.0, "km/s"), "z": u.Q(0.0, "km/s")}
@@ -460,7 +466,7 @@ def test_groups_is_diffeomorphism_only():
     unknown until tau -- so the set must be exactly the diffeomorphism group,
     not merely non-empty.
     """
-    assert cxfm.TimeDep.groups() == frozenset({cxfm.DiffeomorphismGroup})
+    assert cxfm.TimeDep.groups() == frozenset({cxfm.groups.DiffeomorphismGroup})
 
 
 @pytest.mark.parametrize("other", [5, "rot", None])
@@ -565,3 +571,23 @@ def test_timedep_boost_keeps_its_point_action():
         assert jnp.allclose(got[k].ustrip("km/s"), want[k].ustrip("km/s"), atol=1e-12)
     # d/dtau (delta * tau) = delta: the velocity gains the full 1 km/s.
     assert jnp.allclose(got["x"].ustrip("km/s"), 2.0, atol=1e-12)
+
+
+def test_builder_combinators_are_public_and_returned_by_the_algebra():
+    """The builders the algebra *returns* must be importable by the name shown.
+
+    They appear in ``repr``, in `jax.tree` paths, and in tracing errors, so a
+    user has to be able to reach them from `coordinax.transforms`.
+    """
+    a = cxfm.TimeDep(rot_z(OMEGA))
+    b = cxfm.TimeDep(rot_z(OMEGA))
+    static = cxfm.Scale.from_factors(jnp.full(3, 2.0))
+
+    assert isinstance(
+        cxfm.TimeDep.from_(lambda t: static).builder, cxfm.builders.FnBuilder
+    )
+    assert isinstance((a @ b).builder, cxfm.builders.ComposedBuilder)
+    assert isinstance((a @ static).builder.b, cxfm.builders.ConstBuilder)
+    assert isinstance((static @ a).builder.a, cxfm.builders.ConstBuilder)
+    assert isinstance(a.inverse.builder, cxfm.builders.InverseBuilder)
+    assert a.inverse.inverse.builder is a.builder

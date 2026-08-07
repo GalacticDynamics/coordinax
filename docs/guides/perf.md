@@ -419,8 +419,8 @@ def apply_at(op, tau):
     return cxfm.act(op, tau, x, cxc.cart3d, cxr.point)["y"].ustrip("m")
 
 
-op_a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(30.0, "deg/s"), axis=axis))
-op_b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(60.0, "deg/s"), axis=axis))
+op_a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(30.0, "deg/s"), axis=axis))
+op_b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(60.0, "deg/s"), axis=axis))
 apply_at(op_a, u.Q(1.0, "s"))
 apply_at(op_b, u.Q(1.0, "s"))  # same builder structure -> no retrace
 

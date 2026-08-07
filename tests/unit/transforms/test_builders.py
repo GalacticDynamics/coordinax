@@ -18,7 +18,7 @@ from .conftest import X_M as X, ZHAT
 )
 def test_rotation_about_axis_matches_euler(omega, phase):
     """Theta = omega*tau + phase: both terms reach the same 90 deg rotation."""
-    b = cxfm.RotationAboutAxis(omega, axis=ZHAT, phase=phase)
+    b = cxfm.builders.RotationAboutAxis(omega, axis=ZHAT, phase=phase)
     want = cxfm.Rotate.from_euler("z", u.Q(90, "deg")).R
     assert jnp.allclose(b(u.Q(1.0, "s")).R, want, atol=1e-12)
 
@@ -30,7 +30,7 @@ def test_rotation_about_axis_differentiable_in_theta_terms(field):
     def y(val):
         kw = {"omega": u.Q(0.0, "rad/s"), "phase": u.Q(0.0, "rad")}
         kw[field] = u.Q(val, "rad/s" if field == "omega" else "rad")
-        op = cxfm.TimeDep(cxfm.RotationAboutAxis(axis=ZHAT, **kw))
+        op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(axis=ZHAT, **kw))
         out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
         return out["y"].ustrip("m")
 
@@ -52,7 +52,7 @@ def test_rotation_about_axis_differentiable_in_axis():
 
     def y(ax_x):
         axis = jnp.array([ax_x, 0.0, 1.0])
-        op = cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))
+        op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(omega, axis=axis))
         out = cxfm.act(op, u.Q(1.0, "s"), X, cxc.cart3d, cxr.point)
         return out["y"].ustrip("m")
 
@@ -66,7 +66,7 @@ def test_rotation_about_axis_differentiable_in_axis():
 
 def test_uniform_translation():
     rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    b = cxfm.UniformTranslation(rate, chart=cxc.cart3d)
+    b = cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d)
     op = b(u.Q(2.0, "s"))
     assert isinstance(op, cxfm.Translate)
     assert jnp.allclose(op.delta["x"].ustrip("km"), 6.0)
@@ -79,7 +79,7 @@ def test_uniform_translation_differentiable_in_rate():
             "y": u.Q(0.0, "km/s"),
             "z": u.Q(0.0, "km/s"),
         }
-        op = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+        op = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
         out = cxfm.act(op, u.Q(2.0, "s"), X, cxc.cart3d, cxr.point)
         return out["x"].ustrip("m")
 
@@ -89,6 +89,6 @@ def test_uniform_translation_differentiable_in_rate():
 
 def test_rotation_about_axis_zero_axis_raises():
     """A zero-length axis must fail loudly, not normalize to a NaN `R`."""
-    b = cxfm.RotationAboutAxis(u.Q(1, "rad/s"), axis=jnp.zeros(3))
+    b = cxfm.builders.RotationAboutAxis(u.Q(1, "rad/s"), axis=jnp.zeros(3))
     with pytest.raises(Exception, match="must be non-zero"):
         b(u.Q(1.0, "s"))

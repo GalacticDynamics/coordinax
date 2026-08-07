@@ -635,7 +635,7 @@ def act(
 
     >>> import coordinax.transforms as cxfm
     >>> rate = {"x": u.Q(3.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
-    >>> moving = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> moving = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
     >>> out = cx.act(moving, u.Q(2.0, "s"), pv)
     >>> out.point.data["x"], out["velocity"].data["x"]
     (Q(7., 'm'), Q(4., 'm / s'))

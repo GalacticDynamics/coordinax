@@ -134,4 +134,4 @@ ORIGIN_KM = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
 
 def rot_z(omega):
     """Uniform rotation about z: a builder with ``omega`` as a leaf."""
-    return cxfm.RotationAboutAxis(omega, axis=ZHAT)
+    return cxfm.builders.RotationAboutAxis(omega, axis=ZHAT)

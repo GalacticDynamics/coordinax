@@ -41,15 +41,14 @@ __all__: tuple[str, ...] = (
     "Scale",
     "Shear",
     "TimeDep",
-    "RotationAboutAxis",
-    "UniformTranslation",
     "identity",
     # Sub-namespaces
+    "builders",
     "groups",
 )
 
 with install_import_hook("coordinax.transforms"):
-    from . import groups
+    from . import builders, groups
     from ._src.actions import (
         AbstractCompositeTransform,
         AbstractTransform,
@@ -58,12 +57,10 @@ with install_import_hook("coordinax.transforms"):
         Identity,
         Reflect,
         Rotate,
-        RotationAboutAxis,
         Scale,
         Shear,
         TimeDep,
         Translate,
-        UniformTranslation,
         evaluate_at,
         identity,
         is_time_dependent,

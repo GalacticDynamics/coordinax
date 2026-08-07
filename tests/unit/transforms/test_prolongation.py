@@ -63,7 +63,9 @@ def _rot_z_raw_op() -> cxfm.TimeDep:
 
 def uniform_translate(vx, unit="km/s", chart=cxc.cart3d) -> cxfm.TimeDep:
     """A `TimeDep` uniform translation along +x at rate ``vx``."""
-    return cxfm.TimeDep(cxfm.UniformTranslation(q3(vx, 0.0, 0.0, unit), chart=chart))
+    return cxfm.TimeDep(
+        cxfm.builders.UniformTranslation(q3(vx, 0.0, 0.0, unit), chart=chart)
+    )
 
 
 # ============================================================================
@@ -204,7 +206,7 @@ class TestPhysics:
         """Boost(dv) == prolongation of TimeDep(UniformTranslation(dv))."""
         dv = q3(1.5, -0.5, 2.0, "km/s")
         boost = cxfm.Boost(dv, chart=cxc.cart3d)
-        td = cxfm.TimeDep(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
+        td = cxfm.TimeDep(cxfm.builders.UniformTranslation(dv, chart=cxc.cart3d))
         tau = u.Q(3.0, "s")
         jet = {
             0: q3(1.0, 2.0, 3.0, "km"),
@@ -382,7 +384,9 @@ class TestStructure:
     def test_prolong_composed_equals_sequential(self):
         opA = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
         opB = cxfm.TimeDep(
-            cxfm.UniformTranslation(q3(0.0, 2.0, 0.0, "km/s"), chart=cxc.cart3d)
+            cxfm.builders.UniformTranslation(
+                q3(0.0, 2.0, 0.0, "km/s"), chart=cxc.cart3d
+            )
         )
         tau = u.Q(2.0, "s")
         jet = {0: q3(1.0, 2.0, 3.0, "km"), 1: q3(0.5, -0.5, 0.0, "km/s")}
@@ -971,7 +975,7 @@ class TestNonCartesianOpChart:
         fast = cxfm.act(
             boost, tau, a, cxc.sph3d, cxr.coord_acc, at=SPH_AT, at_vel=v, usys=usys
         )
-        td = cxfm.TimeDep(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
+        td = cxfm.TimeDep(cxfm.builders.UniformTranslation(dv, chart=cxc.cart3d))
         gen = prolong_jet(td, tau, {0: SPH_AT, 1: v, 2: a}, cxc.sph3d, usys=usys)
         for k in fast:
             unit = u.unit_of(gen[2][k])

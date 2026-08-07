@@ -93,8 +93,8 @@ def test_time_dependent_rotations_do_not_merge() -> None:
     fibre offset (see `test_simplify_preserves_time_dependent_fibre_offset`).
     """
     # Distinct rates, so a merge that dropped one operand would be caught.
-    a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
-    b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
+    a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
+    b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
     pipe = cxfm.Composed((a, b))
 
     out = cxfm.simplify(pipe)
@@ -108,8 +108,8 @@ def test_time_dependent_rotations_do_not_merge() -> None:
 
 def test_time_dependent_rotations_merge_pointwise_under_matmul() -> None:
     """An EXPLICIT ``a @ b`` still merges two `TimeDep` families, pointwise in tau."""
-    a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
-    b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
+    a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
+    b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
 
     out = a @ b
     assert isinstance(out, cxfm.TimeDep)
@@ -134,7 +134,7 @@ def test_simplify_preserves_time_dependent_fibre_offset() -> None:
             semantic_kind=cxr.coord_vel.semantic_kind,
         )
     )
-    rot = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
+    rot = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
     pipe = cxfm.Composed((kick, rot))
 
     tau = u.Q(2.0, "s")

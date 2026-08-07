@@ -36,7 +36,7 @@ time-derivative of the transformed trajectory — for any transform you define.
 
 The turntable spins counter-clockwise at $\omega = 2\ \text{rad}\,\text{s}^{-1}$ (chosen round for readable numbers). Expressing a lab point in the turntable's own axes rotates its coordinates by $-\omega t$, so the inertial → turntable operator is $R_z(-\omega t)$.
 
-The key move: wrap `cxfm.RotationAboutAxis(omega, axis=...)` in `TimeDep` instead of building a fixed matrix. Coordinax evaluates the builder at the time parameter on every `act`, and — crucially — differentiates through it to transform velocities and accelerations. Passing a **negative** angular frequency gives exactly the $R_z(-\omega t)$ we want:
+The key move: wrap `cxfm.builders.RotationAboutAxis(omega, axis=...)` in `TimeDep` instead of building a fixed matrix. Coordinax evaluates the builder at the time parameter on every `act`, and — crucially — differentiates through it to transform velocities and accelerations. Passing a **negative** angular frequency gives exactly the $R_z(-\omega t)$ we want:
 
 ```pycon
 >>> import jax
@@ -51,7 +51,7 @@ The key move: wrap `cxfm.RotationAboutAxis(omega, axis=...)` in `TimeDep` instea
 >>> OMEGA = 2.0  # rad / s
 >>> axis = jnp.array([0.0, 0.0, 1.0])
 
->>> turntable_builder = cxfm.RotationAboutAxis(u.Q(-OMEGA, "rad/s"), axis=axis)
+>>> turntable_builder = cxfm.builders.RotationAboutAxis(u.Q(-OMEGA, "rad/s"), axis=axis)
 ```
 
 Wrap it in a `TimeDep` operator and attach it to an inertial base frame to make the co-rotating frame:
@@ -191,7 +191,7 @@ At the release instant the puck is at rest in the turntable frame ($\mathbf{v}_\
 
 | Goal | Code |
 | --- | --- |
-| Co-rotating frame | `TransformedReferenceFrame(inertial, TimeDep(RotationAboutAxis(-ω, axis=...)))` |
+| Co-rotating frame | `TransformedReferenceFrame(inertial, TimeDep(builders.RotationAboutAxis(-ω, axis=...)))` |
 | Phase-space state | `Coordinate(point, velocity=Tangent(..., vel), acceleration=Tangent(..., acc))` |
 | Transform state | `cxfm.act(op, tau, state, usys=...)` |
 | Rotating-frame acceleration | `out["acceleration"]` — the fictitious force per unit mass |

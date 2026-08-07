@@ -1,6 +1,12 @@
 """TimeDep (tau-dependent) transform wrapper."""
 
-__all__ = ("TimeDep",)
+__all__ = (
+    "ComposedBuilder",
+    "ConstBuilder",
+    "FnBuilder",
+    "InverseBuilder",
+    "TimeDep",
+)
 
 from collections.abc import Callable
 from typing import Any, cast, final
@@ -21,17 +27,31 @@ _MSG_TAU_REQUIRED = (
 
 
 @final
-class _FnBuilder(eqx.Module):
-    """Wrap a bare ``tau -> AbstractTransform`` function in a STATIC field.
+class FnBuilder(eqx.Module):
+    """A builder wrapping a bare ``tau -> AbstractTransform`` function.
+
+    Produced by ``TimeDep.from_(fn)`` when ``fn`` is a plain function or lambda
+    and no extra arguments are given: a bare function cannot be a pytree leaf,
+    so it is held in a STATIC field.
 
     Static refers to what the function *closes over*: those values are
-    trace-time constants. The function's ``tau`` dependence is unaffected --
-    ``tau`` is a call-time argument, so the prolongation engine differentiates
-    it as for any other builder. For differentiable *closed-over* parameters,
-    bind them with ``TimeDep.from_(fn, *args)`` (or an explicit
-    `equinox.Partial`), or write an `equinox.Module` builder whose fields hold
-    them; `TimeDep.from_` leaves either kind unwrapped so their leaves stay
-    dynamic.
+    trace-time constants, and a fresh closure forces a `jax.jit` retrace. The
+    function's ``tau`` dependence is unaffected -- ``tau`` is a call-time
+    argument, so the prolongation engine differentiates it as for any other
+    builder. For differentiable *closed-over* parameters, bind them with
+    ``TimeDep.from_(fn, *args)`` (or an explicit `equinox.Partial`), or write
+    an `equinox.Module` builder whose fields hold them; `TimeDep.from_` leaves
+    either kind unwrapped so their leaves stay dynamic.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.TimeDep.from_(lambda t: cxfm.Scale.from_factors(jnp.full(3, 2.0)))
+    >>> isinstance(op.builder, cxfm.builders.FnBuilder)
+    True
+
     """
 
     fn: Callable[[Any], AbstractTransform] = eqx.field(static=True)
@@ -41,11 +61,27 @@ class _FnBuilder(eqx.Module):
 
 
 @final
-class _ConstBuilder(eqx.Module):
-    """A constant family: returns the same transform for every tau.
+class ConstBuilder(eqx.Module):
+    """A constant family: ``b(tau) = op`` for every tau.
 
-    Only reachable through an EXPLICIT ``TimeDep @ static`` by the caller.
-    `simplify` deliberately does not build one — see `_ComposedBuilder`.
+    Produced when a constant transform is composed with a `TimeDep` -- an
+    EXPLICIT ``TimeDep @ static_transform`` (or the mirror ``static @
+    TimeDep``) by the caller, which wraps the constant so both sides are
+    families. `simplify` deliberately does not build one — see
+    `ComposedBuilder`.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.transforms as cxfm
+
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=zhat))
+    >>> static = cxfm.Scale.from_factors(jnp.full(3, 2.0))
+    >>> isinstance((a @ static).builder.b, cxfm.builders.ConstBuilder)
+    True
+
     """
 
     op: AbstractTransform
@@ -56,8 +92,11 @@ class _ConstBuilder(eqx.Module):
 
 
 @final
-class _ComposedBuilder(eqx.Module):
+class ComposedBuilder(eqx.Module):
     """Pointwise-in-tau composition: ``(a @ b)(tau) = a(tau) @ b(tau)``.
+
+    Produced by ``TimeDep @ TimeDep`` (and by ``TimeDep @ static_transform``,
+    where the constant side becomes a `ConstBuilder`).
 
     Only some transforms (e.g. `Rotate`) implement ``@``; everything else
     composes with ``|``, which has the same order semantics.
@@ -67,6 +106,19 @@ class _ComposedBuilder(eqx.Module):
     ladder order >= 1 -- exactly the spelling `add.py` rejects. Only an
     EXPLICIT ``a @ b`` gets here, where the caller has asked for pointwise
     composition and owns that constraint.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.transforms as cxfm
+
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=zhat))
+    >>> b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=zhat))
+    >>> isinstance((a @ b).builder, cxfm.builders.ComposedBuilder)
+    True
+
     """
 
     a: Callable[[Any], AbstractTransform]
@@ -79,8 +131,27 @@ class _ComposedBuilder(eqx.Module):
 
 
 @final
-class _InverseBuilder(eqx.Module):
-    """Pointwise inverse of a family: ``binv(tau) = b(tau).inverse``."""
+class InverseBuilder(eqx.Module):
+    """Pointwise inverse of a family: ``binv(tau) = b(tau).inverse``.
+
+    Produced by `TimeDep.inverse`. The wrap is an involution: inverting an
+    already-inverted family unwraps back to the original builder rather than
+    nesting a second `InverseBuilder`.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.transforms as cxfm
+
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=zhat))
+    >>> isinstance(a.inverse.builder, cxfm.builders.InverseBuilder)
+    True
+    >>> a.inverse.inverse.builder is a.builder
+    True
+
+    """
 
     builder: Callable[[Any], AbstractTransform]
 
@@ -108,7 +179,7 @@ class TimeDep(AbstractTransform):
     >>> import coordinax.transforms as cxfm
 
     >>> zhat = jnp.array([0.0, 0.0, 1.0])
-    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
+    >>> op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = op(u.Q(1.0, "s"), q)
     >>> out["y"].round(3)
@@ -135,15 +206,16 @@ class TimeDep(AbstractTransform):
         >>> import coordinax.transforms as cxfm
 
         >>> zhat = jnp.array([0.0, 0.0, 1.0])
-        >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
+        >>> b = cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat)
+        >>> op = cxfm.TimeDep(b)
         >>> op.inverse.inverse.builder is op.builder  # involution unwraps
         True
 
         """
         b = self.builder
-        if isinstance(b, _InverseBuilder):  # involution unwraps
+        if isinstance(b, InverseBuilder):  # involution unwraps
             return TimeDep(b.builder)
-        return TimeDep(_InverseBuilder(b))
+        return TimeDep(InverseBuilder(b))
 
     @property
     def is_time_dependent(self) -> bool:
@@ -161,7 +233,7 @@ class TimeDep(AbstractTransform):
         if isinstance(other, TimeDep):
             return other.builder
         if isinstance(other, AbstractTransform):
-            return _ConstBuilder(other)
+            return ConstBuilder(other)
         return None
 
     def __matmul__(self, other: Any, /) -> Any:
@@ -174,8 +246,9 @@ class TimeDep(AbstractTransform):
         >>> import coordinax.transforms as cxfm
 
         >>> zhat = jnp.array([0.0, 0.0, 1.0])
-        >>> a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=zhat))
-        >>> b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=zhat))
+        >>> ba = cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=zhat)
+        >>> bb = cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=zhat)
+        >>> a, b = cxfm.TimeDep(ba), cxfm.TimeDep(bb)
         >>> ab = a @ b
         >>> isinstance(ab, cxfm.TimeDep)
         True
@@ -184,14 +257,14 @@ class TimeDep(AbstractTransform):
         ob = self._as_builder(other)
         if ob is None:
             return NotImplemented
-        return TimeDep(_ComposedBuilder(self.builder, ob))
+        return TimeDep(ComposedBuilder(self.builder, ob))
 
     def __rmatmul__(self, other: Any, /) -> Any:
         """Pointwise composition with `self` applied second."""
         ob = self._as_builder(other)
         if ob is None:
             return NotImplemented
-        return TimeDep(_ComposedBuilder(ob, self.builder))
+        return TimeDep(ComposedBuilder(ob, self.builder))
 
 
 # ============================================================================
@@ -271,7 +344,7 @@ def from_(
     """
     if args or kw:
         return cls(eqx.Partial(fn, *args, **kw))
-    return cls(fn if isinstance(fn, eqx.Module) else _FnBuilder(fn))
+    return cls(fn if isinstance(fn, eqx.Module) else FnBuilder(fn))
 
 
 # ============================================================================
@@ -306,7 +379,7 @@ def act(
     >>> import coordinax.transforms as cxfm
 
     >>> zhat = jnp.array([0.0, 0.0, 1.0])
-    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
+    >>> op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = cxfm.act(op, u.Q(1.0, "s"), q, cxc.cart3d, cxr.point)
     >>> out["y"].round(3)
@@ -339,7 +412,7 @@ def pushforward(
     >>> import coordinax.transforms as cxfm
 
     >>> zhat = jnp.array([0.0, 0.0, 1.0])
-    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
+    >>> op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat))
     >>> v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
     >>> out = cxfm.pushforward(op, u.Q(1.0, "s"), v, cxc.cart3d, cxr.coord_vel)
     >>> out["y"].round(3)
@@ -367,7 +440,7 @@ def simplify(op: TimeDep, /, *, approx: bool = True, **kw: Any) -> AbstractTrans
     >>> import coordinax.transforms as cxfm
 
     >>> zhat = jnp.array([0.0, 0.0, 1.0])
-    >>> op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
+    >>> op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
     >>> cxfm.simplify(op) is op
     True
 
@@ -386,7 +459,7 @@ def _try_matmul(a: Any, b: Any, /) -> AbstractTransform | None:
 
 
 # NOTE: there is deliberately no `_merge` rule for `TimeDep`. Folding two
-# families into one requires the `_ComposedBuilder` `|` fallback, which for a
+# families into one requires the `ComposedBuilder` `|` fallback, which for a
 # fibre offset materializes a `Composed` that `add.py` rejects -- turning a
 # working pipeline into one that raises. `Composed` already represents the
 # pair correctly; the merge was only ever an optimization. An explicit

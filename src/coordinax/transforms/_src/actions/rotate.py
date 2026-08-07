@@ -116,11 +116,11 @@ class Rotate(AbstractLinearTransform):
 
     ``R`` is always a constant matrix. A time-dependent rotation is a
     `~coordinax.transforms.TimeDep` family of `Rotate` operators — e.g.
-    built by `~coordinax.transforms.RotationAboutAxis`:
+    built by `~coordinax.transforms.builders.RotationAboutAxis`:
 
-    >>> R_op = cxfm.TimeDep(
-    ...     cxfm.RotationAboutAxis(u.Q(45, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
-    ... )
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> b = cxfm.builders.RotationAboutAxis(u.Q(45, "deg/s"), axis=zhat)
+    >>> R_op = cxfm.TimeDep(b)
 
     >>> t = u.Q(4, "s")  # 180 degrees rotation
     >>> R_op(t, q).round(3)

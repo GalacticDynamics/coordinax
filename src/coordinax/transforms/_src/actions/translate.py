@@ -72,7 +72,7 @@ class Translate(AbstractAdd):
 
     A time-dependent translation is a `~coordinax.transforms.TimeDep`
     family of `Translate` operators (e.g. built by
-    `~coordinax.transforms.UniformTranslation`); its
+    `~coordinax.transforms.builders.UniformTranslation`); its
     $d^{m-k}\delta/d\tau^{m-k}$ prolongation terms are recovered by the
     generic tangent funnel, which differentiates the point action.
 
@@ -100,7 +100,7 @@ class Translate(AbstractAdd):
     Time-dependent translation — a `~coordinax.transforms.TimeDep` family:
 
     >>> rate = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
-    >>> moving = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> moving = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
 
     >>> t = u.Q(10, "s")
     >>> x = cx.cdict(u.Q([0.0, 0.0, 0.0], "m"))
@@ -317,7 +317,7 @@ def act(
     family — boosts velocities by its rate (the kinematic prolongation):
 
     >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> moving = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> moving = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
     >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> out = cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel, at=at)
     >>> out["x"].round(3)

@@ -218,11 +218,13 @@ Every primitive transform (`Rotate`, `Translate`, `Boost`, ...) holds only **con
 
 ### Tier 1: a built-in builder
 
-`RotationAboutAxis(omega, axis, phase=...)` covers uniform rotation about a fixed axis — the common case:
+Builders live in their own sub-namespace, `cxfm.builders` — a builder is a `tau -> AbstractTransform` family, not a transform: it has no `act`, no `inverse`, no `@`.
+
+`cxfm.builders.RotationAboutAxis(omega, axis, phase=...)` covers uniform rotation about a fixed axis — the common case:
 
 ```python
 axis = jnp.array([0.0, 0.0, 1.0])
-b = cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=axis)
+b = cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=axis)
 rot_td = cxfm.TimeDep(b)
 
 tau_1s = u.Q(1.0, "s")
@@ -230,11 +232,11 @@ v = cxv.Point.from_([1, 0, 0], "m")
 v_rot = rot_td(tau_1s, v)  # matrix at omega * 1s applied
 ```
 
-`UniformTranslation(rate, chart=...)` covers straight-line motion at constant velocity — a moving frame origin:
+`cxfm.builders.UniformTranslation(rate, chart=...)` covers straight-line motion at constant velocity — a moving frame origin:
 
 ```python
 rate = {"x": u.Q(100.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-translate_td = cxfm.TimeDep(cxfm.UniformTranslation(rate, chart=cxc.cart3d))
+translate_td = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
 
 tau_2s = u.Q(2.0, "s")
 v_origin = cxv.Point.from_([0, 0, 0], "km")
@@ -300,7 +302,7 @@ To bind parameters that must stay differentiable without writing a `Module`, pas
 
 ```python
 def build_rot(omega, tau) -> cxfm.Rotate:
-    return cxfm.RotationAboutAxis(omega, axis=axis)(tau)
+    return cxfm.builders.RotationAboutAxis(omega, axis=axis)(tau)
 
 
 def y_of_op(op):
@@ -371,6 +373,8 @@ class CircleFrame(eqx.Module):
 
 `d/dgamma` is then an ordinary gradient of the operator pytree, and `jax.vmap` over `gamma` produces a frame field along the curve in one call.
 
+The algebra also _returns_ builders, and they are public — in `cxfm.builders` with the rest — so you can name what you see in a `repr` or a tracing error: `FnBuilder` (from `TimeDep.from_(fn)`), `ConstBuilder` (the constant side of `TimeDep @ static_transform`), `ComposedBuilder` (from `TimeDep @ TimeDep`), and `InverseBuilder` (from `TimeDep.inverse`). You rarely construct them yourself.
+
 ## JAX Integration
 
 Transforms are JAX PyTrees, so they compose naturally with `jit`, `vmap`, and `grad`. A builder's numeric fields are **dynamic leaves** — differentiate or `vmap` over them directly, with no `evaluate_at` step first.
@@ -381,7 +385,7 @@ def y_at_tau(op):
     return out["y"].ustrip("m")
 
 
-op = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.0, "deg/s"), axis=axis))
+op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.0, "deg/s"), axis=axis))
 grad_op = eqx.filter_grad(y_at_tau)(op)
 grad_op.builder.omega  # dy/domega, evaluated at omega=0
 ```
@@ -390,7 +394,9 @@ grad_op.builder.omega  # dy/domega, evaluated at omega=0
 
 ```python
 omegas = u.Q(jnp.array([0.0, 45.0, 90.0]), "deg/s")
-ops = jax.vmap(lambda om: cxfm.TimeDep(cxfm.RotationAboutAxis(om, axis=axis)))(omegas)
+ops = jax.vmap(lambda om: cxfm.TimeDep(cxfm.builders.RotationAboutAxis(om, axis=axis)))(
+    omegas
+)
 ys = jax.vmap(y_at_tau)(ops)  # one act per row of the batched operator
 ```
 
@@ -434,8 +440,8 @@ When `act` encounters a `Composed` transform, each primitive is applied at the s
 `simplify` deliberately leaves adjacent `TimeDep` transforms as a `Composed` pair. Folding them would need pointwise composition, which falls back to `|` for transforms that lack `@` — and for a time-dependent fibre offset (a velocity kick) that produces a spelling the ladder rule rejects, turning a working pipeline into one that raises. If you _want_ the pointwise family, ask for it with `@`:
 
 ```python
-a = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=axis))
-b = cxfm.TimeDep(cxfm.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=axis))
+a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=axis))
+b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=axis))
 isinstance(cxfm.simplify(a | b), cxfm.Composed)  # True -- left alone
 isinstance(a @ b, cxfm.TimeDep)  # True -- explicit pointwise composition
 ```
@@ -507,11 +513,11 @@ Every hand-written rule above is property-tested against the generic autodiff pr
 | Compose (t1 then t2) | `t1 \| t2` |
 | Invert | `op.inverse` |
 | Simplify | `op.simplify()` or `cxfm.simplify(op)` |
-| Time-dependent rotation | `cxfm.TimeDep(cxfm.RotationAboutAxis(omega, axis=axis))` |
+| Time-dependent rotation | `cxfm.TimeDep(cxfm.builders.RotationAboutAxis(omega, axis=axis))` |
 | Act on a lone velocity (TD op) | `cxfm.act(op, tau, v, chart, rep, at=base_point)` |
 | Pushforward a displacement | `cxfm.pushforward(op, tau, d, chart, rep, at=...)` |
 | Prolong a jet | `cxfm.act_jet(op, tau, {0: q, 1: v}, chart)` |
-| Time-dependent translation | `cxfm.TimeDep(cxfm.UniformTranslation(rate_dict, chart=...))` |
+| Time-dependent translation | `cxfm.TimeDep(cxfm.builders.UniformTranslation(rate_dict, chart=...))` |
 | Custom time dependence | `cxfm.TimeDep(my_eqx_module_builder)` |
 | Time dependence from a function | `cxfm.TimeDep.from_(fn)`; bind params with `from_(fn, *args)`, `tau` last |
 | Galilean boost | `cxfm.Boost(delta_v_dict, chart=...)` |

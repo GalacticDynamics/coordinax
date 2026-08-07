@@ -155,7 +155,7 @@ Astronomy frames require the `[astro]` extra (`pip install "coordinax[astro]"`) 
 
 >>> # Bar frame co-rotating at Omega_b — TimeDep carries the t-dependence
 >>> Omega_b = u.Q(0.0409, "rad/Myr")  # approx 40 km/s/kpc
->>> spin = cxfm.RotationAboutAxis(-Omega_b, axis=jnp.array([0.0, 0.0, 1.0]))
+>>> spin = cxfm.builders.RotationAboutAxis(-Omega_b, axis=jnp.array([0.0, 0.0, 1.0]))
 
 >>> bar_frame = cxf.TransformedReferenceFrame(cxastro.Galactocentric(), cxfm.TimeDep(spin))
 

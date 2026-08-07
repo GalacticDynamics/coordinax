@@ -42,7 +42,8 @@ class RotationAboutAxis(eqx.Module):
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
-    >>> b = cxfm.RotationAboutAxis(u.Q(90, "deg/s"), axis=jnp.array([0.0, 0.0, 1.0]))
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> b = cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=zhat)
     >>> op = cxfm.TimeDep(b)
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> out = op(u.Q(1.0, "s"), q)
@@ -103,7 +104,7 @@ class UniformTranslation(eqx.Module):
     >>> import coordinax.transforms as cxfm
 
     >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> b = cxfm.UniformTranslation(rate, chart=cxc.cart3d)
+    >>> b = cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d)
     >>> op = b(u.Q(2.0, "s"))
     >>> op.delta["x"]
     Q(6., 'km')
