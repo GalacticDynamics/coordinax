@@ -72,7 +72,9 @@ A rigid rotation by angle $\tau$ about the $z$-axis, centred on $\gamma(\tau)$, 
 ...     return jnp.array([[-st, ct, 0.0], [-ct, -st, 0.0], [0.0, 0.0, 1.0]])
 ...
 
->>> xop = cxfm.Translate(neg_gamma, chart=cxc.cart3d) | cxfm.Rotate(R_z)
+>>> xop = cxfm.Parametric.from_(
+...     lambda tau: cxfm.Translate(neg_gamma(tau), chart=cxc.cart3d)
+... ) | cxfm.Parametric.from_(lambda tau: cxfm.Rotate(R_z(tau)))
 >>> corot_frame = cxf.TransformedReferenceFrame(cxf.alice, xop)
 ```
 

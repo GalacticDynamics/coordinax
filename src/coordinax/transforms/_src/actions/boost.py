@@ -9,24 +9,20 @@ import plum
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import is_any_quantity
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
+from .builders import UniformTranslation
 from .custom_types import CDict, OptUSys
-from .translate import Translate
+from .parametric import Parametric
 from .utils import is_componentwise_offset
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
 
 _MSG_TAU_REQUIRED_POINT = (
     "act(Boost, ...) on point data requires a time parameter: the Galilean "
     "boost moves points by delta_v * tau. Got tau=None."
-)
-_MSG_TAU_REQUIRED_TANGENT = (
-    "act(Boost, ...) with a time-dependent delta on order-{m} tangent data "
-    "requires a time parameter; got tau=None."
 )
 
 
@@ -44,8 +40,8 @@ class Boost(AbstractAdd):
     constant $\Delta v$). Displacements (same-$\tau$ point differences) are
     invariant.
 
-    Equivalently, ``Boost(dv)`` is the time-dependent translation
-    ``Translate(delta=lambda tau: dv * tau)`` — the closed forms here are the
+    Equivalently, ``Boost(dv)`` is the uniform time-dependent translation
+    ``Parametric(UniformTranslation(dv))`` — the closed forms here are the
     prolongation of exactly that point action.
 
     Contrast with ``Translate(semantic_kind=vel)``: that operator is a pure
@@ -54,10 +50,8 @@ class Boost(AbstractAdd):
 
     Parameters
     ----------
-    delta : CDict | Callable[[tau], CDict]
-        The boost velocity. If callable, it is evaluated at the time
-        parameter ``tau`` and the prolongation gains the corresponding
-        derivative terms.
+    delta : CDict
+        The (constant) boost velocity.
 
     Examples
     --------
@@ -115,20 +109,9 @@ class Boost(AbstractAdd):
         return True
 
 
-def _boost_displacement(op: Boost, /) -> Any:
-    r"""Return the boost's displacement function $g(\tau) = \Delta v(\tau)\tau$."""
-    delta = op.delta
-
-    def g(tau: Any, /) -> CDict:
-        dv = delta(tau) if callable(delta) else delta  # ty: ignore[call-top-callable]
-        return jtu.map(lambda c: c * tau, dv, is_leaf=is_any_quantity)
-
-    return g
-
-
-def _as_translate(op: Boost, /) -> Translate:
-    """Return the equivalent displacement Translate: delta = dv(tau) * tau."""
-    return Translate(_boost_displacement(op), chart=op.chart, right_add=op.right_add)
+def _as_translate(op: Boost, /) -> Parametric:
+    r"""Return the equivalent displacement family: $\delta(\tau) = \Delta v\,\tau$."""
+    return Parametric(UniformTranslation(op.delta, chart=op.chart))
 
 
 # ============================================================================
@@ -206,25 +189,17 @@ def act(
     if m == 0:
         return x
 
-    # Static dv: closed forms that need no time parameter.
-    if not callable(op.delta):
-        if m != 1:
-            # Constant dv: higher derivatives of dv*tau vanish.
-            return x
-        return cast(
-            "CDict",
-            jtu.map(
-                jnp.add,
-                *((x, op.delta) if op.right_add else (op.delta, x)),
-                is_leaf=u.quantity.is_any_quantity,
-            ),
-        )
-
-    # Time-dependent dv: delegate to the equivalent displacement Translate,
-    # whose ladder rule computes d^m (dv(tau) * tau) / dtau^m.
-    if tau is None:
-        raise TypeError(_MSG_TAU_REQUIRED_TANGENT.format(m=m))
-    return delegate()
+    # `dv` is constant, so higher derivatives of dv*tau vanish.
+    if m != 1:
+        return x
+    return cast(
+        "CDict",
+        jtu.map(
+            jnp.add,
+            *((x, op.delta) if op.right_add else (op.delta, x)),
+            is_leaf=u.quantity.is_any_quantity,
+        ),
+    )
 
 
 @plum.dispatch

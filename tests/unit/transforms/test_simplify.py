@@ -2,7 +2,6 @@
 
 __all__: tuple[str, ...] = ()
 
-from jaxtyping import Array, Real
 
 import jax
 import numpy as np
@@ -86,16 +85,18 @@ def test_different_semantic_kind_translates_do_not_merge() -> None:
     assert len(out.transforms) == 2
 
 
-def test_time_dependent_rotations_do_not_merge() -> None:
-    def R_of_t(t) -> Real[Array, "3 3"]:
-        th = t.ustrip("s")
-        c, s = jnp.cos(th), jnp.sin(th)
-        return jnp.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
+def test_time_dependent_rotations_merge_pointwise() -> None:
+    """Two `Parametric` rotations merge into one, pointwise in tau."""
+    zhat = jnp.asarray([0.0, 0.0, 1.0])
+    td = cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=zhat))
 
-    td = cxfm.Rotate.from_(R_of_t)
     out = cxfm.simplify(cxfm.Composed((td, td)))
-    assert isinstance(out, cxfm.Composed)
-    assert len(out.transforms) == 2
+    assert isinstance(out, cxfm.Parametric)
+
+    # ...and the merged family acts as the sequential application at a sample tau.
+    tau = u.Q(0.7, "s")
+    p = _point()
+    np.testing.assert_allclose(_xyz(out(tau, p)), _xyz(td(tau, td(tau, p))), atol=1e-12)
 
 
 # ===================================================================

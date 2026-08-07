@@ -419,8 +419,10 @@ class BishopTransform(AbstractParallelTransportTransform):
             """
             return cxc.cdict(-curve(tau), cxc.cart3d)
 
-        translate = cxfm.Translate(neg_gamma_fn, chart=cxc.cart3d)
-        rotate = cxfm.Rotate(rotation_matrix_fn)
+        translate = cxfm.Parametric.from_(
+            lambda tau: cxfm.Translate(neg_gamma_fn(tau), chart=cxc.cart3d)
+        )
+        rotate = cxfm.Parametric.from_(lambda tau: cxfm.Rotate(rotation_matrix_fn(tau)))
 
         return cls(  # ty: ignore[missing-argument]
             translate=translate,

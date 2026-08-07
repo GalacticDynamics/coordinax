@@ -15,7 +15,7 @@ __all__ = ("AbstractParallelTransportFrame", "AbstractParallelTransportTransform
 import abc
 
 from collections.abc import Callable
-from typing import Any, override
+from typing import Any, cast, override
 from typing_extensions import TypeVar
 
 import equinox as eqx
@@ -127,8 +127,11 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
 
     """
 
-    translate: cxfm.Translate
-    rotate: cxfm.Rotate
+    translate: cxfm.Parametric
+    """The ``Translate(-gamma(tau))`` step, as a `Parametric` family."""
+
+    rotate: cxfm.Parametric
+    """The ``Rotate(R(tau))`` step, as a `Parametric` family."""
 
     curve: Callable[[Any], Any]
     """The original constructing curve."""
@@ -155,7 +158,7 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
 
     @override
     @property
-    def transforms(self) -> tuple[cxfm.Translate, cxfm.Rotate]:
+    def transforms(self) -> tuple[cxfm.Parametric, cxfm.Parametric]:
         """Return the ordered pipeline of sub-transforms.
 
         The composite transform is always ``Translate(-gamma) | Rotate(R)``.
@@ -164,7 +167,7 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
 
         Returns
         -------
-        tuple[Translate, Rotate]
+        tuple[Parametric, Parametric]
             Two-element tuple ``(translate, rotate)``.
 
         """
@@ -213,10 +216,10 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
         if self._is_forward:
             return self.curve
 
-        delta_fn = self.translate.delta
+        translate = self.translate
 
         def _location_from_delta(tau: u.AbstractQuantity, /) -> Any:
-            delta = delta_fn(tau) if callable(delta_fn) else delta_fn  # ty: ignore[call-top-callable]
+            delta = cast("cxfm.Translate", translate.materialize(tau)).delta
             return -qnp.stack(list(delta.values()), axis=-1)
 
         return _location_from_delta
@@ -239,8 +242,7 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
             Orthogonal rotation matrix.
 
         """
-        R = self.rotate.R
-        return R(tau) if callable(R) else R  # ty: ignore[call-top-callable]
+        return cast("cxfm.Rotate", self.rotate.materialize(tau)).R
 
     def tangent(self, tau: u.AbstractQuantity, /) -> Any:
         r"""Return the unit tangent vector $\mathbf{T}(\tau)$ (row 0 of R).
@@ -334,9 +336,9 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
 
         Subclasses must construct a new instance with:
 
-        - ``rotate``: ``Rotate(lambda tau: R(tau).T)``
-        - ``translate``: ``Translate(lambda tau: cdict(-R(tau) @
-          gamma(tau), cart3d))``
+        - ``rotate``: ``Parametric.from_(lambda tau: Rotate(R(tau).T))``
+        - ``translate``: ``Parametric.from_(lambda tau: Translate(
+          cdict(-R(tau) @ gamma(tau), cart3d), chart=cart3d))``
         - ``_is_forward = False``
         - All extra fields (e.g. Bishop's ``tau_0``, ``initial_normal``)
         """
@@ -354,23 +356,22 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
     # ---------------------------------------------------------------
     # Inverse-building helpers (shared logic)
 
-    def _make_inverse_rotate(self) -> cxfm.Rotate:
+    def _make_inverse_rotate(self) -> cxfm.Parametric:
         r"""Build the inverse rotation: $R^{\mathsf{T}}$.
 
         Since $R \in SO(3)$, its inverse is simply its transpose.  The returned
-        ``Rotate`` wraps a callable that transposes the forward rotation matrix
-        at each $\tau$.
+        family transposes the forward rotation matrix at each $\tau$.
 
         """
-        R_fn = self.rotate.R
-        inv_R = (
-            lambda tau: jnp.swapaxes(R_fn(tau), -2, -1)  # ty: ignore[call-top-callable]
-            if callable(R_fn)
-            else jnp.swapaxes(R_fn, -2, -1)
-        )
-        return cxfm.Rotate(inv_R)
+        rotate = self.rotate
 
-    def _make_inverse_translate(self) -> cxfm.Translate:
+        def build(tau: Any, /) -> cxfm.Rotate:
+            R = cast("cxfm.Rotate", rotate.materialize(tau)).R
+            return cxfm.Rotate(jnp.swapaxes(R, -2, -1))
+
+        return cast("cxfm.Parametric", cxfm.Parametric.from_(build))
+
+    def _make_inverse_translate(self) -> cxfm.Parametric:
         r"""Build the inverse translation: $-R(\tau) \boldsymbol{\gamma}(\tau)$.
 
         For the inverse transform the translation step shifts by
@@ -380,16 +381,16 @@ class AbstractParallelTransportTransform(cxfm.AbstractCompositeTransform):
         $R^{\mathsf{T}}$, recovers $+\boldsymbol{\gamma}$).
 
         """
-        R_fn = self.rotate.R
+        rotate = self.rotate
         curve = self.curve
         cart = cxc.cart3d
 
-        def inv_delta(tau: Any, /) -> Any:
+        def build(tau: Any, /) -> cxfm.Translate:
             # Evaluate R and gamma at the requested tau, then compute
             # the rotated translation vector  R @ gamma.
-            R = R_fn(tau) if callable(R_fn) else R_fn  # ty: ignore[call-top-callable]
+            R = cast("cxfm.Rotate", rotate.materialize(tau)).R
             gamma = curve(tau)
             R_gamma = qnp.einsum("ij,...j->...i", R, gamma)
-            return cxc.cdict(R_gamma, cart)
+            return cxfm.Translate(cxc.cdict(R_gamma, cart), chart=cart)
 
-        return cxfm.Translate(inv_delta, chart=cart)
+        return cast("cxfm.Parametric", cxfm.Parametric.from_(build))

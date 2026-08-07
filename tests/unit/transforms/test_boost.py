@@ -131,18 +131,7 @@ class TestBoostOnVelocity:
         always wins, unconditionally delegating to the 5-arg ``act`` below —
         so this only pins that the two Boost-specific forms agree with each
         other, not that the generic funnel now does the right thing with a
-        Boost.
-
-        TODO(#537): once `Boost._as_translate` stops synthesizing a bare
-        callable (Task 6: it returns `Parametric(UniformTranslation(dv))`
-        instead), add a test that routes a constant-``delta`` Boost's
-        velocity data through the *generic* funnel (bypassing this 6-arg
-        override, e.g. by calling the base `act(op: AbstractTransform, ...)`
-        dispatch directly) and asserts the result gains ``dv`` — pinning the
-        trait's routing *consequence*, not just its boolean value. Today that
-        call raises `ValueError` (`Translate.materialize` no longer
-        understands a bare closure, per this task's `materialize_transform`
-        rewrite), so the assertion cannot be written yet.
+        Boost. `test_generic_funnel_routes_constant_boost` below pins that.
         """
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
         tau = jnp.array(0.0)
@@ -153,6 +142,36 @@ class TestBoostOnVelocity:
             )
             for k in vel_cdict:
                 assert jnp.allclose(six[k], five[k]), f"{rep} component {k}"
+
+    def test_generic_funnel_routes_constant_boost(self, boost, vel_cdict, delta_v):
+        """The *generic* tangent funnel gains ``dv`` for a constant-dv Boost.
+
+        `Boost.is_time_dependent` is `True` even for a constant ``delta``, so
+        the base `act(op: AbstractTransform, ..., TangentGeometry, ...)`
+        dispatch must route the velocity through the kinematic prolongation
+        rather than the frozen-tau pushforward. Boost's own 6-arg override is
+        more specific and normally wins, so invoke the generic one directly.
+        """
+        generic = cxfm.act.invoke(
+            cxfm.AbstractTransform,
+            object,
+            dict,
+            cxc.AbstractChart,
+            cxr.TangentGeometry,
+            cxr.Representation,
+        )
+        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        out = generic(
+            boost,
+            jnp.array(0.0),
+            vel_cdict,
+            cxc.cart3d,
+            cxr.tangent_geom,
+            cxr.coord_vel,
+            at=at,
+        )
+        for k in vel_cdict:
+            assert jnp.allclose(out[k], vel_cdict[k] + delta_v[k], atol=1e-6)
 
     def test_pushforward_is_frozen_tau_identity(self, boost, vel_cdict):
         """``pushforward`` is the frozen-tau spatial map: velocity is unchanged.

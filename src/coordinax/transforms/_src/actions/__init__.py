@@ -3,6 +3,7 @@
 from .add import *
 from .base import *
 from .boost import *
+from .builders import *
 from .composed import *
 from .composite import *
 from .constants import *

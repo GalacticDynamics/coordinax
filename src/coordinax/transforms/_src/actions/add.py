@@ -5,7 +5,6 @@ __all__ = ("AbstractAdd",)
 import functools as ft
 from dataclasses import KW_ONLY, replace
 
-from collections.abc import Callable
 from jaxtyping import ArrayLike
 from typing import Any, Union, cast
 
@@ -27,7 +26,7 @@ from .composed import Composed
 from .custom_types import CDict
 from .identity import Identity, identity
 from .prolong import _MSG_JET_SLOT0_MISSING, prolong_jet, pushforward_generic
-from .utils import Neg, is_componentwise_offset
+from .utils import is_componentwise_offset
 from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 
@@ -40,11 +39,11 @@ class AbstractAdd(AbstractTransform):
     Common features:
     - Addition of two operators combines their offsets
     - Negation inverts the offset
-    - Time-dependent offsets via callables
+    - Time-dependent offsets: wrap in `~coordinax.transforms.Parametric`
     - Chart-aware representation
     """
 
-    delta: CDict | Callable[[Any], Any]
+    delta: CDict
     """The additive offset (displacement for Translate, velocity for Boost)."""
 
     chart: cxc.AbstractChart = eqx.field(static=True)
@@ -55,17 +54,9 @@ class AbstractAdd(AbstractTransform):
     right_add: bool = eqx.field(default=True, static=True)
     """Whether to add on the right (x + offset) or left (offset + x)."""
 
-    def _combine_offsets(
-        self, other_offset: CDict | Callable[[Any], Any]
-    ) -> CDict | Callable[[Any], Any]:
-        """Combine this offset with another via addition.
-
-        Only works for non-callable offsets.
-        """
-        self_offset = self.delta
-        if callable(self_offset) or callable(other_offset):
-            raise TypeError("Cannot combine callable offsets")
-        return jtu.map(jnp.add, self_offset, other_offset, is_leaf=is_any_quantity)
+    def _combine_offsets(self, other_offset: CDict) -> CDict:
+        """Combine this offset with another via addition."""
+        return jtu.map(jnp.add, self.delta, other_offset, is_leaf=is_any_quantity)
 
     def __neg__(self) -> "AbstractAdd":
         """Return negative of the operator."""
@@ -87,27 +78,14 @@ class AbstractAdd(AbstractTransform):
         )
 
         """
-        delta = self.delta
-        if isinstance(delta, Neg):
-            # Double negation unwraps to the original callable.
-            inv = delta.param
-        elif callable(delta):
-            inv = Neg(delta)
-        else:
-            inv = jtu.map(jnp.negative, delta, is_leaf=is_any_quantity)
+        inv = jtu.map(jnp.negative, self.delta, is_leaf=is_any_quantity)
         return replace(self, delta=inv)
 
     def __add__(self, other: object, /) -> Union["AbstractAdd", Composed]:
         """Combine two operators of the same type."""
         if not isinstance(other, type(self)):
             return NotImplemented
-
-        other_offset = other.delta
-
-        if not callable(self.delta) and not callable(other_offset):
-            combined = self._combine_offsets(other_offset)
-            return replace(self, delta=combined)
-        return Composed((self, other))
+        return replace(self, delta=self._combine_offsets(other.delta))
 
     # ===============================================================
     # Wadler-Lindig API
@@ -339,8 +317,7 @@ def simplify(
     """Simplify a AbstractAdd operator.
 
     A translation with zero delta simplifies to Identity. This is a
-    value-inspecting rule, so it is skipped when ``approx=False`` (and for a
-    time-dependent, callable delta).
+    value-inspecting rule, so it is skipped when ``approx=False``.
 
     >>> import coordinax.transforms as cxfm
 
@@ -353,7 +330,7 @@ def simplify(
     Identity()
 
     """
-    if not approx or callable(op.delta):
+    if not approx:
         return op
     is_zero = jtu.all(
         jtu.map(lambda v: jnp.allclose(u.ustrip(AllowValue, v), 0, **kw), op.delta)
@@ -367,14 +344,12 @@ def simplify(
 def _merge(a: AbstractAdd, b: AbstractAdd, /) -> AbstractTransform | None:
     """Merge two adjacent additive operators of the same type and role.
 
-    Static offsets of the same operator type and ``semantic_kind`` combine into
-    one (their deltas add); anything else is left un-merged.
+    Offsets of the same operator type and ``semantic_kind`` combine into one
+    (their deltas add); anything else is left un-merged.
     """
     if type(a) is not type(b) or getattr(a, "semantic_kind", None) != getattr(
         b, "semantic_kind", None
     ):
-        return None
-    if callable(a.delta) or callable(b.delta):
         return None
     combined = a + b
     return None if isinstance(combined, Composed) else combined

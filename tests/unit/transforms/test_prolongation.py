@@ -4,7 +4,6 @@ The keystone property tested throughout: every hand-written fast path must
 equal the generic autodiff prolongation of the operator's point action.
 """
 
-from jaxtyping import Array, Real
 from typing import ClassVar
 
 import jax
@@ -36,11 +35,29 @@ def allclose_cdict(a, b, unit, atol=1e-10):
     )
 
 
-def rot_z(t) -> Real[Array, "3 3"]:
-    """Uniform rotation about z at 1 rad/s."""
-    th = t.ustrip("s")
-    st_, ct = jnp.sin(th), jnp.cos(th)
-    return jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
+ZHAT = jnp.asarray([0.0, 0.0, 1.0])
+
+
+def rot_z_op() -> cxfm.Parametric:
+    """Uniform rotation about z at 1 rad/s, as a `Parametric` family."""
+    return cxfm.Parametric(cxfm.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=ZHAT))
+
+
+def _rot_z_raw_op() -> cxfm.Parametric:
+    """Rotation about z at 1 rad per unit of a raw (unitless) tau."""
+
+    def build(t):
+        st_, ct = jnp.sin(t), jnp.cos(t)
+        return cxfm.Rotate(
+            jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
+        )
+
+    return cxfm.Parametric.from_(build)
+
+
+def uniform_translate(vx, unit="km/s", chart=cxc.cart3d) -> cxfm.Parametric:
+    """A `Parametric` uniform translation along +x at rate ``vx``."""
+    return cxfm.Parametric(cxfm.UniformTranslation(q3(vx, 0.0, 0.0, unit), chart=chart))
 
 
 # ============================================================================
@@ -130,24 +147,27 @@ class TestPhysics:
     def test_falling_frame(self):
         """Delta = 1/2 g t^2 => vel += g t, acc += g."""
         g = u.Q(9.8, "m/s2")
-        op = cxfm.Translate(
-            lambda t: {"x": 0.5 * g * t**2, "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-            chart=cxc.cart3d,
+        op = cxfm.Parametric.from_(
+            lambda t: cxfm.Translate(
+                {"x": 0.5 * g * t**2, "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
+                chart=cxc.cart3d,
+            )
         )
         tau = u.Q(2.0, "s")
+        at = q3(0.0, 0.0, 0.0, "m")
         v = q3(1.0, 2.0, 3.0, "m/s")
         a = q3(0.0, 0.0, 0.0, "m/s2")
 
-        out_v = cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel)
+        out_v = cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel, at=at)
         assert jnp.allclose(u.ustrip("m/s", out_v["x"]), 1.0 + 9.8 * 2.0)
         assert jnp.allclose(u.ustrip("m/s", out_v["y"]), 2.0)
 
-        out_a = cxfm.act(op, tau, a, cxc.cart3d, cxr.coord_acc)
+        out_a = cxfm.act(op, tau, a, cxc.cart3d, cxr.coord_acc, at=at, at_vel=v)
         assert jnp.allclose(u.ustrip("m/s2", out_a["x"]), 9.8)
 
     def test_rotating_frame_velocity(self):
         """V' = R v + dR/dt x; at t=0: v + omega x_perp."""
-        op = cxfm.Rotate.from_(rot_z)
+        op = rot_z_op()
         tau = u.Q(0.0, "s")
         at = q3(1.0, 0.0, 0.0, "m")
         v = q3(0.0, 0.0, 0.0, "m/s")
@@ -158,7 +178,7 @@ class TestPhysics:
 
     def test_rotating_frame_acceleration_coriolis_centrifugal(self):
         """A' = R a + 2 dR v + ddR x; at t=0: a + 2 omega z x v - omega^2 x_perp."""
-        op = cxfm.Rotate.from_(rot_z)
+        op = rot_z_op()
         tau = u.Q(0.0, "s")
         at = q3(1.0, 0.0, 0.0, "m")
         at_vel = q3(0.0, 1.0, 0.0, "m/s")
@@ -178,12 +198,10 @@ class TestPhysics:
         assert jnp.allclose(u.ustrip("m/s2", out["y"]), 0.0, atol=1e-6)
 
     def test_boost_equals_prolonged_translate(self):
-        """Boost(dv) == prolongation of Translate(dpl, lambda t: dv*t)."""
+        """Boost(dv) == prolongation of Parametric(UniformTranslation(dv))."""
         dv = q3(1.5, -0.5, 2.0, "km/s")
         boost = cxfm.Boost(dv, chart=cxc.cart3d)
-        td = cxfm.Translate(
-            lambda t: {k: c * t for k, c in dv.items()}, chart=cxc.cart3d
-        )
+        td = cxfm.Parametric(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
         tau = u.Q(3.0, "s")
         jet = {
             0: q3(1.0, 2.0, 3.0, "km"),
@@ -204,7 +222,13 @@ class TestPhysics:
 
 
 class TestFastPathEqualsGeneric:
-    """Hand-written fast paths must equal the generic autodiff rule."""
+    r"""Hand-written fast paths must equal the generic autodiff rule.
+
+    `Rotate`'s time-dependent closed form no longer exists (its matrix is
+    always constant, and time dependence lives in `Parametric`), so its case
+    below pins the generic prolongation against the *hand-derived* closed
+    form $v' = R v + \dot R x$ instead — same numeric oracle.
+    """
 
     @given(
         c0=st.floats(-5, 5),
@@ -221,7 +245,7 @@ class TestFastPathEqualsGeneric:
             val = c0 + c1 * ts + c2 * ts**2
             return {"x": u.Q(val, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
 
-        op = cxfm.Translate(delta, chart=cxc.cart3d)
+        op = cxfm.Parametric.from_(lambda t: cxfm.Translate(delta(t), chart=cxc.cart3d))
         tq = u.Q(tau, "s")
         jet = {
             0: q3(1.0, 2.0, 3.0, "km"),
@@ -229,24 +253,34 @@ class TestFastPathEqualsGeneric:
             2: q3(0.1, 0.0, -0.1, "km/s2"),
         }
         out_gen = cxfm.act_jet(op, tq, jet, cxc.cart3d)
-        out_v = cxfm.act(op, tq, jet[1], cxc.cart3d, cxr.coord_vel)
-        out_a = cxfm.act(op, tq, jet[2], cxc.cart3d, cxr.coord_acc)
+        out_v = cxfm.act(op, tq, jet[1], cxc.cart3d, cxr.coord_vel, at=jet[0])
+        out_a = cxfm.act(
+            op, tq, jet[2], cxc.cart3d, cxr.coord_acc, at=jet[0], at_vel=jet[1]
+        )
         assert allclose_cdict(out_v, out_gen[1], "km/s", atol=1e-6)
         assert allclose_cdict(out_a, out_gen[2], "km/s2", atol=1e-6)
 
     @given(tau=st.floats(0.0, 6.0))
     @settings(max_examples=20, deadline=None)
-    def test_rotate_closed_form_vs_generic(self, tau):
-        """Rotate's Cartesian vel closed form == generic prolongation."""
-        op = cxfm.Rotate.from_(rot_z)
+    def test_rotate_prolongation_vs_closed_form(self, tau):
+        """Parametric-rotate prolongation == the closed form v' = R v + Rdot x."""
+        op = rot_z_op()
         tq = u.Q(tau, "s")
         at = q3(1.0, -2.0, 0.5, "m")
         v = q3(0.3, 0.1, -0.2, "m/s")
-        out_hand = cxfm.act(
-            op, tq, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at
-        )
+        out = cxfm.act(op, tq, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at)
         out_gen = cxfm.act_jet(op, tq, {0: at, 1: v}, cxc.cart3d)
-        assert allclose_cdict(out_hand, out_gen[1], "m/s", atol=1e-6)
+        assert allclose_cdict(out, out_gen[1], "m/s", atol=1e-6)
+
+        # Hand-derived closed form for omega = 1 rad/s about z.
+        st_, ct = jnp.sin(tau), jnp.cos(tau)
+        rot = jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
+        rotdot = jnp.array([[-st_, -ct, 0.0], [ct, -st_, 0.0], [0.0, 0.0, 0.0]])
+        v_arr = jnp.array([u.ustrip("m/s", v[k]) for k in "xyz"])
+        at_arr = jnp.array([u.ustrip("m", at[k]) for k in "xyz"])
+        expect = rot @ v_arr + rotdot @ at_arr
+        got = jnp.array([u.ustrip("m/s", out[k]) for k in "xyz"])
+        assert jnp.allclose(got, expect, atol=1e-6)
 
     def test_vel_kick_translate_vs_generic_fibre_law(self):
         """TD vel-kick Translate: acc gains delta-dot (hand rule)."""
@@ -285,9 +319,7 @@ class TestStructure:
         tau = u.Q(2.0, "s")
         ops = [
             cxfm.Translate.from_([1, 2, 3], "km"),
-            cxfm.Translate(
-                lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-            ),
+            uniform_translate(1.0),
             cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d),
         ]
         for op in ops:
@@ -295,9 +327,7 @@ class TestStructure:
             assert allclose_cdict(out, d, "km")
 
     def test_prolong_inverse_roundtrip(self):
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         tau = u.Q(2.0, "s")
         jet = {0: q3(1.0, 2.0, 3.0, "km"), 1: q3(0.5, -0.5, 0.0, "km/s")}
         fwd = cxfm.act_jet(moving, tau, jet, cxc.cart3d)
@@ -307,8 +337,8 @@ class TestStructure:
 
     def test_prolong_composed_equals_sequential(self):
         opA = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
-        opB = cxfm.Translate(
-            lambda t: q3(0.0, 2.0 * t.ustrip("s"), 0.0, "km"), chart=cxc.cart3d
+        opB = cxfm.Parametric(
+            cxfm.UniformTranslation(q3(0.0, 2.0, 0.0, "km/s"), chart=cxc.cart3d)
         )
         tau = u.Q(2.0, "s")
         jet = {0: q3(1.0, 2.0, 3.0, "km"), 1: q3(0.5, -0.5, 0.0, "km/s")}
@@ -329,9 +359,7 @@ class TestUnits:
 
     def test_spherical_chart_mixed_units(self):
         """Prolongation in a spherical chart handles mixed (m, rad) units."""
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "m"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0, "m/s")
         tau = u.Q(2.0, "s")
         jet = {
             0: {
@@ -353,12 +381,11 @@ class TestUnits:
         assert u.dimension_of(out[1]["theta"]) == u.dimension_of(u.Q(1, "rad/s"))
 
     def test_tau_in_myr(self):
-        moving = cxfm.Translate(
-            lambda t: q3(2.0 * t.ustrip("Myr"), 0.0, 0.0, "kpc"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(2.0, "kpc/Myr")
         tau = u.Q(3.0, "Myr")
+        at = q3(0.0, 0.0, 0.0, "kpc")
         v = q3(0.0, 0.0, 0.0, "kpc/Myr")
-        out = cxfm.act(moving, tau, v, cxc.cart3d, cxr.coord_vel)
+        out = cxfm.act(moving, tau, v, cxc.cart3d, cxr.coord_vel, at=at)
         assert jnp.allclose(u.ustrip("kpc/Myr", out["x"]), 2.0)
 
 
@@ -370,9 +397,7 @@ class TestBatchingAndJit:
     """jit/vmap/batching compatibility."""
 
     def test_jit_prolong(self):
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         jet = {0: q3(0.0, 0.0, 0.0, "km"), 1: q3(0.0, 0.0, 0.0, "km/s")}
         f = jax.jit(lambda tau, jet: cxfm.act_jet(moving, tau, jet, cxc.cart3d))
         out = f(u.Q(2.0, "s"), jet)
@@ -380,9 +405,11 @@ class TestBatchingAndJit:
 
     def test_vmap_over_tau(self):
         g = u.Q(2.0, "m/s2")
-        moving = cxfm.Translate(
-            lambda t: {"x": 0.5 * g * t**2, "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-            chart=cxc.cart3d,
+        moving = cxfm.Parametric.from_(
+            lambda t: cxfm.Translate(
+                {"x": 0.5 * g * t**2, "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
+                chart=cxc.cart3d,
+            )
         )
         jet = {0: q3(0.0, 0.0, 0.0, "m"), 1: q3(0.0, 0.0, 0.0, "m/s")}
         f = jax.jit(lambda tau: cxfm.act_jet(moving, tau, jet, cxc.cart3d)[1]["x"])
@@ -391,15 +418,14 @@ class TestBatchingAndJit:
         assert jnp.allclose(u.ustrip("m/s", out), jnp.array([2.0, 4.0, 6.0]))
 
     def test_batched_data(self):
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         v = {
             "x": u.Q(jnp.zeros(4), "km/s"),
             "y": u.Q(jnp.ones(4), "km/s"),
             "z": u.Q(jnp.zeros(4), "km/s"),
         }
-        out = cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel)
+        at = {k: u.Q(jnp.zeros(4), "km") for k in "xyz"}
+        out = cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel, at=at)
         assert out["x"].shape == (4,)
         assert jnp.allclose(u.ustrip("km/s", out["x"]), 3.0)
 
@@ -412,13 +438,13 @@ class TestErrors:
     """Informative errors when required jet slots are missing."""
 
     def test_td_rotate_lone_vel_requires_at(self):
-        op = cxfm.Rotate.from_(rot_z)
+        op = rot_z_op()
         v = q3(1.0, 0.0, 0.0, "m/s")
         with pytest.raises(TypeError, match="requires the base point"):
             cxfm.act(op, u.Q(1.0, "s"), v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel)
 
     def test_td_rotate_acc_requires_at_vel(self):
-        op = cxfm.Rotate.from_(rot_z)
+        op = rot_z_op()
         a = q3(1.0, 0.0, 0.0, "m/s2")
         at = q3(1.0, 0.0, 0.0, "m")
         with pytest.raises(TypeError, match="at_vel"):
@@ -427,45 +453,43 @@ class TestErrors:
             )
 
     def test_td_rotate_pushforward_requires_tau(self):
-        """Materializing a callable R without tau raises informatively."""
-        op = cxfm.Rotate.from_(rot_z)
+        """Materializing a `Parametric` without tau raises informatively."""
+        op = rot_z_op()
         d = q3(1.0, 0.0, 0.0, "m")
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
+        with pytest.raises(TypeError, match="requires a time parameter"):
             cxfm.pushforward(op, None, d, cxc.cart3d, cxr.coord_disp)
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
+        with pytest.raises(TypeError, match="requires a time parameter"):
             cxfm.act(op, None, d, cxc.cart3d, cxr.point)
 
     def test_td_translate_point_requires_tau(self):
-        """Materializing a callable delta without tau raises informatively."""
-        moving = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        """A `Parametric` point action without tau raises informatively."""
+        moving = uniform_translate(1.0)
         p = q3(0.0, 0.0, 0.0, "km")
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
+        with pytest.raises(TypeError, match="requires a time parameter"):
             cxfm.act(moving, None, p, cxc.cart3d, cxr.point)
 
     def test_td_vel_kick_matching_order_requires_tau(self):
-        """A callable vel-kick on velocity data (n==0) also needs tau."""
-        kick = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km/s"),
-            chart=cxc.cart3d,
-            semantic_kind=cxr.vel,
+        """A `Parametric` vel-kick on velocity data also needs tau."""
+        kick = cxfm.Parametric.from_(
+            lambda t: cxfm.Translate(
+                q3(t.ustrip("s"), 0.0, 0.0, "km/s"),
+                chart=cxc.cart3d,
+                semantic_kind=cxr.vel,
+            )
         )
         v = q3(0.0, 0.0, 0.0, "km/s")
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
+        with pytest.raises(TypeError, match="requires a time parameter"):
             cxfm.act(kick, None, v, cxc.cart3d, cxr.coord_vel)
 
     def test_td_translate_tangent_requires_tau(self):
-        moving = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(1.0)
         v = q3(1.0, 0.0, 0.0, "km/s")
         with pytest.raises(TypeError, match="tau=None"):
             cxfm.act(moving, None, v, cxc.cart3d, cxr.coord_vel)
 
     def test_prolong_missing_slot(self):
         # A non-additive op: the generic chain needs every lower slot.
-        op = cxfm.Rotate.from_(rot_z)
+        op = rot_z_op()
         jet = {0: q3(0.0, 0.0, 0.0, "m"), 2: q3(0.0, 0.0, 0.0, "m/s2")}
         with pytest.raises(TypeError, match="slot 1 is missing"):
             cxfm.act_jet(op, u.Q(1.0, "s"), jet, cxc.cart3d)
@@ -484,17 +508,16 @@ class TestErrors:
             cxfm.act_jet(kick, None, jet, cxc.cart3d)
 
     def test_prolong_additive_skips_intermediate_slots(self):
-        # Additive ops prolong slot-wise: no intermediate slots required.
-        moving = cxfm.Translate(
-            lambda t: {
-                "x": 0.5 * u.Q(2.0, "km/s2") * t**2,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
+        """Additive ops prolong slot-wise: no intermediate slots required.
+
+        Slot 2 gains the operator's own order-2 offset (2 km/s2) with slot 1
+        absent; the generic (jet-chain) engine would demand slot 1.
+        """
+        kick = cxfm.Translate(
+            q3(2.0, 0.0, 0.0, "km/s2"), chart=cxc.cart3d, semantic_kind=cxr.acc
         )
         jet = {0: q3(0.0, 0.0, 0.0, "km"), 2: q3(0.0, 0.0, 0.0, "km/s2")}
-        out = cxfm.act_jet(moving, u.Q(1.0, "s"), jet, cxc.cart3d)
+        out = cxfm.act_jet(kick, None, jet, cxc.cart3d)
         assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 2.0)
 
     def test_static_scale_vel_no_at_needed(self):
@@ -528,9 +551,7 @@ class TestCoordinateBundle:
         point = cx.Point.from_([1.0, 0.0, 0.0], "m")
         vel = cx.Tangent(q3(1.0, 0.0, 0.0, "m/s"), cxc.cart3d, cxr.coord_basis, cxr.vel)
         pv = cx.Coordinate(point=point, velocity=vel)
-        op = cx.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "m"), chart=cxc.cart3d
-        )
+        op = uniform_translate(3.0, "m/s")
         out = cx.act(op, u.Q(2.0, "s"), pv)
         assert jnp.allclose(u.ustrip("m", out.point.data["x"]), 7.0)
         assert jnp.allclose(u.ustrip("m/s", out["velocity"].data["x"]), 4.0)
@@ -539,7 +560,7 @@ class TestCoordinateBundle:
         point = cx.Point.from_([1.0, 0.0, 0.0], "m")
         vel = cx.Tangent(q3(0.0, 0.0, 0.0, "m/s"), cxc.cart3d, cxr.coord_basis, cxr.vel)
         pv = cx.Coordinate(point=point, velocity=vel)
-        op = cx.Rotate.from_(rot_z)
+        op = rot_z_op()
         out = cx.act(op, u.Q(0.0, "s"), pv)
         # v' = Rv + dR x = omega z-hat cross x-hat = y-hat
         assert jnp.allclose(u.ustrip("m/s", out["velocity"].data["y"]), 1.0, atol=1e-8)
@@ -577,14 +598,7 @@ class TestFibreKickProlong:
 
     def test_td_translate_composed_with_vel_kick_on_coordinate(self):
         """Coordinate jet path == bare-tangent path for TD op | vel-kick."""
-        moving = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(3.0, "m/s") * t,
-                "y": u.Q(0.0, "m"),
-                "z": u.Q(0.0, "m"),
-            },
-            chart=cxc.cart3d,
-        )
+        moving = uniform_translate(3.0, "m/s")
         kick = cxfm.Translate(
             q3(100.0, 0.0, 0.0, "m/s"), chart=cxc.cart3d, semantic_kind=cxr.vel
         )
@@ -659,9 +673,11 @@ class TestUnitPreservation:
         Myr when the data's time base is Myr.
         """
         g = u.Q(1.0, "kpc/Myr2")
-        moving = cxfm.Translate(
-            lambda t: {"x": 0.5 * g * t**2, "y": u.Q(0.0, "kpc"), "z": u.Q(0.0, "kpc")},
-            chart=cxc.cart3d,
+        moving = cxfm.Parametric.from_(
+            lambda t: cxfm.Translate(
+                {"x": 0.5 * g * t**2, "y": u.Q(0.0, "kpc"), "z": u.Q(0.0, "kpc")},
+                chart=cxc.cart3d,
+            )
         )
         jet = {
             0: {k: u.Q(0.0, "kpc") for k in "xyz"},
@@ -721,7 +737,9 @@ class TestNonCartesianOpChart:
                 "phi": u.Q(0.02 * s, "rad"),
             }
 
-        return cxfm.Translate(delta, chart=cxc.sph3d)
+        return cxfm.Parametric.from_(
+            lambda t: cxfm.Translate(delta(t), chart=cxc.sph3d)
+        )
 
     def test_td_velocity_matches_generic(self):
         """Act on velocity equals the generic prolongation of the point action."""
@@ -769,17 +787,16 @@ class TestNonCartesianOpChart:
             )
 
     def test_cartesian_ladder_unaffected(self):
-        """Cartesian-chart deltas keep the componentwise fast path (no at)."""
-        op = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(3.0, "km/s") * t,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
-        )
+        """A Cartesian-chart TD delta still adds its rate to velocities.
+
+        Time dependence now lives in `Parametric`, so this goes through the
+        generic tangent funnel (which needs the base point); the physics
+        oracle is unchanged: v + ddelta/dtau = 1 + 3 = 4 km/s.
+        """
+        op = uniform_translate(3.0)
         v = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
-        out = cxfm.act(op, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel)
+        at = q3(0.0, 0.0, 0.0, "km")
+        out = cxfm.act(op, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel, at=at)
         assert jnp.allclose(u.ustrip("km/s", out["x"]), 4.0)
 
     def test_is_flat_chart_no_global_cartesian(self):
@@ -805,14 +822,7 @@ class TestNonCartesianOpChart:
         out = cxfm.act(op, None, v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys)
         assert not jnp.allclose(u.ustrip("km/s", out["r"]), 0.3)
         # TD: computes (previously raised ValueError) and equals generic
-        op_td = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(3.0, "km/s") * t,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
-        )
+        op_td = uniform_translate(3.0)
         tau = u.Q(2.0, "s")
         fast = cxfm.act(
             op_td, tau, v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
@@ -873,9 +883,7 @@ class TestNonCartesianOpChart:
         fast = cxfm.act(
             boost, tau, a, cxc.sph3d, cxr.coord_acc, at=self.sph_at, at_vel=v, usys=usys
         )
-        td = cxfm.Translate(
-            lambda t: {k: c * t for k, c in dv.items()}, chart=cxc.cart3d
-        )
+        td = cxfm.Parametric(cxfm.UniformTranslation(dv, chart=cxc.cart3d))
         gen = prolong_jet(td, tau, {0: self.sph_at, 1: v, 2: a}, cxc.sph3d, usys=usys)
         for k in fast:
             unit = u.unit_of(gen[2][k])
@@ -949,9 +957,7 @@ class TestCoordinateBundleEdges:
 
     def test_td_bundle_rejects_anchor_overrides(self):
         """TD Coordinate act raises on at= instead of silently ignoring it."""
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         vel = cxv.Tangent(
             q3(0.1, 0.0, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
         )
@@ -986,9 +992,7 @@ class TestCoordinateBundleEdges:
 
     def test_td_bundle_duplicate_ladder_order_raises(self):
         """Two fibres at the same ladder order are ambiguous for the jet."""
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         v1 = cxv.Tangent(
             q3(0.1, 0.0, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
         )
@@ -1005,9 +1009,7 @@ class TestCoordinateBundleEdges:
         A cylindrical velocity fibre under a TD op equals the same physics
         computed with a Cartesian fibre.
         """
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         tau = u.Q(2.0, "s")
         usys = u.unitsystems.si
         vel_cart = cxv.Tangent(
@@ -1038,9 +1040,7 @@ class TestCoordinateBundleEdges:
 
         They are invariant under a flat translation.
         """
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
+        moving = uniform_translate(3.0)
         d = cxv.Tangent(q3(0.5, 0.0, 0.0, "km"), cxc.cart3d, cxr.coord_basis, cxr.dpl)
         coord = self._bundle(disp=d)
         out = cx.act(moving, u.Q(2.0, "s"), coord)
@@ -1124,15 +1124,10 @@ class TestLinearOpsUnderNewVerbs:
     def test_rotate_raw_tau_unitful_data(self):
         """Raw (unitless) tau with unitful data works and is consistent.
 
-        The closed form interprets d/dtau in the data's own time base,
-        matching the generic engine's raw-tau convention.
+        d/dtau is interpreted in the data's own time base, per the generic
+        engine's raw-tau convention.
         """
-
-        def rot_z_raw(t) -> Real[Array, "3 3"]:
-            st_, ct = jnp.sin(t), jnp.cos(t)
-            return jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
-
-        op = cxfm.Rotate.from_(rot_z_raw)
+        op = _rot_z_raw_op()
         at = q3(1.0, 0.0, 0.0, "m")
         v = q3(0.0, 0.0, 0.0, "m/s")
         tau = jnp.asarray(0.0)
@@ -1145,16 +1140,11 @@ class TestLinearOpsUnderNewVerbs:
         assert jnp.allclose(u.ustrip("m/s", out["y"]), 1.0, atol=1e-7)
 
     def test_rotate_closed_form_fully_raw_data(self):
-        """Fully unitless data stays raw through the m=1 closed form.
+        """Fully unitless data stays raw through the m=1 prolongation.
 
         Mirrors the generic engine's None-unit "stay raw" policy.
         """
-
-        def rot_z_raw(t) -> Real[Array, "3 3"]:
-            st_, ct = jnp.sin(t), jnp.cos(t)
-            return jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
-
-        op = cxfm.Rotate.from_(rot_z_raw)
+        op = _rot_z_raw_op()
         at = {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
         v = {"x": jnp.asarray(0.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
         tau = jnp.asarray(0.0)
@@ -1171,14 +1161,12 @@ class TestLinearOpsUnderNewVerbs:
 
 
 class TestRobustness:
-    """Robustness fixes: Neg double-inversion and integer-dtype promotion."""
+    """Robustness fixes: double inversion and integer-dtype promotion."""
 
     def test_time_dependent_inverse_roundtrip(self):
-        """inverse.inverse of a time-dependent additive op is usable."""
-        moving = cxfm.Translate(
-            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
-        )
-        inv2 = moving.inverse.inverse  # was: TypeError from jnp.negative(Neg)
+        """inverse.inverse of a time-dependent op is usable (and unwraps)."""
+        moving = uniform_translate(3.0)
+        inv2 = moving.inverse.inverse  # the pointwise inverse is an involution
         tau = u.Q(2.0, "s")
         p = q3(1.0, 0.0, 0.0, "km")
         out = cxfm.act(inv2, tau, p, cxc.cart3d, cxr.point)
@@ -1187,14 +1175,7 @@ class TestRobustness:
 
     def test_integer_inputs_through_prolongation(self):
         """Integer-valued Quantities are promoted at the jvp boundary."""
-        moving = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(3.0, "km/s") * t,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
-        )
+        moving = uniform_translate(3.0)
         tau = u.Q(2, "s")  # int
         jet = {
             0: {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},  # ints

@@ -314,8 +314,12 @@ class FrenetSerretTransform(AbstractParallelTransportTransform):
             """
             return cxc.cdict(-curve(tau), cart)  # ty: ignore[invalid-return-type]
 
-        translate = cxfm.Translate(neg_gamma_fn, chart=cart)
-        rotate = cxfm.Rotate(rotation_matrix_array_fn)
+        translate = cxfm.Parametric.from_(
+            lambda tau: cxfm.Translate(neg_gamma_fn(tau), chart=cart)
+        )
+        rotate = cxfm.Parametric.from_(
+            lambda tau: cxfm.Rotate(rotation_matrix_array_fn(tau))
+        )
 
         return cls(  # ty: ignore[missing-argument]
             translate=translate,
