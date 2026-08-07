@@ -12,6 +12,7 @@ import coordinax.manifolds as cxm
 
 import coordinaxs.hypothesis.main as cxst
 from coordinaxs.hypothesis.manifolds._src.atlas import _atlas_class_supports_ndim
+from coordinaxs.hypothesis.manifolds._src.manifold import _manifold_class_supports_ndim
 
 
 @given(atlas_cls=cxst.atlas_classes())
@@ -230,3 +231,21 @@ class TestOnlyDrawableCandidatesAreSelected:
         that is what the predicate calls, so it would assert itself.
         """
         assert _atlas_class_supports_ndim(cxm.CustomAtlas, ndim) is supported
+
+    @pytest.mark.parametrize(
+        ("supports_ndim", "cls"),
+        [
+            (_atlas_class_supports_ndim, cxm.MinkowskiAtlas),
+            (_manifold_class_supports_ndim, cxm.MinkowskiManifold),
+        ],
+    )
+    def test_types_absent_from_the_table_default_to_supported(
+        self, supports_ndim: Callable[[type, int], bool], cls: type
+    ) -> None:
+        """A type with no `_NDIM_SUPPORT` entry is treated as unrestricted.
+
+        Which is why `_NO_STRATEGY` has to be a separate gate: this predicate
+        answers "at which ndim", not "can it be drawn at all", and would wave
+        these two through at every ndim.
+        """
+        assert supports_ndim(cls, 3) is True
