@@ -22,7 +22,7 @@ import unxt as u
 import unxts.hypothesis as ust
 from hypothesis.extra.array_api import make_strategies_namespace
 
-from .dtypes import jax_honoured
+from .dtypes import honoured_dtypes
 from .meta import Metadata
 from .wrap import AbstractNotIntrospectable
 
@@ -31,7 +31,7 @@ T = TypeVar("T")
 xps = make_strategies_namespace(jnp)
 
 #: Default dtypes for array and quantity annotations that pin none themselves.
-SCALAR_DTYPES: Final = jax_honoured(xps.scalar_dtypes())
+SCALAR_DTYPES: Final = honoured_dtypes(xps.scalar_dtypes())
 
 # Fallback unit strategy for quantity annotations that pin no dimension.
 # ``ust.units()`` re-runs astropy's ``UnitBase.compose()`` on every draw, which is

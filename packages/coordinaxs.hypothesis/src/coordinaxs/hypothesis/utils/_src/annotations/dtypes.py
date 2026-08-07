@@ -16,11 +16,10 @@ def _is_honoured(dtype: Any, /) -> bool:
     return jnp.empty(0, dtype=dtype).dtype == jnp.dtype(dtype)
 
 
-def jax_honoured(dtypes: st.SearchStrategy[Any], /) -> st.SearchStrategy[Any]:
+def honoured_dtypes(dtypes: st.SearchStrategy[Any], /) -> st.SearchStrategy[Any]:
     """Drop dtypes JAX narrows under the active x64 setting.
 
-    ``jax.numpy`` declares the 64-bit dtypes unconditionally, but with
-    ``jax_enable_x64`` off ``jnp.asarray(x, dtype=float64)`` returns a float32
-    array, and hypothesis rejects that mismatch with `InvalidArgument`.
+    With ``jax_enable_x64`` off, ``jnp.asarray(x, dtype=float64)`` returns a
+    float32 array and hypothesis rejects the mismatch with `InvalidArgument`.
     """
     return dtypes.filter(_is_honoured)

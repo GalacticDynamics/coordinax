@@ -13,11 +13,11 @@ import jax.numpy as jnp
 from hypothesis import find, settings
 from hypothesis.errors import NoSuchExample
 
-from coordinaxs.hypothesis.utils._src.annotations.dtypes import jax_honoured
+from coordinaxs.hypothesis.utils._src.annotations.dtypes import honoured_dtypes
 
 #: Whether this interpreter honours 64-bit dtypes. The suite sets
 #: ``JAX_ENABLE_X64=1``; downstream users of these strategies often do not.
-X64 = jnp.empty(0, dtype=jnp.float64).dtype == jnp.dtype(jnp.float64)
+X64_ENABLED = jnp.empty(0, dtype=jnp.float64).dtype == jnp.dtype(jnp.float64)
 
 
 def _is_findable(dtypes: st.SearchStrategy[Any], target: Any, /) -> bool:
@@ -33,26 +33,19 @@ def _is_findable(dtypes: st.SearchStrategy[Any], target: Any, /) -> bool:
     return True
 
 
-def test_filter_tracks_the_runtime_not_the_declaration() -> None:
-    """``float64`` survives the filter exactly when the runtime honours it.
+def test_float64_offered_iff_x64() -> None:
+    """``float64`` is reachable exactly when the runtime honours it.
 
-    Meaningful under either setting: with x64 on, float64 must still be
-    reachable (the filter must not over-prune); with it off, it must be gone.
-
-    `hypothesis.find` rather than counting what `@given` happened to draw --
-    the question is whether a dtype is reachable *at all*, and `find` answers
-    that by searching rather than by sampling and hoping.
+    Under x64 the filter must not over-prune; without it float64 must be gone.
     """
-    dtypes = jax_honoured(st.sampled_from([jnp.float32, jnp.float64]))
+    dtypes = honoured_dtypes(st.sampled_from([jnp.float32, jnp.float64]))
     assert _is_findable(dtypes, jnp.float32)
-    assert _is_findable(dtypes, jnp.float64) is X64
+    assert _is_findable(dtypes, jnp.float64) is X64_ENABLED
 
 
-#: Draws `charts()` in a fresh interpreter and prints the count of hard errors.
-#:
-#: Out-of-process because the x64 setting is read once, at JAX import, and this
-#: suite has already imported JAX with it on.
-_X32_DRAW = """
+#: Draws `charts()` in a fresh interpreter, printing the count of hard errors.
+#: Out-of-process: the x64 setting is read once, at JAX import.
+_X32_SCRIPT = """
 import warnings
 warnings.filterwarnings("ignore")
 from hypothesis import given, settings, HealthCheck, strategies as st
@@ -81,11 +74,11 @@ print("\\n".join(bad[:3]))
 def test_charts_draws_without_x64() -> None:
     """``charts()`` must not raise `InvalidArgument` when x64 is off.
 
-    Guards the wiring rather than the helper: dropping `jax_honoured` from the
+    Guards the wiring rather than the helper: dropping `honoured_dtypes` from the
     dtype defaults leaves the unit test above passing while this fails.
     """
     proc = subprocess.run(  # noqa: S603  # fixed literal script, this interpreter
-        [sys.executable, "-c", _X32_DRAW],
+        [sys.executable, "-c", _X32_SCRIPT],
         env={**os.environ, "JAX_ENABLE_X64": "0"},
         capture_output=True,
         text=True,
