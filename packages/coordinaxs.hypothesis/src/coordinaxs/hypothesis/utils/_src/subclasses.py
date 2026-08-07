@@ -84,6 +84,21 @@ def canonicalize_coordinax_class(cls: type, /) -> type:
     return cls
 
 
+def is_library_class(cls: type, /) -> bool:
+    """Whether *cls* is defined by coordinax rather than by its callers.
+
+    The subclass tree is process-global, so anything that has declared a
+    subclass -- a test fake, a downstream experiment, a doctest -- is in it
+    alongside the library's own types. Provenance is the only thing that tells
+    them apart: lifetime cannot, since ``__subclasses__`` is already weak and a
+    class stays alive as long as the module that declared it is imported.
+
+    The ``coordinax`` prefix covers the plugin distributions too
+    (``coordinaxs.astro`` and friends), matching `canonicalize_coordinax_class`.
+    """
+    return getattr(cls, "__module__", "").startswith("coordinax")
+
+
 def is_abstract_class(cls: type, /) -> bool:
     """Determine if a class is abstract."""
     return inspect.isabstract(cls) or cls.__name__.startswith("Abstract")
@@ -103,6 +118,20 @@ def get_all_subclasses(
     Recursively walks the subclass tree of *base_class*, deduplicating and
     (optionally) filtering the results in {class}`coordinax`.  The return value
     is cached via {func}`functools.cache`.
+
+    When *base_class* is a coordinax class, only classes coordinax itself
+    defines are returned -- see `is_library_class`. The subclass tree is
+    process-global, so without that every fake a test declares would be handed
+    out as though it were a library type, and *whether* it was would depend on
+    when the cache happened to warm. For a base of your own the walk stays
+    generic, so the rule never surprises a caller asking about their own types.
+
+    .. note::
+
+        The cache is keyed on the arguments while ``__subclasses__()`` is
+        mutable, so a coordinax class imported after the first call stays absent
+        until `cache_clear`. That window is harmless in practice -- the plugin
+        distributions register their types at import, before any strategy runs.
 
     Parameters
     ----------
@@ -173,6 +202,11 @@ def get_all_subclasses(
     canonical_filter = tuple(canonicalize_coordinax_class(cls) for cls in filter_tuple)
     canonical_exclude = tuple(canonicalize_coordinax_class(cls) for cls in exclude)
 
+    # Asking about a coordinax base means asking about coordinax's own types, so
+    # caller-declared subclasses are dropped. Asking about your own base leaves
+    # the walk generic, which is what the utility's other users rely on.
+    library_only = is_library_class(base_class)
+
     def recurse(cls: type, /) -> None:
         for subclass in cls.__subclasses__():
             # Canonicalize early so checks below are robust to duplicate module
@@ -184,8 +218,10 @@ def get_all_subclasses(
                 continue
 
             # Check if subclass matches ALL filters (not just ANY)
-            if all(issubclass(canonical, f) for f in canonical_filter) and not (
-                exclude_abstract and is_abstract_class(canonical)
+            if (
+                (not library_only or is_library_class(canonical))
+                and all(issubclass(canonical, f) for f in canonical_filter)
+                and not (exclude_abstract and is_abstract_class(canonical))
             ):
                 # Deduplicate by (module, qualname) - only keep first seen
                 key = (canonical.__module__, canonical.__qualname__)

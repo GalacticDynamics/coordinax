@@ -2,16 +2,12 @@
 
 __all__ = ("semantic_classes", "semantics")
 
-from typing import Final
-
 import hypothesis.strategies as st
 
 import coordinax.representations as cxr
 
 from ._common import draw_subclass
 from coordinaxs.hypothesis.utils import get_all_subclasses
-
-SEMANTICS: Final = get_all_subclasses(cxr.AbstractSemanticKind, exclude_abstract=True)
 
 
 @st.composite
@@ -54,7 +50,11 @@ def semantic_classes(
 
     """
     return draw_subclass(
-        draw, SEMANTICS, include=include, exclude=exclude, kind="semantic"
+        draw,
+        get_all_subclasses(cxr.AbstractSemanticKind, exclude_abstract=True),
+        include=include,
+        exclude=exclude,
+        kind="semantic",
     )  # ty: ignore[invalid-return-type]
 
 
