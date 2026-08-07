@@ -3,6 +3,8 @@
 Coverage includes Euclidean and spherical metric behavior, plus JIT/vmap usage.
 """
 
+from typing import ClassVar
+
 import jax
 import jax.numpy as jnp
 import pytest
@@ -609,3 +611,96 @@ class TestProductMetricInterBlockUnits:
         gm, _ = self._metric((cxm.R1, cxm.R1), ("line0", "line1"), at)
         assert gm.unit[0, 1] == u.unit("")
         assert gm.unit[1, 0] == u.unit("")
+
+
+class TestIndefiniteMetricsAreRejected:
+    """`norm` has no real value under an indefinite metric, so it refuses.
+
+    ``sqrt(vᵀ G v)`` is real-valued only for a positive-definite ``G``. Under
+    the Minkowski signature ``(-1, 1, 1, 1)`` the quadratic form is negative
+    for timelike vectors, and the square root used to return ``nan`` — a wrong
+    answer indistinguishable from a real one at the call site.
+    """
+
+    AT: ClassVar = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+
+    @staticmethod
+    def _fourvec(ct, x):
+        return {
+            "ct": u.Q(ct, "m"),
+            "x": u.Q(x, "m"),
+            "y": u.Q(0.0, "m"),
+            "z": u.Q(0.0, "m"),
+        }
+
+    @pytest.mark.parametrize(
+        ("kind", "ct", "x"),
+        [("timelike", 5.0, 1.0), ("spacelike", 1.0, 5.0), ("null", 3.0, 3.0)],
+    )
+    def test_cdict_norm_raises(self, kind, ct, x):
+        """Every causal type is rejected, not just the one that gave ``nan``."""
+        del kind
+        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
+            cxm.norm(
+                self._fourvec(ct, x), cxm.MinkowskiMetric(), cxc.minkowskict, at=self.AT
+            )
+
+    def test_packed_array_norm_raises(self):
+        """The bare-array overload is guarded too, not only the CDict one."""
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
+            cxm.norm(
+                jnp.array([5.0, 1.0, 0.0, 0.0]),
+                cxm.MinkowskiMetric(),
+                cxc.minkowskict,
+                at=at,
+                usys=u.unitsystems.si,
+            )
+
+    def test_error_names_the_metric_and_signature(self):
+        """The message says which metric and signature, not just 'unsupported'."""
+        with pytest.raises(NotImplementedError) as exc:
+            cxm.norm(
+                self._fourvec(5.0, 1.0),
+                cxm.MinkowskiMetric(),
+                cxc.minkowskict,
+                at=self.AT,
+            )
+        assert "MinkowskiMetric" in str(exc.value)
+        assert "(-1, 1, 1, 1)" in str(exc.value)
+
+    def test_mismatched_metric_reports_the_mismatch_not_the_signature(self):
+        """Ordering: an invalid call is diagnosed as invalid, not as indefinite.
+
+        The definiteness guard runs *after* the metric/chart match check, so
+        passing an indefinite metric that also does not belong to the chart
+        reports the mismatch — the actual defect in the call.
+        """
+        v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+        at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+        with pytest.raises(ValueError, match="must match chart"):
+            cxm.norm(v, cxm.MinkowskiMetric(), cxc.cart3d, at=at)
+
+    def test_guard_follows_the_metric_actually_used(self):
+        """A positive-definite *argument* cannot smuggle an indefinite chart past.
+
+        The packed-array overload builds its matrix from ``chart.M`` and has no
+        match check, so guarding the ``metric`` argument would let this call
+        through to the very ``nan`` the guard exists to prevent.
+        """
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
+            cxm.norm(
+                jnp.array([5.0, 1.0, 0.0, 0.0]),
+                cxm.FlatMetric(4),
+                cxc.minkowskict,
+                at=at,
+                usys=u.unitsystems.si,
+            )
+
+    def test_positive_definite_metrics_still_work(self):
+        """Positive control: the guard does not disturb Riemannian metrics."""
+        v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+        at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+        got = cxm.norm(v, cxm.FlatMetric(3), cxc.cart3d, at=at)
+        assert bool(qnp.isclose(got.ustrip("m"), 5.0))

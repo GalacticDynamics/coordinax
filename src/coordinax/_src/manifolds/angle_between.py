@@ -12,7 +12,7 @@ import unxt as u
 import coordinax.angles as cxa
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
-from ._utils import as_quantity_matrix
+from ._utils import as_quantity_matrix, require_positive_definite
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.metric.matrix import DenseMetric
@@ -81,12 +81,10 @@ def angle_between(
     Angle(1.57079633, 'rad')
 
     """
-    if not all(s > 0 for s in metric.signature):
-        msg = (
-            "angle_between currently supports only positive-definite metrics; "
-            "pseudo-Riemannian or indefinite metrics are unsupported."
-        )
-        raise NotImplementedError(msg)
+    # Guards `chart.M.metric` rather than the `metric` argument: the matrix below
+    # comes from `chart.M`, so checking the argument would validate one metric
+    # while computing with another.
+    require_positive_definite(chart.M.metric, "angle_between")
 
     chart.check_data(at, keys=True, values=False)
     chart.check_data(uvec, keys=True, values=False)

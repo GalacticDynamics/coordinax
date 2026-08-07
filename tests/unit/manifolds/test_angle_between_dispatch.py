@@ -62,6 +62,29 @@ class TestAngleBetweenFailureModes:
         with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
             cxm.angle_between(metric, cxc.minkowskict, uvec, vvec, at=at)
 
+    def test_guard_follows_the_metric_actually_used(self):
+        """A positive-definite argument cannot bypass an indefinite chart metric.
+
+        The matrix comes from ``chart.M``, so the guard must check that rather
+        than the ``metric`` argument, else the two disagree.
+        """
+        at = {k: jnp.array(0) for k in ("ct", "x", "y", "z")}
+        uvec = {
+            "ct": jnp.array(1),
+            "x": jnp.array(0),
+            "y": jnp.array(0),
+            "z": jnp.array(0),
+        }
+        vvec = {
+            "ct": jnp.array(0),
+            "x": jnp.array(1),
+            "y": jnp.array(0),
+            "z": jnp.array(0),
+        }
+
+        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
+            cxm.angle_between(cxm.FlatMetric(4), cxc.minkowskict, uvec, vvec, at=at)
+
 
 class TestAngleBetweenJAX:
     """Tests for JAX compatibility of angle_between."""
