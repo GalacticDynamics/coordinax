@@ -16,24 +16,20 @@ Key behavioural contracts verified here:
 
 __all__: tuple[str, ...] = ()
 
-import math
 
 import numpy as np
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import given, settings, strategies as st
 from jax.numpy import pi
-from strategies import _m_qty
 
 import unxt as u
 
 import coordinax.charts as cxc
+import coordinaxs.hypothesis.main as cxst
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-_pos_m = _m_qty(0.5, 10)
-_any_m = _m_qty(-10, 10)
 
 
 def _assert_cdict_approx(got, ref, *, rel=1e-5, abs=None) -> None:
@@ -90,8 +86,8 @@ def roundtrip(p, from_chart, to_chart):
     return cxc.pt_map(p_out, to_chart, from_chart)
 
 
-class TestCartesianRoundTrip3D:
-    """cart3d → chart → cart3d ≈ identity for all 3-D non-Cartesian charts."""
+class TestCartesianRoundTrip:
+    """cart → curvilinear chart → cart ≈ identity, in 2-D and 3-D."""
 
     @pytest.mark.parametrize(
         "chart",
@@ -102,46 +98,49 @@ class TestCartesianRoundTrip3D:
         p = {"x": u.Q(3, "m"), "y": u.Q(4, "m"), "z": u.Q(0, "m")}
         _assert_cdict_approx(roundtrip(p, cxc.cart3d, chart), p, abs=1e-5)
 
-    @given(x=_any_m, y=_any_m, z=_pos_m)
+    @pytest.mark.parametrize(
+        ("cart", "curv"),
+        [
+            pytest.param(cxc.cart3d, cxc.sph3d, id="sph3d"),
+            pytest.param(cxc.cart3d, cxc.cyl3d, id="cyl3d"),
+            pytest.param(cxc.cart2d, cxc.polar2d, id="polar2d"),
+        ],
+    )
+    @given(data=st.data())
     @settings(deadline=None)
-    def test_sph3d_roundtrip(self, x, y, z) -> None:
-        """cart3d → sph3d → cart3d is identity (z > 0 avoids theta-pole issues).
+    def test_roundtrip(
+        self, cart: cxc.AbstractChart, curv: cxc.AbstractChart, data: st.DataObject
+    ) -> None:
+        """Cart -> curv -> cart is the identity at an arbitrary point.
 
-        Near-polar points where sqrt(x²+y²)/z < sqrt(float32_eps) ≈ 3.5e-4 are
-        excluded: arccos(z/r) rounds to 0 in float32 and x,y are irretrievably
-        lost.
+        The point is drawn in the *curvilinear* chart and mapped into the
+        Cartesian one, so it lands inside that chart's domain by construction --
+        clear of its coordinate singularities and of the origin, whichever those
+        are for the chart at hand.
+
+        Drawing Cartesian components directly put points on those singular sets,
+        which each chart then had to exclude by hand. `sph3d` is the worst of
+        them: it needed both a positive-z constraint and an `assume` against
+        near-polar points, where ``arccos(z/r)`` rounds to zero in float32 and
+        x, y are irretrievably lost.
         """
-        assume(math.hypot(float(x.value), float(y.value)) > abs(float(z.value)) * 1e-3)
-        p = {"x": x, "y": y, "z": z}
-        _assert_cdict_approx(roundtrip(p, cxc.cart3d, cxc.sph3d), p, abs=1e-4)
-
-    @given(x=_any_m, y=_any_m, z=_any_m)
-    @settings(deadline=None)
-    def test_cyl3d_roundtrip(self, x, y, z) -> None:
-        """cart3d → cyl3d → cart3d is identity."""
-        p = {"x": x, "y": y, "z": z}
-        _assert_cdict_approx(roundtrip(p, cxc.cart3d, cxc.cyl3d), p, abs=1e-4)
-
-
-class TestCartesianRoundTrip2D:
-    """cart2d → chart → cart2d ≈ identity for 2-D non-Cartesian charts."""
-
-    @given(x=_any_m, y=_any_m)
-    @settings(deadline=None)
-    def test_polar2d_roundtrip(self, x, y) -> None:
-        """cart2d → polar2d → cart2d is identity."""
-        p = {"x": x, "y": y}
-        _assert_cdict_approx(roundtrip(p, cxc.cart2d, cxc.polar2d), p, abs=1e-4)
+        at_curv = data.draw(cxst.cdicts(curv, magnitude=(0.5, 10.0)))
+        p = cxc.pt_map(at_curv, curv, cart)
+        _assert_cdict_approx(roundtrip(p, cart, curv), p, abs=1e-4)
 
 
 class TestCartesianRoundTrip1D:
     """cart1d ↔ radial1d round-trips."""
 
-    @given(x=_any_m)
+    @given(data=st.data())
     @settings(deadline=None)
-    def test_cart1d_radial1d_roundtrip(self, x) -> None:
-        """cart1d → radial1d → cart1d is identity."""
-        p = {"x": x}
+    def test_cart1d_radial1d_roundtrip(self, data: st.DataObject) -> None:
+        """cart1d -> radial1d -> cart1d is identity, sign included.
+
+        `Radial1D` is a relabelled `Cart1D`, so its domain is unconstrained and
+        negative values must survive the round trip.
+        """
+        p = data.draw(cxst.cdicts(cxc.cart1d, magnitude=10.0))
         _assert_cdict_approx(roundtrip(p, cxc.cart1d, cxc.radial1d), p, abs=1e-5)
 
 
