@@ -139,18 +139,18 @@ r2 = rot(None, v)
 r3 = rot(v)  # tau defaults to None
 ```
 
-When a transform has time-dependent parameters, `tau` is passed to the callable fields to materialise them at that instant (see [Time-Dependent Parameters](#time-dependent-parameters) below).
+When a transform is time-dependent, `tau` is passed to the `TimeDep` wrapper, which evaluates the underlying operator at that instant (see [Time-Dependent Parameters](#time-dependent-parameters) below).
 
 ## Composition
 
-Use `|` to chain transforms. Evaluation is **right-to-left**: `t2 | t1` applies `t1` first, then `t2`.
+Use `|` to chain transforms. Evaluation is **left-to-right**, like a Unix shell pipe: `t1 | t2` applies `t1` first, then `t2`.
 
 ```python
 # Translate first (+1 km in x), then rotate 90° around z
 t1 = cxfm.Translate.from_([1, 0, 0], "km")
 t2 = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
 
-composed = t2 | t1  # t1 first, t2 second
+composed = t1 | t2  # t1 first, t2 second
 ```
 
 The result is a `Composed` object that applies each transform in order:
@@ -163,7 +163,7 @@ You can chain arbitrarily many transforms:
 
 ```python
 t3 = cxfm.Translate.from_([-1, 0, 0], "km")
-triple = t3 | t2 | t1  # t1, then t2, then t3
+triple = t1 | t2 | t3  # t1, then t2, then t3
 ```
 
 ## Inversion
@@ -177,7 +177,7 @@ unshift = shift.inverse  # Translate by [-1, 0, 0] km
 rot90 = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
 rot_back = rot90.inverse  # Rotate by -90°
 
-composed_inv = composed.inverse  # Reverses order: t1⁻¹ | t2⁻¹
+composed_inv = composed.inverse  # Reverses order: t2⁻¹ | t1⁻¹
 ```
 
 Round-trip verification:
@@ -212,90 +212,197 @@ Simplification is particularly important before JIT-compiling a long chain of tr
 
 ## Time-Dependent Parameters
 
-Any parameter field of a primitive transform can be a **callable** instead of a static value. The callable receives `tau` and returns the parameter value.
+Every primitive transform (`Rotate`, `Translate`, `Boost`, ...) holds only **constant** parameters — `Rotate.matrix` is always an array, `Translate.delta` is always a `CDict`. Time dependence is expressed by exactly one wrapper, `TimeDep(builder)`, where `builder: tau -> AbstractTransform`.
 
-This is the primary mechanism for time-dependent physics: rotating frames, moving observers, time-varying boosts.
+`builder` is typically an `equinox.Module` whose `__call__(tau)` constructs the operator at that instant. Its fields — angular frequency, phase, boost rate — are ordinary **pytree leaves**: differentiable and `vmap`-able by construction, because building the operator is just pytree arithmetic on those leaves. There are three ways to get a builder, in order of how often you'll reach for them.
 
-### Time-Dependent Rotation
+### Tier 1: a built-in builder
 
-Pass a function `tau -> matrix` to `Rotate`:
+Builders live in their own sub-namespace, `cxfm.builders` — a builder is a `tau -> AbstractTransform` family, not a transform: it has no `act`, no `inverse`, no `@`.
 
-```python
-def angular_velocity_matrix(tau):
-    """Rotation matrix for a frame rotating at 0.5 rad/s around z."""
-    omega = 0.5  # rad/s (plain float — no unit conversion needed)
-    theta = omega * tau.ustrip("s")
-    ct, st = jnp.cos(theta), jnp.sin(theta)
-    return jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-
-
-rot_td = cxfm.Rotate(angular_velocity_matrix)
-```
-
-At any given `tau`, the callable is evaluated and the resulting matrix is used:
+`cxfm.builders.RotationAboutAxis(omega, axis, phase=...)` covers uniform rotation about a fixed axis — the common case:
 
 ```python
+axis = jnp.array([0.0, 0.0, 1.0])
+b = cxfm.builders.RotationAboutAxis(u.Q(90, "deg/s"), axis=axis)
+rot_td = cxfm.TimeDep(b)
+
 tau_1s = u.Q(1.0, "s")
 v = cxv.Point.from_([1, 0, 0], "m")
-v_rot = rot_td(tau_1s, v)  # applies matrix evaluated at t=1 s
+v_rot = rot_td(tau_1s, v)  # matrix at omega * 1s applied
 ```
 
-### Time-Dependent Translation
-
-Pass a function `tau -> CDict` to `Translate`:
+`cxfm.builders.UniformTranslation(rate, chart=...)` covers straight-line motion at constant velocity — a moving frame origin:
 
 ```python
-def orbit_offset(tau):
-    """Moving frame origin: x(t) = 100 km/s * t."""
-    speed = u.Q(100.0, "km/s")
-    return {"x": speed * tau, "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+rate = {"x": u.Q(100.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+translate_td = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
 
-
-translate_td = cxfm.Translate(orbit_offset, chart=cxc.cart3d)
-```
-
-```python
 tau_2s = u.Q(2.0, "s")
 v_origin = cxv.Point.from_([0, 0, 0], "km")
 v_shifted = translate_td(tau_2s, v_origin)  # origin moved by 200 km
 ```
 
-## `materialize_transform`: Materialising at a Time
+### Tier 2: a hand-written builder
 
-`materialize_transform(op, tau)` **materialises** a time-dependent transform at a specific `tau`, returning a new transform of the **same type** with all callable fields replaced by their values at `tau`. The result is a plain static transform.
+For anything beyond uniform rotation or translation, write your own `equinox.Module` builder. Because its numeric fields are pytree leaves, you get differentiation and `vmap` with respect to the physical parameter of the time dependence _for free_ — no `evaluate_at` needed first:
+
+```python
+import equinox as eqx
+import jax
+import coordinax.representations as cxr
+
+
+class RotZ(eqx.Module):
+    omega: u.AbstractQuantity  # angular frequency -- a differentiable leaf
+
+    def __call__(self, tau):
+        th = (self.omega * tau).ustrip("rad")
+        st, ct = jnp.sin(th), jnp.cos(th)
+        R = jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+        return cxfm.Rotate(R)
+
+
+x = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+
+
+def y_at_1s(omega_val):
+    op = cxfm.TimeDep(RotZ(u.Q(omega_val, "rad/s")))
+    out = cxfm.act(op, u.Q(1.0, "s"), x, cxc.cart3d, cxr.point)
+    return out["y"].ustrip("m")
+
+
+# d/domega [sin(omega * 1s)] at omega=0 is 1 (per rad/s)
+grad = jax.grad(y_at_1s)(0.0)
+```
+
+`grad` differentiates _through the construction of `Rotate`_ — no special-casing, because `RotZ(omega).__call__` is ordinary pytree-valued code. This is the capability the old `Rotate(callable)` design could not offer: a closure-captured `omega` was a trace-time constant, invisible to `jax.grad`.
+
+### Tier 3: `TimeDep.from_` for user-defined functions
+
+Hand `from_` any `tau -> AbstractTransform` function. This is a first-class way to express time dependence, not a fallback: `tau` is a **call-time argument**, never a stored parameter, so the $\tau$-dependence written inside the function is differentiated by the [prolongation machinery](#time-dependence-couples-the-ladder-kinematic-prolongation). `act` on tangent data and `act_jet` pick up $\dot\delta$, $\dot R$, ... with no extra work.
+
+A drift of 3 km/s in $x$, acted on data at rest, returns exactly that velocity — the $\dot\delta$ term the machinery differentiated out of the function:
+
+```{code-block} python
+>>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+>>> drift = cxfm.TimeDep.from_(
+...     lambda t: cxfm.Translate({k: v * t for k, v in rate.items()}, chart=cxc.cart3d)
+... )
+
+>>> at_rest = cx.Coordinate(
+...     point=cx.Point.from_([0.0, 0.0, 0.0], "km"),
+...     velocity=cx.Tangent.from_([0.0, 0.0, 0.0], "km/s"),
+... )
+>>> cxfm.act(drift, u.Q(0.0, "s"), at_rest)["velocity"]["x"]
+Q(3., 'km / s')
+```
+
+To bind parameters that must stay differentiable without writing a `Module`, pass them to `from_` after the function. They are bound with `eqx.Partial`, so they stay dynamic leaves:
+
+```python
+def build_rot(omega, tau) -> cxfm.Rotate:
+    return cxfm.builders.RotationAboutAxis(omega, axis=axis)(tau)
+
+
+def y_of_op(op):
+    return cxfm.act(op, u.Q(1.0, "s"), x, cxc.cart3d, cxr.point)["y"].ustrip("m")
+
+
+op_partial = cxfm.TimeDep.from_(build_rot, u.Q(1.0, "rad/s"))
+# d/domega, exactly as for a hand-written builder
+grad_omega = eqx.filter_grad(y_of_op)(op_partial).builder.args[0]
+```
+
+```{warning}
+The bound arguments come **first** and `tau` **last** — `build_rot(omega, tau)`, not `build_rot(tau, omega)`. `eqx.Partial` prepends what it binds, so `op.builder(tau)` calls `build_rot(omega, tau)`. Getting the order backwards silently passes the parameter as `tau`.
+```
+
+Keyword arguments are bound too: `cxfm.TimeDep.from_(build_rot, omega, axis=zhat)`. Passing an `eqx.Partial` you built yourself is equivalent — `from_` uses an already-pytree callable directly. Either way the builder is a `Partial`, which carries the function as a dynamic leaf, so apply the operator under `eqx.filter_jit` rather than plain `jax.jit`.
+
+The remaining caveat is narrow. A _bare_ function is stored in a **static** field, so values it **closes over** are trace-time constants: invisible to `jax.grad`, and a fresh closure forces a `jit` recompile — but only for an operator built once and differentiated or jitted later. It does not touch $\tau$ derivatives at all: the closed-over `rate` above is still fully $\tau$-differentiated. Bind such values with `from_(fn, *args)` (or reach for Tier 2) when you need gradients with respect to _them_.
+
+So: bare function when the bound parameters are fixed; `from_(fn, *args)` when a few of them need gradients or `jit` caching; Tier 2 when the builder deserves a name and a type.
+
+## `evaluate_at`: Evaluating at a Time
+
+`evaluate_at(op, tau)` evaluates every `TimeDep` part of `op` at `tau` and returns a constant transform.
 
 ```python
 tau = u.Q(3.0, "s")
-rot_at_3s = cxfm.materialize_transform(rot_td, tau)
-# rot_at_3s is a Rotate with a concrete 3x3 matrix, not a callable
+rot_at_3s = cxfm.evaluate_at(rot_td, tau)
+# rot_at_3s is a Rotate with a concrete 3x3 matrix, no TimeDep left
 ```
 
-This is useful when you need to inspect the materialised parameters, compose static transforms, or pass to code that does not accept callables.
+This is useful when you need to inspect the evaluated parameters, compose static transforms, or pass to code that does not accept `TimeDep`.
 
-`materialize_transform` is:
+`evaluate_at` is:
 
 - **Pure** — no side effects, safe for JAX tracing
-- **Structure-preserving** — returns same `Rotate`, `Translate`, etc.
-- **PyTree-compatible** — uses `equinox.partition` / `equinox.combine` internally
+- **Recursive** — descends into `Composed` so nested `TimeDep` parts are also evaluated
 
-Static transforms pass through `materialize_transform` unchanged:
+Static transforms pass through `evaluate_at` unchanged:
 
 ```python
 static_rot = cxfm.Rotate.from_euler("z", u.Q(45, "deg"))
-same_rot = cxfm.materialize_transform(
-    static_rot, tau
-)  # returns equivalent static Rotate
+same_rot = cxfm.evaluate_at(static_rot, tau)  # returns the same static Rotate object
 ```
+
+## Writing a Builder
+
+A builder is any `tau -> AbstractTransform` callable — a plain function, an `eqx.Partial`, or (most often) an `equinox.Module`. Whichever you pick, its $\tau$-dependence is differentiated by `act`/`act_jet`; the choice only decides which _other_ parameters are pytree leaves. Two rules:
+
+**Structure constancy.** `builder(tau)` must return the same operator type / pytree structure for every `tau` — required for `jit`, `vmap`, and `jvp` to trace through it. A builder that returns `Rotate` for one `tau` and `Translate` for another breaks tracing; JAX raises its own structure-mismatch error if you get this wrong.
+
+**A second parameter as a field, not a call-time argument.** A curvilinear parameter `gamma` (e.g. arclength along a curve) is not a second slot in `act(op, tau, x)` — it lives as a builder field, a pytree leaf like any other:
+
+```python
+class CircleFrame(eqx.Module):
+    r: u.AbstractQuantity
+    gamma: jax.Array  # a second parameter, differentiable/vmappable directly
+
+    def __call__(self, tau):
+        del tau
+        delta = {
+            "x": self.r * jnp.cos(self.gamma),
+            "y": self.r * jnp.sin(self.gamma),
+            "z": self.r * 0,
+        }
+        return cxfm.Translate(delta, chart=cxc.cart3d)
+```
+
+`d/dgamma` is then an ordinary gradient of the operator pytree, and `jax.vmap` over `gamma` produces a frame field along the curve in one call.
+
+The algebra also _returns_ builders, and they are public — in `cxfm.builders` with the rest — so you can name what you see in a `repr` or a tracing error: `FnBuilder` (from `TimeDep.from_(fn)`), `ConstBuilder` (the constant side of `TimeDep @ static_transform`), `ComposedBuilder` (from `TimeDep @ TimeDep`), and `InverseBuilder` (from `TimeDep.inverse`). You rarely construct them yourself.
 
 ## JAX Integration
 
-Transforms are JAX PyTrees, so they compose naturally with `jit`, `vmap`, and `grad`. The callable fields in time-dependent transforms are **static leaves** (functions are not JAX arrays), while numeric fields are dynamic. This means `materialize_transform` is needed before differentiating through the materialized parameters.
+Transforms are JAX PyTrees, so they compose naturally with `jit`, `vmap`, and `grad`. A builder's numeric fields are **dynamic leaves** — differentiate or `vmap` over them directly, with no `evaluate_at` step first.
+
+```python
+def y_at_tau(op):
+    out = cxfm.act(op, tau_1s, x, cxc.cart3d, cxr.point)
+    return out["y"].ustrip("m")
+
+
+op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.0, "deg/s"), axis=axis))
+grad_op = eqx.filter_grad(y_at_tau)(op)
+grad_op.builder.omega  # dy/domega, evaluated at omega=0
+```
+
+`vmap` over a batch of angular frequencies constructs a batched operator, not a batch of Python objects:
+
+```python
+omegas = u.Q(jnp.array([0.0, 45.0, 90.0]), "deg/s")
+ops = jax.vmap(lambda om: cxfm.TimeDep(cxfm.builders.RotationAboutAxis(om, axis=axis)))(
+    omegas
+)
+ys = jax.vmap(y_at_tau)(ops)  # one act per row of the batched operator
+```
 
 Manifold, chart, and representation types are registered as static JAX nodes, so `@jax.jit` and `jax.vmap` work directly with both `Quantity` and `Vector` inputs:
 
 ```python
-import jax
-
 v = cxv.Point.from_([1.0, 0.0, 0.0], "m")
 
 
@@ -321,18 +428,27 @@ You can compose static and time-dependent transforms freely with `|`:
 
 ```python
 # Translate first (static), then apply time-dependent rotation
-combined = rot_td | shift
+combined = shift | rot_td
 
 tau_5s = u.Q(5.0, "s")
 v_test = cxv.Point.from_([1, 0, 0], "km")
 v_combined = combined(tau_5s, v_test)
 ```
 
-When `act` encounters a `Composed` transform, each primitive is applied at the same `tau`; for tangent data the anchors (base point and velocity) are advanced between the steps so the chain rule is respected. Callable and static parts mix freely.
+When `act` encounters a `Composed` transform, each primitive is applied at the same `tau`; for tangent data the anchors (base point and velocity) are advanced between the steps so the chain rule is respected. `TimeDep` and static parts mix freely.
+
+`simplify` deliberately leaves adjacent `TimeDep` transforms as a `Composed` pair. Folding them would need pointwise composition, which falls back to `|` for transforms that lack `@` — and for a time-dependent fibre offset (a velocity kick) that produces a spelling the ladder rule rejects, turning a working pipeline into one that raises. If you _want_ the pointwise family, ask for it with `@`:
+
+```python
+a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=axis))
+b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=axis))
+isinstance(cxfm.simplify(a | b), cxfm.Composed)  # True -- left alone
+isinstance(a @ b, cxfm.TimeDep)  # True -- explicit pointwise composition
+```
 
 ## Time Dependence Couples the Ladder: Kinematic Prolongation
 
-Materialise-then-apply is the whole story only for **point** data. For tangent data (velocities, accelerations), `act` computes the **kinematic prolongation** of the transform's point action $\phi(\tau, x)$: if the transformed curve is $x'(\tau) = \phi(\tau, x(\tau))$, then
+Evaluate-then-apply (`evaluate_at`, then `act`) is the whole story only for **point** data. For tangent data (velocities, accelerations), `act` computes the **kinematic prolongation** of the transform's point action $\phi(\tau, x)$: if the transformed curve is $x'(\tau) = \phi(\tau, x(\tau))$, then
 
 $$
 v' = \partial_\tau \phi + \partial_x \phi \cdot v, \qquad
@@ -345,8 +461,6 @@ Concretely:
 - a time-dependent `Translate` with offset $\delta(\tau)$ shifts velocities by $\dot\delta(\tau)$ and accelerations by $\ddot\delta(\tau)$;
 - a time-dependent `Rotate` $R(\tau)$ gives $v' = R v + \dot R\,x$ and the full Coriolis/centrifugal acceleration law;
 - `Boost` is the Galilean boost: points move by $\Delta v\,\tau$ (a time is **required** for point data), velocities shift by $\Delta v$. The fibre-only velocity kick that leaves points fixed is `Translate(..., semantic_kind=cxr.vel)`.
-
-Because the $\dot R\,x$-style terms depend on the base point, acting a time-dependent transform on a _lone_ velocity or acceleration requires the anchor keywords `at=` (and `at_vel=` for accelerations) — or act on a `Coordinate` bundle, which supplies the whole jet automatically.
 
 ### The Three Verbs
 
@@ -369,7 +483,7 @@ out = cxfm.act(rot_td, u.Q(0.0, "s"), pv)
 # out["velocity"] now includes the omega x r term of the rotating frame
 ```
 
-Helpers: `is_time_dependent(op)` tests for callable parameters, and `tau_derivative(f, tau, n=...)` takes unit-aware $\tau$-derivatives of a callable parameter.
+Helpers: `is_time_dependent(op)` is a declared trait (`True` for `TimeDep` and `Boost`, the disjunction of children for `Composed`), and `tau_derivative(f, tau, n=...)` takes unit-aware $\tau$-derivatives of a callable.
 
 ### Semantics at a Glance
 
@@ -396,17 +510,19 @@ Every hand-written rule above is property-tested against the generic autodiff pr
 | Reflect across yz-plane | `cxfm.Reflect.from_normal([1.0, 0.0, 0.0])` |
 | Apply transform | `cxfm.act(op, tau, x)` or `op(tau, x)` or `op(x)` |
 | Apply without time | `op(x)` (tau=None) |
-| Compose (t1 then t2) | `t2 \| t1` |
+| Compose (t1 then t2) | `t1 \| t2` |
 | Invert | `op.inverse` |
 | Simplify | `op.simplify()` or `cxfm.simplify(op)` |
-| Time-dependent rotation | `cxfm.Rotate(callable_returning_matrix)` |
+| Time-dependent rotation | `cxfm.TimeDep(cxfm.builders.RotationAboutAxis(omega, axis=axis))` |
 | Act on a lone velocity (TD op) | `cxfm.act(op, tau, v, chart, rep, at=base_point)` |
 | Pushforward a displacement | `cxfm.pushforward(op, tau, d, chart, rep, at=...)` |
 | Prolong a jet | `cxfm.act_jet(op, tau, {0: q, 1: v}, chart)` |
-| Time-dependent translation | `cxfm.Translate(callable_returning_dict, chart=...)` |
+| Time-dependent translation | `cxfm.TimeDep(cxfm.builders.UniformTranslation(rate_dict, chart=...))` |
+| Custom time dependence | `cxfm.TimeDep(my_eqx_module_builder)` |
+| Time dependence from a function | `cxfm.TimeDep.from_(fn)`; bind params with `from_(fn, *args)`, `tau` last |
 | Galilean boost | `cxfm.Boost(delta_v_dict, chart=...)` |
 | Velocity kick (fibre-only) | `cxfm.Translate(dv_dict, chart=..., semantic_kind=cxr.vel)` |
 | Act on a phase-space bundle | `cxfm.act(op, tau, coordinate)` (jet handled automatically) |
 | Is it time-dependent? | `cxfm.is_time_dependent(op)` |
 | d/dtau of a parameter | `cxfm.tau_derivative(fn, tau, n=1)` |
-| Materialise at time | `cxfm.materialize_transform(op, tau)` |
+| Evaluate at a time | `cxfm.evaluate_at(op, tau)` |

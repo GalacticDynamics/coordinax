@@ -23,7 +23,11 @@ def act(*args: Any, **kwargs: Any) -> Any:
     $$ x' = \mathcal{T}(\tau)(x) $$
 
     For tau-independent transforms, $\tau$ is ignored. For composite transforms
-    (e.g., ``Composed``), the component transforms are applied sequentially.
+    (e.g., ``Composed``), the component transforms are applied sequentially. Time
+    dependence itself is carried by exactly one wrapper, ``TimeDep(builder)``,
+    where ``builder(tau) -> AbstractTransform``: every other transform holds only
+    constant parameters, and ``act`` on a ``TimeDep`` evaluates ``builder(tau)``
+    before applying it.
 
     Parameters
     ----------
@@ -37,7 +41,9 @@ def act(*args: Any, **kwargs: Any) -> Any:
 
     tau : Any
         Parameter for tau-dependent transforms. Pass ``None`` for
-        tau-independent transforms.
+        tau-independent transforms. Only ``TimeDep`` (and composites
+        containing one) actually consume ``tau``; it evaluates the wrapped
+        ``builder(tau)`` before applying it.
 
     x : Any
         The input to transform. Supported types depend on the transform:
@@ -125,7 +131,10 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
 
     Contrast with `act` on kinematic tangent data (velocity, acceleration,
     ...), which is the full *prolongation* and includes $\partial_\tau \phi$
-    terms for time-dependent transforms.
+    terms for time-dependent transforms. Those $\partial_\tau \phi$ terms only
+    arise when the transform is (or contains) a ``TimeDep``, the sole
+    carrier of time dependence; `pushforward` deliberately ignores them by
+    holding $\tau$ fixed.
 
     Canonical signature::
 
@@ -145,9 +154,8 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
     A displacement is invariant under any translation, even a time-dependent
     one (the Jacobian of a translation is the identity):
 
-    >>> delta = lambda t: {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"),
-    ...                    "z": u.Q(0.0, "km")}
-    >>> op = cxfm.Translate(delta, chart=cxc.cart3d)
+    >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+    >>> op = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
     >>> d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(0.0, "km")}
     >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> cxfm.pushforward(op, u.Q(5.0, "s"), d, cxc.cart3d, cxr.coord_disp, at=at)
@@ -178,7 +186,10 @@ def act_jet(*args: Any, **kwargs: Any) -> Any:
     This is the joint, order-consistent application of `act` to a full
     phase-space state — the natural verb for `coordinax.Coordinate` bundles
     and for time-dependent transforms, where higher slots depend on all
-    lower ones.
+    lower ones. Time dependence is always carried by a ``TimeDep(builder)``
+    wrapper (or a composite containing one); a purely constant transform has
+    no $\partial_\tau \phi$ terms and `act_jet` reduces to applying the same
+    Jacobian to every jet slot.
 
     Canonical signature::
 

@@ -5,11 +5,9 @@ __all__ = ("Rotate",)
 
 from dataclasses import replace
 
-from collections.abc import Callable
 from jaxtyping import Array, Shaped
-from typing import Any, TypeAlias, cast, final, get_type_hints
+from typing import Any, final
 
-import jax
 import jax.scipy.spatial.transform as jtransform
 import plum
 from jax.typing import ArrayLike
@@ -24,12 +22,8 @@ from .base import AbstractTransform
 from .custom_types import CDict, OptUSys
 from .identity import identity
 from .linear import AbstractLinearTransform
-from .prolong import _attach_leaf, _strip_leaf, _tau_value_unit, prolong_slot
-from .utils import Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
-
-RMatrix: TypeAlias = Shaped[Array, " N N"]
 
 
 @final
@@ -120,27 +114,23 @@ class Rotate(AbstractLinearTransform):
     Q([[ 0,  1,  0],
        [-1,  0,  0]], 'm')
 
-    You can make the rotation matrix time-dependent:
+    ``R`` is always a constant matrix. A time-dependent rotation is a
+    `~coordinax.transforms.TimeDep` family of `Rotate` operators — e.g.
+    built by `~coordinax.transforms.builders.RotationAboutAxis`:
 
-    >>> from jaxtyping import Array, Real
-    >>> def R_func(t) -> Real[Array, "3 3"]:
-    ...     theta = (jnp.pi / 4) * t.to_value("s")
-    ...     st, ct = jnp.sin(theta), jnp.cos(theta)
-    ...     return jnp.array([[ct, -st, 0], [st,  ct, 0], [0, 0, 1]])
+    >>> zhat = jnp.array([0.0, 0.0, 1.0])
+    >>> b = cxfm.builders.RotationAboutAxis(u.Q(45, "deg/s"), axis=zhat)
+    >>> R_op = cxfm.TimeDep(b)
 
-    >>> R_op = cxfm.Rotate.from_(R_func)
-    >>> R_op
-    Rotate(<function R_func>)
-
-    >>> t = u.Q(4, "s")  # R_func -> 180 degrees rotation
+    >>> t = u.Q(4, "s")  # 180 degrees rotation
     >>> R_op(t, q).round(3)
     Q([[-1.,  0.,  0.],
        [-0., -1.,  0.]], 'm')
 
     """
 
-    R: Shaped[Array, " N N"] | Callable[[Any], RMatrix]
-    """The rotation vector."""
+    R: Shaped[Array, " N N"]
+    """The rotation matrix."""
 
     @classmethod
     def groups(cls) -> frozenset[type]:
@@ -149,7 +139,7 @@ class Rotate(AbstractLinearTransform):
         return frozenset((groups.SpecialOrthogonalGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, R: Any) -> None:
-        object.__setattr__(self, "R", jnp.asarray(R) if not callable(R) else R)
+        object.__setattr__(self, "R", jnp.asarray(R))
 
     # -----------------------------------------------------
     # Constructors
@@ -201,13 +191,7 @@ class Rotate(AbstractLinearTransform):
         Array(True, dtype=bool)
 
         """
-        R = self.R
-        return replace(  # TODO: a transposition wrapper
-            self,
-            R=jnp.swapaxes(R, -2, -1)
-            if not callable(R)
-            else lambda x: jnp.swapaxes(R(x), -2, -1),  # ty: ignore[call-top-callable]
-        )
+        return replace(self, R=jnp.swapaxes(self.R, -2, -1))
 
     # -----------------------------------------------------
 
@@ -234,12 +218,7 @@ class Rotate(AbstractLinearTransform):
          [ 0  0 -1]]
 
         """
-        R = (
-            (self.R.param if isinstance(self.R, Neg) else Neg(self.R))
-            if callable(self.R)
-            else -self.R
-        )
-        return replace(self, R=R)
+        return replace(self, R=-self.R)
 
     def __matmul__(self: "Rotate", other: Any, /) -> Any:
         """Combine two Rotations.
@@ -274,9 +253,6 @@ class Rotate(AbstractLinearTransform):
         """
         if not isinstance(other, Rotate):
             return NotImplemented
-        if callable(self.R) or callable(other.R):
-            msg = "@ is not yet implemented for Rotate with callable R."
-            raise NotImplementedError(msg)
         return replace(self, R=other.R @ self.R)
 
 
@@ -296,58 +272,6 @@ def from_(cls: type[Rotate], obj: Rotate, /) -> Rotate:
 
     """
     return obj
-
-
-@Rotate.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Rotate], obj: Callable[..., Any], /) -> Rotate:
-    """Construct a Rotate from a callable.
-
-    The callable must have a return type annotation with shape ending in NxN (a
-    square matrix).
-
-    >>> import jax.numpy as jnp
-    >>> import coordinax.transforms as cxfm
-    >>> from jaxtyping import Array, Real
-
-    >>> def R_func(t) -> Real[Array, "3 3"]:
-    ...     return jnp.eye(3)
-
-    >>> R = cxfm.Rotate.from_(R_func)
-    >>> R
-    Rotate(<function R_func>)
-
-    """
-    # Validate return type has square matrix shape
-    return_type = get_type_hints(obj, include_extras=True).get("return")
-    if return_type is None:
-        msg = "Callable must have a return type annotation."
-        raise ValueError(msg)
-
-    if not hasattr(return_type, "dims"):
-        msg = "Callable return type must have jaxtyping shape annotation."
-        raise ValueError(msg)
-
-    dims = return_type.dims
-
-    if not isinstance(dims, tuple):
-        msg = "Callable return type dims must be a tuple."
-        raise TypeError(msg)
-
-    if len(dims) < 2:
-        msg = f"Callable return type must have matrix shape (...,NxN), got {dims}"
-        raise ValueError(msg)
-
-    # Check if last two dimensions are equal (NxN)
-    dim1, dim2 = dims[-2].size, dims[-1].size
-    # Both should be the same (either literal numbers or same variable)
-    if dim1 != dim2:
-        msg = (
-            "Callable return type must have square matrix shape (NxN), "
-            f"got {dim1} x {dim2}"
-        )
-        raise ValueError(msg)
-
-    return cls(obj)
 
 
 @Rotate.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -428,20 +352,14 @@ def simplify(op: Rotate, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     Identity()
 
     """
-    if approx and not callable(op.R) and jnp.allclose(op.R, jnp.eye(3), **kw):
+    if approx and jnp.allclose(op.R, jnp.eye(3), **kw):
         return identity
     return op
 
 
 @plum.dispatch
 def _merge(a: Rotate, b: Rotate, /) -> AbstractTransform | None:
-    """Merge two adjacent rotations (``a`` applied first) into one.
-
-    Static rotations combine as ``a @ b``; a time-dependent (callable) matrix on
-    either side is left un-merged.
-    """
-    if callable(a.R) or callable(b.R):
-        return None
+    """Merge two adjacent rotations (``a`` applied first) into one, as ``a @ b``."""
     return a @ b
 
 
@@ -571,101 +489,3 @@ def pushforward(
 
     """
     return _rotate_pushforward_cdict(op, tau, v, chart, rep, at=at, usys=usys)
-
-
-@plum.dispatch
-def act(
-    op: Rotate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    geom: cxr.TangentGeometry,
-    rep: cxr.Representation,
-    /,
-    *,
-    at: CDict | None = None,
-    at_vel: CDict | None = None,
-    usys: OptUSys = None,
-    **kw: Any,
-) -> CDict:
-    r"""Apply a rotation to tangent data (kinematic prolongation).
-
-    - Displacement data and any data under a time-independent rotation
-      transform by the frozen-$\tau$ pushforward $v \mapsto R(\tau) v$.
-    - Under a time-dependent rotation $R(\tau)$, velocities gain the
-      $\dot R$ term of the prolongation, $v' = R v + \dot R x$, which
-      requires the base point ``at``; accelerations gain
-      $a' = R a + 2 \dot R v + \ddot R x$, requiring ``at`` and ``at_vel``.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.transforms as cxfm
-    >>> from jaxtyping import Array, Real
-
-    A uniformly rotating frame (angular speed 1 rad/s about z):
-
-    >>> def R_func(t) -> Real[Array, "3 3"]:
-    ...     th = t.ustrip("s")
-    ...     st, ct = jnp.sin(th), jnp.cos(th)
-    ...     return jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
-    >>> op = cxfm.Rotate.from_(R_func)
-
-    At tau=0 the rotation is the identity but the velocity still gains the
-    $\dot R x$ (angular) term:
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> v = {"x": u.Q(0.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
-    >>> out = cxfm.act(op, u.Q(0.0, "s"), v, cxc.cart3d, cxr.tangent_geom,
-    ...                cxr.coord_vel, at=at)
-    >>> out["y"].round(3)
-    Q(1., 'm / s')
-
-    """
-    del geom, kw
-
-    m = rep.semantic_kind.order
-    # Displacements and time-independent rotations: pure pushforward.
-    if m == 0 or not callable(op.R):
-        return _rotate_pushforward_cdict(op, tau, x, chart, rep, at=at, usys=usys)
-
-    cart = chart.cartesian
-    if m == 1 and chart == cart and tau is not None and at is not None:
-        # Closed form in Cartesian components: v' = R v + dR/dtau x.
-        # One jvp evaluates R(tau) and dR/dtau together.
-        tau_val, tau_unit = _tau_value_unit(tau)
-        R_fn = op.R
-        R, Rdot = jax.jvp(
-            lambda tv: R_fn(_attach_leaf(tau_unit, tv)),  # ty: ignore[call-top-callable]
-            (tau_val,),
-            (jax.numpy.ones_like(tau_val),),
-        )
-        R = op._validate_shape_match(op._validate_square(R), cart)
-        comps = cart.components
-        v_arr, v_unit = pack_uniform_unit(x, keys=comps)
-        at_arr, at_unit = pack_uniform_unit(at, keys=comps)
-        # None units mean "stay raw" throughout, mirroring the generic
-        # engine's _attach_leaf/_strip_leaf policy for unitless data.
-        Rv = _attach_leaf(v_unit, jnp.einsum("ij,...j->...i", R, v_arr))
-        # dR/dtau is per tau's unit; for a raw (unitless) tau with unitful
-        # data, interpret it in the data's own time base T = at_unit/v_unit
-        # (the same policy as the generic engine's _common_time_unit), so
-        # Rdot@at carries at_unit/T = v_unit and the sum is consistent.
-        if tau_unit is not None:
-            rdot_unit = at_unit / tau_unit if at_unit is not None else None
-        elif at_unit is not None and v_unit is not None:
-            rdot_unit = v_unit
-        else:
-            rdot_unit = at_unit
-        Rdot_at = _attach_leaf(rdot_unit, jnp.einsum("ij,...j->...i", Rdot, at_arr))
-        out_arr = _strip_leaf(v_unit, Rv + Rdot_at)
-        if v_unit is None:
-            return {k: out_arr[..., i] for i, k in enumerate(comps)}
-        return cast("CDict", cxc.cdict(out_arr, v_unit, comps))
-
-    # General case (acceleration, or non-Cartesian chart): generic prolongation
-    # (which also owns the missing-tau / missing-anchor errors).
-    return prolong_slot(op, tau, x, chart, m, at=at, at_vel=at_vel, usys=usys)

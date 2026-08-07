@@ -17,7 +17,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24"]
+dependencies = ["coordinax>=0.24", "diffrax>=0.7", "diffraxtra>=1.5"]
 description = "Curve-attached reference frames for coordinax"
 dynamic = ["version"]
 license = "MIT"

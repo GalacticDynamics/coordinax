@@ -1,10 +1,11 @@
 """Benchmarks for `act`/`act_jet` steady-state (jit-compiled) performance.
 
-Run with: uv run --no-project pytest tests/benchmark --benchmark-only
+Run with: uv run --no-sync pytest tests/benchmark --benchmark-only
 (requires the ``benchmark`` extra: pytest-benchmark).
-"""
 
-from jaxtyping import Array, Real
+The eager curve-frame cases — where the cost of *materializing* a `TimeDep`
+family dominates, which nothing here can see — live in ``test_curveframes.py``.
+"""
 
 import jax
 import pytest
@@ -64,18 +65,18 @@ def test_static_rotate_vel(benchmark, jet):
 
 
 def _moving_translate():
-    return cxfm.Translate(
-        lambda t: {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
-        chart=cxc.cart3d,
+    return cxfm.TimeDep(
+        cxfm.builders.UniformTranslation(q3(3.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
     )
 
 
-def test_td_translate_vel_fast_path(benchmark, jet):
+def test_td_translate_vel(benchmark, jet):
     op = _moving_translate()
     _bench_jitted(
         benchmark,
-        lambda tau, v: cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel),
+        lambda tau, at, v: cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel, at=at),
         u.Q(2.0, "s"),
+        jet[0],
         jet[1],
     )
 
@@ -90,13 +91,39 @@ def test_td_translate_jet_generic(benchmark, jet):
     )
 
 
-def test_td_rotate_jet_generic(benchmark):
-    def rot_z(t) -> Real[Array, "3 3"]:
-        th = t.ustrip("s")
-        st, ct = jnp.sin(th), jnp.cos(th)
-        return jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+def _moving_velocity_kick():
+    """A `TimeDep` fibre offset (velocity kick growing linearly in tau).
 
-    op = cxfm.Rotate.from_(rot_z)
+    Ladder order k=1 (identity point action): routes through `add.py`'s
+    ladder rule, not the generic tangent funnel. No other benchmark here
+    exercises that path.
+    """
+    return cxfm.TimeDep.from_(
+        lambda t: cxfm.Translate(
+            {"x": u.Q(5.0, "km/s2") * t, "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")},
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+
+
+def test_td_fibre_offset_ladder_acc(benchmark):
+    op = _moving_velocity_kick()
+    a = q3(1.0, 1.0, 1.0, "km/s2")
+    _bench_jitted(
+        benchmark,
+        lambda tau, a_: cxfm.act(op, tau, a_, cxc.cart3d, cxr.coord_acc),
+        u.Q(2.0, "s"),
+        a,
+    )
+
+
+def test_td_rotate_jet_generic(benchmark):
+    op = cxfm.TimeDep(
+        cxfm.builders.RotationAboutAxis(
+            u.Q(1.0, "rad/s"), axis=jnp.asarray([0.0, 0.0, 1.0])
+        )
+    )
     jet2 = {0: q3(1.0, 2.0, 3.0, "m"), 1: q3(0.5, -0.5, 0.0, "m/s")}
     _bench_jitted(
         benchmark,
@@ -139,30 +166,17 @@ class TestEagerOverhead:
         benchmark(lambda: cxfm.act(op, None, p, cxc.cart3d, cxr.point))
 
     def test_eager_td_translate_velocity(self, benchmark):
-        op = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(3.0, "km/s") * t,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
-        )
+        op = _moving_translate()
         tau = u.Q(2.0, "s")
+        at = q3(1.0, 2.0, 3.0, "km")
         v = q3(1.0, 0.0, 0.0, "km/s")
-        cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel)
-        benchmark(lambda: cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel))
+        cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel, at=at)
+        benchmark(lambda: cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel, at=at))
 
     def test_eager_composed_anchored_velocity(self, benchmark):
         """The anchor-threading loop — the dominant eager tangent cost."""
         shift = cxfm.Translate.from_([1.0, 0.0, 0.0], "km")
-        moving = cxfm.Translate(
-            lambda t: {
-                "x": u.Q(3.0, "km/s") * t,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
-        )
+        moving = _moving_translate()
         op = shift | moving | shift
         tau = u.Q(2.0, "s")
         at = q3(1.0, 2.0, 3.0, "km")
@@ -188,13 +202,16 @@ class TestTraceTime:
         benchmark(trace)
 
     def test_trace_td_act_jet_2jet(self, benchmark, jet):
-        op = cxfm.Translate(
-            lambda t: {
-                "x": 0.5 * u.Q(2.0, "km/s2") * t**2,
-                "y": u.Q(0.0, "km"),
-                "z": u.Q(0.0, "km"),
-            },
-            chart=cxc.cart3d,
+        # A genuinely non-uniform (quadratic) delta: a bare-function family.
+        op = cxfm.TimeDep.from_(
+            lambda t: cxfm.Translate(
+                {
+                    "x": 0.5 * u.Q(2.0, "km/s2") * t**2,
+                    "y": u.Q(0.0, "km"),
+                    "z": u.Q(0.0, "km"),
+                },
+                chart=cxc.cart3d,
+            )
         )
         tau = u.Q(2.0, "s")
 

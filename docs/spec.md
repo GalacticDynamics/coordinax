@@ -988,7 +988,8 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
-| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `identity`, </br> `groups` |
+| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `evaluate_at`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `TimeDep`, `identity`, </br> `builders`, `groups` |
+| `coordinax.transforms.builders` | `RotationAboutAxis`, `UniformTranslation`, </br> `FnBuilder`, `ConstBuilder`, `ComposedBuilder`, `InverseBuilder` |
 | `coordinax.transforms.groups` | `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
 
@@ -4704,7 +4705,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `delta : CDict | Callable[[tau], CDict]` — the offset. Its physical dimension follows `semantic_kind` (length for `dpl`, speed for `vel`, ...). If callable, evaluated at the time parameter `tau`.
+    - `delta : CDict` — the offset. Its physical dimension follows `semantic_kind` (length for `dpl`, speed for `vel`, ...). Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
     - `semantic_kind : AbstractTangentSemanticKind` (default `dpl`) — the ladder order $k$ of the offset.
     - `right_add : bool` (default `True`) — whether to compute $x + \Delta x$ (``True``) or $\Delta x + x$ (``False``).
@@ -4743,19 +4744,20 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `matrix : CDict | Callable[[tau], CDict]` — the rotation matrix $Q$. If callable, evaluated at the time parameter `tau`.
-    - `chart : AbstractChart` — the chart in which `matrix` is expressed (static).
+    - `R : Array[N, N]` — the rotation matrix $R$. Always constant; wrap in `TimeDep` for a time-dependent path $R(\tau)$ (see [`TimeDep`](#software-spec-transforms-timedep)).
+    `R` is the only field: a `Rotate` is a bare matrix, with no chart of its
+    own. It acts on the Cartesian components of whatever chart the data is in.
 
     **Inverse:**
 
     ```text
-    rotate.inverse == Rotate(matrix.T, chart)
+    rotate.inverse == Rotate(R.T)
     ```
 
-    **Composition:** Two `Rotate` instances with the same chart combine by matrix multiplication of their `matrix` fields:
+    **Composition:** Two `Rotate` instances combine by matrix multiplication, via `@`:
 
     ```text
-    Rotate(Q1) + Rotate(Q2) == Rotate(Q2 @ Q1)
+    Rotate(R1) @ Rotate(R2) == Rotate(R2 @ R1)
     ```
 
 !!! info `Reflect`
@@ -4790,20 +4792,20 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `matrix : CDict | Callable[[tau], CDict]` — the reflection matrix $Q$. If callable, evaluated at the time parameter `tau`.
-    - `chart : AbstractChart` — the chart in which `matrix` is expressed (static).
+    - `H : Array[N, N]` — the Householder reflection matrix $H_n$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
+    `H` is the only field: a `Reflect` is a bare matrix, with no chart of its
+    own. It acts on the Cartesian components of whatever chart the data is in.
 
-    **Inverse:**
-
-    ```text
-    reflect.inverse == Reflect(matrix.T, chart)
-    ```
-
-    **Composition:** Two `Reflect` instances with the same chart combine by matrix multiplication of their `matrix` fields:
+    **Inverse:** a reflection is its own inverse ($H^2 = I$):
 
     ```text
-    Reflect(Q1) + Reflect(Q2) == Reflect(Q2 @ Q1)
+    reflect.inverse is reflect
     ```
+
+    **Composition:** `Reflect` implements no composition operator. Two
+    reflections compose to a *rotation* (determinant $(-1)^2 = +1$), not a
+    reflection, so there is no closed `Reflect @ Reflect`; pipe them with `|`
+    instead.
 
 (software-spec-transforms-scaling)=
 
@@ -4825,7 +4827,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `factor : float | Callable[[tau], float]` — the scaling factor $s$. If callable, evaluated at the time parameter `tau`.
+    - `factor : float` — the scaling factor $s$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
 
     **Inverse:**
@@ -4858,7 +4860,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `factor : float | Callable[[tau], float]` — the shear factor $k$. If callable, evaluated at the time parameter `tau`.
+    - `factor : float` — the shear factor $k$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
     - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
 
     **Inverse:**
@@ -4873,6 +4875,57 @@ Each group corresponds to a set of transformations preserving a particular geome
     Shear(k1) + Shear(k2) == Shear(k1 + k2)
     ```
 
+(software-spec-transforms-timedep)=
+
+!!! info `TimeDep`
+
+    A **TimeDep** transform is a one-parameter family of transforms: `builder(tau) -> AbstractTransform`. It is the single, uniform mechanism for time dependence — every other transform (`Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`) holds only constant parameters.
+
+    **Defining rule (the "evaluate-at" rule):**
+
+    $$
+    \mathrm{act}(\mathrm{TimeDep}(b), \tau, x, \ldots) = \mathrm{act}(b(\tau), \tau, x, \ldots),
+    $$
+
+    registered once, generically, for every `(geom, rep)` funnel `AbstractTransform` supports. The evaluated operator `b(tau)` receives the *same* $\tau$: if `b(tau)` itself has a $\tau$-dependent point action (e.g. it returns a `Boost`), the chain rule through both paths is handled by the kinematic-prolongation engine's joint $(\tau, x)$ jvp.
+
+    **Builder contract:**
+
+    - `builder(tau) -> AbstractTransform`, for unitful or raw $\tau$ (the builder decides what it accepts; the built-in builders accept a `unxt.Quantity` time).
+    - Must be JAX-traceable in $\tau$.
+    - Must return the same *structure* (operator type / pytree treedef) for every $\tau$ — required for `jit`, `vmap`, and `jvp` to trace through it.
+    - `builder` is not called with `tau=None`: `act(TimeDep(b), None, x)` raises `TypeError`.
+
+    Typically `builder` is an `equinox.Module` whose fields (angular frequency, phase, boost rate, curve parameters, ...) are pytree leaves — differentiable and vmappable by construction, since constructing the operator inside `__call__` is ordinary pytree arithmetic. `TimeDep.from_(fn)` accepts any `tau -> AbstractTransform` callable, including a plain function or lambda.
+
+    $\tau$ is a **call-time argument**, never a stored parameter, so a builder's $\tau$-dependence is always differentiated by the kinematic-prolongation engine regardless of how the builder is spelled — a bare lambda returning $\mathrm{Translate}(\dot\delta\,\tau)$ still contributes $\dot\delta$ to a transformed velocity. The storage question is only about the builder's *other* parameters. A bare function cannot be a pytree leaf, so it is stored in a **static** field: anything it closes over is then a trace-time constant (unless the closure is built inside the traced function, capturing a tracer), and a fresh closure forces a `jit` recompile. A callable that is already a pytree — an `equinox.Module`, notably an `equinox.Partial` binding some parameters — is used as the builder unwrapped, keeping its leaves dynamic. `TimeDep.from_(fn, *args, **kw)` binds `args`/`kw` with `equinox.Partial` (so `fn` must take `tau` **last**), which is how a user-defined function keeps differentiable, `jit`-cached parameters without becoming a `Module`.
+
+    **Fields:**
+
+    - `builder : Callable[[tau], AbstractTransform]` — the family. A pytree child, usually an `equinox.Module`.
+
+    **Trait:** `TimeDep.is_time_dependent` is always `True`.
+
+    **Inverse:** the pointwise inverse of the family, `inv(tau) = builder(tau).inverse`; double inversion unwraps back to the original builder.
+
+    ```text
+    TimeDep(b).inverse.inverse.builder is b
+    ```
+
+    The wrapper is `InverseBuilder`; a bare function passed to `TimeDep.from_` is wrapped in `FnBuilder`. Both are public — in `coordinax.transforms.builders`, alongside every other builder — because they appear in `repr`, in `jax.tree` paths, and in tracing errors, so a user must be able to name them. A builder is a $\tau \mapsto$ transform family, not a transform: it has no `act`, no `inverse`, no `@`, which is why it does not share the flat transform namespace.
+
+    **Algebra (pointwise-in-$\tau$, written once, reusing the constant-operator algebra):**
+
+    - `TimeDep(a) @ TimeDep(b)` → `TimeDep(ComposedBuilder(a, b))`: `(a @ b)(tau) = a(tau) @ b(tau)`.
+    - `TimeDep(a) @ constant_op` (and the mirror) → the constant is wrapped in a `ConstBuilder`, which returns it for any $\tau$, then composed as above.
+    - `simplify(TimeDep(b))` returns the operator unchanged — its value is unknown until $\tau$ is supplied.
+    - `simplify` on a `Composed` chain **does not** fold `TimeDep` transforms together — neither with each other nor with a constant transform. Pointwise composition falls back to `|` whenever the evaluated transforms do not implement `@`, which for a fibre offset materializes a `Composed` holding an order-$\ge 1$ offset — the spelling the fibre-offset ladder rule rejects. `Composed` already represents such a pair correctly, so `simplify` leaves it alone; only an explicit `@` by the caller composes pointwise.
+
+    **Built-in builders** (all in `coordinax.transforms.builders`)**:**
+
+    - `RotationAboutAxis(omega, axis, phase=0)` — `__call__(tau) -> Rotate`, uniform rotation about a fixed axis: $\theta(\tau) = \omega\tau + \phi$.
+    - `UniformTranslation(rate, chart=...)` — `__call__(tau) -> Translate(rate * tau)`. `Boost(dv) ≡ TimeDep(UniformTranslation(dv))` (see [`Boost`](#software-spec-transforms-boost)).
+
 (software-spec-transforms-boost)=
 
 !!! info `Boost`
@@ -4885,7 +4938,7 @@ Each group corresponds to a set of transformations preserving a particular geome
     B_{\Delta v} : (\tau, x) \mapsto (\tau,\, x + \Delta v\,\tau).
     $$
 
-    Its kinematic prolongation follows: points move by $\Delta v\,\tau$, velocities shift by $\Delta v$, and (for constant $\Delta v$) accelerations and displacements are unchanged:
+    Its kinematic prolongation follows: points move by $\Delta v\,\tau$, velocities shift by $\Delta v$, and accelerations and displacements are unchanged:
 
     $$
     B_{\Delta v}(x) = x + \Delta v\,\tau, \quad
@@ -4894,11 +4947,11 @@ Each group corresponds to a set of transformations preserving a particular geome
     B_{\Delta v}(\ddot{x}) = \ddot{x}.
     $$
 
-    Equivalently, `Boost(dv)` is the time-dependent translation `Translate(delta=lambda tau: dv * tau)`. Contrast with `Translate(semantic_kind=vel)` — a fibre-only velocity *kick* that shifts velocities without moving points.
+    Equivalently, `Boost(dv) ≡ TimeDep(UniformTranslation(dv))`. Contrast with `Translate(semantic_kind=vel)` — a fibre-only velocity *kick* that shifts velocities without moving points.
 
     **Fields:**
 
-    - `delta : CDict | Callable[[tau], CDict]` — the boost velocity $\Delta v$. If callable, evaluated at the time parameter `tau` (and the prolongation gains the corresponding derivative terms).
+    - `delta : CDict` — the boost velocity $\Delta v$. Always constant; `Boost` is intrinsically time-dependent — its point action is $x + \Delta v\,\tau$ — via the equivalence above, not via a time-dependent `delta`.
     - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
     - `right_add : bool` (default `True`) — whether to compute $\dot{x} + \Delta v$ (``True``) or $\Delta v + \dot{x}$ (``False``).
 
@@ -4909,7 +4962,7 @@ Each group corresponds to a set of transformations preserving a particular geome
     | `Point` / `Location`         | $x \mapsto x + \Delta v\,\tau$ (requires `tau`; `tau=None` raises `TypeError`) |
     | `Displacement`               | identity        |
     | `Velocity`                   | $\dot{x} \mapsto \dot{x} + \Delta v$ |
-    | `Acceleration`               | identity (for constant $\Delta v$; gains $\dot{\Delta v}$ if time-dependent) |
+    | `Acceleration`               | identity |
 
     **`act` dispatch signature:**
 

@@ -5,6 +5,7 @@ This guide introduces **curve-attached reference frames** provided by `coordinax
 For the mathematical specification see the {doc}`curveframes spec <spec>`. For API reference on the base frame system see [Working With Frames](../../../docs/guides/frames.md) and [Working With Transforms](../../../docs/guides/transforms.md).
 
 ```python
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 
@@ -29,20 +30,19 @@ Curve frames are useful whenever coordinates are most naturally expressed relati
 
 ## The Frenet–Serret Transform
 
-Before building a frame, you need a **transform** — the operator that maps ambient coordinates into curve-local coordinates. `FrenetSerretTransform` stores the curve's geometry as four $\tau$-dependent callables:
+Before building a frame, you need a **transform** — the operator that maps ambient coordinates into curve-local coordinates. `FrenetSerretBuilder` is an `equinox.Module` builder: `tau -> Translate(-gamma) | Rotate(R)`. It stores the curve itself, not pre-computed geometry:
 
-| Field      | Meaning                                  |
-| ---------- | ---------------------------------------- |
-| `location` | curve position $\gamma(\tau)$            |
-| `tangent`  | unit tangent $\mathbf{T}(\tau)$          |
-| `normal`   | unit principal normal $\mathbf{N}(\tau)$ |
-| `binormal` | unit binormal $\mathbf{B}(\tau)$         |
+| Field | Meaning |
+| --- | --- |
+| `curve` | the curve $\gamma \mapsto \boldsymbol{\gamma}(\gamma)$ — a pytree leaf; make it an `equinox.Module` for differentiable curve parameters |
+| `tau_unit` | physical unit of the curve parameter (static) |
+| `gamma` | optional fixed curve parameter (a leaf); `None` means $\tau$ is the curve parameter |
 
-All four fields are **lazy**: they are callables, not pre-evaluated arrays. Computation happens only when you evaluate the transform at a concrete $\tau$.
+The tangent, normal, and binormal are not stored — they are computed by `rotation_matrix(tau)` (and the `tangent`/`normal`/`binormal` convenience methods) from `curve` via automatic differentiation, every time they're evaluated.
 
 ### Building a Transform from a Curve
 
-Define a curve as a function `tau -> Quantity[(3,)]` and pass it to `from_curve`:
+Define a curve as a function `tau -> Quantity[(3,)]` and pass it to the builder:
 
 ```python
 def helix(tau: u.Q) -> u.Q:
@@ -50,10 +50,10 @@ def helix(tau: u.Q) -> u.Q:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-fs_transform = cxfc.FrenetSerretTransform.from_curve(helix)
+fs_transform = cxfc.FrenetSerretBuilder(helix)
 ```
 
-`from_curve` uses `unxt.experimental.jacfwd` to compute unit-correct first and second derivatives of the curve, then builds the tangent, normal, and binormal closures via Gram–Schmidt orthogonalisation.
+`FrenetSerretBuilder` uses `unxt.experimental.jacfwd` to compute unit-correct first and second derivatives of the curve, then derives the tangent, normal, and binormal via Gram–Schmidt orthogonalisation. Nothing is precomputed: `tangent`, `normal`, and `binormal` are methods on the builder, each evaluated at the $\tau$ you pass it.
 
 Evaluate the fields at a specific $\tau$:
 
@@ -65,35 +65,36 @@ fs_transform.tangent(tau)  # unit vector along curve velocity
 
 ### The `tau_unit` Parameter
 
-By default `from_curve` assumes $\tau$ has units of seconds. If your parameter has different units (e.g. radians, years), pass `tau_unit`:
+By default the builder assumes $\tau$ has units of seconds. If your parameter has different units (e.g. radians, years), pass `tau_unit`:
 
 ```python
-fs_rad = cxfc.FrenetSerretTransform.from_curve(helix, tau_unit="rad")
+fs_rad = cxfc.FrenetSerretBuilder(helix, tau_unit="rad")
 ```
 
-This affects only the automatic differentiation step — the returned callables still accept any `Quantity` with compatible dimensions.
+This affects only the automatic differentiation step — the builder's methods still accept any `Quantity` with compatible dimensions.
 
 ### Inversion
 
-Every `FrenetSerretTransform` has an `.inverse` that reverses the mapping:
+The builder itself has no `.inverse` — wrap it in `TimeDep` first, whose `.inverse` reverses the mapping pointwise in $\tau$:
 
 ```python
-fs_inv = fs_transform.inverse
+fs_op = cxfm.TimeDep(fs_transform)
+fs_inv = fs_op.inverse
 ```
 
-The inverse is also a `FrenetSerretTransform` with its own callable fields. Double-inversion recovers the original: `fs_transform.inverse.inverse` reconstructs the forward transform cleanly (no closure accumulation).
+The inverse is another `TimeDep` family whose builder inverts pointwise in $\tau$. Double-inversion recovers the original: `fs_op.inverse.inverse.builder is fs_op.builder`.
 
 ## Building a Frenet–Serret Frame
 
-A `FrenetSerretFrame` pairs a `FrenetSerretTransform` with a **base frame** — the ambient reference frame in which the curve is defined.
+A `FrenetSerretFrame` pairs a `FrenetSerretBuilder` with a **base frame** — the ambient reference frame in which the curve is defined.
 
 ### Direct Construction
 
 ```python
 fs_frame = cxfc.FrenetSerretFrame(
     base_frame=cxf.Alice(),
-    xop=fs_transform,
-    xop_inv=fs_transform.inverse,
+    xop=fs_op,
+    xop_inv=fs_op.inverse,
 )
 ```
 
@@ -109,10 +110,11 @@ This is equivalent to the direct construction above.
 
 ### Fields
 
-`FrenetSerretFrame` inherits two fields from `AbstractTransformedReferenceFrame`:
+`FrenetSerretFrame` inherits three fields from `AbstractTransformedReferenceFrame`:
 
 - `base_frame` — the ambient reference frame (e.g. `Alice()`).
-- `xop` — the `FrenetSerretTransform` connecting them.
+- `xop` — the `TimeDep` family (wrapping a `FrenetSerretBuilder`) connecting base frame to curve frame.
+- `xop_inv` — its pre-computed inverse, `xop.inverse`.
 
 The evolution parameter $\tau$ is **not** stored on the frame. It is supplied at evaluation time when applying the transform via `act`.
 
@@ -130,7 +132,7 @@ op_from_curve = cxf.frame_transition(fs_frame, cxf.Alice())
 
 ### Applying the Transition
 
-Use `cxfm.act(op, tau, x)` to transform a point. The `tau` parameter is passed through to the `FrenetSerretTransform` callables:
+Use `cxfm.act(op, tau, x)` to transform a point. The `tau` parameter is passed through to the `FrenetSerretBuilder` callables:
 
 ```python
 p = u.Q(jnp.array([1.0, 0.0, 0.0]), "km")
@@ -174,17 +176,45 @@ p_recovered = cxfm.act(op4, tau, p_fs2)
 
 ## JAX Integration
 
-Curve frames are JAX-native. All transform fields are pure-function closures and the frame object is a valid JAX PyTree (via Equinox).
+Curve frames are JAX-native. The builder is an `equinox.Module`, so its fields — the curve (and, when the curve is itself an `equinox.Module`, its parameters), `gamma`, `tau_0`, `initial_normal` — are genuine PyTree leaves: differentiable and vmappable.
 
 ### JIT Compilation
 
-Because `FrenetSerretTransform` fields are stored as **static** PyTree leaves (functions), the only dynamic parts are $\tau$ and the coordinate data. JIT works directly:
+JIT works directly when the operator is _closed over_ rather than passed as an argument:
 
 ```python
 @jax.jit
 def transform_point(tau, p):
     return cxfm.act(op_to_curve, tau, p)
 ```
+
+This works because `op_to_curve` never becomes a traced argument of `transform_point` — it's baked in at trace time. Passing a builder holding **array leaves** — `BishopBuilder`'s `tau_0`, a `gamma`, or any curve that is itself an `equinox.Module` with array fields — as an _argument_ to a plain `jax.jit` is a different story: `jax.jit` treats a bound-method argument as a static, hashable value, and JAX cannot hash an array leaf:
+
+```python
+class Helix(eqx.Module):
+    radius: jax.Array  # a differentiable/vmappable leaf, not static
+
+    def __call__(self, tau):
+        t = tau.ustrip("s")
+        return u.Q(
+            jnp.stack([self.radius * jnp.cos(t), self.radius * jnp.sin(t), 0.3 * t]),
+            "km",
+        )
+
+
+builder = cxfc.FrenetSerretBuilder(Helix(jnp.asarray(1.5)))
+
+try:
+    jax.jit(builder.rotation_matrix)(tau)
+except TypeError as exc:
+    assert "unhashable" in str(exc)
+
+# eqx.filter_jit partitions the array leaves from the static fields first,
+# so it works where plain jax.jit cannot:
+R = eqx.filter_jit(builder.rotation_matrix)(tau)
+```
+
+A curve whose parameters are plain Python floats (`eqx.field(static=True)`, or just a bare closure) _is_ hashable, so plain `jax.jit` happens to work for it — but then those parameters are trace-time constants, not differentiable leaves. This is the cliff to watch for: switching a curve parameter from static to a leaf (to make it differentiable) silently breaks plain `jax.jit` on any function that takes the builder as an argument; reach for `eqx.filter_jit` by default.
 
 ### Vectorizing Over $\tau$
 
@@ -207,14 +237,16 @@ trajectory = jax.jit(jax.vmap(lambda t: cxfm.act(op_to_curve, t, p)))(taus)
 
 The **Bishop transform** (also called rotation-minimising or parallel-transport frame) provides an alternative to the Frenet–Serret frame. Its key advantage is that it is **well-defined even when the curvature vanishes** ($\kappa = 0$), where the Frenet–Serret normal is singular.
 
-`BishopTransform` stores the same set of $\tau$-dependent callables:
+`BishopBuilder` extends `AbstractCurveFrameBuilder` with two more fields, in addition to `curve`, `tau_unit`, `gamma`:
 
 | Field | Meaning |
 | --- | --- |
-| `location` | curve position $\gamma(\tau)$ |
-| `tangent` | unit tangent $\mathbf{T}(\tau)$ |
-| `normal1` | first normal $\mathbf{U}_1(\tau)$ (parallel-transported) |
-| `normal2` | second normal $\mathbf{U}_2(\tau) = \mathbf{T} \times \mathbf{U}_1$ |
+| `tau_0` | reference parameter where the initial frame is defined (a leaf); `None` resolves to `Q(0.0, tau_unit)` |
+| `initial_normal` | initial $\mathbf{U}_{1,0}$ (a leaf), or `None` for Gram–Schmidt auto-selection |
+
+…plus `diffeqsolver`, a single [`diffraxtra.DiffEqSolver`](https://github.com/GalacticDynamics/diffraxtra) holding the whole `diffrax` configuration — solver, step-size controller, adjoint, step budget — covered in [Configuring the solve](#configuring-the-solve). It is a _static_ field, so it adds no pytree leaves and a `jax.tree.map` over the curve's parameters cannot reach it.
+
+As with `FrenetSerretBuilder`, the tangent and normals are not stored — `normal1(tau)`/`normal2(tau)` compute $\mathbf{U}_1(\tau)$ (by solving the parallel-transport ODE from `tau_0`) and $\mathbf{U}_2(\tau) = \mathbf{T}\times\mathbf{U}_1$ on every call.
 
 ### How the Bishop Frame Differs from Frenet–Serret
 
@@ -241,14 +273,14 @@ def helix(tau: u.Q) -> u.Q:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-bt = cxfc.BishopTransform.from_curve(helix)
+bt = cxfc.BishopBuilder(helix)
 ```
 
-`from_curve` automatically:
+`BishopBuilder` automatically:
 
 1. Computes $\mathbf{T}$ via JAX autodiff
 2. Chooses an initial normal $\mathbf{U}_{1,0}$ via Gram–Schmidt (unless you supply one)
-3. Solves the parallel-transport ODE with `jax.experimental.ode.odeint`
+3. Solves the parallel-transport ODE with [`diffrax`](https://docs.kidger.site/diffrax/)
 
 Evaluate at a specific $\tau$:
 
@@ -260,20 +292,58 @@ bt.normal1(tau)  # parallel-transported U1
 bt.normal2(tau)  # T x U1
 ```
 
-### Controlling the Initial Normal
+(configuring-the-solve)=
 
-By default, `from_curve` picks the standard basis vector least aligned with $\mathbf{T}(\tau_0)$ via Gram–Schmidt. You can provide an explicit initial normal:
+### Configuring the Solve
+
+The whole solve lives in one field, `diffeqsolver`, a `diffraxtra.DiffEqSolver`. Its defaults — `Tsit5`, `PIDController(rtol=1e-10, atol=1e-10)`, `DirectAdjoint`, `max_steps=16384` — hold orthonormality to $\sim 9 \times 10^{-12}$ out to $|\tau| = 60$ on the helix above.
+
+**Change one knob by deriving from the default, not by building a `DiffEqSolver` from scratch.** `dataclasses.replace` keeps every field you do not name:
 
 ```python
-bt_custom = cxfc.BishopTransform.from_curve(
-    helix, initial_normal=jnp.array([0.0, 0.0, 1.0])
+import dataclasses
+
+import diffrax as dfx
+
+bt = cxfc.BishopBuilder(helix)
+fast = dataclasses.replace(
+    bt,
+    diffeqsolver=dataclasses.replace(
+        bt.diffeqsolver, stepsize_controller=dfx.PIDController(rtol=1e-6, atol=1e-6)
+    ),
 )
+type(fast.diffeqsolver.adjoint).__name__  # 'DirectAdjoint'
+```
+
+`equinox.tree_at` works on the `DiffEqSolver` too, but not through the builder — a `static=True` field is not a pytree leaf.
+
+Why it matters: `DiffEqSolver`'s _own_ field defaults are read off `diffrax.diffeqsolve`'s signature, so `DiffEqSolver(dfx.Tsit5(), stepsize_controller=…)` silently picks up `RecursiveCheckpointAdjoint` — the one adjoint that disables tangent and jet propagation. Deriving from `bt.diffeqsolver` cannot do that.
+
+**Choosing an adjoint** is the one knob that changes what the frame can _do_, not just how fast it does it. The default is `DirectAdjoint` rather than `diffrax`'s own default because `act` on tangent data and `act_jet` differentiate the solve in _forward_ mode:
+
+| Adjoint                      | forward (AD) | reverse (AD) | speed   |
+| ---------------------------- | ------------ | ------------ | ------- |
+| `DirectAdjoint` (default)    | yes          | yes          | slowest |
+| `RecursiveCheckpointAdjoint` | **no**       | yes          | fastest |
+| `ForwardMode`                | yes          | **no**       | fast    |
+| `BacksolveAdjoint`           | **no**       | **no**       | fast    |
+
+`BacksolveAdjoint` is unusable here in _either_ mode: the reparametrised ODE right-hand side closes over $\Delta\tau$ and $\tau_0$, which its backwards solve cannot carry, so both directions raise JAX's `CustomVJPException` ("…with respect to a closed-over value"). That is a property of the reparametrisation, not of the curve — it fails the same way for a curve written as a bare function with no array leaves at all, so there is no way to write the curve that recovers it.
+
+For `RecursiveCheckpointAdjoint`, "forward: no" means tangent and jet propagation raise `TypeError: can't apply forward-mode autodiff (jvp) to a custom_vjp function` — accurate, but it never names the adjoint you chose. Reach for it only when you want `grad` and nothing else.
+
+### Controlling the Initial Normal
+
+By default, the builder picks the standard basis vector least aligned with $\mathbf{T}(\tau_0)$ via Gram–Schmidt. You can provide an explicit initial normal:
+
+```python
+bt_custom = cxfc.BishopBuilder(helix, initial_normal=jnp.array([0.0, 0.0, 1.0]))
 ```
 
 The reference parameter $\tau_0$ can also be set:
 
 ```python
-bt_shifted = cxfc.BishopTransform.from_curve(helix, tau_0=u.Q(1.0, "s"))
+bt_shifted = cxfc.BishopBuilder(helix, tau_0=u.Q(1.0, "s"))
 ```
 
 ### Straight Lines
@@ -286,23 +356,47 @@ def line(tau):
     return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
 
 
-bt_line = cxfc.BishopTransform.from_curve(line)
+bt_line = cxfc.BishopBuilder(line)
 bt_line.normal1(u.Q(5.0, "s"))  # well-defined unit vector
+```
+
+### Propagating Velocities and Jets
+
+A curve frame is $\tau$-dependent, so transforming a velocity is a _kinematic prolongation_, not a frozen-$\tau$ pushforward: the result picks up the $\dot{R}$ and $\dot{\gamma}$ terms. This works identically for both frame types.
+
+```python
+import coordinax.charts as cxc
+import coordinax.representations as cxr
+
+at = {"x": u.Q(2.0, "km"), "y": u.Q(-1.0, "km"), "z": u.Q(3.0, "km")}
+vel = {"x": u.Q(0.1, "km/s"), "y": u.Q(0.2, "km/s"), "z": u.Q(-0.3, "km/s")}
+bishop_op = cxfm.TimeDep(bt)
+
+cxfm.act(
+    bishop_op, u.Q(0.7, "s"), vel, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at
+)
+```
+
+`act_jet` does the same for a whole jet at once, returning every slot:
+
+```python
+cxfm.act_jet(bishop_op, u.Q(0.7, "s"), {0: at, 1: vel}, cxc.cart3d)
 ```
 
 ### Inversion
 
-Like `FrenetSerretTransform`, every `BishopTransform` has an `.inverse`:
+Like `FrenetSerretBuilder`, wrap `BishopBuilder` in `TimeDep` to get `.inverse`:
 
 ```python
-bt_inv = bt.inverse
+bt_op = cxfm.TimeDep(bt)
+bt_inv = bt_op.inverse
 ```
 
-Double-inversion recovers the original: `bt.inverse.inverse` reconstructs the forward transform.
+Double-inversion recovers the original: `bt_op.inverse.inverse.builder is bt_op.builder`.
 
 ## Building a Bishop Frame
 
-A `BishopFrame` pairs a `BishopTransform` with a base frame, exactly like `FrenetSerretFrame`.
+A `BishopFrame` pairs a `BishopBuilder` with a base frame, exactly like `FrenetSerretFrame`.
 
 ### Convenience Constructor
 
@@ -332,13 +426,70 @@ p_back = cxfm.act(op_from_bishop, tau, p_bishop)
 
 ## Design Notes
 
-### Lazy Evaluation
+### Builder Evaluation
 
-All transform fields are callables, not pre-computed arrays. This means:
+A curve-frame builder is an `equinox.Module`: `curve`, `gamma` (and, for `BishopBuilder`, `tau_0`, `initial_normal`) are pytree **leaves**, not lazy callables stashed on the instance. Nothing is pre-computed at construction time — `rotation_matrix(tau)` and `__call__(tau)` are ordinary methods that derive the tangent/normal/binormal (or Bishop's parallel-transported normals) from `curve` afresh, on every call, via `unxt.experimental.jacfwd`. This means:
 
-- **Memory-efficient**: no large arrays stored on the object.
-- **Composable**: fields can be freely passed to `jit`, `vmap`, `grad`.
-- **Exact**: no discretisation error from pre-sampling; the curve is evaluated analytically at each $\tau$.
+- **Structural, not procedural, JAX integration**: because the parameters are real pytree data, `jit`, `vmap`, and `grad` operate on a builder — or a whole frame — the same way they operate on any other pytree; there's no separate "make it JAX-compatible" step.
+- **Differentiable curve parameters**: if `curve` is itself an `equinox.Module` with leaf fields, gradients flow through curve construction and into the frame (see "Differentiating the Curve" below) — not possible when a curve was a bare Python closure.
+- **Exact**: no discretisation error from pre-sampling; the curve and its derivatives are evaluated analytically at each $\tau$.
+
+#### Differentiating the Curve
+
+Because a curve can be an `equinox.Module`, its own parameters are ordinary pytree leaves — differentiable through frame construction and evaluation:
+
+```python
+class Helix(eqx.Module):
+    """A helix whose radius (km) is a differentiable pytree leaf."""
+
+    radius: jax.Array
+
+    def __call__(self, tau):
+        t = tau.ustrip("s")
+        return u.Q(
+            jnp.stack([self.radius * jnp.cos(t), self.radius * jnp.sin(t), 0.3 * t]),
+            "km",
+        )
+
+
+def readout(radius):
+    builder = cxfc.FrenetSerretBuilder(Helix(radius))
+    op = cxfm.TimeDep(builder)
+    p = u.Q(jnp.array([2.0, 1.0, -0.5]), "km")
+    out = cxfm.act(op, u.Q(0.4, "s"), p)
+    return out.ustrip("km")[0]
+
+
+grad_radius = jax.grad(readout)(1.5)
+assert abs(float(grad_radius)) > 1e-3
+```
+
+`jax.grad` differentiates through the Gram–Schmidt tangent/normal construction and the rigid-body transform, all the way back to the helix radius. This is the capability the old closure-based `curve` fields could not offer: whatever a plain Python closure captured was a trace-time constant, invisible to `jax.grad`.
+
+#### A Frame Field via `vmap` over `gamma`
+
+With `gamma` set, a builder produces a fixed, $\tau$-independent frame anchored at $\boldsymbol{\gamma}(\gamma)$ — a frame _field_ rather than a moving frame. Because `gamma` is a pytree leaf, `jax.vmap` over a batch of `gamma` values builds a batch of frames in a single call — the frame field along the whole curve, not a Python loop over frames:
+
+```python
+def circle(tau):
+    t = tau.ustrip("s")
+    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+
+p = u.Q(jnp.array([2.0, 1.0, -0.5]), "km")
+gammas = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
+
+
+def at_gamma(g):
+    op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", g))
+    return cxfm.act(op, u.Q(0.0, "s"), p)
+
+
+field = jax.vmap(at_gamma)(gammas)
+assert field.ustrip("km").shape == (5, 3)
+```
+
+Each row of `field` is the same point `p` expressed in the frame anchored at the corresponding `gamma` value.
 
 ### Active Semantics
 
@@ -346,4 +497,4 @@ Curve frames follow coordinax's **active transformation** convention. `act(op, t
 
 ### Scalar-First Design
 
-Functions operate on scalar $\tau$ and scalar-component vectors. Batching is achieved via `jax.vmap`, not by passing shaped arrays. This keeps the implementation simple and composes cleanly with all JAX transformations.
+`rotation_matrix`, `__call__`, and the convenience accessors operate on scalar $\tau$ and scalar-component vectors — a builder's fields hold a single curve, not a batch of curves. Batching over $\tau$, over `gamma`, or over a curve's own parameters is achieved by `jax.vmap`-ing the builder or the `TimeDep` operator, not by passing shaped arrays into the builder's fields. This keeps the builder implementation simple and composes cleanly with all JAX transformations.

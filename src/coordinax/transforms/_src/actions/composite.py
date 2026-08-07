@@ -66,6 +66,31 @@ class AbstractCompositeTransform(AbstractTransform):
 
         return Composed(tuple(op.inverse for op in reversed(self.transforms)))
 
+    @property
+    def is_time_dependent(self) -> bool:
+        """Whether any component transform is time-dependent.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
+        >>> pipe = cxfm.Composed((shift, cxfm.Identity()))
+        >>> pipe.is_time_dependent
+        False
+
+        A `TimeDep` component makes the whole composite time-dependent:
+
+        >>> moving = cxfm.TimeDep.from_(
+        ...     lambda t: cxfm.Translate.from_(jnp.asarray([1.0, 0.0, 0.0]) * t, "km")
+        ... )
+        >>> cxfm.Composed((shift, moving)).is_time_dependent
+        True
+
+        """
+        return any(op.is_time_dependent for op in self.transforms)
+
     # ===========================================
     # Python API
 

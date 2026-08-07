@@ -633,15 +633,15 @@ def act(
     A time-dependent transform prolongs the whole bundle jointly: a uniformly
     moving translation boosts the velocity fibre by its rate:
 
-    >>> delta = lambda t: {"x": u.Q(3.0, "m/s") * t, "y": u.Q(0.0, "m"),
-    ...                    "z": u.Q(0.0, "m")}
-    >>> op = cx.Translate(delta, chart=cxc.cart3d)
-    >>> out = cx.act(op, u.Q(2.0, "s"), pv)
+    >>> import coordinax.transforms as cxfm
+    >>> rate = {"x": u.Q(3.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> moving = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> out = cx.act(moving, u.Q(2.0, "s"), pv)
     >>> out.point.data["x"], out["velocity"].data["x"]
     (Q(7., 'm'), Q(4., 'm / s'))
 
     """
-    if _needs_joint_jet(op):
+    if cxfm.is_time_dependent(op):
         # The jet anchors are structurally the bundle's own point and fibres;
         # caller-supplied anchor overrides are meaningless here — reject them
         # loudly rather than silently ignoring them (the static path below
@@ -674,24 +674,6 @@ def act(
             fibre_kw = kw_base
         new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
     return Coordinate(point=new_point, **new_fields)
-
-
-def _needs_joint_jet(op: cxfm.AbstractTransform, /) -> bool:
-    """Whether a Coordinate bundle must be transformed as a joint jet.
-
-    True when the op has time-dependent (callable) parameters, and also for
-    `Boost`, whose *point action* is intrinsically tau-dependent (x + dv*tau)
-    even when dv is a constant — its per-fibre closed forms then need the
-    lower jet slots that only the joint path supplies.
-
-    TODO: replace the isinstance test with a declared property on the
-    transform (tracked with the TimeDep parameter refactor, issue #537).
-    """
-    if isinstance(op, cxfm.Boost):
-        return True
-    if isinstance(op, cxfm.Composed):
-        return any(_needs_joint_jet(sub) for sub in op.transforms)
-    return cxfm.is_time_dependent(op)
 
 
 def _point_data_in(point: Point, chart: Any, /) -> CDict:

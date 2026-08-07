@@ -26,7 +26,7 @@ __all__: tuple[str, ...] = (
     "pushforward",
     "simplify",
     "compose",
-    "materialize_transform",
+    "evaluate_at",
     "is_time_dependent",
     "tau_derivative",
     # Transformations
@@ -40,13 +40,15 @@ __all__: tuple[str, ...] = (
     "Reflect",
     "Scale",
     "Shear",
+    "TimeDep",
     "identity",
     # Sub-namespaces
+    "builders",
     "groups",
 )
 
 with install_import_hook("coordinax.transforms"):
-    from . import groups
+    from . import builders, groups
     from ._src.actions import (
         AbstractCompositeTransform,
         AbstractTransform,
@@ -57,10 +59,11 @@ with install_import_hook("coordinax.transforms"):
         Rotate,
         Scale,
         Shear,
+        TimeDep,
         Translate,
+        evaluate_at,
         identity,
         is_time_dependent,
-        materialize_transform,
         tau_derivative,
     )
     from coordinaxs.api.transforms import act, act_jet, compose, pushforward, simplify

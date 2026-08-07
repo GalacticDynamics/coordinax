@@ -1,11 +1,11 @@
 """Shared curves and fixtures for the `coordinaxs.curveframes` tests.
 
 The Frenet-Serret and Bishop frames are two implementations of
-`AbstractParallelTransportTransform`, so most of what the suite checks is the
-*contract* they share rather than anything specific to either. The curves and
-the per-type spec live here so that contract can be written once
-(`test_parallel_transport_contract.py`) and each type's closed-form values
-stay in its own module.
+`AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.TimeDep`, so
+most of what the suite checks is the *contract* they share rather than anything
+specific to either. The curves and the per-type spec live here so that contract
+can be written once (`test_parallel_transport_contract.py`) and each type's
+closed-form values stay in its own module.
 """
 
 __all__: tuple[str, ...] = ()
@@ -13,10 +13,10 @@ __all__: tuple[str, ...] = ()
 from types import SimpleNamespace
 
 import jax.numpy as jnp
-import numpy as np
 import pytest
 
 import coordinax.frames as cxf
+import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 
@@ -65,69 +65,52 @@ def circle_yr(tau: u.AbstractQuantity) -> u.AbstractQuantity:
 # Helpers
 
 
-def as_arr(x: object, unit: str) -> np.ndarray:
-    """Strip *x* to a plain float array in *unit*."""
-    assert isinstance(x, u.AbstractQuantity)
-    return np.asarray(u.ustrip(unit, x), dtype=float)
+def inverse_rotation(builder: object, tau: u.AbstractQuantity) -> object:
+    """Rotation matrix of the inverse family at ``tau`` (i.e. R^T).
 
-
-@pytest.fixture
-def arr():
-    """The `as_arr` helper, as a fixture."""
-    return as_arr
+    The rows of this matrix are the inverse frame's triad, i.e. the *columns*
+    of the forward R.
+    """
+    # The forward family is ``Translate(-gamma) | Rotate(R)``, so its inverse
+    # reverses the pipe and the rotation lands first. Pin that ordering: a
+    # silent reversal would otherwise surface as an opaque AttributeError.
+    inv = cxfm.TimeDep(builder).inverse.evaluate_at(tau)[0]
+    assert isinstance(inv, cxfm.Rotate)
+    return inv.R
 
 
 # ===================================================================
 # Per-type specs
-#
-# `atol` differs by construction, not by accident: Frenet-Serret is closed-form
-# autodiff, while Bishop integrates a parallel-transport ODE and so carries
-# integrator error. Each spec states the tolerance its own frame can hold.
 
-#: Per-assertion absolute tolerances, per type.
+#: Absolute tolerances, in four tiers per type.
 #
-# These are not stylistic. Each entry is the value that assertion carried in the
-# per-type modules before they were merged, and the two columns differ by up to
-# four orders of magnitude: Frenet-Serret's `act` plumbing agrees to 1e-10
-# because it is closed-form autodiff, while Bishop's is 1e-5 because a transport
-# ODE has been integrated in between. A single shared tolerance would have to be
-# the looser of the two everywhere, which would stop Frenet-Serret regressions
-# from being caught at all.
+# The columns differ by construction, not by accident, and must not be merged:
+# Frenet-Serret is closed-form autodiff, while Bishop integrates a
+# parallel-transport ODE and carries integrator error, so a single shared
+# column would have to be Bishop's everywhere and would stop Frenet-Serret
+# regressions from being caught at all.
+#
+# `tight`: gamma itself (the curve, evaluated directly).
+# `plumbing`: jit vs eager, vmap vs eager, transition vs direct xop. Kept
+#   separate from `tight` because Bishop's jit/vmap path re-runs the
+#   parallel-transport ODE solve, which is the likeliest source of
+#   platform-dependent noise in this suite -- it must not be pulled down to
+#   `tight`'s value just because the two happen to coincide for Frenet-Serret.
+# `field`: a frame-field value, norm, dot product, or a single `act`.
+# `loose`: a multi-step chain, where the per-step error compounds.
 TOLERANCES = {
-    "frenet-serret": {
-        "location": 1e-6,  # gamma(0), straight from the curve
-        "field": 1e-5,  # a frame-field value or norm
-        "orthogonality": 1e-5,  # dot products within the triad
-        "transform_roundtrip": 1e-4,  # R_inv @ (R @ (p - g) - g_inv)
-        "double_inverse": 1e-4,
-        "act": 1e-6,  # one `act` application
-        "act_roundtrip": 1e-6,  # act then act-inverse
-        "chain": 1e-6,  # through one intermediate frame
-        "full_chain": 1e-5,  # Alice -> frame -> Alex -> frame -> Alice
-        "plumbing": 1e-10,  # jit vs eager; transition vs direct xop
-    },
-    "bishop": {
-        "location": 1e-6,
-        "field": 1e-5,
-        "orthogonality": 1e-4,
-        "transform_roundtrip": 1e-3,
-        "double_inverse": 1e-4,
-        "act": 1e-5,
-        "act_roundtrip": 1e-3,
-        "chain": 1e-3,
-        "full_chain": 1e-2,
-        "plumbing": 1e-5,
-    },
+    "frenet-serret": {"tight": 1e-10, "plumbing": 1e-10, "field": 1e-6, "loose": 1e-5},
+    "bishop": {"tight": 1e-6, "plumbing": 1e-5, "field": 1e-5, "loose": 1e-3},
 }
 
 PARALLEL_TRANSPORT_TYPES = {
     "frenet-serret": SimpleNamespace(
-        transform_cls=cxfc.FrenetSerretTransform,
+        builder_cls=cxfc.FrenetSerretBuilder,
         frame_cls=cxfc.FrenetSerretFrame,
         triad=("tangent", "normal", "binormal"),
     ),
     "bishop": SimpleNamespace(
-        transform_cls=cxfc.BishopTransform,
+        builder_cls=cxfc.BishopBuilder,
         frame_cls=cxfc.BishopFrame,
         triad=("tangent", "normal1", "normal2"),
     ),
@@ -138,86 +121,29 @@ PARALLEL_TRANSPORT_TYPES = {
 def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     """Every parallel-transport frame type, on the unit circle.
 
-    Yields a namespace of ``transform``, ``frame``, ``tol`` (the per-assertion
-    tolerance table above) and ``fields`` -- a callable
-    ``(transform, tau) -> (e0, e1, e2)`` returning that type's three frame
+    Yields a namespace of ``builder`` (the `AbstractCurveFrameBuilder`),
+    ``xop`` (the `coordinax.transforms.TimeDep` wrapping it), ``frame``,
+    ``tol`` (the tolerance tiers above), ``yr_builder`` (the same type on the
+    opaque-unit `circle_yr`) and ``fields`` -- a callable
+    ``(builder, tau) -> (e0, e1, e2)`` returning that type's three frame
     fields in right-handed order, so contract tests can be written without
     naming ``binormal`` or ``normal2``.
     """
     spec = PARALLEL_TRANSPORT_TYPES[request.param]
+    builder = spec.builder_cls(circle)
 
-    def fields(transform: object, tau: u.AbstractQuantity) -> tuple:
-        return tuple(getattr(transform, name)(tau) for name in spec.triad)
+    def fields(bldr: object, tau: u.AbstractQuantity) -> tuple:
+        return tuple(getattr(bldr, name)(tau) for name in spec.triad)
 
     return SimpleNamespace(
         name=request.param,
-        transform=spec.transform_cls.from_curve(circle),
+        builder=builder,
+        builder_cls=spec.builder_cls,
+        yr_builder=spec.builder_cls(circle_yr, "yr"),
+        xop=cxfm.TimeDep(builder),
         frame=spec.frame_cls.from_curve(cxf.Alice(), circle),
+        frame_cls=spec.frame_cls,
         triad=spec.triad,
         tol=SimpleNamespace(**TOLERANCES[request.param]),
         fields=fields,
     )
-
-
-@pytest.fixture
-def curve():
-    """The unit-circle curve function itself (for constructor tests)."""
-    return circle
-
-
-# ===================================================================
-# Single-type fixtures (closed-form value tests)
-
-
-@pytest.fixture
-def circle_fs() -> cxfc.FrenetSerretTransform:
-    """Frenet-Serret transform on the unit circle."""
-    return cxfc.FrenetSerretTransform.from_curve(circle)
-
-
-@pytest.fixture
-def circle_yr_fs() -> cxfc.FrenetSerretTransform:
-    """Frenet-Serret transform on the opaque-unit (yr) circle."""
-    return cxfc.FrenetSerretTransform.from_curve(circle_yr, tau_unit="yr")
-
-
-@pytest.fixture
-def circle_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on the unit circle."""
-    return cxfc.BishopTransform.from_curve(circle)
-
-
-@pytest.fixture
-def line_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on a straight line (kappa=0)."""
-    return cxfc.BishopTransform.from_curve(straight_line)
-
-
-@pytest.fixture
-def helix_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on a helix."""
-    return cxfc.BishopTransform.from_curve(helix)
-
-
-@pytest.fixture
-def circle_yr_bishop() -> cxfc.BishopTransform:
-    """Bishop transform on the opaque-unit (yr) circle."""
-    return cxfc.BishopTransform.from_curve(circle_yr, tau_unit="yr")
-
-
-@pytest.fixture
-def circle_fs_frame() -> cxfc.FrenetSerretFrame:
-    """Frenet-Serret frame on the unit circle, relative to Alice."""
-    return cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
-
-
-@pytest.fixture
-def circle_bishop_frame() -> cxfc.BishopFrame:
-    """Bishop frame on the unit circle, relative to Alice."""
-    return cxfc.BishopFrame.from_curve(cxf.Alice(), circle)
-
-
-@pytest.fixture
-def line_bishop_frame() -> cxfc.BishopFrame:
-    """Bishop frame on a straight line, relative to Alice."""
-    return cxfc.BishopFrame.from_curve(cxf.Alice(), straight_line)

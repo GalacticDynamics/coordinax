@@ -23,7 +23,7 @@ from unxt import AbstractQuantity as AbcQ
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
-from .base import AbstractTransform, materialize_transform
+from .base import AbstractTransform
 from .custom_types import CDict, HasShape, OptUSys
 from .utils import is_flat_chart, require_matching_keys
 from coordinax.internal import pack_uniform_unit
@@ -38,15 +38,16 @@ def _matmul_cdict(matrix: Array, d: CDict, comps: tuple[str, ...], /) -> CDict:
 class AbstractLinearTransform(AbstractTransform):
     r"""Base for pure Cartesian linear maps :math:`x \mapsto M x`.
 
-    A subclass provides its matrix via the `_raw_matrix` property (which may be
-    a callable of ``tau`` for a time-dependent map); this base owns the matrix
-    validation and every point-geometry ``act`` path.
+    A subclass provides its (constant) matrix via the `_raw_matrix` property;
+    this base owns the matrix validation and every point-geometry ``act``
+    path. A time-dependent linear map is a
+    `~coordinax.transforms.TimeDep` family of these operators.
     """
 
     @property
     @abstractmethod
     def _raw_matrix(self) -> Any:
-        """The matrix parameter (an array, or a callable of ``tau``)."""
+        """The constant matrix parameter."""
         raise NotImplementedError  # pragma: no cover
 
     def _validate_square(self, matrix: HasShape, /) -> Array:
@@ -73,14 +74,9 @@ class AbstractLinearTransform(AbstractTransform):
     def _matrix(
         self, cart: cxc.AbstractChart[Any, Any, Any], tau: Any = None, /
     ) -> Array:
-        """Return the validated matrix for ``cart``, materialized at ``tau``."""
-        op_eval = materialize_transform(self, tau)
-        matrix = op_eval._raw_matrix
-        matrix = eqx.error_if(
-            matrix, callable(matrix), "need to call `materialize_transform`."
-        )
-        matrix = self._validate_square(matrix)
-        return self._validate_shape_match(matrix, cart)
+        """Return the validated matrix for ``cart`` (constant; ``tau`` unused)."""
+        del tau  # the matrix is constant; callers pass tau uniformly
+        return self._validate_shape_match(self._validate_square(self._raw_matrix), cart)
 
 
 # ============================================================================
@@ -206,7 +202,7 @@ def act(
     **kw: Any,
 ) -> CDict:
     """Apply a linear map factorwise on Cartesian-product charts."""
-    n = op._validate_square(materialize_transform(op, tau)._raw_matrix).shape[-1]
+    n = op._validate_square(op._raw_matrix).shape[-1]
 
     n_factors = len(chart.factors)
     parts = chart.split_components(x)
@@ -357,7 +353,7 @@ def pushforward(
         pre = f"pushforward({type(op).__name__}, ...): the {name} components "
         require_matching_keys(d, chart.components, pre + ref)
 
-    n = op._validate_square(materialize_transform(op, tau)._raw_matrix).shape[-1]
+    n = op._validate_square(op._raw_matrix).shape[-1]
     parts = chart.split_components(v)
     at_parts = (
         chart.split_components(at) if at is not None else [None] * len(chart.factors)

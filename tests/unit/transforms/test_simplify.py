@@ -2,7 +2,6 @@
 
 __all__: tuple[str, ...] = ()
 
-from jaxtyping import Array, Real
 
 import jax
 import numpy as np
@@ -15,6 +14,7 @@ from dataclassish import replace
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+from .conftest import ZHAT
 
 
 def _xyz(d):
@@ -87,15 +87,68 @@ def test_different_semantic_kind_translates_do_not_merge() -> None:
 
 
 def test_time_dependent_rotations_do_not_merge() -> None:
-    def R_of_t(t) -> Real[Array, "3 3"]:
-        th = t.ustrip("s")
-        c, s = jnp.cos(th), jnp.sin(th)
-        return jnp.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
+    """`simplify` leaves adjacent `TimeDep` transforms alone, but preserves the act.
 
-    td = cxfm.Rotate.from_(R_of_t)
-    out = cxfm.simplify(cxfm.Composed((td, td)))
+    Merging them needs the pointwise ``|`` fallback, which is unsound for a
+    fibre offset (see `test_simplify_preserves_time_dependent_fibre_offset`).
+    """
+    # Distinct rates, so a merge that dropped one operand would be caught.
+    a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
+    b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
+    pipe = cxfm.Composed((a, b))
+
+    out = cxfm.simplify(pipe)
     assert isinstance(out, cxfm.Composed)
     assert len(out.transforms) == 2
+
+    tau = u.Q(0.7, "s")
+    p = _point()
+    np.testing.assert_allclose(_xyz(out(tau, p)), _xyz(b(tau, a(tau, p))), atol=1e-12)
+
+
+def test_time_dependent_rotations_merge_pointwise_under_matmul() -> None:
+    """An EXPLICIT ``a @ b`` still merges two `TimeDep` families, pointwise in tau."""
+    a = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.3, "rad/s"), axis=ZHAT))
+    b = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
+
+    out = a @ b
+    assert isinstance(out, cxfm.TimeDep)
+
+    # ...and the merged family acts as the sequential application at a sample tau.
+    tau = u.Q(0.7, "s")
+    p = _point()
+    np.testing.assert_allclose(_xyz(out(tau, p)), _xyz(b(tau, a(tau, p))), atol=1e-12)
+
+
+def test_simplify_preserves_time_dependent_fibre_offset() -> None:
+    """`simplify` must not fold a time-dependent fibre offset into a `TimeDep`.
+
+    Folding it would materialize a `Composed` holding an order-1 offset, which
+    `add.py` rejects: a working pipeline would start raising.
+    """
+    rate = {k: u.Q(v, "km/s") for k, v in (("x", 0.3), ("y", 0.0), ("z", 0.0))}
+    kick = cxfm.TimeDep.from_(
+        lambda t: cxfm.Translate(
+            {k: v * (t / u.Q(1.0, "s")) for k, v in rate.items()},
+            chart=cxc.cart3d,
+            semantic_kind=cxr.coord_vel.semantic_kind,
+        )
+    )
+    rot = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(0.5, "rad/s"), axis=ZHAT))
+    pipe = cxfm.Composed((kick, rot))
+
+    tau = u.Q(2.0, "s")
+    v = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+    at = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(0.0, "km")}
+    kw = {"at": at}
+
+    before = cxfm.act(pipe, tau, v, cxc.cart3d, cxr.coord_vel, **kw)
+    after = cxfm.act(cxfm.simplify(pipe), tau, v, cxc.cart3d, cxr.coord_vel, **kw)
+    np.testing.assert_allclose(
+        [float(after[k].ustrip("km/s")) for k in "xyz"],
+        [float(before[k].ustrip("km/s")) for k in "xyz"],
+        atol=1e-12,
+    )
 
 
 # ===================================================================

@@ -17,10 +17,8 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
-from .base import is_time_dependent, materialize_transform
 from .composed import Composed
 from .custom_types import CDict, OptUSys
-from .prolong import prolong_slot, tau_derivative
 from .utils import is_componentwise_offset
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -47,11 +45,10 @@ class Translate(AbstractAdd):
 
     Parameters
     ----------
-    delta : CDict | Callable[[tau], CDict]
+    delta : CDict
         The offset to apply. Its physical dimension follows ``semantic_kind``:
         length for the default displacement kind (``dpl``), speed for a
-        velocity kick (``vel``), and so on up the time-derivative ladder. If
-        callable, it is evaluated at the time parameter ``tau``.
+        velocity kick (``vel``), and so on up the time-derivative ladder.
 
     Notes
     -----
@@ -60,29 +57,30 @@ class Translate(AbstractAdd):
     (points behave as the curve position for $k=0$):
 
     - $k = 0$ with ``delta`` in a Cartesian-type (flat) chart: shifts points
-      by $\delta(\tau)$; velocities gain $\dot\delta(\tau)$ and
-      accelerations $\ddot\delta(\tau)$ when ``delta`` is time-dependent
-      (the kinematic prolongation); ``Displacement`` data ($m = 0$) is
-      unaffected (a displacement is a same-$\tau$ point difference and the
-      Jacobian of a flat translation is the identity).
+      by $\delta$ and leaves every tangent order unchanged (the Jacobian of a
+      flat translation is the identity, and a constant $\delta$ has no
+      $\tau$-derivatives).
     - $k = 0$ with ``delta`` in a non-flat chart: the point action pushes
       ``delta`` through the chart Jacobian at the point, so it is base-point
       dependent. All tangent data — including displacements — transforms by
       the generic pushforward/prolongation of the point action, which is
       generally not the identity and requires the base point (``at=``, or a
       `~coordinax.Coordinate` bundle).
-    - $k \geq 1$: identity on points and on all orders $m < k$; order $m = k$
-      gains $\delta(\tau)$; orders $m > k$ gain
-      $d^{m-k}\delta/d\tau^{m-k}$ when ``delta`` is time-dependent. The
-      componentwise rule is definitional (the point action is the identity),
-      independent of chart flatness.
+    - $k \geq 1$: identity on points and on all orders $m \neq k$; order
+      $m = k$ gains $\delta$. The componentwise rule is definitional (the
+      point action is the identity), independent of chart flatness.
+
+    A time-dependent translation is a `~coordinax.transforms.TimeDep`
+    family of `Translate` operators (e.g. built by
+    `~coordinax.transforms.builders.UniformTranslation`); its
+    $d^{m-k}\delta/d\tau^{m-k}$ prolongation terms are recovered by the
+    generic tangent funnel, which differentiates the point action.
 
     Examples
     --------
     >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.transforms as cxfm
-    >>> import wadler_lindig as wl
 
     Create a translation operator:
 
@@ -99,19 +97,15 @@ class Translate(AbstractAdd):
         {'x': Q(-1, 'km'), 'y': Q(-2, 'km'), 'z': Q(-3, 'km')}, chart=Cart3D(M=Rn(3))
     )
 
-    Time-dependent translation:
+    Time-dependent translation — a `~coordinax.transforms.TimeDep` family:
 
-    >>> delta = lambda t: {"x": u.Q(t.ustrip("s"), "m"), "y": u.Q(0, "m"),
-    ...                    "z": u.Q(0, "m")}
-    >>> moving = cxfm.Translate(delta, chart=cxc.cart3d)
-    >>> moving
-    Translate(<function <lambda>>, chart=Cart3D(M=Rn(3)))
+    >>> rate = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> moving = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
 
     >>> t = u.Q(10, "s")
-    >>> x = cx.cdict(u.Q([0, 0, 0], "m"))
-    >>> wl.pprint(moving(t, x), short_arrays='compact', named_units=False)
-    {'x': Quantity(10, unit='m'), 'y': Quantity(0, unit='m'),
-     'z': Quantity(0, unit='m')}
+    >>> x = cx.cdict(u.Q([0.0, 0.0, 0.0], "m"))
+    >>> moving(t, x)
+    {'x': Q(10., 'm'), 'y': Q(0., 'm'), 'z': Q(0., 'm')}
 
     """
 
@@ -215,17 +209,14 @@ def act(
         chart, not isinstance(chart, type(chart.cartesian)), "chart must be cartesian"
     )
 
-    # Process Translation
-    op_eval = materialize_transform(op, tau)
-
     # Convert delta to array using chart components and usys
-    delta, unit = pack_uniform_unit(op_eval.delta, chart.components)  # ty: ignore[no-matching-overload]
+    delta, unit = pack_uniform_unit(op.delta, chart.components)
     if unit is not None:
         delta = u.uconvert_value(usys[u.dimension_of(unit)], unit, delta)
 
     # Apply translation
     x_arr = jnp.asarray(x)
-    return x_arr + delta if op_eval.right_add else delta + x_arr  # ty: ignore[unsupported-operator]
+    return x_arr + delta if op.right_add else delta + x_arr  # ty: ignore[unsupported-operator]
 
 
 # -----------------------------------------------
@@ -276,13 +267,10 @@ def act(
     if not isinstance(op.semantic_kind, cxr.Displacement):
         return x
 
-    # Process Translation
-    op_eval = materialize_transform(op, tau)
-
     # Convert delta to array using chart components and usys
-    delta = jnp.stack(list(op_eval.delta.values()), axis=-1)  # ty: ignore[unresolved-attribute]
+    delta = jnp.stack(list(op.delta.values()), axis=-1)
 
-    return x + delta if op_eval.right_add else delta + x
+    return x + delta if op.right_add else delta + x
 
 
 # -----------------------------------------------
@@ -325,14 +313,15 @@ def act(
     >>> cxfm.act(shift, None, v, cxc.cart3d, cxr.coord_vel)
     {'x': Q(1., 'km / s'), 'y': Q(0., 'km / s'), 'z': Q(0., 'km / s')}
 
-    But a time-dependent translate boosts velocities by its rate
-    (the kinematic prolongation):
+    But a time-dependent translate — a `~coordinax.transforms.TimeDep`
+    family — boosts velocities by its rate (the kinematic prolongation):
 
-    >>> delta = lambda t: {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"),
-    ...                    "z": u.Q(0.0, "km")}
-    >>> moving = cxfm.Translate(delta, chart=cxc.cart3d)
-    >>> cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel)
-    {'x': Q(4., 'km / s'), 'y': Q(0., 'km / s'), 'z': Q(0., 'km / s')}
+    >>> rate = {"x": u.Q(3.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+    >>> moving = cxfm.TimeDep(cxfm.builders.UniformTranslation(rate, chart=cxc.cart3d))
+    >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+    >>> out = cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel, at=at)
+    >>> out["x"].round(3)
+    Q(4., 'km / s')
 
     """
     k = op.semantic_kind.order
@@ -358,28 +347,23 @@ def act(
     # gains base-point-dependent coupling terms — defer to the generic
     # autodiff engine (which requires the base point 'at').
     if not is_componentwise_offset(op, chart):
-        return _act_translate_nonflat(op, tau, x, chart, rep, m, kw, usys)
+        return cast(
+            "CDict",
+            cxfmapi.pushforward(op, tau, x, chart, rep, at=kw.get("at"), usys=usys),
+        )
 
     # Displacements are same-tau point differences (never gain dtau terms and
     # the Jacobian of a flat translation is the identity).
     if m == 0:
         return x
 
-    # Contribution: d^(m-k) delta / dtau^(m-k).
-    n = m - k
-    if n == 0:
-        delta = materialize_transform(op, tau).delta
-    elif callable(op.delta):
-        # Differentiating the callable delta needs tau. Route the tau=None
-        # guard through materialize_transform (the shared choke point) so
-        # every callable-parameter tau error carries one consistent message
-        # instead of a Translate-specific one that can drift.
-        if tau is None:
-            materialize_transform(op, tau)  # raises the shared TypeError
-        delta = tau_derivative(op.delta, tau, n=n)
-    else:
-        # Static delta: all tau-derivatives vanish.
+    # Contribution: d^(m-k) delta / dtau^(m-k). `delta` is constant, so every
+    # tau-derivative of it vanishes and only the matching order m == k gains
+    # anything. (A time-dependent offset is a `TimeDep` family, whose
+    # higher-order terms come from the generic tangent funnel.)
+    if m != k:
         return x
+    delta = op.delta
 
     # Only k >= 1 fibre kicks reach here cross-chart (k=0 routed to the
     # generic engine above). A kick is a tangent vector at the point, so it
@@ -423,28 +407,6 @@ def _kick_delta_in_chart(
     )
 
 
-def _act_translate_nonflat(
-    op: Translate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    m: int,
-    kw: dict[str, Any],
-    usys: OptUSys,
-    /,
-) -> CDict:
-    """Generic-engine fallback for a k=0 offset that is not a flat translation."""
-    if m == 0 or not is_time_dependent(op):
-        return cast(
-            "CDict",
-            cxfmapi.pushforward(op, tau, x, chart, rep, at=kw.get("at"), usys=usys),
-        )
-    return prolong_slot(
-        op, tau, x, chart, m, at=kw.get("at"), at_vel=kw.get("at_vel"), usys=usys
-    )
-
-
 def _translate_point_cdict(
     op: Translate,
     tau: Any,
@@ -455,29 +417,24 @@ def _translate_point_cdict(
     usys: OptUSys = None,
 ) -> CDict:
     """Shift a point by the (materialized) delta, via the Cartesian chart."""
-    op_eval = materialize_transform(op, tau)
+    del tau  # `delta` is constant
 
     # Translate in Cartesian space, then map back.
     cart = chart.cartesian
     x_cart = cxc.pt_map(x, chart, cart, usys=usys)
 
-    if op_eval.chart == cart:
-        delta_cart = op_eval.delta
+    if op.chart == cart:
+        delta_cart = op.delta
     else:
         # Push delta through the Jacobian into Cartesian.
-        at_in_op_chart = cxc.pt_map(x_cart, cart, op_eval.chart, usys=usys)
+        at_in_op_chart = cxc.pt_map(x_cart, cart, op.chart, usys=usys)
         delta_cart = cxr.tangent_map(  # ty: ignore[missing-argument]
-            op_eval.delta,
-            op_eval.chart,
-            cxr.coord_disp,
-            cart,
-            at=at_in_op_chart,
-            usys=usys,
+            op.delta, op.chart, cxr.coord_disp, cart, at=at_in_op_chart, usys=usys
         )
 
     x_cart2 = jtu.map(
         jnp.add,
-        *((x_cart, delta_cart) if op_eval.right_add else (delta_cart, x_cart)),
+        *((x_cart, delta_cart) if op.right_add else (delta_cart, x_cart)),
         is_leaf=u.quantity.is_any_quantity,
     )
     return cast("CDict", cxc.pt_map(x_cart2, cart, chart, usys=usys))

@@ -8,11 +8,11 @@ Public API
 ----------
 .. autosummary::
 
+    AbstractCurveFrameBuilder
     AbstractParallelTransportFrame
-    AbstractParallelTransportTransform
-    FrenetSerretTransform
+    FrenetSerretBuilder
     FrenetSerretFrame
-    BishopTransform
+    BishopBuilder
     BishopFrame
 
 Typical usage::
@@ -30,24 +30,24 @@ coordinax.transforms : Transform primitives (Translate, Rotate, etc.).
 """
 
 __all__ = (
+    "AbstractCurveFrameBuilder",
     "AbstractParallelTransportFrame",
-    "AbstractParallelTransportTransform",
+    "BishopBuilder",
     "BishopFrame",
-    "BishopTransform",
+    "FrenetSerretBuilder",
     "FrenetSerretFrame",
-    "FrenetSerretTransform",
 )
 
 from ._setup_package import install_import_hook
 
 with install_import_hook("coordinaxs.curveframes"):
     from ._src import (
+        AbstractCurveFrameBuilder,
         AbstractParallelTransportFrame,
-        AbstractParallelTransportTransform,
+        BishopBuilder,
         BishopFrame,
-        BishopTransform,
+        FrenetSerretBuilder,
         FrenetSerretFrame,
-        FrenetSerretTransform,
     )
 
 del install_import_hook
