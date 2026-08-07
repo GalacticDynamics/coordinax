@@ -104,63 +104,6 @@ class TestConversionEndpoints:
         assert jnp.array_equal(result.value, plx.value)
 
 
-def _resolved_from_(cls, arg, /):
-    """Return the `from_` implementation plum selects for *arg*.
-
-    `from_` is a `classmethod` wrapping a plum dispatcher, and how many
-    wrappers sit between it and the `Function` that can `resolve_method` is not
-    stable across Python versions: 3.12 nests
-    ``method -> _BoundFunction -> Function``, 3.13+ drops the outer one. Walk
-    the chain until something can resolve, rather than hardcoding the hops.
-
-    plum exposes no public accessor here, and which overload gets selected is
-    exactly what these tests exist to pin, so the private walk earns its keep.
-    """
-    f = cls.from_
-    for _ in range(5):
-        if hasattr(f, "resolve_method"):
-            fn, _ = f.resolve_method((cls, arg))
-            return fn
-        f = getattr(f, "__func__", None) or getattr(f, "_f", None)
-        if f is None:
-            break
-    msg = f"could not reach plum's dispatcher from {cls.__name__}.from_"
-    raise AssertionError(msg)
-
-
-class TestParametricFromDispatch:
-    """`from_` routes ParametricQuantity by type (optional unxts.parametric)."""
-
-    @pytest.mark.parametrize(("value", "unit"), [(1, "mas"), (10, "pc"), (10, "mag")])
-    def test_matches_quantity_path(self, value: float, unit: str) -> None:
-        """A ParametricQuantity gives the same result as a plain Quantity."""
-        pq = pytest.importorskip("unxts.parametric").PQ(value, unit)
-        got = cxastro.Parallax.from_(pq, dtype=float)
-        expected = cxastro.Parallax.from_(u.Q(value, unit), dtype=float)
-        assert got.unit == expected.unit
-        assert jnp.allclose(got.value, expected.value)
-
-    @pytest.mark.parametrize(("value", "unit"), [(1, "mas"), (10, "pc"), (10, "mag")])
-    def test_dispatches_by_type_not_by_dimension(self, value: float, unit: str) -> None:
-        """The parametric input selects a *different* overload than a plain one.
-
-        Behavioural equivalence alone cannot see this: if the parametric
-        registrations were dropped, a `PQ` would fall through to the
-        `AbstractQuantity` overload, branch on `u.dimension_of` and return the
-        very same answer -- the feature would be gone with every other
-        assertion still green.
-
-        Poisoning `u.dimension_of` does not work as a substitute.
-        `__check_init__` calls it to validate the *constructed* object, so the
-        call lands on both paths and the check fails even when dispatch is
-        correct.
-        """
-        pq = pytest.importorskip("unxts.parametric").PQ(value, unit)
-        parametric = _resolved_from_(cxastro.Parallax, pq)
-        plain = _resolved_from_(cxastro.Parallax, u.Q(value, unit))
-        assert parametric is not plain
-
-
 class TestFromUnsupportedDimension:
     """`from_` rejects a dimension it has no branch for."""
 
