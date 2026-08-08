@@ -26,17 +26,6 @@ _MSG_SUPERLUMINAL = (
 )
 
 
-def _as_beta(beta: Any, /) -> Array:
-    """Coerce the boost parameter to a float array.
-
-    A converter rather than an ``__init__``: it is the spelling the rest of the
-    package uses (`composed.py`, `point.py`), and it keeps the ergonomic
-    ``LorentzBoost([0.6, 0.0, 0.0])`` spelling working without hand-writing a
-    constructor that does nothing else.
-    """
-    return jnp.asarray(beta, dtype=float)
-
-
 _MSG_ZERO_DIRECTION = (
     "LorentzBoost.from_rapidity requires a non-zero `direction`; the zero "
     "vector has no boost axis to normalise onto."
@@ -152,7 +141,9 @@ class LorentzBoost(AbstractLinearTransform):
 
     """
 
-    beta: Shaped[Array, "3"] = eqx.field(converter=_as_beta)
+    beta: Shaped[Array, "3"] = eqx.field(
+        converter=lambda b: jnp.asarray(b, dtype=float)
+    )
     """Boost velocity in units of ``c`` (dimensionless 3-vector)."""
 
     @classmethod
@@ -162,26 +153,6 @@ class LorentzBoost(AbstractLinearTransform):
         return frozenset(
             (groups.ProperOrthochronousLorentzGroup, groups.DiffeomorphismGroup)
         )
-
-    @property
-    def is_time_dependent(self) -> bool:
-        r"""`False`: a boost is a *constant* linear map on spacetime.
-
-        Declared explicitly rather than inherited, because this is the one place
-        the answer surprises: {class}`~coordinax.transforms.Boost`, the Galilean
-        boost, declares `True`. There, time is a parameter outside the manifold
-        and the point action varies with it; here $ct$ is a coordinate *of* the
-        manifold and $\Lambda$ does not depend on $\tau$ at all. An accelerating
-        frame is a `~coordinax.transforms.TimeDep` family of these.
-
-        Examples
-        --------
-        >>> import coordinax.transforms as cxfm
-        >>> cxfm.LorentzBoost([0.6, 0.0, 0.0]).is_time_dependent
-        False
-
-        """
-        return False
 
     # -----------------------------------------------------
     # Constructors
