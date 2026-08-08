@@ -15,6 +15,7 @@ from unxt.quantity import is_any_quantity
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import require_positive_definite
+from .quadratic_form import quadratic_form
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.charts import Cart0D, Cart1D, Cart2D, Cart3D, CartND
 from coordinax._src.custom_types import CDict, OptUSys
@@ -229,45 +230,18 @@ def norm(
     norm() supports only positive-definite metrics, but
 
     """
-    keys = chart.components
-    qty_flags = [is_any_quantity(val) for val in v.values()]
-    if any(qty_flags) and not all(qty_flags):
-        raise TypeError(
-            "norm(): mixed CDict with both Quantity and bare Array values is not "
-            "supported. All components must be either all Quantity or all bare Array."
-        )
-    is_qty = all(qty_flags)
-
     if metric != chart.M.metric:
         raise ValueError("Metric-level dispatch: metric must match chart's metric")
 
     # After the match check, so a mismatched *indefinite* metric still reports the
     # mismatch rather than the definiteness. Guards `chart.M.metric` because that
-    # is what `metric_matrix` below actually uses.
+    # is what the metric matrix is built from.
     require_positive_definite(chart.M.metric, "norm")
 
-    if not is_qty and usys is None:
-        raise TypeError(
-            "norm(): `usys` is required when `v` is a CDict of bare arrays "
-            "(no unit information). "
-            "Example: pass `usys=unxt.unitsystems.si`."
-        )
-
-    # Evaluate the metric matrix at the base point.  ``metric_matrix`` returns a
-    # typed ``AbstractMetricMatrix`` (Diagonal/Dense) and handles both bare-array
-    # and Quantity ``at`` values; it needs no unit system.
-    mm = cxmapi.metric_matrix(chart.M, at, chart)
-
-    if not is_qty:  # Bare arrays — stack on last axis for correct batch broadcasting
-        v_vec = jnp.stack([jnp.asarray(v[k]) for k in keys], axis=-1)
-        return array_norm(mm.to_dense().matrix, v_vec)  # ty: ignore[unresolved-attribute]
-
-    # Pack CDict of quantities into a QuantityMatrix, preserving per-component units,
-    # then compute sqrt(vᵀ G v) via QuantityMatrix/AbstractMetricMatrix arithmetic,
-    # which handles all unit conversions correctly (including mixed-unit
-    # components like m/s and rad/s).
-    v_qm: ul.QM = cxcapi.carray(v, keys)  # ty: ignore[invalid-assignment]
-    return jnp.sqrt(v_qm @ (mm @ v_qm))
+    # The norm is the square root of the metric quadratic form; the form itself
+    # owns the unit handling, and is shared with the callers that need it
+    # unrooted (where an indefinite metric makes the root meaningless).
+    return jnp.sqrt(quadratic_form(v, chart, at=at, usys=usys, fname="norm"))
 
 
 @plum.dispatch
@@ -308,10 +282,16 @@ def norm(
         # Single-component chart: wrap the (scalar or length-1) quantity in a
         # one-element CDict, squeezing the trailing component axis if present.
         v_dict = {keys[0]: v if v.ndim == 0 else v[..., 0]}
-    else:
-        # Multi-component chart: split the packed quantity across components.
-        v_dict = cxcapi.cdict(v, chart)
-    return cxmapi.norm(v_dict, metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+        return cxmapi.norm(v_dict, metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+
+    # Multi-component: hand the packed quantity straight down. Splitting it into
+    # a CDict here only for `quadratic_form` to repack it into a QuantityMatrix
+    # was measurable trace-time waste -- and tracing is 30-46% of compile time,
+    # so it showed up as slower `jit` compilation, not just slower eager calls.
+    if metric != chart.M.metric:
+        raise ValueError("Metric-level dispatch: metric must match chart's metric")
+    require_positive_definite(chart.M.metric, "norm")
+    return jnp.sqrt(quadratic_form(v, chart, at=at, usys=usys, fname="norm"))
 
 
 @plum.dispatch
