@@ -162,7 +162,40 @@ $\gamma \approx 15.8$ is the whole story in one number. There is also `rapidity`
 3.453
 ```
 
-Now transform the muon's death event into the frame where the muon is moving:
+### An aside: why a boost is not "time-dependent"
+
+`coordinax` marks transforms whose point action varies with the evolution parameter $\tau$. A Lorentz boost is **not** one of them, which surprises people who know that its Galilean cousin is:
+
+```pycon
+>>> boost.is_time_dependent
+False
+>>> galilean = cxfm.Boost(
+...     {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)},
+...     chart=cxc.cart3d,
+... )
+>>> galilean.is_time_dependent
+True
+```
+
+The difference is _where time lives_. For `Boost`, time is a parameter outside the manifold and the action $x \mapsto x + \Delta v\,\tau$ genuinely depends on it. For `LorentzBoost`, $ct$ is a **coordinate of the manifold** — time is already inside the vector being transformed — so $\Lambda$ is just a constant matrix. That is why `act` above takes `None` for $\tau$.
+
+An _accelerating_ frame, where the rapidity itself grows with $\tau$, is built by wrapping a builder in `TimeDep`:
+
+```pycon
+>>> import equinox as eqx
+
+>>> class UniformlyAccelerating(eqx.Module):
+...     rate: jnp.ndarray
+...     def __call__(self, tau):
+...         return cxfm.LorentzBoost(self.rate * tau)
+...
+
+>>> accelerating = cxfm.TimeDep(UniformlyAccelerating(jnp.asarray([0.1, 0.0, 0.0])))
+>>> accelerating.is_time_dependent
+True
+```
+
+Now transform the muon's death event into the frame where the muon is moving. The `None` in the second slot is the time parameter $\tau$, and a boost does not use it — see the note below.
 
 ```pycon
 >>> death_lab = cxfm.act(boost, None, death, cxc.minkowskict, cxr.point)
