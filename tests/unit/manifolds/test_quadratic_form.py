@@ -18,7 +18,10 @@ import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
-from coordinax._src.manifolds.quadratic_form import quadratic_form
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.manifolds as cxmapi
+from coordinax._src.manifolds.quadratic_form import _contract, quadratic_form
+from coordinax._src.metric.matrix import DiagonalMetric
 
 ATOL = 1e-5
 
@@ -152,4 +155,95 @@ class TestJAX:
         got = jax.vmap(lambda v: quadratic_form(v, cxc.cart3d, at=at))(batch)
         assert qnp.allclose(
             got, u.Q(jnp.asarray([25.0, 1.0]), "m2"), atol=u.Q(ATOL, "m2")
+        )
+
+
+class TestDiagonalFastPath:
+    """`DiagonalMetric` contracts in O(n); it must agree with the O(n^2) form.
+
+    `metric_matrix` returns a `DiagonalMetric` for every metric the library
+    ships in its canonical chart, and that type exists so the full matrix need
+    never be materialised. `to_dense()` discards the structure, so the fast path
+    is the common one — and its whole job is to be indistinguishable from the
+    dense answer.
+    """
+
+    CASES: ClassVar = [
+        (
+            "cart3d",
+            cxc.cart3d,
+            {"x": (0.0, "m"), "y": (0.0, "m"), "z": (0.0, "m")},
+            {"x": (3.0, "m"), "y": (4.0, "m"), "z": (0.0, "m")},
+        ),
+        (
+            "minkowskict",
+            cxc.minkowskict,
+            {"ct": (0.0, "m"), "x": (0.0, "m"), "y": (0.0, "m"), "z": (0.0, "m")},
+            {"ct": (5.0, "m"), "x": (1.0, "m"), "y": (0.0, "m"), "z": (0.0, "m")},
+        ),
+        (
+            "sph2 (curved)",
+            cxc.sph2,
+            {"theta": (jnp.pi / 2, "rad"), "phi": (0.0, "rad")},
+            {"theta": (1.0, "rad/s"), "phi": (1.0, "rad/s")},
+        ),
+        (
+            "sph3d (mixed units)",
+            cxc.sph3d,
+            {"r": (5.0, "m"), "theta": (jnp.pi / 2, "rad"), "phi": (0.0, "rad")},
+            {"r": (1.0, "m/s"), "theta": (0.0, "rad/s"), "phi": (0.0, "rad/s")},
+        ),
+    ]
+
+    @pytest.mark.parametrize(("label", "chart", "at_spec", "v_spec"), CASES)
+    def test_agrees_with_the_dense_contraction(self, label, chart, at_spec, v_spec):
+        del label
+        at = {k: u.Q(val, un) for k, (val, un) in at_spec.items()}
+        v = {k: u.Q(val, un) for k, (val, un) in v_spec.items()}
+        mm = cxmapi.metric_matrix(chart.M, at, chart)
+        assert isinstance(mm, DiagonalMetric), "case must exercise the fast path"
+
+        v_qm = cxcapi.carray(v, chart.components)
+        fast = _contract(mm, v_qm)
+        dense = _contract(mm.to_dense(), v_qm)  # forces the generic fallback
+
+        assert u.unit_of(fast) == u.unit_of(dense)
+        assert qnp.allclose(fast, dense, atol=u.Q(1e-8, u.unit_of(dense)))
+
+    @pytest.mark.parametrize(
+        ("label", "chart", "at_spec", "v_spec"),
+        [c for c in CASES if c[0] != "sph3d (mixed units)"],
+    )
+    def test_bare_array_branch_agrees_too(self, label, chart, at_spec, v_spec):
+        """The stacked-array path has its own overload; it must match as well.
+
+        ``sph3d`` is excluded: a unitless vector against a unitful (mixed-unit)
+        diagonal is unsupported on *both* paths, before this change and after,
+        so there is no agreement to assert.
+        """
+        del label
+        at = {k: u.Q(val, un) for k, (val, un) in at_spec.items()}
+        v_arr = {k: jnp.asarray(val) for k, (val, _) in v_spec.items()}
+        mm = cxmapi.metric_matrix(chart.M, at, chart)
+        stacked = jnp.stack([v_arr[k] for k in chart.components], axis=-1)
+
+        fast = _contract(mm, stacked)
+        dense = _contract(mm.to_dense(), stacked)
+        assert jnp.allclose(jnp.asarray(fast), jnp.asarray(dense), atol=1e-8)
+
+    def test_batched_arrays_reduce_over_components_not_the_batch(self):
+        """``sum(..., axis=-1)`` rather than ``@``, which would eat the batch axis."""
+        at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+        mm = cxmapi.metric_matrix(cxc.cart3d.M, at, cxc.cart3d)
+        batch = jnp.asarray([[3.0, 4.0, 0.0], [1.0, 0.0, 0.0], [0.0, 5.0, 12.0]])
+        got = _contract(mm, batch)
+        assert got.shape == (3,)
+        assert jnp.allclose(got, jnp.asarray([25.0, 1.0, 169.0]), atol=1e-8)
+
+    def test_norm_is_unchanged_end_to_end(self):
+        """The optimisation is invisible from the public verb."""
+        at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+        v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+        assert float(cxm.norm(v, cxc.cart3d, at=at).ustrip("m")) == pytest.approx(
+            5.0, abs=ATOL
         )
