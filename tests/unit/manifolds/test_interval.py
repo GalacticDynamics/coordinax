@@ -70,6 +70,33 @@ class TestInterval:
             float(as_dict.ustrip("m2")), abs=ATOL
         )
 
+    def test_mismatched_metric_is_rejected(self):
+        """The `metric` argument is a checked selector, not an ignored one.
+
+        It previously had no effect at all: the matrix always came from
+        ``chart.M``, so passing a different metric silently returned the
+        chart's answer. Matches `norm`'s metric-level contract.
+        """
+        with pytest.raises(ValueError, match="must match chart"):
+            cxm.interval(cxm.FlatMetric(4), cxc.minkowskict, ORIGIN, event(1.0, 5.0))
+
+    def test_unitless_components_are_supported(self):
+        """Bare arrays are valid component values, so no unit may be assumed.
+
+        The default null-tolerance path used to call ``u.unit_of`` on every
+        component, which assumes each carries a unit.
+        """
+        origin = {k: jnp.asarray(0.0) for k in ("ct", "x", "y", "z")}
+        ev = {
+            "ct": jnp.asarray(5.0),
+            "x": jnp.asarray(1.0),
+            "y": jnp.asarray(0.0),
+            "z": jnp.asarray(0.0),
+        }
+        ds2 = cxm.interval(cxc.minkowskict, origin, ev)
+        assert float(u.ustrip("", ds2)) == pytest.approx(-24.0, abs=ATOL)
+        assert cxm.causal_character(cxc.minkowskict, origin, ev) == "timelike"
+
     def test_explicit_metric_overload(self):
         got = cxm.interval(
             cxm.MinkowskiMetric(), cxc.minkowskict, ORIGIN, event(1.0, 5.0)
@@ -210,3 +237,35 @@ class TestProperTimeAndDistance:
         with pytest.raises(ValueError, match="spacelike") as exc:
             cxm.proper_time(cxc.minkowskict, ORIGIN, event(1.0, 5.0))
         assert "spacelike" in str(exc.value)
+
+
+class TestSingleIntervalEvaluation:
+    """`proper_time`/`proper_distance` classify from one interval evaluation.
+
+    They used to call `causal_character` (which computes the interval) and then
+    `interval` again — two metric-matrix builds for one question. Behaviour must
+    be identical after collapsing them to one.
+    """
+
+    @pytest.mark.parametrize(("ct", "x"), [(5.0, 1.0), (10.0, 2.0), (-7.0, 3.0)])
+    def test_proper_time_agrees_with_the_two_step_form(self, ct, x):
+        b = event(ct, x)
+        assert cxm.causal_character(cxc.minkowskict, ORIGIN, b) == "timelike"
+        ds2 = cxm.interval(cxc.minkowskict, ORIGIN, b)
+        expected = float(jnp.sqrt(-ds2.ustrip("m2"))) / 299792458.0
+        got = cxm.proper_time(cxc.minkowskict, ORIGIN, b)
+        assert float(got.ustrip("s")) == pytest.approx(expected, rel=1e-5)
+
+    @pytest.mark.parametrize(("ct", "x"), [(1.0, 5.0), (3.0, 5.0), (0.0, 2.0)])
+    def test_proper_distance_agrees_with_the_two_step_form(self, ct, x):
+        b = event(ct, x)
+        assert cxm.causal_character(cxc.minkowskict, ORIGIN, b) == "spacelike"
+        ds2 = cxm.interval(cxc.minkowskict, ORIGIN, b)
+        expected = float(jnp.sqrt(ds2.ustrip("m2")))
+        got = cxm.proper_distance(cxc.minkowskict, ORIGIN, b)
+        assert float(got.ustrip("m")) == pytest.approx(expected, rel=1e-5)
+
+    def test_atol_still_reaches_the_refusal_path(self):
+        """The shared classifier still honours `atol` from these entry points."""
+        with pytest.raises(ValueError, match="null"):
+            cxm.proper_time(cxc.minkowskict, ORIGIN, event(5.0, 1.0), atol=100.0)

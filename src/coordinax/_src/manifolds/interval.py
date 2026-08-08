@@ -10,6 +10,13 @@ which is what this module exposes as `interval`.  For a Riemannian metric it is
 simply the squared `separation`; for a Lorentzian one its **sign** is the causal
 character of the pair, and its magnitude gives proper time (timelike) or proper
 distance (spacelike).
+
+Like `separation`, the metric is evaluated **at the first point** ``a`` and
+applied to the coordinate difference.  This is exact for a flat manifold --
+including Minkowski, the case this module exists for, where the metric is
+constant everywhere -- but on a curved manifold it is a first-order estimate
+rather than a geodesic quantity, and it is asymmetric in ``a`` and ``b``.  Bring
+the points into a Cartesian chart first for a chart-invariant result.
 """
 
 __all__: tuple[str, ...] = ()
@@ -52,6 +59,37 @@ _MSG_NOT_SPACELIKE = (
     "pair is {kind} (interval^2 = {ds2}). Use `interval` for the signed "
     "square, or `proper_time` for a timelike pair."
 )
+
+
+def _as_float(x: Any, /) -> float:
+    """Return *x* as a plain float, stripping units only if it has any.
+
+    `chart.check_data(..., values=False)` permits bare arrays alongside
+    quantities, so a components-have-units assumption would break the
+    bare-array path.
+    """
+    unit = u.unit_of(x)
+    return float(x if unit is None else u.ustrip(unit, x))
+
+
+def _classify(ds2: Any, a: CDict, b: CDict, keys: tuple[str, ...], atol: Any, /) -> str:
+    """Classify a precomputed interval, so callers evaluate it only once."""
+    ds2_val = _as_float(ds2)
+
+    if atol is None:
+        # Scale-free default: compare against the largest squared coordinate
+        # difference, so "close to zero" means small *relative to the data*
+        # rather than small in whatever unit the caller happened to use.
+        scale = max((_as_float(b[k] - a[k]) ** 2 for k in keys), default=1.0)
+        tol = 1e-8 * max(scale, 1.0)
+    else:
+        tol = _as_float(atol)
+
+    if ds2_val < -tol:
+        return "timelike"
+    if ds2_val > tol:
+        return "spacelike"
+    return "null"
 
 
 def _require_lorentzian(metric: AbstractMetricField, fname: str, /) -> None:
@@ -123,8 +161,25 @@ def interval(
     >>> cxm.interval(cxm.MinkowskiMetric(), cxc.minkowskict, o, ev).round(2)
     Q(24., 'm2')
 
+    ``metric`` is a checked selector, not an override: it must be the chart's own
+    metric, matching the contract of the metric-level `~coordinax.manifolds.norm`
+    overload.
+
+    >>> try:
+    ...     cxm.interval(cxm.FlatMetric(4), cxc.minkowskict, o, ev)
+    ... except ValueError as e:
+    ...     print(e)
+    Metric-level dispatch: metric must match chart's metric
+
     """
     del usys
+    # Mirrors `norm`'s metric-level dispatch: the argument is validated against
+    # the chart rather than silently ignored, so a caller who passes a different
+    # metric expecting it to be honoured is told, instead of quietly receiving
+    # the chart's answer.
+    if metric != chart.M.metric:
+        raise ValueError("Metric-level dispatch: metric must match chart's metric")
+
     chart.check_data(a, keys=True, values=False)
     chart.check_data(b, keys=True, values=False)
 
@@ -216,28 +271,7 @@ def causal_character(
     """
     _require_lorentzian(chart.M.metric, "causal_character")
     ds2 = cxmapi.interval(chart, a, b, usys=usys)
-
-    unit = u.unit_of(ds2)
-    ds2_val = float(u.ustrip(unit, ds2)) if unit is not None else float(ds2)
-
-    if atol is None:
-        # Scale-free default: compare against the largest squared coordinate
-        # difference, so "close to zero" means small *relative to the data*
-        # rather than small in whatever unit the caller happened to use.
-        diffs = (
-            float(u.ustrip(u.unit_of(b[k]), b[k] - a[k])) ** 2 for k in chart.components
-        )
-        scale = max(diffs, default=1.0)
-        tol = 1e-8 * max(scale, 1.0)
-    else:
-        has_unit = u.unit_of(atol) is not None
-        tol = float(u.ustrip(unit, atol)) if has_unit else float(atol)
-
-    if ds2_val < -tol:
-        return "timelike"
-    if ds2_val > tol:
-        return "spacelike"
-    return "null"
+    return _classify(ds2, a, b, chart.components, atol)
 
 
 # ===================================================================
@@ -286,8 +320,12 @@ def proper_time(
     proper_time() is defined only for timelike-separated eve
 
     """
-    kind = cxmapi.causal_character(chart, a, b, atol=atol, usys=usys)
+    # One evaluation of the interval, classified and then used. Calling
+    # `causal_character` here would compute it a second time, which on a curved
+    # metric means a second `metric_matrix` build.
+    _require_lorentzian(chart.M.metric, "proper_time")
     ds2 = cast("Any", cxmapi.interval(chart, a, b, usys=usys))
+    kind = _classify(ds2, a, b, chart.components, atol)
     if kind != "timelike":
         raise ValueError(_MSG_NOT_TIMELIKE.format(kind=kind, ds2=ds2))
     return jnp.sqrt(-ds2) / C_LIGHT
@@ -321,8 +359,12 @@ def proper_distance(
     Q(4., 'm')
 
     """
-    kind = cxmapi.causal_character(chart, a, b, atol=atol, usys=usys)
+    # One evaluation of the interval, classified and then used. Calling
+    # `causal_character` here would compute it a second time, which on a curved
+    # metric means a second `metric_matrix` build.
+    _require_lorentzian(chart.M.metric, "proper_distance")
     ds2 = cast("Any", cxmapi.interval(chart, a, b, usys=usys))
+    kind = _classify(ds2, a, b, chart.components, atol)
     if kind != "spacelike":
         raise ValueError(_MSG_NOT_SPACELIKE.format(kind=kind, ds2=ds2))
     return jnp.sqrt(ds2)
