@@ -46,6 +46,12 @@ _MSG_USYS = (
     "Example: pass `usys=unxt.unitsystems.si`."
 )
 
+_MSG_CROSS_VECTOR_MIXED = (
+    "{fname}(): all vectors must be consistently either Quantity-valued or "
+    "bare-array-valued. Mixing a Quantity CDict with a bare-array CDict "
+    "across arguments is not supported."
+)
+
 
 def bilinear_form(
     uvec: CDict,
@@ -268,6 +274,14 @@ def _prepare(
         if require_usys and not all(qty_flags) and usys is None:
             raise TypeError(_MSG_USYS.format(fname=fname))
         packed.append(qty_flags)
+
+    # Cross-argument check: all vectors must be consistently Quantity or bare-array.
+    # Each element in `packed` is a list of bool flags; `all(flags)` means all-Quantity,
+    # `not all(flags)` means all-bare-array (the within-vector check above ensures no mixing).
+    if len(packed) > 1:
+        is_qty_per_vec = [all(qty_flags) for qty_flags in packed]
+        if any(is_qty_per_vec) and not all(is_qty_per_vec):
+            raise TypeError(_MSG_CROSS_VECTOR_MIXED.format(fname=fname))
 
     # ``metric_matrix`` returns a typed ``AbstractMetricMatrix`` (Diagonal/Dense)
     # and handles both bare-array and Quantity ``at`` values; it needs no unit

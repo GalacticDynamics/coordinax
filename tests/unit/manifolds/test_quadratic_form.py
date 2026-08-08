@@ -295,6 +295,19 @@ class TestBilinearForm:
         with pytest.raises(TypeError, match="mixed CDict"):
             bilinear_form(self.XHAT, mixed, cxc.cart3d, at=self.AT)
 
+    def test_cross_argument_mixing_quantity_and_bare_array_is_rejected(self):
+        """One Quantity CDict and one bare-array CDict across arguments is rejected.
+        
+        Without this check, the code would pass `_prepare()` but fail in `_contract()`
+        with a plum dispatch error, since there's no overload for
+        `(AbstractMetricMatrix, QuantityMatrix, Array)` or vice versa.
+        """
+        bare = {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
+        with pytest.raises(TypeError, match="consistently either Quantity"):
+            bilinear_form(self.XHAT, bare, cxc.cart3d, at=self.AT, require_usys=False)
+        with pytest.raises(TypeError, match="consistently either Quantity"):
+            bilinear_form(bare, self.XHAT, cxc.cart3d, at=self.AT, require_usys=False)
+
 
 class TestRequireUsysIsAPolicyNotAComputation:
     """Whether bare arrays need `usys` depends on the *verb*, not the primitive.
