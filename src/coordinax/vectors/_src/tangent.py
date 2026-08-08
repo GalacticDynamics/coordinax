@@ -142,7 +142,7 @@ class Tangent(
         if isinstance(key, str):
             return self.data[key]
         data = broadcast_and_index_data(self.data, self.shape, key)
-        return replace(self, data=data)  # ty: ignore[invalid-return-type,not-subscriptable]
+        return replace(self, data=data)  # ty: ignore[invalid-return-type]
 
 
 # ===================================================================
