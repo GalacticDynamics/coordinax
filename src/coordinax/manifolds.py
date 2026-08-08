@@ -12,6 +12,10 @@ __all__ = (
     "metric_representation",
     "norm",
     "separation",
+    "interval",
+    "causal_character",
+    "proper_time",
+    "proper_distance",
     # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
     "AbstractMetricField",
@@ -134,10 +138,14 @@ with install_import_hook("coordinax.manifolds"):
     from coordinaxs.api.charts import pt_map
     from coordinaxs.api.manifolds import (
         angle_between,
+        causal_character,
         guess_manifold,
+        interval,
         metric_matrix,
         metric_representation,
         norm,
+        proper_distance,
+        proper_time,
         pt_embed,
         pt_project,
         scale_factors,

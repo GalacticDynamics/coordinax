@@ -11,6 +11,10 @@ __all__ = (
     "pt_map",
     "norm",
     "separation",
+    "interval",
+    "causal_character",
+    "proper_time",
+    "proper_distance",
 )
 
 from typing import TYPE_CHECKING, Any
@@ -610,4 +614,40 @@ def metric_representation(M: Any, chart: Any, /) -> Any:
 
     """
     del M, chart
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def interval(*args: Any, **kwargs: Any) -> Any:
+    """Signed squared interval between two points.
+
+    ``interval`` is the metric quadratic form of the coordinate difference,
+    *without* the square root that `norm` and `separation` take.  It is
+    therefore defined for every metric, including indefinite ones where
+    `separation` has no real value: for a Riemannian metric it is the squared
+    separation, and for a Lorentzian one its sign is the pair's causal
+    character.
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def causal_character(*args: Any, **kwargs: Any) -> Any:
+    """Classify a pair of events as timelike, null, or spacelike.
+
+    Defined for Lorentzian metrics; the classification is the sign of
+    `interval`.
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def proper_time(*args: Any, **kwargs: Any) -> Any:
+    """Proper time between two timelike-separated events."""
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def proper_distance(*args: Any, **kwargs: Any) -> Any:
+    """Proper distance between two spacelike-separated events."""
     raise NotImplementedError  # pragma: no cover
