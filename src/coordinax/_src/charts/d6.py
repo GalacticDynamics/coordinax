@@ -7,8 +7,6 @@ import dataclasses
 
 from typing import Any, Final, Literal as L, NoReturn, override  # noqa: N817
 
-import jax.tree_util as jtu
-
 from coordinax._src.base import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
@@ -45,7 +43,6 @@ PoincarePolarDims = tuple[
 ]
 
 
-@jtu.register_static
 @chart_dataclass_decorator
 class PoincarePolar6D(
     AbstractFixedComponentsChart[Any, PoincarePolarKeys, PoincarePolarDims], Abstract6D

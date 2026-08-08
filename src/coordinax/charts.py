@@ -69,6 +69,8 @@ We can also compute the Jacobian of the point map:
 __all__ = (
     # ===========================================
     "AbstractChart",
+    "AbstractStaticChart",
+    "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
@@ -163,6 +165,8 @@ with install_import_hook("coordinax.charts"):
         AbstractChart,
         AbstractDimensionalFlag,
         AbstractFixedComponentsChart,
+        AbstractParameterizedChart,
+        AbstractStaticChart,
     )
     from coordinax._src.charts import (
         Abstract0D,

@@ -2,6 +2,8 @@
 
 __all__ = (
     "AbstractChart",
+    "AbstractStaticChart",
+    "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
@@ -31,6 +33,7 @@ from typing import (
     no_type_check,
 )
 
+import equinox as eqx
 import jax.tree_util as jtu
 import plum
 import wadler_lindig as wl
@@ -80,7 +83,6 @@ def _field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
     return tuple(getattr(chart, f.name) for f in dataclasses.fields(chart))
 
 
-@jtu.register_static
 class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
 
@@ -330,6 +332,44 @@ def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
 
 
 ##############################################################################
+# The two branches of the chart hierarchy.
+# NOTE: these must be defined after `is_abstract_class`, which
+# `__init_subclass__` calls while the class body is being created.
+
+
+class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
+    """A chart with no parameters, and therefore no pytree leaves.
+
+    Concrete subclasses are registered as static automatically -- staticness
+    is structural, inherited from this branch, not a decorator that can be
+    forgotten. (`jtu.register_static` is not inherited, so an unregistered
+    chart would silently become a single opaque leaf.)
+    """
+
+    def __init_subclass__(cls, **kw: Any) -> None:
+        super().__init_subclass__(**kw)
+        # Mirror AbstractChart.__init_subclass__'s guard: dataclass(slots=True)
+        # calls this twice and only the second class object is the real one.
+        if (
+            "__dataclass_params__" in cls.__dict__
+            and "__slots__" not in cls.__dict__
+            and cls.__dict__["__dataclass_params__"].slots
+        ):
+            return
+        if not is_abstract_class(cls):
+            jtu.register_static(cls)
+
+
+class AbstractParameterizedChart(AbstractChart[MT, Ks, Ds], eqx.Module):
+    """A chart carrying parameters, and therefore a pytree.
+
+    Whether an instance actually has leaves depends on what it is given: a
+    `unxt.StaticQuantity` parameter contributes none (hashable, behaves like a
+    static chart), a `unxt.Quantity` contributes one (differentiable).
+    """
+
+
+##############################################################################
 # AbstractFixedComponentsChart
 
 
@@ -338,7 +378,7 @@ def _get_tuple(tp: GAT, /) -> GAT:  # noqa: UP047
     return tuple(arg.__args__[0] for arg in get_args(tp))
 
 
-class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
+class AbstractFixedComponentsChart(AbstractStaticChart[MT, Ks, Ds]):
     """Abstract base class for charts with fixed components and dimensions."""
 
     _components: Ks

@@ -12,7 +12,6 @@ from itertools import chain
 from collections.abc import Mapping
 from typing import Any, ClassVar, TypeVar, cast, final, override
 
-import jax.tree_util as jtu
 import plum
 import wadler_lindig as wl
 
@@ -22,6 +21,7 @@ from coordinax._src.base import (
     MISSING,
     AbstractChart,
     AbstractManifold,
+    AbstractStaticChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
@@ -29,7 +29,9 @@ from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 V = TypeVar("V")
 
 
-class AbstractCartesianProductChart(AbstractChart[CartesianProductManifold, Ks, Ds]):
+class AbstractCartesianProductChart(
+    AbstractStaticChart[CartesianProductManifold, Ks, Ds]
+):
     """Abstract base class for Cartesian product charts.
 
     A Cartesian product chart is defined by a finite ordered tuple of factor
@@ -282,7 +284,6 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 # =========================================================
 
 
-@jtu.register_static
 @final
 @chart_dataclass_decorator
 class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):

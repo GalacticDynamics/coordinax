@@ -6,7 +6,6 @@ import dataclasses
 
 from typing import Final, Literal as L, final, override  # noqa: N817
 
-import jax.tree_util as jtu
 import plum
 
 from .atlas import MinkowskiAtlas
@@ -22,7 +21,6 @@ _WRONG_M_MSG = "MinkowskiCT chart must belong to a MinkowskiManifold, got {typen
 
 
 @MinkowskiAtlas.register
-@jtu.register_static
 @final
 @chart_dataclass_decorator
 class MinkowskiCT(

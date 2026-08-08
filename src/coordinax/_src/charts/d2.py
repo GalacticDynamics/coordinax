@@ -8,8 +8,6 @@ import dataclasses
 from typing import Any, Final, Literal as L, Self, override  # noqa: N817
 from typing_extensions import TypeVar
 
-import jax.tree_util as jtu
-
 from coordinax._src.base import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
@@ -50,7 +48,6 @@ Cart2DDims = tuple[Len, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Cart2D(AbstractFixedComponentsChart[MT, Cart2DKeys, Cart2DDims], Abstract2D):
     r"""Two-dimensional Cartesian chart $(x, y)$.
@@ -111,7 +108,6 @@ Polar2DDims = tuple[Len, Ang]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Polar2D(AbstractFixedComponentsChart[MT, PolarKeys, Polar2DDims], Abstract2D):
     r"""Two-dimensional polar chart $(r, \theta)$.

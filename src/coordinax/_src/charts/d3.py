@@ -23,7 +23,6 @@ import dataclasses
 from jaxtyping import Real
 from typing import Annotated, Any, Final, Literal as L, Self, override  # noqa: N817
 
-import jax.tree_util as jtu
 from beartype.vale import Is
 
 import quaxed.numpy as jnp
@@ -69,7 +68,6 @@ Cart3DDims = tuple[Len, Len, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Cart3D(AbstractFixedComponentsChart[MT, Cart3DKeys, Cart3DDims], Abstract3D):
     r"""Three-dimensional Cartesian chart $(x, y, z)$.
@@ -130,7 +128,6 @@ Cylindrical3DDims = tuple[Len, Ang, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Cylindrical3D(
     AbstractFixedComponentsChart[MT, CylindricalKeys, Cylindrical3DDims], Abstract3D
@@ -215,7 +212,6 @@ Spherical3DDims = tuple[Len, Ang, Ang]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Spherical3D(AbstractSpherical3D[MT, SphericalKeys, Spherical3DDims]):
     r"""Three-dimensional spherical coordinates $(r, \theta, \phi)$.
@@ -274,7 +270,6 @@ LonLatSpherical3DDims = tuple[Ang, Ang, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class LonLatSpherical3D(
     AbstractSpherical3D[MT, LonLatSphericalKeys, LonLatSpherical3DDims]
@@ -333,7 +328,6 @@ LonCosLatSpherical3DDims = tuple[Ang, Ang, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class LonCosLatSpherical3D(
     AbstractSpherical3D[MT, LonCosLatSphericalKeys, LonCosLatSpherical3DDims]
@@ -385,7 +379,6 @@ MathSphericalKeys = tuple[L["r"], L["theta"], L["phi"]]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class MathSpherical3D(AbstractSpherical3D[MT, MathSphericalKeys, Spherical3DDims]):
     r"""Mathematical-convention spherical coordinates $(r, \theta, \phi)$.
@@ -440,7 +433,6 @@ ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class ProlateSpheroidal3D(
     Abstract3D,

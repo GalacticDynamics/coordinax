@@ -5,7 +5,6 @@ __all__ = ("EmbeddedChart",)
 
 from typing import ClassVar, Generic, cast, final, override
 
-import jax
 import plum
 
 import coordinaxs.api.charts as cxcapi
@@ -15,16 +14,16 @@ from .manifold import EmbeddedManifold
 from coordinax._src.base import (
     AbstractChart,
     AbstractManifold,
+    AbstractStaticChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 
-@jax.tree_util.register_static
 @final
 @chart_dataclass_decorator
 class EmbeddedChart(
-    AbstractChart[EmbeddedManifold, Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
+    AbstractStaticChart[EmbeddedManifold, Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 ):
     r"""Chart for intrinsic coordinates on an embedding manifold.
 
