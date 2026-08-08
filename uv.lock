@@ -487,6 +487,9 @@ curveframes = [
 interop-astropy = [
     { name = "coordinaxs-interop-astropy" },
 ]
+parametric = [
+    { name = "unxts-parametric" },
+]
 workspace = [
     { name = "coordinaxs-api" },
     { name = "coordinaxs-astro" },
@@ -627,10 +630,11 @@ requires-dist = [
     { name = "typing-extensions", specifier = ">=4.13.2" },
     { name = "unxt", specifier = ">=2.0" },
     { name = "unxts-linalg", specifier = ">=2.0.3" },
+    { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
-provides-extras = ["astro", "benchmark", "curveframes", "interop-astropy", "workspace"]
+provides-extras = ["astro", "benchmark", "curveframes", "interop-astropy", "parametric", "workspace"]
 
 [package.metadata.requires-dev]
 build = [{ name = "build", specifier = ">=1.3.0" }]
