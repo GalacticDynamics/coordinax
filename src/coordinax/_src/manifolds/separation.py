@@ -21,6 +21,7 @@ import unxt as u
 import coordinax.distances as cxd
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
+from ._utils import require_positive_definite
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 
@@ -80,6 +81,15 @@ def separation(
     Distance(5., 'm')
 
     """
+    # Checked here as well as in `norm`, purely so the message names the function
+    # the caller actually invoked; otherwise `separation` reports a `norm` error.
+    # Guards `chart.M.metric` rather than the argument, for the same reason `norm`
+    # does: that is the metric the computation uses. It also keeps the ordering
+    # right — a *mismatched* metric passes this guard (the chart's own metric is
+    # fine) and goes on to be reported as a mismatch by `norm`, instead of being
+    # misreported here as a definiteness problem.
+    require_positive_definite(chart.M.metric, "separation")
+
     chart.check_data(a, keys=True, values=False)
     chart.check_data(b, keys=True, values=False)
     diff = {k: b[k] - a[k] for k in chart.components}
