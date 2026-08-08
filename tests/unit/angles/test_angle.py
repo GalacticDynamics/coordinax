@@ -200,6 +200,8 @@ class TestAngleWrapTo:
         assert jnp.allclose(wrapped.value, expected, atol=1e-4)
 
     @given(angle=cxst.angles(unit="deg", shape=(4,)))
+    # Same first-call JAX compile as `test_wrap_to_range` above; see its comment.
+    @settings(deadline=None)
     def test_wrap_array_angle(self, angle: cxa.Angle) -> None:
         """wrap_to acts element-wise on array-valued Angles."""
         wrapped = angle.wrap_to(u.Q(0, "deg"), u.Q(360, "deg"))
