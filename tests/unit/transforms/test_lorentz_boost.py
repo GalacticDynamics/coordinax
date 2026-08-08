@@ -6,6 +6,7 @@ consequence of it) rather than the matrix entries, so they stay meaningful if
 the matrix is ever rewritten.
 """
 
+import equinox as eqx
 import jax
 import pytest
 
@@ -35,6 +36,17 @@ ATOL = 1e-5
 def _interval(four_vec):
     """Minkowski interval ``-ct² + x² + y² + z²`` of a packed 4-vector."""
     return jnp.einsum("i,ij,j->", four_vec, ETA, four_vec)
+
+
+def _pack(cdict):
+    """Pack a cdict into a 4-vector in the chart's component order.
+
+    Explicitly ordered by ``minkowskict.components`` rather than by dict
+    iteration, which is insertion order and says nothing about the chart.
+    """
+    return jnp.asarray(
+        [float(cdict[k].ustrip("m")) for k in cxc.minkowskict.components]
+    )
 
 
 class TestDefiningInvariance:
@@ -147,9 +159,24 @@ class TestDerivedQuantities:
         in_kms = cxfm.LorentzBoost.from_velocity(u.Q([149896.229, 0.0, 0.0], "km/s"))
         assert float(in_kms.speed) == pytest.approx(0.5, abs=1e-4)
 
-    def test_superluminal_boost_is_rejected(self):
-        with pytest.raises(Exception, match="subluminal"):
-            _ = cxfm.LorentzBoost([1.5, 0.0, 0.0]).gamma
+    @pytest.mark.parametrize("attr", ["gamma", "rapidity"])
+    def test_superluminal_boost_is_rejected(self, attr):
+        """Every derived quantity guards, not just ``gamma``.
+
+        ``rapidity`` used to reach ``arctanh(|beta| >= 1)`` and hand back
+        ``inf``/``nan`` while ``gamma`` on the same object raised.
+        """
+        with pytest.raises(eqx.EquinoxRuntimeError, match="subluminal"):
+            _ = getattr(cxfm.LorentzBoost([1.5, 0.0, 0.0]), attr)
+
+    def test_zero_direction_is_rejected(self):
+        """A zero ``direction`` has no axis to normalise onto.
+
+        Dividing by its zero norm produced ``nan`` betas that then propagated
+        silently into every entry of the matrix.
+        """
+        with pytest.raises(eqx.EquinoxRuntimeError, match="non-zero"):
+            cxfm.LorentzBoost.from_rapidity(0.5, (0.0, 0.0, 0.0))
 
 
 class TestPhysicalPredictions:
@@ -204,8 +231,8 @@ class TestAct:
             "z": u.Q(0.5, "m"),
         }
         out = cxfm.act(self.OP, None, ev, cxc.minkowskict, cxr.point)
-        before = _interval(jnp.asarray([float(ev[k].ustrip("m")) for k in ev]))
-        after = _interval(jnp.asarray([float(out[k].ustrip("m")) for k in ev]))
+        before = _interval(_pack(ev))
+        after = _interval(_pack(out))
         assert jnp.allclose(after, before, atol=1e-4)
 
     def test_act_on_packed_quantity(self):
@@ -247,3 +274,74 @@ class TestJAX:
         betas = jnp.asarray([[0.0, 0.0, 0.0], [0.6, 0.0, 0.0], [0.8, 0.0, 0.0]])
         got = jax.vmap(gamma_of)(betas)
         assert jnp.allclose(got, jnp.asarray([1.0, 1.25, 5.0 / 3.0]), atol=ATOL)
+
+
+class TestTimeDependenceTrait:
+    """`is_time_dependent` is a declared trait (#642), and the answer surprises."""
+
+    def test_a_boost_is_not_time_dependent(self):
+        """`ct` is a coordinate here, not an external parameter, so Λ is constant."""
+        assert cxfm.LorentzBoost([0.6, 0.0, 0.0]).is_time_dependent is False
+
+    def test_it_disagrees_with_the_galilean_boost_on_purpose(self):
+        """`Boost` declares `True`; the contrast is structural, not an oversight.
+
+        Pinned so that a future change making them agree has to be deliberate.
+        """
+        galilean = cxfm.Boost(
+            {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)},
+            chart=cxc.cart3d,
+        )
+        assert galilean.is_time_dependent is True
+        assert cxfm.LorentzBoost([0.6, 0.0, 0.0]).is_time_dependent is False
+
+
+class _UniformlyAccelerating(eqx.Module):
+    """A boost whose rapidity grows linearly in tau."""
+
+    rate: jnp.ndarray
+
+    def __call__(self, tau):
+        return cxfm.LorentzBoost(self.rate * tau)
+
+
+class TestTimeDepComposition:
+    """An accelerating frame is `TimeDep` over this operator, per #642.
+
+    These pin the property that makes that work: ``beta`` is an ordinary pytree
+    leaf, not a callable, so the builder's physical rate stays differentiable.
+    """
+
+    BUILDER = _UniformlyAccelerating(jnp.asarray([0.1, 0.0, 0.0]))
+
+    def test_wrapping_in_timedep_is_time_dependent(self):
+        assert cxfm.TimeDep(self.BUILDER).is_time_dependent is True
+
+    def test_acting_through_timedep_boosts_by_rate_times_tau(self):
+        op = cxfm.TimeDep(self.BUILDER)
+        ev = {
+            "ct": u.Q(1.0, "m"),
+            "x": u.Q(0.0, "m"),
+            "y": u.Q(0.0, "m"),
+            "z": u.Q(0.0, "m"),
+        }
+        out = cxfm.act(op, 3.0, ev, cxc.minkowskict, cxr.point)
+        direct = cxfm.LorentzBoost([0.3, 0.0, 0.0])._raw_matrix @ jnp.asarray(
+            [1.0, 0.0, 0.0, 0.0]
+        )
+        assert float(out["ct"].ustrip("m")) == pytest.approx(float(direct[0]), abs=ATOL)
+        assert float(out["x"].ustrip("m")) == pytest.approx(float(direct[1]), abs=ATOL)
+
+    def test_the_builder_rate_is_differentiable(self):
+        """The whole point of #642: grad flows to the physical parameter.
+
+        A callable-valued ``beta`` would make ``rate`` a dead trace-time
+        constant and this gradient would be zero or an error.
+        """
+
+        def gamma_of_rate(r):
+            return cxfm.LorentzBoost(jnp.asarray([r, 0.0, 0.0]) * 3.0).gamma
+
+        g = jax.grad(gamma_of_rate)(0.1)
+        assert jnp.isfinite(g)
+        assert float(g) > 0.0  # faster rate -> larger gamma

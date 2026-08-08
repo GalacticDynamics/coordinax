@@ -41,7 +41,7 @@ out = cxfm.act(frame_op, None, v)
 - `Identity`: null transform
 - `Translate`: additive offset on the semantic-kind ladder (displacement by default; a velocity kick with `semantic_kind=vel`)
 - `Boost`: Galilean boost (moves points by `dv * tau`, shifts velocities by `dv`)
-- `LorentzBoost`: Lorentz boost of Minkowski spacetime (linear map `X -> Λ X` on `MinkowskiCT` four-vectors; reduces to `Boost` as `beta -> 0`)
+- `LorentzBoost`: Lorentz boost of Minkowski spacetime (constant linear map `X -> Λ X` on `MinkowskiCT` four-vectors). Distinct from `Boost`, which is Galilean: this one mixes `ct` into the spatial components at first order in `beta` (relativity of simultaneity), and is _not_ time-dependent, since `ct` is a coordinate rather than an external parameter. An accelerating frame is a `TimeDep` family of these.
 - `Rotate`: pure rotation
 - `Reflect`: Householder hyperplane reflection
 - `Scale`: Cartesian linear scaling

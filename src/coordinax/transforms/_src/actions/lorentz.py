@@ -25,6 +25,11 @@ _MSG_SUPERLUMINAL = (
     "(equivalently |v| < c)."
 )
 
+_MSG_ZERO_DIRECTION = (
+    "LorentzBoost.from_rapidity requires a non-zero `direction`; the zero "
+    "vector has no boost axis to normalise onto."
+)
+
 
 @final
 class LorentzBoost(AbstractLinearTransform):
@@ -52,9 +57,47 @@ class LorentzBoost(AbstractLinearTransform):
     **Sign convention.** This is the *active* convention, matching
     {class}`~coordinax.transforms.Boost` (the Galilean boost): a boost with
     parameter $\boldsymbol\beta$ carries an event to where it would be for an
-    object given velocity $+\boldsymbol\beta c$. In the non-relativistic limit
-    $\gamma \to 1$ it reduces to $x \mapsto x + v t$, exactly
-    {class}`~coordinax.transforms.Boost`.
+    object given velocity $+\boldsymbol\beta c$.
+
+    **Relation to** {class}`~coordinax.transforms.Boost`. The two are *not* the
+    same map in a limit, and it is worth being precise about how they differ.
+    `Boost` acts on 3-space with $\tau$ as an external parameter,
+    $x \mapsto x + \Delta v\,\tau$, leaving $\tau$ alone. `LorentzBoost` acts on
+    the 4-space itself, and mixes $ct$ into the spatial components and back:
+
+    $$ ct' = \gamma(ct + \boldsymbol\beta\cdot\mathbf{x}). $$
+
+    At small $\beta$ the *spatial* action does reduce to `Boost`'s, but the
+    temporal mixing $\boldsymbol\beta\cdot\mathbf{x}$ is **first order** in
+    $\beta$, not a higher-order correction — it is the relativity of
+    simultaneity, exactly the part the Galilean group lacks. The genuine
+    Galilean limit is $c \to \infty$ at fixed $v$, where that term vanishes
+    *relative to* $ct$.
+
+    **Time dependence.** `LorentzBoost.is_time_dependent` is `False`, while
+    {attr}`Boost.is_time_dependent` is `True`. That is not an oversight: for the
+    Galilean boost, time is a parameter *outside* the manifold and the point
+    action genuinely varies with it, whereas here $ct$ is a *coordinate of the
+    manifold* and $\Lambda$ is a constant matrix. A boost whose rapidity varies
+    with $\tau$ — an accelerating frame — is spelled the same way as any other
+    time-dependent transform, by wrapping a builder:
+
+    >>> import equinox as eqx
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax.transforms as cxfm
+
+    >>> class UniformlyAccelerating(eqx.Module):
+    ...     rate: jnp.ndarray
+    ...     def __call__(self, tau):
+    ...         return cxfm.LorentzBoost(self.rate * tau)
+
+    >>> op = cxfm.TimeDep(UniformlyAccelerating(jnp.asarray([0.1, 0.0, 0.0])))
+    >>> op.is_time_dependent
+    True
+
+    Because ``beta`` is an ordinary pytree leaf rather than a callable, ``rate``
+    stays differentiable and vmappable through that builder -- which is exactly
+    what the `TimeDep` refactor exists to make possible.
 
     **Parameterisation.** Because ``MinkowskiCT`` measures time as $ct$ in
     *length* units, the chart-native boost parameter is the dimensionless
@@ -111,6 +154,26 @@ class LorentzBoost(AbstractLinearTransform):
             (groups.ProperOrthochronousLorentzGroup, groups.DiffeomorphismGroup)
         )
 
+    @property
+    def is_time_dependent(self) -> bool:
+        r"""`False`: a boost is a *constant* linear map on spacetime.
+
+        Declared explicitly rather than inherited, because this is the one place
+        the answer surprises: {class}`~coordinax.transforms.Boost`, the Galilean
+        boost, declares `True`. There, time is a parameter outside the manifold
+        and the point action varies with it; here $ct$ is a coordinate *of* the
+        manifold and $\Lambda$ does not depend on $\tau$ at all. An accelerating
+        frame is a `~coordinax.transforms.TimeDep` family of these.
+
+        Examples
+        --------
+        >>> import coordinax.transforms as cxfm
+        >>> cxfm.LorentzBoost([0.6, 0.0, 0.0]).is_time_dependent
+        False
+
+        """
+        return False
+
     # -----------------------------------------------------
     # Constructors
 
@@ -163,8 +226,11 @@ class LorentzBoost(AbstractLinearTransform):
 
         """
         d = jnp.asarray(direction, dtype=float)
-        d = d / jnp.linalg.norm(d)
-        return cls(jnp.tanh(jnp.asarray(rapidity, dtype=float)) * d)
+        norm = jnp.linalg.norm(d)
+        # A zero direction has no boost axis to normalise onto; dividing would
+        # give `nan` betas that then propagate silently into every matrix entry.
+        norm = eqx.error_if(norm, norm == 0.0, _MSG_ZERO_DIRECTION)
+        return cls(jnp.tanh(jnp.asarray(rapidity, dtype=float)) * (d / norm))
 
     # -----------------------------------------------------
     # Derived quantities
@@ -210,7 +276,12 @@ class LorentzBoost(AbstractLinearTransform):
         True
 
         """
-        return jnp.arctanh(self.speed)
+        # `arctanh` returns inf at |beta| == 1 and nan beyond it. Guard on the
+        # same condition as `gamma`, so every derived quantity reports the same
+        # superluminal error rather than one of them leaking a non-finite value.
+        speed = self.speed
+        speed = eqx.error_if(speed, speed >= 1.0, _MSG_SUPERLUMINAL)
+        return jnp.arctanh(speed)
 
     # -----------------------------------------------------
 
