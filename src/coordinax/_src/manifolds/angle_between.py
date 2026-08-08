@@ -11,14 +11,13 @@ import plum
 
 import quaxed.numpy as qnp
 import unxt as u
+from unxt.quantity import is_any_quantity
 
 import coordinax.angles as cxa
-import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
-from ._utils import as_quantity_matrix
+from .quadratic_form import gram
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax._src.metric.matrix import DenseMetric
 
 
 @plum.dispatch
@@ -114,18 +113,23 @@ def angle_between(
     chart.check_data(uvec, keys=True, values=False)
     chart.check_data(vvec, keys=True, values=False)
 
-    mm = cxmapi.metric_matrix(chart.M, at, chart)
-    g = as_quantity_matrix(
-        mm.matrix if isinstance(mm, DenseMetric) else mm.to_dense().matrix  # ty: ignore[unresolved-attribute]
+    # All three contractions from one metric evaluation, via the shared
+    # primitive -- so the unit handling (mixed Quantity/bare-array rejection,
+    # per-component units surviving the contraction) is the same one `norm`
+    # uses, and the diagonal fast path comes along too. `gram` rather than three
+    # `bilinear_form` calls: those would rebuild the metric matrix three times,
+    # free under `jit` but ~1.6x eagerly.
+    #
+    # `require_usys=False`: the cosine is a ratio, so every unit cancels and the
+    # result is dimensionless whatever the inputs carry. The "declare a unit
+    # system" contract that `norm` and `interval` impose -- where the result's
+    # unit *is* derived from the inputs -- would be ceremony here, and would
+    # break callers that have always passed bare arrays.
+    inner, uu, vv = gram(
+        uvec, vvec, chart, at=at, usys=usys, fname="angle_between", require_usys=False
     )
-    u_qm = cxcapi.carray(uvec, chart.components)
-    v_qm = cxcapi.carray(vvec, chart.components)
 
-    inner = u_qm @ (g @ v_qm)
-    uu = u_qm @ (g @ u_qm)
-    vv = v_qm @ (g @ v_qm)
-
-    cos = jnp.asarray(u.ustrip("", inner / qnp.sqrt(uu * vv)))
+    cos = _dimensionless(inner / qnp.sqrt(uu * vv))
 
     # Eagerly this raises, naming the case. Under tracing it cannot -- the values
     # are not concrete -- so it is a no-op there and `valid` below is what stands
@@ -136,11 +140,7 @@ def angle_between(
     # would reach the clip and hand back 0 or pi for a hyperbolic or imaginary
     # case -- silently reporting "anti-parallel" for two observers in relative
     # motion. `nan` is the honest value: no real angle exists.
-    valid = (
-        (jnp.asarray(uu.value) > 0)
-        & (jnp.asarray(vv.value) > 0)
-        & (jnp.abs(cos) <= 1.0 + _COS_ATOL)
-    )
+    valid = (_value(uu) > 0) & (_value(vv) > 0) & (jnp.abs(cos) <= 1.0 + _COS_ATOL)
     # The clip is float-error insurance for the *valid* branch only; `valid`
     # has already excluded everything genuinely out of range.
     angle = jnp.arccos(jnp.clip(cos, -1.0, 1.0))
@@ -177,9 +177,27 @@ _MSG_NOT_SPACELIKE_PLANE = (
 )
 
 
-def _check_angle_is_defined(
-    uu: u.AbstractQuantity, vv: u.AbstractQuantity, cos: Any, /
-) -> None:
+def _dimensionless(x: Any, /) -> Any:
+    """Strip *x* to a bare dimensionless array.
+
+    Only valid where the value genuinely is dimensionless -- the cosine, whose
+    units cancel. The shared contraction returns a `unxt.Quantity` for Quantity
+    input and a plain array for bare-array input, and both reach here.
+    """
+    return jnp.asarray(u.ustrip("", x) if is_any_quantity(x) else x)
+
+
+def _value(x: Any, /) -> Any:
+    """Return the raw array behind *x*, keeping whatever unit it carried.
+
+    For ``g(v,v)`` only the *sign* is wanted, so the unit (``m2``, ``rad2/s2``,
+    ...) is irrelevant and must not be converted away -- unlike the cosine,
+    stripping it to dimensionless would raise.
+    """
+    return jnp.asarray(x.value if is_any_quantity(x) else x)
+
+
+def _check_angle_is_defined(uu: Any, vv: Any, cos: Any, /) -> None:
     r"""Raise unless a real circular angle exists between the two vectors.
 
     A metric angle needs the metric to be positive-definite *on the plane the
@@ -191,16 +209,14 @@ def _check_angle_is_defined(
     Skipped under JAX tracing, where the values are not concrete; the caller
     applies the same conditions as a mask there, yielding `nan` instead.
     """
-    values = [uu.value, vv.value, cos]
+    values = [getattr(uu, "value", uu), getattr(vv, "value", vv), cos]
     if any(isinstance(x, jax.core.Tracer) for x in values):  # ty: ignore[possibly-missing-submodule]
         return
 
-    uu_v = float(jnp.min(jnp.asarray(uu.value)))
-    vv_v = float(jnp.min(jnp.asarray(vv.value)))
+    uu_v = float(jnp.min(_value(uu)))
+    vv_v = float(jnp.min(_value(vv)))
 
-    if bool(jnp.any(jnp.asarray(uu.value) == 0)) or bool(
-        jnp.any(jnp.asarray(vv.value) == 0)
-    ):
+    if bool(jnp.any(_value(uu) == 0)) or bool(jnp.any(_value(vv) == 0)):
         raise ValueError(_MSG_NULL)
     if uu_v < 0 and vv_v < 0:
         raise ValueError(_MSG_TIMELIKE)
