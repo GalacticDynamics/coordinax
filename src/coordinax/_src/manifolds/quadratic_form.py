@@ -46,6 +46,94 @@ _MSG_USYS = (
     "Example: pass `usys=unxt.unitsystems.si`."
 )
 
+_MSG_CROSS_VECTOR_MIXED = (
+    "{fname}(): all vectors must be consistently either Quantity-valued or "
+    "bare-array-valued. Mixing a Quantity CDict with a bare-array CDict "
+    "across arguments is not supported."
+)
+
+
+def bilinear_form(
+    uvec: CDict,
+    vvec: CDict,
+    chart: AbstractChart,
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys = None,
+    fname: str = "bilinear_form",
+    require_usys: bool = True,
+) -> Any:
+    r"""Return $u^\top G(\text{at})\, v$ for the chart's metric.
+
+    The general contraction: `quadratic_form` is the ``u is v`` case, and
+    `~coordinax.manifolds.angle_between` needs all three of $g(u,v)$, $g(u,u)$
+    and $g(v,v)$. No square root is taken, so this is defined for every metric,
+    including indefinite ones.
+
+    Parameters
+    ----------
+    uvec, vvec
+        Component dictionaries of the two vectors. Within each, values must be
+        *all* `unxt.Quantity` or *all* bare arrays; a mixture raises `TypeError`.
+    chart
+        The chart whose manifold supplies the metric, evaluated at ``at``.
+        Components are read in ``chart.components`` order.
+    at
+        Base point at which to evaluate the metric.
+    usys
+        Unit system. Required when the vectors hold bare arrays, since there is
+        then no unit information to work from.
+    fname
+        Name of the calling function, used in error messages so a caller of
+        `norm` is not told about `bilinear_form`. Mirrors the ``fname``
+        argument of `require_positive_definite`.
+    require_usys
+        Whether bare-array components must be accompanied by ``usys``. True for
+        verbs whose *result* carries units derived from the inputs (`norm`,
+        ``interval``), where declaring a unit system is a meaningful contract.
+        False for verbs returning a dimensionless ratio
+        (`~coordinax.manifolds.angle_between`), where every unit cancels and the
+        demand would be ceremony.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> from coordinax._src.manifolds.quadratic_form import bilinear_form
+
+    Orthogonal directions contract to zero; a vector with itself gives its
+    squared length:
+
+    >>> at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+    >>> xhat = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> yhat = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")}
+    >>> bilinear_form(xhat, yhat, cxc.cart3d, at=at).round(2)
+    Q(0., 'm2')
+    >>> bilinear_form(xhat, xhat, cxc.cart3d, at=at).round(2)
+    Q(1., 'm2')
+
+    It is symmetric, as the metric is:
+
+    >>> v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+    >>> a = bilinear_form(v, xhat, cxc.cart3d, at=at)
+    >>> b = bilinear_form(xhat, v, cxc.cart3d, at=at)
+    >>> bool(a == b)
+    True
+
+    """
+    keys = chart.components
+    mm, packed = _prepare(
+        chart,
+        (uvec, vvec),
+        at=at,
+        usys=usys,
+        fname=fname,
+        keys=keys,
+        require_usys=require_usys,
+    )
+    return _contract(mm, *packed)
+
 
 def quadratic_form(
     v: CDict,
@@ -55,11 +143,15 @@ def quadratic_form(
     at: CDict,
     usys: OptUSys = None,
     fname: str = "quadratic_form",
+    require_usys: bool = True,
 ) -> Any:
     r"""Return $v^\top G(\text{at})\, v$ for the chart's metric.
 
-    No square root is taken, so this is defined for every metric — including
-    indefinite ones, where it is the signed interval rather than a magnitude.
+    The ``u is v`` case of `bilinear_form`, which is what every
+    magnitude-like verb needs: `~coordinax.manifolds.norm` is its square root,
+    and ``interval`` is it applied to a coordinate difference. No square root is
+    taken here, so it is defined for every metric -- including indefinite ones,
+    where it is a signed interval rather than a magnitude.
 
     Parameters
     ----------
@@ -67,21 +159,19 @@ def quadratic_form(
         Component dictionary of the vector to contract. Values must be *all*
         `unxt.Quantity` or *all* bare arrays; a mixture raises `TypeError`.
     chart
-        The chart whose manifold supplies the metric. The metric is evaluated at
-        ``at``, and ``v``'s components are read in ``chart.components`` order.
+        The chart whose manifold supplies the metric, evaluated at ``at``.
     at
         Base point at which to evaluate the metric.
     usys
-        Unit system. Required when ``v`` holds bare arrays, since there is then
-        no unit information to work from; optional otherwise.
+        Unit system. Required when ``v`` holds bare arrays.
     fname
-        Name of the calling function, used in error messages so a caller of
-        `norm` is not told about ``quadratic_form``. Mirrors the ``fname``
-        argument of `require_positive_definite`.
+        Name of the calling function, used in error messages.
+    require_usys
+        Whether bare-array components must be accompanied by ``usys``; see
+        `bilinear_form`.
 
     Examples
     --------
-    >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> from coordinax._src.manifolds.quadratic_form import quadratic_form
@@ -105,50 +195,131 @@ def quadratic_form(
 
     """
     keys = chart.components
+    mm, packed = _prepare(
+        chart, (v,), at=at, usys=usys, fname=fname, keys=keys, require_usys=require_usys
+    )
+    return _contract(mm, packed[0], packed[0])
 
-    qty_flags = [is_any_quantity(val) for val in v.values()]
-    if any(qty_flags) and not all(qty_flags):
-        raise TypeError(_MSG_MIXED.format(fname=fname))
-    is_qty = all(qty_flags)
 
-    if not is_qty and usys is None:
-        raise TypeError(_MSG_USYS.format(fname=fname))
+def gram(
+    uvec: CDict,
+    vvec: CDict,
+    chart: AbstractChart,
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys = None,
+    fname: str = "gram",
+    require_usys: bool = True,
+) -> tuple[Any, Any, Any]:
+    r"""Return $(g(u,v),\; g(u,u),\; g(v,v))$ from a *single* metric evaluation.
+
+    Three `bilinear_form` calls would rebuild the metric matrix three times.
+    Under `jax.jit` that costs nothing -- XLA common-subexpression-eliminates
+    the identical builds, which is why the compiled op count is unchanged -- but
+    eagerly it is a measured ~1.6x on `~coordinax.manifolds.angle_between`, the
+    one caller that needs all three at the same base point.
+
+    So the metric is evaluated once and each vector packed once, then contracted
+    three times. Same unit handling as `bilinear_form`, since it is the same
+    `_prepare`.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> from coordinax._src.manifolds.quadratic_form import gram
+
+    >>> at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+    >>> xhat = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+    >>> uv, uu, vv = gram(xhat, v, cxc.cart3d, at=at)
+    >>> uv.round(2), uu.round(2), vv.round(2)
+    (Q(3., 'm2'), Q(1., 'm2'), Q(25., 'm2'))
+
+    """
+    mm, (u_, v_) = _prepare(
+        chart,
+        (uvec, vvec),
+        at=at,
+        usys=usys,
+        fname=fname,
+        keys=chart.components,
+        require_usys=require_usys,
+    )
+    return _contract(mm, u_, v_), _contract(mm, u_, u_), _contract(mm, v_, v_)
+
+
+def _prepare(
+    chart: AbstractChart,
+    vecs: tuple[CDict, ...],
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys,
+    fname: str,
+    keys: tuple[str, ...],
+    require_usys: bool,
+) -> tuple[Any, tuple[Any, ...]]:
+    """Validate the vectors, build the metric matrix, and pack for contraction.
+
+    All the unit handling lives here, once: it is the fiddly part, and a second
+    copy reliably ends up with a subset of the checks.
+    """
+    packed: list[Any] = []
+    for vec in vecs:
+        qty_flags = [is_any_quantity(val) for val in vec.values()]
+        if any(qty_flags) and not all(qty_flags):
+            raise TypeError(_MSG_MIXED.format(fname=fname))
+        if require_usys and not all(qty_flags) and usys is None:
+            raise TypeError(_MSG_USYS.format(fname=fname))
+        packed.append(qty_flags)
+
+    # Cross-argument check: all vectors must be consistently Quantity or bare-array.
+    # Each element in `packed` is a list of bool flags; `all(flags)` means
+    # all-Quantity, `not all(flags)` means all-bare-array (the within-vector
+    # check above ensures no mixing).
+    if len(packed) > 1:
+        is_qty_per_vec = [all(qty_flags) for qty_flags in packed]
+        if any(is_qty_per_vec) and not all(is_qty_per_vec):
+            raise TypeError(_MSG_CROSS_VECTOR_MIXED.format(fname=fname))
 
     # ``metric_matrix`` returns a typed ``AbstractMetricMatrix`` (Diagonal/Dense)
     # and handles both bare-array and Quantity ``at`` values; it needs no unit
     # system of its own.
     mm = cxmapi.metric_matrix(chart.M, at, chart)
 
-    if not is_qty:  # Bare arrays — stack on last axis for correct batch broadcasting
-        v_vec = jnp.stack([jnp.asarray(v[k]) for k in keys], axis=-1)
-        return _contract(mm, v_vec)
-
-    # Pack into a QuantityMatrix, preserving per-component units, then contract
-    # via QuantityMatrix/AbstractMetricMatrix arithmetic, which handles all unit
-    # conversions correctly (including mixed-unit components like m/s and rad/s).
-    v_qm: ul.QM = cxcapi.carray(v, keys)  # ty: ignore[invalid-assignment]
-    return _contract(mm, v_qm)
-
-
-@plum.dispatch
-def _contract(mm: AbstractMetricMatrix, v: ul.QM, /) -> Any:
-    r"""Fallback: densify, then contract $v^\top G v$ -- $O(n^2)$."""
-    return v @ (mm.to_dense() @ v)
+    out: list[Any] = []
+    for vec, qty_flags in zip(vecs, packed, strict=True):
+        if not all(qty_flags):
+            # Bare arrays — stack on the last axis for correct batch broadcasting.
+            out.append(jnp.stack([jnp.asarray(vec[k]) for k in keys], axis=-1))
+        else:
+            # Pack into a QuantityMatrix, preserving per-component units, so the
+            # contraction handles mixed-unit components (m/s alongside rad/s).
+            out.append(cxcapi.carray(vec, keys))
+    return mm, tuple(out)
 
 
 @plum.dispatch
-def _contract(mm: AbstractMetricMatrix, v: Array, /) -> Any:
-    r"""Fallback for a stacked bare array -- $O(n^2)$.
+def _contract(mm: AbstractMetricMatrix, uvec: ul.QM, vvec: ul.QM, /) -> Any:
+    r"""Fallback: densify, then contract $u^\top G v$ -- $O(n^2)$."""
+    return uvec @ (mm.to_dense() @ vvec)
+
+
+@plum.dispatch
+def _contract(mm: AbstractMetricMatrix, uvec: Array, vvec: Array, /) -> Any:
+    r"""Fallback for stacked bare arrays -- $O(n^2)$.
 
     ``einsum`` rather than ``@``, so a leading batch axis stays distinct from
     the component axis.
     """
-    return jnp.einsum("...i,...ij,...j->...", v, mm.to_dense().matrix, v)
+    return jnp.einsum("...i,...ij,...j->...", uvec, mm.to_dense().matrix, vvec)
 
 
 @plum.dispatch
-def _contract(mm: DiagonalMetric, v: ul.QM, /) -> Any:
-    r"""Diagonal fast path -- $\sum_i g_{ii} v_i^2$, $O(n)$ instead of $O(n^2)$.
+def _contract(mm: DiagonalMetric, uvec: ul.QM, vvec: ul.QM, /) -> Any:
+    r"""Diagonal fast path -- $\sum_i g_{ii} u_i v_i$, $O(n)$ instead of $O(n^2)$.
 
     `DiagonalMetric` stores only the diagonal precisely so the full matrix need
     never be materialised -- its own docstring says so -- but `to_dense` throws
@@ -159,28 +330,27 @@ def _contract(mm: DiagonalMetric, v: ul.QM, /) -> Any:
     Measured on 100k points vmapped inside one `jit`: **2.2x** at n=2 (`sph2`),
     **8.3x** at n=3 (`cart3d`), **3.9x** at n=4 (`minkowskict`).
 
-    Written ``(d * v) @ v`` rather than with a `sum`: a 1-D `QuantityMatrix`
+    Written ``(d * u) @ v`` rather than with a `sum`: a 1-D `QuantityMatrix`
     cannot be reduced over its logical axis, and this spelling keeps
     per-component units riding along -- the diagonal is itself a
     `QuantityMatrix` on a mixed-unit chart such as ``sph3d``.
     """
-    return (mm.diagonal * v) @ v
+    return (mm.diagonal * uvec) @ vvec
 
 
 @plum.dispatch
-def _contract(mm: DiagonalMetric, v: Array, /) -> Any:
-    r"""Diagonal fast path for a stacked bare array -- $O(n)$.
+def _contract(mm: DiagonalMetric, uvec: Array, vvec: Array, /) -> Any:
+    r"""Diagonal fast path for stacked bare arrays -- $O(n)$.
 
     Summed explicitly rather than via ``@``, which would contract a leading
     batch axis instead of the component axis.
 
     A *unitful* diagonal is sent back to the dense path: on a mixed-unit chart
-    the per-component units cannot be factored out of a sum against a unitless
-    vector. That combination does not work on the dense path either (it raises
-    from the unit machinery), so this keeps the pre-existing failure rather than
-    substituting a different one.
+    the per-component units cannot be factored out of a sum against unitless
+    vectors. That combination does not work on the dense path either, so this
+    keeps the pre-existing failure rather than substituting a different one.
     """
     d = mm.diagonal
     if isinstance(d, ul.QM):
-        return jnp.einsum("...i,...ij,...j->...", v, mm.to_dense().matrix, v)
-    return jnp.sum(d * v * v, axis=-1)
+        return jnp.einsum("...i,...ij,...j->...", uvec, mm.to_dense().matrix, vvec)
+    return jnp.sum(d * uvec * vvec, axis=-1)

@@ -1925,4 +1925,4 @@ def pt_map(
         "y": cosp * dt_rho + sinp * lz_over_rho,
         "z": dt_z,
     }
-    return cast("CDict", to_chart.merge_components((pos, vel)))
+    return to_chart.merge_components((pos, vel))

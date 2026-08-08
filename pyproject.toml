@@ -497,6 +497,7 @@ sections = { typing = [
   "collections.abc",
   "jaxtyping",
 ] }
+split-on-trailing-comma = false
 
 [tool.ty.rules]
 invalid-argument-type = "ignore"
