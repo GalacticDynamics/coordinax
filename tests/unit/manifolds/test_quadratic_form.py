@@ -332,3 +332,59 @@ class TestRequireUsysIsAPolicyNotAComputation:
         good = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")}
         with pytest.raises(TypeError, match="mixed CDict"):
             cxm.angle_between(cxc.cart3d, mixed, good, at=at)
+
+
+class TestPackedQuantityAvoidsTheDictRoundTrip:
+    """A packed `Quantity` goes straight to a `QuantityMatrix`.
+
+    It used to be split into a CDict only for the contraction to repack it,
+    which cost ~1.5x eagerly -- and eager cost is trace cost, so it showed up as
+    slower `jit` compilation too, not merely slower interactive calls.
+    """
+
+    AT: ClassVar = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+
+    def test_packed_and_cdict_agree(self):
+        """The shortcut must not change the answer."""
+        metric = cxm.RoundMetric(2)
+        packed = cxm.norm(
+            u.Q(jnp.asarray([1.0, 1.0]), "rad/s"), metric, cxc.sph2, at=self.AT
+        )
+        as_dict = cxm.norm(
+            {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(1.0, "rad/s")},
+            metric,
+            cxc.sph2,
+            at=self.AT,
+        )
+        assert u.unit_of(packed) == u.unit_of(as_dict)
+        assert float(packed.ustrip("rad/s")) == pytest.approx(
+            float(as_dict.ustrip("rad/s")), abs=ATOL
+        )
+
+    def test_no_cdict_round_trip_happens(self):
+        """Pins the shortcut itself, not just the value it produces."""
+        import coordinaxs.api.charts as charts_api
+
+        calls = []
+        real = charts_api.cdict
+        charts_api.cdict = lambda *a, **k: (calls.append(1), real(*a, **k))[1]
+        try:
+            cxm.norm(
+                u.Q(jnp.asarray([1.0, 1.0]), "rad/s"),
+                cxm.RoundMetric(2),
+                cxc.sph2,
+                at=self.AT,
+            )
+        finally:
+            charts_api.cdict = real
+        assert calls == [], "packed Quantity should not be split into a CDict"
+
+    def test_one_component_chart_still_works(self):
+        """The 1-D chart takes a different branch; it must be unaffected."""
+        got = cxm.norm(
+            u.Q(jnp.asarray([5.0]), "m"),
+            cxm.FlatMetric(1),
+            cxc.cart1d,
+            at={"x": jnp.asarray(0.0)},
+        )
+        assert float(got.ustrip("m")) == pytest.approx(5.0, abs=ATOL)

@@ -246,7 +246,7 @@ def gram(
 
 def _prepare(
     chart: AbstractChart,
-    vecs: tuple[CDict, ...],
+    vecs: tuple[Any, ...],
     /,
     *,
     at: CDict,
@@ -262,6 +262,11 @@ def _prepare(
     """
     packed: list[Any] = []
     for vec in vecs:
+        if is_any_quantity(vec):
+            # Already packed: nothing to validate component-wise, and the dict
+            # round-trip below would only take it apart to put it back together.
+            packed.append(None)
+            continue
         qty_flags = [is_any_quantity(val) for val in vec.values()]
         if any(qty_flags) and not all(qty_flags):
             raise TypeError(_MSG_MIXED.format(fname=fname))
@@ -276,7 +281,14 @@ def _prepare(
 
     out: list[Any] = []
     for vec, qty_flags in zip(vecs, packed, strict=True):
-        if not all(qty_flags):
+        if qty_flags is None:
+            # Packed Quantity -> QuantityMatrix directly, one uniform unit.
+            out.append(
+                ul.QuantityMatrix(
+                    vec.value, unit=ul.UnitsMatrix.full((len(keys),), vec.unit)
+                )
+            )
+        elif not all(qty_flags):
             # Bare arrays — stack on the last axis for correct batch broadcasting.
             out.append(jnp.stack([jnp.asarray(vec[k]) for k in keys], axis=-1))
         else:

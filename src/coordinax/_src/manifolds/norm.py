@@ -282,10 +282,16 @@ def norm(
         # Single-component chart: wrap the (scalar or length-1) quantity in a
         # one-element CDict, squeezing the trailing component axis if present.
         v_dict = {keys[0]: v if v.ndim == 0 else v[..., 0]}
-    else:
-        # Multi-component chart: split the packed quantity across components.
-        v_dict = cxcapi.cdict(v, chart)
-    return cxmapi.norm(v_dict, metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+        return cxmapi.norm(v_dict, metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+
+    # Multi-component: hand the packed quantity straight down. Splitting it into
+    # a CDict here only for `quadratic_form` to repack it into a QuantityMatrix
+    # was measurable trace-time waste -- and tracing is 30-46% of compile time,
+    # so it showed up as slower `jit` compilation, not just slower eager calls.
+    if metric != chart.M.metric:
+        raise ValueError("Metric-level dispatch: metric must match chart's metric")
+    require_positive_definite(chart.M.metric, "norm")
+    return jnp.sqrt(quadratic_form(v, chart, at=at, usys=usys, fname="norm"))
 
 
 @plum.dispatch
