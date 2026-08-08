@@ -20,7 +20,11 @@ import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
-from coordinax._src.manifolds.quadratic_form import _contract, quadratic_form
+from coordinax._src.manifolds.quadratic_form import (
+    _contract,
+    bilinear_form,
+    quadratic_form,
+)
 from coordinax._src.metric.matrix import DiagonalMetric
 
 ATOL = 1e-5
@@ -204,8 +208,8 @@ class TestDiagonalFastPath:
         assert isinstance(mm, DiagonalMetric), "case must exercise the fast path"
 
         v_qm = cxcapi.carray(v, chart.components)
-        fast = _contract(mm, v_qm)
-        dense = _contract(mm.to_dense(), v_qm)  # forces the generic fallback
+        fast = _contract(mm, v_qm, v_qm)
+        dense = _contract(mm.to_dense(), v_qm, v_qm)  # forces the generic fallback
 
         assert u.unit_of(fast) == u.unit_of(dense)
         assert qnp.allclose(fast, dense, atol=u.Q(1e-8, u.unit_of(dense)))
@@ -227,8 +231,8 @@ class TestDiagonalFastPath:
         mm = cxmapi.metric_matrix(chart.M, at, chart)
         stacked = jnp.stack([v_arr[k] for k in chart.components], axis=-1)
 
-        fast = _contract(mm, stacked)
-        dense = _contract(mm.to_dense(), stacked)
+        fast = _contract(mm, stacked, stacked)
+        dense = _contract(mm.to_dense(), stacked, stacked)
         assert jnp.allclose(jnp.asarray(fast), jnp.asarray(dense), atol=1e-8)
 
     def test_batched_arrays_reduce_over_components_not_the_batch(self):
@@ -236,7 +240,7 @@ class TestDiagonalFastPath:
         at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
         mm = cxmapi.metric_matrix(cxc.cart3d.M, at, cxc.cart3d)
         batch = jnp.asarray([[3.0, 4.0, 0.0], [1.0, 0.0, 0.0], [0.0, 5.0, 12.0]])
-        got = _contract(mm, batch)
+        got = _contract(mm, batch, batch)
         assert got.shape == (3,)
         assert jnp.allclose(got, jnp.asarray([25.0, 1.0, 169.0]), atol=1e-8)
 
@@ -247,3 +251,84 @@ class TestDiagonalFastPath:
         assert float(cxm.norm(v, cxc.cart3d, at=at).ustrip("m")) == pytest.approx(
             5.0, abs=ATOL
         )
+
+
+class TestBilinearForm:
+    """`quadratic_form` is the ``u is v`` case; `angle_between` needs the rest."""
+
+    AT: ClassVar = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+    XHAT: ClassVar = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    YHAT: ClassVar = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")}
+    V: ClassVar = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+
+    def test_orthogonal_vectors_contract_to_zero(self):
+        got = bilinear_form(self.XHAT, self.YHAT, cxc.cart3d, at=self.AT)
+        assert float(got.ustrip("m2")) == pytest.approx(0.0, abs=ATOL)
+
+    def test_reduces_to_quadratic_form_when_both_vectors_are_the_same(self):
+        """The defining relationship between the two spellings."""
+        bi = bilinear_form(self.V, self.V, cxc.cart3d, at=self.AT)
+        qu = quadratic_form(self.V, cxc.cart3d, at=self.AT)
+        assert float(bi.ustrip("m2")) == pytest.approx(float(qu.ustrip("m2")), abs=ATOL)
+
+    def test_is_symmetric(self):
+        """As the metric is."""
+        a = bilinear_form(self.V, self.XHAT, cxc.cart3d, at=self.AT)
+        b = bilinear_form(self.XHAT, self.V, cxc.cart3d, at=self.AT)
+        assert float(a.ustrip("m2")) == pytest.approx(float(b.ustrip("m2")), abs=ATOL)
+
+    def test_indefinite_metric_gives_a_signed_value(self):
+        at4 = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+        t = {
+            "ct": u.Q(1.0, "m"),
+            "x": u.Q(0.0, "m"),
+            "y": u.Q(0.0, "m"),
+            "z": u.Q(0.0, "m"),
+        }
+        got = bilinear_form(t, t, cxc.minkowskict, at=at4)
+        assert float(got.ustrip("m2")) == pytest.approx(-1.0, abs=ATOL)
+
+    def test_mixed_cdict_is_rejected_in_either_argument(self):
+        mixed = {"x": u.Q(3.0, "m"), "y": jnp.asarray(4.0), "z": u.Q(0.0, "m")}
+        with pytest.raises(TypeError, match="mixed CDict"):
+            bilinear_form(mixed, self.XHAT, cxc.cart3d, at=self.AT)
+        with pytest.raises(TypeError, match="mixed CDict"):
+            bilinear_form(self.XHAT, mixed, cxc.cart3d, at=self.AT)
+
+
+class TestRequireUsysIsAPolicyNotAComputation:
+    """Whether bare arrays need `usys` depends on the *verb*, not the primitive.
+
+    `norm` and ``interval`` return a value whose unit is derived from the
+    inputs, so demanding a unit system is a meaningful contract.
+    `angle_between` returns a dimensionless ratio in which every unit cancels,
+    so the same demand would be ceremony -- and would break callers that have
+    always passed bare arrays.
+    """
+
+    BARE: ClassVar = {"theta": jnp.asarray(1.0), "phi": jnp.asarray(0.0)}
+    AT: ClassVar = {"theta": jnp.asarray(jnp.pi / 2), "phi": jnp.asarray(0.0)}
+
+    def test_default_demands_usys(self):
+        with pytest.raises(TypeError, match="usys"):
+            quadratic_form(self.BARE, cxc.sph2, at=self.AT)
+
+    def test_opting_out_allows_bare_arrays(self):
+        got = quadratic_form(self.BARE, cxc.sph2, at=self.AT, require_usys=False)
+        assert float(got) == pytest.approx(1.0, abs=ATOL)
+
+    def test_angle_between_accepts_bare_arrays(self):
+        """Regression: migrating onto the shared primitive must not tighten this."""
+        at = {"x": jnp.asarray(0.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
+        xh = {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
+        yh = {"x": jnp.asarray(0.0), "y": jnp.asarray(1.0), "z": jnp.asarray(0.0)}
+        got = cxm.angle_between(cxc.cart3d, xh, yh, at=at)
+        assert float(u.ustrip("rad", got)) == pytest.approx(jnp.pi / 2, abs=1e-5)
+
+    def test_angle_between_still_rejects_a_mixed_cdict(self):
+        """It gains the check it never had, which is the point of sharing."""
+        at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        mixed = {"x": u.Q(1.0, "m"), "y": jnp.asarray(0.0), "z": u.Q(0.0, "m")}
+        good = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")}
+        with pytest.raises(TypeError, match="mixed CDict"):
+            cxm.angle_between(cxc.cart3d, mixed, good, at=at)
