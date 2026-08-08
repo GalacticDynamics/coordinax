@@ -97,10 +97,12 @@ $$ \Delta s^2 = -(c\Delta t)^2 + \Delta x^2 + \Delta y^2 + \Delta z^2 $$
 -434998
 ```
 
-Negative, as promised. Its **sign** is physically meaningful, and `causal_character` reads it off:
+Negative, as promised. Its **sign** is physically meaningful, and `causal_character` reads it off.
+
+Note the namespace: `interval` lives directly on `coordinax.manifolds` because the signed quadratic form is defined for _every_ metric, but the verbs that read its sign need a timelike direction, so they live in `cxm.lorentzian`. (Named for the signature rather than "spacetime" because `galileanct` is a spacetime too, and is not Lorentzian.)
 
 ```pycon
->>> cxm.causal_character(cxc.minkowskict, birth, death)
+>>> cxm.lorentzian.causal_character(cxc.minkowskict, birth, death)
 'timelike'
 ```
 
@@ -113,16 +115,16 @@ Timelike means a slower-than-light observer can be present at both events — he
 | $> 0$ | spacelike | no observer attends both; neither causes the other |
 
 ```pycon
->>> cxm.causal_character(cxc.minkowskict, birth, event(1.0, 5.0))
+>>> cxm.lorentzian.causal_character(cxc.minkowskict, birth, event(1.0, 5.0))
 'spacelike'
->>> cxm.causal_character(cxc.minkowskict, birth, event(3.0, 3.0))
+>>> cxm.lorentzian.causal_character(cxc.minkowskict, birth, event(3.0, 3.0))
 'null'
 ```
 
 For a **timelike** pair, the magnitude is the elapsed **proper time** — what a wristwatch carried between the two events would read. Since we built these events from the muon's lifetime, we should get it back:
 
 ```pycon
->>> tau = cxm.proper_time(cxc.minkowskict, birth, death)
+>>> tau = cxm.lorentzian.proper_time(cxc.minkowskict, birth, death)
 >>> round(float(tau.uconvert("us").ustrip("us")), 3)
 2.2
 ```
@@ -131,12 +133,17 @@ For a **spacelike** pair the magnitude is a proper distance instead, and asking 
 
 ```pycon
 >>> round(
-...     float(cxm.proper_distance(cxc.minkowskict, birth, event(3.0, 5.0)).ustrip("m")), 3
+...     float(
+...         cxm.lorentzian.proper_distance(cxc.minkowskict, birth, event(3.0, 5.0)).ustrip(
+...             "m"
+...         )
+...     ),
+...     3,
 ... )
 4.0
 
 >>> try:
-...     cxm.proper_time(cxc.minkowskict, birth, event(1.0, 5.0))
+...     cxm.lorentzian.proper_time(cxc.minkowskict, birth, event(1.0, 5.0))
 ... except ValueError as e:
 ...     print(str(e)[:52])
 ...
@@ -162,7 +169,40 @@ $\gamma \approx 15.8$ is the whole story in one number. There is also `rapidity`
 3.453
 ```
 
-Now transform the muon's death event into the frame where the muon is moving:
+### An aside: why a boost is not "time-dependent"
+
+`coordinax` marks transforms whose point action varies with the evolution parameter $\tau$. A Lorentz boost is **not** one of them, which surprises people who know that its Galilean cousin is:
+
+```pycon
+>>> boost.is_time_dependent
+False
+>>> galilean = cxfm.Boost(
+...     {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)},
+...     chart=cxc.cart3d,
+... )
+>>> galilean.is_time_dependent
+True
+```
+
+The difference is _where time lives_. For `Boost`, time is a parameter outside the manifold and the action $x \mapsto x + \Delta v\,\tau$ genuinely depends on it. For `LorentzBoost`, $ct$ is a **coordinate of the manifold** — time is already inside the vector being transformed — so $\Lambda$ is just a constant matrix. That is why `act` above takes `None` for $\tau$.
+
+An _accelerating_ frame, where the rapidity itself grows with $\tau$, is built by wrapping a builder in `TimeDep`:
+
+```pycon
+>>> import equinox as eqx
+
+>>> class UniformlyAccelerating(eqx.Module):
+...     rate: jnp.ndarray
+...     def __call__(self, tau):
+...         return cxfm.LorentzBoost(self.rate * tau)
+...
+
+>>> accelerating = cxfm.TimeDep(UniformlyAccelerating(jnp.asarray([0.1, 0.0, 0.0])))
+>>> accelerating.is_time_dependent
+True
+```
+
+Now transform the muon's death event into the frame where the muon is moving. The `None` in the second slot is the time parameter $\tau$, and a boost does not use it — see the note below.
 
 ```pycon
 >>> death_lab = cxfm.act(boost, None, death, cxc.minkowskict, cxr.point)
@@ -196,7 +236,7 @@ The coordinates moved, the elapsed time moved, the distance travelled moved. It 
 The same $-434998\;\text{m}^2$ we computed in the rest frame. And therefore so is the proper time:
 
 ```pycon
->>> tau_lab = cxm.proper_time(cxc.minkowskict, birth_lab, death_lab)
+>>> tau_lab = cxm.lorentzian.proper_time(cxc.minkowskict, birth_lab, death_lab)
 >>> round(float(tau_lab.uconvert("us").ustrip("us")), 3)
 2.2
 ```
@@ -206,7 +246,7 @@ The same $-434998\;\text{m}^2$ we computed in the rest frame. And therefore so i
 The causal character is likewise absolute — no boost can turn a timelike pair spacelike, which is why relativity does not let you reorder cause and effect:
 
 ```pycon
->>> cxm.causal_character(cxc.minkowskict, birth_lab, death_lab)
+>>> cxm.lorentzian.causal_character(cxc.minkowskict, birth_lab, death_lab)
 'timelike'
 ```
 
@@ -240,7 +280,7 @@ True
 "At the same time" is not a property of a pair of events; it is a property of a pair of events _and a frame_. Note this is only possible because the pair is **spacelike** separated — for a timelike pair the ordering is fixed, so causality survives:
 
 ```pycon
->>> cxm.causal_character(cxc.minkowskict, here, there)
+>>> cxm.lorentzian.causal_character(cxc.minkowskict, here, there)
 'spacelike'
 ```
 
