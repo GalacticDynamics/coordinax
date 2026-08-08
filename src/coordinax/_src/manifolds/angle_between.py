@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 
 import jax
+import jax.numpy as jnp
 import plum
 
 import quaxed.numpy as qnp
@@ -12,7 +13,7 @@ import unxt as u
 import coordinax.angles as cxa
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
-from ._utils import as_quantity_matrix, require_positive_definite
+from ._utils import as_quantity_matrix
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.metric.matrix import DenseMetric
@@ -80,12 +81,33 @@ def angle_between(
     >>> cxm.angle_between(metric, cxc.sph3d, uvec, vvec, at=at)
     Angle(1.57079633, 'rad')
 
-    """
-    # Guards `chart.M.metric` rather than the `metric` argument: the matrix below
-    # comes from `chart.M`, so checking the argument would validate one metric
-    # while computing with another.
-    require_positive_definite(chart.M.metric, "angle_between")
+    An indefinite metric is not rejected outright. Two *spacelike* directions
+    span a plane on which the Minkowski metric is positive-definite, so the
+    angle between them is an ordinary one:
 
+    >>> at4 = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+    >>> xhat = {"ct": u.Q(0.0, "m"), "x": u.Q(1.0, "m"),
+    ...         "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> yhat = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"),
+    ...         "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")}
+    >>> cxm.angle_between(cxc.minkowskict, xhat, yhat, at=at4)
+    Angle(1.57079633, 'rad')
+
+    Two *timelike* directions have no circular angle between them -- the
+    invariant is a hyperbolic one, the relative rapidity -- so this raises
+    rather than clipping ``arccos`` to a meaningless value:
+
+    >>> obs = {"ct": u.Q(1.0, "m"), "x": u.Q(0.0, "m"),
+    ...        "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> moving = {"ct": u.Q(1.25, "m"), "x": u.Q(0.75, "m"),
+    ...           "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> try:
+    ...     cxm.angle_between(cxc.minkowskict, obs, moving, at=at4)
+    ... except ValueError as e:
+    ...     print(str(e).split(":")[0])
+    angle_between is undefined for two timelike tangent vectors
+
+    """
     chart.check_data(at, keys=True, values=False)
     chart.check_data(uvec, keys=True, values=False)
     chart.check_data(vvec, keys=True, values=False)
@@ -101,19 +123,74 @@ def angle_between(
     uu = u_qm @ (g @ u_qm)
     vv = v_qm @ (g @ v_qm)
 
-    _check_nonzero_norm(uu, vv)
+    _check_angle_is_defined(uu, vv, inner)
 
     cosine = inner / qnp.sqrt(uu * vv)
+    # The clip is float-error insurance only. Under a positive-definite metric
+    # Cauchy-Schwarz guarantees |cosine| <= 1; under an indefinite one it does
+    # not, which is why `_check_angle_is_defined` verifies it rather than
+    # letting the clip quietly flatten an out-of-range value to 0 or pi.
     cosine_value = qnp.clip(u.ustrip("", cosine), -1.0, 1.0)
     return cxa.Angle(qnp.arccos(cosine_value), "rad")
 
 
-def _check_nonzero_norm(*norms: u.AbstractQuantity) -> None:
-    """Raise when a norm-squared is zero or negative outside JAX tracing."""
-    for norm in norms:
-        value = norm.value
-        if isinstance(value, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
-            continue
-        if bool(qnp.any(value <= 0)):
-            msg = "angle_between is undefined for zero-norm tangent vectors."
-            raise ValueError(msg)
+_MSG_NULL = (
+    "angle_between is undefined for null (zero-norm) tangent vectors: the "
+    "cosine's denominator vanishes."
+)
+
+_MSG_TIMELIKE = (
+    "angle_between is undefined for two timelike tangent vectors: g(u,u) and "
+    "g(v,v) are both negative, and the invariant separating them is a "
+    "*hyperbolic* angle -- the relative rapidity, arccosh(-g(u,v)/sqrt(g(u,u) "
+    "g(v,v))) -- not a circular angle. Computing `arccos` here would clip to 0 "
+    "or pi and silently report no relative motion."
+)
+
+_MSG_MIXED = (
+    "angle_between is undefined between a timelike and a spacelike tangent "
+    "vector: g(u,u) g(v,v) < 0, so the cosine's denominator is imaginary."
+)
+
+_MSG_NOT_SPACELIKE_PLANE = (
+    "angle_between is undefined here: both tangent vectors are spacelike, but "
+    "they span a plane that is not, so |g(u,v)| > sqrt(g(u,u) g(v,v)) and the "
+    "ratio is not a cosine. This cannot happen under a positive-definite "
+    "metric, where Cauchy-Schwarz guarantees the bound."
+)
+
+
+def _check_angle_is_defined(
+    uu: u.AbstractQuantity, vv: u.AbstractQuantity, inner: u.AbstractQuantity, /
+) -> None:
+    r"""Raise unless a real circular angle exists between the two vectors.
+
+    A metric angle needs the metric to be positive-definite *on the plane the
+    two vectors span* -- which is a condition on the arguments, not on the
+    metric. Under a Riemannian metric it always holds, so none of these fire.
+    Under a Lorentzian one it holds exactly for a spacelike pair spanning a
+    spacelike plane, which is the case this function serves.
+
+    Skipped under JAX tracing, where the values are not concrete.
+    """
+    values = [q.value for q in (uu, vv, inner)]
+    if any(isinstance(x, jax.core.Tracer) for x in values):  # ty: ignore[possibly-missing-submodule]
+        return
+
+    uu_v = float(jnp.min(jnp.asarray(uu.value)))
+    vv_v = float(jnp.min(jnp.asarray(vv.value)))
+
+    if bool(jnp.any(jnp.asarray(uu.value) == 0)) or bool(
+        jnp.any(jnp.asarray(vv.value) == 0)
+    ):
+        raise ValueError(_MSG_NULL)
+    if uu_v < 0 and vv_v < 0:
+        raise ValueError(_MSG_TIMELIKE)
+    if uu_v < 0 or vv_v < 0:
+        raise ValueError(_MSG_MIXED)
+
+    # Both spacelike, but their span may still be Lorentzian -- e.g. u=(0,1,0,0)
+    # and v=(1,2,0,0) are each spacelike while their span contains (1,0,0,0).
+    cos = jnp.asarray(u.ustrip("", inner / qnp.sqrt(uu * vv)))
+    if bool(jnp.any(jnp.abs(cos) > 1.0 + 1e-6)):
+        raise ValueError(_MSG_NOT_SPACELIKE_PLANE)

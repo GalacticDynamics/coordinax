@@ -11,6 +11,16 @@ import coordinax.manifolds as cxm
 from coordinax.angles import AbstractAngle
 
 
+def _m4(ct, x, y, z):
+    """A Minkowski tangent-vector CDict."""
+    return {
+        "ct": jnp.array(ct),
+        "x": jnp.array(x),
+        "y": jnp.array(y),
+        "z": jnp.array(z),
+    }
+
+
 class TestAngleBetweenEuclidean:
     """Tests for angle_between on Euclidean metrics and manifolds."""
 
@@ -38,52 +48,65 @@ class TestAngleBetweenFailureModes:
         with pytest.raises(ValueError, match="zero"):
             cxm.angle_between(metric, cxc.cart2d, zero, other, at=at)
 
-    def test_indefinite_metric_is_not_supported(self):
-        metric = cxm.MinkowskiMetric()
-        at = {
-            "ct": jnp.array(0),
-            "x": jnp.array(0),
-            "y": jnp.array(0),
-            "z": jnp.array(0),
-        }
-        uvec = {
-            "ct": jnp.array(0),
-            "x": jnp.array(1),
-            "y": jnp.array(0),
-            "z": jnp.array(0),
-        }
-        vvec = {
-            "ct": jnp.array(0),
-            "x": jnp.array(0),
-            "y": jnp.array(1),
-            "z": jnp.array(0),
-        }
+    def test_spacelike_pair_in_minkowski_has_an_ordinary_angle(self):
+        """The metric on a spacelike 2-plane is positive-definite.
 
-        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
-            cxm.angle_between(metric, cxc.minkowskict, uvec, vvec, at=at)
-
-    def test_guard_follows_the_metric_actually_used(self):
-        """A positive-definite argument cannot bypass an indefinite chart metric.
-
-        The matrix comes from ``chart.M``, so the guard must check that rather
-        than the ``metric`` argument, else the two disagree.
+        This used to be rejected wholesale, on the metric's signature. The
+        condition is really on the plane the two vectors span, not the metric.
         """
-        at = {k: jnp.array(0) for k in ("ct", "x", "y", "z")}
-        uvec = {
-            "ct": jnp.array(1),
-            "x": jnp.array(0),
-            "y": jnp.array(0),
-            "z": jnp.array(0),
-        }
-        vvec = {
-            "ct": jnp.array(0),
-            "x": jnp.array(1),
-            "y": jnp.array(0),
-            "z": jnp.array(0),
-        }
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        xhat = _m4(0.0, 1.0, 0.0, 0.0)
+        yhat = _m4(0.0, 0.0, 1.0, 0.0)
+        got = cxm.angle_between(cxc.minkowskict, xhat, yhat, at=at)
+        assert float(u.ustrip("rad", got)) == pytest.approx(jnp.pi / 2, abs=1e-5)
 
-        with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
-            cxm.angle_between(cxm.FlatMetric(4), cxc.minkowskict, uvec, vvec, at=at)
+    def test_spacelike_pair_at_45_degrees(self):
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        got = cxm.angle_between(
+            cxc.minkowskict, _m4(0.0, 1.0, 0.0, 0.0), _m4(0.0, 1.0, 1.0, 0.0), at=at
+        )
+        assert float(u.ustrip("rad", got)) == pytest.approx(jnp.pi / 4, abs=1e-5)
+
+    def test_two_timelike_vectors_are_a_hyperbolic_angle_not_a_circular_one(self):
+        """`arccos` would clip to pi and report no relative motion.
+
+        For two timelike vectors ``g(u,v)/sqrt(g(u,u) g(v,v))`` has magnitude
+        >= 1 by the reverse Cauchy-Schwarz inequality, so it is a ``cosh``, not
+        a ``cos``. The invariant is the relative rapidity.
+        """
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        obs = _m4(1.0, 0.0, 0.0, 0.0)
+        moving = _m4(1.25, 0.75, 0.0, 0.0)  # beta = 0.6, gamma = 1.25
+        with pytest.raises(ValueError, match="timelike"):
+            cxm.angle_between(cxc.minkowskict, obs, moving, at=at)
+
+    def test_mixed_causal_types_are_rejected(self):
+        """``g(u,u) g(v,v) < 0`` makes the denominator imaginary."""
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(ValueError, match="timelike and a spacelike"):
+            cxm.angle_between(
+                cxc.minkowskict, _m4(1.0, 0.0, 0.0, 0.0), _m4(0.0, 1.0, 0.0, 0.0), at=at
+            )
+
+    def test_null_vector_is_rejected(self):
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(ValueError, match="null"):
+            cxm.angle_between(
+                cxc.minkowskict, _m4(1.0, 1.0, 0.0, 0.0), _m4(0.0, 1.0, 0.0, 0.0), at=at
+            )
+
+    def test_spacelike_pair_spanning_a_lorentzian_plane_is_rejected(self):
+        """Both spacelike is *not* sufficient — the span can still be timelike.
+
+        ``u = (0,1,0,0)`` and ``v = (1,2,0,0)`` are each spacelike, but their
+        span contains the timelike ``(1,0,0,0)``, and ``|cos| = 1.15 > 1``.
+        Clipping would silently report a 0 angle.
+        """
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(ValueError, match="span a plane that is not"):
+            cxm.angle_between(
+                cxc.minkowskict, _m4(0.0, 1.0, 0.0, 0.0), _m4(1.0, 2.0, 0.0, 0.0), at=at
+            )
 
 
 class TestAngleBetweenJAX:
