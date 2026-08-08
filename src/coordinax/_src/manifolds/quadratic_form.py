@@ -276,8 +276,9 @@ def _prepare(
         packed.append(qty_flags)
 
     # Cross-argument check: all vectors must be consistently Quantity or bare-array.
-    # Each element in `packed` is a list of bool flags; `all(flags)` means all-Quantity,
-    # `not all(flags)` means all-bare-array (the within-vector check above ensures no mixing).
+    # Each element in `packed` is a list of bool flags; `all(flags)` means
+    # all-Quantity, `not all(flags)` means all-bare-array (the within-vector
+    # check above ensures no mixing).
     if len(packed) > 1:
         is_qty_per_vec = [all(qty_flags) for qty_flags in packed]
         if any(is_qty_per_vec) and not all(is_qty_per_vec):
