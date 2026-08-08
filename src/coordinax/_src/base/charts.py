@@ -348,14 +348,9 @@ class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
 
     def __init_subclass__(cls, **kw: Any) -> None:
         super().__init_subclass__(**kw)
-        # Mirror AbstractChart.__init_subclass__'s guard: dataclass(slots=True)
-        # calls this twice and only the second class object is the real one.
-        if (
-            "__dataclass_params__" in cls.__dict__
-            and "__slots__" not in cls.__dict__
-            and cls.__dict__["__dataclass_params__"].slots
-        ):
-            return
+        # NOTE: static charts must use `chart_dataclass_decorator` (slots=False).
+        # `dataclass(slots=True)` builds a second class object and would register
+        # both it and the discarded first one.
         if not is_abstract_class(cls):
             jtu.register_static(cls)
 
@@ -415,7 +410,7 @@ class AbstractFixedComponentsChart(AbstractStaticChart[MT, Ks, Ds]):
                 )
                 raise TypeError(msg)
 
-        super().__init_subclass__(**kw)  # AbstractChart has.
+        super().__init_subclass__(**kw)  # AbstractStaticChart registers `cls`.
 
     @property
     def components(self) -> Ks:
