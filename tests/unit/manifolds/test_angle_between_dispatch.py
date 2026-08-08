@@ -1,5 +1,7 @@
 """Tests for the angle_between() manifold API and wrappers."""
 
+from typing import ClassVar
+
 import jax
 import jax.numpy as jnp
 import pytest
@@ -142,3 +144,67 @@ class TestAngleBetweenJAX:
         got = jax.vmap(compute)(thetas)
         expected = jnp.arccos(1 / jnp.sqrt(1 + jnp.sin(thetas) ** 2))
         assert jnp.allclose(got, expected, atol=1e-6)
+
+
+class TestTransformedCodepathsDoNotSilentlyClip:
+    """The eager guard cannot fire under tracing, so the mask must.
+
+    Regression: with only the eager check, `jax.jit` reached the `clip` and
+    returned pi rad for two timelike vectors -- reporting "anti-parallel" for
+    two observers in relative motion -- and 0 rad for a spacelike pair spanning
+    a Lorentzian plane. Both are the wrong-but-real failure this whole change
+    exists to remove, so they must be covered under transformation too.
+    """
+
+    AT: ClassVar = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+
+    @staticmethod
+    def _angle(uvec, vvec, at):
+        return cxm.angle_between(cxc.minkowskict, uvec, vvec, at=at)
+
+    @pytest.mark.parametrize(
+        ("label", "uvec", "vvec"),
+        [
+            ("timelike-timelike", (1.0, 0.0, 0.0, 0.0), (1.25, 0.75, 0.0, 0.0)),
+            (
+                "spacelike pair, Lorentzian span",
+                (0.0, 1.0, 0.0, 0.0),
+                (1.0, 2.0, 0.0, 0.0),
+            ),
+            ("mixed causal types", (1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0)),
+            ("null", (1.0, 1.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0)),
+        ],
+    )
+    def test_jit_yields_nan_not_a_plausible_angle(self, label, uvec, vvec):
+        del label
+        fn = jax.jit(lambda a, b: self._angle(a, b, self.AT))
+        got = fn(_m4(*uvec), _m4(*vvec))
+        assert bool(jnp.isnan(u.ustrip("rad", got))), f"expected nan, got {got}"
+
+    def test_jit_still_returns_the_angle_when_it_is_defined(self):
+        fn = jax.jit(lambda a, b: self._angle(a, b, self.AT))
+        got = fn(_m4(0.0, 1.0, 0.0, 0.0), _m4(0.0, 0.0, 1.0, 0.0))
+        assert float(u.ustrip("rad", got)) == pytest.approx(jnp.pi / 2, abs=1e-5)
+
+    def test_vmap_marks_only_the_invalid_entries(self):
+        """A mixed batch must not poison the valid entries, nor hide the bad."""
+        us = {
+            k: jnp.stack([_m4(1.0, 0.0, 0.0, 0.0)[k], _m4(0.0, 1.0, 0.0, 0.0)[k]])
+            for k in ("ct", "x", "y", "z")
+        }
+        vs = {
+            k: jnp.stack([_m4(1.25, 0.75, 0.0, 0.0)[k], _m4(0.0, 0.0, 1.0, 0.0)[k]])
+            for k in ("ct", "x", "y", "z")
+        }
+        got = jax.vmap(lambda a, b: self._angle(a, b, self.AT))(us, vs)
+        vals = u.ustrip("rad", got)
+        assert bool(jnp.isnan(vals[0]))
+        assert float(vals[1]) == pytest.approx(jnp.pi / 2, abs=1e-5)
+
+    def test_riemannian_jit_is_untouched(self):
+        """The mask must not introduce nan on the positive-definite path."""
+        at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        xh = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        yh = {"x": jnp.array(0.0), "y": jnp.array(1.0), "z": jnp.array(0.0)}
+        fn = jax.jit(lambda a, b: cxm.angle_between(cxc.cart3d, a, b, at=at))
+        assert float(u.ustrip("rad", fn(xh, yh))) == pytest.approx(jnp.pi / 2, abs=1e-5)

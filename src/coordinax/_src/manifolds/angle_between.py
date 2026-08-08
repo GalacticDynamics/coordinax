@@ -3,6 +3,8 @@
 __all__: tuple[str, ...] = ()
 
 
+from typing import Any
+
 import jax
 import jax.numpy as jnp
 import plum
@@ -123,16 +125,31 @@ def angle_between(
     uu = u_qm @ (g @ u_qm)
     vv = v_qm @ (g @ v_qm)
 
-    _check_angle_is_defined(uu, vv, inner)
+    cos = jnp.asarray(u.ustrip("", inner / qnp.sqrt(uu * vv)))
 
-    cosine = inner / qnp.sqrt(uu * vv)
-    # The clip is float-error insurance only. Under a positive-definite metric
-    # Cauchy-Schwarz guarantees |cosine| <= 1; under an indefinite one it does
-    # not, which is why `_check_angle_is_defined` verifies it rather than
-    # letting the clip quietly flatten an out-of-range value to 0 or pi.
-    cosine_value = qnp.clip(u.ustrip("", cosine), -1.0, 1.0)
-    return cxa.Angle(qnp.arccos(cosine_value), "rad")
+    # Eagerly this raises, naming the case. Under tracing it cannot -- the values
+    # are not concrete -- so it is a no-op there and `valid` below is what stands
+    # between the caller and a wrong answer.
+    _check_angle_is_defined(uu, vv, cos)
 
+    # The traced counterpart of the same conditions. Without it, `jit`/`vmap`
+    # would reach the clip and hand back 0 or pi for a hyperbolic or imaginary
+    # case -- silently reporting "anti-parallel" for two observers in relative
+    # motion. `nan` is the honest value: no real angle exists.
+    valid = (
+        (jnp.asarray(uu.value) > 0)
+        & (jnp.asarray(vv.value) > 0)
+        & (jnp.abs(cos) <= 1.0 + _COS_ATOL)
+    )
+    # The clip is float-error insurance for the *valid* branch only; `valid`
+    # has already excluded everything genuinely out of range.
+    angle = jnp.arccos(jnp.clip(cos, -1.0, 1.0))
+    return cxa.Angle(jnp.where(valid, angle, jnp.nan), "rad")
+
+
+#: Slack on |cos| <= 1, so ordinary float error in a valid Riemannian case is
+#: not mistaken for a genuinely non-spacelike plane.
+_COS_ATOL = 1e-6
 
 _MSG_NULL = (
     "angle_between is undefined for null (zero-norm) tangent vectors: the "
@@ -161,7 +178,7 @@ _MSG_NOT_SPACELIKE_PLANE = (
 
 
 def _check_angle_is_defined(
-    uu: u.AbstractQuantity, vv: u.AbstractQuantity, inner: u.AbstractQuantity, /
+    uu: u.AbstractQuantity, vv: u.AbstractQuantity, cos: Any, /
 ) -> None:
     r"""Raise unless a real circular angle exists between the two vectors.
 
@@ -171,9 +188,10 @@ def _check_angle_is_defined(
     Under a Lorentzian one it holds exactly for a spacelike pair spanning a
     spacelike plane, which is the case this function serves.
 
-    Skipped under JAX tracing, where the values are not concrete.
+    Skipped under JAX tracing, where the values are not concrete; the caller
+    applies the same conditions as a mask there, yielding `nan` instead.
     """
-    values = [q.value for q in (uu, vv, inner)]
+    values = [uu.value, vv.value, cos]
     if any(isinstance(x, jax.core.Tracer) for x in values):  # ty: ignore[possibly-missing-submodule]
         return
 
@@ -191,6 +209,5 @@ def _check_angle_is_defined(
 
     # Both spacelike, but their span may still be Lorentzian -- e.g. u=(0,1,0,0)
     # and v=(1,2,0,0) are each spacelike while their span contains (1,0,0,0).
-    cos = jnp.asarray(u.ustrip("", inner / qnp.sqrt(uu * vv)))
-    if bool(jnp.any(jnp.abs(cos) > 1.0 + 1e-6)):
+    if bool(jnp.any(jnp.abs(jnp.asarray(cos)) > 1.0 + _COS_ATOL)):
         raise ValueError(_MSG_NOT_SPACELIKE_PLANE)
