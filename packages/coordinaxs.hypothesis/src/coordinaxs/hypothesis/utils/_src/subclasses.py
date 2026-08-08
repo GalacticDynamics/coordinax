@@ -8,6 +8,8 @@ import inspect
 import sys
 import warnings
 
+from typing import Final
+
 
 @ft.cache
 def _public_coordinax_module_candidates(module: str, /) -> tuple[str, ...]:
@@ -84,17 +86,39 @@ def canonicalize_coordinax_class(cls: type, /) -> type:
     return cls
 
 
+#: Module-path components that mark a class as declared by a test rather than by
+#: a library: a ``tests`` package, a ``test_*`` or ``conftest`` module, or an
+#: interactive session.
+_TEST_MODULE_PARTS: Final = frozenset({"tests", "test", "conftest", "__main__"})
+
+
+def is_test_declared(cls: type, /) -> bool:
+    """Whether *cls* was declared by a test rather than by a library.
+
+    The subclass tree is process-global, so every fake a test declares sits in
+    it beside the real types and gets drawn as though it were one. Lifetime
+    cannot separate them -- ``__subclasses__`` is already weak, and a fake stays
+    alive as long as the module that declared it is imported -- so this goes on
+    where the class was defined.
+
+    Deliberately keyed on *test* provenance rather than on "outside coordinax":
+    a downstream library that defines its own charts is a first-class user of
+    these strategies and its types must still be drawn. Only classes from test
+    modules are dropped, which also covers that library's own fakes.
+    """
+    module = getattr(cls, "__module__", "")
+    parts = module.split(".")
+    return bool(_TEST_MODULE_PARTS.intersection(parts)) or parts[-1].startswith("test_")
+
+
 def is_library_class(cls: type, /) -> bool:
-    """Whether *cls* is defined by coordinax rather than by its callers.
+    """Whether *cls* belongs to coordinax itself.
 
-    The subclass tree is process-global, so anything that has declared a
-    subclass -- a test fake, a downstream experiment, a doctest -- is in it
-    alongside the library's own types. Provenance is the only thing that tells
-    them apart: lifetime cannot, since ``__subclasses__`` is already weak and a
-    class stays alive as long as the module that declared it is imported.
-
-    The ``coordinax`` prefix covers the plugin distributions too
-    (``coordinaxs.astro`` and friends), matching `canonicalize_coordinax_class`.
+    Used to decide whether `get_all_subclasses` is being asked about coordinax's
+    own hierarchy, in which case it drops test-declared subclasses, or about a
+    caller's, in which case it stays a plain subclass walk. The ``coordinax``
+    prefix covers the plugin distributions too, matching
+    `canonicalize_coordinax_class`.
     """
     return getattr(cls, "__module__", "").startswith("coordinax")
 
@@ -119,12 +143,16 @@ def get_all_subclasses(
     (optionally) filtering the results in {class}`coordinax`.  The return value
     is cached via {func}`functools.cache`.
 
-    When *base_class* is a coordinax class, only classes coordinax itself
-    defines are returned -- see `is_library_class`. The subclass tree is
-    process-global, so without that every fake a test declares would be handed
-    out as though it were a library type, and *whether* it was would depend on
-    when the cache happened to warm. For a base of your own the walk stays
-    generic, so the rule never surprises a caller asking about their own types.
+    When *base_class* belongs to coordinax, subclasses declared by test modules
+    are skipped -- see `is_test_declared`. The subclass tree is process-global,
+    so without that every fake a test declares would be handed out as though it
+    were a real type, and *whether* it was would depend on when the cache
+    happened to warm.
+
+    Classes from ordinary library modules are always kept, **including a
+    downstream package's own** -- extending coordinax and having your types
+    drawn is a supported use of these strategies. And for a base of your own the
+    walk stays entirely plain.
 
     .. note::
 
@@ -202,10 +230,10 @@ def get_all_subclasses(
     canonical_filter = tuple(canonicalize_coordinax_class(cls) for cls in filter_tuple)
     canonical_exclude = tuple(canonicalize_coordinax_class(cls) for cls in exclude)
 
-    # Asking about a coordinax base means asking about coordinax's own types, so
-    # caller-declared subclasses are dropped. Asking about your own base leaves
-    # the walk generic, which is what the utility's other users rely on.
-    library_only = is_library_class(base_class)
+    # Only police coordinax's own hierarchies. Asked about a base of your own,
+    # this stays a plain subclass walk -- which is what the utility's other
+    # callers, and their synthetic test hierarchies, rely on.
+    drop_test_classes = is_library_class(base_class)
 
     def recurse(cls: type, /) -> None:
         for subclass in cls.__subclasses__():
@@ -219,7 +247,7 @@ def get_all_subclasses(
 
             # Check if subclass matches ALL filters (not just ANY)
             if (
-                (not library_only or is_library_class(canonical))
+                not (drop_test_classes and is_test_declared(canonical))
                 and all(issubclass(canonical, f) for f in canonical_filter)
                 and not (exclude_abstract and is_abstract_class(canonical))
             ):

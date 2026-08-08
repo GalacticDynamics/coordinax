@@ -9,7 +9,7 @@ import coordinax.charts as cxc
 
 from coordinaxs.hypothesis.utils._src.subclasses import (
     canonicalize_coordinax_class,
-    is_library_class,
+    is_test_declared,
 )
 
 
@@ -92,7 +92,22 @@ def test_caller_declared_subclasses_are_not_returned() -> None:
     assert library_unchanged == "1", "library classes changed"
 
 
-def test_library_classes_are_recognised() -> None:
-    """Both coordinax and its plugin distributions count as library classes."""
-    assert is_library_class(cxc.Cart3D)
-    assert not is_library_class(test_library_classes_are_recognised.__class__)
+def test_test_provenance_is_recognised() -> None:
+    """Test modules are spotted; ordinary library modules are not.
+
+    The downstream case is the point: a package that defines its own charts is a
+    first-class user of these strategies, so its classes must survive.
+    """
+    assert is_test_declared(test_test_provenance_is_recognised.__class__) is False
+    assert is_test_declared(cxc.Cart3D) is False  # coordinax itself
+    for module in (
+        "tests.unit.test_x",
+        "mypkg.tests.helpers",
+        "pkg.conftest",
+        "__main__",
+    ):
+        fake = type("Fake", (), {"__module__": module})
+        assert is_test_declared(fake), module
+    for module in ("mypkg", "mypkg.charts", "coordinaxs.astro._src.frames"):
+        real = type("Real", (), {"__module__": module})
+        assert not is_test_declared(real), module
