@@ -25,6 +25,18 @@ _MSG_SUPERLUMINAL = (
     "(equivalently |v| < c)."
 )
 
+
+def _as_beta(beta: Any, /) -> Array:
+    """Coerce the boost parameter to a float array.
+
+    A converter rather than an ``__init__``: it is the spelling the rest of the
+    package uses (`composed.py`, `point.py`), and it keeps the ergonomic
+    ``LorentzBoost([0.6, 0.0, 0.0])`` spelling working without hand-writing a
+    constructor that does nothing else.
+    """
+    return jnp.asarray(beta, dtype=float)
+
+
 _MSG_ZERO_DIRECTION = (
     "LorentzBoost.from_rapidity requires a non-zero `direction`; the zero "
     "vector has no boost axis to normalise onto."
@@ -140,11 +152,8 @@ class LorentzBoost(AbstractLinearTransform):
 
     """
 
-    beta: Shaped[Array, "3"]
+    beta: Shaped[Array, "3"] = eqx.field(converter=_as_beta)
     """Boost velocity in units of ``c`` (dimensionless 3-vector)."""
-
-    def __init__(self, beta: Any) -> None:
-        object.__setattr__(self, "beta", jnp.asarray(beta, dtype=float))
 
     @classmethod
     def groups(cls) -> frozenset[type]:
