@@ -5,6 +5,7 @@ dependency is absent, rather than each test carrying its own `importorskip`.
 """
 
 import jax.numpy as jnp
+import plum
 import pytest
 
 import unxt as u
@@ -69,3 +70,21 @@ class TestParametricFromDispatch:
         parametric = _resolved_from_(cxd.Distance, PQ(value, unit))
         plain = _resolved_from_(cxd.Distance, u.Q(value, unit))
         assert parametric is not plain
+
+
+class TestParametricPromotion:
+    """A distance and a `PQ` promote to the `PQ`."""
+
+    def test_promotes_to_parametric_quantity(self) -> None:
+        """`plum.promote` degrades the distance, as it does for `Q`."""
+        promoted = plum.promote(cxd.Distance(1, "pc"), PQ(1.0, "rad"))
+        assert all(isinstance(x, PQ) for x in promoted)
+
+    def test_arithmetic_is_order_independent(self) -> None:
+        """Both operand orders give the same `PQ`; `Distance * PQ` used to raise."""
+        d, pq = cxd.Distance(1, "pc"), PQ(1.0, "rad")
+        forward, reverse = d * pq, pq * d
+        assert isinstance(forward, PQ)
+        assert isinstance(reverse, PQ)
+        assert forward.unit == reverse.unit
+        assert jnp.allclose(forward.value, reverse.value)

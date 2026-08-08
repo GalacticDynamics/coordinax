@@ -53,6 +53,7 @@ astro = ["coordinaxs.astro>=0.24"]
 benchmark = ["pytest-benchmark>=5.2.3", "pytest-codspeed>=5.0.3"]
 curveframes = ["coordinaxs.curveframes>=0.24"]
 interop-astropy = ["coordinaxs.interop.astropy>=0.24"]
+parametric = ["unxts.parametric>=2.0"]
 workspace = [
   "coordinaxs.api>=0.24",
   "coordinaxs.astro>=0.24",
