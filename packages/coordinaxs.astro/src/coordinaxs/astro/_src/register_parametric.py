@@ -13,10 +13,7 @@ from typing import Any
 from plum import add_promotion_rule
 
 # Optional dependency: absent from the lint environment by design.
-from unxts.parametric import (  # ty: ignore[unresolved-import]
-    PQ,
-    ParametricQuantity,
-)
+from unxts.parametric import PQ, ParametricQuantity
 
 from .distance_modulus import (
     DistanceModulus,

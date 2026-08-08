@@ -297,7 +297,7 @@ class TestBilinearForm:
 
     def test_cross_argument_mixing_quantity_and_bare_array_is_rejected(self):
         """One Quantity CDict and one bare-array CDict across arguments is rejected.
-        
+
         Without this check, the code would pass `_prepare()` but fail in `_contract()`
         with a plum dispatch error, since there's no overload for
         `(AbstractMetricMatrix, QuantityMatrix, Array)` or vice versa.

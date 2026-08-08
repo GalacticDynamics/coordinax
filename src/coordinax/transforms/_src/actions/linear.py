@@ -307,10 +307,7 @@ def pushforward(
     p_cart = cxr.tangent_map(v, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
     p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
     at_out = _matmul_cdict(matrix, at_cart, comps_cart)
-    return cxr.tangent_map(
-        p_cart_out, cart, rep, chart, at=at_out, usys=usys
-    )  # ty: ignore[missing-argument]
-    )
+    return cxr.tangent_map(p_cart_out, cart, rep, chart, at=at_out, usys=usys)  # ty: ignore[missing-argument]
 
 
 @plum.dispatch
