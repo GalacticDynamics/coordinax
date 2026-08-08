@@ -126,8 +126,8 @@ def atlases(
       dimensionality. The ``required_chart_classes`` argument pins specific
       chart types into the atlas.
     - **``CartesianProductAtlas``**: returns a ``CartesianProductAtlas``
-      built from two factor atlases whose dimensionalities sum to ``ndim``
-      (at least 2). ``CartesianProductAtlas`` is excluded from the factors.
+      built from 1-5 factor atlases whose dimensionalities sum to ``ndim``.
+      ``CartesianProductAtlas`` is excluded from the factors.
     - **``NoAtlas``**: returns ``NoAtlas()`` (always 0-D). By name only.
     - **``MinkowskiAtlas``**: returns ``MinkowskiAtlas()`` (always 4-D). By
       name only.
@@ -618,11 +618,12 @@ def atlases(
 ) -> Any:
     """Draw a ``CartesianProductAtlas`` with 1-5 non-product factor atlases.
 
-    The number of factors is drawn uniformly from 1 to 5. Each factor atlas is
-    drawn as a non-product atlas with ndim in ``[1, 3]``, and the total
-    dimensionality of the product equals the sum of those factor dimensionalities.
-    When ``ndim`` is given, examples are constrained so a valid partition into
-    ``n_factors`` values in ``[1, 3]`` exists.
+    Each factor atlas is drawn as a non-product atlas with ndim in ``[1, 3]``,
+    and the total dimensionality of the product equals the sum of those factor
+    dimensionalities. Without ``ndim`` the factor count is drawn uniformly from
+    1 to 5. With ``ndim`` given it is drawn uniformly from the counts that admit
+    a partition into values in ``[1, 3]``; an ``ndim`` no count can reach
+    (below 1, or above 15) is discarded via ``hypothesis.assume``.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinaxs.hypothesis.manifolds as cxmst
@@ -636,15 +637,20 @@ def atlases(
     """
     target_ndim = draw_if_strategy(draw, ndim)
 
-    # Draw the number of factors: 1–5
-    n_factors = draw(st.integers(min_value=1, max_value=5))
-
     dims: list[int] = []
     if target_ndim is None:
+        n_factors = draw(st.integers(min_value=1, max_value=5))
         dims = [draw(st.integers(min_value=1, max_value=3)) for _ in range(n_factors)]
     else:
-        # Feasibility for partition of target_ndim into n_factors entries in [1, 3].
-        assume(n_factors <= target_ndim <= 3 * n_factors)
+        # A partition of target_ndim into n_factors entries in [1, 3] exists iff
+        # n_factors <= target_ndim <= 3 * n_factors. Solve that for n_factors and
+        # draw from the feasible range, rather than drawing 1-5 and rejecting:
+        # at ndim=1 only one of the five counts worked.
+        lo = max(1, -(-target_ndim // 3))
+        hi = min(5, target_ndim)
+        if lo > hi:  # no factor count reaches this target
+            assume(False)
+        n_factors = draw(st.integers(min_value=lo, max_value=hi))
 
         remaining = target_ndim
         for i in range(n_factors):
@@ -657,8 +663,8 @@ def atlases(
 
         # No `assume(remaining == 0)`: on the last factor `factors_left_after`
         # is 0, so min_this == max_this == remaining and the loop always lands
-        # exactly on the target. The feasibility `assume` above is what does the
-        # work.
+        # exactly on the target. The `n_factors` range above is what makes every
+        # iteration's range non-empty.
 
     factors = tuple(
         draw(cast("Any", atlases)(exclude=(cxm.CartesianProductAtlas,), ndim=d))

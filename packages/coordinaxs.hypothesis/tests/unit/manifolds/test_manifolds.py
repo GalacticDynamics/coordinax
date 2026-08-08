@@ -280,3 +280,37 @@ class TestExcludedFromGenericPoolAreStillExplicitlyDrawable:
         predicate answers "at which ndim", not "belongs in the generic pool".
         """
         assert supports_ndim(cls, 3) is True
+
+
+class TestProductFactorCountIsDrawnFeasible:
+    """The factor count is narrowed to the target, not drawn then rejected."""
+
+    @pytest.mark.parametrize("ndim", [1, 2, 3, 4, 5])
+    def test_product_manifold_low_ndim_does_not_filter(self, ndim: int) -> None:
+        """Low ``ndim`` products generate without tripping ``filter_too_much``.
+
+        Drawing the count from 1-5 and `assume`-ing feasibility rejected most
+        counts at small targets -- at ``ndim=1`` only one of the five worked --
+        which is what made this strategy fragile under the health check.
+        """
+
+        @given(M=cxst.manifolds(cxm.CartesianProductManifold, ndim=ndim))
+        @settings(max_examples=25, deadline=None)
+        def check(M: cxm.CartesianProductManifold) -> None:
+            assert 1 <= len(M.factors) <= min(5, ndim)
+            assert sum(f.ndim for f in M.factors) == ndim
+
+        check()
+
+    @pytest.mark.parametrize("ndim", [1, 2, 3, 4, 5])
+    def test_product_atlas_low_ndim_does_not_filter(self, ndim: int) -> None:
+        """Same for atlases, whose factors are additionally capped at 3-D."""
+
+        @given(atlas=cxst.atlases(cxm.CartesianProductAtlas, ndim=ndim))
+        @settings(max_examples=25, deadline=None)
+        def check(atlas: cxm.CartesianProductAtlas) -> None:
+            n = len(atlas.factors)
+            assert n <= ndim <= 3 * n
+            assert sum(f.ndim for f in atlas.factors) == ndim
+
+        check()

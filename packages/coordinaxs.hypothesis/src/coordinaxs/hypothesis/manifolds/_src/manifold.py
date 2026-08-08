@@ -423,11 +423,12 @@ def manifolds(
 ) -> Any:
     """Draw a ``CartesianProductManifold`` with 1-5 non-product factor manifolds.
 
-    The number of factors is drawn uniformly from 1 to 5. The total
-    dimensionality of the product equals the sum of the factor dimensionalities.
-    When ``ndim`` is given it must be at least the number of factors (each
-    factor contributes at least 1 dimension); examples that cannot satisfy this
-    are discarded via ``hypothesis.assume``.
+    The total dimensionality of the product equals the sum of the factor
+    dimensionalities. Without ``ndim`` the factor count is drawn uniformly from
+    1 to 5. With ``ndim`` given, each factor contributes at least 1 dimension,
+    so the count is drawn uniformly from ``[1, min(5, ndim)]``, every value of
+    which admits a partition; ``ndim < 1`` admits no product at all and is
+    discarded via ``hypothesis.assume``.
 
     >>> import coordinax.manifolds as cxm
     >>> import coordinaxs.hypothesis.manifolds as cxmst
@@ -441,15 +442,17 @@ def manifolds(
     """
     target_ndim = draw_if_strategy(draw, ndim)
 
-    # Draw the number of factors: 1–5
-    n_factors = draw(st.integers(min_value=1, max_value=5))
-
-    # Each factor needs at least 1 dimension, so total_ndim >= n_factors.
-    if target_ndim is not None:
-        assume(target_ndim >= n_factors)
-        total_ndim = target_ndim
-    else:
+    # Each factor needs at least 1 dimension, so bound the factor count by the
+    # target up front rather than drawing 1-5 and rejecting the infeasible
+    # counts: at ndim=1 that threw away four draws in five.
+    if target_ndim is None:
+        n_factors = draw(st.integers(min_value=1, max_value=5))
         total_ndim = draw(st.integers(min_value=n_factors, max_value=n_factors + 4))
+    else:
+        # Below 1 dimension no factor count works at all.
+        assume(target_ndim >= 1)
+        n_factors = draw(st.integers(min_value=1, max_value=min(5, target_ndim)))
+        total_ndim = target_ndim
 
     # Partition total_ndim into n_factors positive integers, drawing each factor
     # from the range that still leaves >= 1 dimension for every factor after it.
