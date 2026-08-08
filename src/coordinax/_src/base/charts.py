@@ -83,6 +83,22 @@ def _field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
     return tuple(getattr(chart, f.name) for f in dataclasses.fields(chart))
 
 
+def _is_dynamic(value: Any, /) -> bool:
+    """Whether a field value can hold an array or tracer.
+
+    A `unxt.StaticQuantity` contributes no pytree leaves and is static; a
+    `unxt.Quantity` contributes one array leaf and is dynamic. Values that are
+    not registered pytrees at all (e.g. an `AbstractEmbeddingMap`) are a single
+    *non-array* leaf, and stay static -- they compare and hash as before.
+    """
+    return any(eqx.is_array(x) for x in jtu.tree_leaves(value))
+
+
+def _static_field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
+    """Field values that hold no arrays or tracers, in field order."""
+    return tuple(v for v in _field_values(chart) if not _is_dynamic(v))
+
+
 class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
 
@@ -268,8 +284,11 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     def __eq__(self, other: object) -> bool:
         """Check equality between charts.
 
-        Two charts are equal if they are the same type and have equal field
-        values.
+        Two charts are equal only when provably so: the same object, or the
+        same type with no dynamic (traced/array) parameters on either side and
+        equal static fields. This is deliberately conservative -- a rule that
+        inspected dynamic values would behave differently inside and outside
+        `jax.jit`.
 
         Examples
         --------
@@ -285,16 +304,27 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
         # Make sure the other object is the same type of chart
         if type(self) is not type(other):
             return NotImplemented
-        # Check the components, coord_dimensions, and field values for equality
+        if self is other:
+            return True
+        # Conservative: a dynamic parameter cannot be compared at trace time.
+        # Not provably equal => not equal.
         assert isinstance(other, AbstractChart)  # noqa: S101  # for mypy
+        self_values, other_values = _field_values(self), _field_values(other)
+        if any(map(_is_dynamic, self_values)) or any(map(_is_dynamic, other_values)):
+            return False
+        # Neither side has a dynamic field, so these *are* the static values.
+        # Check the components, coord_dimensions, and static fields for equality
         return (
             self.components == other.components
             and self.coord_dimensions == other.coord_dimensions
-            and (_field_values(self) == _field_values(other))
+            and self_values == other_values
         )
 
     def __hash__(self) -> int:
-        """Hash a chart based on its type and field values.
+        """Hash a chart based on its type and static field values.
+
+        Dynamic (traced/array) parameters are excluded: they are unhashable,
+        and `__eq__` never uses them either, so equal charts still hash equal.
 
         Examples
         --------
@@ -305,7 +335,12 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
 
         """
         return hash(
-            (type(self), self.components, self.coord_dimensions, _field_values(self))
+            (
+                type(self),
+                self.components,
+                self.coord_dimensions,
+                _static_field_values(self),
+            )
         )
 
 
