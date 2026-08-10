@@ -32,8 +32,8 @@ import unxt as u
 from .atlas import SPHERICAL_ATLAS_DEFAULT_CHARTS, HyperSphericalAtlas
 from .manifold import S1, S2, Sn
 from coordinax._src.base import (
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts import checks
@@ -51,7 +51,7 @@ _MSG_NO_CART: Final = (
 )
 
 
-class AbstractSphericalHyperSphere(AbstractFixedComponentsChart[MT, Ks, Ds]):
+class AbstractSphericalHyperSphere(AbstractStaticFixedComponentsChart[MT, Ks, Ds]):
     r"""Abstract base class for intrinsic charts on the unit hypersphere.
 
     All hypersphere charts represent coordinates on the surface of a unit

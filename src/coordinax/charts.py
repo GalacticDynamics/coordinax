@@ -72,6 +72,8 @@ __all__ = (
     "AbstractStaticChart",
     "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
+    "AbstractStaticFixedComponentsChart",
+    "AbstractParameterizedFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
@@ -166,7 +168,9 @@ with install_import_hook("coordinax.charts"):
         AbstractDimensionalFlag,
         AbstractFixedComponentsChart,
         AbstractParameterizedChart,
+        AbstractParameterizedFixedComponentsChart,
         AbstractStaticChart,
+        AbstractStaticFixedComponentsChart,
     )
     from coordinax._src.charts import (
         Abstract0D,

@@ -10,7 +10,10 @@ import plum
 
 from .atlas import MinkowskiAtlas
 from .manifold import MinkowskiManifold
-from coordinax._src.base import AbstractFixedComponentsChart, chart_dataclass_decorator
+from coordinax._src.base import (
+    AbstractStaticFixedComponentsChart,
+    chart_dataclass_decorator,
+)
 from coordinax._src.charts.d4 import Abstract4D
 from coordinax._src.custom_types import Len
 
@@ -25,7 +28,9 @@ _WRONG_M_MSG = "MinkowskiCT chart must belong to a MinkowskiManifold, got {typen
 @chart_dataclass_decorator
 class MinkowskiCT(
     Abstract4D,
-    AbstractFixedComponentsChart[MinkowskiManifold, MinkowskiCTKeys, MinkowskiCTDims],
+    AbstractStaticFixedComponentsChart[
+        MinkowskiManifold, MinkowskiCTKeys, MinkowskiCTDims
+    ],
 ):
     r"""4D Minkowski spacetime chart $(ct, x, y, z)$.
 

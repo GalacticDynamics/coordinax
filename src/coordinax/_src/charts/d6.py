@@ -9,8 +9,8 @@ from typing import Any, Final, Literal as L, NoReturn, override  # noqa: N817
 
 from coordinax._src.base import (
     AbstractDimensionalFlag,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.custom_types import Len, Spd
@@ -45,7 +45,8 @@ PoincarePolarDims = tuple[
 
 @chart_dataclass_decorator
 class PoincarePolar6D(
-    AbstractFixedComponentsChart[Any, PoincarePolarKeys, PoincarePolarDims], Abstract6D
+    AbstractStaticFixedComponentsChart[Any, PoincarePolarKeys, PoincarePolarDims],
+    Abstract6D,
 ):
     r"""Six-dimensional Poincaré symplectic-polar chart on phase space.
 

@@ -10,8 +10,8 @@ from typing_extensions import TypeVar
 
 from coordinax._src.base import (
     AbstractDimensionalFlag,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.custom_types import Len
@@ -49,7 +49,9 @@ CartNDDims = tuple[Len]
 
 @EuclideanAtlas.register
 @chart_dataclass_decorator
-class CartND(AbstractFixedComponentsChart[MT, CartNDKeys, CartNDDims], AbstractND):
+class CartND(
+    AbstractStaticFixedComponentsChart[MT, CartNDKeys, CartNDDims], AbstractND
+):
     r"""N-dimensional Cartesian chart.
 
     Components are ordered as ``("q",)`` with dimension ``("length",)``,

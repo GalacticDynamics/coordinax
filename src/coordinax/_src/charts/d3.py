@@ -31,7 +31,8 @@ import unxt as u
 from coordinax._src.base import (
     MT,
     AbstractDimensionalFlag,
-    AbstractFixedComponentsChart,
+    AbstractParameterizedFixedComponentsChart,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts import checks
@@ -69,7 +70,9 @@ Cart3DDims = tuple[Len, Len, Len]
 
 @EuclideanAtlas.register
 @chart_dataclass_decorator
-class Cart3D(AbstractFixedComponentsChart[MT, Cart3DKeys, Cart3DDims], Abstract3D):
+class Cart3D(
+    AbstractStaticFixedComponentsChart[MT, Cart3DKeys, Cart3DDims], Abstract3D
+):
     r"""Three-dimensional Cartesian chart $(x, y, z)$.
 
     Components are ordered as ``("x", "y", "z")`` with dimensions ``("length",
@@ -130,7 +133,8 @@ Cylindrical3DDims = tuple[Len, Ang, Len]
 @EuclideanAtlas.register
 @chart_dataclass_decorator
 class Cylindrical3D(
-    AbstractFixedComponentsChart[MT, CylindricalKeys, Cylindrical3DDims], Abstract3D
+    AbstractStaticFixedComponentsChart[MT, CylindricalKeys, Cylindrical3DDims],
+    Abstract3D,
 ):
     r"""Three-dimensional cylindrical chart $(\rho, \phi, z)$.
 
@@ -182,7 +186,7 @@ True
 # Spherical
 
 
-class AbstractSpherical3D(AbstractFixedComponentsChart[MT, Ks, Ds], Abstract3D):
+class AbstractSpherical3D(AbstractStaticFixedComponentsChart[MT, Ks, Ds], Abstract3D):
     """Abstract spherical vector representation."""
 
     _: dataclasses.KW_ONLY
@@ -433,10 +437,11 @@ ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 
 
 @EuclideanAtlas.register
-@chart_dataclass_decorator
 class ProlateSpheroidal3D(
     Abstract3D,
-    AbstractFixedComponentsChart[MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
+    AbstractParameterizedFixedComponentsChart[
+        MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims
+    ],
 ):
     r"""Prolate spheroidal coordinates $(\mu, \nu, \phi)$ with focal length $\Delta$.
 
@@ -473,7 +478,7 @@ class ProlateSpheroidal3D(
 
     _: dataclasses.KW_ONLY
     Delta: Annotated[
-        Real[u.quantity.StaticQuantity, ""],  # StaticQuantity["length"]
+        Real[u.quantity.AbstractQuantity, ""],  # Quantity (dynamic) or StaticQuantity
         Is[lambda x: x.value > 0],
     ]
     """Focal length of the coordinate system."""

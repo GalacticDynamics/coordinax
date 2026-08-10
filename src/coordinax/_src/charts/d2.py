@@ -10,8 +10,8 @@ from typing_extensions import TypeVar
 
 from coordinax._src.base import (
     AbstractDimensionalFlag,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.custom_types import Ang, Len
@@ -49,7 +49,9 @@ Cart2DDims = tuple[Len, Len]
 
 @EuclideanAtlas.register
 @chart_dataclass_decorator
-class Cart2D(AbstractFixedComponentsChart[MT, Cart2DKeys, Cart2DDims], Abstract2D):
+class Cart2D(
+    AbstractStaticFixedComponentsChart[MT, Cart2DKeys, Cart2DDims], Abstract2D
+):
     r"""Two-dimensional Cartesian chart $(x, y)$.
 
     Components are ordered as ``("x", "y")`` with dimensions ``("length",
@@ -109,7 +111,9 @@ Polar2DDims = tuple[Len, Ang]
 
 @EuclideanAtlas.register
 @chart_dataclass_decorator
-class Polar2D(AbstractFixedComponentsChart[MT, PolarKeys, Polar2DDims], Abstract2D):
+class Polar2D(
+    AbstractStaticFixedComponentsChart[MT, PolarKeys, Polar2DDims], Abstract2D
+):
     r"""Two-dimensional polar chart $(r, \theta)$.
 
     Components are ordered as ``("r", "theta")`` with dimensions ``("length",

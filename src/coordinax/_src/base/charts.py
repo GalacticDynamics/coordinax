@@ -5,6 +5,8 @@ __all__ = (
     "AbstractStaticChart",
     "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
+    "AbstractStaticFixedComponentsChart",
+    "AbstractParameterizedFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
@@ -408,8 +410,14 @@ def _get_tuple(tp: GAT, /) -> GAT:  # noqa: UP047
     return tuple(arg.__args__[0] for arg in get_args(tp))
 
 
-class AbstractFixedComponentsChart(AbstractStaticChart[MT, Ks, Ds]):
-    """Abstract base class for charts with fixed components and dimensions."""
+class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
+    """Abstract base class for charts with fixed components and dimensions.
+
+    Having fixed components is orthogonal to the static/parameterized split, so
+    this sits *above* it. Concrete charts inherit a branch-bound subclass:
+    `AbstractStaticFixedComponentsChart` or
+    `AbstractParameterizedFixedComponentsChart`.
+    """
 
     _components: Ks
     _coord_dimensions: Ds
@@ -445,7 +453,7 @@ class AbstractFixedComponentsChart(AbstractStaticChart[MT, Ks, Ds]):
                 )
                 raise TypeError(msg)
 
-        super().__init_subclass__(**kw)  # AbstractStaticChart registers `cls`.
+        super().__init_subclass__(**kw)  # the branch base registers `cls`.
 
     @property
     def components(self) -> Ks:
@@ -454,6 +462,18 @@ class AbstractFixedComponentsChart(AbstractStaticChart[MT, Ks, Ds]):
     @property
     def coord_dimensions(self) -> Ds:
         return self._coord_dimensions
+
+
+class AbstractStaticFixedComponentsChart(
+    AbstractFixedComponentsChart[MT, Ks, Ds], AbstractStaticChart[MT, Ks, Ds]
+):
+    """Fixed-components chart with no parameters (the common case)."""
+
+
+class AbstractParameterizedFixedComponentsChart(
+    AbstractFixedComponentsChart[MT, Ks, Ds], AbstractParameterizedChart[MT, Ks, Ds]
+):
+    """Fixed-components chart carrying parameters, e.g. `ProlateSpheroidal3D`."""
 
 
 ##############################################################################
