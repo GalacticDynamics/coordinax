@@ -432,9 +432,23 @@ class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
 
         This runs on every static-chart construction, including hot ones like
         `chart.cartesian`, so it walks the fields directly rather than through
-        the (plum-dispatched, ~100x more expensive) `dataclassish.field_items`,
-        and takes a single `tree_leaves` pass over all of them. Naming the
-        offending fields costs a second, slower pass -- paid only when raising.
+        the (plum-dispatched, ~50x more expensive) `dataclassish.field_items`,
+        and takes a single pass over all of them. Naming the offending fields
+        costs a second, per-field pass -- paid only when raising.
+
+        KNOWN GAP: `jtu.tree_leaves` stops at anything that is not a *registered*
+        pytree, so a live array inside one is a single opaque non-array leaf and
+        slips through. `EmbeddedChart.embed_map` is exactly that -- an
+        `AbstractEmbeddingMap` is explicitly `jtu.register_static` -- so
+        `EmbeddedChart(TwoSphereIn3D(radius=u.Q(...)))` still constructs, still
+        reports zero leaves, and can still leak a tracer. Recursing into
+        dataclass leaves does close it, but forces `radius` to a
+        `StaticQuantity`, and `pt_embed` propagates `radius` straight into the
+        output point -- where a `StaticQuantity` dies under any `jnp` op or
+        trace. The fix is the `ProlateSpheroidal3D` treatment: register
+        `AbstractEmbeddingMap` as a pytree and move `EmbeddedChart` to
+        `AbstractParameterizedChart`, which keeps `radius` a live `Quantity` and
+        makes it differentiable. Tracked as follow-up, not closed here.
         """
         fields = dataclasses.fields(self)  # ty: ignore[invalid-argument-type]
         values = [getattr(self, f.name) for f in fields]
