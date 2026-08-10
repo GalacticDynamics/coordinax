@@ -190,7 +190,7 @@ class TestAbstractDimensionalFlag:
 
         from coordinax._src.base import (
             MT,
-            AbstractFixedComponentsChart,
+            AbstractStaticFixedComponentsChart,
             chart_dataclass_decorator,
         )
         from coordinax._src.charts.d3 import Abstract3D, Cart3D
@@ -205,7 +205,7 @@ class TestAbstractDimensionalFlag:
 
             @chart_dataclass_decorator
             class _Bad3D(
-                AbstractFixedComponentsChart[MT, two_keys, two_dims], Abstract3D
+                AbstractStaticFixedComponentsChart[MT, two_keys, two_dims], Abstract3D
             ):
                 _: dataclasses.KW_ONLY
                 M: MT = R3

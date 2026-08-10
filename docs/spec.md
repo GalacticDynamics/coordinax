@@ -1481,7 +1481,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `ProlateSpheroidal3D` is the final concrete chart type for prolate spheroidal coordinates $(\mu, \nu, \phi)$.
     - Components: `("mu", "nu", "phi")` with dimensions `("area", "area", "angle")`.
-    - Carries a required field `Delta` (focal half-length, a static `Quantity["length"]` with `Delta > 0`).
+    - Carries a required field `Delta` (focal half-length, an `AbstractQuantity["length"]` with `Delta > 0`). A `StaticQuantity` contributes no pytree leaves; a `Quantity` contributes one and is differentiable.
     - Validity constraints: $\mu \ge \Delta^2$, $|\nu| \le \Delta^2$.
     - Unlike many other charts, `ProlateSpheroidal3D` instances are not interchangeable: two instances with different `Delta` are distinct charts.
     - No pre-defined instance (requires `Delta` parameter).

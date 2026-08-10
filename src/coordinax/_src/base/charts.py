@@ -96,6 +96,31 @@ def _is_dynamic(value: Any, /) -> bool:
     return any(eqx.is_array(x) for x in jtu.tree_leaves(value))
 
 
+def _check_on_exactly_one_branch(cls: type, /) -> None:
+    """Reject a concrete chart that is not on exactly one branch.
+
+    A chart on neither branch is never registered static and silently becomes
+    one opaque pytree leaf; a chart on both is a contradiction. Neither fails
+    loudly on its own, so fail here, at class creation.
+
+    The branch classes are resolved from module globals because they are defined
+    *below* `AbstractChart` -- while they are themselves being created the names
+    are absent, and abstract classes are exempt anyway.
+    """
+    static = globals().get("AbstractStaticChart")
+    param = globals().get("AbstractParameterizedChart")
+    if static is None or param is None:
+        return
+    on_static, on_param = issubclass(cls, static), issubclass(cls, param)
+    if on_static == on_param:
+        msg = (
+            f"{cls.__name__} is on {'both' if on_static else 'neither'} chart "
+            "branch; a concrete chart must subclass exactly one of "
+            "AbstractStaticChart, AbstractParameterizedChart"
+        )
+        raise TypeError(msg)
+
+
 def _static_field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
     """Field values that hold no arrays or tracers, in field order."""
     return tuple(v for v in _field_values(chart) if not _is_dynamic(v))
@@ -129,6 +154,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
         CHART_CLASSES.add(cls)
         if not is_abstract_class(cls):
             NON_ABC_CHART_CLASSES.add(cls)
+            _check_on_exactly_one_branch(cls)
 
     # ===============================================================
     # Vector API

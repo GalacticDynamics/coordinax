@@ -15,8 +15,8 @@ from .chart import AbstractFlatCartesianProductChart
 from .manifold import CartesianProductManifold
 from coordinax._src.base import (
     AbstractChart,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts.d1 import time1d
@@ -92,7 +92,9 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     """
 
-    spatial_chart: AbstractFixedComponentsChart[Any, Any, Any] = field(default=cart3d)  # pylint: disable=invalid-field-call
+    spatial_chart: AbstractStaticFixedComponentsChart[Any, Any, Any] = field(
+        default=cart3d
+    )  # pylint: disable=invalid-field-call
     """Spatial part of the representation (defaults to `coordinax.charts.cart3d`)."""
 
     _: KW_ONLY

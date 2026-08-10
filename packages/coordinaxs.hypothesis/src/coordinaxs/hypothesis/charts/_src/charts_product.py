@@ -143,7 +143,10 @@ def cartesian_product_factors(
         # Exclude abstract charts, product charts (to avoid infinite recursion),
         # and charts with unresolvable TypeVars Late import to avoid circular
         # import (core.py imports from this module)
-        chart = draw(charts(filter=cxc.AbstractFixedComponentsChart, ndim=factor_dim))  # ty: ignore[missing-argument, unknown-argument]
+        # The product chart is on the static branch, so a parameterized factor
+        # would hide a live array inside a `register_static` node.
+        factor_cls = cxc.AbstractStaticFixedComponentsChart
+        chart = draw(charts(filter=factor_cls, ndim=factor_dim))  # ty: ignore[missing-argument, unknown-argument]
         factors.append(chart)
 
     return tuple(factors)

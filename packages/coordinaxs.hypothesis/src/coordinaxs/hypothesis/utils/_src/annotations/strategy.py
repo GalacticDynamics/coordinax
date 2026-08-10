@@ -107,32 +107,37 @@ def strategy_for_annotation(
     except (eqx.EquinoxTracetimeError, ValueError):
         dim = ANY_UNITS
 
-    # Determine the quantity class and whether to use static values
-    # Check if ann is a subclass of StaticQuantity or if it's a parametrized
-    # type with StaticQuantity as the underlying type
-    quantity_cls = u.Q  # Default
-    static_value = False
-    if inspect.isclass(ann):
-        if issubclass(ann, u.StaticQuantity):
-            quantity_cls = u.StaticQuantity
-            static_value = True  # StaticQuantity requires StaticValue
-
-    # For generic types like StaticQuantity[PhysicalType('length')]
-    elif (
-        hasattr(ann, "__origin__")
-        and inspect.isclass(ann.__origin__)
-        and issubclass(ann.__origin__, u.StaticQuantity)
-    ):
-        quantity_cls = u.StaticQuantity
-        static_value = True  # StaticQuantity requires StaticValue
+    # Which concrete quantity type(s) to draw, as (class, static_value) pairs.
+    # `static_value=True` is not optional -- `StaticQuantity` requires a
+    # `StaticValue`. Unwrap parametrized annotations like
+    # `StaticQuantity[PhysicalType('length')]` first.
+    origin = ann.__origin__ if hasattr(ann, "__origin__") else ann
+    if not inspect.isclass(origin):
+        kinds = [(u.Q, False)]
+    elif issubclass(origin, u.StaticQuantity):
+        kinds = [(u.StaticQuantity, True)]  # the annotation pins static
+    elif issubclass(u.StaticQuantity, origin):
+        # An abstract base (e.g. `AbstractQuantity`) admits either kind, so it
+        # must draw both. Defaulting to `u.Q` here silently strips *all* static
+        # coverage from every field annotated with it -- and for a chart field
+        # that is worse than thin coverage: a dynamic value inside a static
+        # chart is a live array that JAX cannot see.
+        kinds = [(u.Q, False), (u.StaticQuantity, True)]
+    else:
+        kinds = [(u.Q, False)]  # the annotation pins dynamic
 
     # Build quantity strategy
-    strategy = ust.quantities(
-        unit=dim,
-        quantity_cls=quantity_cls,
-        dtype=meta.get("dtype", SCALAR_DTYPES),
-        shape=meta.get("shape", xps.array_shapes()),
-        static_value=static_value,
+    strategy = st.one_of(
+        [
+            ust.quantities(
+                unit=dim,
+                quantity_cls=quantity_cls,
+                dtype=meta.get("dtype", SCALAR_DTYPES),
+                shape=meta.get("shape", xps.array_shapes()),
+                static_value=static_value,
+            )
+            for quantity_cls, static_value in kinds
+        ]
     )
 
     # Apply validators if present

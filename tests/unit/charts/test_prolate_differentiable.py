@@ -18,11 +18,24 @@ def test_prolate_is_on_the_parameterized_branch():
     assert issubclass(cxc.ProlateSpheroidal3D, AbstractParameterizedChart)
 
 
+def test_prolate_still_has_fixed_components():
+    """The invariant the shared-base split exists to protect.
+
+    `AbstractFixedComponentsChart` is used as a *filter* by `guess_chart_cls`,
+    `GalileanCT`, and the hypothesis strategies -- if prolate ever fell out of
+    it, every one of them would silently skip it and nothing would go red.
+    """
+    assert issubclass(cxc.ProlateSpheroidal3D, cxc.AbstractFixedComponentsChart)
+
+
 def test_static_delta_is_unchanged():
     """Every existing call site passes StaticQuantity and must be unaffected."""
     c = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+    twin = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
     assert len(jax.tree.leaves(c)) == 0
-    assert hash(c) is not None
+    assert c == twin  # by value, not identity -- dict/cache keys depend on it
+    assert hash(c) == hash(twin)
+    assert c != cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(3.0, "m"))
 
 
 def test_dynamic_delta_gives_a_leaf():
@@ -73,3 +86,15 @@ def test_jit_retraces_once_across_delta_values():
     assert len(traces) == 1, (
         f"retraced {len(traces)} times; Delta is being treated as static"
     )
+
+    # A static Delta still keys the cache by value: equal charts share a trace.
+    static_traces = []
+
+    @jax.jit
+    def g(chart):
+        static_traces.append(1)
+        return cxc.pt_map(Q_IN, chart, cxc.cart3d)["x"].ustrip("m")
+
+    g(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m")))
+    g(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m")))
+    assert len(static_traces) == 1

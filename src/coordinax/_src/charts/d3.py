@@ -454,7 +454,10 @@ class ProlateSpheroidal3D(
     - $\mu \ge \Delta^2$,
     - $\lvert\nu\rvert \le \Delta^2$.
 
-    The parameter $\Delta$ is stored as metadata on the representation.
+    $\Delta$ is a chart *parameter*, and differentiability in it is opt-in per
+    instance: a `unxt.StaticQuantity` contributes no pytree leaves (hashable,
+    behaves like any other chart), a `unxt.Quantity` contributes one and can be
+    differentiated through.
 
     Examples
     --------
@@ -463,6 +466,13 @@ class ProlateSpheroidal3D(
     >>> chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2, "kpc"))
     >>> chart.components
     ('mu', 'nu', 'phi')
+
+    >>> import jax
+    >>> len(jax.tree.leaves(chart))
+    0
+
+    >>> len(jax.tree.leaves(cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "kpc"))))
+    1
 
     >>> chart.coord_dimensions
     ('area', 'area', 'angle')
