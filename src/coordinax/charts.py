@@ -64,6 +64,37 @@ We can also compute the Jacobian of the point map:
 
 >>> jac = cxc.jac_pt_map(q, cxc.cart3d, cxc.sph3d)
 
+Every concrete chart is on exactly one of two branches. `AbstractStaticChart`
+charts have no parameters; they are registered static automatically, so they
+have no pytree leaves and are always hashable. `AbstractParameterizedChart`
+charts carry parameters and are `equinox.Module` pytrees.
+
+>>> isinstance(cxc.cart3d, cxc.AbstractStaticChart)
+True
+>>> issubclass(cxc.ProlateSpheroidal3D, cxc.AbstractParameterizedChart)
+True
+
+A parameterized chart has leaves only if its parameters do, so
+differentiability is opt-in per instance:
+
+>>> import jax
+>>> import unxt as u
+
+>>> len(jax.tree.leaves(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))))
+0
+>>> len(jax.tree.leaves(cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "m"))))
+1
+
+Equality is conservative: charts holding dynamic parameters are equal only when
+they are the same object, because under `jit` those parameters are tracers with
+no values to compare.
+
+>>> cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "m")) == cxc.ProlateSpheroidal3D(
+...     Delta=u.Q(2.0, "m"))
+False
+
+See the "Working With Charts" guide for the full story.
+
 """
 
 __all__ = (

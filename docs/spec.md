@@ -1079,9 +1079,20 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     Notes:
 
-    - Registered to JAX as static using `jax.tree_util.register_static`.
-    - Equality is based on matching classes, components, coord_dimensions, and all field values (if any).
+    - ``AbstractChart`` itself is not registered static; staticness comes from the branch a chart is on (see below).
+    - Equality is based on matching classes, components, coord_dimensions, and *static* field values; see the conservative equality rule below.
     - Implements a `wadler_lindig` ``__pdoc__()`` method which underpins ``__repr__`` and ``__str__`
+
+!!! info `AbstractStaticChart` and `AbstractParameterizedChart`
+
+    ``AbstractChart`` has exactly two branches, and every concrete chart is on exactly one of them. A concrete chart on neither branch, or on both, raises ``TypeError`` at class creation.
+
+    - ``AbstractStaticChart``: a chart with no parameters. Concrete subclasses are registered with `jax.tree_util.register_static` by ``__init_subclass__``, so staticness is *structural* -- inherited from the branch, not applied per class by a decorator that can be forgotten (``register_static`` is not inherited, so an unregistered chart would silently become one opaque pytree leaf). A static chart has zero pytree leaves and is always hashable. ``__post_init__`` raises ``TypeError`` if any field holds an array, which registration would otherwise hide from JAX.
+    - ``AbstractParameterizedChart``: a chart carrying parameters. It is an `equinox.Module`, and therefore a pytree. Whether an instance has leaves depends on what it is given: a `unxt.StaticQuantity` parameter contributes none (hashable, behaves like a static chart), a `unxt.Quantity` contributes one (differentiable, and `jit` caches on structure rather than value). Differentiability is therefore opt-in per instance -- ``ProlateSpheroidal3D(Delta=...)`` accepts either quantity type.
+
+    Equality and hashing are parameter-aware, and deliberately conservative: two charts holding dynamic (array- or tracer-valued) parameters are equal only when they are the same object, *even when numerically equal*. Hashing ignores dynamic fields, so equal charts still hash equal. A rule that inspected dynamic values would behave differently inside and outside `jax.jit`, where those values are tracers.
+
+    A chart's parameters are reachable by ``jax.grad`` and by the `jit` cache when the chart is passed as an argument to, or built inside, a traced function. A `Point` holds its chart in the pytree structure rather than as a child, so a point's leaf count is unchanged by its chart's parameters; the consequence is that `jit` over points whose charts hold dynamic parameters retraces each call.
 
 !!! info `AbstractFixedComponentsChart`
 
