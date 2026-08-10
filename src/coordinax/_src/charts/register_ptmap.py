@@ -1386,8 +1386,13 @@ def pt_map(
     )
     p = jax.tree.map(lambda x: jnp.asarray(x, dtype=dtype), p)
     cyl3d = Cylindrical3D(M=to_chart.M)
+    # `Delta == Delta` is a *dimensionless Quantity* whenever either side is a
+    # `unxt.Quantity`, and `lax.cond` rejects that as a predicate. Compare in a
+    # common unit and strip to a plain array bool, which works for a static and
+    # a traced `Delta` alike.
+    unit = from_chart.Delta.unit
     return jax.lax.cond(
-        to_chart.Delta == from_chart.Delta,
+        u.ustrip(unit, to_chart.Delta) == u.ustrip(unit, from_chart.Delta),
         lambda p: p,
         lambda p: cxcapi.pt_map(
             cxcapi.pt_map(p, from_M, from_chart, to_M, cyl3d, usys=usys),

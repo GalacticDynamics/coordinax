@@ -417,6 +417,38 @@ class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
         if not is_abstract_class(cls):
             jtu.register_static(cls)
 
+    def __post_init__(self) -> None:
+        """Reject an array (or tracer) hiding inside a static chart.
+
+        `jtu.register_static` makes the whole instance one static node, so an
+        array held in a field reports *zero* pytree leaves: `jit` bakes it in as
+        a constant and a tracer walks straight out through the boundary, to die
+        later somewhere unrelated. The annotations that would forbid this
+        (`GalileanCT.spatial_chart`, `CartesianProductChart.factors`) are not
+        enforced at runtime, so enforce it here, at construction.
+
+        Subclasses that define their own `__post_init__` must call
+        `super().__post_init__()`.
+
+        This runs on every static-chart construction, including hot ones like
+        `chart.cartesian`, so it walks the fields directly rather than through
+        the (plum-dispatched, ~100x more expensive) `dataclassish.field_items`,
+        and takes a single `tree_leaves` pass over all of them. Naming the
+        offending fields costs a second, slower pass -- paid only when raising.
+        """
+        fields = dataclasses.fields(self)  # ty: ignore[invalid-argument-type]
+        values = [getattr(self, f.name) for f in fields]
+        if not any(eqx.is_array(x) for x in jtu.tree_leaves(values)):
+            return
+        bad = sorted(f.name for f in fields if _is_dynamic(getattr(self, f.name)))
+        msg = (
+            f"{type(self).__name__} is a static chart, but {bad} hold arrays. "
+            "A chart parameter that can hold an array must live on a "
+            "parameterized chart (`AbstractParameterizedChart`); a static chart "
+            "would hide it from JAX entirely."
+        )
+        raise TypeError(msg)
+
 
 class AbstractParameterizedChart(AbstractChart[MT, Ks, Ds], eqx.Module):
     """A chart carrying parameters, and therefore a pytree.

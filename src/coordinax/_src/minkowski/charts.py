@@ -70,6 +70,7 @@ class MinkowskiCT(
 
     def __post_init__(self) -> None:
         """Validate that M is compatible with this chart."""
+        super().__post_init__()
         if not isinstance(self.M, MinkowskiManifold):
             raise TypeError(_WRONG_M_MSG.format(typename=type(self.M).__name__))
 

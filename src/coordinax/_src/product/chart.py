@@ -326,6 +326,9 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
 
     def __post_init__(self) -> None:
+        # Rejects a parameterized factor, which would hide a live array here.
+        super().__post_init__()
+
         # Validate lengths match
         if len(self.factors) != len(self.factor_names):
             msg = (

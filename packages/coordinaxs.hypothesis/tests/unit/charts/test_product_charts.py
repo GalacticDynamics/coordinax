@@ -245,8 +245,13 @@ class TestProductChartsEdgeCases:
     @given(
         chart=cxst.charts(
             cxc.CartesianProductChart,
+            # A product chart is on the static branch, so its factors must be
+            # too -- a parameterized factor hides a live array in a
+            # `register_static` node and is rejected at construction.
             factor_charts=st.lists(
-                cxst.charts(exclude=(cxc.Abstract0D,)), min_size=1, max_size=3
+                cxst.charts(filter=cxc.AbstractStaticChart, exclude=(cxc.Abstract0D,)),
+                min_size=1,
+                max_size=3,
             ).map(tuple),
         )
     )
