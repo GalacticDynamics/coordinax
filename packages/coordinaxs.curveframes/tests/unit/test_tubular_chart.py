@@ -77,6 +77,20 @@ def test_static_bounds_drop_their_leaves() -> None:
     assert len(jax.tree.leaves(ch)) == 2  # builder only
 
 
+def test_inside_the_reach_the_jacobian_factor_is_positive() -> None:
+    ch = _chart()  # unit circle: curvature 1, so the reach is |n| < 1
+    at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
+    assert float(ch.jacobian_factor(at)) > 0
+    ch.check_data(at, values=True)  # must not raise
+
+
+def test_the_factor_vanishes_at_the_focal_distance() -> None:
+    """On the unit circle the focal distance is exactly the radius."""
+    ch = _chart()
+    at = {"tau": u.Q(0.0, "s"), "n1": u.Q(-1.0, "km"), "n2": u.Q(0.0, "km")}
+    assert abs(float(ch.jacobian_factor(at))) < 1e-6
+
+
 def test_the_reach_guard_fires_past_the_focal_distance() -> None:
     ch = _chart()
     at = {"tau": u.Q(0.0, "s"), "n1": u.Q(-1.6, "km"), "n2": u.Q(0.0, "km")}
