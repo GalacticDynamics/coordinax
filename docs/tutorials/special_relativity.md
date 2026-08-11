@@ -132,14 +132,8 @@ For a **timelike** pair, the magnitude is the elapsed **proper time** — what a
 For a **spacelike** pair the magnitude is a proper distance instead, and asking for the wrong one is an error rather than a silent `nan`:
 
 ```pycon
->>> round(
-...     float(
-...         cxm.lorentzian.proper_distance(cxc.minkowskict, birth, event(3.0, 5.0)).ustrip(
-...             "m"
-...         )
-...     ),
-...     3,
-... )
+>>> sigma = cxm.lorentzian.proper_distance(cxc.minkowskict, birth, event(3.0, 5.0))
+>>> round(float(sigma.ustrip("m")), 3)
 4.0
 
 >>> try:
@@ -169,7 +163,41 @@ $\gamma \approx 15.8$ is the whole story in one number. There is also `rapidity`
 3.453
 ```
 
-### An aside: why a boost is not "time-dependent"
+Now transform the muon's death event into the frame where the muon is moving. The `None` in the second slot is the time parameter $\tau$; a boost does not use one, for reasons the aside after this section explains.
+
+```pycon
+>>> death_lab = cxfm.act(boost, None, death, cxc.minkowskict, cxr.point)
+>>> round(float(death_lab["ct"].ustrip("m")))
+10434
+>>> round(float(death_lab["x"].uconvert("km").ustrip("km")), 2)
+10.41
+```
+
+Two things changed. In this frame the muon **travelled 10.4 km**, not zero — of course, it is moving here. And the elapsed coordinate time grew:
+
+```pycon
+>>> elapsed = (death_lab["ct"] / c).uconvert("us")
+>>> round(float(elapsed.ustrip("us")), 1)
+34.8
+```
+
+$34.8\;\mu\text{s}$, against the $2.2\;\mu\text{s}$ we started with — a factor of $\gamma = 15.82$. This is **time dilation**, and it is what saves the muon.
+
+It is worth finishing the arithmetic, because 10.4 km is still short of 15 km. The $2.2\;\mu\text{s}$ is a _mean_ lifetime: decay is exponential, so what matters is not whether one muon survives a fixed distance but what fraction of them do.
+
+```pycon
+>>> import math
+>>> classical = 0.998 * float(c.ustrip("m/s")) * float(tau0.uconvert("s").ustrip("s"))
+>>> relativistic = float(death_lab["x"].ustrip("m"))
+>>> f"{math.exp(-15000 / classical):.1e}"
+'1.3e-10'
+>>> round(math.exp(-15000 / relativistic), 3)
+0.237
+```
+
+Roughly a quarter of them arrive, against one in eight billion classically. That ratio — not the single distance — is the thing sea-level detectors measure.
+
+## An aside: why a boost is not "time-dependent"
 
 `coordinax` marks transforms whose point action varies with the evolution parameter $\tau$. A Lorentz boost is **not** one of them, which surprises people who know that its Galilean cousin is:
 
@@ -202,26 +230,6 @@ An _accelerating_ frame, where the rapidity itself grows with $\tau$, is built b
 True
 ```
 
-Now transform the muon's death event into the frame where the muon is moving. The `None` in the second slot is the time parameter $\tau$, and a boost does not use it — see the note below.
-
-```pycon
->>> death_lab = cxfm.act(boost, None, death, cxc.minkowskict, cxr.point)
->>> round(float(death_lab["ct"].ustrip("m")))
-10434
->>> round(float(death_lab["x"].uconvert("km").ustrip("km")), 2)
-10.41
-```
-
-Two things changed. In this frame the muon **travelled 10.4 km**, not zero — of course, it is moving here. And the elapsed coordinate time grew:
-
-```pycon
->>> elapsed = (death_lab["ct"] / c).uconvert("us")
->>> round(float(elapsed.ustrip("us")), 1)
-34.8
-```
-
-$34.8\;\mu\text{s}$, against the $2.2\;\mu\text{s}$ we started with — a factor of $\gamma = 15.82$. This is **time dilation**, and it is what saves the muon: 10.4 km of travel gets it most of the way down through a 15 km atmosphere, where the naive 660 m would not have gotten it out of the stratosphere.
-
 ## Step 5: What Did _Not_ Change
 
 The coordinates moved, the elapsed time moved, the distance travelled moved. It is easy to come away thinking everything is relative. The interval is not:
@@ -250,7 +258,15 @@ The causal character is likewise absolute — no boost can turn a timelike pair 
 'timelike'
 ```
 
-This invariance is the defining property of a Lorentz transformation, $\Lambda^\top \eta \Lambda = \eta$, and you can check it directly on the matrix:
+This invariance is the defining property of a Lorentz transformation, $\Lambda^\top \eta \Lambda = \eta$, and you can check it directly on the matrix.
+
+```{note}
+The next few examples reach for `boost._raw_matrix`. That attribute is
+**internal** — it is shown here only because seeing $\Lambda$ itself is the
+point of these three checks. Ordinary use of `LorentzBoost` goes through
+`act`, `gamma`, `rapidity` and `inverse`, none of which need the matrix.
+A public accessor is tracked in issue #698.
+```
 
 ```pycon
 >>> eta = jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0]))
@@ -268,13 +284,13 @@ One more frame-dependent thing, and the least intuitive. Take two events that ar
 >>> there = event(0.0, 1.0)
 ```
 
-Both at $ct = 0$: simultaneous. After a boost they are not:
+Both at $ct = 0$: simultaneous. After a boost they are not — the two clocks now differ by $\gamma\beta\,\Delta x$:
 
 ```pycon
 >>> here_b = cxfm.act(boost, None, here, cxc.minkowskict, cxr.point)
 >>> there_b = cxfm.act(boost, None, there, cxc.minkowskict, cxr.point)
->>> round(float(there_b["ct"].ustrip("m")), 6) != round(float(here_b["ct"].ustrip("m")), 6)
-True
+>>> round(float((there_b["ct"] - here_b["ct"]).ustrip("m")), 3)
+15.788
 ```
 
 "At the same time" is not a property of a pair of events; it is a property of a pair of events _and a frame_. Note this is only possible because the pair is **spacelike** separated — for a timelike pair the ordering is fixed, so causality survives:
@@ -319,7 +335,7 @@ True
 | **proper time**                  | ❌ **invariant** |
 | **causal character**             | ❌ **invariant** |
 
-The practical rule: reach for `interval`, `proper_time`, and `causal_character` when you want a statement about _physics_, and read coordinates only when you genuinely want a statement about a particular frame. `separation` and `norm` belong to the Riemannian world and will refuse Minkowski input rather than let you mix the two up.
+The practical rule: reach for `interval` and the `cxm.lorentzian` verbs when you want a statement about _physics_, and read coordinates only when you genuinely want a statement about a particular frame. `separation` and `norm` belong to the Riemannian world and will refuse Minkowski input rather than let you mix the two up.
 
 ## See Also
 
