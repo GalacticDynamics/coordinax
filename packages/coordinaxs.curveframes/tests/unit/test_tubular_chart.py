@@ -179,3 +179,52 @@ def test_identity_falls_back_through_cartesian_for_different_charts() -> None:
     # And the requirement this test exists to enforce: at least one component
     # differs substantially from the input, so a no-op fallback would fail.
     assert not jnp.allclose(got["n2"].ustrip("km"), p["n2"].ustrip("km"), atol=1e-3)
+
+
+def _helix(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+    """A curve with nonzero torsion.
+
+    Both metric tests below must share this curve, not the planar `circle`
+    above: a planar curve has zero torsion, so Frenet--Serret is diagonal
+    there too and a circle-based Bishop test would pass for either builder,
+    proving nothing about the ds*dn cross terms.
+    """
+    t = tau.ustrip("s")
+    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
+
+
+_HELIX_BOUNDS = (u.Q(-1.0, "s"), u.Q(6.0, "s"))
+_HELIX_AT = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
+
+
+def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
+    """Bishop is rotation-minimising, so there are no ds*dn cross terms.
+
+    Uses the torsion-carrying `_helix`, not the planar `circle`: on a planar
+    curve Frenet--Serret is diagonal too (zero torsion), so this claim only
+    has content on a curve with nonzero torsion. See
+    `test_frenet_metric_has_torsion_cross_terms` for the contrast on the same
+    curve.
+    """
+    from coordinaxs.api.manifolds import metric_matrix
+
+    ch = cxfc.TubularChart(cxfc.BishopBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
+    g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
+
+    assert jnp.allclose(g[0, 1], 0.0, atol=1e-8)
+    assert jnp.allclose(g[0, 2], 0.0, atol=1e-8)
+    assert jnp.allclose(g[1, 1], 1.0, atol=1e-8)
+    assert jnp.allclose(g[2, 2], 1.0, atol=1e-8)
+
+
+def test_frenet_metric_has_torsion_cross_terms() -> None:
+    """The contrast that motivates preferring Bishop for this chart.
+
+    Same `_helix` and same point as the Bishop test above: Bishop is
+    diagonal there, Frenet--Serret is not, ten orders of magnitude apart.
+    """
+    from coordinaxs.api.manifolds import metric_matrix
+
+    ch = cxfc.TubularChart(cxfc.FrenetSerretBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
+    g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
+    assert not jnp.allclose(g[0, 1], 0.0, atol=1e-6)

@@ -9,9 +9,14 @@ implementation modules:
 - {mod}`.chart` — `TubularChart`, on the parameterized branch.
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
 - {mod}`.register_ptmap` — ``pt_map`` dispatch registrations for `TubularChart`.
+- {mod}`.register_metric` — ``metric_matrix`` dispatch registration for
+  `TubularChart`.
 """
 
-from . import register_ptmap  # noqa: F401
+from . import (
+    register_metric,  # noqa: F401
+    register_ptmap,  # noqa: F401
+)
 from .base import *
 from .bishop import *
 from .chart import *
