@@ -47,7 +47,9 @@ def require_positive_definite(metric: AbstractMetricField, fname: str, /) -> Non
     norm() supports only positive-definite metrics, but MinkowskiMetric has
     signature (-1, 1, 1, 1), which is pseudo-Riemannian (indefinite). Under such
     a metric `sqrt(v^T G v)` is `nan` for timelike vectors rather than a
-    meaningful magnitude.
+    meaningful magnitude. Use `interval` for the signed square, or
+    `proper_time` / `proper_distance` for the magnitude of a timelike /
+    spacelike pair.
 
     """
     if all(s > 0 for s in metric.signature):
@@ -57,7 +59,9 @@ def require_positive_definite(metric: AbstractMetricField, fname: str, /) -> Non
         f"{type(metric).__name__} has signature {tuple(metric.signature)}, which "
         "is pseudo-Riemannian (indefinite). Under such a metric "
         "`sqrt(v^T G v)` is `nan` for timelike vectors rather than a "
-        "meaningful magnitude."
+        "meaningful magnitude. Use `interval` for the signed square, or "
+        "`proper_time` / `proper_distance` for the magnitude of a timelike / "
+        "spacelike pair."
     )
     raise NotImplementedError(msg)
 
