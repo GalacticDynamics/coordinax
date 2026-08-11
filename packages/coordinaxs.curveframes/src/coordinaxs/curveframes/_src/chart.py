@@ -68,7 +68,13 @@ class TubularChart(AbstractParameterizedChart):
     _: dataclasses.KW_ONLY
 
     tau_bounds: tuple[Any, Any]
-    """Scan range for the inverse solve. Must cover the curve of interest."""
+    """Scan range for the inverse solve.
+
+    Must cover the curve of interest, and for a **closed** curve must not span
+    more than one period: `gamma(tau)` and `gamma(tau + period)` are the same
+    ambient point, so a wider range makes the nearest-point solve an exact tie
+    and the recovered `tau` arbitrary between the two.
+    """
 
     n_seed: int = eqx.field(static=True, default=64)
     """Seed points for the inverse scan. Static: it is a loop bound."""

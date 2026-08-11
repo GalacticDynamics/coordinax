@@ -16,7 +16,12 @@ def circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
 
-BOUNDS = (u.Q(-1.0, "s"), u.Q(7.0, "s"))
+# Exactly ONE period of the circle. Bounds spanning more than a period make
+# the inverse genuinely ambiguous: gamma(tau) and gamma(tau + 2*pi) are the
+# same point, so the nearest-point solve faces an exact tie (measured:
+# |gamma(0.7) - gamma(0.7 + 2*pi)| = 0.0). That is a property of closed
+# curves, not a solver defect.
+BOUNDS = (u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s"))
 
 
 def _chart(**kw):
@@ -110,22 +115,14 @@ def test_forward_matches_the_frame_construction() -> None:
 
 
 def test_round_trip_cartesian_to_tubular_and_back() -> None:
-    # NOTE: tau=0.8, not the brief's 0.7. `circle` has period 2*pi =~ 6.283, and
-    # BOUNDS=(-1, 7) spans 8 units -- wider than one period -- so tau=0.7 has a
-    # periodic alias at 0.7 + 2*pi =~ 6.983, still inside BOUNDS. Bishop/Frenet
-    # holonomy is exactly zero for a planar curve, so gamma and the (U1, U2)
-    # triad are *identical* at both parameter values: the two candidates are an
-    # exact tie in Euclidean distance, not a near-tie broken by seed-grid luck.
-    # `nearest_tau`'s coarse scan (see nearest.py) has no way to prefer one
-    # over the other, and empirically resolves it to the 6.983 alias. This is
-    # not a chart bug: nearest_tau is documented to find the *nearest* point,
-    # and here two points are equally near. tau=0.8 puts the alias (0.8+2*pi
-    # =~ 7.083) outside BOUNDS, making the inverse well-posed again.
+    # BOUNDS is exactly one period of `circle` (see its definition above), so
+    # tau=0.7 has no periodic alias inside the scan range and the inverse is
+    # well-posed: there is exactly one nearest point for nearest_tau to find.
     ch = _chart()
-    p = {"tau": u.Q(0.8, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
+    p = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
     xyz = cxc.pt_map(p, ch.M, ch, ch.M, cxc.cart3d)
     back = cxc.pt_map(xyz, ch.M, cxc.cart3d, ch.M, ch)
-    assert jnp.allclose(back["tau"].ustrip("s"), 0.8, atol=1e-6)
+    assert jnp.allclose(back["tau"].ustrip("s"), 0.7, atol=1e-6)
     assert jnp.allclose(back["n1"].ustrip("km"), 0.13, atol=1e-6)
     assert jnp.allclose(back["n2"].ustrip("km"), -0.21, atol=1e-6)
 
