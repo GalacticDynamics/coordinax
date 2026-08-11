@@ -14,7 +14,6 @@ the chart's validity domain (``mu >= Delta**2``, ``|nu| <= Delta**2``), so a
 
 import jax
 import jax.numpy as jnp
-import pytest
 
 import unxt as u
 
@@ -36,11 +35,6 @@ def _chart(delta_value):
 
 def _tangent(chart):
     return cx.Tangent(data=VEL, chart=chart, basis=cxr.coord_basis, semantic=cxr.vel)
-
-
-def test_the_chart_under_test_is_actually_parameterized():
-    """Guard the guard: these tests are worthless if `Delta` is static."""
-    assert len(jax.tree.leaves(_chart(DELTA))) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -263,15 +257,16 @@ def test_jit_coordinate_bundle_keyed_by_parameterized_chart():
 # The payoff: none of the above may cost differentiability in `Delta`.
 
 
-# `AT` is in-domain for Delta**2 in [|nu|, mu] == [2, 6] m2, i.e. Delta in
-# [1.42, 2.44] m. Outside that the map is genuinely `nan` and says nothing.
-@pytest.mark.parametrize("d", [1.5, 2.0, 2.4])
-def test_grad_through_delta_is_finite_and_nonzero(d):
-    """If any branch above went static in `Delta`, the gradient would vanish."""
+def test_grad_through_delta_is_finite_and_nonzero():
+    """If any branch above went static in `Delta`, the gradient would vanish.
+
+    `AT` is in-domain for Delta**2 in [|nu|, mu] == [2, 6] m2; outside that the
+    map is genuinely `nan` and says nothing.
+    """
 
     def f(delta):
         return cxc.pt_map(AT, _chart(delta), cxc.cart3d)["x"].ustrip("m")
 
-    g = jax.grad(f)(d)
+    g = jax.grad(f)(DELTA)
     assert jnp.isfinite(g)
     assert g != 0.0

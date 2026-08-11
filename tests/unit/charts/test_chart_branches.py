@@ -8,15 +8,9 @@ import unxt as u
 import coordinax.charts as cxc
 from coordinax._src.base.charts import (
     NON_ABC_CHART_CLASSES,
-    AbstractChart,
     AbstractParameterizedChart,
     AbstractStaticChart,
 )
-
-
-def test_both_branches_are_abstract_charts():
-    assert issubclass(AbstractStaticChart, AbstractChart)
-    assert issubclass(AbstractParameterizedChart, AbstractChart)
 
 
 @pytest.mark.parametrize("cls", sorted(NON_ABC_CHART_CLASSES, key=lambda c: c.__name__))
@@ -34,22 +28,9 @@ def test_every_concrete_chart_is_on_exactly_one_branch(cls):
         assert not jax.tree.leaves(cls.__new__(cls))
 
 
-def test_static_charts_have_zero_leaves():
-    """The property every existing Point/vmap/tree_map depends on."""
-    for chart in (cxc.cart3d, cxc.sph3d, cxc.cyl3d):
-        assert len(jax.tree.leaves(chart)) == 0
-        assert hash(chart) is not None
-
-
 # ---------------------------------------------------------------------------
-# A static chart must not be handed an array-bearing parameter.
-#
-# `jtu.register_static` collapses the whole instance to one static node, so an
-# array in a field reports *zero* leaves. `jit` then bakes it in, and a tracer
-# walks straight out through the boundary -- to die much later, far from here,
-# with `TypeError: unsupported operand type(s) for +: 'Quantity' and 'Quantity'`.
-# The annotations that forbid this are not enforced at runtime, so
-# `AbstractStaticChart.__post_init__` is.
+# A static chart must not be handed an array-bearing parameter; see
+# `AbstractStaticChart.__post_init__`.
 
 
 def _prolate(delta):

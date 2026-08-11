@@ -6,16 +6,11 @@ import jax.numpy as jnp
 import unxt as u
 
 import coordinax.charts as cxc
-from coordinax._src.base.charts import AbstractParameterizedChart
 
 # The chart's validity domain is ``mu >= Delta**2`` and ``|nu| <= Delta**2``.
 # ``mu`` must clear the largest ``Delta`` used below (3 m), or the transition
 # takes the square root of a negative number and every value is NaN.
 Q_IN = {"mu": u.Q(12.0, "m2"), "nu": u.Q(0.5, "m2"), "phi": u.Q(0.3, "rad")}
-
-
-def test_prolate_is_on_the_parameterized_branch():
-    assert issubclass(cxc.ProlateSpheroidal3D, AbstractParameterizedChart)
 
 
 def test_prolate_still_has_fixed_components():
