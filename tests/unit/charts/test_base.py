@@ -188,11 +188,9 @@ class TestAbstractDimensionalFlag:
 
         from typing import Literal
 
-        import jax.tree_util as jtu
-
         from coordinax._src.base import (
             MT,
-            AbstractFixedComponentsChart,
+            AbstractStaticFixedComponentsChart,
             chart_dataclass_decorator,
         )
         from coordinax._src.charts.d3 import Abstract3D, Cart3D
@@ -205,10 +203,9 @@ class TestAbstractDimensionalFlag:
         # A 2-component chart declared 3D (via Abstract3D) must be rejected.
         with pytest.raises(TypeError, match="declared 3D but has 2 components"):
 
-            @jtu.register_static
             @chart_dataclass_decorator
             class _Bad3D(
-                AbstractFixedComponentsChart[MT, two_keys, two_dims], Abstract3D
+                AbstractStaticFixedComponentsChart[MT, two_keys, two_dims], Abstract3D
             ):
                 _: dataclasses.KW_ONLY
                 M: MT = R3

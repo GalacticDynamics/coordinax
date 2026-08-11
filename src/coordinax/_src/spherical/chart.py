@@ -27,15 +27,13 @@ import dataclasses
 from typing import Any, Final, Literal as L, NoReturn, override  # noqa: N817
 from typing_extensions import TypeVar
 
-import jax.tree_util as jtu
-
 import unxt as u
 
 from .atlas import SPHERICAL_ATLAS_DEFAULT_CHARTS, HyperSphericalAtlas
 from .manifold import S1, S2, Sn
 from coordinax._src.base import (
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts import checks
@@ -53,7 +51,7 @@ _MSG_NO_CART: Final = (
 )
 
 
-class AbstractSphericalHyperSphere(AbstractFixedComponentsChart[MT, Ks, Ds]):
+class AbstractSphericalHyperSphere(AbstractStaticFixedComponentsChart[MT, Ks, Ds]):
     r"""Abstract base class for intrinsic charts on the unit hypersphere.
 
     All hypersphere charts represent coordinates on the surface of a unit
@@ -123,7 +121,6 @@ CircularOneSphereDims = tuple[Ang]
 
 
 @HyperSphericalAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class CircularOneSphere(
     AbstractSphericalOneSphere[MT, CircularOneSphereKeys, CircularOneSphereDims]
@@ -200,7 +197,6 @@ SphericalTwoSphereDims = tuple[Ang, Ang]
 
 
 @HyperSphericalAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class SphericalTwoSphere(
     AbstractSphericalTwoSphere[MT, SphericalTwoSphereKeys, SphericalTwoSphereDims]
@@ -260,7 +256,6 @@ LonLatSphericalTwoSphereDims = tuple[Ang, Ang]
 
 
 @HyperSphericalAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class LonLatSphericalTwoSphere(
     AbstractSphericalTwoSphere[
@@ -311,7 +306,6 @@ LonCosLatSphericalTwoSphereDims = tuple[Ang, Ang]
 
 
 @HyperSphericalAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class LonCosLatSphericalTwoSphere(
     AbstractSphericalTwoSphere[
@@ -356,7 +350,6 @@ MathSphericalTwoSphereKeys = tuple[L["theta"], L["phi"]]
 
 
 @HyperSphericalAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class MathSphericalTwoSphere(
     AbstractSphericalTwoSphere[MT, MathSphericalTwoSphereKeys, SphericalTwoSphereDims]

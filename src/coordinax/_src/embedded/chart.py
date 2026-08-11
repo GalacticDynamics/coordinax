@@ -5,7 +5,6 @@ __all__ = ("EmbeddedChart",)
 
 from typing import ClassVar, Generic, cast, final, override
 
-import jax
 import plum
 
 import coordinaxs.api.charts as cxcapi
@@ -15,16 +14,15 @@ from .manifold import EmbeddedManifold
 from coordinax._src.base import (
     AbstractChart,
     AbstractManifold,
-    chart_dataclass_decorator,
+    AbstractParameterizedChart,
 )
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 
-@jax.tree_util.register_static
 @final
-@chart_dataclass_decorator
 class EmbeddedChart(
-    AbstractChart[EmbeddedManifold, Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
+    AbstractParameterizedChart[EmbeddedManifold, Ks, Ds],
+    Generic[IntrinsicT, AmbientT, Ks, Ds],
 ):
     r"""Chart for intrinsic coordinates on an embedding manifold.
 
@@ -167,18 +165,6 @@ class EmbeddedChart(
 
         """
         return self.ambient.cartesian
-
-    def __hash__(self) -> int:
-        """Hash based on the class and the embedding map.
-
-        >>> import coordinax.manifolds as cxm
-        >>> import unxt as u
-        >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.StaticQuantity(2.0, "km")))
-        >>> isinstance(hash(chart), int)
-        True
-
-        """  # noqa: E501
-        return hash((self.__class__, self.embed_map))
 
 
 # ===================================================================

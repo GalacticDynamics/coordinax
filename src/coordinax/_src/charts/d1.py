@@ -13,12 +13,10 @@ import dataclasses
 from typing import Any, Final, Literal as L, Self, override  # noqa: N817
 from typing_extensions import TypeVar
 
-import jax.tree_util as jtu
-
 from coordinax._src.base import (
     AbstractDimensionalFlag,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.custom_types import Len
@@ -53,9 +51,10 @@ Cart1DKeys = tuple[L["x"]]
 Cart1DDims = tuple[Len]
 
 
-@jtu.register_static
 @chart_dataclass_decorator
-class Cart1D(AbstractFixedComponentsChart[MT, Cart1DKeys, Cart1DDims], Abstract1D):
+class Cart1D(
+    AbstractStaticFixedComponentsChart[MT, Cart1DKeys, Cart1DDims], Abstract1D
+):
     r"""One-dimensional Cartesian chart $(x)$.
 
     Components are ordered as ``("x",)`` with dimension ``("length",)``.
@@ -113,9 +112,10 @@ Radial1DDims = tuple[Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
-class Radial1D(AbstractFixedComponentsChart[MT, RadialKeys, Radial1DDims], Abstract1D):
+class Radial1D(
+    AbstractStaticFixedComponentsChart[MT, RadialKeys, Radial1DDims], Abstract1D
+):
     r"""One-dimensional radial chart $(r)$.
 
     Components are ordered as ``("r",)`` with dimension ``("length",)``.
@@ -171,9 +171,8 @@ TimeDims = tuple[L["time"]]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
-class Time1D(AbstractFixedComponentsChart[MT, TimeKeys, TimeDims], Abstract1D):
+class Time1D(AbstractStaticFixedComponentsChart[MT, TimeKeys, TimeDims], Abstract1D):
     """One-dimensional time chart ``(t)``.
 
     Components are ordered as ``("t",)`` with dimension ``("time",)``.

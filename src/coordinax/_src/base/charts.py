@@ -2,7 +2,10 @@
 
 __all__ = (
     "AbstractChart",
+    "AbstractStaticChart",
+    "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
+    "AbstractStaticFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
@@ -31,6 +34,7 @@ from typing import (
     no_type_check,
 )
 
+import equinox as eqx
 import jax.tree_util as jtu
 import plum
 import wadler_lindig as wl
@@ -80,7 +84,45 @@ def _field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
     return tuple(getattr(chart, f.name) for f in dataclasses.fields(chart))
 
 
-@jtu.register_static
+def _is_dynamic(value: Any, /) -> bool:
+    """Whether a field value can hold an array or tracer.
+
+    A `unxt.StaticQuantity` contributes no pytree leaves and is static; a
+    `unxt.Quantity` contributes one array leaf and is dynamic. Values that are
+    not registered pytrees at all are a single *non-array* leaf, and stay
+    static -- they compare and hash as before.
+    """
+    return any(eqx.is_array(x) for x in jtu.tree_leaves(value))
+
+
+def _check_on_exactly_one_branch(cls: type, /) -> None:
+    """Reject a concrete chart that is not on exactly one branch.
+
+    A chart on neither branch is never registered static and silently becomes
+    one opaque pytree leaf; a chart on both is a contradiction. Neither fails
+    loudly on its own, so fail here, at class creation.
+
+    The branch classes are resolved from module globals because they are defined
+    *below* `AbstractChart`. Only they themselves are created before the names
+    exist, and they are `Abstract`-prefixed, so this never runs for them.
+    """
+    static = globals()["AbstractStaticChart"]
+    param = globals()["AbstractParameterizedChart"]
+    on_static, on_param = issubclass(cls, static), issubclass(cls, param)
+    if on_static == on_param:
+        msg = (
+            f"{cls.__name__} is on {'both' if on_static else 'neither'} chart "
+            "branch; a concrete chart must subclass exactly one of "
+            "AbstractStaticChart, AbstractParameterizedChart"
+        )
+        raise TypeError(msg)
+
+
+def _static_field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
+    """Field values that hold no arrays or tracers, in field order."""
+    return tuple(v for v in _field_values(chart) if not _is_dynamic(v))
+
+
 class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
 
@@ -109,6 +151,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
         CHART_CLASSES.add(cls)
         if not is_abstract_class(cls):
             NON_ABC_CHART_CLASSES.add(cls)
+            _check_on_exactly_one_branch(cls)
 
     # ===============================================================
     # Vector API
@@ -266,8 +309,11 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     def __eq__(self, other: object) -> bool:
         """Check equality between charts.
 
-        Two charts are equal if they are the same type and have equal field
-        values.
+        Two charts are equal only when provably so: the same object, or the
+        same type with no dynamic (traced/array) parameters on either side and
+        equal static fields. This is deliberately conservative -- a rule that
+        inspected dynamic values would behave differently inside and outside
+        `jax.jit`.
 
         Examples
         --------
@@ -283,16 +329,27 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
         # Make sure the other object is the same type of chart
         if type(self) is not type(other):
             return NotImplemented
-        # Check the components, coord_dimensions, and field values for equality
+        if self is other:
+            return True
+        # Conservative: a dynamic parameter cannot be compared at trace time.
+        # Not provably equal => not equal.
         assert isinstance(other, AbstractChart)  # noqa: S101  # for mypy
+        self_values, other_values = _field_values(self), _field_values(other)
+        if any(map(_is_dynamic, self_values)) or any(map(_is_dynamic, other_values)):
+            return False
+        # Neither side has a dynamic field, so these *are* the static values.
+        # Check the components, coord_dimensions, and static fields for equality
         return (
             self.components == other.components
             and self.coord_dimensions == other.coord_dimensions
-            and (_field_values(self) == _field_values(other))
+            and self_values == other_values
         )
 
     def __hash__(self) -> int:
-        """Hash a chart based on its type and field values.
+        """Hash a chart based on its type and static field values.
+
+        Dynamic (traced/array) parameters are excluded: they are unhashable,
+        and `__eq__` never uses them either, so equal charts still hash equal.
 
         Examples
         --------
@@ -303,7 +360,12 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
 
         """
         return hash(
-            (type(self), self.components, self.coord_dimensions, _field_values(self))
+            (
+                type(self),
+                self.components,
+                self.coord_dimensions,
+                _static_field_values(self),
+            )
         )
 
 
@@ -330,6 +392,75 @@ def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
 
 
 ##############################################################################
+# The two branches of the chart hierarchy.
+# NOTE: these must be defined after `is_abstract_class`, which
+# `__init_subclass__` calls while the class body is being created.
+
+
+class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
+    """A chart with no parameters, and therefore no pytree leaves.
+
+    Concrete subclasses are registered as static automatically -- staticness
+    is structural, inherited from this branch, not a decorator that can be
+    forgotten. (`jtu.register_static` is not inherited, so an unregistered
+    chart would silently become a single opaque leaf.)
+    """
+
+    def __init_subclass__(cls, **kw: Any) -> None:
+        super().__init_subclass__(**kw)
+        # NOTE: static charts must use `chart_dataclass_decorator` (slots=False).
+        # `dataclass(slots=True)` builds a second class object and would register
+        # both it and the discarded first one.
+        if not is_abstract_class(cls):
+            jtu.register_static(cls)
+
+    def __post_init__(self) -> None:
+        """Reject an array (or tracer) hiding inside a static chart.
+
+        An array in a field of a static node reports *zero* pytree leaves, so
+        `jit` bakes it in and a tracer walks out through the boundary; the
+        annotations that would forbid it (`GalileanCT.spatial_chart`,
+        `CartesianProductChart.factors`) are not enforced at runtime.
+
+        Subclasses that define their own `__post_init__` must call
+        `super().__post_init__()`.
+
+        This runs on every static-chart construction, including hot ones like
+        `chart.cartesian`, so it walks the fields directly rather than through
+        the (plum-dispatched, ~50x more expensive) `dataclassish.field_items`,
+        and takes a single pass over all of them. Naming the offending fields
+        costs a second, per-field pass -- paid only when raising.
+
+        `jtu.tree_leaves` stops at anything that is not a *registered* pytree, so
+        a live array hidden inside one would still slip through as a single
+        opaque non-array leaf. `AbstractEmbeddingMap` was the one such holder in
+        the codebase; it is now a pytree, and its chart holder `EmbeddedChart`
+        is on the parameterized branch.
+        """
+        fields = dataclasses.fields(self)  # ty: ignore[invalid-argument-type]
+        values = [getattr(self, f.name) for f in fields]
+        if not any(eqx.is_array(x) for x in jtu.tree_leaves(values)):
+            return
+        bad = sorted(f.name for f in fields if _is_dynamic(getattr(self, f.name)))
+        msg = (
+            f"{type(self).__name__} is a static chart, but {bad} hold arrays. "
+            "A chart parameter that can hold an array must live on a "
+            "parameterized chart (`AbstractParameterizedChart`); a static chart "
+            "would hide it from JAX entirely."
+        )
+        raise TypeError(msg)
+
+
+class AbstractParameterizedChart(AbstractChart[MT, Ks, Ds], eqx.Module):
+    """A chart carrying parameters, and therefore a pytree.
+
+    Whether an instance actually has leaves depends on what it is given: a
+    `unxt.StaticQuantity` parameter contributes none (hashable, behaves like a
+    static chart), a `unxt.Quantity` contributes one (differentiable).
+    """
+
+
+##############################################################################
 # AbstractFixedComponentsChart
 
 
@@ -339,7 +470,12 @@ def _get_tuple(tp: GAT, /) -> GAT:  # noqa: UP047
 
 
 class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
-    """Abstract base class for charts with fixed components and dimensions."""
+    """Abstract base class for charts with fixed components and dimensions.
+
+    Having fixed components is orthogonal to the static/parameterized split, so
+    this sits *above* it: a concrete chart mixes in a branch alongside it, via
+    `AbstractStaticFixedComponentsChart` or directly.
+    """
 
     _components: Ks
     _coord_dimensions: Ds
@@ -375,7 +511,7 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
                 )
                 raise TypeError(msg)
 
-        super().__init_subclass__(**kw)  # AbstractChart has.
+        super().__init_subclass__(**kw)  # the branch base registers `cls`.
 
     @property
     def components(self) -> Ks:
@@ -384,6 +520,12 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
     @property
     def coord_dimensions(self) -> Ds:
         return self._coord_dimensions
+
+
+class AbstractStaticFixedComponentsChart(
+    AbstractFixedComponentsChart[MT, Ks, Ds], AbstractStaticChart[MT, Ks, Ds]
+):
+    """Fixed-components chart with no parameters (the common case)."""
 
 
 ##############################################################################

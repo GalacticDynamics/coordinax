@@ -143,7 +143,13 @@ def cartesian_product_factors(
         # Exclude abstract charts, product charts (to avoid infinite recursion),
         # and charts with unresolvable TypeVars Late import to avoid circular
         # import (core.py imports from this module)
-        chart = draw(charts(filter=cxc.AbstractFixedComponentsChart, ndim=factor_dim))  # ty: ignore[missing-argument, unknown-argument]
+        # The product chart is on the static branch, so a factor carrying array
+        # leaves is rejected at construction. Drawing from the static branch is
+        # the cheap way to guarantee that: staticness implies leaf-freedom. It
+        # is sufficient, not necessary -- a parameterized chart built with
+        # static parameters is leaf-free and legal too, just not drawn here.
+        factor_cls = cxc.AbstractStaticFixedComponentsChart
+        chart = draw(charts(filter=factor_cls, ndim=factor_dim))  # ty: ignore[missing-argument, unknown-argument]
         factors.append(chart)
 
     return tuple(factors)

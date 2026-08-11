@@ -6,7 +6,7 @@ This guide focuses only on chart functionality in `coordinax.charts`.
 
 - A **chart** defines coordinate component names and dimensions.
 - Chart maps change coordinate representation while preserving the same point.
-- Charts are static descriptors; coordinate values live in dictionaries.
+- Most charts are static descriptors; coordinate values live in dictionaries. A few charts carry parameters — see [Static And Parameterized Charts](#static-and-parameterized-charts).
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
@@ -248,6 +248,106 @@ The spatial factor can be changed at construction time. Chart conversions on the
 True
 >>> cxc.GalileanCT(cxc.sph3d).cartesian == cxc.galileanct
 True
+```
+
+## Static And Parameterized Charts
+
+Every concrete chart is on exactly one of two branches; being on neither, or on both, is a `TypeError` at class-creation time.
+
+- `AbstractStaticChart` — no parameters. Concrete subclasses register themselves with JAX as static, so they have zero pytree leaves and are always hashable. Staticness is structural, inherited from the branch, not a decorator that can be forgotten.
+- `AbstractParameterizedChart` — carries parameters. It is an `equinox.Module`, and therefore a pytree.
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+
+>>> isinstance(cxc.cart3d, cxc.AbstractStaticChart)
+True
+>>> issubclass(cxc.ProlateSpheroidal3D, cxc.AbstractParameterizedChart)
+True
+```
+
+### Opt-In Differentiability
+
+A parameterized chart only has leaves if it is given something with leaves. `ProlateSpheroidal3D` accepts its focal length `Delta` as either quantity type, so differentiability is chosen per instance:
+
+```{code-block} python
+>>> import jax
+>>> import unxt as u
+
+>>> static = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+>>> len(jax.tree.leaves(static))
+0
+
+>>> dynamic = cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "m"))
+>>> len(jax.tree.leaves(dynamic))
+1
+```
+
+A `StaticQuantity` behaves exactly as charts always have: hashable, no leaves, baked into the `jit` cache key. A `Quantity` is a live array, so it can be differentiated through and `jit` traces once across many values of it:
+
+```{code-block} python
+>>> at = {"mu": u.Q(12.0, "m2"), "nu": u.Q(0.5, "m2"), "phi": u.Q(0.3, "rad")}
+
+>>> def x_of(chart):
+...     return cxc.pt_map(at, chart, cxc.cart3d)["x"].ustrip("m")
+
+>>> jax.grad(x_of)(dynamic).Delta
+Q(-0.45135407, 'm')
+```
+
+Both of these apply to a chart **passed as an argument to, or built inside, a traced function**. They do not extend to a chart carried inside a `coordinax.Point`: a point stores its chart in the pytree _structure_, not among its children, so it has the same three leaves either way.
+
+```{code-block} python
+>>> import coordinax as cx
+
+>>> len(jax.tree.leaves(cx.Point(at, static)))
+3
+>>> len(jax.tree.leaves(cx.Point(at, dynamic)))
+3
+```
+
+The cost is caching, not gradients: since the chart is structural data, `jit` over points whose charts hold a dynamic `Delta` retraces on every call — the equality rule below guarantees a cache miss. Pass the chart as its own argument when you want one trace across many `Delta`.
+
+### Charts With Dynamic Parameters Compare Unequal
+
+```{code-block} python
+>>> a = cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "m"))
+>>> b = cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "m"))
+>>> a == b
+False
+>>> a == a
+True
+```
+
+Equality is deliberately conservative: two charts with dynamic parameters are equal only when they are the same object, even when numerically identical. Under `jit` those parameters are tracers with no values to compare, so any rule that inspected them would answer differently inside and outside `jit`. Hashing ignores dynamic fields for the same reason, which keeps equal charts hashing equal. Static parameters are compared by value, as before:
+
+```{code-block} python
+>>> s1 = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+>>> s2 = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+>>> s1 == s2, hash(s1) == hash(s2)
+(True, True)
+```
+
+### Static Charts Reject Arrays
+
+Registering a chart as static makes the whole instance one static node, so an array held in a field would report zero leaves and be silently baked in as a constant. Static charts refuse this at construction:
+
+```{code-block} python
+>>> cxc.GalileanCT(cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "m")))
+Traceback (most recent call last):
+    ...
+TypeError: GalileanCT is a static chart, but ['spatial_chart'] hold arrays. ...
+```
+
+The guard walks pytree leaves, so it only sees an array that is _in_ the pytree: one buried inside a value that is itself registered static would be a single opaque leaf and slip through. The way out is to put the parameter on the parameterized branch, not to make the guard stricter. `EmbeddedChart` is the worked example — `TwoSphereIn3D.radius` is a coordinate value that `pt_embed` propagates into output points, so forcing it static would break every embedded coordinate; instead the embedding map is a pytree and the chart is parameterized:
+
+```{code-block} python
+>>> import coordinax.manifolds as cxm
+
+>>> len(jax.tree.leaves(cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))))
+1
+>>> len(jax.tree.leaves(cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.StaticQuantity(2.0, "km")))))
+0
 ```
 
 ## Quick Reference

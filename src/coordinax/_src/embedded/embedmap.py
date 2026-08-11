@@ -7,16 +7,16 @@ import dataclasses
 
 from typing import Any, Generic, Protocol, TypeVar, final, runtime_checkable
 
-import jax
+import equinox as eqx
 
 from coordinax._src.base import AbstractChart
+from coordinax._src.base.charts import is_abstract_class
 from coordinax._src.custom_types import CDict, OptUSys
 
 IntrinsicT = TypeVar("IntrinsicT", bound=AbstractChart[Any, Any, Any])
 AmbientT = TypeVar("AmbientT", bound=AbstractChart[Any, Any, Any])
 
 
-@jax.tree_util.register_static
 class AbstractEmbeddingMap(Generic[IntrinsicT, AmbientT], metaclass=abc.ABCMeta):
     r"""Abstract base class representing a smooth embedding.
 
@@ -47,10 +47,28 @@ class AbstractEmbeddingMap(Generic[IntrinsicT, AmbientT], metaclass=abc.ABCMeta)
     higher-level metric machinery (e.g. induced metrics) can be built on top of
     this interface.
 
+    This class is deliberately *not* an `equinox.Module` itself: the two
+    attributes below are an interface for concrete maps to satisfy with either a
+    field (`CustomEmbeddingMap.ambient`) or a property
+    (`TwoSphereIn3D.intrinsic`), and a `Module` base would turn them into
+    required constructor arguments.
+
     """
 
     intrinsic: IntrinsicT
     ambient: AmbientT  # e.g. Cart3D
+
+    def __init_subclass__(cls, **kw: Any) -> None:
+        super().__init_subclass__(**kw)
+        # `eqx.Module` is not inherited from here, so it can be forgotten -- and
+        # a non-pytree map is one opaque leaf that hides its parameters from
+        # JAX, which is the bug this whole arrangement exists to prevent.
+        if not is_abstract_class(cls) and not issubclass(cls, eqx.Module):
+            msg = (
+                f"{cls.__name__} must subclass `equinox.Module`: an embedding map "
+                "holds coordinate values, so it has to be a pytree."
+            )
+            raise TypeError(msg)
 
     @abc.abstractmethod
     def embed(self, point: CDict, /, *, usys: OptUSys = None) -> CDict:
@@ -80,6 +98,13 @@ class AbstractEmbeddingMap(Generic[IntrinsicT, AmbientT], metaclass=abc.ABCMeta)
         """
         raise NotImplementedError  # pragma: no cover
 
+    def __repr__(self) -> str:
+        # The plain dataclass repr, which `eqx.Module` replaces with a
+        # Wadler-Lindig one that elides array values and default fields.
+        fs = dataclasses.fields(self)
+        args = ", ".join(f"{f.name}={getattr(self, f.name)!r}" for f in fs)
+        return f"{type(self).__name__}({args})"
+
 
 @runtime_checkable
 class EPCallable(Protocol):
@@ -89,8 +114,7 @@ class EPCallable(Protocol):
 
 
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
-class CustomEmbeddingMap(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
+class CustomEmbeddingMap(AbstractEmbeddingMap[IntrinsicT, AmbientT], eqx.Module):
     """A concrete embedding map defined by user-provided functions.
 
     This class allows users to define an embedding by providing custom `embed`
@@ -113,8 +137,9 @@ class CustomEmbeddingMap(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
 
     intrinsic: IntrinsicT
     ambient: AmbientT
-    embed_fn: EPCallable
-    project_fn: EPCallable
+    # Plain functions are not JAX types, so they must not be pytree leaves.
+    embed_fn: EPCallable = eqx.field(static=True)
+    project_fn: EPCallable = eqx.field(static=True)
 
     def embed(self, point: CDict, /, *, usys: OptUSys = None) -> CDict:
         return self.embed_fn(point, usys=usys)

@@ -23,7 +23,6 @@ import dataclasses
 from jaxtyping import Real
 from typing import Annotated, Any, Final, Literal as L, Self, override  # noqa: N817
 
-import jax.tree_util as jtu
 from beartype.vale import Is
 
 import quaxed.numpy as jnp
@@ -33,6 +32,8 @@ from coordinax._src.base import (
     MT,
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
+    AbstractParameterizedChart,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts import checks
@@ -69,9 +70,10 @@ Cart3DDims = tuple[Len, Len, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
-class Cart3D(AbstractFixedComponentsChart[MT, Cart3DKeys, Cart3DDims], Abstract3D):
+class Cart3D(
+    AbstractStaticFixedComponentsChart[MT, Cart3DKeys, Cart3DDims], Abstract3D
+):
     r"""Three-dimensional Cartesian chart $(x, y, z)$.
 
     Components are ordered as ``("x", "y", "z")`` with dimensions ``("length",
@@ -130,10 +132,10 @@ Cylindrical3DDims = tuple[Len, Ang, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Cylindrical3D(
-    AbstractFixedComponentsChart[MT, CylindricalKeys, Cylindrical3DDims], Abstract3D
+    AbstractStaticFixedComponentsChart[MT, CylindricalKeys, Cylindrical3DDims],
+    Abstract3D,
 ):
     r"""Three-dimensional cylindrical chart $(\rho, \phi, z)$.
 
@@ -185,7 +187,7 @@ True
 # Spherical
 
 
-class AbstractSpherical3D(AbstractFixedComponentsChart[MT, Ks, Ds], Abstract3D):
+class AbstractSpherical3D(AbstractStaticFixedComponentsChart[MT, Ks, Ds], Abstract3D):
     """Abstract spherical vector representation."""
 
     _: dataclasses.KW_ONLY
@@ -215,7 +217,6 @@ Spherical3DDims = tuple[Len, Ang, Ang]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class Spherical3D(AbstractSpherical3D[MT, SphericalKeys, Spherical3DDims]):
     r"""Three-dimensional spherical coordinates $(r, \theta, \phi)$.
@@ -274,7 +275,6 @@ LonLatSpherical3DDims = tuple[Ang, Ang, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class LonLatSpherical3D(
     AbstractSpherical3D[MT, LonLatSphericalKeys, LonLatSpherical3DDims]
@@ -333,7 +333,6 @@ LonCosLatSpherical3DDims = tuple[Ang, Ang, Len]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class LonCosLatSpherical3D(
     AbstractSpherical3D[MT, LonCosLatSphericalKeys, LonCosLatSpherical3DDims]
@@ -385,7 +384,6 @@ MathSphericalKeys = tuple[L["r"], L["theta"], L["phi"]]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
 class MathSpherical3D(AbstractSpherical3D[MT, MathSphericalKeys, Spherical3DDims]):
     r"""Mathematical-convention spherical coordinates $(r, \theta, \phi)$.
@@ -440,11 +438,10 @@ ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
-@chart_dataclass_decorator
 class ProlateSpheroidal3D(
     Abstract3D,
     AbstractFixedComponentsChart[MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
+    AbstractParameterizedChart[MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
 ):
     r"""Prolate spheroidal coordinates $(\mu, \nu, \phi)$ with focal length $\Delta$.
 
@@ -457,7 +454,10 @@ class ProlateSpheroidal3D(
     - $\mu \ge \Delta^2$,
     - $\lvert\nu\rvert \le \Delta^2$.
 
-    The parameter $\Delta$ is stored as metadata on the representation.
+    $\Delta$ is a chart *parameter*, and differentiability in it is opt-in per
+    instance: a `unxt.StaticQuantity` contributes no pytree leaves (hashable,
+    behaves like any other chart), a `unxt.Quantity` contributes one and can be
+    differentiated through.
 
     Examples
     --------
@@ -466,6 +466,13 @@ class ProlateSpheroidal3D(
     >>> chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2, "kpc"))
     >>> chart.components
     ('mu', 'nu', 'phi')
+
+    >>> import jax
+    >>> len(jax.tree.leaves(chart))
+    0
+
+    >>> len(jax.tree.leaves(cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "kpc"))))
+    1
 
     >>> chart.coord_dimensions
     ('area', 'area', 'angle')
@@ -481,7 +488,7 @@ class ProlateSpheroidal3D(
 
     _: dataclasses.KW_ONLY
     Delta: Annotated[
-        Real[u.quantity.StaticQuantity, ""],  # StaticQuantity["length"]
+        Real[u.quantity.AbstractQuantity, ""],  # Quantity (dynamic) or StaticQuantity
         Is[lambda x: x.value > 0],
     ]
     """Focal length of the coordinate system."""

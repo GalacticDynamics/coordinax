@@ -7,7 +7,6 @@ from dataclasses import KW_ONLY, field, replace
 from jaxtyping import Float
 from typing import Any, ClassVar, Final, cast, final, override
 
-import jax.tree_util as jtu
 import numpy as np
 
 import unxt as u
@@ -16,8 +15,8 @@ from .chart import AbstractFlatCartesianProductChart
 from .manifold import CartesianProductManifold
 from coordinax._src.base import (
     AbstractChart,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts.d1 import time1d
@@ -34,7 +33,6 @@ r"""The 4-dimensional Galilean spacetime manifold, $\mathbb{R} \times \mathbb{R}
 C_DEFAULT = u.StaticQuantity(np.array(299_792.458), "km/s")
 
 
-@jtu.register_static
 @final
 @chart_dataclass_decorator
 class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
@@ -94,7 +92,9 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     """
 
-    spatial_chart: AbstractFixedComponentsChart[Any, Any, Any] = field(default=cart3d)  # pylint: disable=invalid-field-call
+    spatial_chart: AbstractStaticFixedComponentsChart[Any, Any, Any] = field(
+        default=cart3d
+    )  # pylint: disable=invalid-field-call
     """Spatial part of the representation (defaults to `coordinax.charts.cart3d`)."""
 
     _: KW_ONLY

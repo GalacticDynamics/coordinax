@@ -7,12 +7,10 @@ import dataclasses
 from typing import Any, Final, Literal as L, Self, override  # noqa: N817
 from typing_extensions import TypeVar
 
-import jax.tree_util as jtu
-
 from coordinax._src.base import (
     AbstractDimensionalFlag,
-    AbstractFixedComponentsChart,
     AbstractManifold,
+    AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.euclidean.atlas import (
@@ -45,9 +43,8 @@ ZeroDDims = tuple[()]
 
 
 @EuclideanAtlas.register
-@jtu.register_static
 @chart_dataclass_decorator
-class Cart0D(AbstractFixedComponentsChart[MT, ZeroDKeys, ZeroDDims], Abstract0D):
+class Cart0D(AbstractStaticFixedComponentsChart[MT, ZeroDKeys, ZeroDDims], Abstract0D):
     """Zero-dimensional Cartesian chart.
 
     This chart has no coordinate components and no coordinate dimensions.

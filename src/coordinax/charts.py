@@ -64,12 +64,25 @@ We can also compute the Jacobian of the point map:
 
 >>> jac = cxc.jac_pt_map(q, cxc.cart3d, cxc.sph3d)
 
+Every concrete chart is on exactly one of two branches: `AbstractStaticChart`
+(no parameters -- registered static automatically, so no pytree leaves and
+always hashable) and `AbstractParameterizedChart` (an `equinox.Module` whose
+parameters may be live arrays). A parameterized chart has leaves only if its
+parameters do, so differentiability is opt-in per instance, and equality is
+conservative: charts holding dynamic parameters are equal only when they are
+the same object.
+
+See the "Working With Charts" guide for the full story, with examples.
+
 """
 
 __all__ = (
     # ===========================================
     "AbstractChart",
+    "AbstractStaticChart",
+    "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
+    "AbstractStaticFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
@@ -163,6 +176,9 @@ with install_import_hook("coordinax.charts"):
         AbstractChart,
         AbstractDimensionalFlag,
         AbstractFixedComponentsChart,
+        AbstractParameterizedChart,
+        AbstractStaticChart,
+        AbstractStaticFixedComponentsChart,
     )
     from coordinax._src.charts import (
         Abstract0D,

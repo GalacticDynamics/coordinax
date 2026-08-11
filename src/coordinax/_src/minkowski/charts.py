@@ -6,12 +6,14 @@ import dataclasses
 
 from typing import Final, Literal as L, final, override  # noqa: N817
 
-import jax.tree_util as jtu
 import plum
 
 from .atlas import MinkowskiAtlas
 from .manifold import MinkowskiManifold
-from coordinax._src.base import AbstractFixedComponentsChart, chart_dataclass_decorator
+from coordinax._src.base import (
+    AbstractStaticFixedComponentsChart,
+    chart_dataclass_decorator,
+)
 from coordinax._src.charts.d4 import Abstract4D
 from coordinax._src.custom_types import Len
 
@@ -22,12 +24,13 @@ _WRONG_M_MSG = "MinkowskiCT chart must belong to a MinkowskiManifold, got {typen
 
 
 @MinkowskiAtlas.register
-@jtu.register_static
 @final
 @chart_dataclass_decorator
 class MinkowskiCT(
     Abstract4D,
-    AbstractFixedComponentsChart[MinkowskiManifold, MinkowskiCTKeys, MinkowskiCTDims],
+    AbstractStaticFixedComponentsChart[
+        MinkowskiManifold, MinkowskiCTKeys, MinkowskiCTDims
+    ],
 ):
     r"""4D Minkowski spacetime chart $(ct, x, y, z)$.
 
@@ -67,6 +70,7 @@ class MinkowskiCT(
 
     def __post_init__(self) -> None:
         """Validate that M is compatible with this chart."""
+        super().__post_init__()
         if not isinstance(self.M, MinkowskiManifold):
             raise TypeError(_WRONG_M_MSG.format(typename=type(self.M).__name__))
 
