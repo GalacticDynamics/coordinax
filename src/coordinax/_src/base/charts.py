@@ -69,6 +69,17 @@ MISSING = object()
 # AbstractChart
 
 
+def _field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
+    """Field values of a chart, as `dataclassish.field_values` would give them.
+
+    Every concrete chart is built by `chart_dataclass_decorator`, so the fields
+    can be walked directly. That avoids the plum dispatch in
+    `dataclassish.field_values`, which dominates `__eq__` / `__hash__` (~28 us
+    vs ~1.4 us per call).
+    """
+    return tuple(getattr(chart, f.name) for f in dataclasses.fields(chart))
+
+
 @jtu.register_static
 class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
@@ -277,7 +288,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
         return (
             self.components == other.components
             and self.coord_dimensions == other.coord_dimensions
-            and (dataclassish.field_values(self) == dataclassish.field_values(other))
+            and (_field_values(self) == _field_values(other))
         )
 
     def __hash__(self) -> int:
@@ -292,12 +303,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
 
         """
         return hash(
-            (
-                type(self),
-                self.components,
-                self.coord_dimensions,
-                dataclassish.field_values(self),
-            )
+            (type(self), self.components, self.coord_dimensions, _field_values(self))
         )
 
 
