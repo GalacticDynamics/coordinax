@@ -52,13 +52,26 @@ CHART_IDS = [type(c).__name__ for c in CHARTS]
 
 
 def test_every_concrete_chart_is_covered() -> None:
-    """The list above must not drift behind the chart hierarchy.
+    """The list above must not drift behind *core* `coordinax`'s chart hierarchy.
 
     Without this, adding a chart silently adds an untested domain -- which is
     exactly how the original name-guessing version came to skip 13 of 24.
+
+    Scoped to charts core `coordinax` itself ships (``__module__`` starting
+    with ``"coordinax."`` -- the dot excludes sibling distributions like
+    `coordinaxs.curveframes`, whose `__module__` starts with the same eight
+    letters but not the same package). A satellite package's chart classes
+    (e.g. `coordinaxs.curveframes.TubularChart`) are registered globally the
+    moment that package is imported, via `AbstractChart.__subclasses__()` --
+    but this package cannot add them to `CHARTS` without depending on the
+    satellite package, which is backwards. Each satellite package is
+    responsible for its own `component_domains` coverage in its own tests
+    (see `coordinaxs.curveframes`'s `test_tubular_chart_hypothesis.py`).
     """
     concrete = {
-        c.__name__ for c in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True)
+        c.__name__
+        for c in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True)
+        if c.__module__.startswith("coordinax.")
     }
     assert concrete - {type(c).__name__ for c in CHARTS} == set()
 

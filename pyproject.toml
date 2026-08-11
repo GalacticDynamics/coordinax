@@ -205,6 +205,7 @@ files = [
   "packages/coordinaxs.astro/src/coordinaxs/astro",
   "packages/coordinaxs.astro/src/coordinaxs/hypothesis/astro",
   "packages/coordinaxs.curveframes/src/coordinaxs/curveframes",
+  "packages/coordinaxs.curveframes/src/coordinaxs/hypothesis/curveframes",
   "packages/coordinaxs.hypothesis/src/coordinaxs/hypothesis",
   "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy",
 ]
@@ -365,6 +366,7 @@ namespace-packages = [
   "packages/coordinaxs.astro/src/coordinaxs",
   "packages/coordinaxs.astro/src/coordinaxs/hypothesis",
   "packages/coordinaxs.curveframes/src/coordinaxs",
+  "packages/coordinaxs.curveframes/src/coordinaxs/hypothesis",
   "packages/coordinaxs.hypothesis/src/coordinaxs",
   "packages/coordinaxs.hypothesis/src/coordinaxs/hypothesis",
   "packages/coordinaxs.interop.astropy/src/coordinaxs",
@@ -458,6 +460,7 @@ ignore = [
 "coordinaxs.hypothesis.angles"          = "cxast"
 "coordinaxs.hypothesis.astro"           = "cxastrost"
 "coordinaxs.hypothesis.charts"          = "cxcst"
+"coordinaxs.hypothesis.curveframes"     = "cxfcst"
 "coordinaxs.hypothesis.distances"       = "cxdst"
 "coordinaxs.hypothesis.main"            = "cxst"
 "coordinaxs.hypothesis.manifolds"       = "cxmst"

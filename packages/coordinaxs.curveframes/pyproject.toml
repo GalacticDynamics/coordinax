@@ -30,6 +30,17 @@ name = "coordinaxs.curveframes"
 readme = "README.md"
 requires-python = ">=3.12"
 
+[project.optional-dependencies]
+# This distribution also ships the `coordinaxs.hypothesis.curveframes`
+# strategy tree, which imports `hypothesis` and `coordinaxs.hypothesis`.
+# Those are not needed to `import coordinaxs.curveframes`, so they are
+# declared here rather than as hard dependencies:
+#   pip install "coordinaxs.curveframes[hypothesis]"
+hypothesis = ["coordinaxs.hypothesis>=0.24", "hypothesis>=6.148.7"]
+
+[project.entry-points."coordinaxs.hypothesis"]
+curveframes = "coordinaxs.hypothesis.curveframes:coordinaxs_hypothesis_exports"
+
 [build-system]
 build-backend = "hatchling.build"
 requires      = ["hatch-vcs", "hatchling"]
