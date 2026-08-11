@@ -9,14 +9,15 @@ implementation modules:
 - {mod}`.chart` — `TubularChart`, on the parameterized branch.
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
 - {mod}`.register_ptmap` — ``pt_map`` dispatch registrations for `TubularChart`.
-- {mod}`.register_metric` — ``metric_matrix`` dispatch registration for
-  `TubularChart`.
+
+`metric_matrix` needs no registration of its own: `TubularChart` has no
+closed-form metric better than the Jacobian pullback, so it falls through to
+`coordinax`'s generic ``(EuclideanManifold, dict, AbstractChart)`` rule,
+which already computes ``g = J^T J`` and (unlike a hand-rolled version)
+keeps units.
 """
 
-from . import (
-    register_metric,  # noqa: F401
-    register_ptmap,  # noqa: F401
-)
+from . import register_ptmap  # noqa: F401
 from .base import *
 from .bishop import *
 from .chart import *

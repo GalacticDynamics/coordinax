@@ -200,6 +200,12 @@ _HELIX_AT = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")
 def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
     """Bishop is rotation-minimising, so there are no ds*dn cross terms.
 
+    No `metric_matrix` rule is registered for `TubularChart`: it has no
+    closed form better than the Jacobian pullback, so it falls through to
+    `coordinax`'s generic ``(EuclideanManifold, dict, AbstractChart)`` rule,
+    which returns a unit-carrying `QuantityMatrix` (tau is a time, n1/n2 are
+    lengths, so the entries are not all the same unit).
+
     Uses the torsion-carrying `_helix`, not the planar `circle`: on a planar
     curve Frenet--Serret is diagonal too (zero torsion), so this claim only
     has content on a curve with nonzero torsion. See
@@ -211,10 +217,10 @@ def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
     ch = cxfc.TubularChart(cxfc.BishopBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
 
-    assert jnp.allclose(g[0, 1], 0.0, atol=1e-8)
-    assert jnp.allclose(g[0, 2], 0.0, atol=1e-8)
-    assert jnp.allclose(g[1, 1], 1.0, atol=1e-8)
-    assert jnp.allclose(g[2, 2], 1.0, atol=1e-8)
+    assert jnp.allclose(g[0, 1].ustrip("km / s"), 0.0, atol=1e-8)
+    assert jnp.allclose(g[0, 2].ustrip("km / s"), 0.0, atol=1e-8)
+    assert jnp.allclose(g[1, 1].ustrip(""), 1.0, atol=1e-8)
+    assert jnp.allclose(g[2, 2].ustrip(""), 1.0, atol=1e-8)
 
 
 def test_frenet_metric_has_torsion_cross_terms() -> None:
@@ -227,4 +233,4 @@ def test_frenet_metric_has_torsion_cross_terms() -> None:
 
     ch = cxfc.TubularChart(cxfc.FrenetSerretBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
-    assert not jnp.allclose(g[0, 1], 0.0, atol=1e-6)
+    assert not jnp.allclose(g[0, 1].ustrip("km / s"), 0.0, atol=1e-6)
