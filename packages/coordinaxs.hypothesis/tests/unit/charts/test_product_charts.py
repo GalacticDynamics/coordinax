@@ -245,9 +245,11 @@ class TestProductChartsEdgeCases:
     @given(
         chart=cxst.charts(
             cxc.CartesianProductChart,
-            # A product chart is on the static branch, so its factors must be
-            # too -- a parameterized factor hides a live array in a
-            # `register_static` node and is rejected at construction.
+            # A product chart is on the static branch, so a factor carrying
+            # array leaves is rejected at construction. Static factors are
+            # leaf-free by construction, which is the cheap way to satisfy that
+            # -- sufficient, not necessary. The boundary itself is pinned by
+            # `test_a_static_delta_factor_is_still_accepted`.
             factor_charts=st.lists(
                 cxst.charts(filter=cxc.AbstractStaticChart, exclude=(cxc.Abstract0D,)),
                 min_size=1,

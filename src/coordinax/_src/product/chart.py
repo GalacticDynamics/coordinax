@@ -326,7 +326,10 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
 
     def __post_init__(self) -> None:
-        # Rejects a parameterized factor, which would hide a live array here.
+        # Rejects a factor carrying array or tracer leaves, which would hide a
+        # live array inside this `register_static` node. Note the test is on the
+        # leaves, not on the branch: a parameterized factor built with static
+        # parameters holds none, and is accepted.
         super().__post_init__()
 
         # Validate lengths match
