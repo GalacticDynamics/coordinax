@@ -150,16 +150,22 @@ class TubularChart(AbstractParameterizedChart):
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
         unit = self.builder.tau_unit
+        # Derive the ambient unit from the curve, the way `nearest.py`
+        # (`x.unit`) and `register_ptmap.py` (`b.location(...).unit`) do,
+        # rather than hardcoding it: the scale cancels in `dot(dx,T)/speed`,
+        # but a hardcoded "km" raises `UnitConversionError` for a curve whose
+        # ambient unit is dimensionless.
+        ambient_unit = self.builder.location(tau).unit
 
         def gamma_v(t: jax.Array) -> jax.Array:
             return jnp.asarray(
-                self.builder.location(u.Q(t, unit)).ustrip("km"), dtype=float
+                self.builder.location(u.Q(t, unit)).ustrip(ambient_unit), dtype=float
             )
 
         def offset_v(t: jax.Array) -> jax.Array:
             R = self.builder.rotation_matrix(u.Q(t, unit))
-            n1_v = jnp.asarray(n1.ustrip("km"), dtype=float)
-            n2_v = jnp.asarray(n2.ustrip("km"), dtype=float)
+            n1_v = jnp.asarray(n1.ustrip(ambient_unit), dtype=float)
+            n2_v = jnp.asarray(n2.ustrip(ambient_unit), dtype=float)
             return gamma_v(t) + n1_v * R[1] + n2_v * R[2]
 
         tau_v = jnp.asarray(tau.ustrip(unit), dtype=float)

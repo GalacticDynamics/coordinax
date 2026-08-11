@@ -229,7 +229,7 @@ Even a correctly one-period range still has the two endpoints coincide (they are
 
 `n_seed` (default 64) sets how finely that same scan samples `tau_bounds` before the Newton polish; it is what makes the inverse pick the _nearest_ point rather than merely _a_ stationary one. On a curve that doubles back on itself, too coarse a scan can miss the seed nearest the true answer and lock onto the wrong branch — raise `n_seed` if the curve has tight folds relative to the sampling density `tau_bounds` implies.
 
-**The chart is injective only inside the curve's reach.** Past the _focal distance_ — where the normal-plane offset cancels the local curvature exactly — nearby ambient points map to the same $(\tau, n_1, n_2)$, and `check_data(..., values=True)` raises rather than return coordinates that aren't unique. On the unit circle with `BishopBuilder`, $+\mathbf{U}_1$ points outward, so the Jacobian factor is $1+n_1$ and the focal point sits at $n_1=-1.0$ — one radius toward the center:
+**The chart is injective only inside the curve's reach, and that is checked only when you ask for it.** Past the _focal distance_ — where the normal-plane offset cancels the local curvature exactly — nearby ambient points map to the same $(\tau, n_1, n_2)$. `check_data(..., values=True)` raises rather than return coordinates that aren't unique, but `values` defaults to `False`, and every `check_data` call inside `coordinax` itself passes `values=False` or omits it. The inverse `pt_map` does not call `check_data` at all, so it happily returns focal-point coordinates without complaint — the guard below is opt-in, something _you_ must call, not a protection the chart applies for you. On the unit circle with `BishopBuilder`, $+\mathbf{U}_1$ points outward, so the Jacobian factor is $1+n_1$ and the focal point sits at $n_1=-1.0$ — one radius toward the center:
 
 ```{code-block} python
 >>> at_inside = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
@@ -258,17 +258,20 @@ ValueError: point lies outside the reach of the curve: the tubular coordinates a
 
 ```
 
-`HELIX_BOUNDS` is `(-1, 6)` s, so `333.33` is nowhere near it. The same happens on the closed circle for a point equidistant from the whole curve -- its centre -- where the stationarity condition is degenerate for every $\tau$:
+`HELIX_BOUNDS` is `(-1, 6)` s, so `333.33` is nowhere near it. Callers who cannot rule out querying past the fitted range should check the returned `tau` against `tau_bounds` themselves -- that converged-but-out-of-bounds case is not an error.
+
+A genuinely degenerate query is different, and _is_ caught: a point equidistant from the whole closed circle -- its centre -- leaves the stationarity condition satisfied by no particular $\tau$, so the Newton polish does not converge. `nearest_tau` checks the solver's own result and raises rather than return an arbitrary, meaningless $\tau$:
 
 ```{code-block} python
 >>> centre = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
->>> got_centre = cxc.pt_map(centre, ch_frenet.M, cxc.cart3d, ch_frenet.M, ch_frenet)
->>> float(got_centre["tau"].ustrip("s"))
-13.908361157205992
+>>> cxc.pt_map(centre, ch_frenet.M, cxc.cart3d, ch_frenet.M, ch_frenet)
+Traceback (most recent call last):
+    ...
+RuntimeError: nearest-point solve did not converge
 
 ```
 
-`BOUNDS` is one period, `(0, 2*pi)` s $\approx$ `(0, 6.28)` s; `13.9` s is more than two periods past it. Callers who cannot rule out querying past the fitted range should check the returned `tau` against `tau_bounds` themselves.
+That check cannot see the periodic-aliasing case from [Limitations](#limitations) above -- a wide `tau_bounds` still converges, just to the wrong branch -- so a one-period `tau_bounds` remains the caller's responsibility for closed curves.
 
 :::{seealso}
 
