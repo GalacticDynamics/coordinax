@@ -374,22 +374,24 @@ class TestPackedQuantityAvoidsTheDictRoundTrip:
             float(as_dict.ustrip("rad/s")), abs=ATOL
         )
 
-    def test_no_cdict_round_trip_happens(self):
+    def test_no_cdict_round_trip_happens(self, monkeypatch):
         """Pins the shortcut itself, not just the value it produces."""
         import coordinaxs.api.charts as charts_api
 
         calls = []
         real = charts_api.cdict
-        charts_api.cdict = lambda *a, **k: (calls.append(1), real(*a, **k))[1]
-        try:
-            cxm.norm(
-                u.Q(jnp.asarray([1.0, 1.0]), "rad/s"),
-                cxm.RoundMetric(2),
-                cxc.sph2,
-                at=self.AT,
-            )
-        finally:
-            charts_api.cdict = real
+
+        def counting_cdict(*args, **kwargs):
+            calls.append(1)
+            return real(*args, **kwargs)
+
+        monkeypatch.setattr(charts_api, "cdict", counting_cdict)
+        cxm.norm(
+            u.Q(jnp.asarray([1.0, 1.0]), "rad/s"),
+            cxm.RoundMetric(2),
+            cxc.sph2,
+            at=self.AT,
+        )
         assert calls == [], "packed Quantity should not be split into a CDict"
 
     def test_one_component_chart_still_works(self):
@@ -401,3 +403,40 @@ class TestPackedQuantityAvoidsTheDictRoundTrip:
             at={"x": jnp.asarray(0.0)},
         )
         assert float(got.ustrip("m")) == pytest.approx(5.0, abs=ATOL)
+
+
+class TestPackedQuantityShapeIsStillChecked:
+    """Skipping the CDict round-trip must not skip the shape check it did.
+
+    `cdict` validated the trailing axis against `chart.components` on the way
+    past. Without that, a mis-sized quantity still failed -- never silently
+    broadcast -- but from inside `QuantityMatrix`, phrased in terms of matrix
+    internals rather than the chart contract the caller actually broke.
+    """
+
+    AT: ClassVar = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+
+    def _norm(self, q):
+        return cxm.norm(q, cxm.RoundMetric(2), cxc.sph2, at=self.AT)
+
+    @pytest.mark.parametrize("n", [1, 3, 4])
+    def test_wrong_trailing_dimension_names_the_chart(self, n):
+        with pytest.raises(ValueError, match=r"norm\(\).*trailing dimension"):
+            self._norm(u.Q(jnp.ones((n,)), "rad/s"))
+
+    def test_scalar_is_rejected(self):
+        with pytest.raises(ValueError, match=r"norm\(\).*scalar"):
+            self._norm(u.Q(jnp.asarray(1.0), "rad/s"))
+
+    def test_batched_wrong_trailing_dimension_is_rejected(self):
+        """A leading batch axis must not disguise a wrong component count."""
+        with pytest.raises(ValueError, match=r"norm\(\).*trailing dimension"):
+            self._norm(u.Q(jnp.ones((4, 3)), "rad/s"))
+
+    def test_correct_shapes_still_work(self):
+        """Positive control, scalar and batched."""
+        assert float(
+            self._norm(u.Q(jnp.asarray([1.0, 1.0]), "rad/s")).ustrip("rad/s")
+        ) == pytest.approx(jnp.sqrt(2.0), abs=ATOL)
+        batched = self._norm(u.Q(jnp.ones((4, 2)), "rad/s"))
+        assert batched.shape == (4,)

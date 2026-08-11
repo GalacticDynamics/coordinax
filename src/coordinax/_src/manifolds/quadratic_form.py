@@ -35,6 +35,16 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.metric.matrix import AbstractMetricMatrix, DiagonalMetric
 
+_MSG_PACKED_SHAPE = (
+    "{fname}(): packed Quantity has trailing dimension {got}, but chart "
+    "component{plural} {comps} expect{verb} {want}."
+)
+
+_MSG_PACKED_NDIM = (
+    "{fname}(): packed Quantity is a scalar, but chart components {comps} "
+    "expect a trailing axis of length {want}."
+)
+
 _MSG_MIXED = (
     "{fname}(): mixed CDict with both Quantity and bare Array values is not "
     "supported. All components must be either all Quantity or all bare Array."
@@ -250,6 +260,32 @@ def gram(
     return _contract(mm, u_, v_), _contract(mm, u_, u_), _contract(mm, v_, v_)
 
 
+def _check_packed_shape(v: Any, keys: tuple[str, ...], fname: str, /) -> None:
+    """Validate a packed Quantity's trailing axis against the chart.
+
+    Splitting the quantity into a CDict used to perform this check on the way
+    past. Skipping the round-trip skipped the check with it, so a mis-sized
+    quantity reached `QuantityMatrix` and failed there -- still an error, never a
+    silent broadcast, but phrased in terms of matrix internals rather than the
+    chart contract the caller actually broke.
+    """
+    want = len(keys)
+    shape = jnp.shape(v.value)
+    if not shape:
+        raise ValueError(_MSG_PACKED_NDIM.format(fname=fname, comps=keys, want=want))
+    if shape[-1] != want:
+        raise ValueError(
+            _MSG_PACKED_SHAPE.format(
+                fname=fname,
+                got=shape[-1],
+                plural="" if want == 1 else "s",
+                comps=keys,
+                verb="s" if want == 1 else "",
+                want=want,
+            )
+        )
+
+
 def _prepare(
     chart: AbstractChart,
     vecs: tuple[Any, ...],
@@ -271,6 +307,9 @@ def _prepare(
         if is_any_quantity(vec):
             # Already packed: nothing to validate component-wise, and the dict
             # round-trip below would only take it apart to put it back together.
+            # The shape check that round-trip used to perform is kept, though --
+            # see `_check_packed_shape`.
+            _check_packed_shape(vec, keys, fname)
             packed.append(None)
             continue
         qty_flags = [is_any_quantity(val) for val in vec.values()]
