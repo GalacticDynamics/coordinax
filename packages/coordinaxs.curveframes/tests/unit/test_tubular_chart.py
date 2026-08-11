@@ -77,3 +77,20 @@ def test_the_reach_guard_fires_past_the_focal_distance() -> None:
     at = {"tau": u.Q(0.0, "s"), "n1": u.Q(-1.6, "km"), "n2": u.Q(0.0, "km")}
     with pytest.raises(ValueError, match="outside the reach"):
         ch.check_data(at, values=True)
+
+
+def test_the_reach_guard_also_fires_under_jit() -> None:
+    """The eager path and the traced path are different code; test both.
+
+    A bare `eqx.error_if` whose result is unused is dead-code-eliminated, so
+    the traced branch can pass silently while the eager branch works.
+    """
+    ch = _chart()
+
+    @jax.jit
+    def run(v):
+        at = {"tau": u.Q(0.0, "s"), "n1": u.Q(v, "km"), "n2": u.Q(0.0, "km")}
+        return ch.check_data(at, values=True)["n1"].ustrip("km")
+
+    with pytest.raises(jax.errors.JaxRuntimeError, match="outside the reach"):
+        run(-1.6)

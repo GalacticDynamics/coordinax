@@ -96,7 +96,9 @@ class TubularChart(AbstractParameterizedChart):
         return cxc.cart3d
 
     def check_data(self, data: dict, /, *, values: bool = False, **kw: Any) -> dict:
-        super().check_data(data, **kw)
+        # Forward `values`: the base class gates its coordinate-dimension check
+        # on it, and binding it as a named parameter keeps it out of `**kw`.
+        super().check_data(data, values=values, **kw)
         if values:
             # Inside the reach the Jacobian factor is positive; at the focal
             # distance it vanishes and the coordinates stop being unique.
@@ -111,7 +113,12 @@ class TubularChart(AbstractParameterizedChart):
                 "coordinates are not injective there"
             )
             if isinstance(pred, jax.core.Tracer):
-                eqx.error_if(pred, pred, msg)
+                # The return value MUST be threaded back into the data that is
+                # returned. `eqx.error_if` is eliminated as dead code when its
+                # result goes unused -- a bare `eqx.error_if(pred, pred, msg)`
+                # compiles away and the guard silently passes under `jit`
+                # (verified: it returned n1=-1.6, well outside the reach).
+                data = {**data, "n1": eqx.error_if(data["n1"], pred, msg)}
             elif bool(pred):
                 raise ValueError(msg)
         return data
