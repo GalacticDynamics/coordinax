@@ -31,7 +31,8 @@ import unxt as u
 from coordinax._src.base import (
     MT,
     AbstractDimensionalFlag,
-    AbstractParameterizedFixedComponentsChart,
+    AbstractFixedComponentsChart,
+    AbstractParameterizedChart,
     AbstractStaticFixedComponentsChart,
     chart_dataclass_decorator,
 )
@@ -439,9 +440,8 @@ ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 @EuclideanAtlas.register
 class ProlateSpheroidal3D(
     Abstract3D,
-    AbstractParameterizedFixedComponentsChart[
-        MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims
-    ],
+    AbstractFixedComponentsChart[MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
+    AbstractParameterizedChart[MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
 ):
     r"""Prolate spheroidal coordinates $(\mu, \nu, \phi)$ with focal length $\Delta$.
 

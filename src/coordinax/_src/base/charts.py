@@ -6,7 +6,6 @@ __all__ = (
     "AbstractParameterizedChart",
     "AbstractFixedComponentsChart",
     "AbstractStaticFixedComponentsChart",
-    "AbstractParameterizedFixedComponentsChart",
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
@@ -104,13 +103,11 @@ def _check_on_exactly_one_branch(cls: type, /) -> None:
     loudly on its own, so fail here, at class creation.
 
     The branch classes are resolved from module globals because they are defined
-    *below* `AbstractChart` -- while they are themselves being created the names
-    are absent, and abstract classes are exempt anyway.
+    *below* `AbstractChart`. Only they themselves are created before the names
+    exist, and they are `Abstract`-prefixed, so this never runs for them.
     """
-    static = globals().get("AbstractStaticChart")
-    param = globals().get("AbstractParameterizedChart")
-    if static is None or param is None:
-        return
+    static = globals()["AbstractStaticChart"]
+    param = globals()["AbstractParameterizedChart"]
     on_static, on_param = issubclass(cls, static), issubclass(cls, param)
     if on_static == on_param:
         msg = (
@@ -420,12 +417,10 @@ class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
     def __post_init__(self) -> None:
         """Reject an array (or tracer) hiding inside a static chart.
 
-        `jtu.register_static` makes the whole instance one static node, so an
-        array held in a field reports *zero* pytree leaves: `jit` bakes it in as
-        a constant and a tracer walks straight out through the boundary, to die
-        later somewhere unrelated. The annotations that would forbid this
-        (`GalileanCT.spatial_chart`, `CartesianProductChart.factors`) are not
-        enforced at runtime, so enforce it here, at construction.
+        An array in a field of a static node reports *zero* pytree leaves, so
+        `jit` bakes it in and a tracer walks out through the boundary; the
+        annotations that would forbid it (`GalileanCT.spatial_chart`,
+        `CartesianProductChart.factors`) are not enforced at runtime.
 
         Subclasses that define their own `__post_init__` must call
         `super().__post_init__()`.
@@ -478,9 +473,8 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
     """Abstract base class for charts with fixed components and dimensions.
 
     Having fixed components is orthogonal to the static/parameterized split, so
-    this sits *above* it. Concrete charts inherit a branch-bound subclass:
-    `AbstractStaticFixedComponentsChart` or
-    `AbstractParameterizedFixedComponentsChart`.
+    this sits *above* it: a concrete chart mixes in a branch alongside it, via
+    `AbstractStaticFixedComponentsChart` or directly.
     """
 
     _components: Ks
@@ -532,12 +526,6 @@ class AbstractStaticFixedComponentsChart(
     AbstractFixedComponentsChart[MT, Ks, Ds], AbstractStaticChart[MT, Ks, Ds]
 ):
     """Fixed-components chart with no parameters (the common case)."""
-
-
-class AbstractParameterizedFixedComponentsChart(
-    AbstractFixedComponentsChart[MT, Ks, Ds], AbstractParameterizedChart[MT, Ks, Ds]
-):
-    """Fixed-components chart carrying parameters, e.g. `ProlateSpheroidal3D`."""
 
 
 ##############################################################################

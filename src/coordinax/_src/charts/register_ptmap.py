@@ -1388,14 +1388,9 @@ def pt_map(
     cyl3d = Cylindrical3D(M=to_chart.M)
     # `Delta == Delta` is a *dimensionless Quantity* whenever either side is a
     # `unxt.Quantity`, and `lax.cond` rejects that as a predicate. Compare in a
-    # common unit and strip to a plain array bool, which is a valid predicate for
-    # a static and a traced `Delta` alike. Two caveats, both about the branches
-    # rather than the predicate: `lax.cond` traces *both* even when the predicate
-    # is a concrete `False`, so the two charts must still agree on units or the
-    # branch outputs differ in pytree structure (`Unit("m2")` vs `Unit("cm2")`)
-    # and this raises -- pre-existing, and unchanged by the strip. And a `Delta`
-    # of the wrong dimension now raises `UnitConversionError` here instead of
-    # silently taking the conversion branch.
+    # common unit and strip to a plain array bool, valid for a static and a
+    # traced `Delta` alike. Cost: a `Delta` of the wrong dimension now raises
+    # `UnitConversionError` here, instead of taking the conversion branch.
     unit = from_chart.Delta.unit
     return jax.lax.cond(
         u.ustrip(unit, to_chart.Delta) == u.ustrip(unit, from_chart.Delta),

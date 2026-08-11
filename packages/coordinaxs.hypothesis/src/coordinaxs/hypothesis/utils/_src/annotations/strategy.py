@@ -111,20 +111,18 @@ def strategy_for_annotation(
     # `static_value=True` is not optional -- `StaticQuantity` requires a
     # `StaticValue`. Unwrap parametrized annotations like
     # `StaticQuantity[PhysicalType('length')]` first.
-    origin = ann.__origin__ if hasattr(ann, "__origin__") else ann
-    if not inspect.isclass(origin):
-        kinds = [(u.Q, False)]
-    elif issubclass(origin, u.StaticQuantity):
-        kinds = [(u.StaticQuantity, True)]  # the annotation pins static
-    elif issubclass(u.StaticQuantity, origin):
-        # An abstract base (e.g. `AbstractQuantity`) admits either kind, so it
-        # must draw both. Defaulting to `u.Q` here silently strips *all* static
-        # coverage from every field annotated with it -- and for a chart field
-        # that is worse than thin coverage: a dynamic value inside a static
-        # chart is a live array that JAX cannot see.
-        kinds = [(u.Q, False), (u.StaticQuantity, True)]
-    else:
-        kinds = [(u.Q, False)]  # the annotation pins dynamic
+    origin = getattr(ann, "__origin__", ann)
+    kinds = [(u.Q, False)]  # the annotation pins dynamic, or is not a class
+    if inspect.isclass(origin):
+        if issubclass(origin, u.StaticQuantity):
+            kinds = [(u.StaticQuantity, True)]  # the annotation pins static
+        elif issubclass(u.StaticQuantity, origin):
+            # An abstract base (e.g. `AbstractQuantity`) admits either kind, so
+            # it must draw both. Defaulting to `u.Q` here silently strips *all*
+            # static coverage from every field annotated with it -- and for a
+            # chart field that is worse than thin coverage: a dynamic value
+            # inside a static chart is a live array that JAX cannot see.
+            kinds = [(u.Q, False), (u.StaticQuantity, True)]
 
     # Build quantity strategy
     strategy = st.one_of(
