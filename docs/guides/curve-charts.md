@@ -2,7 +2,9 @@
 
 `coordinaxs.curveframes` provides `TubularChart`: a `coordinax.charts` chart whose coordinates $(\tau, n_1, n_2)$ locate a point relative to a curve,
 
-$$ \mathbf{x} = \boldsymbol{\gamma}(\tau) + n_1\mathbf{U}\_1(\tau) + n_2\mathbf{U}\_2(\tau), $$
+$$
+\mathbf{x} = \boldsymbol{\gamma}(\tau) + n_1\mathbf{U}_1(\tau) + n_2\mathbf{U}_2(\tau)
+$$
 
 where $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is the triad supplied by a `FrenetSerretBuilder` or `BishopBuilder`. This guide covers construction, the forward and inverse maps, differentiating through a fitted curve, the induced metric, and where the chart stops being valid.
 
@@ -224,6 +226,8 @@ Even a correctly one-period range still has the two endpoints coincide (they are
 0.0
 
 ```
+
+`n_seed` (default 64) sets how finely that same scan samples `tau_bounds` before the Newton polish; it is what makes the inverse pick the _nearest_ point rather than merely _a_ stationary one. On a curve that doubles back on itself, too coarse a scan can miss the seed nearest the true answer and lock onto the wrong branch — raise `n_seed` if the curve has tight folds relative to the sampling density `tau_bounds` implies.
 
 **The chart is injective only inside the curve's reach.** Past the _focal distance_ — where the normal-plane offset cancels the local curvature exactly — nearby ambient points map to the same $(\tau, n_1, n_2)$, and `check_data(..., values=True)` raises rather than return coordinates that aren't unique. On the unit circle with `BishopBuilder`, $+\mathbf{U}_1$ points outward, so the Jacobian factor is $1+n_1$ and the focal point sits at $n_1=-1.0$ — one radius toward the center:
 
