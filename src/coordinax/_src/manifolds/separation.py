@@ -81,13 +81,8 @@ def separation(
     Distance(5., 'm')
 
     """
-    # Checked here as well as in `norm`, purely so the message names the function
-    # the caller actually invoked; otherwise `separation` reports a `norm` error.
-    # Guards `chart.M.metric` rather than the argument, for the same reason `norm`
-    # does: that is the metric the computation uses. It also keeps the ordering
-    # right — a *mismatched* metric passes this guard (the chart's own metric is
-    # fine) and goes on to be reported as a mismatch by `norm`, instead of being
-    # misreported here as a definiteness problem.
+    # Duplicated with `norm` so the message names the function the caller
+    # invoked. Guards `chart.M.metric` -- the metric actually used.
     require_positive_definite(chart.M.metric, "separation")
 
     chart.check_data(a, keys=True, values=False)
