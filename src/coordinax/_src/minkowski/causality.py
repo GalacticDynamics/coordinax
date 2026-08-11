@@ -112,17 +112,17 @@ def causal_character(
     A big time difference and a small space difference is timelike -- the two
     events can be visited by one slower-than-light observer:
 
-    >>> cxm.causal_character(cxc.minkowskict, o, ev(5.0, 1.0))
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, ev(5.0, 1.0))
     'timelike'
 
     The reverse is spacelike -- no observer sees both:
 
-    >>> cxm.causal_character(cxc.minkowskict, o, ev(1.0, 5.0))
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, ev(1.0, 5.0))
     'spacelike'
 
     Equal parts is null: exactly a light ray.
 
-    >>> cxm.causal_character(cxc.minkowskict, o, ev(3.0, 3.0))
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, ev(3.0, 3.0))
     'null'
 
     """
@@ -167,7 +167,7 @@ def proper_time(
     >>> o = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
     >>> rest = {"ct": u.Q(299792458.0, "m"), "x": u.Q(0.0, "m"),
     ...         "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxm.proper_time(cxc.minkowskict, o, rest).uconvert("s").round(3)
+    >>> cxm.lorentzian.proper_time(cxc.minkowskict, o, rest).uconvert("s").round(3)
     Q(1., 's')
 
     A spacelike pair has no proper time:
@@ -175,7 +175,7 @@ def proper_time(
     >>> far = {"ct": u.Q(1.0, "m"), "x": u.Q(5.0, "m"),
     ...        "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> try:
-    ...     cxm.proper_time(cxc.minkowskict, o, far)
+    ...     cxm.lorentzian.proper_time(cxc.minkowskict, o, far)
     ... except ValueError as e:
     ...     print(str(e)[:56])
     proper_time() is defined only for timelike-separated eve
@@ -218,7 +218,7 @@ def proper_distance(
     >>> o = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
     >>> far = {"ct": u.Q(3.0, "m"), "x": u.Q(5.0, "m"),
     ...        "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxm.proper_distance(cxc.minkowskict, o, far).round(2)
+    >>> cxm.lorentzian.proper_distance(cxc.minkowskict, o, far).round(2)
     Q(4., 'm')
 
     """
@@ -265,7 +265,7 @@ def causal_character(
     >>> o = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
     >>> ev = {"ct": u.Q(5.0, "m"), "x": u.Q(1.0, "m"),
     ...       "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxm.causal_character(cxc.minkowskict, o, ev)
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, ev)
     'timelike'
 
     """
@@ -341,7 +341,7 @@ def causal_character(
     >>> a = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
     >>> b = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> try:
-    ...     cxm.causal_character(cxc.cart3d, a, b)
+    ...     cxm.lorentzian.causal_character(cxc.cart3d, a, b)
     ... except NotImplementedError as e:
     ...     print(str(e).split("--")[0].strip())
     causal_character() requires a Lorentzian metric

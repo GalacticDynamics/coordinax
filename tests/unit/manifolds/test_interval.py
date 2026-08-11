@@ -106,7 +106,9 @@ class TestInterval:
         assert not hasattr(got, "unit")
         assert float(got) == pytest.approx(-24.0, abs=ATOL)
         assert (
-            cxm.causal_character(cxc.minkowskict, origin, ev, usys=u.unitsystems.si)
+            cxm.lorentzian.causal_character(
+                cxc.minkowskict, origin, ev, usys=u.unitsystems.si
+            )
             == "timelike"
         )
 
@@ -158,23 +160,23 @@ class TestLorentzInvariance:
         """Causal ordering is absolute: no boost turns timelike into spacelike."""
         op = cxfm.LorentzBoost(beta)
         a, b = ORIGIN, event(ct, x)
-        before = cxm.causal_character(cxc.minkowskict, a, b)
+        before = cxm.lorentzian.causal_character(cxc.minkowskict, a, b)
 
         a2 = cxfm.act(op, None, a, cxc.minkowskict, cxr.point)
         b2 = cxfm.act(op, None, b, cxc.minkowskict, cxr.point)
-        after = cxm.causal_character(cxc.minkowskict, a2, b2)
+        after = cxm.lorentzian.causal_character(cxc.minkowskict, a2, b2)
 
         assert after == before
 
     def test_proper_time_is_boost_invariant(self):
         """A wristwatch reading cannot depend on who is looking at it."""
         a, b = ORIGIN, event(5.0, 1.0)
-        before = cxm.proper_time(cxc.minkowskict, a, b).uconvert("s")
+        before = cxm.lorentzian.proper_time(cxc.minkowskict, a, b).uconvert("s")
 
         op = cxfm.LorentzBoost([0.6, 0.0, 0.0])
         a2 = cxfm.act(op, None, a, cxc.minkowskict, cxr.point)
         b2 = cxfm.act(op, None, b, cxc.minkowskict, cxr.point)
-        after = cxm.proper_time(cxc.minkowskict, a2, b2).uconvert("s")
+        after = cxm.lorentzian.proper_time(cxc.minkowskict, a2, b2).uconvert("s")
 
         assert float(after.ustrip("s")) == pytest.approx(
             float(before.ustrip("s")), rel=1e-3
@@ -195,21 +197,30 @@ class TestCausalCharacter:
         ],
     )
     def test_classification(self, ct, x, want):
-        assert cxm.causal_character(cxc.minkowskict, ORIGIN, event(ct, x)) == want
+        assert (
+            cxm.lorentzian.causal_character(cxc.minkowskict, ORIGIN, event(ct, x))
+            == want
+        )
 
     def test_coincident_events_are_null(self):
-        assert cxm.causal_character(cxc.minkowskict, ORIGIN, ORIGIN) == "null"
+        assert (
+            cxm.lorentzian.causal_character(cxc.minkowskict, ORIGIN, ORIGIN) == "null"
+        )
 
     def test_null_tolerance_scales_with_the_data(self):
         """A light ray a million metres long is still null, not spacelike."""
         big = event(1e6, 1e6)
-        assert cxm.causal_character(cxc.minkowskict, ORIGIN, big) == "null"
+        assert cxm.lorentzian.causal_character(cxc.minkowskict, ORIGIN, big) == "null"
 
     def test_explicit_atol_is_respected(self):
         """A wide tolerance can call a genuinely timelike pair null."""
         pair = event(5.0, 1.0)  # ds^2 = -24
-        assert cxm.causal_character(cxc.minkowskict, ORIGIN, pair) == "timelike"
-        loose = cxm.causal_character(cxc.minkowskict, ORIGIN, pair, atol=100.0)
+        assert (
+            cxm.lorentzian.causal_character(cxc.minkowskict, ORIGIN, pair) == "timelike"
+        )
+        loose = cxm.lorentzian.causal_character(
+            cxc.minkowskict, ORIGIN, pair, atol=100.0
+        )
         assert loose == "null"
 
     @pytest.mark.parametrize(
@@ -227,7 +238,7 @@ class TestCausalCharacter:
         a = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         with pytest.raises(NotImplementedError, match="requires a Lorentzian metric"):
-            getattr(cxm, verb)(cxc.cart3d, a, b)
+            getattr(cxm.lorentzian, verb)(cxc.cart3d, a, b)
 
     def test_the_precondition_is_a_type_not_a_runtime_scan(self):
         """`MinkowskiMetric` carries the marker; Riemannian metrics do not.
@@ -245,7 +256,7 @@ class TestCausalCharacter:
         at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
         b = {"theta": u.Q(1.0, "rad"), "phi": u.Q(0.0, "rad")}
         with pytest.raises(NotImplementedError, match="requires a Lorentzian metric"):
-            cxm.causal_character(cxc.sph2, at, b)
+            cxm.lorentzian.causal_character(cxc.sph2, at, b)
 
 
 class TestProperTimeAndDistance:
@@ -254,14 +265,14 @@ class TestProperTimeAndDistance:
     def test_proper_time_at_rest_is_coordinate_time(self):
         """An observer at rest ages by the full coordinate time."""
         one_light_second = event(299792458.0, 0.0)
-        got = cxm.proper_time(cxc.minkowskict, ORIGIN, one_light_second)
+        got = cxm.lorentzian.proper_time(cxc.minkowskict, ORIGIN, one_light_second)
         assert float(got.uconvert("s").ustrip("s")) == pytest.approx(1.0, rel=1e-4)
 
     def test_moving_clock_ages_less(self):
         """Time dilation: same coordinate time, but moving, gives less ageing."""
         c = 299792458.0
-        at_rest = cxm.proper_time(cxc.minkowskict, ORIGIN, event(c, 0.0))
-        moving = cxm.proper_time(cxc.minkowskict, ORIGIN, event(c, 0.6 * c))
+        at_rest = cxm.lorentzian.proper_time(cxc.minkowskict, ORIGIN, event(c, 0.0))
+        moving = cxm.lorentzian.proper_time(cxc.minkowskict, ORIGIN, event(c, 0.6 * c))
         assert float(moving.ustrip("s")) < float(at_rest.ustrip("s"))
         # sqrt(1 - 0.6^2) = 0.8
         assert float(moving.ustrip("s")) == pytest.approx(
@@ -269,22 +280,22 @@ class TestProperTimeAndDistance:
         )
 
     def test_proper_distance_value(self):
-        got = cxm.proper_distance(cxc.minkowskict, ORIGIN, event(3.0, 5.0))
+        got = cxm.lorentzian.proper_distance(cxc.minkowskict, ORIGIN, event(3.0, 5.0))
         assert float(got.ustrip("m")) == pytest.approx(4.0, abs=ATOL)
 
     @pytest.mark.parametrize(("ct", "x"), [(1.0, 5.0), (3.0, 3.0)])
     def test_proper_time_refuses_non_timelike(self, ct, x):
         with pytest.raises(ValueError, match="timelike"):
-            cxm.proper_time(cxc.minkowskict, ORIGIN, event(ct, x))
+            cxm.lorentzian.proper_time(cxc.minkowskict, ORIGIN, event(ct, x))
 
     @pytest.mark.parametrize(("ct", "x"), [(5.0, 1.0), (3.0, 3.0)])
     def test_proper_distance_refuses_non_spacelike(self, ct, x):
         with pytest.raises(ValueError, match="spacelike"):
-            cxm.proper_distance(cxc.minkowskict, ORIGIN, event(ct, x))
+            cxm.lorentzian.proper_distance(cxc.minkowskict, ORIGIN, event(ct, x))
 
     def test_error_message_names_the_actual_causal_type(self):
         with pytest.raises(ValueError, match="spacelike") as exc:
-            cxm.proper_time(cxc.minkowskict, ORIGIN, event(1.0, 5.0))
+            cxm.lorentzian.proper_time(cxc.minkowskict, ORIGIN, event(1.0, 5.0))
         assert "spacelike" in str(exc.value)
 
 
@@ -299,25 +310,29 @@ class TestSingleIntervalEvaluation:
     @pytest.mark.parametrize(("ct", "x"), [(5.0, 1.0), (10.0, 2.0), (-7.0, 3.0)])
     def test_proper_time_agrees_with_the_two_step_form(self, ct, x):
         b = event(ct, x)
-        assert cxm.causal_character(cxc.minkowskict, ORIGIN, b) == "timelike"
+        assert cxm.lorentzian.causal_character(cxc.minkowskict, ORIGIN, b) == "timelike"
         ds2 = cxm.interval(cxc.minkowskict, ORIGIN, b)
         expected = float(jnp.sqrt(-ds2.ustrip("m2"))) / 299792458.0
-        got = cxm.proper_time(cxc.minkowskict, ORIGIN, b)
+        got = cxm.lorentzian.proper_time(cxc.minkowskict, ORIGIN, b)
         assert float(got.ustrip("s")) == pytest.approx(expected, rel=1e-5)
 
     @pytest.mark.parametrize(("ct", "x"), [(1.0, 5.0), (3.0, 5.0), (0.0, 2.0)])
     def test_proper_distance_agrees_with_the_two_step_form(self, ct, x):
         b = event(ct, x)
-        assert cxm.causal_character(cxc.minkowskict, ORIGIN, b) == "spacelike"
+        assert (
+            cxm.lorentzian.causal_character(cxc.minkowskict, ORIGIN, b) == "spacelike"
+        )
         ds2 = cxm.interval(cxc.minkowskict, ORIGIN, b)
         expected = float(jnp.sqrt(ds2.ustrip("m2")))
-        got = cxm.proper_distance(cxc.minkowskict, ORIGIN, b)
+        got = cxm.lorentzian.proper_distance(cxc.minkowskict, ORIGIN, b)
         assert float(got.ustrip("m")) == pytest.approx(expected, rel=1e-5)
 
     def test_atol_still_reaches_the_refusal_path(self):
         """The shared classifier still honours `atol` from these entry points."""
         with pytest.raises(ValueError, match="null"):
-            cxm.proper_time(cxc.minkowskict, ORIGIN, event(5.0, 1.0), atol=100.0)
+            cxm.lorentzian.proper_time(
+                cxc.minkowskict, ORIGIN, event(5.0, 1.0), atol=100.0
+            )
 
 
 class TestCausalVerbsValidateTheirMetricArgument:
