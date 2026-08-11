@@ -56,6 +56,7 @@ ang = cxm.angle_between(cxc.cart3d, uvec, vvec, at=at)
 
 ### Manifolds
 
+- `AbstractLorentzianMetricField`: structural marker for metrics with a Lorentzian signature; gates the `lorentzian` sub-namespace below
 - `AbstractManifold`: base manifold interface
 - `EuclideanManifold` / `R3`: Euclidean manifold family and 3D convenience
 - `HyperSphericalManifold`: intrinsic two-sphere manifold
@@ -90,4 +91,35 @@ ang = cxm.angle_between(cxc.cart3d, uvec, vvec, at=at)
 .. automodule:: coordinax.manifolds
     :exclude-members: aval, default, materialise, enable_materialise
 
+```
+
+## `coordinax.manifolds.lorentzian`
+
+A sub-namespace for measurements that need a **timelike direction** — gated on the metric type `AbstractLorentzianMetricField` (signature $(-,+,\ldots,+)$), not on a chart. A metric without one has no method here, rather than a method that accepts and then refuses.
+
+- `causal_character`: classify a pair of events as `"timelike"`, `"null"`, or `"spacelike"`. Returns a `str`, so not `jit`-able; branch on the sign of `interval` inside a trace
+- `proper_time`: elapsed proper time between two timelike-separated events
+- `proper_distance`: proper distance between two spacelike-separated events
+- `interval`: **re-exported** for convenience — canonical in `coordinax.manifolds`, since the signed quadratic form is defined for _every_ metric. It appears here because `causal_character` is its sign and `proper_time` its root
+
+Named for the signature rather than for "spacetime" deliberately: `charts.galileanct` is a 4-D Galilean spacetime and is **not** Lorentzian, so a `spacetime` namespace would promise membership these verbs refuse. Named `lorentzian` rather than `minkowski` because the gate is the signature — a curved spacetime metric (Schwarzschild, FLRW) inherits the marker and acquires all three.
+
+```pycon
+>>> import unxt as u
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+
+>>> birth = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+>>> death = {
+...     "ct": u.Q(5.0, "m"),
+...     "x": u.Q(1.0, "m"),
+...     "y": u.Q(0.0, "m"),
+...     "z": u.Q(0.0, "m"),
+... }
+
+>>> cxm.lorentzian.causal_character(cxc.minkowskict, birth, death)
+'timelike'
+
+>>> cxm.lorentzian.proper_time(cxc.minkowskict, birth, death).uconvert("ns").round(2)
+Q(16.34, 'ns')
 ```

@@ -13,9 +13,8 @@ __all__ = (
     "norm",
     "separation",
     "interval",
-    "causal_character",
-    "proper_time",
-    "proper_distance",
+    # Sub-namespaces
+    "lorentzian",
     # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
     "AbstractMetricField",
@@ -76,25 +75,26 @@ __all__ = (
     "galilean_spacetime",
 )
 
-from ._src.setup_package import install_import_hook
+from coordinax._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.manifolds"):
-    from ._src.base import (
+    from . import lorentzian
+    from coordinax._src.base import (
         AbstractAtlas,
         AbstractDiagonalMetricField,
         AbstractLorentzianMetricField,
         AbstractManifold,
         AbstractMetricField,
     )
-    from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
-    from ._src.embedded import (
+    from coordinax._src.custom import CustomAtlas, CustomManifold, CustomMetric
+    from coordinax._src.embedded import (
         AbstractEmbeddingMap,
         CustomEmbeddingMap,
         EmbeddedChart,
         EmbeddedManifold,
         PullbackMetric,
     )
-    from ._src.euclidean import (
+    from coordinax._src.euclidean import (
         R0,
         R1,
         R2,
@@ -105,15 +105,15 @@ with install_import_hook("coordinax.manifolds"):
         FlatMetric,
         Rn,
     )
-    from ._src.manifolds import *  # noqa: F403
-    from ._src.metric import AbstractMetricMatrix, DenseMetric, DiagonalMetric
-    from ._src.minkowski import (
+    from coordinax._src.manifolds import *
+    from coordinax._src.metric import AbstractMetricMatrix, DenseMetric, DiagonalMetric
+    from coordinax._src.minkowski import (
         MinkowskiAtlas,
         MinkowskiManifold,
         MinkowskiMetric,
         minkowski4d,
     )
-    from ._src.null import (
+    from coordinax._src.null import (
         NoAtlas,
         NoManifold,
         NoMetric,
@@ -121,13 +121,13 @@ with install_import_hook("coordinax.manifolds"):
         no_manifold,
         no_metric,
     )
-    from ._src.product import (
+    from coordinax._src.product import (
         CartesianProductAtlas,
         CartesianProductManifold,
         ProductMetric,
     )
-    from ._src.product.galilean_ct import galilean_spacetime
-    from ._src.spherical import (
+    from coordinax._src.product.galilean_ct import galilean_spacetime
+    from coordinax._src.spherical import (
         S1,
         S2,
         HyperSphericalAtlas,
@@ -140,14 +140,11 @@ with install_import_hook("coordinax.manifolds"):
     from coordinaxs.api.charts import pt_map
     from coordinaxs.api.manifolds import (
         angle_between,
-        causal_character,
         guess_manifold,
         interval,
         metric_matrix,
         metric_representation,
         norm,
-        proper_distance,
-        proper_time,
         pt_embed,
         pt_project,
         scale_factors,
