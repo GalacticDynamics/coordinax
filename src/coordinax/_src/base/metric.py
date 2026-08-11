@@ -109,32 +109,18 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
 class AbstractLorentzianMetricField(AbstractMetricField):
     r"""Abstract base class for metrics with a Lorentzian signature.
 
-    Subclassing signals that the metric has exactly one timelike direction --
-    signature $(-,+,\ldots,+)$ -- so a tangent vector, or a pair of points, has
-    a **causal character**: timelike, null, or spacelike.
+    Subclassing signals exactly one timelike direction -- signature
+    $(-,+,\ldots,+)$ -- so a tangent vector, or a pair of points, has a **causal
+    character**: timelike, null, or spacelike.
 
-    This is a marker, carrying no implementation. Its purpose is to let the
-    verbs that only mean something under such a signature --
-    `~coordinax.manifolds.causal_character`,
-    `~coordinax.manifolds.proper_time`,
-    `~coordinax.manifolds.proper_distance` -- state that precondition **as a
-    type**. They previously accepted any chart and scanned ``metric.signature``
-    at runtime, so ``causal_character(cart3d, ...)`` resolved and only then
-    refused. Now the precondition is carried by the dispatch: the implementing
-    overloads match only a Lorentzian metric.
+    A marker carrying no implementation. It lets the verbs that need such a
+    signature -- `~coordinax.manifolds.causal_character`,
+    `~coordinax.manifolds.proper_time`, `~coordinax.manifolds.proper_distance` --
+    state that precondition as a *type*, and lets a curved spacetime metric join
+    them by inheriting it.
 
-    A non-Lorentzian one is still *answered* -- by deliberate fallback overloads
-    on `AbstractMetricField` that raise `NotImplementedError` naming the
-    requirement. Those exist only so the refusal reads as a sentence rather than
-    as plum's resolution dump; they carry no implementation, and removing them
-    would change the error's presentation, not which inputs are accepted.
-
-    It also keeps the set extensible: a curved spacetime metric (Schwarzschild,
-    FLRW) inherits from here and acquires all three verbs, rather than each verb
-    needing to learn about it.
-
-    Note this is orthogonal to `AbstractDiagonalMetricField`, which is about the
-    *shape* of the matrix rather than its signature. `MinkowskiMetric` is both.
+    Orthogonal to `AbstractDiagonalMetricField`, which describes the matrix's
+    *shape* rather than its signature. `MinkowskiMetric` is both.
 
     Examples
     --------

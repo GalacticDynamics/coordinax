@@ -2,22 +2,17 @@ r"""Causal structure of a Lorentzian manifold.
 
 These verbs mean nothing without a timelike direction: a pair of points has a
 *causal character* -- timelike, null, or spacelike -- only when the metric has
-signature $(-,+,\\ldots,+)$. They therefore dispatch on
-`~coordinax.manifolds.AbstractLorentzianMetricField` rather than on a chart,
-so a Riemannian metric has no method rather than a method that accepts and then
-refuses.
+signature $(-,+,\ldots,+)$. They dispatch on
+`~coordinax.manifolds.AbstractLorentzianMetricField`, so the precondition is a
+type rather than a runtime check.
 
-They live in the Minkowski package for the same reason ``scale_factors`` and
-``metric_matrix`` do: a verb is declared once in `coordinaxs.api`, and each
-manifold registers its own dispatch. `~coordinax.manifolds.interval` stays in
-the generic manifolds package, because the signed quadratic form *is* defined
-for every metric -- it is the squared `~coordinax.manifolds.separation` when
-Riemannian, and it is what these three read.
+`~coordinax.manifolds.interval` stays in the generic manifolds package: the
+signed quadratic form is defined for every metric, and is what these three read.
 """
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import plum
 
@@ -36,8 +31,6 @@ from coordinax._src.custom_types import CDict, OptUSys
 #: into a duration.  `MinkowskiCT` measures time as ``ct`` in length units, so
 #: this is needed only at the boundary where a caller wants seconds.
 C_LIGHT = u.Q(299792458.0, "m/s")
-
-CausalCharacter = Literal["timelike", "null", "spacelike"]
 
 _MSG_NOT_TIMELIKE = (
     "proper_time() is defined only for timelike-separated events; this pair is "
@@ -292,19 +285,7 @@ def proper_time(
     atol: Any = None,
     usys: OptUSys = None,
 ) -> Any:
-    """Proper time between two events, resolving the metric from the chart.
-
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-
-    >>> o = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
-    >>> rest = {"ct": u.Q(299792458.0, "m"), "x": u.Q(0.0, "m"),
-    ...         "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxm.proper_time(cxc.minkowskict, o, rest).uconvert("s").round(3)
-    Q(1., 's')
-
-    """
+    """Proper time between two events, resolving the metric from the chart."""
     return cxmapi.proper_time(chart.M.metric, chart, a, b, atol=atol, usys=usys)
 
 
@@ -318,19 +299,7 @@ def proper_distance(
     atol: Any = None,
     usys: OptUSys = None,
 ) -> Any:
-    """Proper distance between two events, resolving the metric from the chart.
-
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-
-    >>> o = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
-    >>> far = {"ct": u.Q(3.0, "m"), "x": u.Q(5.0, "m"),
-    ...        "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxm.proper_distance(cxc.minkowskict, o, far).round(2)
-    Q(4., 'm')
-
-    """
+    """Proper distance between two events, resolving the metric from the chart."""
     return cxmapi.proper_distance(chart.M.metric, chart, a, b, atol=atol, usys=usys)
 
 
@@ -386,7 +355,6 @@ def causal_character(
 def proper_time(
     metric: AbstractMetricField, chart: AbstractChart, a: CDict, b: CDict, /, **kw: Any
 ) -> Any:
-    """Refuse a non-Lorentzian metric, by name."""
     del chart, a, b, kw
     raise NotImplementedError(_not_lorentzian(metric, "proper_time"))
 
@@ -395,6 +363,5 @@ def proper_time(
 def proper_distance(
     metric: AbstractMetricField, chart: AbstractChart, a: CDict, b: CDict, /, **kw: Any
 ) -> Any:
-    """Refuse a non-Lorentzian metric, by name."""
     del chart, a, b, kw
     raise NotImplementedError(_not_lorentzian(metric, "proper_distance"))
