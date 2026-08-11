@@ -12,24 +12,40 @@ fitted curve's parameters differentiable through the chart transition.
 
 __all__ = ("nearest_tau",)
 
+from functools import lru_cache
+
 from typing import Any
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 import optimistix as optx
 
 import unxt as u
 
-_SOLVER_CACHE: dict[tuple[float, float], optx.Newton] = {}
 
-
+@lru_cache
 def _solver(rtol: float, atol: float) -> optx.Newton:
-    # Newton instances are cheap but hashable-by-identity; reusing one keeps
-    # `jit` from seeing a fresh static argument on every call.
-    key = (rtol, atol)
-    if key not in _SOLVER_CACHE:
-        _SOLVER_CACHE[key] = optx.Newton(rtol=rtol, atol=atol)
-    return _SOLVER_CACHE[key]
+    # Newton instances are cheap but hashable-by-identity; caching keeps
+    # `jit` from seeing a fresh static argument on every call. In practice
+    # there is exactly one (rtol, atol) pair per process -- nothing on
+    # `TubularChart` or either `pt_map` exposes them -- so an unbounded
+    # cache never grows past one entry.
+    return optx.Newton(rtol=rtol, atol=atol)
+
+
+def _default_tol() -> float:
+    """Solver tolerance scaled to the active dtype's working precision.
+
+    `1e-10` is unreachable in float32 -- JAX's default dtype everywhere
+    outside this repo's pytest config, which sets `JAX_ENABLE_X64=1`. Below
+    the dtype's own epsilon, a solve can never satisfy the tolerance and
+    reports `max_steps_reached` on every call even though its answer is
+    already correct to that dtype's precision. Scaling by the dtype's
+    epsilon keeps float64 tight while giving float32 a tolerance it can
+    actually reach.
+    """
+    return float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5
 
 
 def nearest_tau(
@@ -39,8 +55,8 @@ def nearest_tau(
     *,
     bounds: tuple[u.AbstractQuantity, u.AbstractQuantity],
     n_seed: int = 64,
-    rtol: float = 1e-10,
-    atol: float = 1e-10,
+    rtol: float | None = None,
+    atol: float | None = None,
 ) -> u.AbstractQuantity:
     r"""Curve parameter of the point on the curve nearest to ``x``.
 
@@ -50,20 +66,31 @@ def nearest_tau(
     the global argmin, and polish that. The argmin is an integer index and
     carries no gradient; the polish is implicitly differentiated.
 
+    ``rtol``/``atol`` default to `None`, meaning "derive from the active
+    dtype" (see `_default_tol`); pass either explicitly to override.
+
+    Raises
+    ------
+    Exception
+        If the Newton polish does not converge (`eqx.error_if` under `jit`,
+        a plain exception when eager). This cannot detect the periodic-
+        aliasing case for a closed curve queried outside a one-period
+        `tau_bounds` -- that solve *converges*, just to the wrong branch; see
+        `TubularChart.tau_bounds`.
+
     Examples
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinaxs.curveframes as cxfc
-    >>> from coordinaxs.curveframes._src.nearest import nearest_tau
 
     >>> def circle(tau):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
     >>> b = cxfc.BishopBuilder(circle)
-    >>> tau = nearest_tau(b, u.Q(jnp.array([2.0, 0.0, 0.0]), "km"),
-    ...                   bounds=(u.Q(-1.0, "s"), u.Q(6.0, "s")))
+    >>> tau = cxfc.nearest_tau(b, u.Q(jnp.array([2.0, 0.0, 0.0]), "km"),
+    ...                        bounds=(u.Q(-1.0, "s"), u.Q(6.0, "s")))
     >>> bool(jnp.allclose(tau.ustrip("s"), 0.0, atol=1e-6))
     True
 
@@ -92,5 +119,23 @@ def nearest_tau(
         T = builder.rotation_matrix(u.Q(tau_v, unit))[0]
         return jnp.dot(T, offset(tau_v))
 
-    sol = optx.root_find(residual, _solver(rtol, atol), tau0, max_steps=64, throw=False)
-    return u.Q(sol.value, unit)
+    tol = _default_tol()
+    solver = _solver(tol if rtol is None else rtol, tol if atol is None else atol)
+    sol = optx.root_find(residual, solver, tau0, max_steps=64, throw=False)
+
+    # Surface a non-converged solve rather than silently returning a wrong
+    # tau. Hybrid form, matching `_src/charts/checks.py`: `eqx.error_if`
+    # under trace (a Python `bool` on a tracer raises
+    # `TracerBoolConversionError`), a plain exception when concrete. The
+    # return value MUST be threaded back into what is returned -- a bare
+    # `eqx.error_if(pred, pred, msg)` is dead-code-eliminated and the guard
+    # silently disappears under `jit`.
+    pred = sol.result != optx.RESULTS.successful
+    msg = "nearest-point solve did not converge"
+    if isinstance(pred, jax.core.Tracer):
+        value = eqx.error_if(sol.value, pred, msg)
+    elif bool(pred):
+        raise RuntimeError(msg)
+    else:
+        value = sol.value
+    return u.Q(value, unit)

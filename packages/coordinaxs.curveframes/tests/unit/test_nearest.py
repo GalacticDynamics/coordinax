@@ -7,7 +7,7 @@ import pytest
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
-from coordinaxs.curveframes._src.nearest import nearest_tau
+from coordinaxs.curveframes import nearest_tau
 
 
 def helix(tau: u.AbstractQuantity) -> u.AbstractQuantity:
@@ -51,3 +51,33 @@ def test_is_jittable() -> None:
     x = _point_at(b, 0.7, 0.13, -0.21)
     got = jax.jit(lambda xx: nearest_tau(b, xx, bounds=BOUNDS))(x)
     assert jnp.allclose(got.ustrip("s"), 0.7, atol=1e-6)
+
+
+def test_nonconvergence_raises_eagerly() -> None:
+    """An unreachable tolerance forces `max_steps_reached`, not a silent tau.
+
+    `rtol`/`atol` this tight are unreachable at any dtype, so this is a
+    deterministic way to exercise the non-convergence guard independent of
+    the default-tolerance dtype scaling.
+    """
+    b = cxfc.BishopBuilder(helix)
+    x = _point_at(b, 0.7, 0.13, -0.21)
+    with pytest.raises(RuntimeError, match="did not converge"):
+        nearest_tau(b, x, bounds=BOUNDS, rtol=1e-300, atol=1e-300)
+
+
+def test_nonconvergence_raises_under_jit() -> None:
+    """The eager and traced guards are different code paths; test both.
+
+    A bare `eqx.error_if` whose result is unused is dead-code-eliminated, so
+    the traced branch can pass silently while the eager branch still works.
+    """
+    b = cxfc.BishopBuilder(helix)
+    x = _point_at(b, 0.7, 0.13, -0.21)
+
+    @jax.jit
+    def run(xx):
+        return nearest_tau(b, xx, bounds=BOUNDS, rtol=1e-300, atol=1e-300)
+
+    with pytest.raises(jax.errors.JaxRuntimeError, match="did not converge"):
+        run(x)
