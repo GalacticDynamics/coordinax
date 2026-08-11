@@ -17,6 +17,7 @@ import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinaxs.api.manifolds as cxmapi
 
 ATOL = 1e-4
 
@@ -211,12 +212,40 @@ class TestCausalCharacter:
         loose = cxm.causal_character(cxc.minkowskict, ORIGIN, pair, atol=100.0)
         assert loose == "null"
 
-    def test_riemannian_metric_is_rejected(self):
-        """Causal character is meaningless without a timelike direction."""
+    @pytest.mark.parametrize(
+        "verb", ["causal_character", "proper_time", "proper_distance"]
+    )
+    def test_non_lorentzian_metric_is_rejected(self, verb):
+        """Causal character is meaningless without a timelike direction.
+
+        The refusal is now the *type system's*: there is no method for a
+        non-Lorentzian metric, rather than a method that accepts any chart and
+        scans ``metric.signature`` at runtime. The `NotImplementedError` below
+        comes from a deliberate fallback overload whose only job is to say so in
+        a sentence instead of a plum resolution dump.
+        """
         a = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        with pytest.raises(ValueError, match="Lorentzian"):
-            cxm.causal_character(cxc.cart3d, a, b)
+        with pytest.raises(NotImplementedError, match="requires a Lorentzian metric"):
+            getattr(cxm, verb)(cxc.cart3d, a, b)
+
+    def test_the_precondition_is_a_type_not_a_runtime_scan(self):
+        """`MinkowskiMetric` carries the marker; Riemannian metrics do not.
+
+        This is what makes the set extensible: a curved spacetime metric
+        inherits the marker and acquires all three verbs, rather than each verb
+        needing to learn about it.
+        """
+        assert isinstance(cxm.MinkowskiMetric(), cxm.AbstractLorentzianMetricField)
+        assert not isinstance(cxm.FlatMetric(3), cxm.AbstractLorentzianMetricField)
+        assert not isinstance(cxm.RoundMetric(2), cxm.AbstractLorentzianMetricField)
+
+    def test_sphere_is_also_rejected(self):
+        """Not just flat-Riemannian: any positive-definite metric."""
+        at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+        b = {"theta": u.Q(1.0, "rad"), "phi": u.Q(0.0, "rad")}
+        with pytest.raises(NotImplementedError, match="requires a Lorentzian metric"):
+            cxm.causal_character(cxc.sph2, at, b)
 
 
 class TestProperTimeAndDistance:
@@ -289,3 +318,50 @@ class TestSingleIntervalEvaluation:
         """The shared classifier still honours `atol` from these entry points."""
         with pytest.raises(ValueError, match="null"):
             cxm.proper_time(cxc.minkowskict, ORIGIN, event(5.0, 1.0), atol=100.0)
+
+
+class TestCausalVerbsValidateTheirMetricArgument:
+    """The `metric` argument is a checked selector, not an ignored one.
+
+    Regression: the metric-level overloads called the *chart-level* `interval`,
+    dropping their own `metric` argument. A Lorentzian metric passed alongside a
+    Riemannian chart therefore classified using the chart's metric and slipped
+    the precondition entirely:
+
+        causal_character(MinkowskiMetric(), cart3d, a, b)  ->  'spacelike'
+
+    Same defect class as the one review caught in #674's guard and again in
+    #680's `interval`; routing through the metric-level `interval` -- which
+    validates `metric == chart.M.metric` -- is what fixes it in all three.
+    """
+
+    A3: ClassVar = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+    B3: ClassVar = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+
+    @pytest.mark.parametrize(
+        "verb", ["causal_character", "proper_time", "proper_distance"]
+    )
+    def test_lorentzian_metric_with_riemannian_chart_is_rejected(self, verb):
+        """The mismatch must be reported, not silently resolved to the chart."""
+        with pytest.raises(ValueError, match="must match chart"):
+            getattr(cxmapi, verb)(cxm.MinkowskiMetric(), cxc.cart3d, self.A3, self.B3)
+
+    @pytest.mark.parametrize(
+        ("verb", "ct", "x"),
+        [
+            ("causal_character", 5.0, 1.0),  # any pair
+            ("proper_time", 5.0, 1.0),  # timelike
+            ("proper_distance", 1.0, 5.0),  # spacelike
+        ],
+    )
+    def test_matching_metric_and_chart_still_work(self, verb, ct, x):
+        """Positive control: the honest call is unaffected.
+
+        Each verb gets the causal type it is defined for -- `proper_distance`
+        refuses a timelike pair by design.
+        """
+        o = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+        got = getattr(cxmapi, verb)(
+            cxm.MinkowskiMetric(), cxc.minkowskict, o, event(ct, x)
+        )
+        assert got is not None
