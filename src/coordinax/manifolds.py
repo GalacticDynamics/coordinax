@@ -21,6 +21,7 @@ __all__ = (
     "AbstractMetricField",
     "AbstractManifold",
     "AbstractDiagonalMetricField",
+    "AbstractLorentzianMetricField",
     # Metric matrix classes
     "AbstractMetricMatrix",
     "DiagonalMetric",
@@ -81,6 +82,7 @@ with install_import_hook("coordinax.manifolds"):
     from ._src.base import (
         AbstractAtlas,
         AbstractDiagonalMetricField,
+        AbstractLorentzianMetricField,
         AbstractManifold,
         AbstractMetricField,
     )

@@ -8,13 +8,16 @@ from typing import final
 
 import jax
 
-from coordinax._src.base import AbstractDiagonalMetricField
+from coordinax._src.base import (
+    AbstractDiagonalMetricField,
+    AbstractLorentzianMetricField,
+)
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class MinkowskiMetric(AbstractDiagonalMetricField):
+class MinkowskiMetric(AbstractDiagonalMetricField, AbstractLorentzianMetricField):
     r"""Pseudo-Riemannian (Lorentzian) metric on Minkowski spacetime.
 
     In the canonical {class}`~coordinax.charts.MinkowskiCT` chart

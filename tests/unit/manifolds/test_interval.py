@@ -211,12 +211,40 @@ class TestCausalCharacter:
         loose = cxm.causal_character(cxc.minkowskict, ORIGIN, pair, atol=100.0)
         assert loose == "null"
 
-    def test_riemannian_metric_is_rejected(self):
-        """Causal character is meaningless without a timelike direction."""
+    @pytest.mark.parametrize(
+        "verb", ["causal_character", "proper_time", "proper_distance"]
+    )
+    def test_non_lorentzian_metric_is_rejected(self, verb):
+        """Causal character is meaningless without a timelike direction.
+
+        The refusal is now the *type system's*: there is no method for a
+        non-Lorentzian metric, rather than a method that accepts any chart and
+        scans ``metric.signature`` at runtime. The `NotImplementedError` below
+        comes from a deliberate fallback overload whose only job is to say so in
+        a sentence instead of a plum resolution dump.
+        """
         a = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        with pytest.raises(ValueError, match="Lorentzian"):
-            cxm.causal_character(cxc.cart3d, a, b)
+        with pytest.raises(NotImplementedError, match="requires a Lorentzian metric"):
+            getattr(cxm, verb)(cxc.cart3d, a, b)
+
+    def test_the_precondition_is_a_type_not_a_runtime_scan(self):
+        """`MinkowskiMetric` carries the marker; Riemannian metrics do not.
+
+        This is what makes the set extensible: a curved spacetime metric
+        inherits the marker and acquires all three verbs, rather than each verb
+        needing to learn about it.
+        """
+        assert isinstance(cxm.MinkowskiMetric(), cxm.AbstractLorentzianMetricField)
+        assert not isinstance(cxm.FlatMetric(3), cxm.AbstractLorentzianMetricField)
+        assert not isinstance(cxm.RoundMetric(2), cxm.AbstractLorentzianMetricField)
+
+    def test_sphere_is_also_rejected(self):
+        """Not just flat-Riemannian: any positive-definite metric."""
+        at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+        b = {"theta": u.Q(1.0, "rad"), "phi": u.Q(0.0, "rad")}
+        with pytest.raises(NotImplementedError, match="requires a Lorentzian metric"):
+            cxm.causal_character(cxc.sph2, at, b)
 
 
 class TestProperTimeAndDistance:

@@ -1,6 +1,7 @@
 """Minkowski spacetime manifold."""
 
 from .atlas import *
+from .causality import *
 from .charts import *
 from .manifold import *
 from .metric import *

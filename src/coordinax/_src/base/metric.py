@@ -1,6 +1,10 @@
 """Manifold definitions and manifold inference helpers."""
 
-__all__ = ("AbstractMetricField", "AbstractDiagonalMetricField")
+__all__ = (
+    "AbstractMetricField",
+    "AbstractDiagonalMetricField",
+    "AbstractLorentzianMetricField",
+)
 
 import abc
 
@@ -100,6 +104,42 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
 
         """
         return cxmapi.norm(v, self, *args, at=at, usys=usys, **kwargs)
+
+
+class AbstractLorentzianMetricField(AbstractMetricField):
+    r"""Abstract base class for metrics with a Lorentzian signature.
+
+    Subclassing signals that the metric has exactly one timelike direction --
+    signature $(-,+,\ldots,+)$ -- so a tangent vector, or a pair of points, has
+    a **causal character**: timelike, null, or spacelike.
+
+    This is a marker, carrying no implementation. Its purpose is to let the
+    verbs that only mean something under such a signature --
+    `~coordinax.manifolds.causal_character`,
+    `~coordinax.manifolds.proper_time`,
+    `~coordinax.manifolds.proper_distance` -- state that precondition **as a
+    type**. They previously accepted any chart and scanned ``metric.signature``
+    at runtime, so ``causal_character(cart3d, ...)`` resolved and only then
+    refused. Now there is no method at all for a metric that is not Lorentzian.
+
+    It also keeps the set extensible: a curved spacetime metric (Schwarzschild,
+    FLRW) inherits from here and acquires all three verbs, rather than each verb
+    needing to learn about it.
+
+    Note this is orthogonal to `AbstractDiagonalMetricField`, which is about the
+    *shape* of the matrix rather than its signature. `MinkowskiMetric` is both.
+
+    Examples
+    --------
+    >>> import coordinax.manifolds as cxm
+
+    >>> isinstance(cxm.MinkowskiMetric(), cxm.AbstractLorentzianMetricField)
+    True
+
+    >>> isinstance(cxm.FlatMetric(3), cxm.AbstractLorentzianMetricField)
+    False
+
+    """
 
 
 class AbstractDiagonalMetricField(AbstractMetricField):
