@@ -790,6 +790,7 @@ dependencies = [
     { name = "coordinax" },
     { name = "diffrax" },
     { name = "diffraxtra" },
+    { name = "optimistix" },
 ]
 
 [package.metadata]
@@ -797,6 +798,7 @@ requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "diffrax", specifier = ">=0.7" },
     { name = "diffraxtra", specifier = ">=1.5" },
+    { name = "optimistix", specifier = ">=0.1.0" },
 ]
 
 [[package]]
