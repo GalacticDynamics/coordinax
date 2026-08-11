@@ -24,6 +24,7 @@ coordinaxs.interop.astropy <packages/coordinaxs.interop.astropy/index.md>
 
 guides/quantities.md
 guides/charts.md
+guides/curve-charts.md
 guides/manifolds.md
 guides/representations.md
 guides/vectors.md
