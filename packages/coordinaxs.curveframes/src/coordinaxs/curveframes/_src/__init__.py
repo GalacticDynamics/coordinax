@@ -6,10 +6,12 @@ implementation modules:
 - {mod}`.base` — abstract base classes.
 - {mod}`.frenetserret` — Frenet--Serret transform and frame.
 - {mod}`.bishop` — Bishop (rotation-minimising) transform and frame.
+- {mod}`.chart` — `TubularChart`, on the parameterized branch.
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
 """
 
 from .base import *
 from .bishop import *
+from .chart import *
 from .frenetserret import *
 from .register_frames import *

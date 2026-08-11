@@ -14,6 +14,7 @@ Public API
     FrenetSerretFrame
     BishopBuilder
     BishopFrame
+    TubularChart
 
 Typical usage::
 
@@ -36,6 +37,7 @@ __all__ = (
     "BishopFrame",
     "FrenetSerretBuilder",
     "FrenetSerretFrame",
+    "TubularChart",
 )
 
 from ._setup_package import install_import_hook
@@ -48,6 +50,7 @@ with install_import_hook("coordinaxs.curveframes"):
         BishopFrame,
         FrenetSerretBuilder,
         FrenetSerretFrame,
+        TubularChart,
     )
 
 del install_import_hook
