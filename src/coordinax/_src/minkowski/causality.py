@@ -34,13 +34,13 @@ C_LIGHT = u.Q(299792458.0, "m/s")
 
 _MSG_NOT_TIMELIKE = (
     "proper_time() is defined only for timelike-separated events; this pair is "
-    "{kind} (interval^2 = {ds2}). Use `interval` for the signed square, or "
+    "{kind} (interval = {ds2}). Use `interval` for the signed square, or "
     "`proper_distance` for a spacelike pair."
 )
 
 _MSG_NOT_SPACELIKE = (
     "proper_distance() is defined only for spacelike-separated events; this "
-    "pair is {kind} (interval^2 = {ds2}). Use `interval` for the signed "
+    "pair is {kind} (interval = {ds2}). Use `interval` for the signed "
     "square, or `proper_time` for a timelike pair."
 )
 
