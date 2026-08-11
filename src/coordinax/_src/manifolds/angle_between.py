@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
+import equinox as eqx
 import jax
 import plum
 
@@ -101,19 +102,27 @@ def angle_between(
     uu = u_qm @ (g @ u_qm)
     vv = v_qm @ (g @ v_qm)
 
-    _check_nonzero_norm(uu, vv)
+    uu, vv = _check_nonzero_norm(uu, vv)
 
     cosine = inner / qnp.sqrt(uu * vv)
     cosine_value = qnp.clip(u.ustrip("", cosine), -1.0, 1.0)
     return cxa.Angle(qnp.arccos(cosine_value), "rad")
 
 
-def _check_nonzero_norm(*norms: u.AbstractQuantity) -> None:
-    """Raise when a norm-squared is zero or negative outside JAX tracing."""
+def _check_nonzero_norm(*norms: u.AbstractQuantity) -> tuple[u.AbstractQuantity, ...]:
+    """Raise when a norm-squared is zero or negative, traced or not.
+
+    Mirrors `coordinax._src.charts.checks.strictly_positive`: under tracing
+    (jit/vmap/grad) the check is deferred to `eqx.error_if`, so its output
+    must be threaded back into the computation or the check gets DCE'd.
+    """
+    msg = "angle_between is undefined for zero-norm tangent vectors."
+    checked = []
     for norm in norms:
-        value = norm.value
-        if isinstance(value, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
-            continue
-        if bool(qnp.any(value <= 0)):
-            msg = "angle_between is undefined for zero-norm tangent vectors."
+        pred = u.ustrip("", qnp.any(norm <= 0))
+        if isinstance(pred, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
+            norm = eqx.error_if(norm, pred, msg)  # noqa: PLW2901
+        elif bool(pred):
             raise ValueError(msg)
+        checked.append(norm)
+    return tuple(checked)
