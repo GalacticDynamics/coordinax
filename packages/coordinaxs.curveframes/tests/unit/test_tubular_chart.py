@@ -149,3 +149,33 @@ def test_identity_between_two_distinct_but_equal_charts() -> None:
     assert jnp.allclose(got["tau"].ustrip("s"), 0.7, atol=1e-6)
     assert jnp.allclose(got["n1"].ustrip("km"), 0.13, atol=1e-6)
     assert jnp.allclose(got["n2"].ustrip("km"), -0.21, atol=1e-6)
+
+
+def test_identity_falls_back_through_cartesian_for_different_charts() -> None:
+    """Two charts on *different* curves must give different coordinates.
+
+    The same-curve fallback test above passes trivially for a fallback that
+    returns its input unchanged or a copy of it, since the round trip lands
+    back on the same numbers either way. Pin the fallback against a chart
+    whose curve is displaced along z by 1 km: the offset picked up by that
+    displacement must show up in the recovered coordinates. Values below are
+    measured (run and printed), not hand-derived.
+    """
+
+    def shifted(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.ustrip("s")
+        return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.ones_like(t)]), "km")
+
+    ch1 = _chart()
+    ch2 = cxfc.TubularChart(cxfc.BishopBuilder(shifted), tau_bounds=BOUNDS)
+    p = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
+    got = cxc.pt_map(p, ch1.M, ch1, ch2.M, ch2)
+
+    # Measured: tau and n1 are unchanged (the shift is along U2 for this
+    # planar curve's Bishop frame), n2 shifts by exactly the 1 km offset.
+    assert jnp.allclose(got["tau"].ustrip("s"), 0.7, atol=1e-6)
+    assert jnp.allclose(got["n1"].ustrip("km"), 0.13, atol=1e-6)
+    assert jnp.allclose(got["n2"].ustrip("km"), 0.79, atol=1e-6)
+    # And the requirement this test exists to enforce: at least one component
+    # differs substantially from the input, so a no-op fallback would fail.
+    assert not jnp.allclose(got["n2"].ustrip("km"), p["n2"].ustrip("km"), atol=1e-3)
