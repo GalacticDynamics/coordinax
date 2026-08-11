@@ -50,18 +50,30 @@ def test_cartesian_is_cart3d() -> None:
     assert isinstance(_chart().cartesian, cxc.Cart3D)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Unreachable given the landed BishopBuilder: `tau_0` is always a real "
-        "Quantity leaf by design (see "
-        "test_bishop.py::TestBishopTau0::test_tau_0_is_a_pytree_leaf), and the "
-        "plain `circle` function is itself an opaque pytree leaf. `builder` "
-        "cannot be a static TubularChart field either, since that would also "
-        "hide an eqx.Module curve's differentiable parameters. See "
-        "task-2-report.md for the full analysis."
-    ),
-)
-def test_a_static_curve_gives_no_leaves() -> None:
-    """A plain-function curve closes over constants: nothing to differentiate."""
-    assert jax.tree.leaves(_chart()) == []
+def test_the_chart_carries_the_builders_leaves() -> None:
+    """The chart is always dynamic, and this pins why.
+
+    `AbstractCurveFrameBuilder` holds a live `tau_0` array, so a builder has
+    two leaves whatever the curve is -- a plain function contributes itself as
+    a (non-array) leaf, an `equinox.Module` curve contributes its parameters.
+    The chart adds its own `tau_bounds`. Measured, not assumed.
+    """
+    ch = _chart()
+    assert len(jax.tree.leaves(ch.builder)) == 2
+    assert len(jax.tree.leaves(ch)) == 4  # builder 2 + tau_bounds 2
+
+
+def test_static_bounds_drop_their_leaves() -> None:
+    """`tau_bounds` follows the usual opt-in rule for chart parameters."""
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(circle),
+        tau_bounds=(u.StaticQuantity(-1.0, "s"), u.StaticQuantity(7.0, "s")),
+    )
+    assert len(jax.tree.leaves(ch)) == 2  # builder only
+
+
+def test_the_reach_guard_fires_past_the_focal_distance() -> None:
+    ch = _chart()
+    at = {"tau": u.Q(0.0, "s"), "n1": u.Q(-1.6, "km"), "n2": u.Q(0.0, "km")}
+    with pytest.raises(ValueError, match="outside the reach"):
+        ch.check_data(at, values=True)

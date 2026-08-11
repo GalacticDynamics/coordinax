@@ -140,4 +140,10 @@ class TubularChart(AbstractParameterizedChart):
         tau_v = jnp.asarray(tau.ustrip(unit), dtype=float)
         dx = jax.jacfwd(offset_v)(tau_v)
         speed = jnp.linalg.norm(jax.jacfwd(gamma_v)(tau_v))
-        return jnp.linalg.norm(dx) / speed
+        # Project onto the tangent: dx is parallel to T, and past the focal
+        # distance it REVERSES. `norm(dx)` is sign-blind and bounces back up
+        # (measured: at n1=-1.1 on the unit circle, norm=+0.1 but the true
+        # factor is -0.1), so a `<= 0` guard built on the norm can only fire
+        # exactly at the focal point -- a measure-zero set it will never hit.
+        T = self.builder.rotation_matrix(u.Q(tau_v, unit))[0]
+        return jnp.dot(dx, T) / speed
