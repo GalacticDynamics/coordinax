@@ -80,14 +80,14 @@ class TubularChart(AbstractParameterizedChart):
     """
 
     n_seed: int = eqx.field(static=True, default=64)
-    """Seed points for the inverse scan. Static: it is a loop bound."""
+    """Seed points for the inverse scan. Static, since it is a loop bound."""
 
     M: ClassVar[Any]
 
     @override
     @property
     def M(self) -> Any:
-        """The ambient manifold: always flat 3-space, regardless of the curve."""
+        """The ambient manifold, always flat 3-space regardless of the curve."""
         return cxm.R3
 
     @property

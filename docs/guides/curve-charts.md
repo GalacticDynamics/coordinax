@@ -8,7 +8,7 @@ $$
 
 where $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is the triad supplied by a `FrenetSerretBuilder` or `BishopBuilder`. This guide covers construction, the forward and inverse maps, differentiating through a fitted curve, the induced metric, and where the chart stops being valid.
 
-For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`Working With Curve Frames <../../packages/coordinaxs.curveframes/docs/guide>`. For the chart system in general, see [Working With Charts](charts.md).
+For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`Working With Curve Frames <../packages/coordinaxs.curveframes/guide>`. For the chart system in general, see [Working With Charts](charts.md).
 
 ## Why A Chart, Not A Frame
 
@@ -252,6 +252,6 @@ ValueError: point lies outside the reach of the curve: the tubular coordinates a
 
 [Working With Charts](charts.md)
 
-{doc}`Working With Curve Frames <../../packages/coordinaxs.curveframes/docs/guide>`
+{doc}`Working With Curve Frames <../packages/coordinaxs.curveframes/guide>`
 
 :::
