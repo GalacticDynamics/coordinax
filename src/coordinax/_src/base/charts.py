@@ -90,8 +90,8 @@ def _is_dynamic(value: Any, /) -> bool:
 
     A `unxt.StaticQuantity` contributes no pytree leaves and is static; a
     `unxt.Quantity` contributes one array leaf and is dynamic. Values that are
-    not registered pytrees at all (e.g. an `AbstractEmbeddingMap`) are a single
-    *non-array* leaf, and stay static -- they compare and hash as before.
+    not registered pytrees at all are a single *non-array* leaf, and stay
+    static -- they compare and hash as before.
     """
     return any(eqx.is_array(x) for x in jtu.tree_leaves(value))
 
@@ -436,19 +436,11 @@ class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
         and takes a single pass over all of them. Naming the offending fields
         costs a second, per-field pass -- paid only when raising.
 
-        KNOWN GAP: `jtu.tree_leaves` stops at anything that is not a *registered*
-        pytree, so a live array inside one is a single opaque non-array leaf and
-        slips through. `EmbeddedChart.embed_map` is exactly that -- an
-        `AbstractEmbeddingMap` is explicitly `jtu.register_static` -- so
-        `EmbeddedChart(TwoSphereIn3D(radius=u.Q(...)))` still constructs, still
-        reports zero leaves, and can still leak a tracer. Recursing into
-        dataclass leaves does close it, but forces `radius` to a
-        `StaticQuantity`, and `pt_embed` propagates `radius` straight into the
-        output point -- where a `StaticQuantity` dies under any `jnp` op or
-        trace. The fix is the `ProlateSpheroidal3D` treatment: register
-        `AbstractEmbeddingMap` as a pytree and move `EmbeddedChart` to
-        `AbstractParameterizedChart`, which keeps `radius` a live `Quantity` and
-        makes it differentiable. Tracked as follow-up, not closed here.
+        `jtu.tree_leaves` stops at anything that is not a *registered* pytree, so
+        a live array hidden inside one would still slip through as a single
+        opaque non-array leaf. `AbstractEmbeddingMap` was the one such holder in
+        the codebase; it is now a pytree, and its chart holder `EmbeddedChart`
+        is on the parameterized branch.
         """
         fields = dataclasses.fields(self)  # ty: ignore[invalid-argument-type]
         values = [getattr(self, f.name) for f in fields]

@@ -2,9 +2,9 @@
 
 __all__ = ("TwoSphereIn3D", "embedded_twosphere")
 
-import dataclasses
-
 from typing import Any, final
+
+import equinox as eqx
 
 import unxt as u
 
@@ -21,8 +21,7 @@ from coordinax._src.spherical.manifold import S2
 
 
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
-class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
+class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT], eqx.Module):
     r"""Embedding of ``cxc.SphericalTwoSphere`` as a 2-sphere in a 3D ambient chart.
 
     This embedding models a 2-sphere of fixed radius $R$ as the hypersurface $r
@@ -88,8 +87,8 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
 
     """
 
-    radius: u.AbstractQuantity | float | int = dataclasses.field()
-    ambient: cxc.AbstractChart[Any, Any, Any] = dataclasses.field(default=cxc.sph3d)
+    radius: u.AbstractQuantity | float | int
+    ambient: cxc.AbstractChart[Any, Any, Any] = cxc.sph3d
 
     @property
     def intrinsic(self) -> cxc.AbstractChart[Any, Any, Any]:

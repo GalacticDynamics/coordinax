@@ -339,7 +339,16 @@ Traceback (most recent call last):
 TypeError: GalileanCT is a static chart, but ['spatial_chart'] hold arrays. ...
 ```
 
-The guard is not universal. It walks pytree leaves, so an array inside something itself registered static — `EmbeddedChart.embed_map` — is a single opaque leaf and slips through. Closing that gap means giving `EmbeddedChart` the `ProlateSpheroidal3D` treatment, not a stricter guard: `radius` is a coordinate value that `pt_embed` propagates into output points, so forcing it static would break every embedded coordinate. See `AbstractStaticChart.__post_init__`.
+The guard walks pytree leaves, so it only sees an array that is _in_ the pytree: one buried inside a value that is itself registered static would be a single opaque leaf and slip through. The way out is to put the parameter on the parameterized branch, not to make the guard stricter. `EmbeddedChart` is the worked example — `TwoSphereIn3D.radius` is a coordinate value that `pt_embed` propagates into output points, so forcing it static would break every embedded coordinate; instead the embedding map is a pytree and the chart is parameterized:
+
+```{code-block} python
+>>> import coordinax.manifolds as cxm
+
+>>> len(jax.tree.leaves(cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))))
+1
+>>> len(jax.tree.leaves(cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.StaticQuantity(2.0, "km")))))
+0
+```
 
 ## Quick Reference
 

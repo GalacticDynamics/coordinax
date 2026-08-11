@@ -80,9 +80,9 @@ def test_equality_is_safe_under_jit() -> None:
 def test_opaque_non_pytree_field_stays_static() -> None:
     """A field that is not a registered pytree is one *non-array* leaf.
 
-    It must not be treated as a dynamic parameter, or every static chart
-    holding such a field (e.g. `EmbeddedChart`) would silently stop comparing
-    equal to its own twin.
+    It must not be treated as a dynamic parameter, or a chart holding such a
+    field would silently stop comparing equal to its own twin. Here the field
+    is a `StaticQuantity`-radius embedding map: a pytree, but a leafless one.
     """
 
     def make() -> cxm.EmbeddedChart:
