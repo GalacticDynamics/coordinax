@@ -120,7 +120,14 @@ class AbstractLorentzianMetricField(AbstractMetricField):
     `~coordinax.manifolds.proper_distance` -- state that precondition **as a
     type**. They previously accepted any chart and scanned ``metric.signature``
     at runtime, so ``causal_character(cart3d, ...)`` resolved and only then
-    refused. Now there is no method at all for a metric that is not Lorentzian.
+    refused. Now the precondition is carried by the dispatch: the implementing
+    overloads match only a Lorentzian metric.
+
+    A non-Lorentzian one is still *answered* -- by deliberate fallback overloads
+    on `AbstractMetricField` that raise `NotImplementedError` naming the
+    requirement. Those exist only so the refusal reads as a sentence rather than
+    as plum's resolution dump; they carry no implementation, and removing them
+    would change the error's presentation, not which inputs are accepted.
 
     It also keeps the set extensible: a curved spacetime metric (Schwarzschild,
     FLRW) inherits from here and acquires all three verbs, rather than each verb

@@ -133,7 +133,11 @@ def causal_character(
     'null'
 
     """
-    ds2 = cxmapi.interval(chart, a, b, usys=usys)
+    # Metric-level `interval`, not the chart-level one: it validates that
+    # `metric` is the chart's own. Going via the chart would ignore the
+    # argument entirely, so a Lorentzian metric passed with a Riemannian chart
+    # would classify using the chart's metric and slip the precondition.
+    ds2 = cxmapi.interval(metric, chart, a, b, usys=usys)
     return _classify(ds2, a, b, chart.components, atol)
 
 
@@ -187,7 +191,9 @@ def proper_time(
     # One evaluation of the interval, classified and then used. Calling
     # `causal_character` here would compute it a second time, which on a curved
     # metric means a second `metric_matrix` build.
-    ds2 = cast("Any", cxmapi.interval(chart, a, b, usys=usys))
+    # Metric-level `interval`: validates `metric` against the chart (see
+    # `causal_character`).
+    ds2 = cast("Any", cxmapi.interval(metric, chart, a, b, usys=usys))
     kind = _classify(ds2, a, b, chart.components, atol)
     if kind != "timelike":
         raise ValueError(_MSG_NOT_TIMELIKE.format(kind=kind, ds2=ds2))
@@ -226,7 +232,9 @@ def proper_distance(
     # One evaluation of the interval, classified and then used. Calling
     # `causal_character` here would compute it a second time, which on a curved
     # metric means a second `metric_matrix` build.
-    ds2 = cast("Any", cxmapi.interval(chart, a, b, usys=usys))
+    # Metric-level `interval`: validates `metric` against the chart (see
+    # `causal_character`).
+    ds2 = cast("Any", cxmapi.interval(metric, chart, a, b, usys=usys))
     kind = _classify(ds2, a, b, chart.components, atol)
     if kind != "spacelike":
         raise ValueError(_MSG_NOT_SPACELIKE.format(kind=kind, ds2=ds2))
@@ -235,10 +243,14 @@ def proper_distance(
 
 # ---------------------------------------------------------------------------
 # Chart-level convenience: resolve the metric from the chart, then redispatch.
-# Mirrors how `norm` and `separation` layer chart-level over metric-level. A
-# chart whose manifold carries a non-Lorentzian metric finds no method on the
-# redispatch, which is the point: the refusal is the type system's, not a
-# runtime signature scan's.
+# Mirrors how `norm` and `separation` layer chart-level over metric-level.
+#
+# A chart whose manifold carries a non-Lorentzian metric redispatches to the
+# `AbstractMetricField` fallbacks at the bottom of this module, which raise
+# `NotImplementedError` naming the requirement. The *typed* overloads above are
+# still what encodes the precondition -- they simply do not match -- but the
+# refusal a caller sees comes from those fallbacks, not from plum failing to
+# resolve, and not from a runtime signature scan.
 
 
 @plum.dispatch
