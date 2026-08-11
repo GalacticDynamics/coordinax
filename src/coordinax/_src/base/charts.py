@@ -72,8 +72,11 @@ MISSING = object()
 def _field_values(chart: "AbstractChart[Any, Any, Any]", /) -> tuple[Any, ...]:
     """Field values, as `dataclassish.field_values` gives them.
 
-    Direct walk: every chart is a dataclass, and the plum dispatch costs ~25x.
+    Direct walk when the chart is a dataclass -- as all built-in ones are --
+    since the plum dispatch costs ~25x. Other charts take the general path.
     """
+    if not dataclasses.is_dataclass(chart):
+        return tuple(dataclassish.field_values(chart))
     return tuple(getattr(chart, f.name) for f in dataclasses.fields(chart))
 
 
