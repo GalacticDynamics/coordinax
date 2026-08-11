@@ -248,6 +248,28 @@ ValueError: point lies outside the reach of the curve: the tubular coordinates a
 
 ```
 
+**The inverse does not detect a point whose nearest curve point lies outside `tau_bounds`.** The coarse scan is confined to `tau_bounds`, but the Newton polish that follows it is unconstrained and can walk the solution arbitrarily far outside that range. The result is a finite $\tau$ outside `tau_bounds`, with residual near zero and no error or `NaN` -- clipping `tau` to the bounds is not a fix, since it would break the stationarity condition the inverse solves. A helix queried well past the end of its intended range shows this:
+
+```{code-block} python
+>>> far = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(100.0, "km")}
+>>> got_far = cxc.pt_map(far, ch_f.M, cxc.cart3d, ch_f.M, ch_f)
+>>> float(got_far["tau"].ustrip("s"))
+333.3333333333333
+
+```
+
+`HELIX_BOUNDS` is `(-1, 6)` s, so `333.33` is nowhere near it. The same happens on the closed circle for a point equidistant from the whole curve -- its centre -- where the stationarity condition is degenerate for every $\tau$:
+
+```{code-block} python
+>>> centre = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+>>> got_centre = cxc.pt_map(centre, ch_frenet.M, cxc.cart3d, ch_frenet.M, ch_frenet)
+>>> float(got_centre["tau"].ustrip("s"))
+13.908361157205992
+
+```
+
+`BOUNDS` is one period, `(0, 2*pi)` s $\approx$ `(0, 6.28)` s; `13.9` s is more than two periods past it. Callers who cannot rule out querying past the fitted range should check the returned `tau` against `tau_bounds` themselves.
+
 :::{seealso}
 
 [Working With Charts](charts.md)

@@ -91,6 +91,21 @@ def test_the_factor_vanishes_at_the_focal_distance() -> None:
     assert abs(float(ch.jacobian_factor(at))) < 1e-6
 
 
+def test_check_data_forwards_values_to_the_base_dimension_check() -> None:
+    """Regression guard for the `values=values` forwarding in `check_data`.
+
+    `AbstractParameterizedChart.check_data` binds `values` as a named
+    parameter, so a bare `**kw` forward drops it -- the base class's
+    coordinate-dimension check (comparing each component against
+    `coord_dimensions`) then never runs. `tau` on this fixture's circle is
+    dimension "time"; passing it as a length must be caught.
+    """
+    ch = _chart()
+    at = {"tau": u.Q(0.7, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
+    with pytest.raises(ValueError, match="does not match chart coordinate dimension"):
+        ch.check_data(at, values=True)
+
+
 def test_the_reach_guard_fires_past_the_focal_distance() -> None:
     ch = _chart()
     at = {"tau": u.Q(0.0, "s"), "n1": u.Q(-1.6, "km"), "n2": u.Q(0.0, "km")}

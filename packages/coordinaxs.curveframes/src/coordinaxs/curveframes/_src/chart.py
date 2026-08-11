@@ -77,6 +77,15 @@ class TubularChart(AbstractParameterizedChart):
 
     The endpoints of a one-period range still coincide for a closed curve;
     the scan's tie-break resolves that seam to the lower bound.
+
+    A point whose true nearest curve point lies outside `tau_bounds` does
+    not raise: the coarse scan is confined to `tau_bounds`, but the Newton
+    polish that follows it is unconstrained and can walk the solution
+    arbitrarily far outside that range, returning a finite, low-residual
+    `tau` outside `tau_bounds` rather than an error (measured: a helix with
+    `tau_bounds=(-1, 6)` s returns `tau=333.33` s for an ambient point past
+    the end of the curve). Callers who cannot rule out off-curve queries
+    should check the returned `tau` against `tau_bounds` themselves.
     """
 
     n_seed: int = eqx.field(static=True, default=64)
