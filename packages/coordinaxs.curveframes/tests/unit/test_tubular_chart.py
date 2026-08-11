@@ -134,3 +134,18 @@ def test_a_point_on_the_curve_has_zero_offsets() -> None:
     got = cxc.pt_map(d, ch.M, cxc.cart3d, ch.M, ch)
     assert jnp.allclose(got["n1"].ustrip("km"), 0.0, atol=1e-6)
     assert jnp.allclose(got["n2"].ustrip("km"), 0.0, atol=1e-6)
+
+
+def test_identity_between_two_distinct_but_equal_charts() -> None:
+    """Distinct chart objects decline to the Cartesian round trip.
+
+    Parameterized charts compare conservatively -- equal only when identical --
+    so two independently built charts take the fallback path, not the fast one.
+    """
+    ch1, ch2 = _chart(), _chart()
+    assert ch1 is not ch2
+    p = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
+    got = cxc.pt_map(p, ch1.M, ch1, ch2.M, ch2)
+    assert jnp.allclose(got["tau"].ustrip("s"), 0.7, atol=1e-6)
+    assert jnp.allclose(got["n1"].ustrip("km"), 0.13, atol=1e-6)
+    assert jnp.allclose(got["n2"].ustrip("km"), -0.21, atol=1e-6)

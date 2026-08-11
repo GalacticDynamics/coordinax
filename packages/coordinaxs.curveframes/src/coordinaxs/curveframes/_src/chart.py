@@ -74,6 +74,9 @@ class TubularChart(AbstractParameterizedChart):
     more than one period: `gamma(tau)` and `gamma(tau + period)` are the same
     ambient point, so a wider range makes the nearest-point solve an exact tie
     and the recovered `tau` arbitrary between the two.
+
+    The endpoints of a one-period range still coincide for a closed curve;
+    the scan's tie-break resolves that seam to the lower bound.
     """
 
     n_seed: int = eqx.field(static=True, default=64)
