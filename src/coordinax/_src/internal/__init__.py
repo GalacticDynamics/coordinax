@@ -23,7 +23,6 @@ Contents:
 
 """
 
-from . import custom_types  # noqa: F401
 from .dtype_utils import *
 from .pack_utils import *
 from .wl_utils import *

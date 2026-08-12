@@ -1,3 +1,11 @@
+"""Custom types.
+
+The one deliberate copy of `coordinax`'s type vocabulary: ``coordinaxs.api``
+must not depend on ``coordinax``, so it cannot re-export from
+``coordinax.internal`` the way every other package does. Keep the `CDict`
+definition below in step with ``coordinax._src.custom_types``.
+"""
+
 __all__ = ("CKey", "CDict")
 
 from typing import TYPE_CHECKING, Any, TypeAlias

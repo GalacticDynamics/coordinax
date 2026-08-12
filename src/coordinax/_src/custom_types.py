@@ -1,10 +1,22 @@
-"""Custom types."""
+"""Custom types.
+
+This is the single definition of the type vocabulary shared across
+``coordinax``. Every layer (``vectors``, ``representations``, ``transforms``,
+``_src.internal``) re-exports from here rather than restating the aliases:
+`CDict` in particular carries a runtime invariant (see below) that is easy to
+break silently in a copy.
+
+The one deliberate exception is ``coordinaxs.api._custom_types``, which repeats
+`CKey`/`CDict` because ``coordinaxs.api`` must not depend on ``coordinax``.
+"""
 
 __all__: tuple[str, ...] = (
     "Ang",
     "Len",
     "Spd",
     "OptUSys",
+    "Shape",
+    "HasShape",
     "CKey",
     "CDict",
     "CDictT",
@@ -12,7 +24,7 @@ __all__: tuple[str, ...] = (
     "Ds",
 )
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_checkable
 from typing_extensions import TypeVar
 
 import unxt as u
@@ -27,6 +39,22 @@ Spd: TypeAlias = Literal["speed"]
 
 # Units
 OptUSys: TypeAlias = u.AbstractUnitSystem | None
+
+# =========================================================
+# Array-related Types
+
+Shape: TypeAlias = tuple[int, ...]
+
+
+@runtime_checkable
+class HasShape(Protocol):
+    """A protocol for objects that have a shape attribute."""
+
+    @property
+    def shape(self) -> Shape:
+        """The shape of the object."""
+        raise NotImplementedError  # pragma: no cover
+
 
 # =========================================================
 # Vector-related Types
