@@ -41,6 +41,13 @@ class TubularChart(AbstractParameterizedChart):
     parameters contributes leaves and can be differentiated through; a plain
     function closes over trace-time constants and contributes none.
 
+    Coordinate data must be a single point, not a batch: the forward and
+    inverse `pt_map`, and `check_data(..., values=True)`, all raise on
+    batched `tau`/`n1`/`n2` (the Jacobian in `jacobian_factor` takes
+    `jax.jacfwd` over `tau`, which is not batch-aware). Use `jax.vmap` over
+    single-point calls instead -- see the "Working With Curve Charts" guide's
+    Limitations section for this and the chart's other boundaries.
+
     Examples
     --------
     >>> import jax.numpy as jnp
@@ -53,7 +60,7 @@ class TubularChart(AbstractParameterizedChart):
 
     >>> chart = cxfc.TubularChart(
     ...     cxfc.BishopBuilder(circle),
-    ...     tau_bounds=(u.Q(-1.0, "s"), u.Q(7.0, "s")),
+    ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
     >>> chart.components
     ('tau', 'n1', 'n2')
@@ -73,19 +80,18 @@ class TubularChart(AbstractParameterizedChart):
     Must cover the curve of interest, and for a **closed** curve must not span
     more than one period: `gamma(tau)` and `gamma(tau + period)` are the same
     ambient point, so a wider range makes the nearest-point solve an exact tie
-    and the recovered `tau` arbitrary between the two.
+    and the recovered `tau` arbitrary between the two -- the scan's tie-break
+    then resolves even a correctly one-period range's coincident endpoints to
+    the lower bound.
 
-    The endpoints of a one-period range still coincide for a closed curve;
-    the scan's tie-break resolves that seam to the lower bound.
-
-    A point whose true nearest curve point lies outside `tau_bounds` does
-    not raise: the coarse scan is confined to `tau_bounds`, but the Newton
-    polish that follows it is unconstrained and can walk the solution
-    arbitrarily far outside that range, returning a finite, low-residual
-    `tau` outside `tau_bounds` rather than an error (measured: a helix with
-    `tau_bounds=(-1, 6)` s returns `tau=333.33` s for an ambient point past
-    the end of the curve). Callers who cannot rule out off-curve queries
-    should check the returned `tau` against `tau_bounds` themselves.
+    A point whose true nearest curve point lies outside `tau_bounds` does not
+    raise: the coarse scan is confined to `tau_bounds`, but if that leaves no
+    bracketed root to polish, `nearest_tau` falls back to an unconstrained
+    solve that can walk arbitrarily far outside `tau_bounds`, returning a
+    finite, low-residual `tau` there rather than an error. Callers who cannot
+    rule out off-curve queries should check the returned `tau` against
+    `tau_bounds` themselves. See the curve-charts guide's Limitations section
+    for worked examples of both of the above.
     """
 
     n_seed: int = eqx.field(static=True, default=64)
@@ -156,9 +162,13 @@ class TubularChart(AbstractParameterizedChart):
     def jacobian_factor(self, data: dict, /) -> Any:
         r"""$\partial\mathbf{x}/\partial\tau$ scaled by the on-curve speed.
 
-        Equals $1-k_1n_1-k_2n_2$ for a unit-speed curve; in general it is that
-        quantity times $\|\gamma'\|$. It is positive inside the reach and
-        vanishes at the focal distance, which is the test that matters.
+        Equals $1-k_1n_1-k_2n_2$ at *any* parametrisation, not only a
+        unit-speed one: $\partial\mathbf{x}/\partial\tau$ itself picks up a
+        $\|\gamma'\|$ speed factor away from unit speed, but dividing it out
+        below cancels that factor, leaving the same dimensionless quantity a
+        unit-speed curve would give directly. It is positive inside the
+        reach and vanishes at the focal distance, which is the test that
+        matters.
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
         unit = self.builder.tau_unit

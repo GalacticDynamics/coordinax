@@ -17,7 +17,7 @@ overload is always in place before `chart_classes()` can enumerate
 `TubularChart`.
 """
 
-__all__ = ("tubular_charts",)
+__all__: tuple[str, ...] = ()
 
 from collections.abc import Callable
 from typing import Any
@@ -65,23 +65,6 @@ def _tubular_kwargs(draw: st.DrawFn, /) -> dict[str, Any]:
     curve, (lo, hi) = draw(st.sampled_from(_CURVES))
     builder_cls = draw(st.sampled_from(_BUILDERS))
     return {"builder": builder_cls(curve), "tau_bounds": (u.Q(lo, "s"), u.Q(hi, "s"))}
-
-
-@st.composite
-def tubular_charts(draw: st.DrawFn, /) -> cxfc.TubularChart:
-    """Strategy for `coordinaxs.curveframes.TubularChart` instances.
-
-    Examples
-    --------
-    >>> from hypothesis import given
-    >>> import coordinaxs.hypothesis.curveframes as cxfcst
-
-    >>> @given(chart=cxfcst.tubular_charts())
-    ... def test_tubular(chart):
-    ...     assert chart.components == ("tau", "n1", "n2")
-
-    """
-    return cxfc.TubularChart(**draw(_tubular_kwargs()))
 
 
 @plum.dispatch

@@ -12,11 +12,9 @@ implementation modules:
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
 - {mod}`.register_ptmap` — ``pt_map`` dispatch registrations for `TubularChart`.
 
-`metric_matrix` needs no registration of its own: `TubularChart` has no
-closed-form metric better than the Jacobian pullback, so it falls through to
-`coordinax`'s generic ``(EuclideanManifold, dict, AbstractChart)`` rule,
-which already computes ``g = J^T J`` and (unlike a hand-rolled version)
-keeps units.
+`metric_matrix` needs no registration of its own: it falls through to
+`coordinax`'s generic Jacobian-pullback rule. See the "The Metric" section of
+the curve-charts guide for why, and for the two builders' differing results.
 """
 
 from . import register_ptmap  # noqa: F401

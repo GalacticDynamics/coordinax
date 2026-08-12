@@ -8,9 +8,9 @@ loading the `coordinaxs.hypothesis` entry-point group (see
 ``[project.entry-points."coordinaxs.hypothesis"]``).
 """
 
-__all__ = ("tubular_charts",)
+__all__: tuple[str, ...] = ()
 
-from ._tubular import tubular_charts
+from . import _tubular  # noqa: F401
 
 
 def coordinaxs_hypothesis_exports() -> dict[str, object]:
@@ -21,8 +21,7 @@ def coordinaxs_hypothesis_exports() -> dict[str, object]:
     and `chart_init_kwargs()` overloads for `TubularChart` (defined in
     `._tubular`, imported above). There is nothing this package needs to
     export by name into `coordinaxs.hypothesis`'s own namespace -- the
-    strategies are consumed through `charts()`/`chart_init_kwargs()`, or
-    directly as `coordinaxs.hypothesis.curveframes.tubular_charts` -- so this
+    strategies are consumed through `charts()`/`chart_init_kwargs()`, so this
     returns no exports.
     """
     return {}

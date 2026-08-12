@@ -45,7 +45,7 @@ def pt_map(
 
     >>> chart = cxfc.TubularChart(
     ...     cxfc.BishopBuilder(circle),
-    ...     tau_bounds=(u.Q(-1.0, "s"), u.Q(7.0, "s")),
+    ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
     >>> p = {"tau": u.Q(0.0, "s"), "n1": u.Q(0.1, "km"), "n2": u.Q(0.0, "km")}
     >>> cxc.pt_map(p, chart.M, chart, chart.M, cxc.cart3d)
@@ -93,7 +93,7 @@ def pt_map(
 
     >>> chart = cxfc.TubularChart(
     ...     cxfc.BishopBuilder(circle),
-    ...     tau_bounds=(u.Q(-1.0, "s"), u.Q(7.0, "s")),
+    ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
 
     A point exactly on the curve has zero offsets. Bishop runs an ODE solve
@@ -163,7 +163,7 @@ def pt_map(
 
     >>> chart = cxfc.TubularChart(
     ...     cxfc.BishopBuilder(circle),
-    ...     tau_bounds=(u.Q(-1.0, "s"), u.Q(7.0, "s")),
+    ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
     >>> p = {"tau": u.Q(0.0, "s"), "n1": u.Q(0.1, "km"), "n2": u.Q(0.0, "km")}
     >>> cxc.pt_map(p, chart.M, chart, chart.M, chart) is p

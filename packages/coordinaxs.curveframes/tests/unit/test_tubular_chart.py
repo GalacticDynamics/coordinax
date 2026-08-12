@@ -247,11 +247,9 @@ _HELIX_AT = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")
 def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
     """Bishop is rotation-minimising, so there are no ds*dn cross terms.
 
-    No `metric_matrix` rule is registered for `TubularChart`: it has no
-    closed form better than the Jacobian pullback, so it falls through to
-    `coordinax`'s generic ``(EuclideanManifold, dict, AbstractChart)`` rule,
-    which returns a unit-carrying `QuantityMatrix` (tau is a time, n1/n2 are
-    lengths, so the entries are not all the same unit).
+    No `metric_matrix` rule is registered for `TubularChart` -- see the "The
+    Metric" section of the curve-charts guide for why, and for the
+    unit-carrying `QuantityMatrix` this falls through to.
 
     Uses the torsion-carrying `_helix`, not the planar `circle`: on a planar
     curve Frenet--Serret is diagonal too (zero torsion), so this claim only

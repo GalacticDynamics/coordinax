@@ -145,6 +145,8 @@ Make the curve's radius a live, fittable parameter by holding it in an `equinox.
 
 This is the stream-track-fitting case: `x` is an observed point, `radius` (or any other differentiable curve parameter) is what you're solving for, and `n1_of_radius` is the residual whose gradient a fit needs.
 
+The builder you fit through matters for how much that gradient costs, not only for the metric's cross terms below: Bishop's gradient goes through `diffrax`'s `DirectAdjoint` (see `bishop.py`'s _Choosing an adjoint_ section), which is roughly three orders of magnitude slower per point than Frenet–Serret's closed-form gradient, and that cost scales roughly linearly with the number of points. Prefer Frenet–Serret for gradient-based fitting over thousands of points when the metric's torsion cross-terms don't matter for the fit.
+
 ## The Metric
 
 No `metric_matrix` rule is registered for `TubularChart` — it has no closed form better than the Jacobian pullback $g = J^\top J$, so it falls through to `coordinax`'s generic Euclidean rule, unchanged by which builder supplies the triad. The two builders still give visibly different metrics, because the Jacobian itself differs. A **torsion-carrying** curve is required to see it: a planar curve has zero torsion, and Frenet–Serret is diagonal there too, same as Bishop.
@@ -222,14 +224,14 @@ Even a correctly one-period range still has the two endpoints coincide (they are
 >>> seam = circle(u.Q(0.0, "s"))
 >>> d_seam = {"x": seam[0], "y": seam[1], "z": seam[2]}
 >>> recovered_seam = cxc.pt_map(d_seam, ch_bishop.M, cxc.cart3d, ch_bishop.M, ch_bishop)["tau"]
->>> float(recovered_seam.ustrip("s"))
-0.0
+>>> bool(jnp.allclose(recovered_seam.ustrip("s"), 0.0, atol=1e-8))
+True
 
 ```
 
-`n_seed` (default 64) sets how finely that same scan samples `tau_bounds` before the Newton polish; it is what makes the inverse pick the _nearest_ point rather than merely _a_ stationary one. On a curve that doubles back on itself, too coarse a scan can miss the seed nearest the true answer and lock onto the wrong branch — raise `n_seed` if the curve has tight folds relative to the sampling density `tau_bounds` implies.
+`n_seed` (default 64) sets how finely that same scan samples `tau_bounds` before the root-find polish; it is what makes the inverse pick the _nearest_ point rather than merely _a_ stationary one. On a curve that doubles back on itself, too coarse a scan can pick the wrong basin outright and lock onto the wrong branch — raise `n_seed` if the curve has tight folds relative to the sampling density `tau_bounds` implies. The polish itself is confined to one seed spacing either side of the scan's chosen basin, so once the scan has the right basin the polish cannot leave it for a competing stationary point (a local _maximum_ of the distance also satisfies the stationarity condition, and an unconstrained polish could converge there instead — see `nearest_tau`'s docstring for a worked counterexample).
 
-**The chart is injective only inside the curve's reach, and that is checked only when you ask for it.** Past the _focal distance_ — where the normal-plane offset cancels the local curvature exactly — nearby ambient points map to the same $(\tau, n_1, n_2)$. `check_data(..., values=True)` raises rather than return coordinates that aren't unique, but `values` defaults to `False`, and every `check_data` call inside `coordinax` itself passes `values=False` or omits it. The inverse `pt_map` does not call `check_data` at all, so it happily returns focal-point coordinates without complaint — the guard below is opt-in, something _you_ must call, not a protection the chart applies for you. On the unit circle with `BishopBuilder`, $+\mathbf{U}_1$ points outward, so the Jacobian factor is $1+n_1$ and the focal point sits at $n_1=-1.0$ — one radius toward the center:
+**The chart is injective only _locally_ inside the curve's reach, and that is checked only when you ask for it.** Past the _focal distance_ — where the normal-plane offset cancels the local curvature exactly — nearby ambient points map to the same $(\tau, n_1, n_2)$. `check_data(..., values=True)` raises rather than return coordinates that aren't unique, but `values` defaults to `False`, and every `check_data` call inside `coordinax` itself passes `values=False` or omits it. The inverse `pt_map` does not call `check_data` at all, so it happily returns focal-point coordinates without complaint — the guard below is opt-in, something _you_ must call, not a protection the chart applies for you. On the unit circle with `BishopBuilder`, $+\mathbf{U}_1$ points outward, so the Jacobian factor is $1+n_1$ and the focal point sits at $n_1=-1.0$ — one radius toward the center:
 
 ```{code-block} python
 >>> at_inside = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
@@ -244,11 +246,13 @@ True
 >>> ch_bishop.check_data(at_outside, values=True)
 Traceback (most recent call last):
     ...
-ValueError: point lies outside the reach of the curve: the tubular coordinates are not injective there
+ValueError: point lies outside the reach of the curve: the tubular coordinates are not locally injective there
 
 ```
 
-**The inverse does not detect a point whose nearest curve point lies outside `tau_bounds`.** The coarse scan is confined to `tau_bounds`, but the Newton polish that follows it is unconstrained and can walk the solution arbitrarily far outside that range. The result is a finite $\tau$ outside `tau_bounds`, with residual near zero and no error or `NaN` -- clipping `tau` to the bounds is not a fix, since it would break the stationarity condition the inverse solves. A helix queried well past the end of its intended range shows this:
+The factor is a _local_ test only: it says nothing about a point mirrored across the curve at the same offset (same factor, same ambient point, different $\tau$), and nothing about the curve's global self-approach distance either — a passing factor does not rule either out.
+
+**The inverse does not detect a point whose nearest curve point lies outside `tau_bounds`.** The coarse scan is confined to `tau_bounds`; if the bracketed polish above finds no root there (because the true nearest point is further out), `nearest_tau` falls back to an unconstrained root-find from the scan's edge, which can walk the solution arbitrarily far outside `tau_bounds`. The result is a finite $\tau$ outside `tau_bounds`, with residual near zero and no error or `NaN` -- clipping `tau` to the bounds is not a fix, since it would break the stationarity condition the inverse solves. A helix queried well past the end of its intended range shows this:
 
 ```{code-block} python
 >>> far = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(100.0, "km")}
@@ -260,7 +264,7 @@ ValueError: point lies outside the reach of the curve: the tubular coordinates a
 
 `HELIX_BOUNDS` is `(-1, 6)` s, so `333.33` is nowhere near it. Callers who cannot rule out querying past the fitted range should check the returned `tau` against `tau_bounds` themselves -- that converged-but-out-of-bounds case is not an error.
 
-A genuinely degenerate query is different, and _is_ caught: a point equidistant from the whole closed circle -- its centre -- leaves the stationarity condition satisfied by no particular $\tau$, so the Newton polish does not converge. `nearest_tau` checks the solver's own result and raises rather than return an arbitrary, meaningless $\tau$:
+A genuinely degenerate query is different, and _is_ caught: a point equidistant from the whole closed circle -- its centre -- leaves the stationarity condition satisfied everywhere, not by any particular $\tau$, so that same fallback root-find does not converge (its step divides by a derivative that vanishes identically). `nearest_tau` checks the solver's own result and raises rather than return an arbitrary, meaningless $\tau$:
 
 ```{code-block} python
 >>> centre = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
