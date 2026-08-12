@@ -159,9 +159,9 @@ _MSG_NULL = (
 _MSG_TIMELIKE = (
     "angle_between is undefined for two timelike tangent vectors: g(u,u) and "
     "g(v,v) are both negative, and the invariant separating them is a "
-    "*hyperbolic* angle -- the relative rapidity, arccosh(-g(u,v)/sqrt(g(u,u) "
-    "g(v,v))) -- not a circular angle. Computing `arccos` here would clip to 0 "
-    "or pi and silently report no relative motion."
+    "*hyperbolic* angle, not a circular one. Computing `arccos` here would clip "
+    "to 0 or pi and silently report no relative motion. Use "
+    "`coordinax.manifolds.lorentzian.rapidity_between`."
 )
 
 _MSG_MIXED = (

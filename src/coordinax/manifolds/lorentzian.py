@@ -17,7 +17,7 @@ runtime.  ``lorentzian`` says exactly what the gate is.
 
 Nor is it named ``minkowski``: the gate is the signature, not the metric.  A
 curved spacetime metric -- Schwarzschild, FLRW -- inherits the marker and
-acquires all three verbs without any change here.
+acquires every verb here without any change.
 
 This module is a **view**, not a home.  The dispatches live with the manifold
 that implements them (Minkowski's in ``_src/minkowski/causality.py``, and a
@@ -28,7 +28,7 @@ future Schwarzschild's alongside its own metric), exactly as
 gated -- the signed quadratic form is defined for every metric, and
 `coordinax.manifolds` remains its canonical home.  It appears here because
 `causal_character` is literally the sign of it and `proper_time` the root of it,
-so a relativistic workflow wants all four to hand.
+so a relativistic workflow wants them all to hand.
 
 Examples
 --------
@@ -65,6 +65,7 @@ __all__ = (
     "causal_character",
     "proper_time",
     "proper_distance",
+    "rapidity_between",
     # Re-exported, canonical in `coordinax.manifolds`: defined for every metric,
     # but the quantity the three above read.
     "interval",
@@ -75,4 +76,5 @@ from coordinaxs.api.manifolds import (
     interval,
     proper_distance,
     proper_time,
+    rapidity_between,
 )
