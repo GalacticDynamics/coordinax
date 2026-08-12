@@ -1,73 +1,65 @@
 # Usage Guide
 
-This guide demonstrates how to use {mod}`coordinaxs.api` to implement custom vector types and coordinate transformations that integrate with the `coordinax` ecosystem.
+This guide shows how to use {mod}`coordinaxs.api` to make your own types work with the `coordinax` ecosystem, without depending on `coordinax` itself.
 
-The {mod}`coordinaxs.api` package uses [plum-dispatch](https://github.com/beartype/plum) for multiple dispatch. This allows different implementations of the same function based on the types of the arguments.
+The {mod}`coordinaxs.api` package uses [plum-dispatch](https://github.com/beartype/plum) for multiple dispatch. Each function here is declared _abstract_: it carries no implementation, only the contract. `coordinax` registers the concrete methods, and so can you.
 
-## Representations
+## Registering a method
 
-Here's how to create a custom 2D vector type and implement coordinate transformations:
+Every {mod}`coordinaxs.api` function is extended the same way: `@plum.dispatch` a function of the **same name**, annotated with the types you handle. Match the signature of the abstract function you are extending — a method whose signature does not match a real call site is never selected, and dispatch fails with `NotImplementedError` rather than a `TypeError` pointing at your code.
+
+Here a custom container is taught to expose itself as a component dictionary by registering {func}`~coordinaxs.api.charts.cdict`, whose contract is `cdict(obj, /) -> dict`:
 
 ```python
-import math
 import dataclasses
+
 import plum
+import unxt as u
 
-import coordinaxs.api.representations as cxrapi
-
-
-@dataclasses.dataclass
-class MyCartesian:
-    """A simple 2D vector in Cartesian coordinates."""
-
-    x: float
-    y: float
+import coordinaxs.api.charts as cxcapi
 
 
-@dataclasses.dataclass
-class MyPolar:
-    """A simple 2D vector in polar coordinates."""
+@dataclasses.dataclass(frozen=True)
+class Station:
+    """A survey station, recorded as an easting/northing offset."""
 
-    r: float
-    theta: float
+    east: u.Quantity
+    north: u.Quantity
 
 
-# Implement conversion from Cartesian to Polar
 @plum.dispatch
-def cconvert(vec: MyCartesian, target: type[MyPolar], **kwargs):
-    """Convert Cartesian to polar coordinates."""
-    r = math.sqrt(vec.x**2 + vec.y**2)
-    theta = math.atan2(vec.y, vec.x)
-    return MyPolar(r=r, theta=theta)
+def cdict(obj: Station, /) -> dict:
+    """Expose a `Station` as 2D Cartesian components."""
+    return {"x": obj.east, "y": obj.north}
 
 
-# Implement conversion from Polar to Cartesian
-@plum.dispatch
-def cconvert(vec: MyPolar, target: type[MyCartesian], **kwargs):
-    """Convert polar to Cartesian coordinates."""
-    x = vec.r * math.cos(vec.theta)
-    y = vec.r * math.sin(vec.theta)
-    return MyCartesian(x=x, y=y)
-
-
-# Usage
-cart = MyCartesian(x=3.0, y=4.0)
-polar = cxrapi.cconvert(cart, MyPolar)
-print(f"Polar: r={polar.r:.2f}, theta={polar.theta:.2f}")  # r=5.00, theta=0.93
-
-back = cxrapi.cconvert(polar, MyCartesian)
-print(f"Cartesian: x={back.x:.2f}, y={back.y:.2f}")  # x=3.00, y=4.00
+station = Station(east=u.Quantity(3.0, "km"), north=u.Quantity(4.0, "km"))
+print(cxcapi.cdict(station))
+# {'x': Q(3., 'km'), 'y': Q(4., 'km')}
 ```
 
-## Best Practices
+Nothing above imports `coordinax`. But once `coordinax` _is_ installed, the registration is live in it too — the same `plum.Function` object backs both names, so `Station` now flows into charts, points and transformations:
 
-1. **Type hints**: Always use proper type hints for dispatch to work correctly
-2. **Documentation**: Document what your dispatch expects and returns
-3. **Error handling**: Raise clear errors for unsupported conversions
-4. **Testing**: Test your dispatches with various input types
+```python
+import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.vectors as cxv
+
+cxv.Point.from_(cx.cdict(station), cxc.cart2d)
+# Point({'x': Q(3., 'km'), 'y': Q(4., 'km')}, chart=Cart2D(M=Rn(2)))
+
+cxc.pt_map(cx.cdict(station), cxc.cart2d, cxc.polar2d)
+# {'r': Q(5., 'km'), 'theta': Q(0.9272952, 'rad')}
+```
+
+## One dispatch table per name
+
+`plum`'s global dispatcher keys its namespace on the **bare function name**, so every module-level `@plum.dispatch def cdict` in every installed package shares one table. Two consequences:
+
+- Registering a method is a global act. Dispatch only stays unambiguous because your method is annotated with _your_ types; never register a method whose annotations are all broad built-ins.
+- Declaring the same name twice does not create a second function. It returns the same `plum.Function`, and the second declaration's docstring is dead text.
 
 ## Next Steps
 
-- See the {doc}`API Reference </packages/coordinaxs.api/api>` for complete documentation
-- Check out the [coordinax documentation](https://coordinax.readthedocs.io/) for concrete implementations
-- Review the plum-dispatch documentation for advanced dispatch patterns
+- The {doc}`API Reference </packages/coordinaxs.api/api>` lists every abstract function and its contract.
+- The [coordinax documentation](https://coordinax.readthedocs.io/) covers the concrete implementations, and its conventions page has more on dispatch.

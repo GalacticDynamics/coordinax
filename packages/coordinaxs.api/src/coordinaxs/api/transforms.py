@@ -1,6 +1,6 @@
 """Representations."""
 
-__all__: tuple[str, ...] = ("act", "act_jet", "compose", "pushforward")
+__all__: tuple[str, ...] = ("act", "act_jet", "compose", "pushforward", "simplify")
 
 from typing import Any
 
