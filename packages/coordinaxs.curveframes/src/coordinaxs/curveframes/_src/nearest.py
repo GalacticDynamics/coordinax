@@ -12,7 +12,6 @@ fitted curve's parameters differentiable through the chart transition.
 
 __all__ = ("nearest_tau",)
 
-from functools import lru_cache
 
 from typing import Any
 
@@ -22,16 +21,6 @@ import jax.numpy as jnp
 import optimistix as optx
 
 import unxt as u
-
-
-@lru_cache
-def _solver(rtol: float, atol: float) -> optx.Newton:
-    # Newton instances are cheap but hashable-by-identity; caching keeps
-    # `jit` from seeing a fresh static argument on every call. In practice
-    # there is exactly one (rtol, atol) pair per process -- nothing on
-    # `TubularChart` or either `pt_map` exposes them -- so an unbounded
-    # cache never grows past one entry.
-    return optx.Newton(rtol=rtol, atol=atol)
 
 
 def _default_tol() -> float:
@@ -120,7 +109,13 @@ def nearest_tau(
         return jnp.dot(T, offset(tau_v))
 
     tol = _default_tol()
-    solver = _solver(tol if rtol is None else rtol, tol if atol is None else atol)
+    # Built per call rather than cached: the solver is a trace-time constant,
+    # so `jit` sees it once however it is produced -- measured, a fresh Newton
+    # on every call still traces exactly once. Two Newtons with equal
+    # tolerances also compare and hash equal, so caching buys nothing.
+    solver = optx.Newton(
+        rtol=tol if rtol is None else rtol, atol=tol if atol is None else atol
+    )
     sol = optx.root_find(residual, solver, tau0, max_steps=64, throw=False)
 
     # Surface a non-converged solve rather than silently returning a wrong
