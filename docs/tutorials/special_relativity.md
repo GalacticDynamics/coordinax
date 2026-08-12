@@ -260,17 +260,9 @@ The causal character is likewise absolute — no boost can turn a timelike pair 
 
 This invariance is the defining property of a Lorentz transformation, $\Lambda^\top \eta \Lambda = \eta$, and you can check it directly on the matrix.
 
-```{note}
-The next few examples reach for `boost._raw_matrix`. That attribute is
-**internal** — it is shown here only because seeing $\Lambda$ itself is the
-point of these three checks. Ordinary use of `LorentzBoost` goes through
-`act`, `gamma`, `rapidity` and `inverse`, none of which need the matrix.
-A public accessor is tracked in issue #698.
-```
-
 ```pycon
 >>> eta = jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0]))
->>> lam = boost._raw_matrix
+>>> lam = boost.matrix
 >>> bool(jnp.allclose(lam.T @ eta @ lam, eta, atol=1e-5))
 True
 ```
@@ -306,7 +298,7 @@ A last piece of bookkeeping worth seeing. Boost by $0.6c$, then by $0.6c$ again.
 
 ```pycon
 >>> b1 = cxfm.LorentzBoost([0.6, 0.0, 0.0])
->>> combined = b1._raw_matrix @ b1._raw_matrix
+>>> combined = b1.matrix @ b1.matrix
 >>> round(float(combined[0, 1] / combined[0, 0]), 4)
 0.8824
 ```
@@ -319,7 +311,7 @@ Rapidity is the parameterisation that _does_ add, which is why it exists:
 >>> r1 = cxfm.LorentzBoost.from_rapidity(0.3)
 >>> r2 = cxfm.LorentzBoost.from_rapidity(0.5)
 >>> r3 = cxfm.LorentzBoost.from_rapidity(0.8)
->>> bool(jnp.allclose(r2._raw_matrix @ r1._raw_matrix, r3._raw_matrix, atol=1e-5))
+>>> bool(jnp.allclose(r2.matrix @ r1.matrix, r3.matrix, atol=1e-5))
 True
 ```
 

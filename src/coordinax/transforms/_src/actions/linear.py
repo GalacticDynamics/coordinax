@@ -38,17 +38,52 @@ def _matmul_cdict(matrix: Array, d: CDict, comps: tuple[str, ...], /) -> CDict:
 class AbstractLinearTransform(AbstractTransform):
     r"""Base for pure Cartesian linear maps :math:`x \mapsto M x`.
 
-    A subclass provides its (constant) matrix via the `_raw_matrix` property;
-    this base owns the matrix validation and every point-geometry ``act``
-    path. A time-dependent linear map is a
-    `~coordinax.transforms.TimeDep` family of these operators.
+    A subclass provides its (constant) matrix via the `_raw_matrix` property and
+    reads it back through the public `matrix`; this base owns the matrix
+    validation and every point-geometry ``act`` path. A time-dependent linear
+    map is a `~coordinax.transforms.TimeDep` family of these operators.
     """
 
     @property
     @abstractmethod
     def _raw_matrix(self) -> Any:
-        """The constant matrix parameter."""
+        """The constant matrix parameter, as the subclass stores it."""
         raise NotImplementedError  # pragma: no cover
+
+    @property
+    def matrix(self) -> Array:
+        r"""The matrix $M$ this transform applies, as $x \mapsto M x$.
+
+        Every subclass carries $M$, but under its own letter (``R``, ``H``,
+        ``S``) or not directly at all: `~coordinax.transforms.LorentzBoost`
+        stores the *velocity* and derives $\Lambda$ from it. This is the one
+        spelling they share, and the derived cases' only public one.
+
+        Validated square, but not against any chart -- a chart is what fixes the
+        dimension, and this accessor takes none. The ``act`` paths still check
+        that match when they apply it.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        For a stored matrix it is the field under a common name:
+
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+        >>> bool(jnp.array_equal(cxfm.Rotate(Rz).matrix, Rz))
+        True
+
+        For a derived one it is the only way to see it:
+
+        >>> cxfm.LorentzBoost([0.6, 0.0, 0.0]).matrix.round(2)
+        Array([[1.25, 0.75, 0.  , 0.  ],
+               [0.75, 1.25, 0.  , 0.  ],
+               [0.  , 0.  , 1.  , 0.  ],
+               [0.  , 0.  , 0.  , 1.  ]], dtype=float64)
+
+        """
+        return self._validate_square(self._raw_matrix)
 
     def _validate_square(self, matrix: HasShape, /) -> Array:
         """Check the matrix is square (N x N)."""
