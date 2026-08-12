@@ -23,20 +23,6 @@ import optimistix as optx
 import unxt as u
 
 
-def _default_tol() -> float:
-    """Solver tolerance scaled to the active dtype's working precision.
-
-    `1e-10` is unreachable in float32 -- JAX's default dtype everywhere
-    outside this repo's pytest config, which sets `JAX_ENABLE_X64=1`. Below
-    the dtype's own epsilon, a solve can never satisfy the tolerance and
-    reports `max_steps_reached` on every call even though its answer is
-    already correct to that dtype's precision. Scaling by the dtype's
-    epsilon keeps float64 tight while giving float32 a tolerance it can
-    actually reach.
-    """
-    return float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5
-
-
 def nearest_tau(
     builder: Any,
     x: u.AbstractQuantity,
@@ -49,22 +35,48 @@ def nearest_tau(
 ) -> u.AbstractQuantity:
     r"""Curve parameter of the point on the curve nearest to ``x``.
 
-    A Newton solve alone finds *a* stationary point of the distance, not the
-    nearest one: on a curve that doubles back, the answer depends entirely on
-    the initial guess. So scan ``n_seed`` points across ``bounds`` first, take
-    the global argmin, and polish that. The argmin is an integer index and
-    carries no gradient; the polish is implicitly differentiated.
+    An unconstrained root-find alone finds *a* stationary point of the
+    distance, not the nearest one -- and not even always a minimum: the
+    stationarity condition below is satisfied at every local maximum of the
+    distance too, and a solve left free to wander can walk out of the basin
+    the scan found and converge onto one of those instead (measured: a
+    sine-wave curve with ``x=(4.4, -1.4, 0)`` km sends an unconstrained
+    Newton polish 3.2 seed spacings from a correctly-chosen start onto a
+    maximum 2.4x farther away, reporting success). So scan ``n_seed`` points
+    across ``bounds`` first, take the global argmin, and root-find *within
+    one seed spacing either side of it*: the argmin is guaranteed within one
+    spacing of the true minimiser, and the residual
+    $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})$ equals
+    $-\|\gamma'\|^{-1}\,d/d\tau(\tfrac12\mathrm{dist}^2)$, which crosses from
+    positive to negative across a genuine minimum, so that bracket is
+    well-posed for bisection and cannot land on the maximum next door.
+
+    That bracket does not always contain a sign change, though -- the
+    residual can be one-signed across it in two situations: the true nearest
+    point lies outside `tau_bounds` altogether (the scan is confined to
+    `tau_bounds`, so its argmin sits at the edge with the real root further
+    out), or the query is genuinely degenerate, equidistant from the whole
+    curve (e.g. the centre of a circular curve), where there is no
+    particular nearest point at all. An unconstrained Newton polish from the
+    scan's argmin is used for that case instead, exactly as before this
+    bracket existed -- it walks to the correct answer in the first situation
+    and, because its own derivative vanishes identically on a degenerate
+    query, fails to converge in the second, which is what tells the two
+    apart. The mainline case above never reaches this fallback, since its
+    bracket is guaranteed to contain a sign change. The scan's argmin is an
+    integer index and carries no gradient; both root-finds are implicitly
+    differentiated.
 
     ``rtol``/``atol`` default to `None`, meaning "derive from the active
-    dtype" (see `_default_tol`); pass either explicitly to override.
+    dtype's epsilon" (below); pass either explicitly to override.
 
     Raises
     ------
     Exception
-        If the Newton polish does not converge (`eqx.error_if` under `jit`,
-        a plain exception when eager). This cannot detect the periodic-
-        aliasing case for a closed curve queried outside a one-period
-        `tau_bounds` -- that solve *converges*, just to the wrong branch; see
+        If neither solve converges (`eqx.error_if` under `jit`, a plain
+        exception when eager). This cannot detect the periodic-aliasing case
+        for a closed curve queried outside a one-period `tau_bounds` -- that
+        solve *converges*, just to the wrong branch; see
         `TubularChart.tau_bounds`.
 
     Examples
@@ -79,7 +91,7 @@ def nearest_tau(
 
     >>> b = cxfc.BishopBuilder(circle)
     >>> tau = cxfc.nearest_tau(b, u.Q(jnp.array([2.0, 0.0, 0.0]), "km"),
-    ...                        bounds=(u.Q(-1.0, "s"), u.Q(6.0, "s")))
+    ...                        bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")))
     >>> bool(jnp.allclose(tau.ustrip("s"), 0.0, atol=1e-6))
     True
 
@@ -101,22 +113,73 @@ def nearest_tau(
     # 1. Coarse global scan -- this is what makes the answer the *nearest*.
     seeds = jnp.linspace(lo, hi, n_seed)
     tau0 = seeds[jnp.argmin(jax.vmap(dist2)(seeds))]
+    spacing = (hi - lo) / (n_seed - 1)
+    bracket_lo, bracket_hi = tau0 - spacing, tau0 + spacing
 
-    # 2. Newton polish on the stationarity condition.
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
         T = builder.rotation_matrix(u.Q(tau_v, unit))[0]
         return jnp.dot(T, offset(tau_v))
 
-    tol = _default_tol()
-    # Built per call rather than cached: the solver is a trace-time constant,
-    # so `jit` sees it once however it is produced -- measured, a fresh Newton
-    # on every call still traces exactly once. Two Newtons with equal
-    # tolerances also compare and hash equal, so caching buys nothing.
-    solver = optx.Newton(
-        rtol=tol if rtol is None else rtol, atol=tol if atol is None else atol
+    # `1e-10` is unreachable in float32 -- JAX's default dtype everywhere
+    # outside this repo's pytest config, which sets `JAX_ENABLE_X64=1`. Below
+    # the dtype's own epsilon, a solve can never satisfy the tolerance and
+    # reports `max_steps_reached` on every call even though its answer is
+    # already correct to that dtype's precision. Scaling by the dtype's
+    # epsilon keeps float64 tight while giving float32 a tolerance it can
+    # actually reach.
+    tol = float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5
+    rtol = tol if rtol is None else rtol
+    atol = tol if atol is None else atol
+
+    # 2a. Bracketed root-find, confined to one seed spacing either side of
+    # the scan's argmin -- see the docstring above for why that bracket
+    # contains the true minimiser and cannot converge to the neighbouring
+    # maximum. This is the mainline path; 2b only fires when this bracket
+    # turns out not to contain a sign change (see below). `expand_if_
+    # necessary=True` only matters here in the sense that it keeps
+    # `Bisection.init` from raising its own (differently-worded) error when
+    # the bracket lacks a sign change -- `bracket_has_root` below makes that
+    # determination itself and routes to 2b instead; whatever `bsol` comes
+    # back with in that case is discarded.
+    bisector = optx.Bisection(  # ty: ignore[missing-argument]
+        rtol=rtol, atol=atol, flip="detect", expand_if_necessary=True
     )
-    sol = optx.root_find(residual, solver, tau0, max_steps=64, throw=False)
+    bsol = optx.root_find(
+        residual,
+        bisector,
+        tau0,
+        options={"lower": bracket_lo, "upper": bracket_hi},
+        max_steps=64,
+        throw=False,
+    )
+
+    # 2b. Unconstrained Newton, used only as a fallback -- see the docstring
+    # above for the two cases (nearest point outside `tau_bounds`, or a
+    # genuinely degenerate query) that leave the bracket above without a
+    # sign change, and how this fallback's own convergence tells them apart.
+    newton = optx.Newton(rtol=rtol, atol=atol)
+    nsol = optx.root_find(residual, newton, tau0, max_steps=64, throw=False)
+
+    # A real crossing changes the residual by an amount well above the noise
+    # floor; on a genuinely degenerate query (residual identically zero --
+    # e.g. every point on a circle is equidistant from its centre) the two
+    # endpoint values are equal save for floating-point noise at the ~1e-16
+    # level, which can and does land on opposite sides of zero often enough
+    # to fool a sign-only check, especially under `jit` where XLA's
+    # evaluation order differs from eager. Requiring the change to clear
+    # `atol` -- already the solver's own noise floor -- rejects that noise
+    # without a new tolerance to tune.
+    r_lo, r_hi = residual(bracket_lo, None), residual(bracket_hi, None)
+    bracket_has_root = (jnp.sign(r_lo) != jnp.sign(r_hi)) & (
+        jnp.abs(r_hi - r_lo) > atol
+    )
+    value = jnp.where(bracket_has_root, bsol.value, nsol.value)
+    not_converged = jnp.where(
+        bracket_has_root,
+        bsol.result != optx.RESULTS.successful,
+        nsol.result != optx.RESULTS.successful,
+    )
 
     # Surface a non-converged solve rather than silently returning a wrong
     # tau. Hybrid form, matching `_src/charts/checks.py`: `eqx.error_if`
@@ -125,12 +188,9 @@ def nearest_tau(
     # return value MUST be threaded back into what is returned -- a bare
     # `eqx.error_if(pred, pred, msg)` is dead-code-eliminated and the guard
     # silently disappears under `jit`.
-    pred = sol.result != optx.RESULTS.successful
     msg = "nearest-point solve did not converge"
-    if isinstance(pred, jax.core.Tracer):
-        value = eqx.error_if(sol.value, pred, msg)
-    elif bool(pred):
+    if isinstance(not_converged, jax.core.Tracer):
+        value = eqx.error_if(value, not_converged, msg)
+    elif bool(not_converged):
         raise RuntimeError(msg)
-    else:
-        value = sol.value
     return u.Q(value, unit)

@@ -130,6 +130,24 @@ def test_the_reach_guard_also_fires_under_jit() -> None:
         run(-1.6)
 
 
+def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_gamma() -> None:
+    """A pinned-`gamma` builder makes the on-curve speed (and factor) 0/0 = nan.
+
+    `jnp.any(f <= 0)` is False for `nan` (every comparison against `nan` is
+    False in IEEE754), so that guard would let a NaN factor sail through
+    silently. The fix is `jnp.any(~(f > 0))`, which is True for `nan` since
+    `nan > 0` is also False. This is reachable without user error --
+    `FrenetSerretBuilder(curve, gamma=...)` is public API.
+    """
+    ch = cxfc.TubularChart(
+        cxfc.FrenetSerretBuilder(circle, gamma=u.Q(0.5, "s")), tau_bounds=BOUNDS
+    )
+    at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
+    assert jnp.isnan(ch.jacobian_factor(at))
+    with pytest.raises(ValueError, match="outside the reach"):
+        ch.check_data(at, values=True)
+
+
 def test_forward_matches_the_frame_construction() -> None:
     """Forward is gamma + n1*U1 + n2*U2, by definition."""
     ch = _chart()

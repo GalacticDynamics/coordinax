@@ -119,16 +119,28 @@ class TubularChart(AbstractParameterizedChart):
         super().check_data(data, values=values, **kw)
         if values:
             # Inside the reach the Jacobian factor is positive; at the focal
-            # distance it vanishes and the coordinates stop being unique.
+            # distance it vanishes and the coordinates stop being *locally*
+            # injective. This is a necessary condition, not sufficient for
+            # global injectivity: the factor cannot see a point mirrored
+            # across the curve at equal offset (same factor, same ambient
+            # point, different tau) or the curve's global self-approach
+            # distance, so a passing factor does not rule those out.
+            #
+            # `~(f > 0)` rather than `f <= 0`: a pinned-gamma builder (see
+            # `AbstractCurveFrameBuilder.gamma`) makes the on-curve speed
+            # zero, so the factor is `0/0 = nan` -- and `nan <= 0` is False,
+            # so that comparison would let a NaN factor sail through the
+            # guard silently. `nan > 0` is also False, so negating it (`~(f >
+            # 0)`) catches NaN as well as the genuine `<= 0` case.
             #
             # Hybrid form, copied from `_src/charts/checks.py`: `eqx.error_if`
             # under trace (a Python `bool` on a tracer raises
             # `TracerBoolConversionError`), a plain `ValueError` when concrete.
             # Do not collapse it to one branch.
-            pred = jnp.any(self.jacobian_factor(data) <= 0)
+            pred = jnp.any(~(self.jacobian_factor(data) > 0))
             msg = (
                 "point lies outside the reach of the curve: the tubular "
-                "coordinates are not injective there"
+                "coordinates are not locally injective there"
             )
             if isinstance(pred, jax.core.Tracer):
                 # The return value MUST be threaded back into the data that is
