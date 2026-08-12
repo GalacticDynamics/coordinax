@@ -277,6 +277,27 @@ RuntimeError: nearest-point solve did not converge
 
 That check cannot see the periodic-aliasing case from [Limitations](#limitations) above -- a wide `tau_bounds` still converges, just to the wrong branch -- so a one-period `tau_bounds` remains the caller's responsibility for closed curves.
 
+### Coordinate Data Must Be Scalar Per Point
+
+Unlike the stock charts, `TubularChart` does not accept batched coordinate arrays: the inverse solve and `jacobian_factor` are written for a scalar `tau`, and `jax.jacfwd` over a batched one would build an N x N Jacobian. Passing arrays raises rather than returning something wrong.
+
+Use `jax.vmap` over single points, which works and is the fast path anyway -- the inverse batches well, dropping from ~40 us to well under 1 us per point between one query and a thousand:
+
+```{code-block} python
+>>> import jax
+
+>>> tubular = cxfc.TubularChart(
+...     cxfc.BishopBuilder(circle),
+...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
+... )
+>>> def to_cart(tau, n1):
+...     p = {"tau": u.Q(tau, "s"), "n1": u.Q(n1, "km"), "n2": u.Q(0.0, "km")}
+...     return cxc.pt_map(p, tubular.M, tubular, tubular.M, cxc.cart3d)["x"]
+
+>>> jax.vmap(to_cart)(jnp.array([0.5, 1.0]), jnp.array([0.1, 0.2]))
+Q([0.96534082, 0.64836277], 'km')
+```
+
 :::{seealso}
 
 [Working With Charts](charts.md)
