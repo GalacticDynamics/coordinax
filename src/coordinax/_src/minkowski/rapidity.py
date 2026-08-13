@@ -29,7 +29,7 @@ from coordinax._src.base import (
     AbstractMetricField,
 )
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax._src.manifolds._utils import raw_value as _value
+from coordinax._src.manifolds._utils import to_dimensionless
 from coordinax._src.manifolds.quadratic_form import gram
 
 #: Slack on ``cosh(phi) >= 1``, so ordinary float error at coincident
@@ -59,20 +59,26 @@ _MSG_NOT_LORENTZIAN = (
 )
 
 
-def _check_rapidity_is_defined(uu: Any, vv: Any, cosh: Any, /) -> None:
+def _check_rapidity_is_defined(
+    u_timelike: Any, v_timelike: Any, cosh: Any, uu: Any, vv: Any, /
+) -> None:
     """Raise unless a real rapidity exists between the two vectors.
+
+    Takes the predicates already computed by the caller rather than recomputing
+    them, so the eager check and the traced mask cannot drift apart. ``uu`` and
+    ``vv`` are here only to be quoted, with units, in the message.
 
     Skipped under JAX tracing, where the values are not concrete; the caller
     applies the same conditions as a mask there, yielding `nan` instead.
     """
-    if any(isinstance(_value(x), jax.core.Tracer) for x in (uu, vv, cosh)):  # ty: ignore[possibly-missing-submodule]
+    if any(isinstance(x, jax.core.Tracer) for x in (u_timelike, v_timelike, cosh)):  # ty: ignore[possibly-missing-submodule]
         return
 
-    if bool(jnp.any(_value(uu) >= 0)) or bool(jnp.any(_value(vv) >= 0)):
+    if not (bool(jnp.all(u_timelike)) and bool(jnp.all(v_timelike))):
         raise ValueError(_MSG_NOT_TIMELIKE.format(uu=uu, vv=vv))
     # Both timelike, so the reverse Cauchy-Schwarz inequality gives
     # |cosh| >= 1 -- the only way to miss the branch is the wrong sign.
-    if bool(jnp.any(jnp.asarray(cosh) < 1.0 - _COSH_ATOL)):
+    if bool(jnp.any(cosh < 1.0 - _COSH_ATOL)):
         raise ValueError(_MSG_OPPOSED)
 
 
@@ -167,14 +173,20 @@ def rapidity_between(
         require_usys=False,
     )  # fmt: skip
 
-    cosh = _value(-inner / qnp.sqrt(uu * vv))
+    # The ratio's units cancel exactly, so this is a real conversion to
+    # dimensionless, not a discarded unit. The sign tests compare against zero
+    # *in* whatever unit g(v,v) carries -- the one comparison needing no common
+    # unit -- so only the resulting booleans are converted.
+    cosh = to_dimensionless(-inner / qnp.sqrt(uu * vv))
+    u_timelike = to_dimensionless(uu < 0)
+    v_timelike = to_dimensionless(vv < 0)
 
     # Eagerly this raises, naming the case. Under tracing it cannot -- the
     # values are not concrete -- so `valid` below is what stands between the
     # caller and a wrong answer.
-    _check_rapidity_is_defined(uu, vv, cosh)
+    _check_rapidity_is_defined(u_timelike, v_timelike, cosh, uu, vv)
 
-    valid = (_value(uu) < 0) & (_value(vv) < 0) & (cosh >= 1.0 - _COSH_ATOL)
+    valid = u_timelike & v_timelike & (cosh >= 1.0 - _COSH_ATOL)
     # The clamp is float-error insurance for the *valid* branch only, where the
     # exact value is >= 1; `valid` has already excluded the genuine sign errors.
     return jnp.where(valid, jnp.arccosh(jnp.maximum(cosh, 1.0)), jnp.nan)

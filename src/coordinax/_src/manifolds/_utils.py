@@ -97,12 +97,15 @@ def as_quantity_matrix(x: ul.QM | Array, /) -> ul.QM:
     return ul.QM(value=x, unit=ul.UnitsMatrix.full((n_rows, n_cols), DMLS))
 
 
-def raw_value(x: Any, /) -> Array:
-    """Return the bare magnitude of *x*, ignoring any unit it carries.
+def to_dimensionless(x: Any, /) -> Array:
+    """Convert a genuinely dimensionless *x* to a bare array.
 
-    Only the *sign* of a contraction like ``g(v,v)`` is ever wanted from this,
-    and the unit (``m2``, ``rad2/s2``, ...) does not bear on a sign. Note this
-    *discards* the unit rather than converting it -- ``ustrip("")`` would raise
-    on a dimensionful value.
+    A real unit conversion, not a peek at the magnitude: it raises on anything
+    that is not dimensionless. Two things reach it -- a ratio whose units
+    cancel, and the boolean from a comparison -- and both are dimensionless by
+    construction.
+
+    Callers may pass bare arrays (`check_data(..., values=False)` permits it),
+    which are already in the target form and pass straight through.
     """
-    return jnp.asarray(x.value if is_any_quantity(x) else x)
+    return jnp.asarray(u.ustrip("", x) if is_any_quantity(x) else x)

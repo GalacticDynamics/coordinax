@@ -10,12 +10,10 @@ import jax.numpy as jnp
 import plum
 
 import quaxed.numpy as qnp
-import unxt as u
-from unxt.quantity import is_any_quantity
 
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
-from ._utils import raw_value as _value
+from ._utils import to_dimensionless as _dimensionless
 from .quadratic_form import gram
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
@@ -132,6 +130,12 @@ def angle_between(
 
     cos = _dimensionless(inner / qnp.sqrt(uu * vv))
 
+    # Compared against zero *in* whatever unit g(v,v) carries -- the one
+    # comparison that needs no common unit -- so only the resulting boolean is
+    # converted, and it is dimensionless by construction.
+    u_spacelike = _dimensionless(uu > 0)
+    v_spacelike = _dimensionless(vv > 0)
+
     # Eagerly this raises, naming the case. Under tracing it cannot -- the values
     # are not concrete -- so it is a no-op there and `valid` below is what stands
     # between the caller and a wrong answer.
@@ -141,7 +145,7 @@ def angle_between(
     # would reach the clip and hand back 0 or pi for a hyperbolic or imaginary
     # case -- silently reporting "anti-parallel" for two observers in relative
     # motion. `nan` is the honest value: no real angle exists.
-    valid = (_value(uu) > 0) & (_value(vv) > 0) & (jnp.abs(cos) <= 1.0 + _COS_ATOL)
+    valid = u_spacelike & v_spacelike & (jnp.abs(cos) <= 1.0 + _COS_ATOL)
     # The clip is float-error insurance for the *valid* branch only; `valid`
     # has already excluded everything genuinely out of range.
     angle = jnp.arccos(jnp.clip(cos, -1.0, 1.0))
@@ -178,16 +182,6 @@ _MSG_NOT_SPACELIKE_PLANE = (
 )
 
 
-def _dimensionless(x: Any, /) -> Any:
-    """Strip *x* to a bare dimensionless array.
-
-    Only valid where the value genuinely is dimensionless -- the cosine, whose
-    units cancel. The shared contraction returns a `unxt.Quantity` for Quantity
-    input and a plain array for bare-array input, and both reach here.
-    """
-    return jnp.asarray(u.ustrip("", x) if is_any_quantity(x) else x)
-
-
 def _check_angle_is_defined(uu: Any, vv: Any, cos: Any, /) -> None:
     r"""Raise unless a real circular angle exists between the two vectors.
 
@@ -200,18 +194,16 @@ def _check_angle_is_defined(uu: Any, vv: Any, cos: Any, /) -> None:
     Skipped under JAX tracing, where the values are not concrete; the caller
     applies the same conditions as a mask there, yielding `nan` instead.
     """
-    values = [getattr(uu, "value", uu), getattr(vv, "value", vv), cos]
-    if any(isinstance(x, jax.core.Tracer) for x in values):  # ty: ignore[possibly-missing-submodule]
+    u_neg, v_neg = _dimensionless(uu < 0), _dimensionless(vv < 0)
+    u_zero, v_zero = _dimensionless(uu == 0), _dimensionless(vv == 0)
+    if any(isinstance(x, jax.core.Tracer) for x in (u_neg, v_neg, cos)):  # ty: ignore[possibly-missing-submodule]
         return
 
-    uu_v = float(jnp.min(_value(uu)))
-    vv_v = float(jnp.min(_value(vv)))
-
-    if bool(jnp.any(_value(uu) == 0)) or bool(jnp.any(_value(vv) == 0)):
+    if bool(jnp.any(u_zero)) or bool(jnp.any(v_zero)):
         raise ValueError(_MSG_NULL)
-    if uu_v < 0 and vv_v < 0:
+    if bool(jnp.any(u_neg)) and bool(jnp.any(v_neg)):
         raise ValueError(_MSG_TIMELIKE)
-    if uu_v < 0 or vv_v < 0:
+    if bool(jnp.any(u_neg)) or bool(jnp.any(v_neg)):
         raise ValueError(_MSG_MIXED)
 
     # Both spacelike, but their span may still be Lorentzian -- e.g. u=(0,1,0,0)
