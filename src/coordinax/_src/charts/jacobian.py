@@ -9,11 +9,11 @@ Mathematical background:
 Given charts $C_1$ and $C_2$ with a transition map $\tau: C_1 \to C_2$, the
 Jacobian at a base point $p$ (expressed in $C_1$ coordinates) is
 
-$$ J^j{}_i(p) = \frac{\\partial \tau^j}{\partial q^i}\bigg|_p $$
+$$ J^j{}_i(p) = \frac{\partial \tau^j}{\partial q^i}\bigg|_p $$
 
 where $q^i$ are the $C_1$ coordinates and $\tau^j$ are the $C_2$ coordinates.
 The result is a 2-D {class}`~unxts.linalg.QuantityMatrix` of shape
-$(n_\\mathrm{out},\\, n_\\mathrm{in})$ whose $(j, i)$ element carries units
+$(n_\mathrm{out},\, n_\mathrm{in})$ whose $(j, i)$ element carries units
 
 $$ \mathrm{unit}(J^j{}_i) = \frac{\mathrm{unit}(\tau^j)}{\mathrm{unit}(q^i)} $$
 

@@ -13,7 +13,6 @@ from .d1 import Cart1D
 from .d2 import Cart2D
 from .d3 import Cart3D
 from .dn import CartND
-from coordinax._src.base import AbstractDimensionalFlag
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.euclidean import FlatMetric
 
@@ -45,9 +44,5 @@ def scale_factors(
 
     """
     del metric, at, usys
-    n = (
-        chart.ndim
-        if isinstance(chart, AbstractDimensionalFlag)
-        else len(chart.components)
-    )
+    n = chart.ndim
     return ul.QM(jnp.ones((n,)), unit=ul.UnitsMatrix.full(n, ""))
