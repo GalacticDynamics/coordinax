@@ -205,3 +205,26 @@ def test_linear_velocity_on_nested_product_charts_recurses() -> None:
     pt = {k: u.Q(1.0, "m") for k in ps.components}
     pa = cxfm.act(op, None, pt, ps, cxr.point)
     assert {k: float(_to_np(pa[k], "m")) for k in ps.components} == got
+
+
+def test_matrix_is_the_stored_field() -> None:
+    """For the four that store a matrix, the accessor is that matrix.
+
+    Value equality, not identity: `_validate_square` routes through
+    `eqx.error_if`, which returns a fresh array wrapping the same value.
+    """
+    R = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    for op, field in [
+        (cxfm.Rotate(R), "R"),
+        (cxfm.Reflect.from_normal([1.0, 0.0, 0.0]), "H"),
+        (cxfm.Scale.from_factors([2.0, 3.0, 4.0]), "S"),
+        (cxfm.Shear(R), "H"),
+    ]:
+        assert np.array_equal(np.asarray(op.matrix), np.asarray(getattr(op, field)))
+
+
+def test_matrix_rejects_a_non_square_field() -> None:
+    """The accessor validates, so a malformed operator cannot hand one out."""
+    op = cxfm.Rotate(jnp.zeros((2, 3)))
+    with pytest.raises(eqx.EquinoxTracetimeError, match="requires a square matrix"):
+        _ = op.matrix

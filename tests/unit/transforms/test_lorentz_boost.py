@@ -54,20 +54,20 @@ class TestDefiningInvariance:
 
     @pytest.mark.parametrize("beta", BETAS)
     def test_preserves_the_minkowski_form(self, beta):
-        lam = cxfm.LorentzBoost(beta)._raw_matrix
+        lam = cxfm.LorentzBoost(beta).matrix
         assert jnp.allclose(lam.T @ ETA @ lam, ETA, atol=ATOL)
 
     @pytest.mark.parametrize("beta", BETAS)
     def test_is_proper_and_orthochronous(self, beta):
         """``det Λ = +1`` and ``Λ⁰⁰ ≥ 1``: no parity flip, no time reversal."""
-        lam = cxfm.LorentzBoost(beta)._raw_matrix
+        lam = cxfm.LorentzBoost(beta).matrix
         assert jnp.allclose(jnp.linalg.det(lam), 1.0, atol=ATOL)
         assert float(lam[0, 0]) >= 1.0 - ATOL
 
     @pytest.mark.parametrize("beta", BETAS)
     def test_interval_of_an_event_is_invariant(self, beta):
         """A boost preserves the interval of every event, of any causal type."""
-        lam = cxfm.LorentzBoost(beta)._raw_matrix
+        lam = cxfm.LorentzBoost(beta).matrix
         for ev in ([2.0, 1.0, 0.0, 0.0], [1.0, 3.0, -1.0, 2.0], [1.0, 1.0, 0.0, 0.0]):
             x = jnp.asarray(ev)
             assert jnp.allclose(_interval(lam @ x), _interval(x), atol=ATOL)
@@ -75,7 +75,7 @@ class TestDefiningInvariance:
     @pytest.mark.parametrize("beta", BETAS)
     def test_light_cone_is_preserved(self, beta):
         """A null vector stays null — the invariance of the speed of light."""
-        lam = cxfm.LorentzBoost(beta)._raw_matrix
+        lam = cxfm.LorentzBoost(beta).matrix
         null = jnp.asarray([1.0, 1.0, 0.0, 0.0])
         assert jnp.allclose(_interval(lam @ null), 0.0, atol=ATOL)
 
@@ -85,7 +85,7 @@ class TestGroupStructure:
 
     def test_zero_boost_is_the_identity(self):
         """``beta = 0`` gives ``I``, not ``nan`` from the ``0/0`` in the matrix."""
-        lam = cxfm.LorentzBoost([0.0, 0.0, 0.0])._raw_matrix
+        lam = cxfm.LorentzBoost([0.0, 0.0, 0.0]).matrix
         assert not bool(jnp.any(jnp.isnan(lam)))
         assert jnp.allclose(lam, jnp.eye(4), atol=ATOL)
 
@@ -93,7 +93,7 @@ class TestGroupStructure:
     def test_inverse_is_the_opposite_boost(self, beta):
         op = cxfm.LorentzBoost(beta)
         assert jnp.allclose(op.inverse.beta, -op.beta, atol=ATOL)
-        round_trip = op.inverse._raw_matrix @ op._raw_matrix
+        round_trip = op.inverse.matrix @ op.matrix
         assert jnp.allclose(round_trip, jnp.eye(4), atol=ATOL)
 
     def test_neg_matches_inverse(self):
@@ -107,14 +107,14 @@ class TestGroupStructure:
         Velocities do *not* add (that is the relativistic velocity-addition
         formula); rapidities do, so this is a sharp check on the matrix.
         """
-        m1 = cxfm.LorentzBoost.from_rapidity(phi1)._raw_matrix
-        m2 = cxfm.LorentzBoost.from_rapidity(phi2)._raw_matrix
-        combined = cxfm.LorentzBoost.from_rapidity(phi1 + phi2)._raw_matrix
+        m1 = cxfm.LorentzBoost.from_rapidity(phi1).matrix
+        m2 = cxfm.LorentzBoost.from_rapidity(phi2).matrix
+        combined = cxfm.LorentzBoost.from_rapidity(phi1 + phi2).matrix
         assert jnp.allclose(m2 @ m1, combined, atol=ATOL)
 
     def test_velocity_addition_is_not_naive(self):
         """Guard the physics: 0.6c then 0.6c is 0.882c, never 1.2c."""
-        m = cxfm.LorentzBoost([0.6, 0.0, 0.0])._raw_matrix
+        m = cxfm.LorentzBoost([0.6, 0.0, 0.0]).matrix
         combined = m @ m
         # Recover beta from the composed matrix: beta = Λ⁰ⁱ / Λ⁰⁰.
         beta_combined = float(combined[0, 1] / combined[0, 0])
@@ -186,14 +186,14 @@ class TestPhysicalPredictions:
         """A clock at rest at the origin ticking ``ct=1`` lands at ``ct=gamma``."""
         op = cxfm.LorentzBoost([0.6, 0.0, 0.0])
         tick = jnp.asarray([1.0, 0.0, 0.0, 0.0])
-        out = op._raw_matrix @ tick
+        out = op.matrix @ tick
         assert float(out[0]) == pytest.approx(1.25, abs=ATOL)
 
     def test_simultaneity_is_relative(self):
         """Two simultaneous, separated events stop being simultaneous."""
         op = cxfm.LorentzBoost([0.6, 0.0, 0.0])
-        here = op._raw_matrix @ jnp.asarray([0.0, 0.0, 0.0, 0.0])
-        there = op._raw_matrix @ jnp.asarray([0.0, 1.0, 0.0, 0.0])
+        here = op.matrix @ jnp.asarray([0.0, 0.0, 0.0, 0.0])
+        there = op.matrix @ jnp.asarray([0.0, 1.0, 0.0, 0.0])
         assert float(there[0] - here[0]) != pytest.approx(0.0, abs=1e-3)
 
     def test_reduces_to_the_galilean_boost_at_low_speed(self):
@@ -201,7 +201,7 @@ class TestPhysicalPredictions:
         beta = 1e-6
         op = cxfm.LorentzBoost([beta, 0.0, 0.0])
         ct, x = 5.0, 2.0
-        out = op._raw_matrix @ jnp.asarray([ct, x, 0.0, 0.0])
+        out = op.matrix @ jnp.asarray([ct, x, 0.0, 0.0])
         assert float(out[1]) == pytest.approx(x + beta * ct, abs=1e-9)
         assert float(out[0]) == pytest.approx(ct + beta * x, abs=1e-9)
 
@@ -262,7 +262,7 @@ class TestJAX:
     def test_jit(self):
         @jax.jit
         def apply(beta, x):
-            return cxfm.LorentzBoost(beta)._raw_matrix @ x
+            return cxfm.LorentzBoost(beta).matrix @ x
 
         out = apply(jnp.asarray([0.6, 0.0, 0.0]), jnp.asarray([1.0, 1.0, 0.0, 0.0]))
         assert jnp.allclose(out[:2], jnp.asarray([2.0, 2.0]), atol=ATOL)
@@ -326,7 +326,7 @@ class TestTimeDepComposition:
             "z": u.Q(0.0, "m"),
         }
         out = cxfm.act(op, 3.0, ev, cxc.minkowskict, cxr.point)
-        direct = cxfm.LorentzBoost([0.3, 0.0, 0.0])._raw_matrix @ jnp.asarray(
+        direct = cxfm.LorentzBoost([0.3, 0.0, 0.0]).matrix @ jnp.asarray(
             [1.0, 0.0, 0.0, 0.0]
         )
         assert float(out["ct"].ustrip("m")) == pytest.approx(float(direct[0]), abs=ATOL)
