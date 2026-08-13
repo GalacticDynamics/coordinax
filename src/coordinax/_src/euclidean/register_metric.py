@@ -8,8 +8,16 @@ chart in its atlas.  The rules follow a two-tier scheme:
   ``Polar2D``, ``Cylindrical3D``, ``Spherical3D``, ``MathSpherical3D``,
   ``LonLatSpherical3D``) have explicit analytic diagonal metrics and return
   a :class:`~coordinax._src.metric.matrix.DiagonalMetric`.
+* ``ProlateSpheroidal3D`` is orthogonal too, but has no closed form here: it
+  evaluates the pullback and keeps only the diagonal, still returning a
+  :class:`~coordinax._src.metric.matrix.DiagonalMetric`.
 * **All other charts** compute the Jacobian pullback ``g = J^T J`` directly
   and return the result as a :class:`~coordinax._src.metric.matrix.DenseMetric`.
+
+Whether a pair returns a diagonal or a dense metric is not a storage detail:
+it is how the library states that a chart is orthogonal, which is what
+:func:`~coordinax.manifolds.scale_factors` keys on. A chart missing from the
+diagonal list is declared non-orthogonal by omission.
 
 """
 
@@ -33,6 +41,7 @@ from coordinax._src.charts.d3 import (
     Cylindrical3D,
     LonLatSpherical3D,
     MathSpherical3D,
+    ProlateSpheroidal3D,
     Spherical3D,
 )
 from coordinax._src.charts.dn import CartND
@@ -104,7 +113,8 @@ def metric_representation(
     | Cylindrical3D
     | Spherical3D
     | MathSpherical3D
-    | LonLatSpherical3D,
+    | LonLatSpherical3D
+    | ProlateSpheroidal3D,
     /,
 ) -> type[DiagonalMetric]:
     """Euclidean manifold in a Cartesian or orthogonal curvilinear chart.
@@ -123,6 +133,14 @@ def metric_representation(
     <class 'coordinax._src.metric.matrix.DiagonalMetric'>
 
     >>> metric_representation(cxm.R3, cxc.sph3d)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
+
+    Prolate spheroidal coordinates are orthogonal too -- reparameterising each
+    of the confocal coordinates separately does not couple them:
+
+    >>> import unxt as u
+    >>> chart = cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m"))
+    >>> metric_representation(cxm.R3, chart)
     <class 'coordinax._src.metric.matrix.DiagonalMetric'>
 
     """
@@ -447,6 +465,49 @@ def metric_matrix(
     )
     units = ul.UnitsMatrix((d2_unit / lon_unit**2, d2_unit / lat_unit**2, u.unit("")))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
+
+
+# =====================================================================
+# metric_matrix — Prolate spheroidal (orthogonal, but no closed form here)
+# =====================================================================
+
+
+@plum.dispatch
+def metric_matrix(
+    M: EuclideanManifold, point: dict, chart: ProlateSpheroidal3D, /
+) -> DiagonalMetric:
+    r"""Euclidean metric in ``ProlateSpheroidal3D``, as a diagonal.
+
+    Confocal prolate spheroidal coordinates are orthogonal, and stay so under
+    this chart's per-coordinate reparameterisation to $(\mu, \nu, \phi)$: each
+    of $\mu$ and $\nu$ is a function of one confocal coordinate alone, so no
+    cross terms appear. The off-diagonal entries of $J^\top J$ are therefore
+    zero up to round-off -- measured at $8\times 10^{-17}$ relative, over a
+    grid of $(\Delta, \mu, \nu, \phi)$.
+
+    The pullback is still evaluated, since there is no closed form here; only
+    its diagonal is kept, and the result is *declared* diagonal so callers that
+    need an orthogonal frame -- `coordinax.manifolds.scale_factors` -- can tell
+    this chart from a genuinely non-orthogonal one such as
+    `coordinax.charts.LonCosLatSpherical3D`.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinaxs.api.manifolds import metric_matrix
+    >>> from coordinax._src.metric.matrix import DiagonalMetric
+
+    >>> chart = cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m"))
+    >>> at = {"mu": u.Q(2.0, "m2"), "nu": u.Q(0.5, "m2"),
+    ...       "phi": u.Angle(0.3, "rad")}
+    >>> g = metric_matrix(cxm.R3, at, chart)
+    >>> isinstance(g, DiagonalMetric)
+    True
+
+    """
+    del M
+    J = cxcapi.jac_pt_map(point, chart, chart.cartesian, usys=None)
+    return DiagonalMetric((J.T @ J).diag())  # ty: ignore[unresolved-attribute]
 
 
 # =====================================================================

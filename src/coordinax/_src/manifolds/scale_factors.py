@@ -55,6 +55,10 @@ def scale_factors(
     Uses the ``metric_matrix`` dispatch API to compute the metric, then
     extracts the diagonal entries.
 
+    The chart must be orthogonal. Per-axis factors describe a metric only
+    where the off-diagonal terms vanish, so a chart whose metric is dense is
+    refused rather than answered with a diagonal that does not reproduce it.
+
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
@@ -64,15 +68,37 @@ def scale_factors(
     >>> cxm.scale_factors(metric, cxc.sph2, at=at)
     QM([1., 1.], '(, )')
 
+    `LonCosLatSpherical3D` is non-orthogonal -- its ``g_01 = lon_coslat *
+    tan(lat)`` -- and so has no scale factors:
+
+    >>> import unxt as u
+    >>> at = {"lon_coslat": u.Angle(0.3, "rad"), "lat": u.Angle(0.6, "rad"),
+    ...       "distance": u.Q(2.0, "m")}
+    >>> try: cxm.scale_factors(cxc.loncoslat_sph3d, at=at)
+    ... except NotImplementedError as e: print(e)
+    scale_factors is a diagonal (orthogonal-frame) concept and the metric of
+    LonCosLatSpherical3D... is not diagonal, so no set of per-axis factors
+    reproduces it. Use coordinax.manifolds.metric_matrix.
+
     """
     mm = cxmapi.metric_matrix(chart.M, at, chart)
-    if isinstance(mm, DiagonalMetric):
-        diag = mm.diagonal
-        if isinstance(diag, ul.QM):
-            return diag
-        units = ul.UnitsMatrix.full(diag.shape[-1], DMLS)
-        return ul.QM(diag, unit=units)
-    return as_quantity_matrix(mm.matrix).diag()  # ty: ignore[unresolved-attribute]
+    if not isinstance(mm, DiagonalMetric):
+        # Not a storage detail: a `(manifold, chart)` pair reports a diagonal
+        # metric exactly when the library declares that chart orthogonal, so
+        # this is the orthogonality test. See `metric_representation`.
+        msg = (
+            "scale_factors is a diagonal (orthogonal-frame) concept and the "
+            f"metric of {type(chart).__name__} on {chart.M} is not diagonal, "
+            "so no set of per-axis factors reproduces it. Use "
+            "coordinax.manifolds.metric_matrix."
+        )
+        raise NotImplementedError(msg)
+
+    diag = mm.diagonal
+    if isinstance(diag, ul.QM):
+        return diag
+    units = ul.UnitsMatrix.full(diag.shape[-1], DMLS)
+    return ul.QM(diag, unit=units)
 
 
 @plum.dispatch

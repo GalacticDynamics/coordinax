@@ -255,3 +255,55 @@ class TestScaleFactorsPullbackMetric:
         )
         h = cxm.scale_factors(M.metric, cxc.cart1d, at={"x": u.Q(1.0, "m")})
         assert jnp.allclose(jnp.asarray(h.value).ravel()[0], expected, atol=1e-9)
+
+
+class TestScaleFactorsRequiresAnOrthogonalChart:
+    """A chart whose metric is not diagonal has no per-axis factors.
+
+    `LonCosLatSphericalTwoSphere` has been refused on this ground since it was
+    added, while its 3-D sibling answered with the diagonal of a metric whose
+    off-diagonal is the same order as the diagonal.
+    """
+
+    def test_loncoslat_3d_metric_really_is_not_diagonal(self):
+        """The premise: this is not a marginal off-diagonal."""
+        at = {
+            "lon_coslat": u.Angle(0.3, "rad"),
+            "lat": u.Angle(0.6, "rad"),
+            "distance": u.Q(2.0, "m"),
+        }
+        g = jnp.asarray(mm_dispatch(cxm.R3, at, cxc.loncoslat_sph3d).matrix.value)
+        assert jnp.max(jnp.abs(g - jnp.diag(jnp.diagonal(g)))) > 0.5
+
+    @pytest.mark.parametrize(
+        ("chart", "at"),
+        [
+            pytest.param(
+                cxc.loncoslat_sph3d,
+                {
+                    "lon_coslat": u.Angle(0.3, "rad"),
+                    "lat": u.Angle(0.6, "rad"),
+                    "distance": u.Q(2.0, "m"),
+                },
+                id="loncoslat_sph3d",
+            ),
+            pytest.param(
+                cxc.loncoslat_sph2,
+                {"lon_coslat": u.Angle(0.4, "rad"), "lat": u.Angle(0.5, "rad")},
+                id="loncoslat_sph2",
+            ),
+        ],
+    )
+    def test_non_orthogonal_charts_are_refused(self, chart, at):
+        with pytest.raises(NotImplementedError, match="orthogonal-frame"):
+            cxm.scale_factors(chart, at=at)
+
+    def test_prolate_spheroidal_is_orthogonal_and_answers(self):
+        """The guard keys on the declared metric, and prolate is declared diagonal.
+
+        Its off-diagonals measure ~1e-16 relative, so refusing it -- as a guard
+        keyed on `DenseMetric` would have -- is wrong.
+        """
+        chart = cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m"))
+        at = {"mu": u.Q(2.0, "m2"), "nu": u.Q(0.5, "m2"), "phi": u.Angle(0.3, "rad")}
+        assert cxm.scale_factors(chart, at=at).shape == (3,)

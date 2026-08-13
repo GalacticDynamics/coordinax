@@ -141,9 +141,13 @@ def change_basis(
     keys = chart.components
     mm = cxmapi.metric_matrix(M, at, chart)
     if isinstance(mm, DiagonalMetric):
-        h = jnp.sqrt(mm.diagonal)
-        # Components are on the last axis (leading axes are batch).
-        return {k: h[..., i] * v[k] for i, k in enumerate(keys)}
+        # `cdict` splits the diagonal into components. Indexing it directly
+        # does not work: the diagonal of a unitful metric is a
+        # `QuantityMatrix`, whose `__getitem__` rejects the `[..., i]` form
+        # this used to use, since the ellipsis cannot be split between the
+        # batch axes and the logical ones.
+        h: CDict = cxc.cdict(jnp.sqrt(mm.diagonal), keys)  # ty: ignore[invalid-assignment]
+        return {k: h[k] * v[k] for k in keys}
     # General case: Cholesky vielbein E = L^T, hat_v = E @ v
     assert isinstance(mm, DenseMetric)  # noqa: S101
     E = _cholesky_vielbein(mm)
@@ -204,9 +208,9 @@ def change_basis(
     keys = chart.components
     mm = cxmapi.metric_matrix(M, at, chart)
     if isinstance(mm, DiagonalMetric):
-        h = jnp.sqrt(mm.diagonal)
-        # Components are on the last axis (leading axes are batch).
-        return {k: v[k] / h[..., i] for i, k in enumerate(keys)}
+        # See the forward direction for why this is `cdict` and not `[..., i]`.
+        h: CDict = cxc.cdict(jnp.sqrt(mm.diagonal), keys)  # ty: ignore[invalid-assignment]
+        return {k: v[k] / h[k] for k in keys}
     # General case: Cholesky vielbein E = L^T, v = E^{-1} hat_v (triangular solve)
     assert isinstance(mm, DenseMetric)  # noqa: S101
     E = _cholesky_vielbein(mm)
