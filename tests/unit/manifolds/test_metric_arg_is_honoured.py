@@ -37,6 +37,9 @@ Y4 = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0,
 MINK = cxm.MinkowskiMetric()
 FLAT4 = cxm.FlatMetric(4)
 
+#: A point on `cartnd`, whose manifold `Rn(N)` leaves its dimension open.
+QN = {"q": u.Q(jnp.asarray([1.0, 2.0, 3.0]), "m")}
+
 
 #: ``(id, thunk)`` where the thunk passes a metric the chart does not carry.
 #: One row per metric-level overload reachable with a mismatched metric.
@@ -69,6 +72,11 @@ MISMATCHED_CALLS = [
         "angle_between-4d",
         lambda: cxm.angle_between(FLAT4, cxc.minkowskict, X4, Y4, at=Z4),
     ),
+    # `Rn(N)` relaxes to a kind check, but a kind check is still a check.
+    (
+        "scale_factors-open-ndim-wrong-kind",
+        lambda: cxm.scale_factors(MINK, cxc.cartnd, at=QN),
+    ),
 ]
 
 
@@ -80,6 +88,18 @@ def test_mismatched_metric_is_refused(name: str, call) -> None:
     del name
     with pytest.raises(ValueError, match="metric-level dispatch needs the chart's own"):
         call()
+
+
+def test_open_dimension_chart_accepts_any_metric_of_its_kind() -> None:
+    """`Rn(N)` pins no dimension, so the caller's metric supplies it.
+
+    The premise "the metric argument is never data" holds only for a chart
+    whose manifold fixes its dimension. `cxc.cartnd` does not, so demanding
+    equality against its unbound `FlatMetric(ndim=True)` would reject the
+    legitimate call that #708 relies on.
+    """
+    got = cxm.scale_factors(cxm.FlatMetric(3), cxc.cartnd, at=QN)
+    assert got.shape[-1] == 3
 
 
 def test_matching_metric_still_works() -> None:

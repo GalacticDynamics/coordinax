@@ -15,6 +15,12 @@ def check_metric_is_charts(
     ``chart.M.metric``, so a differing one cannot be honoured and must not be
     quietly replaced by the chart's.
 
+    A manifold that leaves its dimension open -- ``Rn(N)``, spelled
+    ``ndim is True`` -- pins nothing, so its metric is unbound and equality is
+    the wrong test. There the caller's metric supplies the concrete dimension
+    and only the *kind* can be required: `cxc.cartnd` accepts any
+    `FlatMetric`, and still refuses a `MinkowskiMetric`.
+
     Examples
     --------
     >>> import unxt as u
@@ -30,10 +36,16 @@ def check_metric_is_charts(
     norm(): metric-level dispatch needs the chart's own
 
     """
-    if metric != chart.M.metric:
+    chart_metric = chart.M.metric
+    ok = (
+        isinstance(metric, type(chart_metric))
+        if getattr(chart.M, "ndim", None) is True
+        else metric == chart_metric
+    )
+    if not ok:
         msg = (
             f"{fname}(): metric-level dispatch needs the chart's own metric; "
-            f"got {metric} for a chart carrying {chart.M.metric}. The metric "
+            f"got {metric} for a chart carrying {chart_metric}. The metric "
             f"selects the method; it is not applied in place of the chart's."
         )
         raise ValueError(msg)
