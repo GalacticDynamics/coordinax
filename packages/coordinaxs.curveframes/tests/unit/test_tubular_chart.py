@@ -131,13 +131,9 @@ def test_the_reach_guard_also_fires_under_jit() -> None:
 
 
 def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_gamma() -> None:
-    """A pinned-`gamma` builder makes the on-curve speed (and factor) 0/0 = nan.
+    """See the `~(f > 0)` vs `f <= 0` comment in `TubularChart.check_data`.
 
-    `jnp.any(f <= 0)` is False for `nan` (every comparison against `nan` is
-    False in IEEE754), so that guard would let a NaN factor sail through
-    silently. The fix is `jnp.any(~(f > 0))`, which is True for `nan` since
-    `nan > 0` is also False. This is reachable without user error --
-    `FrenetSerretBuilder(curve, gamma=...)` is public API.
+    Reachable via public API: `FrenetSerretBuilder(curve, gamma=...)`.
     """
     ch = cxfc.TubularChart(
         cxfc.FrenetSerretBuilder(circle, gamma=u.Q(0.5, "s")), tau_bounds=BOUNDS

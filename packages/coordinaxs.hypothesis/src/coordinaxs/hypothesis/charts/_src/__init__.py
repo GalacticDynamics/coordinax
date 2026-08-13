@@ -38,21 +38,13 @@ for flag_cls in get_all_subclasses(cxc.AbstractDimensionalFlag, exclude_abstract
 # ============================================================================
 # Optional strategy modules from other distributions
 #
-# A satellite package (e.g. `coordinaxs.curveframes`) that defines its own
-# `coordinax.charts.AbstractChart` subclass registers a `charts()` /
-# `chart_init_kwargs()` overload for it, in its own `coordinaxs.hypothesis.*`
-# strategy module, under the `coordinaxs.hypothesis` entry-point group (the
-# same mechanism `coordinax.frames` and `coordinax.transforms` use for
-# `coordinaxs.frames` / `coordinaxs.transforms`; see those modules).
-#
-# Loading that group here -- unconditionally, on import of
-# `coordinaxs.hypothesis.charts` -- means the overload is always registered
-# before `chart_classes()` / `charts()` can enumerate the class, regardless of
-# which module happened to import the satellite package first. Without this,
-# the chart class and its strategy could drift apart: the class shows up in
-# `AbstractChart.__subclasses__()` as soon as *anything* imports the satellite
-# package, but its strategy would only exist once that package's
-# `coordinaxs.hypothesis.*` module had also been imported somewhere.
+# A satellite package (e.g. `coordinaxs.curveframes`) registers a `charts()`
+# overload for its own `AbstractChart` subclass under the
+# `coordinaxs.hypothesis` entry-point group (mirroring `coordinax.frames`'s
+# use of `coordinaxs.frames`). Load it unconditionally here so the overload
+# exists before `chart_classes()` can enumerate the class -- otherwise a
+# chart can appear via `__subclasses__()` before its strategy does,
+# depending on import order.
 _HYPOTHESIS_STRATEGY_ENTRYPOINT_GROUP: Final = "coordinaxs.hypothesis"
 _OPTIONAL_HYPOTHESIS_STRATEGY_STATE: dict[str, bool] = {"loading": False}
 

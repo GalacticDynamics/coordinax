@@ -78,20 +78,13 @@ class TubularChart(AbstractParameterizedChart):
     """Scan range for the inverse solve.
 
     Must cover the curve of interest, and for a **closed** curve must not span
-    more than one period: `gamma(tau)` and `gamma(tau + period)` are the same
-    ambient point, so a wider range makes the nearest-point solve an exact tie
-    and the recovered `tau` arbitrary between the two -- the scan's tie-break
-    then resolves even a correctly one-period range's coincident endpoints to
-    the lower bound.
+    more than one period: a wider range ties the nearest-point solve between
+    `gamma(tau)` and `gamma(tau + period)`, the same ambient point.
 
     A point whose true nearest curve point lies outside `tau_bounds` does not
-    raise: the coarse scan is confined to `tau_bounds`, but if that leaves no
-    bracketed root to polish, `nearest_tau` falls back to an unconstrained
-    solve that can walk arbitrarily far outside `tau_bounds`, returning a
-    finite, low-residual `tau` there rather than an error. Callers who cannot
-    rule out off-curve queries should check the returned `tau` against
-    `tau_bounds` themselves. See the curve-charts guide's Limitations section
-    for worked examples of both of the above.
+    raise: the fallback solve can converge to a finite, low-residual `tau`
+    outside `tau_bounds` instead. See the curve-charts guide's Limitations
+    section for worked examples of both warnings above.
     """
 
     n_seed: int = eqx.field(static=True, default=64)
@@ -126,34 +119,26 @@ class TubularChart(AbstractParameterizedChart):
         if values:
             # Inside the reach the Jacobian factor is positive; at the focal
             # distance it vanishes and the coordinates stop being *locally*
-            # injective. This is a necessary condition, not sufficient for
-            # global injectivity: the factor cannot see a point mirrored
-            # across the curve at equal offset (same factor, same ambient
-            # point, different tau) or the curve's global self-approach
-            # distance, so a passing factor does not rule those out.
+            # injective. Necessary, not sufficient, for global injectivity --
+            # can't see a point mirrored across the curve or the curve's
+            # global self-approach distance (see the curve-charts guide's
+            # Limitations section).
             #
-            # `~(f > 0)` rather than `f <= 0`: a pinned-gamma builder (see
-            # `AbstractCurveFrameBuilder.gamma`) makes the on-curve speed
-            # zero, so the factor is `0/0 = nan` -- and `nan <= 0` is False,
-            # so that comparison would let a NaN factor sail through the
-            # guard silently. `nan > 0` is also False, so negating it (`~(f >
-            # 0)`) catches NaN as well as the genuine `<= 0` case.
+            # `~(f > 0)`, not `f <= 0`: a pinned-gamma builder makes the
+            # on-curve speed (and factor) `0/0 = nan`, and `nan <= 0` is
+            # False too -- negating `nan > 0` (also False) catches it.
             #
-            # Hybrid form, copied from `_src/charts/checks.py`: `eqx.error_if`
-            # under trace (a Python `bool` on a tracer raises
-            # `TracerBoolConversionError`), a plain `ValueError` when concrete.
-            # Do not collapse it to one branch.
+            # Hybrid form, matching `_src/charts/checks.py` (see `nearest.py`
+            # for the full mechanics): `eqx.error_if` under trace, plain
+            # `ValueError` when concrete. The return value MUST be threaded
+            # back into `data` -- an unused result silently vanishes under
+            # `jit` (verified: it returned n1=-1.6, well outside the reach).
             pred = jnp.any(~(self.jacobian_factor(data) > 0))
             msg = (
                 "point lies outside the reach of the curve: the tubular "
                 "coordinates are not locally injective there"
             )
             if isinstance(pred, jax.core.Tracer):
-                # The return value MUST be threaded back into the data that is
-                # returned. `eqx.error_if` is eliminated as dead code when its
-                # result goes unused -- a bare `eqx.error_if(pred, pred, msg)`
-                # compiles away and the guard silently passes under `jit`
-                # (verified: it returned n1=-1.6, well outside the reach).
                 data = {**data, "n1": eqx.error_if(data["n1"], pred, msg)}
             elif bool(pred):
                 raise ValueError(msg)
@@ -172,11 +157,10 @@ class TubularChart(AbstractParameterizedChart):
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
         unit = self.builder.tau_unit
-        # Derive the ambient unit from the curve, the way `nearest.py`
-        # (`x.unit`) and `register_ptmap.py` (`b.location(...).unit`) do,
-        # rather than hardcoding it: the scale cancels in `dot(dx,T)/speed`,
-        # but a hardcoded "km" raises `UnitConversionError` for a curve whose
-        # ambient unit is dimensionless.
+        # Derive the unit from the curve (as `nearest.py` and
+        # `register_ptmap.py` do), not hardcode `"km"`: the scale cancels in
+        # `dot(dx,T)/speed`, but a hardcoded unit raises `UnitConversionError`
+        # for a dimensionless curve.
         ambient_unit = self.builder.location(tau).unit
 
         def gamma_v(t: jax.Array) -> jax.Array:

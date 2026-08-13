@@ -67,17 +67,10 @@ def test_nonconvergence_raises_eagerly() -> None:
 
 
 def test_polish_does_not_walk_onto_a_local_maximum() -> None:
-    """An unconstrained polish can leave the scan's basin for a maximum.
+    """Regression for the counterexample in `nearest_tau`'s docstring.
 
-    Counterexample (measured): on `gamma(tau) = (tau, 0.6*sin(6*tau), 0)`
-    km with `bounds=(-5, 5)` s and the default `n_seed=64`, the scan's
-    argmin for `x=(4.4, -1.4, 0)` km is `tau0=3.8889` -- the correct basin,
-    one seed spacing from the true minimiser `tau*=3.95275` (distance
-    0.92278). An unconstrained Newton polish from that `tau0` used to walk
-    3.2 seed spacings away to `tau=3.37962`, a local *maximum* of the
-    distance (distance 2.23983, 2.4x too far) that also satisfies the
-    stationarity condition, and reported success. The polish must stay in
-    the scan's basin and return the minimiser, not the maximum.
+    An unconstrained polish can leave the scan's basin for a local maximum
+    instead of the minimiser.
     """
 
     def wavy(tau: u.AbstractQuantity) -> u.AbstractQuantity:

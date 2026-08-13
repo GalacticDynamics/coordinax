@@ -121,27 +121,18 @@ def nearest_tau(
         T = builder.rotation_matrix(u.Q(tau_v, unit))[0]
         return jnp.dot(T, offset(tau_v))
 
-    # `1e-10` is unreachable in float32 -- JAX's default dtype everywhere
-    # outside this repo's pytest config, which sets `JAX_ENABLE_X64=1`. Below
-    # the dtype's own epsilon, a solve can never satisfy the tolerance and
-    # reports `max_steps_reached` on every call even though its answer is
-    # already correct to that dtype's precision. Scaling by the dtype's
-    # epsilon keeps float64 tight while giving float32 a tolerance it can
-    # actually reach.
+    # Scale by the dtype's epsilon, not a fixed `1e-10`: float32 (JAX's
+    # default outside this repo's x64 pytest config) can never satisfy
+    # `1e-10` below its own epsilon, and reports `max_steps_reached` on
+    # every call despite an already-correct answer.
     tol = float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5
     rtol = tol if rtol is None else rtol
     atol = tol if atol is None else atol
 
-    # 2a. Bracketed root-find, confined to one seed spacing either side of
-    # the scan's argmin -- see the docstring above for why that bracket
-    # contains the true minimiser and cannot converge to the neighbouring
-    # maximum. This is the mainline path; 2b only fires when this bracket
-    # turns out not to contain a sign change (see below). `expand_if_
-    # necessary=True` only matters here in the sense that it keeps
-    # `Bisection.init` from raising its own (differently-worded) error when
-    # the bracket lacks a sign change -- `bracket_has_root` below makes that
-    # determination itself and routes to 2b instead; whatever `bsol` comes
-    # back with in that case is discarded.
+    # 2a. Bracketed root-find within one seed spacing of the argmin (see the
+    # docstring above). `expand_if_necessary=True` only silences
+    # `Bisection.init`'s own error on a rootless bracket -- `bracket_has_root`
+    # below re-checks that itself and routes to 2b, discarding `bsol` then.
     bisector = optx.Bisection(  # ty: ignore[missing-argument]
         rtol=rtol, atol=atol, flip="detect", expand_if_necessary=True
     )
@@ -161,15 +152,9 @@ def nearest_tau(
     newton = optx.Newton(rtol=rtol, atol=atol)
     nsol = optx.root_find(residual, newton, tau0, max_steps=64, throw=False)
 
-    # A real crossing changes the residual by an amount well above the noise
-    # floor; on a genuinely degenerate query (residual identically zero --
-    # e.g. every point on a circle is equidistant from its centre) the two
-    # endpoint values are equal save for floating-point noise at the ~1e-16
-    # level, which can and does land on opposite sides of zero often enough
-    # to fool a sign-only check, especially under `jit` where XLA's
-    # evaluation order differs from eager. Requiring the change to clear
-    # `atol` -- already the solver's own noise floor -- rejects that noise
-    # without a new tolerance to tune.
+    # `atol`-gated, not sign-only: on a degenerate query (e.g. a circle's
+    # centre) both endpoints are ~1e-16 noise that can land on either side of
+    # zero, especially under `jit` where XLA's eval order differs from eager.
     r_lo, r_hi = residual(bracket_lo, None), residual(bracket_hi, None)
     bracket_has_root = (jnp.sign(r_lo) != jnp.sign(r_hi)) & (
         jnp.abs(r_hi - r_lo) > atol
@@ -181,13 +166,10 @@ def nearest_tau(
         nsol.result != optx.RESULTS.successful,
     )
 
-    # Surface a non-converged solve rather than silently returning a wrong
-    # tau. Hybrid form, matching `_src/charts/checks.py`: `eqx.error_if`
-    # under trace (a Python `bool` on a tracer raises
-    # `TracerBoolConversionError`), a plain exception when concrete. The
-    # return value MUST be threaded back into what is returned -- a bare
-    # `eqx.error_if(pred, pred, msg)` is dead-code-eliminated and the guard
-    # silently disappears under `jit`.
+    # Must surface non-convergence, not return silently (hybrid form,
+    # matching `_src/charts/checks.py`). The return value MUST be threaded
+    # through -- an unused `eqx.error_if` result is dead-code-eliminated and
+    # the guard vanishes under `jit`.
     msg = "nearest-point solve did not converge"
     if isinstance(not_converged, jax.core.Tracer):
         value = eqx.error_if(value, not_converged, msg)
