@@ -1,4 +1,4 @@
-"""`coordinax.internal` — semi-public utilities.
+"""``coordinax.internal`` — semi-public utilities.
 
 .. warning::
 
