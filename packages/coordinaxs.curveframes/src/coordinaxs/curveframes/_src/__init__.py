@@ -17,10 +17,10 @@ implementation modules:
 the curve-charts guide for why, and for the two builders' differing results.
 """
 
-from . import register_ptmap  # noqa: F401
 from .base import *
 from .bishop import *
 from .chart import *
 from .frenetserret import *
 from .nearest import *
 from .register_frames import *
+from .register_ptmap import *
