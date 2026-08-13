@@ -6,8 +6,16 @@ __all__: tuple[str, ...] = ()
 import plum
 
 from .atlas import HyperSphericalAtlas
-from .chart import AbstractSphericalTwoSphere
+from .chart import AbstractSphericalTwoSphere, SphericalTwoSphere
 from .manifold import HyperSphericalManifold
+from coordinax._src.charts.register_guess import register_canonical_chart
+
+# `("theta", "phi")` is also `MathSphericalTwoSphere`, which swaps the polar and
+# azimuthal angles; component names cannot tell them apart, so name the one
+# `guess_chart` should infer. Declared here rather than in
+# `coordinax._src.charts`, which is imported before this package and so cannot
+# reach `SphericalTwoSphere`.
+register_canonical_chart(SphericalTwoSphere)
 
 
 @plum.dispatch

@@ -8,13 +8,14 @@
 
 2. When multiple chart types share the same component names (e.g.,
    Spherical3D and MathSpherical3D both use ('r', 'theta', 'phi')),
-   `guess_chart` returns whichever it finds first in iteration order.
-   This is by design - component names alone don't uniquely identify
-   chart types.
+   `guess_chart` has to pick one: component names alone don't uniquely
+   identify chart types. `CANONICAL_CHART_CLASSES` names which, and
+   `TestAmbiguousComponentNames` pins it -- the alternatives disagree about
+   what ``theta`` means, so the choice is a numerical answer, not a detail.
 
 """
 
-from typing import TypeAlias
+from typing import ClassVar, TypeAlias
 
 import numpy as np
 import pytest
@@ -25,6 +26,8 @@ import unxts.hypothesis as ust
 import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst
 from .conftest import SHAPE_CART_MAP, xps
+from coordinax._src.base import NON_ABC_CHART_CLASSES, AbstractFixedComponentsChart
+from coordinax._src.charts.register_guess import CANONICAL_CHART_CLASSES
 
 Shape: TypeAlias = tuple[int, ...]
 
@@ -97,6 +100,57 @@ class TestGuessChartCaching:
         result1 = cxc.guess_chart(d1)
         result2 = cxc.guess_chart(d2)
         assert type(result1) is type(result2)
+
+
+class TestAmbiguousComponentNames:
+    """Charts sharing a component-name set resolve to one declared chart.
+
+    `guess_chart` scans `NON_ABC_CHART_CLASSES`, a `weakref.WeakSet`, which
+    iterates in `id`-hash order and so differs between processes. What makes
+    the answer a function of the component names is `CANONICAL_CHART_CLASSES`,
+    which names the chart to infer; the alternatives disagree about which angle
+    is polar, so picking the other one silently moves the point.
+    """
+
+    #: Component-name sets shared by several charts, and the one to infer.
+    #: Both pairs are physics convention vs maths convention.
+    AMBIGUOUS: ClassVar = [
+        pytest.param(("r", "theta", "phi"), "Spherical3D", id="sph3d"),
+        pytest.param(("theta", "phi"), "SphericalTwoSphere", id="sph2"),
+    ]
+
+    def test_every_ambiguous_component_set_is_declared(self) -> None:
+        """The invariant `guess_chart_cls` relies on, over every chart."""
+        by_components: dict[frozenset[str], list[str]] = {}
+        for cls in NON_ABC_CHART_CLASSES:
+            if issubclass(cls, AbstractFixedComponentsChart):
+                by_components.setdefault(frozenset(cls._components), []).append(
+                    cls.__name__
+                )
+
+        ambiguous = {k for k, v in by_components.items() if len(v) > 1}
+        undeclared = {
+            tuple(sorted(k)): sorted(by_components[k])
+            for k in ambiguous - set(CANONICAL_CHART_CLASSES)
+        }
+        assert not undeclared, (
+            f"Component names no longer identify a chart: {undeclared}. Add "
+            "the intended one to `CANONICAL_CHART_CLASSES`."
+        )
+
+    @pytest.mark.parametrize(("components", "expected"), AMBIGUOUS)
+    def test_ambiguity_resolves_to_the_declared_chart(
+        self, components: tuple[str, ...], expected: str
+    ) -> None:
+        """The physics-convention chart is inferred, in every process."""
+        assert type(cxc.guess_chart(frozenset(components))).__name__ == expected
+
+    @pytest.mark.parametrize(("components", "expected"), AMBIGUOUS)
+    def test_the_declaration_names_that_chart(
+        self, components: tuple[str, ...], expected: str
+    ) -> None:
+        """The choice is declared, not a by-product of scan order."""
+        assert CANONICAL_CHART_CLASSES[frozenset(components)].__name__ == expected
 
 
 class TestGuessChartFromArrayLike:
