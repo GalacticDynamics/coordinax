@@ -117,15 +117,32 @@ def test_matching_metric_still_works() -> None:
 _SRC = pathlib.Path(cxm.__file__).parent.parent / "_src"
 
 
-def _forwards_metric(node: ast.FunctionDef) -> bool:
-    """Report whether the body passes its own ``metric`` to another verb.
+def _calls_guard(node: ast.FunctionDef) -> bool:
+    """Report whether the body actually *calls* the guard.
 
-    Checked structurally, not by substring: a body that merely mentions
-    ``cxmapi`` while forwarding ``chart.M`` is *not* forwarding the metric, and
-    that is exactly the bug this file exists to catch.
+    A call node, not a substring of the unparsed source: a docstring or comment
+    naming `check_metric_is_charts` must not be able to satisfy this.
     """
     return any(
         isinstance(n, ast.Call)
+        and isinstance(n.func, ast.Name)
+        and n.func.id == "check_metric_is_charts"
+        for n in ast.walk(node)
+    )
+
+
+def _forwards_metric(node: ast.FunctionDef) -> bool:
+    """Report whether the body passes its own ``metric`` to another verb.
+
+    Only a dispatched verb counts -- an attribute call such as
+    ``cxmapi.interval(metric, ...)``. A bare-name call taking ``metric`` (the
+    guard itself, or a local helper) is not forwarding, and a body that merely
+    mentions ``cxmapi`` while passing ``chart.M`` is not either. Both are
+    exactly the shapes this file exists to catch.
+    """
+    return any(
+        isinstance(n, ast.Call)
+        and isinstance(n.func, ast.Attribute)
         and any(isinstance(a, ast.Name) and a.id == "metric" for a in n.args)
         for n in ast.walk(node)
     )
@@ -147,12 +164,14 @@ def _metric_level_overloads() -> list[tuple[str, int, ast.FunctionDef]]:
     found = []
     for path in sorted(_SRC.rglob("*.py")):
         try:
-            tree = ast.parse(path.read_text())
+            tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:  # pragma: no cover
             continue
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef):
                 continue
+            if node.name == "check_metric_is_charts":
+                continue  # the guard itself, not a dispatch that needs guarding
             names = {a.arg for a in node.args.posonlyargs + node.args.args}
             if {"metric", "chart"} <= names:
                 found.append((str(path.relative_to(_SRC)), node.lineno, node))
@@ -172,7 +191,7 @@ def test_no_unguarded_metric_overloads() -> None:
     unguarded = [
         f"{path}:{line}"
         for path, line, node in overloads
-        if "check_metric_is_charts" not in ast.unparse(node)
+        if not _calls_guard(node)
         and not _forwards_metric(node)
         and not _is_refusal(node)
     ]
