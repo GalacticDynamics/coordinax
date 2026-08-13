@@ -1146,7 +1146,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     Dispatches:
 
-    - Input `frozenset[str]` (component names): infer a chart whose `components` set matches exactly. The results are cached; repeated calls with the same key set return the same chart object instance.
+    - Input `frozenset[str]` (component names): infer a chart whose `components` set matches exactly. Each call constructs a chart, so repeated calls return equal — not identical — instances.
     - Input `CDict`/mapping: infer from `frozenset(obj.keys())`.
     - Input array-like or quantity-like with trailing axis length 1, 2, or 3: infer the matching low-dimensional Cartesian chart (`cart1d`/`cart2d`/`cart3d`) by that trailing size.
     - Input array-like or quantity-like with any other trailing axis length: infer the arbitrary-dimension Cartesian chart `cartnd` (`CartND`).
@@ -1159,8 +1159,9 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     Notes:
 
-    - There is a selection ambiguity. Key-based inference uses component names only. If multiple chart types share the same component names, the result is not uniquely identifiable from keys alone and one matching chart is returned.
-    - Inferred chart choice from keys is stable within a process due to caching, but callers should not treat key-only inference as a unique chart identifier when component-name collisions exist.
+    - There is a selection ambiguity. Key-based inference uses component names only. If multiple chart types share the same component names — `Spherical3D` and `MathSpherical3D` both carry `("r", "theta", "phi")`, and disagree about which angle is polar — the keys alone do not identify a chart.
+    - Each such collision MUST have exactly one chart declared canonical (via `register_canonical_chart`), and that chart is the one inferred. The choice is therefore the same in every process, and does not depend on the order charts are registered or scanned in. A collision with no declaration raises `ValueError` rather than returning an arbitrary member.
+    - Callers should still not treat key-only inference as a unique chart identifier when collisions exist: it resolves to the declared convention, which may not be the one intended. Pass the chart explicitly when it matters.
 
 !!! info `cdict`
 
