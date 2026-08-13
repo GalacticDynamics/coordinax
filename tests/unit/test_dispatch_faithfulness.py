@@ -15,17 +15,10 @@ foreign package's unfaithful method on a shared name is not ours to fix.
 __all__: tuple[str, ...] = ()
 
 import plum
-import pytest
 
-import coordinax.charts as cxc
-import coordinax.frames as cxf
-import coordinax.manifolds as cxm
-import coordinax.representations as cxr
-import coordinax.transforms as cxfm
-import coordinax.vectors as cxv
+from conftest import import_public_subpackages
 
-#: Imported for the dispatch registrations they carry, not for their names.
-_REGISTERED_BY = (cxc, cxf, cxm, cxr, cxfm, cxv)
+import_public_subpackages()
 
 #: Functions that dispatch on something types alone cannot decide, and the
 #: reason. These are design choices, not accidents, and they cost the cache.
@@ -81,10 +74,11 @@ def test_no_new_unfaithful_signatures() -> None:
     )
 
 
-@pytest.mark.parametrize("name", sorted(UNFAITHFUL_BY_DESIGN))
-def test_the_allowlist_has_no_stale_entries(name: str) -> None:
+def test_the_allowlist_has_no_stale_entries() -> None:
     """An entry that became faithful should be dropped, to keep the list honest."""
-    assert name in _coordinax_unfaithful(), (
-        f"`{name}` no longer has an unfaithful coordinax method; remove it "
-        "from UNFAITHFUL_BY_DESIGN so a future regression is caught."
+    became_faithful = UNFAITHFUL_BY_DESIGN - set(_coordinax_unfaithful())
+    assert not became_faithful, (
+        f"{sorted(became_faithful)} no longer have an unfaithful coordinax "
+        "method; drop them from UNFAITHFUL_BY_DESIGN so a future regression "
+        "is caught."
     )

@@ -13,11 +13,10 @@ call raised `NotFoundLookupError` for users while its own doctests passed.
 
 __all__: tuple[str, ...] = ()
 
-import importlib
 import sys
 from pathlib import Path
 
-import pytest
+from conftest import import_public_subpackages
 
 import coordinax as cx
 
@@ -30,19 +29,6 @@ ALLOWED_UNIMPORTED = {
 
 _ROOT = Path(cx.__file__).parent
 
-#: The public subpackages. Importing `coordinax` alone does not pull these in,
-#: so a user reaching `coordinax.charts` must not thereby change dispatch.
-PUBLIC_SUBPACKAGES = (
-    "angles",
-    "charts",
-    "distances",
-    "frames",
-    "manifolds",
-    "representations",
-    "transforms",
-    "vectors",
-)
-
 
 def _module_name(path: Path) -> str:
     """Dotted module name for a file under the `coordinax` package."""
@@ -52,20 +38,14 @@ def _module_name(path: Path) -> str:
     return ".".join(parts)
 
 
-@pytest.fixture(scope="module")
-def imported_modules() -> frozenset[str]:
-    """Everything in `sys.modules` after importing the public surface."""
-    for name in PUBLIC_SUBPACKAGES:
-        importlib.import_module(f"coordinax.{name}")
-    return frozenset(sys.modules)
-
-
-def test_no_module_is_dead_in_production_only(imported_modules) -> None:
+def test_no_module_is_dead_in_production_only() -> None:
     """No module under `src/coordinax` is skipped by the package's imports."""
+    import_public_subpackages()
+    imported = frozenset(sys.modules)
     unimported = sorted(
         name
         for path in _ROOT.rglob("*.py")
-        if (name := _module_name(path)) not in imported_modules
+        if (name := _module_name(path)) not in imported
         and name not in ALLOWED_UNIMPORTED
     )
     assert not unimported, (
