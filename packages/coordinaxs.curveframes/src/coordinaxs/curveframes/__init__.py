@@ -10,6 +10,7 @@ Public API
 
     AbstractCurveFrameBuilder
     AbstractParallelTransportFrame
+    ArcLength
     FrenetSerretBuilder
     FrenetSerretFrame
     BishopBuilder
@@ -34,6 +35,7 @@ coordinax.transforms : Transform primitives (Translate, Rotate, etc.).
 __all__ = (
     "AbstractCurveFrameBuilder",
     "AbstractParallelTransportFrame",
+    "ArcLength",
     "BishopBuilder",
     "BishopFrame",
     "FrenetSerretBuilder",
@@ -48,6 +50,7 @@ with install_import_hook("coordinaxs.curveframes"):
     from ._src import (
         AbstractCurveFrameBuilder,
         AbstractParallelTransportFrame,
+        ArcLength,
         BishopBuilder,
         BishopFrame,
         FrenetSerretBuilder,
