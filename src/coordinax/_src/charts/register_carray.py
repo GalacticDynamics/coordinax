@@ -12,13 +12,13 @@ import unxts.linalg as ul
 from unxt.quantity import AllowValue
 
 from coordinax._src.base import AbstractChart
-from coordinaxs.api.custom_types import CDict
+from coordinaxs.api.custom_types import CDict, CKeys
 
 DMLS: Final = u.unit("")
 
 
 @plum.dispatch
-def carray(p: CDict, keys: tuple[str, ...], /) -> ul.QM:
+def carray(p: CDict, keys: CKeys, /) -> ul.QM:
     """Pack a component dict into a 1-D ``QM`` with per-component native units.
 
     Unitless components are treated as dimensionless, so quantity- and
@@ -53,7 +53,7 @@ def carray(p: CDict, chart: AbstractChart, /) -> ul.QM:
 
 
 @plum.dispatch
-def carray(p: CDict, keys: tuple[str, ...], usys: u.AbstractUnitSystem, /) -> ul.QM:
+def carray(p: CDict, keys: CKeys, usys: u.AbstractUnitSystem, /) -> ul.QM:
     """Pack a component dict, resolving each component's unit from ``usys``.
 
     >>> import unxt as u
@@ -87,7 +87,7 @@ def carray(p: CDict, chart: AbstractChart, usys: u.AbstractUnitSystem, /) -> ul.
 
 
 @plum.dispatch
-def carray(p: CDict, keys: tuple[str, ...], unit: u.AbstractUnit, /) -> ul.QM:
+def carray(p: CDict, keys: CKeys, unit: u.AbstractUnit, /) -> ul.QM:
     """Pack a component dict into a single shared ``unit`` (all components converted).
 
     >>> import unxt as u
