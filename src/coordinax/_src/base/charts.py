@@ -242,19 +242,19 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")))
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            Delta=StaticQuantity(i64[](numpy), unit='km'), M=Rn(3)
+            Delta=StaticQuantity(i64[](numpy), 'km'), M=Rn(3)
         )
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")),
         ... short_arrays=False)
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            Delta=StaticQuantity(array(20), unit='km'), M=Rn(3)
+            Delta=StaticQuantity(array(20), 'km'), M=Rn(3)
         )
 
         """
         kw.setdefault("short_arrays", "compact")
-        kw.setdefault("use_short_names", True)
-        kw.setdefault("named_units", False)
+        kw.setdefault("use_short_name", True)
+        kw.setdefault("named_unit", False)
         kw.setdefault("hide_defaults", True)
 
         if include_params:

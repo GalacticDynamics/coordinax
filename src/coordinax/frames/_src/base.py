@@ -76,7 +76,7 @@ class AbstractReferenceFrame(eqx.Module):
         # Set defaults for pdoc kwargs
         kw.setdefault("include_params", False)
         kw.setdefault("short_arrays", "compact")
-        kw.setdefault("use_short_names", True)
+        kw.setdefault("use_short_name", True)
         kw.setdefault("named_unit", False)
 
         # Include only fields that differ from their default values.

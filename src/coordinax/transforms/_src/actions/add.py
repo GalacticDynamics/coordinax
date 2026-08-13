@@ -134,7 +134,7 @@ class AbstractAdd(AbstractTransform):
         # Set pdoc option defaults
         kw.setdefault("include_params", False)
         kw.setdefault("short_arrays", "compact")
-        kw.setdefault("use_short_names", True)
+        kw.setdefault("use_short_name", True)
         kw.setdefault("named_unit", False)
 
         # Build the fields
