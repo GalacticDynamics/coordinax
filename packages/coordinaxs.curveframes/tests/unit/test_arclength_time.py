@@ -90,3 +90,52 @@ def test_a_live_time_is_a_leaf() -> None:
     sta = cxfc.AtTime(stretch, u.StaticQuantity(1.0, "s"))
     assert len(jax.tree.leaves(dyn)) == 1
     assert jax.tree.leaves(sta) == []
+
+
+def test_lagrangian_labels_ride_with_the_material_point() -> None:
+    """The label is arc length at t0, and thereafter names the same point.
+
+    The material point at tau=1 is at x=1 when t=0 and x=1.5 when t=1. Its
+    Lagrangian label stays 1.0 throughout.
+    """
+    lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"))
+    assert jnp.allclose(
+        cxfc.AtTime(lag, u.Q(0.0, "s"))(u.Q(1.0, "km")).ustrip("km"),
+        jnp.array([1.0, 0.0, 0.0]),
+        atol=1e-6,
+    )
+    assert jnp.allclose(
+        cxfc.AtTime(lag, u.Q(1.0, "s"))(u.Q(1.0, "km")).ustrip("km"),
+        jnp.array([1.5, 0.0, 0.0]),
+        atol=1e-6,
+    )
+
+
+def test_the_two_readings_differ_under_stretching() -> None:
+    """Separate the two readings, at label 1 evaluated at t=1.
+
+    Eulerian gives x=1.0 (one unit along the *current* curve); Lagrangian
+    gives x=1.5 (the material point, which has moved). A rigid motion would
+    NOT separate them -- it leaves every arc length untouched -- so the curve
+    must stretch.
+    """
+    eul = cxfc.AtTime(cxfc.ArcLength(stretch), u.Q(1.0, "s"))
+    lag = cxfc.AtTime(cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s")), u.Q(1.0, "s"))
+    x_eul = eul(u.Q(1.0, "km")).ustrip("km")[0]
+    x_lag = lag(u.Q(1.0, "km")).ustrip("km")[0]
+    assert jnp.allclose(x_eul, 1.0, atol=1e-6), x_eul
+    assert jnp.allclose(x_lag, 1.5, atol=1e-6), x_lag
+
+
+def test_a_rigid_motion_does_not_separate_them() -> None:
+    """Pins why the discriminating test must stretch rather than rotate."""
+
+    def rot(tau: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+        a = tau.ustrip("s") + t.ustrip("s")
+        return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
+
+    eul = cxfc.AtTime(cxfc.ArcLength(rot), u.Q(1.0, "s"))
+    lag = cxfc.AtTime(cxfc.LagrangianArcLength(rot, u.Q(0.0, "s")), u.Q(1.0, "s"))
+    assert jnp.allclose(
+        eul(u.Q(0.7, "km")).ustrip("km"), lag(u.Q(0.7, "km")).ustrip("km"), atol=1e-6
+    )

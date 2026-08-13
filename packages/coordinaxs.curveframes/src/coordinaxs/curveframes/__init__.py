@@ -12,6 +12,7 @@ Public API
     AbstractParallelTransportFrame
     ArcLength
     AtTime
+    LagrangianArcLength
     FrenetSerretBuilder
     FrenetSerretFrame
     BishopBuilder
@@ -42,6 +43,7 @@ __all__ = (
     "BishopFrame",
     "FrenetSerretBuilder",
     "FrenetSerretFrame",
+    "LagrangianArcLength",
     "TubularChart",
     "nearest_tau",
 )
@@ -58,6 +60,7 @@ with install_import_hook("coordinaxs.curveframes"):
         BishopFrame,
         FrenetSerretBuilder,
         FrenetSerretFrame,
+        LagrangianArcLength,
         TubularChart,
         nearest_tau,
     )

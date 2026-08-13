@@ -20,7 +20,7 @@ change: e.g. ``BishopBuilder(ArcLength(curve))``.
 
 """
 
-__all__ = ("ArcLength",)
+__all__ = ("ArcLength", "LagrangianArcLength")
 
 import inspect
 
@@ -47,6 +47,47 @@ _DIFFEQSOLVER = DiffEqSolver(
     adjoint=dfx.DirectAdjoint(),
     max_steps=16384,
 )
+
+
+def _solve_tau(
+    curve: Callable[[Any], Any],
+    tau_unit: u.AbstractUnit,
+    tau_0: u.AbstractQuantity,
+    diffeqsolver: DiffEqSolver,
+    s: u.AbstractQuantity,
+    /,
+) -> u.AbstractQuantity:
+    r"""Solve $d\tau/ds = 1/\|\text{curve}'(\tau)\|$ from $\tau_0$ to arc length ``s``.
+
+    Shared by `ArcLength` and `LagrangianArcLength`: both solve the same ODE
+    and differ only in which one-argument ``curve`` supplies the speed (the
+    slice being evaluated, versus a fixed reference slice) and in which curve
+    the resulting $\tau$ is ultimately plugged into.
+
+    ``curve`` must already be one-argument -- a time-dependent curve is bound
+    with `AtTime` by the caller before reaching here.
+    """
+    s_unit = s.unit
+    speed_unit = s_unit / tau_unit
+
+    # Pre-compute the curve's derivative as a callable, once, rather than
+    # nesting AD inside the ODE right-hand side.
+    dcurve = u.experimental.jacfwd(curve, units=(tau_unit,))
+
+    def speed(tau_q: u.AbstractQuantity, /) -> Any:
+        return jnp.linalg.norm(dcurve(tau_q).ustrip(speed_unit))
+
+    s_val = s.ustrip(s_unit)
+    tau_0_val = tau_0.ustrip(tau_unit)
+
+    def ode_rhs(sigma: Any, tau_flat: Any, args: Any) -> Any:
+        """Right-hand side in the rescaled parameter ``sigma``."""
+        del sigma, args
+        tau_q = u.Q(tau_flat, tau_unit)
+        return s_val / speed(tau_q)
+
+    sol = diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, tau_0_val)
+    return u.Q(sol.ys[-1], tau_unit)
 
 
 def _is_two_argument(curve: Callable[..., Any], /) -> bool:
@@ -111,6 +152,12 @@ class ArcLength(eqx.Module):
         **static** field (it holds no arrays), so changing it recompiles
         rather than retracing silently; see `BishopBuilder`'s *Changing one
         knob* for how to derive from the default with `dataclasses.replace`.
+
+    See Also
+    --------
+    coordinaxs.curveframes.LagrangianArcLength :
+        Always measures arc length on a fixed reference slice, rather than
+        the slice being evaluated.
 
     Examples
     --------
@@ -195,8 +242,6 @@ class ArcLength(eqx.Module):
         """
         tau_unit = self.tau_unit
         tau_0 = cast("u.AbstractQuantity", self.tau_0)
-        s_unit = s.unit
-        speed_unit = s_unit / tau_unit
 
         # Bind `t` into a one-argument curve for a time-dependent wrapped
         # curve; otherwise use it as-is. `self._two_argument` is a static
@@ -204,22 +249,130 @@ class ArcLength(eqx.Module):
         # curve shape, not a per-call runtime branch under jit.
         curve = self.curve if not self._two_argument else AtTime(self.curve, t)
 
-        # Pre-compute the curve's derivative as a callable, once, rather than
-        # nesting AD inside the ODE right-hand side.
-        dcurve = u.experimental.jacfwd(curve, units=(tau_unit,))
+        tau = _solve_tau(curve, tau_unit, tau_0, self.diffeqsolver, s)
+        return curve(tau)
 
-        def speed(tau_q: u.AbstractQuantity, /) -> Any:
-            return jnp.linalg.norm(dcurve(tau_q).ustrip(speed_unit))
 
-        s_val = s.ustrip(s_unit)
-        tau_0_val = tau_0.ustrip(tau_unit)
+@final
+class LagrangianArcLength(eqx.Module):
+    r"""Reparameterise a time-dependent curve by arc length on a fixed slice.
 
-        def ode_rhs(sigma: Any, tau_flat: Any, args: Any) -> Any:
-            """Right-hand side in the rescaled parameter ``sigma``."""
-            del sigma, args
-            tau_q = u.Q(tau_flat, tau_unit)
-            return s_val / speed(tau_q)
+    Wraps a two-argument curve $\boldsymbol{\gamma}(\tau, t)$ and returns a
+    curve $(s, t) \mapsto \boldsymbol{\gamma}(\tau(s), t)$ where $\tau(s)$
+    solves
 
-        sol = self.diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, tau_0_val)
-        tau_val = sol.ys[-1]
-        return curve(u.Q(tau_val, tau_unit))
+    $$ \frac{d\tau}{ds} = \frac{1}{\|\partial_\tau\boldsymbol{\gamma}(\tau, t_0)\|},
+    \qquad \tau(0) = \tau_0, $$
+
+    i.e. arc length is always measured on the **fixed** reference slice
+    $t_0$, never on the slice ``t`` supplied at call time. The solved $\tau$
+    is then plugged into $\boldsymbol{\gamma}(\cdot, t)$ at that *supplied*
+    time. A label therefore names a fixed material point -- however the
+    curve has since moved -- rather than a position on the current curve.
+
+    This is the *Lagrangian* reading, and it differs from `ArcLength` over
+    the same two-argument curve, which stays *Eulerian*: it re-measures arc
+    length on whichever slice ``t`` it is evaluated at, so its label tracks
+    the current curve rather than a material point. The two readings agree
+    exactly when the curve moves rigidly (no slice's arc length differs from
+    any other's); they diverge once the curve stretches or bends.
+
+    Parameters
+    ----------
+    curve : Callable
+        A function ``(tau, t) -> Quantity[float, (3,)]``, in the parameter
+        unit ``tau_unit``. Make it an `equinox.Module` for differentiable
+        curve parameters; a bare function's captures are trace-time
+        constants.
+    t0 : Quantity
+        The fixed reference slice on which arc length is measured.
+    tau_unit : AbstractUnit or str, optional
+        Unit of the wrapped curve's parameter $\tau$ -- not of $s$, which is
+        instead read off the length `Quantity` passed to `__call__`. Defaults
+        to ``"s"``.
+    tau_0 : Quantity, optional
+        Reference parameter where $s = 0$. Defaults to ``Q(0.0, tau_unit)``.
+    diffeqsolver : DiffEqSolver, optional
+        `diffraxtra.DiffEqSolver` configuring the ODE solve; see `ArcLength`.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinaxs.curveframes as cxfc
+
+    >>> def stretch(tau: u.Q, t: u.Q) -> u.Q:
+    ...     x = tau.ustrip("s") * (1.0 + 0.5 * t.ustrip("s"))
+    ...     z = jnp.zeros_like(x)
+    ...     return u.Q(jnp.stack([x, z, z]), "km")
+
+    >>> lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"))
+    >>> lag(u.Q(1.0, "km"), u.Q(1.0, "s"))
+    Q([1.5, 0. , 0. ], 'km')
+
+    """
+
+    curve: Callable[[Any, Any], Any]
+    """The wrapped, two-argument curve."""
+
+    t0: u.AbstractQuantity
+    """The fixed reference slice on which arc length is measured."""
+
+    tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
+        default=u.unit("s"), static=True, converter=u.unit
+    )
+    """The unit of the wrapped curve's parameter tau."""
+
+    tau_0: u.AbstractQuantity | None = None
+    """Reference parameter value where s = 0 (a leaf).
+
+    `None` is resolved to ``Q(0.0, tau_unit)`` by ``__post_init__``.
+    """
+
+    # See `BishopBuilder.diffeqsolver` for why this is static and why the
+    # default is a factory rather than a plain default.
+    diffeqsolver: DiffEqSolver = eqx.field(
+        default_factory=lambda: _DIFFEQSOLVER, static=True
+    )
+    """Solver, step-size controller, adjoint and step budget for the ODE."""
+
+    def __post_init__(self) -> None:
+        """Resolve a `None` ``tau_0`` to zero in ``tau_unit`` (a pytree leaf)."""
+        if self.tau_0 is None:
+            self.tau_0 = u.Q(0.0, self.tau_unit)
+
+    def __call__(self, s: u.AbstractQuantity, t: Any, /) -> Any:
+        r"""Evaluate the reparameterised curve at label ``s`` and time ``t``.
+
+        Solves for $\tau(s)$ against the curve's speed on the fixed slice
+        ``t0``, then evaluates the wrapped curve at ``(tau(s), t)``. See
+        `ArcLength.__call__` for why the ODE is rescaled to $\sigma \in
+        [0, 1]$.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        >>> def stretch(tau: u.Q, t: u.Q) -> u.Q:
+        ...     x = tau.ustrip("s") * (1.0 + 0.5 * t.ustrip("s"))
+        ...     z = jnp.zeros_like(x)
+        ...     return u.Q(jnp.stack([x, z, z]), "km")
+
+        >>> lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"))
+        >>> lag(u.Q(1.0, "km"), u.Q(0.0, "s"))
+        Q([1., 0., 0.], 'km')
+
+        """
+        tau_unit = self.tau_unit
+        tau_0 = cast("u.AbstractQuantity", self.tau_0)
+
+        # Speed is always measured on the fixed slice t0 -- never on the
+        # supplied t -- which is what makes this reading Lagrangian.
+        curve_t0 = AtTime(self.curve, self.t0)
+        tau = _solve_tau(curve_t0, tau_unit, tau_0, self.diffeqsolver, s)
+
+        # But the resulting tau is evaluated on the *supplied* slice, so the
+        # label rides with the material point as the curve moves.
+        return self.curve(tau, t)
