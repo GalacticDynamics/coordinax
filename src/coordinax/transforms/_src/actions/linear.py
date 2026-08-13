@@ -38,10 +38,10 @@ def _matmul_cdict(matrix: Array, d: CDict, comps: tuple[str, ...], /) -> CDict:
 class AbstractLinearTransform(AbstractTransform):
     r"""Base for pure Cartesian linear maps :math:`x \mapsto M x`.
 
-    A subclass provides its (constant) matrix via the `_raw_matrix` property and
-    reads it back through the public `matrix`; this base owns the matrix
-    validation and every point-geometry ``act`` path. A time-dependent linear
-    map is a `~coordinax.transforms.TimeDep` family of these operators.
+    A subclass provides its (constant) matrix via the `_raw_matrix` property;
+    this base owns the matrix validation and every point-geometry ``act`` path.
+    A time-dependent linear map is a `~coordinax.transforms.TimeDep` family of
+    these operators.
     """
 
     @property
@@ -54,14 +54,12 @@ class AbstractLinearTransform(AbstractTransform):
     def matrix(self) -> Array:
         r"""The matrix $M$ this transform applies, as $x \mapsto M x$.
 
-        Every subclass carries $M$, but under its own letter (``R``, ``H``,
-        ``S``) or not directly at all: `~coordinax.transforms.LorentzBoost`
-        stores the *velocity* and derives $\Lambda$ from it. This is the one
-        spelling they share, and the derived cases' only public one.
+        The one spelling shared by every subclass, which otherwise keep $M$
+        under their own letter (``R``, ``H``, ``S``) or, for
+        `~coordinax.transforms.LorentzBoost`, derive it from a stored velocity.
 
-        Validated square, but not against any chart -- a chart is what fixes the
-        dimension, and this accessor takes none. The ``act`` paths still check
-        that match when they apply it.
+        Validated square, but not against a chart -- a chart is what fixes the
+        dimension and this takes none, so the ``act`` paths keep that check.
 
         Examples
         --------

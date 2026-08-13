@@ -208,10 +208,10 @@ def test_linear_velocity_on_nested_product_charts_recurses() -> None:
 
 
 def test_matrix_is_the_stored_field() -> None:
-    """`matrix` is the one public spelling of what each subclass stores.
+    """For the four that store a matrix, the accessor is that matrix.
 
-    Rotate/Reflect/Scale/Shear each keep the matrix under their own letter, so
-    for them the accessor must be that exact array -- not a copy, not a rebuild.
+    Value equality, not identity: `_validate_square` routes through
+    `eqx.error_if`, which returns a fresh array wrapping the same value.
     """
     R = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     for op, field in [
