@@ -24,12 +24,11 @@ import plum
 
 import unxt as u
 
-from ._custom_types import CDict
-
 # `pt_map` also maps an embedded manifold's intrinsic chart to its ambient one,
 # so it belongs here too -- re-exported, never redeclared (see `conventions.md`,
 # "One Dispatch Table Per Name").
 from .charts import pt_map
+from .custom_types import CDict
 
 if TYPE_CHECKING:
     import coordinax.manifolds  # noqa: ICN001

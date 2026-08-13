@@ -1,7 +1,15 @@
-"""Custom types.
+"""The shared component-key/component-dict vocabulary.
 
-The one deliberate copy of ``coordinax._src.custom_types``: ``coordinaxs.api``
-must not depend on ``coordinax``, so it cannot re-export. Keep the two in step.
+Canonical home for ``CKey`` and ``CDict``. ``coordinaxs.api`` is the root of
+the workspace -- every other package depends on it, directly or through
+``coordinax``, and it depends on none of them -- so it is the one place all
+layers can import from. ``coordinax._src.custom_types`` re-exports these.
+
+``coordinaxs.api`` has no ``__init__.py`` by design, so this module *is* the
+public path::
+
+    from coordinaxs.api.custom_types import CDict, CKey
+
 """
 
 __all__ = ("CKey", "CDict")

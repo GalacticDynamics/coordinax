@@ -15,7 +15,7 @@ import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
-from coordinax.internal import CDict
+from coordinaxs.api.custom_types import CDict
 
 # ======================================================================
 # Helpers

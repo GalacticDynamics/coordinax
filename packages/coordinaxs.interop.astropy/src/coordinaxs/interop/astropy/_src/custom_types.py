@@ -2,4 +2,4 @@
 
 __all__ = ("CDict",)
 
-from coordinax.internal import CDict
+from coordinaxs.api.custom_types import CDict

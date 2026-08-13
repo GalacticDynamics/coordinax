@@ -1,8 +1,14 @@
 """Custom types.
 
 The single definition of ``coordinax``'s shared type vocabulary; every layer
-re-exports from here. ``coordinaxs.api._custom_types`` is the one deliberate
-copy, since ``coordinaxs.api`` must not depend on ``coordinax``.
+re-exports from here.
+
+``CKey`` and ``CDict`` are the exception: they live in
+`coordinaxs.api.custom_types` and are re-exported below. ``coordinaxs.api`` is
+the root of the workspace -- it may not depend on ``coordinax``, while every
+other package depends on it -- so it is the only spot all layers can share.
+Defining them here too would leave a copy that drifts silently: the
+``dict``-not-``dict[...]`` trick below is load-bearing for plum's method cache.
 """
 
 __all__: tuple[str, ...] = (
@@ -19,10 +25,12 @@ __all__: tuple[str, ...] = (
     "Ds",
 )
 
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_checkable
+from typing import Literal, Protocol, TypeAlias, runtime_checkable
 from typing_extensions import TypeVar
 
 import unxt as u
+
+from coordinaxs.api.custom_types import CDict, CKey
 
 # =========================================================
 # Unit-related Types
@@ -54,16 +62,6 @@ class HasShape(Protocol):
 # =========================================================
 # Vector-related Types
 
-CKey: TypeAlias = str
-if TYPE_CHECKING:
-    # Typed for static checkers only.
-    CDict: TypeAlias = dict[CKey, Any]
-else:
-    # A parametric `dict[...]` annotation makes every plum signature
-    # using CDict "unfaithful", disabling plum's method cache (a full
-    # ~200x slower resolution per call). The bare `dict` keeps the cache;
-    # the TYPE_CHECKING branch above preserves the static type.
-    CDict: TypeAlias = dict
 CDictT = TypeVar("CDictT", bound=CDict)
 
 Ks = TypeVar("Ks", bound=tuple[CKey, ...], default=tuple[str, ...])

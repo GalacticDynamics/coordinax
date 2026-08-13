@@ -815,6 +815,7 @@ name = "coordinaxs-hypothesis"
 source = { editable = "packages/coordinaxs.hypothesis" }
 dependencies = [
     { name = "coordinax" },
+    { name = "coordinaxs-api" },
     { name = "hypothesis" },
     { name = "unxts-hypothesis" },
 ]
@@ -822,6 +823,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "coordinax", editable = "." },
+    { name = "coordinaxs-api", editable = "packages/coordinaxs.api" },
     { name = "hypothesis", specifier = ">=6.0" },
     { name = "unxts-hypothesis", specifier = ">=2.0" },
 ]

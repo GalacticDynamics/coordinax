@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 import plum
 
-from ._custom_types import CDict
+from .custom_types import CDict
 
 if TYPE_CHECKING:
     import unxts.linalg  # noqa: ICN001

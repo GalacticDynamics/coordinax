@@ -2,4 +2,5 @@
 
 __all__ = ("Shape", "CKey", "CDict")
 
-from coordinax.internal import CDict, CKey, Shape
+from coordinax.internal import Shape
+from coordinaxs.api.custom_types import CDict, CKey

@@ -17,7 +17,12 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["coordinax>=0.24", "hypothesis>=6.0", "unxts.hypothesis>=2.0"]
+dependencies = [
+  "coordinax>=0.24",
+  "coordinaxs.api>=0.24",
+  "hypothesis>=6.0",
+  "unxts.hypothesis>=2.0",
+]
 description = "Hypothesis strategies for coordinax"
 dynamic = ["version"]
 license = "MIT"
@@ -75,4 +80,5 @@ known-first-party  = ["coordinax"]
 known-local-folder = ["coordinaxs.hypothesis"]
 
 [tool.uv.sources]
-coordinax = { workspace = true }
+coordinax        = { workspace = true }
+"coordinaxs.api" = { workspace = true }

@@ -21,9 +21,11 @@ Contents:
     Existing float and complex leaves are left unchanged.  Useful for
     satisfying ``jax.jacfwd``'s requirement of real-floating inputs.
 
-- ``CDict``, ``CKey``, ``Shape``, ``OptUSys``
-    The shared type vocabulary, re-exported from
-    ``coordinax._src.custom_types`` so downstream packages need not restate it.
+- ``Shape``, ``OptUSys``
+    Shared type vocabulary, re-exported from ``coordinax._src.custom_types`` so
+    downstream packages need not restate it.  ``CKey`` and ``CDict`` are
+    deliberately **not** here -- they are public in
+    `coordinaxs.api.custom_types`, which every package can already reach.
 
 """
 
@@ -33,8 +35,6 @@ __all__ = (
     "pos_named_objs",
     "jax_scalar_handler",
     # Types
-    "CDict",
-    "CKey",
     "OptUSys",
     "Shape",
 )
@@ -42,7 +42,7 @@ __all__ = (
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.internal"):
-    from coordinax._src.custom_types import CDict, CKey, OptUSys, Shape
+    from coordinax._src.custom_types import OptUSys, Shape
     from coordinax._src.internal import (
         jax_scalar_handler,
         pack_uniform_unit,

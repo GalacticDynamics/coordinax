@@ -11,7 +11,7 @@ import unxts.hypothesis as ust
 import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst
 from .conftest import shapes_ending_in_123, xps
-from coordinax.internal import CDict
+from coordinaxs.api.custom_types import CDict
 
 
 @given(cxst.cdicts(cxst.charts()))
