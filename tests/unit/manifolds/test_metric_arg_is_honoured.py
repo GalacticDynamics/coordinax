@@ -1,11 +1,9 @@
 """Every metric-level dispatch must honour the metric it is handed.
 
-A metric-level overload takes ``(metric, chart, ...)``, but every primitive
-underneath -- `quadratic_form`, `gram`, `metric_matrix` -- reads
-``chart.M.metric``. So the argument can never be *used*; it selects the method
-and must otherwise be checked. Skipping the check is silent: the tests all pass
-the matching metric, so the ignored argument never differs from the one
-actually applied, and nothing fails.
+The primitives underneath a metric-level overload all read ``chart.M.metric``,
+so its ``metric`` argument selects the method and must otherwise be checked.
+Forgetting is silent: every test passes the matching metric, so the ignored
+argument never differs from the one applied.
 
 Hence #674, #680, #695 -- and `angle_between`/`norm` here.
 `test_no_unguarded_metric_overloads` reads the source, so a new overload that
@@ -81,23 +79,16 @@ MISMATCHED_CALLS = [
 
 
 @pytest.mark.parametrize(
-    ("name", "call"), MISMATCHED_CALLS, ids=[c[0] for c in MISMATCHED_CALLS]
+    "call", [c[1] for c in MISMATCHED_CALLS], ids=[c[0] for c in MISMATCHED_CALLS]
 )
-def test_mismatched_metric_is_refused(name: str, call) -> None:
+def test_mismatched_metric_is_refused(call) -> None:
     """A metric that is not the chart's must raise, not be quietly dropped."""
-    del name
     with pytest.raises(ValueError, match="metric-level dispatch needs the chart's own"):
         call()
 
 
 def test_open_dimension_chart_accepts_any_metric_of_its_kind() -> None:
-    """`Rn(N)` pins no dimension, so the caller's metric supplies it.
-
-    The premise "the metric argument is never data" holds only for a chart
-    whose manifold fixes its dimension. `cxc.cartnd` does not, so demanding
-    equality against its unbound `FlatMetric(ndim=True)` would reject the
-    legitimate call that #708 relies on.
-    """
+    """`cartnd`'s `Rn(N)` fixes no dimension, so #708's call is legitimate."""
     got = cxm.scale_factors(cxm.FlatMetric(3), cxc.cartnd, at=QN)
     assert got.shape[-1] == 3
 
@@ -111,7 +102,6 @@ def test_matching_metric_still_works() -> None:
 
 
 # ---------------------------------------------------------------------------
-# The completeness check: the reason this closes the class and not the cases.
 
 _SRC = pathlib.Path(cxm.__file__).parent.parent / "_src"
 
@@ -133,11 +123,8 @@ def _calls_guard(node: ast.FunctionDef) -> bool:
 def _forwards_metric(node: ast.FunctionDef) -> bool:
     """Report whether the body passes its own ``metric`` to another verb.
 
-    Only a dispatched verb counts -- an attribute call such as
-    ``cxmapi.interval(metric, ...)``. A bare-name call taking ``metric`` (the
-    guard itself, or a local helper) is not forwarding, and a body that merely
-    mentions ``cxmapi`` while passing ``chart.M`` is not either. Both are
-    exactly the shapes this file exists to catch.
+    Attribute calls only (``cxmapi.interval(metric, ...)``): a bare-name call
+    taking ``metric`` is the guard itself or a local helper, not a forward.
     """
     return any(
         isinstance(n, ast.Call)

@@ -11,9 +11,8 @@ def check_metric_is_charts(
 ) -> None:
     """Refuse a metric that is not the one ``chart`` carries.
 
-    The metric gates the dispatch; the primitives underneath all read
-    ``chart.M.metric``, so a differing one cannot be honoured and must not be
-    quietly replaced by the chart's.
+    The primitives underneath all read ``chart.M.metric``, so a differing one
+    cannot be honoured and must not be quietly swapped for the chart's.
 
     A manifold that leaves its dimension open -- ``Rn(N)``, spelled
     ``ndim is True`` -- pins nothing, so its metric is unbound and equality is

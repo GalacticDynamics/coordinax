@@ -97,10 +97,6 @@ def interval(
     >>> cxm.interval(cxm.MinkowskiMetric(), cxc.minkowskict, o, ev).round(2)
     Q(24., 'm2')
 
-    ``metric`` is a checked selector, not an override: it must be the chart's own
-    metric, matching the contract of the metric-level `~coordinax.manifolds.norm`
-    overload.
-
     >>> try:
     ...     cxm.interval(cxm.FlatMetric(4), cxc.minkowskict, o, ev)
     ... except ValueError as e:
@@ -108,10 +104,6 @@ def interval(
     interval(): metric-level dispatch needs the chart's own
 
     """
-    # Mirrors `norm`'s metric-level dispatch: the argument is validated against
-    # the chart rather than silently ignored, so a caller who passes a different
-    # metric expecting it to be honoured is told, instead of quietly receiving
-    # the chart's answer.
     check_metric_is_charts(metric, chart, "interval")
 
     chart.check_data(a, keys=True, values=False)
