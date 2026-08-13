@@ -1,13 +1,8 @@
 """Custom types.
 
-This is the single definition of the type vocabulary shared across
-``coordinax``. Every layer (``vectors``, ``representations``, ``transforms``,
-``_src.internal``) re-exports from here rather than restating the aliases:
-`CDict` in particular carries a runtime invariant (see below) that is easy to
-break silently in a copy.
-
-The one deliberate exception is ``coordinaxs.api._custom_types``, which repeats
-`CKey`/`CDict` because ``coordinaxs.api`` must not depend on ``coordinax``.
+The single definition of ``coordinax``'s shared type vocabulary; every layer
+re-exports from here. ``coordinaxs.api._custom_types`` is the one deliberate
+copy, since ``coordinaxs.api`` must not depend on ``coordinax``.
 """
 
 __all__: tuple[str, ...] = (

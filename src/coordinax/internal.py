@@ -22,11 +22,8 @@ Contents:
     satisfying ``jax.jacfwd``'s requirement of real-floating inputs.
 
 - ``CDict``, ``CKey``, ``Shape``, ``OptUSys``
-    The shared type vocabulary, re-exported so downstream packages can
-    annotate against it instead of restating the aliases.  ``CDict`` is a
-    bare ``dict`` at runtime and ``dict[CKey, Any]`` only to static checkers:
-    a parametric annotation would make every `plum` signature using it
-    "unfaithful", disabling plum's method cache.
+    The shared type vocabulary, re-exported from
+    ``coordinax._src.custom_types`` so downstream packages need not restate it.
 
 """
 

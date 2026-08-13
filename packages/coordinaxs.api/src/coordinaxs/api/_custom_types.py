@@ -1,9 +1,7 @@
 """Custom types.
 
-The one deliberate copy of `coordinax`'s type vocabulary: ``coordinaxs.api``
-must not depend on ``coordinax``, so it cannot re-export from
-``coordinax.internal`` the way every other package does. Keep the `CDict`
-definition below in step with ``coordinax._src.custom_types``.
+The one deliberate copy of ``coordinax._src.custom_types``: ``coordinaxs.api``
+must not depend on ``coordinax``, so it cannot re-export. Keep the two in step.
 """
 
 __all__ = ("CKey", "CDict")
