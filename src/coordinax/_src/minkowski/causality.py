@@ -312,11 +312,11 @@ def proper_distance(
 # translate "no method" into a sentence naming the requirement.
 
 _MSG_NOT_LORENTZIAN = (
-    "{fname}() requires a Lorentzian metric -- one timelike direction, "
-    "signature (-1, 1, ..., 1) -- because it reads the *sign* of the interval. "
-    "{name} has signature {sig}, under which every separation has the same "
-    "character and there is nothing to classify. Use `interval` for the signed "
-    "square, or `separation` for a Riemannian distance."
+    "{fname}() requires a Lorentzian metric -- *exactly one* timelike "
+    "direction, signature (-1, 1, ..., 1) -- because the causal character of a "
+    "separation is only well defined against a single time direction. {name} "
+    "has signature {sig}. Use `interval` for the signed square, or `separation` "
+    "for a Riemannian distance."
 )
 
 

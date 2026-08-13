@@ -15,6 +15,7 @@ __all__ = (
     "causal_character",
     "proper_time",
     "proper_distance",
+    "rapidity_between",
 )
 
 from typing import TYPE_CHECKING, Any
@@ -545,4 +546,14 @@ def proper_time(*args: Any, **kwargs: Any) -> Any:
 @plum.dispatch.abstract
 def proper_distance(*args: Any, **kwargs: Any) -> Any:
     """Proper distance between two spacelike-separated events."""
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def rapidity_between(*args: Any, **kwargs: Any) -> Any:
+    """Relative rapidity between two timelike tangent vectors.
+
+    The hyperbolic counterpart of `angle_between`, which refuses a timelike
+    pair. Defined for Lorentzian metrics.
+    """
     raise NotImplementedError  # pragma: no cover

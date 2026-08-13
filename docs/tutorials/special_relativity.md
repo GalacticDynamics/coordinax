@@ -315,6 +315,29 @@ Rapidity is the parameterisation that _does_ add, which is why it exists:
 True
 ```
 
+Those are operators. The same rapidity is also a property of the two frames themselves, readable off their four-velocities without naming any operator that connects them:
+
+```pycon
+>>> def four_velocity(beta):
+...     g = 1.0 / jnp.sqrt(1.0 - beta**2)
+...     return {
+...         "ct": u.Q(g, ""),
+...         "x": u.Q(g * beta, ""),
+...         "y": u.Q(0.0, ""),
+...         "z": u.Q(0.0, ""),
+...     }
+...
+>>> here = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+>>> beta_combined = float(combined[0, 1] / combined[0, 0])
+>>> phi = cxm.lorentzian.rapidity_between(
+...     cxc.minkowskict, four_velocity(0.0), four_velocity(beta_combined), at=here
+... )
+>>> round(float(phi), 4), round(float(2 * jnp.arctanh(0.6)), 4)
+(1.3863, 1.3863)
+```
+
+Two boosts of $0.6c$, measured after the fact: $2\,\mathrm{arctanh}\,0.6$. This is the timelike case `angle_between` refuses — two four-velocities have no circular angle between them, only a hyperbolic one.
+
 ## Summary
 
 | quantity                         | frame-dependent? |
@@ -326,6 +349,7 @@ True
 | **interval** $\Delta s^2$        | ❌ **invariant** |
 | **proper time**                  | ❌ **invariant** |
 | **causal character**             | ❌ **invariant** |
+| **relative rapidity**            | ❌ **invariant** |
 
 The practical rule: reach for `interval` and the `cxm.lorentzian` verbs when you want a statement about _physics_, and read coordinates only when you genuinely want a statement about a particular frame. `separation` and `norm` belong to the Riemannian world and will refuse Minkowski input rather than let you mix the two up.
 
