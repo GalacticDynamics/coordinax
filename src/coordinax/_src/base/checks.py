@@ -11,11 +11,9 @@ def check_metric_is_charts(
 ) -> None:
     """Refuse a metric that is not the one ``chart`` carries.
 
-    Metric-level dispatch takes a metric for *dispatch* -- to gate on its type
-    -- not as data. Every primitive underneath (`quadratic_form`, `gram`,
-    `metric_matrix`) reads ``chart.M.metric``, so a metric that differs from
-    the chart's cannot be honoured. Answering with the chart's metric anyway
-    would silently answer a question the caller did not ask.
+    The metric gates the dispatch; the primitives underneath all read
+    ``chart.M.metric``, so a differing one cannot be honoured and must not be
+    quietly replaced by the chart's.
 
     Examples
     --------

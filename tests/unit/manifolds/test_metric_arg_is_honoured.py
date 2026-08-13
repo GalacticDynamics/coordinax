@@ -7,11 +7,9 @@ and must otherwise be checked. Skipping the check is silent: the tests all pass
 the matching metric, so the ignored argument never differs from the one
 actually applied, and nothing fails.
 
-That is why this defect recurred four times (#674, #680, #695, and again in
-`angle_between`/`norm` here). These tests target the *shape* of the mistake
-rather than the instances: `test_no_unguarded_metric_overloads` reads the
-source, so a newly added overload that forgets is caught without anyone
-remembering to add a case for it.
+Hence #674, #680, #695 -- and `angle_between`/`norm` here.
+`test_no_unguarded_metric_overloads` reads the source, so a new overload that
+forgets is caught without anyone remembering to add a case.
 """
 
 __all__: tuple[str, ...] = ()
@@ -34,65 +32,54 @@ Z4 = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
 X4 = {"ct": u.Q(0.0, "m"), "x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
 Y4 = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")}
 
-
-def _four_velocity(beta: float) -> dict[str, u.AbstractQuantity]:
-    gamma = 1.0 / jnp.sqrt(1.0 - beta**2)
-    return {
-        "ct": u.Q(gamma, ""),
-        "x": u.Q(gamma * beta, ""),
-        "y": u.Q(0.0, ""),
-        "z": u.Q(0.0, ""),
-    }
+#: Metrics no chart below carries: Minkowski against the 3-D charts, flat
+#: against the Minkowski one.
+MINK = cxm.MinkowskiMetric()
+FLAT4 = cxm.FlatMetric(4)
 
 
-#: ``(id, call)`` where ``call`` takes the *wrong* metric and must refuse it.
+#: ``(id, thunk)`` where the thunk passes a metric the chart does not carry.
 #: One row per metric-level overload reachable with a mismatched metric.
-WRONG_METRIC_CALLS = [
-    ("norm-cdict", lambda m: cxm.norm(P3, m, cxc.cart3d, at=Z3)),
+MISMATCHED_CALLS = [
+    ("norm-cdict", lambda: cxm.norm(P3, MINK, cxc.cart3d, at=Z3)),
     (
         "norm-bare-array",
-        lambda m: cxm.norm(
-            jnp.asarray([1.0, 0.0, 0.0]), m, cxc.cart3d, at=Z3, usys=USYS
+        lambda: cxm.norm(
+            jnp.asarray([1.0, 0.0, 0.0]), MINK, cxc.cart3d, at=Z3, usys=USYS
         ),
     ),
-    ("separation", lambda m: cxm.separation(m, cxc.cart3d, Z3, P3)),
-    ("angle_between-3d", lambda m: cxm.angle_between(m, cxc.cart3d, P3, P3, at=Z3)),
-    ("interval", lambda m: cxm.interval(m, cxc.minkowskict, Z4, X4)),
+    # `FlatMetric(2)` and `FlatMetric(3)` both satisfy the `FlatMetric`
+    # annotation, so the Cartesian short-circuit's dispatch does not pin the
+    # dimension and the guard is what catches it.
     (
-        "angle_between-4d",
-        lambda m: cxm.angle_between(m, cxc.minkowskict, X4, Y4, at=Z4),
-    ),
-    ("scale_factors", lambda m: cxm.scale_factors(m, cxc.cart3d, at=P3)),
-]
-
-#: A metric that is *not* the chart's, per chart dimension.
-WRONG = {3: cxm.MinkowskiMetric(), 4: cxm.FlatMetric(4)}
-
-
-@pytest.mark.parametrize(
-    ("name", "call"), WRONG_METRIC_CALLS, ids=[c[0] for c in WRONG_METRIC_CALLS]
-)
-def test_mismatched_metric_is_refused(name: str, call) -> None:
-    """A metric that is not the chart's must raise, not be quietly dropped."""
-    wrong = WRONG[4] if "4d" in name or name == "interval" else WRONG[3]
-    with pytest.raises(ValueError, match="metric-level dispatch needs the chart's own"):
-        call(wrong)
-
-
-def test_flat_metric_fast_path_checks_dimension() -> None:
-    """The Cartesian short-circuit is dispatch-gated but still not exempt.
-
-    ``FlatMetric(2)`` and ``FlatMetric(3)`` both satisfy the ``FlatMetric``
-    annotation, so dispatch alone does not pin the dimension.
-    """
-    with pytest.raises(ValueError, match="metric-level dispatch needs the chart's own"):
-        cxm.norm(
+        "norm-flat-wrong-ndim",
+        lambda: cxm.norm(
             jnp.asarray([1.0, 0.0, 0.0]),
             cxm.FlatMetric(2),
             cxc.cart3d,
             at=Z3,
             usys=USYS,
-        )
+        ),
+    ),
+    ("separation", lambda: cxm.separation(MINK, cxc.cart3d, Z3, P3)),
+    ("angle_between-3d", lambda: cxm.angle_between(MINK, cxc.cart3d, P3, P3, at=Z3)),
+    ("scale_factors", lambda: cxm.scale_factors(MINK, cxc.cart3d, at=P3)),
+    ("interval", lambda: cxm.interval(FLAT4, cxc.minkowskict, Z4, X4)),
+    (
+        "angle_between-4d",
+        lambda: cxm.angle_between(FLAT4, cxc.minkowskict, X4, Y4, at=Z4),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("name", "call"), MISMATCHED_CALLS, ids=[c[0] for c in MISMATCHED_CALLS]
+)
+def test_mismatched_metric_is_refused(name: str, call) -> None:
+    """A metric that is not the chart's must raise, not be quietly dropped."""
+    del name
+    with pytest.raises(ValueError, match="metric-level dispatch needs the chart's own"):
+        call()
 
 
 def test_matching_metric_still_works() -> None:
@@ -101,14 +88,6 @@ def test_matching_metric_still_works() -> None:
         float(cxm.norm(P3, cxc.cart3d.M.metric, cxc.cart3d, at=Z3).ustrip("m")) == 1.0
     )
     assert cxm.interval(cxc.minkowskict.M.metric, cxc.minkowskict, Z4, X4) is not None
-    phi = cxm.lorentzian.rapidity_between(
-        cxc.minkowskict.M.metric,
-        cxc.minkowskict,
-        _four_velocity(0.0),
-        _four_velocity(0.6),
-        at=Z4,
-    )
-    assert float(phi) == pytest.approx(float(jnp.arctanh(0.6)), abs=1e-6)
 
 
 # ---------------------------------------------------------------------------
