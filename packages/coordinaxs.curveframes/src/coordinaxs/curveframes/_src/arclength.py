@@ -82,12 +82,6 @@ class ArcLength(eqx.Module):
         rather than retracing silently; see `BishopBuilder`'s *Changing one
         knob* for how to derive from the default with `dataclasses.replace`.
 
-    See Also
-    --------
-    coordinaxs.curveframes.LagrangianArcLength :
-        Always measures arc length on a fixed reference slice, rather than
-        the slice being evaluated.
-
     Examples
     --------
     >>> import jax.numpy as jnp
