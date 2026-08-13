@@ -56,8 +56,17 @@ def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     field -- so `__call__` branches on a Python `bool` (resolved at trace
     time, one compiled variant per curve shape) rather than re-inspecting
     ``curve`` on every call.
+
+    The second parameter must be **required**. Counting parameters instead
+    misreads two ordinary idioms as time-dependent curves: a one-argument
+    curve carrying a tuning knob, ``def curve(tau, smoothing=0.1)``, and a
+    curve whose time a caller has already frozen with
+    ``functools.partial(curve, t=...)`` -- `inspect.signature` keeps a
+    keyword-bound parameter, with a default. Both then receive ``t=None``
+    and fail deep inside the ODE solve, nowhere near the real cause.
     """
-    return len(inspect.signature(curve).parameters) >= 2
+    params = list(inspect.signature(curve).parameters.values())
+    return len(params) >= 2 and params[1].default is inspect.Parameter.empty
 
 
 @final
