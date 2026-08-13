@@ -59,11 +59,7 @@ def pt_map(
     R = b.rotation_matrix(tau)
     g = b.location(tau)
     unit = g.unit
-    xyz = (
-        jnp.asarray(g.ustrip(unit), dtype=float)
-        + jnp.asarray(p["n1"].ustrip(unit), dtype=float) * R[1]
-        + jnp.asarray(p["n2"].ustrip(unit), dtype=float) * R[2]
-    )
+    xyz = g.ustrip(unit) + p["n1"].ustrip(unit) * R[1] + p["n2"].ustrip(unit) * R[2]
     return {k: u.Q(xyz[i], unit) for i, k in enumerate(("x", "y", "z"))}
 
 
@@ -115,18 +111,11 @@ def pt_map(
     assert to_M == to_chart.M  # noqa: S101
     b = to_chart.builder
     unit = b.location(to_chart.tau_bounds[0]).unit
-    x = u.Q(
-        jnp.stack(
-            [jnp.asarray(p[k].ustrip(unit), dtype=float) for k in ("x", "y", "z")]
-        ),
-        unit,
-    )
+    x = u.Q(jnp.stack([p[k].ustrip(unit) for k in ("x", "y", "z")]), unit)
 
     tau = nearest_tau(b, x, bounds=to_chart.tau_bounds, n_seed=to_chart.n_seed)
     R = b.rotation_matrix(tau)
-    d = jnp.asarray(x.ustrip(unit), dtype=float) - jnp.asarray(
-        b.location(tau).ustrip(unit), dtype=float
-    )
+    d = x.ustrip(unit) - b.location(tau).ustrip(unit)
     return {
         "tau": tau,
         "n1": u.Q(jnp.dot(d, R[1]), unit),

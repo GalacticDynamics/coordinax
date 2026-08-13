@@ -170,11 +170,11 @@ class TubularChart(AbstractParameterizedChart):
 
         def offset_v(t: jax.Array) -> jax.Array:
             R = self.builder.rotation_matrix(u.Q(t, unit))
-            n1_v = jnp.asarray(n1.ustrip(ambient_unit), dtype=float)
-            n2_v = jnp.asarray(n2.ustrip(ambient_unit), dtype=float)
+            n1_v = n1.ustrip(ambient_unit)
+            n2_v = n2.ustrip(ambient_unit)
             return gamma_v(t) + n1_v * R[1] + n2_v * R[2]
 
-        tau_v = jnp.asarray(tau.ustrip(unit), dtype=float)
+        tau_v = tau.ustrip(unit)
         dx = jax.jacfwd(offset_v)(tau_v)
         speed = jnp.linalg.norm(jax.jacfwd(gamma_v)(tau_v))
         # Project onto the tangent: dx is parallel to T, and past the focal

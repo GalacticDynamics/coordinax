@@ -97,14 +97,17 @@ def nearest_tau(
 
     """
     unit = builder.tau_unit
-    lo = jnp.asarray(bounds[0].ustrip(unit), dtype=float)
-    hi = jnp.asarray(bounds[1].ustrip(unit), dtype=float)
+    # `jnp.asarray` narrows only here: `ustrip` is typed as a broad union, and
+    # `ty` rejects `hi - lo` between two of them. Everywhere else the bare
+    # `ustrip` is enough.
+    lo = jnp.asarray(bounds[0].ustrip(unit))
+    hi = jnp.asarray(bounds[1].ustrip(unit))
     x_unit = x.unit
-    xv = jnp.asarray(x.ustrip(x_unit), dtype=float)
+    xv = x.ustrip(x_unit)
 
     def offset(tau_v: jax.Array) -> jax.Array:
         g = builder.location(u.Q(tau_v, unit))
-        return xv - jnp.asarray(g.ustrip(x_unit), dtype=float)
+        return xv - g.ustrip(x_unit)
 
     def dist2(tau_v: jax.Array) -> jax.Array:
         d = offset(tau_v)
