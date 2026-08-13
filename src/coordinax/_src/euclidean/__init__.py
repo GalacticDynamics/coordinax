@@ -10,4 +10,3 @@ from .guess import *
 from .manifold import *
 from .metric import *
 from .register_metric import *
-from .scale_factors import *

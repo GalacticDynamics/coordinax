@@ -49,6 +49,22 @@ class TestScaleFactorsEuclidean:
         assert result.unit[1] == u.unit("m2 / rad2")
         assert result.unit[2] == u.unit("m2 / rad2")
 
+    def test_cartnd_is_sized_by_the_point_not_the_component_count(self):
+        """`CartND` packs the whole vector into one component, ``q``.
+
+        Sizing the result by `len(chart.components)` gives a single scale
+        factor for an N-dimensional space, disagreeing with `metric_matrix`
+        for the same chart and point.
+        """
+        at = {"q": u.Q(jnp.array([1.0, 2.0, 3.0]), "m")}
+
+        result = cxm.scale_factors(cxm.FlatMetric(3), cxc.cartnd, at=at)
+        diagonal = mm_dispatch(cxm.R3, at, cxc.cartnd).diagonal
+
+        assert result.shape == (3,)
+        assert jnp.allclose(result.value, jnp.ones(3))
+        assert jnp.allclose(result.value, jnp.asarray(diagonal))
+
 
 class TestScaleFactorsGeneric:
     """Tests for generic metric-based scale_factors behavior."""

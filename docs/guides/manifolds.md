@@ -130,7 +130,7 @@ Array(True, dtype=bool)
 '(, km2 / rad2, km2 / rad2)'
 ```
 
-For generic metrics, `scale_factors` follows the metric matrix path and returns the diagonal. For `FlatMetric`, coordinax uses a more efficient specialization that avoids forming the full metric matrix.
+`scale_factors` follows the metric matrix path and returns its diagonal. Metrics that are diagonal by construction report a `DiagonalMetric`, so no full matrix is formed for them.
 
 ## Measuring Angles Between Tangent Vectors
 
