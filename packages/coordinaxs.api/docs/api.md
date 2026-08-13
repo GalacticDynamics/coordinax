@@ -2,7 +2,8 @@
 
 Complete API documentation for `coordinaxs.api`.
 
-`coordinaxs.api` is a [PEP 420](https://peps.python.org/pep-0420/) namespace package with no `__init__.py`, so each subpackage is documented on its own below rather than through a single `automodule:: coordinaxs.api` (which would find no members).
+<!-- Documented per-subpackage: `coordinaxs.api` is a PEP 420 namespace package
+     with no `__init__.py`, so `automodule:: coordinaxs.api` finds no members. -->
 
 ```{eval-rst}
 

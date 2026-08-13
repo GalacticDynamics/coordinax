@@ -25,12 +25,9 @@ import unxt as u
 
 from ._custom_types import CDict
 
-# `pt_map` is not restricted to charts on one manifold -- it also expresses
-# realization-style maps between an embedded manifold's intrinsic chart and its
-# ambient chart, so it belongs to this namespace too. It is re-exported rather
-# than redeclared: `plum.dispatch` keys its global namespace on the bare
-# function name, so a second `def pt_map` here would resolve to the very same
-# `plum.Function` and its docstring would simply be dead text.
+# `pt_map` also maps an embedded manifold's intrinsic chart to its ambient one,
+# so it belongs here too -- re-exported, never redeclared (see `conventions.md`,
+# "One Dispatch Table Per Name").
 from .charts import pt_map
 
 if TYPE_CHECKING:

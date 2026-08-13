@@ -12,9 +12,7 @@ import importlib
 
 import pytest
 
-#: The `coordinaxs.api` subpackages. The dispatch functions themselves are read
-#: off each subpackage's ``__all__`` rather than listed here: a hand-maintained
-#: copy silently stops covering whatever is added later.
+#: The `coordinaxs.api` subpackages; their functions are read off ``__all__``.
 SUBPACKAGES = ("charts", "frames", "manifolds", "representations", "transforms")
 
 
