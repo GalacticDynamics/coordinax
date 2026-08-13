@@ -790,14 +790,25 @@ dependencies = [
     { name = "coordinax" },
     { name = "diffrax" },
     { name = "diffraxtra" },
+    { name = "optimistix" },
+]
+
+[package.optional-dependencies]
+hypothesis = [
+    { name = "coordinaxs-hypothesis" },
+    { name = "hypothesis" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "coordinax", editable = "." },
+    { name = "coordinaxs-hypothesis", marker = "extra == 'hypothesis'", editable = "packages/coordinaxs.hypothesis" },
     { name = "diffrax", specifier = ">=0.7" },
     { name = "diffraxtra", specifier = ">=1.5" },
+    { name = "hypothesis", marker = "extra == 'hypothesis'", specifier = ">=6.148.7" },
+    { name = "optimistix", specifier = ">=0.1.0" },
 ]
+provides-extras = ["hypothesis"]
 
 [[package]]
 name = "coordinaxs-hypothesis"

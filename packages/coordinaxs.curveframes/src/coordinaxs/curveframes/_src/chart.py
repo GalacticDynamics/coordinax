@@ -1,0 +1,186 @@
+r"""A chart on a tubular neighbourhood of a curve.
+
+Coordinates are $(\tau, n_1, n_2)$:
+
+$$ \mathbf{x} = \boldsymbol{\gamma}(\tau)
+   + n_1\mathbf{U}_1(\tau) + n_2\mathbf{U}_2(\tau) $$
+
+where $(\mathbf{T},\mathbf{U}_1,\mathbf{U}_2)$ is the triad supplied by an
+`AbstractCurveFrameBuilder`. The same class serves Frenet--Serret and Bishop;
+they differ only in the builder handed in.
+
+Note that $\tau$ is the *curve parameter*, not arc length. The builders are
+$\tau$-parameterised, so $g_{\tau\tau}$ carries a $\|\gamma'\|^2$ speed factor
+rather than reducing to $(1-k_1n_1-k_2n_2)^2$.
+"""
+
+__all__ = ("TubularChart",)
+
+import dataclasses
+
+from typing import Any, ClassVar, final, override
+
+import equinox as eqx
+import jax
+import jax.numpy as jnp
+
+import coordinax.charts as cxc
+import coordinax.manifolds as cxm
+import unxt as u
+from coordinax._src.base import AbstractParameterizedChart
+
+from .base import AbstractCurveFrameBuilder
+
+
+@final
+class TubularChart(AbstractParameterizedChart):
+    r"""Chart on a tubular neighbourhood of a curve.
+
+    Differentiability is opt-in per instance, exactly as for any parameterized
+    chart: a curve that is an `equinox.Module` holding `unxt.Quantity`
+    parameters contributes leaves and can be differentiated through; a plain
+    function closes over trace-time constants and contributes none.
+
+    Coordinate data must be a single point, not a batch: the forward and
+    inverse `pt_map`, and `check_data(..., values=True)`, all raise on
+    batched `tau`/`n1`/`n2` (the Jacobian in `jacobian_factor` takes
+    `jax.jacfwd` over `tau`, which is not batch-aware). Use `jax.vmap` over
+    single-point calls instead -- see the "Working With Curve Charts" guide's
+    Limitations section for this and the chart's other boundaries.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinaxs.curveframes as cxfc
+
+    >>> def circle(tau):
+    ...     t = tau.ustrip("s")
+    ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+    >>> chart = cxfc.TubularChart(
+    ...     cxfc.BishopBuilder(circle),
+    ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
+    ... )
+    >>> chart.components
+    ('tau', 'n1', 'n2')
+    >>> chart.coord_dimensions
+    ('time', 'length', 'length')
+
+    """
+
+    builder: AbstractCurveFrameBuilder
+    """The curve-frame builder supplying gamma and the triad."""
+
+    _: dataclasses.KW_ONLY
+
+    tau_bounds: tuple[Any, Any]
+    """Scan range for the inverse solve.
+
+    Must cover the curve of interest, and for a **closed** curve must not span
+    more than one period: a wider range ties the nearest-point solve between
+    `gamma(tau)` and `gamma(tau + period)`, the same ambient point.
+
+    A point whose true nearest curve point lies outside `tau_bounds` does not
+    raise: the fallback solve can converge to a finite, low-residual `tau`
+    outside `tau_bounds` instead. See the curve-charts guide's Limitations
+    section for worked examples of both warnings above.
+    """
+
+    n_seed: int = eqx.field(static=True, default=64)
+    """Seed points for the inverse scan. Static, since it is a loop bound."""
+
+    M: ClassVar[Any]
+
+    @override
+    @property
+    def M(self) -> Any:
+        """The ambient manifold, always flat 3-space regardless of the curve."""
+        return cxm.R3
+
+    @property
+    def components(self) -> tuple[str, str, str]:
+        return ("tau", "n1", "n2")
+
+    @property
+    def coord_dimensions(self) -> tuple[str, str, str]:
+        # The first coordinate inherits whatever the curve is parameterised by,
+        # so this cannot be a class-level tuple the way most charts declare it.
+        return (str(u.dimension_of(self.builder.tau_unit)), "length", "length")
+
+    @property
+    def cartesian(self) -> cxc.Cart3D:
+        return cxc.cart3d
+
+    def check_data(self, data: dict, /, *, values: bool = False, **kw: Any) -> dict:
+        # Forward `values`: the base class gates its coordinate-dimension check
+        # on it, and binding it as a named parameter keeps it out of `**kw`.
+        super().check_data(data, values=values, **kw)
+        if values:
+            # Inside the reach the Jacobian factor is positive; at the focal
+            # distance it vanishes and the coordinates stop being *locally*
+            # injective. Necessary, not sufficient, for global injectivity --
+            # can't see a point mirrored across the curve or the curve's
+            # global self-approach distance (see the curve-charts guide's
+            # Limitations section).
+            #
+            # `~(f > 0)`, not `f <= 0`: a pinned-gamma builder makes the
+            # on-curve speed (and factor) `0/0 = nan`, and `nan <= 0` is
+            # False too -- negating `nan > 0` (also False) catches it.
+            #
+            # Hybrid form, matching `_src/charts/checks.py` (see `nearest.py`
+            # for the full mechanics): `eqx.error_if` under trace, plain
+            # `ValueError` when concrete. The return value MUST be threaded
+            # back into `data` -- an unused result silently vanishes under
+            # `jit` (verified: it returned n1=-1.6, well outside the reach).
+            pred = jnp.any(~(self.jacobian_factor(data) > 0))
+            msg = (
+                "point lies outside the reach of the curve: the tubular "
+                "coordinates are not locally injective there"
+            )
+            if isinstance(pred, jax.core.Tracer):
+                data = {**data, "n1": eqx.error_if(data["n1"], pred, msg)}
+            elif bool(pred):
+                raise ValueError(msg)
+        return data
+
+    def jacobian_factor(self, data: dict, /) -> Any:
+        r"""$\partial\mathbf{x}/\partial\tau$ scaled by the on-curve speed.
+
+        Equals $1-k_1n_1-k_2n_2$ at *any* parametrisation, not only a
+        unit-speed one: $\partial\mathbf{x}/\partial\tau$ itself picks up a
+        $\|\gamma'\|$ speed factor away from unit speed, but dividing it out
+        below cancels that factor, leaving the same dimensionless quantity a
+        unit-speed curve would give directly. It is positive inside the
+        reach and vanishes at the focal distance, which is the test that
+        matters.
+        """
+        tau, n1, n2 = data["tau"], data["n1"], data["n2"]
+        unit = self.builder.tau_unit
+        # Derive the unit from the curve (as `nearest.py` and
+        # `register_ptmap.py` do), not hardcode `"km"`: the scale cancels in
+        # `dot(dx,T)/speed`, but a hardcoded unit raises `UnitConversionError`
+        # for a dimensionless curve.
+        ambient_unit = self.builder.location(tau).unit
+
+        def gamma_v(t: jax.Array) -> jax.Array:
+            return jnp.asarray(
+                self.builder.location(u.Q(t, unit)).ustrip(ambient_unit), dtype=float
+            )
+
+        def offset_v(t: jax.Array) -> jax.Array:
+            R = self.builder.rotation_matrix(u.Q(t, unit))
+            n1_v = n1.ustrip(ambient_unit)
+            n2_v = n2.ustrip(ambient_unit)
+            return gamma_v(t) + n1_v * R[1] + n2_v * R[2]
+
+        tau_v = tau.ustrip(unit)
+        dx = jax.jacfwd(offset_v)(tau_v)
+        speed = jnp.linalg.norm(jax.jacfwd(gamma_v)(tau_v))
+        # Project onto the tangent: dx is parallel to T, and past the focal
+        # distance it REVERSES. `norm(dx)` is sign-blind and bounces back up
+        # (measured: at n1=-1.1 on the unit circle, norm=+0.1 but the true
+        # factor is -0.1), so a `<= 0` guard built on the norm can only fire
+        # exactly at the focal point -- a measure-zero set it will never hit.
+        T = self.builder.rotation_matrix(u.Q(tau_v, unit))[0]
+        return jnp.dot(dx, T) / speed
