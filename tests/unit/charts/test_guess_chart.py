@@ -110,6 +110,20 @@ class TestGuessChartRepeatability:
         assert type(result1) is type(result2)
 
 
+class TestGuessChartFailureModes:
+    """No chart matches, and the messages that come back."""
+
+    def test_unknown_component_names_raise(self) -> None:
+        """The spec's failure semantics: an unmatched key set is a `ValueError`."""
+        with pytest.raises(ValueError, match="Cannot infer representation"):
+            cxc.guess_chart(frozenset(("nope", "nada")))
+
+    def test_the_message_lists_the_keys_in_a_stable_order(self) -> None:
+        """`frozenset` iterates in `id`-hash order; the message must not."""
+        with pytest.raises(ValueError, match=r"\['nada', 'nope'\]"):
+            guess_chart_cls(frozenset(("nope", "nada")))
+
+
 class TestAmbiguousComponentNames:
     """Charts sharing a component-name set resolve to one declared chart.
 
