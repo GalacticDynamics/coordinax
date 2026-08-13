@@ -14,7 +14,7 @@ import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart
-from coordinaxs.api.custom_types import CDict
+from coordinaxs.api.custom_types import CDict, CKeys
 
 # ===================================================================
 # CDict
@@ -71,7 +71,7 @@ def cdict(obj: u.AbstractQuantity, /) -> CDict:
 
 
 @plum.dispatch
-def cdict(obj: u.AbstractQuantity, keys: tuple[str, ...], /) -> CDict:
+def cdict(obj: u.AbstractQuantity, keys: CKeys, /) -> CDict:
     """Extract component dictionary from a Quantity using specified keys.
 
     Treats the Quantity as a vector with components in the last dimension,
@@ -109,7 +109,7 @@ def cdict(obj: u.AbstractQuantity, keys: tuple[str, ...], /) -> CDict:
 
 
 @plum.dispatch
-def cdict(obj: ul.QuantityMatrix, keys: tuple[str, ...], /) -> CDict:
+def cdict(obj: ul.QuantityMatrix, keys: CKeys, /) -> CDict:
     """Extract component dictionary from a 1D ``QuantityMatrix``.
 
     This overload supports heterogeneous per-component units by constructing
@@ -201,7 +201,7 @@ def cdict(obj: ul.QuantityMatrix, chart: AbstractChart, /) -> CDict:
 
 
 @plum.dispatch
-def cdict(obj: ArrayLike, keys: tuple[str, ...], /) -> CDict:
+def cdict(obj: ArrayLike, keys: CKeys, /) -> CDict:
     """Extract component dictionary from an array.
 
     Raises
@@ -247,10 +247,7 @@ def cdict(obj: ArrayLike, chart: AbstractChart, /) -> CDict:
 
 @plum.dispatch
 def cdict(
-    obj: ArrayLike,
-    unit: u.AbstractUnit | str | ul.UnitsMatrix | None,
-    keys: tuple[str, ...],
-    /,
+    obj: ArrayLike, unit: u.AbstractUnit | str | ul.UnitsMatrix | None, keys: CKeys, /
 ) -> CDict:
     """Extract component dictionary from an array.
 
