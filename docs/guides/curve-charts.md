@@ -105,7 +105,7 @@ True
 
 ## Differentiability
 
-This is the payoff for treating $\tau$ as a coordinate rather than a fixed parameter: fitting a curve to data means finding the curve parameters for which the chart's coordinates match observations, which needs a gradient through the _inverse_ transition — through the root-find, and for Bishop, through the parallel-transport ODE nested inside it.
+Treating $\tau$ as a coordinate rather than a fixed parameter is what makes this reachable: fitting a curve to data means finding the curve parameters for which the chart's coordinates match observations, which needs a gradient through the _inverse_ transition — through the root-find, and for Bishop, through the parallel-transport ODE nested inside it.
 
 Make the curve's radius a live, fittable parameter by holding it in an `equinox.Module`:
 
@@ -143,7 +143,7 @@ Make the curve's radius a live, fittable parameter by holding it in an `equinox.
 
 ```
 
-This is the stream-track-fitting case: `x` is an observed point, `radius` (or any other differentiable curve parameter) is what you're solving for, and `n1_of_radius` is the residual whose gradient a fit needs.
+`x` is an observed point, `radius` (or any other differentiable curve parameter) is what you're solving for, and `n1_of_radius` is the residual whose gradient a fit needs.
 
 The builder you fit through matters for how much that gradient costs, not only for the metric's cross terms below: Bishop's gradient goes through `diffrax`'s `DirectAdjoint` (see `bishop.py`'s _Choosing an adjoint_ section), which is roughly three orders of magnitude slower per point than Frenet–Serret's closed-form gradient, and that cost scales roughly linearly with the number of points. Prefer Frenet–Serret for gradient-based fitting over thousands of points when the metric's torsion cross-terms don't matter for the fit.
 

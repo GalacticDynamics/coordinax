@@ -1,9 +1,9 @@
 """`TubularChart` is generatable by `coordinaxs.hypothesis`, and usable once drawn.
 
-This is the crux of Task 8: `TubularChart` is the first chart class defined
-outside core `coordinax`, and by default nothing tells `coordinaxs.hypothesis`
-how to draw one -- its `builder: AbstractCurveFrameBuilder` and
-`tau_bounds: tuple[Any, Any]` fields have no annotation-derived strategy (see
+`TubularChart` is the first chart class defined outside core `coordinax`, and
+by default nothing tells `coordinaxs.hypothesis` how to draw one -- its
+`builder: AbstractCurveFrameBuilder` and `tau_bounds: tuple[Any, Any]` fields
+have no annotation-derived strategy (see
 `coordinaxs.hypothesis.curveframes._tubular`). These tests exercise the fix
 from the consumer side: `coordinaxs.hypothesis.main.charts()`, not the
 strategy module directly.

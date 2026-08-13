@@ -265,7 +265,7 @@ def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
 
 
 def test_frenet_metric_has_torsion_cross_terms() -> None:
-    """The contrast that motivates preferring Bishop for this chart.
+    """Frenet--Serret carries torsion cross terms; Bishop does not.
 
     Same `_helix` and same point as the Bishop test above: Bishop is
     diagonal there, Frenet--Serret is not, ten orders of magnitude apart.

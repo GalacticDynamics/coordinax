@@ -1,4 +1,4 @@
-"""The point of the exercise: a fitted curve's parameters stay differentiable.
+"""A fitted curve's parameters stay differentiable.
 
 The inverse transition runs a root-find (and, for Bishop, an ODE solve inside
 it). `optimistix` differentiates the root-find implicitly, so a gradient with
