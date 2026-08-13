@@ -14,7 +14,7 @@ import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict
+from coordinaxs.api.custom_types import CDict
 
 # ===================================================================
 # CDict

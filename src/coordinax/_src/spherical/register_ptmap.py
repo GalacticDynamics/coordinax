@@ -21,8 +21,9 @@ from .chart import (
 )
 from .manifold import Sn
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.utils import uconvert_to_rad
+from coordinaxs.api.custom_types import CDict
 
 IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any, Any]], ...]] = (
     SphericalTwoSphere,

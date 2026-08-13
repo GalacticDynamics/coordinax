@@ -30,7 +30,8 @@ from coordinax._src.base import (
     AbstractLorentzianMetricField,
     AbstractMetricField,
 )
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 if TYPE_CHECKING:
     from jaxtyping import Array

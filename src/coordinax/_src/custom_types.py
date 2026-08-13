@@ -1,21 +1,31 @@
-"""Custom types."""
+"""Custom types.
+
+The single definition of ``coordinax``'s shared type vocabulary; every layer
+re-exports from here.
+
+``CKey`` and ``CDict`` are *not* here -- import them from
+`coordinaxs.api.custom_types`. They appear below only as the bounds of
+``CDictT`` and ``Ks``.
+"""
 
 __all__: tuple[str, ...] = (
     "Ang",
     "Len",
     "Spd",
     "OptUSys",
-    "CKey",
-    "CDict",
+    "Shape",
+    "HasShape",
     "CDictT",
     "Ks",
     "Ds",
 )
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import Literal, Protocol, TypeAlias, runtime_checkable
 from typing_extensions import TypeVar
 
 import unxt as u
+
+from coordinaxs.api.custom_types import CDict, CKey
 
 # =========================================================
 # Unit-related Types
@@ -29,18 +39,24 @@ Spd: TypeAlias = Literal["speed"]
 OptUSys: TypeAlias = u.AbstractUnitSystem | None
 
 # =========================================================
+# Array-related Types
+
+Shape: TypeAlias = tuple[int, ...]
+
+
+@runtime_checkable
+class HasShape(Protocol):
+    """A protocol for objects that have a shape attribute."""
+
+    @property
+    def shape(self) -> Shape:
+        """The shape of the object."""
+        raise NotImplementedError  # pragma: no cover
+
+
+# =========================================================
 # Vector-related Types
 
-CKey: TypeAlias = str
-if TYPE_CHECKING:
-    # Typed for static checkers only.
-    CDict: TypeAlias = dict[CKey, Any]
-else:
-    # A parametric `dict[...]` annotation makes every plum signature
-    # using CDict "unfaithful", disabling plum's method cache (a full
-    # ~200x slower resolution per call). The bare `dict` keeps the cache;
-    # the TYPE_CHECKING branch above preserves the static type.
-    CDict: TypeAlias = dict
 CDictT = TypeVar("CDictT", bound=CDict)
 
 Ks = TypeVar("Ks", bound=tuple[CKey, ...], default=tuple[str, ...])

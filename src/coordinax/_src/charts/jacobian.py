@@ -54,8 +54,9 @@ import unxts.linalg as ul
 import coordinaxs.api.charts as cxcapi
 from .d2 import Cart2D, Polar2D
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax.internal import tree_cast_int_bool_to_float
+from coordinaxs.api.custom_types import CDict
 
 # ===================================================================
 # Partial function

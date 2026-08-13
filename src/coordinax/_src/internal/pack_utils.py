@@ -16,7 +16,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
-from .custom_types import CDict, CKey
+from coordinaxs.api.custom_types import CDict, CKey
 
 DMLS: Final = u.unit("")
 

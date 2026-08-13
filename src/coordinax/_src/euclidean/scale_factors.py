@@ -14,7 +14,8 @@ from unxt.quantity import AllowValue, is_any_quantity
 import coordinaxs.api.charts as cxcapi
 from .metric import FlatMetric
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 DMLS = u.unit("")
 

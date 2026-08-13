@@ -23,7 +23,7 @@ from .mixins import AstropyRepresentationAPIMixin
 from .point import _frame_converter
 
 if TYPE_CHECKING:
-    from coordinax.internal import CDict
+    from coordinaxs.api.custom_types import CDict
 
 ChartT = TypeVar(
     "ChartT",

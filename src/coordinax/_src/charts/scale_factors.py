@@ -13,8 +13,9 @@ from .d1 import Cart1D
 from .d2 import Cart2D
 from .d3 import Cart3D
 from .dn import CartND
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.euclidean import FlatMetric
+from coordinaxs.api.custom_types import CDict
 
 
 @plum.dispatch

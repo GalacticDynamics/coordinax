@@ -17,9 +17,9 @@ from coordinax._src.charts.d3 import (
     Cylindrical3D,
     ProlateSpheroidal3D,
 )
-from coordinax._src.custom_types import CDict
 from coordinax._src.euclidean import R0, R1, R2, R3, EuclideanManifold
 from coordinax._src.null import no_manifold
+from coordinaxs.api.custom_types import CDict
 
 # ===================================================================
 # Guess Manifolds

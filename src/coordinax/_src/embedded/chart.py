@@ -16,7 +16,8 @@ from coordinax._src.base import (
     AbstractManifold,
     AbstractParameterizedChart,
 )
-from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
+from coordinax._src.custom_types import Ds, Ks, OptUSys
+from coordinaxs.api.custom_types import CDict
 
 
 @final

@@ -33,12 +33,13 @@ from .d6 import PoincarePolar6D
 from .dn import CartND
 from coordinax._src.base import AbstractChart
 from coordinax._src.base.manifold import AbstractManifold
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
 from coordinax._src.null import NoManifold
 from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
 from coordinax._src.utils import uconvert_to_rad
+from coordinaxs.api.custom_types import CDict
 
 
 def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
