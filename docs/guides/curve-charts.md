@@ -184,19 +184,117 @@ True
 
 Prefer Bishop for this chart when the metric matters and the diagonal structure is convenient — it holds regardless of torsion.
 
+## Arc-Length Reparametrisation
+
+`coordinaxs.curveframes` provides `ArcLength`, which wraps a curve $\gamma(\tau)$ and returns $s \mapsto \gamma(\tau(s))$ with $\|\gamma'(s)\| = 1$ everywhere, by solving $d\tau/ds = 1/\|\gamma'(\tau)\|$ rather than integrating speed and inverting it. Because a curve is consumed purely as a callable throughout `coordinaxs.curveframes`, `ArcLength(curve)` is itself a curve: it wraps into `BishopBuilder` or `FrenetSerretBuilder`, and from there into `TubularChart`, unchanged.
+
+```{code-block} python
+>>> arc = cxfc.ArcLength(helix)
+>>> ch_arc = cxfc.TubularChart(
+...     cxfc.BishopBuilder(arc, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(5.0, "km"))
+... )
+
+```
+
+A builder over an arc-length curve takes a **length** `tau_unit` — `"km"` above, not `"s"` — because the wrapped curve's parameter now is arc length rather than time. `tau_bounds` follow: they are lengths too, and `coord_dimensions` reports it:
+
+```{code-block} python
+>>> ch_arc.coord_dimensions
+('length', 'length', 'length')
+
+```
+
+### The Payoff
+
+On the curve itself ($n_1 = n_2 = 0$), $g_{ss}$ reduces to the textbook tubular-coordinate form $(1-k_1n_1-k_2n_2)^2 = 1$ — no speed factor. On the plain $\tau$-parameterised `helix`, $g_{\tau\tau}$ still carries the curve's squared speed, $1 + 0.3^2$:
+
+```{code-block} python
+>>> at0 = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> g_plain = metric_matrix(ch_b.M, at0, ch_b).matrix
+>>> f"{g_plain[0, 0].ustrip('km2 / s2'):.10f}"
+'1.0900000000'
+
+>>> at_arc = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> g_arc = metric_matrix(ch_arc.M, at_arc, ch_arc).matrix
+>>> f"{g_arc[0, 0].ustrip(''):.10f}"
+'1.0000000000'
+
+```
+
+No metric code changes between the two calls: `metric_matrix` falls through to the same generic Jacobian pullback described in [The Metric](#the-metric) either way. The only difference is which curve the chart wraps.
+
+### Time-Dependent Curves: Eulerian Versus Lagrangian
+
+Over a two-argument curve $\gamma(\tau, t)$, `ArcLength` stays two-argument: `ArcLength(curve)(s, t)` measures arc length on the slice at `t` — the slice being evaluated. This is the **Eulerian** reading: a label is the arc length of the _current_ curve, so a fixed material point's label drifts as the curve moves.
+
+`LagrangianArcLength(curve, t0)` measures arc length on the fixed reference slice `t0` instead, always — never on the `t` supplied at call time — then evaluates the wrapped curve at that _supplied_ `t`. A label therefore names the same material point at every `t`, but it stops being the current arc length once the curve has moved.
+
+The two readings agree wherever the curve moves rigidly — a rotation or translation leaves every arc length untouched — and differ only where the curve stretches or compresses. A uniformly stretching line, $\gamma(\tau, t) = (\tau(1+0.5t), 0, 0)$, makes the difference concrete: at label $s=1\,\mathrm{km}$, $t=1\,\mathrm{s}$, the Eulerian reading gives one unit of arc length along the current (already-stretched) line; the Lagrangian reading gives the position of the material point that was one unit along the line at $t_0=0$:
+
+```{code-block} python
+>>> def stretch(tau, t):
+...     x = tau.ustrip("s") * (1.0 + 0.5 * t.ustrip("s"))
+...     z = jnp.zeros_like(x)
+...     return u.Q(jnp.stack([x, z, z]), "km")
+
+>>> eulerian = cxfc.AtTime(cxfc.ArcLength(stretch), u.Q(1.0, "s"))
+>>> eulerian(u.Q(1.0, "km"))
+Q([1., 0., 0.], 'km')
+
+>>> lagrangian = cxfc.AtTime(
+...     cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s")), u.Q(1.0, "s")
+... )
+>>> lagrangian(u.Q(1.0, "km"))
+Q([1.5, 0. , 0. ], 'km')
+
+```
+
+`AtTime(curve, t)` binds the evaluation time of a two-argument curve, turning it into a one-argument one; it is what makes `ArcLength`'s otherwise-two-argument result callable with `s` alone above. Where `AtTime` sits relative to `ArcLength` changes what is being asked: `ArcLength(AtTime(curve, t))` binds `t` first, so `ArcLength` sees a one-argument curve and freezes arc length to that one slice permanently — there is no Eulerian/Lagrangian distinction left to make. `AtTime(ArcLength(curve), t)`, used above, keeps `ArcLength` two-argument and only fixes which slice a given call reads; a later call with a different `t` re-measures on that slice instead.
+
+### Precomputing With `s_max`
+
+Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Passing `s_max` solves it once, at construction, as a dense interpolation of $\tau(s)$ over $s \in [0, s_{\max}]$; each call then evaluates that interpolation instead of re-solving:
+
+```{code-block} python
+>>> plain = cxfc.ArcLength(helix)
+>>> cached = cxfc.ArcLength(helix, s_max=u.Q(5.0, "km"))
+>>> plain(u.Q(2.0, "km"))
+Q([-0.33806139,  0.94112406,  0.57469577], 'km')
+>>> cached(u.Q(2.0, "km"))
+Q([-0.33806139,  0.94112406,  0.57469577], 'km')
+
+```
+
+The two agree to $2.22\times10^{-16}$ — solver tolerance, not an approximation. Measured on this helix, the cached path ran 7.7 times faster per call (6183us to 806us, one construction amortised over many evaluations).
+
+`s_max` has two constraints. Calling with `s` outside $[0, s_{\max}]$ raises rather than silently extrapolating:
+
+```{code-block} python
+>>> try:
+...     cached(u.Q(6.0, "km"))
+... except Exception as e:
+...     print("s lies outside the precomputed domain" in str(e))
+True
+
+```
+
+And `s_max` is rejected outright for `ArcLength` over a two-argument curve — the Eulerian reading re-measures arc length per slice, so there is no single $\tau(s)$ map to precompute:
+
+```{code-block} python
+>>> cxfc.ArcLength(stretch, s_max=u.Q(5.0, "km"))
+Traceback (most recent call last):
+    ...
+ValueError: s_max is not supported for a two-argument (time-dependent) curve...
+
+```
+
+Bind `t` first with `AtTime(curve, t)` to get a one-argument curve `s_max` accepts, or use `LagrangianArcLength`, whose reference slice `t0` is fixed at construction and so always accepts `s_max`.
+
 (limitations)=
 
 ## Limitations
 
-**$\tau$ is the curve parameter, not arc length.** The builders are $\tau$-parameterised, not unit-speed, so $g_{\tau\tau}$ carries a $\|\gamma'\|^2$ speed factor rather than reducing to the textbook $(1-k_1n_1-k_2n_2)^2$. You can see this in the units alone: for a genuinely unit-speed (arc-length) parameterisation, $g_{\tau\tau}$ would be dimensionless; here it is not:
-
-```{code-block} python
->>> g_b[0, 0].unit
-Unit("km2 / s2")
-
-```
-
-Arc-length reparametrization is planned follow-up work, not a permanent design choice — treat this as a current limitation of the $\tau$-parameterised builders, not a property of the chart itself.
+The builders themselves stay $\tau$-parameterised, not unit-speed: $g_{\tau\tau}$ carries a $\|\gamma'\|^2$ speed factor by default, as seen in [The Metric](#the-metric) above. Wrap the curve in `ArcLength` first (see [Arc-Length Reparametrisation](#arc-length-reparametrisation)) to get a unit-speed $\tau$ instead.
 
 **`tau_bounds` must not span more than one period for a closed curve.** `tau_bounds` seeds the inverse's coarse scan (see [Both Directions](#both-directions) above); for a closed curve, $\gamma(\tau)$ and $\gamma(\tau + \text{period})$ are the same ambient point, so a range wider than one period turns the nearest-point solve into an exact tie:
 
