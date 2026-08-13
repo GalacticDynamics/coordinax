@@ -14,7 +14,6 @@ call raised `NotFoundLookupError` for users while its own doctests passed.
 __all__: tuple[str, ...] = ()
 
 import importlib
-import pkgutil
 import sys
 from pathlib import Path
 
@@ -80,7 +79,9 @@ def test_no_module_is_dead_in_production_only(imported_modules) -> None:
 def test_the_allowlist_has_no_stale_entries() -> None:
     """An allowlisted module that no longer exists should be dropped."""
     for name in ALLOWED_UNIMPORTED:
-        assert pkgutil.resolve_name(name.rsplit(".", 1)[0]), name
-        assert (_ROOT.parent / Path(*name.split("."))).with_suffix(".py").exists(), (
+        base = _ROOT.parent / Path(*name.split("."))
+        # `_module_name` collapses `pkg/__init__.py` to `pkg`, so an allowlisted
+        # name may be either a module file or a package directory.
+        assert base.with_suffix(".py").exists() or (base / "__init__.py").exists(), (
             f"{name} is allowlisted but no longer exists; drop the entry."
         )
