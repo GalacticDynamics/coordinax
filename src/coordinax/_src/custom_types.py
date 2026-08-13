@@ -3,12 +3,8 @@
 The single definition of ``coordinax``'s shared type vocabulary; every layer
 re-exports from here.
 
-``CKey`` and ``CDict`` are the exception: they live in
-`coordinaxs.api.custom_types` and are re-exported below. ``coordinaxs.api`` is
-the root of the workspace -- it may not depend on ``coordinax``, while every
-other package depends on it -- so it is the only spot all layers can share.
-Defining them here too would leave a copy that drifts silently: the
-``dict``-not-``dict[...]`` trick below is load-bearing for plum's method cache.
+``CKey`` and ``CDict`` come from `coordinaxs.api.custom_types`, the workspace
+root, and are re-exported below.
 """
 
 __all__: tuple[str, ...] = (

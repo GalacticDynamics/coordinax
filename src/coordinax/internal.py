@@ -23,9 +23,8 @@ Contents:
 
 - ``Shape``, ``OptUSys``
     Shared type vocabulary, re-exported from ``coordinax._src.custom_types`` so
-    downstream packages need not restate it.  ``CKey`` and ``CDict`` are
-    deliberately **not** here -- they are public in
-    `coordinaxs.api.custom_types`, which every package can already reach.
+    downstream packages need not restate it.  ``CKey`` and ``CDict`` are public
+    in `coordinaxs.api.custom_types`.
 
 """
 
