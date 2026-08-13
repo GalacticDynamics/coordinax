@@ -672,7 +672,8 @@ def change_basis(
     This is a convenience overload: the caller may pass full
     :class:`Representation` objects for ``from_rep``/``to_rep`` instead of bare
     :class:`AbstractBasis` instances.  The basis is extracted from each argument
-    and the appropriate :func:`change_basis` overload is called.
+    and the appropriate :func:`~coordinax.representations.change_basis` overload
+    is called.
 
     >>> import unxt as u
     >>> import coordinax.charts as cxc

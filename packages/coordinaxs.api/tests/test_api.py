@@ -12,33 +12,23 @@ import importlib
 
 import pytest
 
-#: Public dispatch functions exposed by each `coordinaxs.api` subpackage.
-API_FUNCTIONS: dict[str, tuple[str, ...]] = {
-    "charts": ("cartesian_chart", "pt_map", "guess_chart", "cdict"),
-    "frames": ("frame_transition",),
-    "manifolds": (
-        "guess_manifold",
-        "pt_embed",
-        "pt_project",
-        "pt_map",
-        "scale_factors",
-        "angle_between",
-    ),
-    "representations": (
-        "cconvert",
-        "guess_geometry_kind",
-        "guess_rep",
-        "guess_semantic_kind",
-    ),
-    "transforms": ("act", "compose", "simplify"),
-}
-
-FUNCTION_CASES = [
-    (subpackage, name) for subpackage, names in API_FUNCTIONS.items() for name in names
-]
+#: The `coordinaxs.api` subpackages; their functions are read off ``__all__``.
+SUBPACKAGES = ("charts", "frames", "manifolds", "representations", "transforms")
 
 
-@pytest.mark.parametrize("subpackage", API_FUNCTIONS)
+def _api_functions() -> list[tuple[str, str]]:
+    """Every ``(subpackage, name)`` pair exported by `coordinaxs.api`."""
+    return [
+        (subpackage, name)
+        for subpackage in SUBPACKAGES
+        for name in importlib.import_module(f"coordinaxs.api.{subpackage}").__all__
+    ]
+
+
+FUNCTION_CASES = _api_functions()
+
+
+@pytest.mark.parametrize("subpackage", SUBPACKAGES)
 def test_subpackage_importable(subpackage: str) -> None:
     """Each API subpackage is importable."""
     importlib.import_module(f"coordinaxs.api.{subpackage}")
@@ -48,6 +38,10 @@ def test_subpackage_importable(subpackage: str) -> None:
     ("subpackage", "name"), FUNCTION_CASES, ids=[f"{s}.{n}" for s, n in FUNCTION_CASES]
 )
 def test_can_be_dispatched_on(subpackage: str, name: str) -> None:
-    """Each API function has at least one registered dispatch method."""
+    """Each API function has at least one registered dispatch method.
+
+    An abstract with no registered method is not an extension point, it is a
+    guaranteed `NotImplementedError` at the call site.
+    """
     module = importlib.import_module(f"coordinaxs.api.{subpackage}")
     assert len(getattr(module, name).methods) > 0

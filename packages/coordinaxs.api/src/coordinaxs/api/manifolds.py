@@ -1,4 +1,4 @@
-"""Vector API for coordinax."""
+"""Manifold API for coordinax: metrics, embeddings, and measures."""
 
 __all__ = (
     "guess_manifold",
@@ -24,6 +24,11 @@ import plum
 import unxt as u
 
 from ._custom_types import CDict
+
+# `pt_map` also maps an embedded manifold's intrinsic chart to its ambient one,
+# so it belongs here too -- re-exported, never redeclared (see `conventions.md`,
+# "One Dispatch Table Per Name").
+from .charts import pt_map
 
 if TYPE_CHECKING:
     import coordinax.manifolds  # noqa: ICN001
@@ -418,116 +423,6 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
     {'theta': Q(3.14159265, 'rad'), 'phi': Q(0., 'rad')}
 
     """
-    raise NotImplementedError  # pragma: no cover
-
-
-@plum.dispatch.abstract
-def pt_map(*args: Any, **kwargs: Any) -> CDict:
-    r"""Transform position coordinates from one chart to another.
-
-    This function implements the most general point-coordinate map between two
-    compatible chart representations of the same geometric point. It is a
-    point-wise map that preserves the physical location while changing the
-    coordinate description.
-
-    For charts in the same atlas on the same manifold, this reduces to the
-    ordinary chart transition map handled by `coordinax.charts.pt_map`. It is the
-    intrinsic coordinate-change operation: the underlying point on the manifold
-    is unchanged, and only its coordinate representation is changed.
-
-    However, this function is not restricted to two charts on the same manifold.
-    It may also represent a **realization-style** map between charts attached to
-    different manifolds when one is a realization of the other, such as an
-    intrinsic chart on an embedded manifold and a chart on its ambient manifold.
-    In that case, this function may change both the chart and the manifold in
-    which the point is being represented.
-
-    Mathematical Definition:
-
-    Let $(U, \varphi_{\mathrm{from}})$ and $(V, \varphi_{\mathrm{to}})$ be
-    charts on the same manifold $M$, with overlapping domains. The transition
-    map is
-
-    $$
-        \varphi_{\mathrm{to}} \circ \varphi_{\mathrm{from}}^{-1}
-        :
-        \varphi_{\mathrm{from}}(U \cap V)
-        \to
-        \varphi_{\mathrm{to}}(U \cap V).
-    $$
-
-    If a point $p \in U \cap V$ has coordinates
-    $q = \varphi_{\mathrm{from}}(p)$, then this function returns
-    $p' = \varphi_{\mathrm{to}}(p)$ for the same manifold point.
-
-    More generally, if $\varphi_{\mathrm{from}} : U \subset M \to \mathbb{R}^n$
-    and $\psi_{\mathrm{to}} : W \subset N \to \mathbb{R}^m$ are chart maps on
-    manifolds $M$ and $N$, and there is a point map $F : M \supset U \to W
-    \subset N$, then `coordinax.charts.pt_map` represents the coordinate expression
-
-    $$ \psi_{\mathrm{to}} \circ F \circ \varphi_{\mathrm{from}}^{-1}. $$
-
-    - **3D Spherical → Cartesian**:
-
-      $$
-          x &= r \sin\theta \cos\phi \\ y &= r \sin\theta \sin\phi \\ z &= r
-          \cos\theta
-      $$
-
-    Raises
-    ------
-    NotImplementedError
-        If no transformation rule is registered for the specific pair of charts
-        ``(to_chart, from_chart)``.
-
-    Notes
-    -----
-    - This is a **position-only** transformation.
-    - This function may map between charts on the same manifold or across
-      manifolds, provided a compatible point map is defined between them.
-    - Transformations preserve physical dimensions. For example, converting from
-      polar to Cartesian preserves that ``r`` has length dimension and produces
-      ``x`` and ``y`` with length dimension.
-    - Some transformations may introduce singularities (e.g., polar coordinates
-      at the origin, spherical coordinates at poles).
-    - Transformations are composable: transforming $A \to B \to C$ yields the
-      same result as a direct $A \to C$ transformation (up to numerical
-      precision).
-    - Identity transformations (same ``from_chart`` and ``to_chart``) return the
-      input unchanged.
-
-    See Also
-    --------
-    coordinax.charts.pt_map : transform position coordinates between charts on the
-    same manifold.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    Transform from 2D polar to Cartesian:
-
-    >>> p_polar = {"r": u.Q(2.0, "m"), "theta": u.Angle(jnp.pi / 4, "rad")}
-    >>> cxc.pt_map(p_polar, cxc.polar2d, cxc.cart2d)
-    {'x': Q(1.41421356, 'm'), 'y': Q(1.41421356, 'm')}
-
-    Transform from 3D spherical to Cartesian:
-
-    >>> p_sph = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad"),
-    ...          "r": u.Q(5.0, "km")}
-    >>> cxc.pt_map(p_sph, cxc.sph3d, cxc.cart3d)
-    {'x': Q(5., 'km'), 'y': Q(0., 'km'), 'z': Q(3.061617e-16, 'km')}
-
-    Transform from Cartesian to cylindrical:
-
-    >>> p_xyz = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(5.0, "m")}
-    >>> cxc.pt_map(p_xyz, cxc.cart3d, cxc.cyl3d)
-    {'rho': Q(5., 'm'), 'phi': Q(0.92729522, 'rad'), 'z': Q(5., 'm')}
-
-    """
-    del args, kwargs  # Unused in abstract method
     raise NotImplementedError  # pragma: no cover
 
 

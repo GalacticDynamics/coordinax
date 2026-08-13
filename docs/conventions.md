@@ -178,6 +178,22 @@ def add(x: str, y: str):
 
 Plum selects implementation based on runtime types of **all** arguments (not just the first). This enables `coordinax` to seamlessly handle mixed types (e.g., `Distance + Quantity`).
 
+### One Dispatch Table Per Name
+
+`plum.dispatch`'s global namespace is keyed on the **bare function name** — module-level dispatch functions sharing a name are the _same_ `plum.Function`, across modules and across distributions:
+
+```python
+import coordinaxs.api.charts, coordinaxs.api.manifolds
+
+coordinaxs.api.charts.pt_map is coordinaxs.api.manifolds.pt_map
+# True
+```
+
+Two rules follow:
+
+- **A dispatched name is a global identifier.** `coordinax` shares tables with `unxt`, `unxts`, `quaxed` and `dataclassish` on names such as `uconvert`, `dimension_of` and `replace`. That sharing is deliberate — those are one generic function each. Before introducing a new module-level dispatch function, check that its name does not collide with an unrelated one, and prefer a specific name over a generic verb.
+- **Re-export, never redeclare.** A second `def` of an existing dispatched name does not create a second function; it hands back the first one, and the new docstring is dead text. To expose a dispatch function in another namespace, import it.
+
 ### Discovering All Implementations
 
 When working with a dispatched function, use the `.methods` attribute to see all registered implementations:
