@@ -147,3 +147,27 @@ def test_metric_level_and_chart_level_agree() -> None:
     assert rapidity(metric, cxc.minkowskict, a, b, at=AT) == pytest.approx(
         rapidity(cxc.minkowskict, a, b, at=AT), abs=1e-9
     )
+
+
+def test_rejects_a_multi_timelike_metric_without_claiming_too_much() -> None:
+    """A (-,-,+,+) metric is refused, and the message does not lie about why.
+
+    "Not Lorentzian" is not the same as "positive-definite": the gate is the
+    `AbstractLorentzianMetricField` marker, so an indefinite metric with *two*
+    timelike directions misses it while still having timelike vectors. The
+    refusal must therefore report the signature without asserting that nothing
+    under it is timelike.
+    """
+    g = jnp.diag(jnp.asarray([-1.0, -1.0, 1.0, 1.0]))
+    metric = cxm.CustomMetric(
+        metric_matrix=lambda *a, **kw: g, signature=(-1, -1, 1, 1)
+    )
+    assert not isinstance(metric, cxm.AbstractLorentzianMetricField)
+    # a plainly timelike vector under this signature
+    v = np.asarray([1.0, 0.0, 0.0, 0.0])
+    assert float(v @ np.asarray(g) @ v) < 0
+
+    with pytest.raises(NotImplementedError) as exc:
+        cxm.lorentzian.rapidity_between(metric, cxc.minkowskict, REST, REST, at=AT)
+    assert "exactly one" in str(exc.value)
+    assert "no vector is timelike" not in str(exc.value)

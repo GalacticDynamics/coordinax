@@ -15,6 +15,7 @@ from unxt.quantity import is_any_quantity
 
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
+from ._utils import raw_value as _value
 from .quadratic_form import gram
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
@@ -185,16 +186,6 @@ def _dimensionless(x: Any, /) -> Any:
     input and a plain array for bare-array input, and both reach here.
     """
     return jnp.asarray(u.ustrip("", x) if is_any_quantity(x) else x)
-
-
-def _value(x: Any, /) -> Any:
-    """Return the raw array behind *x*, keeping whatever unit it carried.
-
-    For ``g(v,v)`` only the *sign* is wanted, so the unit (``m2``, ``rad2/s2``,
-    ...) is irrelevant and must not be converted away -- unlike the cosine,
-    stripping it to dimensionless would raise.
-    """
-    return jnp.asarray(x.value if is_any_quantity(x) else x)
 
 
 def _check_angle_is_defined(uu: Any, vv: Any, cos: Any, /) -> None:

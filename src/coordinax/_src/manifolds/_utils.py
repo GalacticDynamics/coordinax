@@ -3,9 +3,13 @@
 __all__: tuple[str, ...] = ()
 
 from jaxtyping import Array
+from typing import Any
+
+import jax.numpy as jnp
 
 import unxt as u
 import unxts.linalg as ul
+from unxt.quantity import is_any_quantity
 
 from coordinax._src.base import AbstractMetricField
 
@@ -91,3 +95,14 @@ def as_quantity_matrix(x: ul.QM | Array, /) -> ul.QM:
         return x
     n_rows, n_cols = x.shape[-2:]
     return ul.QM(value=x, unit=ul.UnitsMatrix.full((n_rows, n_cols), DMLS))
+
+
+def raw_value(x: Any, /) -> Array:
+    """Return the bare magnitude of *x*, ignoring any unit it carries.
+
+    Only the *sign* of a contraction like ``g(v,v)`` is ever wanted from this,
+    and the unit (``m2``, ``rad2/s2``, ...) does not bear on a sign. Note this
+    *discards* the unit rather than converting it -- ``ustrip("")`` would raise
+    on a dimensionful value.
+    """
+    return jnp.asarray(x.value if is_any_quantity(x) else x)

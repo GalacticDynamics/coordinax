@@ -29,6 +29,7 @@ from coordinax._src.base import (
     AbstractMetricField,
 )
 from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.manifolds._utils import raw_value as _value
 from coordinax._src.manifolds.quadratic_form import gram
 
 #: Slack on ``cosh(phi) >= 1``, so ordinary float error at coincident
@@ -50,22 +51,12 @@ _MSG_OPPOSED = (
 )
 
 _MSG_NOT_LORENTZIAN = (
-    "rapidity_between() requires a Lorentzian metric -- one timelike "
+    "rapidity_between() requires a Lorentzian metric -- *exactly one* timelike "
     "direction, signature (-1, 1, ..., 1) -- because a rapidity is the "
-    "hyperbolic angle between two *timelike* vectors, and {name} has signature "
-    "{sig}, under which no vector is timelike. Use `angle_between` for the "
-    "Riemannian angle."
+    "hyperbolic angle between two timelike vectors, measured against the single "
+    "time orientation they share. {name} has signature {sig}. Use "
+    "`angle_between` for the Riemannian angle."
 )
-
-
-def _value(x: Any, /) -> Any:
-    """Return the raw array behind *x*, keeping whatever unit it carried.
-
-    Only the *sign* of ``g(v,v)`` is wanted, so the unit (``m2``, ...) is
-    irrelevant and must not be converted away -- stripping to dimensionless
-    would raise.
-    """
-    return jnp.asarray(getattr(x, "value", x))
 
 
 def _check_rapidity_is_defined(uu: Any, vv: Any, cosh: Any, /) -> None:
