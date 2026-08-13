@@ -14,7 +14,7 @@ between.
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import jax
 import jax.numpy as jnp
@@ -31,6 +31,9 @@ from coordinax._src.base import (
     AbstractMetricField,
 )
 from coordinax._src.custom_types import CDict, OptUSys
+
+if TYPE_CHECKING:
+    from jaxtyping import Array
 from coordinax._src.manifolds.quadratic_form import gram
 
 #: Slack on ``cosh(phi) >= 1``, so ordinary float error at coincident
@@ -178,9 +181,9 @@ def rapidity_between(
     # dimensionless, and lets a bare-array caller through untouched. The ratio's
     # units cancel exactly; the sign tests compare against zero *in* whatever
     # unit g(v,v) carries, so only their booleans are converted.
-    cosh = jnp.asarray(u.ustrip(AllowValue, "", -inner / qnp.sqrt(uu * vv)))
-    u_timelike = jnp.asarray(u.ustrip(AllowValue, "", uu < 0))
-    v_timelike = jnp.asarray(u.ustrip(AllowValue, "", vv < 0))
+    cosh = cast("Array", u.ustrip(AllowValue, "", -inner / qnp.sqrt(uu * vv)))
+    u_timelike = cast("Array", u.ustrip(AllowValue, "", uu < 0))
+    v_timelike = cast("Array", u.ustrip(AllowValue, "", vv < 0))
 
     # Eagerly this raises, naming the case. Under tracing it cannot -- the
     # values are not concrete -- so `valid` below is what stands between the

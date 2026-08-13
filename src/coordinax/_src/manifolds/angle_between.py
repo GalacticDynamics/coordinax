@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import jax
 import jax.numpy as jnp
@@ -18,6 +18,9 @@ import coordinaxs.api.manifolds as cxmapi
 from .quadratic_form import gram
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
+
+if TYPE_CHECKING:
+    from jaxtyping import Array
 
 
 @plum.dispatch
@@ -129,13 +132,13 @@ def angle_between(
         uvec, vvec, chart, at=at, usys=usys, fname="angle_between", require_usys=False
     )
 
-    cos = jnp.asarray(u.ustrip(AllowValue, "", inner / qnp.sqrt(uu * vv)))
+    cos = u.ustrip(AllowValue, "", inner / qnp.sqrt(uu * vv))
 
     # Compared against zero *in* whatever unit g(v,v) carries -- the one
     # comparison needing no common unit -- so only the resulting boolean is
     # converted, and `AllowValue` lets a bare-array caller through untouched.
-    u_spacelike = jnp.asarray(u.ustrip(AllowValue, "", uu > 0))
-    v_spacelike = jnp.asarray(u.ustrip(AllowValue, "", vv > 0))
+    u_spacelike = cast("Array", u.ustrip(AllowValue, "", uu > 0))
+    v_spacelike = cast("Array", u.ustrip(AllowValue, "", vv > 0))
 
     # Eagerly this raises, naming the case. Under tracing it cannot -- the values
     # are not concrete -- so it is a no-op there and `valid` below is what stands
