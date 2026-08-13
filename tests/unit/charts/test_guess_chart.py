@@ -27,7 +27,11 @@ import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst
 from .conftest import SHAPE_CART_MAP, xps
 from coordinax._src.base import NON_ABC_CHART_CLASSES, AbstractFixedComponentsChart
-from coordinax._src.charts.register_guess import CANONICAL_CHART_CLASSES
+from coordinax._src.charts.register_guess import (
+    CANONICAL_CHART_CLASSES,
+    guess_chart_cls,
+    register_canonical_chart,
+)
 
 Shape: TypeAlias = tuple[int, ...]
 
@@ -83,8 +87,12 @@ def test_guess_chart_from_dict_returns_same_components(
     assert guessed.components == chart.components
 
 
-class TestGuessChartCaching:
-    """Test that guess_chart caching works correctly."""
+class TestGuessChartRepeatability:
+    """Repeated inference agrees.
+
+    Note it is *not* cached: each call builds a chart, so the results are equal
+    but not identical.
+    """
 
     def test_frozenset_dispatch(self) -> None:
         """The frozenset dispatch should return equal objects."""
@@ -135,7 +143,7 @@ class TestAmbiguousComponentNames:
         }
         assert not undeclared, (
             f"Component names no longer identify a chart: {undeclared}. Add "
-            "the intended one to `CANONICAL_CHART_CLASSES`."
+            "the intended one with `register_canonical_chart`."
         )
 
     @pytest.mark.parametrize(("components", "expected"), AMBIGUOUS)
@@ -151,6 +159,30 @@ class TestAmbiguousComponentNames:
     ) -> None:
         """The choice is declared, not a by-product of scan order."""
         assert CANONICAL_CHART_CLASSES[frozenset(components)].__name__ == expected
+
+    def test_redeclaring_the_same_chart_is_a_no_op(self) -> None:
+        """A module may be imported twice without tripping the guard."""
+        before = dict(CANONICAL_CHART_CLASSES)
+        register_canonical_chart(cxc.Spherical3D)
+        assert before == CANONICAL_CHART_CLASSES
+
+    def test_a_second_chart_cannot_claim_the_same_names(self) -> None:
+        """Overwriting would hand the choice back to import order."""
+        with pytest.raises(ValueError, match="already declared canonical"):
+            register_canonical_chart(cxc.MathSpherical3D)
+        assert CANONICAL_CHART_CLASSES[frozenset(("r", "theta", "phi"))] is (
+            cxc.Spherical3D
+        )
+
+    def test_unresolvable_ambiguity_names_the_candidates(self) -> None:
+        """An undeclared collision raises rather than picking one."""
+        keys = frozenset(("r", "theta", "phi"))
+        canonical = CANONICAL_CHART_CLASSES.pop(keys)
+        try:
+            with pytest.raises(ValueError, match="none of them is canonical"):
+                guess_chart_cls(keys)
+        finally:
+            CANONICAL_CHART_CLASSES[keys] = canonical
 
 
 class TestGuessChartFromArrayLike:

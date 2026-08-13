@@ -46,9 +46,22 @@ which is what lets a chart from any package declare itself without
 def register_canonical_chart(cls: ChartCls, /) -> ChartCls:
     """Declare `cls` as the chart to infer for its component names.
 
+    Redeclaring the same class is a no-op, so a module may be imported twice.
+    Declaring a *different* class for names already claimed raises: silently
+    overwriting would put the inferred chart back at the mercy of import order,
+    which is what this registry exists to take it out of.
+
     Returns `cls`, so it can also be used as a decorator.
     """
-    CANONICAL_CHART_CLASSES[frozenset(cls._components)] = cls
+    keys = frozenset(cls._components)
+    claimed = CANONICAL_CHART_CLASSES.get(keys)
+    if claimed is not None and claimed is not cls:
+        msg = (
+            f"Components {sorted(keys)} are already declared canonical for "
+            f"{claimed.__name__}; {cls.__name__} cannot also claim them."
+        )
+        raise ValueError(msg)
+    CANONICAL_CHART_CLASSES[keys] = cls
     return cls
 
 
@@ -75,8 +88,12 @@ def guess_chart_cls(obj: frozenset[str]) -> type[AbstractChart[Any, Any, Any]]:
         and frozenset(chart_cls._components) == obj
     ]
 
+    # `obj` is a frozenset, whose iteration order varies between processes;
+    # sort it so the message reads the same everywhere.
+    keys = sorted(obj)
+
     if not matches:
-        msg = f"Cannot infer representation from keys {obj}"
+        msg = f"Cannot infer representation from keys {keys}"
         raise ValueError(msg)
 
     if len(matches) == 1:
@@ -87,8 +104,8 @@ def guess_chart_cls(obj: frozenset[str]) -> type[AbstractChart[Any, Any, Any]]:
         # Returning any one of these would be a coin flip between conventions.
         names = ", ".join(sorted(cls.__name__ for cls in matches))
         msg = (
-            f"Keys {set(obj)} match several charts ({names}) and none of them "
-            "is canonical; declare the intended one with "
+            f"Keys {keys} match several charts ({names}) and none of them is "
+            "canonical; declare the intended one with "
             "`register_canonical_chart`, or pass the chart explicitly."
         )
         raise ValueError(msg)
