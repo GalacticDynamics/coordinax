@@ -1,4 +1,4 @@
-"""Representations."""
+"""Frame API for coordinax: the transition between reference frames."""
 
 __all__: tuple[str, ...] = ("frame_transition",)
 

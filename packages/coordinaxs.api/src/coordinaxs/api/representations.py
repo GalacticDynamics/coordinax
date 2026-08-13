@@ -1,4 +1,4 @@
-"""Representations."""
+"""Representation API for coordinax: charts, bases, and tangent maps."""
 
 __all__ = (
     "add",

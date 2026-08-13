@@ -1,4 +1,4 @@
-"""Vector API for coordinax."""
+"""Manifold API for coordinax: metrics, embeddings, and measures."""
 
 __all__ = (
     "guess_manifold",

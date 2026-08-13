@@ -1,4 +1,4 @@
-"""Representations."""
+"""Transform API for coordinax: actions, prolongations, and composition."""
 
 __all__: tuple[str, ...] = ("act", "act_jet", "compose", "pushforward", "simplify")
 
