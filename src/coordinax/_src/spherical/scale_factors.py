@@ -16,8 +16,9 @@ from .chart import LonCosLatSphericalTwoSphere, RelabeledTwoSphere
 from .manifold import HyperSphericalManifold
 from .metric import RoundMetric
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.metric.matrix import DiagonalMetric
+from coordinaxs.api.custom_types import CDict
 
 
 @plum.dispatch

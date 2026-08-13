@@ -24,7 +24,8 @@ from coordinax._src.base import (
     AbstractStaticChart,
     chart_dataclass_decorator,
 )
-from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
+from coordinax._src.custom_types import Ds, Ks, OptUSys
+from coordinaxs.api.custom_types import CDict
 
 V = TypeVar("V")
 

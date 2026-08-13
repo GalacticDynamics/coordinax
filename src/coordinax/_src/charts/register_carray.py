@@ -12,7 +12,7 @@ import unxts.linalg as ul
 from unxt.quantity import AllowValue
 
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict
+from coordinaxs.api.custom_types import CDict
 
 DMLS: Final = u.unit("")
 

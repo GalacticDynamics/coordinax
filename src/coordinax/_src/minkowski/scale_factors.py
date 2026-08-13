@@ -9,7 +9,8 @@ import unxts.linalg as ul
 
 from .charts import MinkowskiCT
 from .metric import MinkowskiMetric
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 
 @plum.dispatch

@@ -21,8 +21,9 @@ from coordinax._src.base import (
 )
 from coordinax._src.charts.d1 import time1d
 from coordinax._src.charts.d3 import cart3d
-from coordinax._src.custom_types import CDict, Ds, Ks
+from coordinax._src.custom_types import Ds, Ks
 from coordinax._src.euclidean.manifold import R1, R3
+from coordinaxs.api.custom_types import CDict
 
 galilean_spacetime: Final = CartesianProductManifold(
     factors=(R1, R3), factor_names=("ct", "space")

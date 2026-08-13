@@ -11,7 +11,8 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 AMBIGUOUS_CHART_POINT_REALIZATION_MAP_MSG: Final[str] = (
     "Ambiguous point realization map: {0}_chart={1} is present in both "

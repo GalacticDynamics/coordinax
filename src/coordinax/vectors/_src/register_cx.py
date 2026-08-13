@@ -22,7 +22,8 @@ import coordinaxs.api.transforms as cxfmapi
 from .bundle import Coordinate
 from .point import Point
 from .tangent import Tangent
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 CHART_MSMTCH = "from_chart {0} does not match the point's chart {1.chart}"
 

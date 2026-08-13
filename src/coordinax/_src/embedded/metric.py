@@ -15,7 +15,8 @@ import unxts.linalg as ul
 import coordinaxs.api.charts as cxcapi
 from .embedmap import AbstractEmbeddingMap
 from coordinax._src.base import AbstractMetricField
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 DMLS = u.unit("")
 

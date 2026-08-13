@@ -9,7 +9,7 @@ import equinox as eqx
 import unxt as u
 
 import coordinax.charts as cxc
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.embedded import (
     AbstractEmbeddingMap,
     AmbientT,
@@ -18,6 +18,7 @@ from coordinax._src.embedded import (
 )
 from coordinax._src.euclidean.manifold import R3
 from coordinax._src.spherical.manifold import S2
+from coordinaxs.api.custom_types import CDict
 
 
 @final

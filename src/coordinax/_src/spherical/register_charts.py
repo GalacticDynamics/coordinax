@@ -14,7 +14,8 @@ from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold
 from coordinax._src.base import AbstractChart
 from coordinax._src.charts.d3 import Abstract3D, Spherical3D
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 _twospherefrom3d: Final = TwoSphereIn3D(1)
 

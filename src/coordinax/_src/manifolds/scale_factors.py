@@ -11,10 +11,11 @@ import unxts.linalg as ul
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import as_quantity_matrix
 from coordinax._src.base import AbstractChart, AbstractMetricField
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.embedded.manifold import EmbeddedManifold
 from coordinax._src.embedded.metric import PullbackMetric
 from coordinax._src.metric.matrix import DiagonalMetric
+from coordinaxs.api.custom_types import CDict
 
 DMLS = u.unit("")
 

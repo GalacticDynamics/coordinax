@@ -30,8 +30,8 @@ import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .custom_types import HasShape, Shape
-from coordinax._src.custom_types import CDict
 from coordinax.internal import pos_named_objs
+from coordinaxs.api.custom_types import CDict
 
 if TYPE_CHECKING:
     from typing import Self

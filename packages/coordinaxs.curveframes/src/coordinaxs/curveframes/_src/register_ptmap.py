@@ -12,8 +12,9 @@ import plum
 
 import coordinax.charts as cxc
 import unxt as u
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax.manifolds import Rn
+from coordinaxs.api.custom_types import CDict
 
 from .chart import TubularChart
 from .nearest import nearest_tau

@@ -11,7 +11,8 @@ import equinox as eqx
 
 from coordinax._src.base import AbstractChart
 from coordinax._src.base.charts import is_abstract_class
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 IntrinsicT = TypeVar("IntrinsicT", bound=AbstractChart[Any, Any, Any])
 AmbientT = TypeVar("AmbientT", bound=AbstractChart[Any, Any, Any])

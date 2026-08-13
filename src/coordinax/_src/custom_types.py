@@ -3,8 +3,9 @@
 The single definition of ``coordinax``'s shared type vocabulary; every layer
 re-exports from here.
 
-``CKey`` and ``CDict`` come from `coordinaxs.api.custom_types`, the workspace
-root, and are re-exported below.
+``CKey`` and ``CDict`` are *not* here -- import them from
+`coordinaxs.api.custom_types`. They appear below only as the bounds of
+``CDictT`` and ``Ks``.
 """
 
 __all__: tuple[str, ...] = (
@@ -14,8 +15,6 @@ __all__: tuple[str, ...] = (
     "OptUSys",
     "Shape",
     "HasShape",
-    "CKey",
-    "CDict",
     "CDictT",
     "Ks",
     "Ds",

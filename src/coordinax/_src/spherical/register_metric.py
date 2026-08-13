@@ -32,13 +32,13 @@ from .chart import (
     SphericalTwoSphere,
 )
 from .manifold import HyperSphericalManifold
-from coordinax._src.custom_types import CDict
 from coordinax._src.metric.matrix import (
     DenseMetric,
     DiagonalMetric,
     _sine_product_diagonal,
 )
 from coordinax.internal import tree_cast_int_bool_to_float
+from coordinaxs.api.custom_types import CDict
 
 RAD = u.unit("rad")
 

@@ -14,7 +14,8 @@ import coordinaxs.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from .metric import PullbackMetric
 from coordinax._src.base import AbstractAtlas, AbstractChart, AbstractManifold
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 UNSUPPORTED_CHART_MESSAGE: Final[str] = (
     "{0} chart {1} is not supported by the manifold's {0} atlas {2}."

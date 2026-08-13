@@ -32,8 +32,9 @@ from unxt.quantity import is_any_quantity
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import AbstractChart
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.metric.matrix import AbstractMetricMatrix, DiagonalMetric
+from coordinaxs.api.custom_types import CDict
 
 _MSG_PACKED_SHAPE = (
     "{fname}(): packed Quantity has trailing dimension {got}, but chart "

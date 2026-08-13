@@ -25,7 +25,8 @@ from coordinax._src.base import (
     AbstractLorentzianMetricField,
     AbstractMetricField,
 )
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
+from coordinaxs.api.custom_types import CDict
 
 #: Speed of light in vacuum, for converting a length-valued proper interval
 #: into a duration.  `MinkowskiCT` measures time as ``ct`` in length units, so

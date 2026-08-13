@@ -21,7 +21,7 @@ from coordinax._src.base import (
     AbstractChart,
     AbstractFixedComponentsChart,
 )
-from coordinax._src.custom_types import CDict
+from coordinaxs.api.custom_types import CDict
 
 # ===================================================================
 # Guess Chart Classes

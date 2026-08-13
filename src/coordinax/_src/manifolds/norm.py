@@ -18,9 +18,10 @@ from ._utils import require_positive_definite
 from .quadratic_form import quadratic_form
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.charts import Cart0D, Cart1D, Cart2D, Cart3D, CartND
-from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import OptUSys
 from coordinax._src.euclidean import FlatMetric
 from coordinax._src.internal import pack_uniform_unit
+from coordinaxs.api.custom_types import CDict
 
 # ===================================================================
 # Metric Matrix
