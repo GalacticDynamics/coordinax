@@ -22,6 +22,8 @@ change: e.g. ``BishopBuilder(ArcLength(curve))``.
 
 __all__ = ("ArcLength",)
 
+import inspect
+
 from collections.abc import Callable
 from typing import Any, cast, final
 
@@ -31,6 +33,8 @@ import jax.numpy as jnp
 from diffraxtra import DiffEqSolver
 
 import unxt as u
+
+from .attime import AtTime
 
 #: Default integrator for the arc-length ODE.  Same choice as
 #: `coordinaxs.curveframes._src.bishop._DIFFEQSOLVER`: `Tsit5` with a tight
@@ -43,6 +47,17 @@ _DIFFEQSOLVER = DiffEqSolver(
     adjoint=dfx.DirectAdjoint(),
     max_steps=16384,
 )
+
+
+def _is_two_argument(curve: Callable[..., Any], /) -> bool:
+    """Report whether ``curve`` takes two positional arguments, ``(tau, t)``.
+
+    Inspected once, at `ArcLength` construction, and cached in a static
+    field -- so `__call__` branches on a Python `bool` (resolved at trace
+    time, one compiled variant per curve shape) rather than re-inspecting
+    ``curve`` on every call.
+    """
+    return len(inspect.signature(curve).parameters) >= 2
 
 
 @final
@@ -59,14 +74,20 @@ class ArcLength(eqx.Module):
     inverting.  The result is differentiable through the solve in both AD
     modes (see `diffeqsolver`).
 
-    For a **time-dependent** curve (one that also takes an evaluation time),
-    this is the *Eulerian* reading: arc length is measured on the slice being
-    evaluated, not on some fixed reference slice.
+    If the wrapped ``curve`` also takes an evaluation time, i.e. it is
+    ``(tau, t) -> Quantity`` rather than ``tau -> Quantity``, `ArcLength`
+    detects this at construction and **stays two-argument**:
+    ``ArcLength(curve)(s, t)`` measures arc length on the slice at ``t`` --
+    the *Eulerian* reading. This is different from binding ``t`` first with
+    `AtTime` and wrapping the result: ``ArcLength(AtTime(curve, t))`` is a
+    one-argument curve frozen to that single slice. See `AtTime` for the
+    distinction and why the order matters.
 
     Parameters
     ----------
     curve : Callable
-        A function ``tau -> Quantity[float, (3,)]``, in the parameter unit
+        A function ``tau -> Quantity[float, (3,)]`` or, for a time-dependent
+        curve, ``(tau, t) -> Quantity[float, (3,)]``, in the parameter unit
         ``tau_unit``.  Make it an `equinox.Module` for differentiable curve
         parameters; a bare function's captures are trace-time constants.
     tau_unit : AbstractUnit or str, optional
@@ -119,12 +140,20 @@ class ArcLength(eqx.Module):
     )
     """Solver, step-size controller, adjoint and step budget for the ODE."""
 
+    _two_argument: bool = eqx.field(static=True, init=False, default=False)
+    """Whether ``curve`` takes ``(tau, t)`` rather than just ``tau``.
+
+    Detected once from ``curve``'s signature in ``__post_init__`` (see
+    `_is_two_argument`) so `__call__` never re-inspects ``curve``.
+    """
+
     def __post_init__(self) -> None:
         """Resolve a `None` ``tau_0`` to zero in ``tau_unit`` (a pytree leaf)."""
         if self.tau_0 is None:
             self.tau_0 = u.Q(0.0, self.tau_unit)
+        self._two_argument = _is_two_argument(self.curve)
 
-    def __call__(self, s: u.AbstractQuantity, /) -> Any:
+    def __call__(self, s: u.AbstractQuantity, t: Any = None, /) -> Any:
         r"""Evaluate the reparameterised curve at arc length ``s``.
 
         Solves $d\tau/ds = 1/\|\boldsymbol{\gamma}'(\tau)\|$ from $s = 0$ to
@@ -134,6 +163,10 @@ class ArcLength(eqx.Module):
         differentiable in ``s`` at ``s = 0``: integrating over $[0, s]$
         directly would put ``s`` in the integration bound, where the solver
         loop takes zero steps and the derivative silently comes back as $0$.
+
+        If the wrapped curve is time-dependent, ``t`` selects the slice on
+        which arc length is measured (the Eulerian reading); it is ignored
+        (and may be omitted) for a one-argument curve.
 
         Examples
         --------
@@ -156,9 +189,15 @@ class ArcLength(eqx.Module):
         s_unit = s.unit
         speed_unit = s_unit / tau_unit
 
+        # Bind `t` into a one-argument curve for a time-dependent wrapped
+        # curve; otherwise use it as-is. `self._two_argument` is a static
+        # field, so this is a Python-level branch resolved once per traced
+        # curve shape, not a per-call runtime branch under jit.
+        curve = self.curve if not self._two_argument else AtTime(self.curve, t)
+
         # Pre-compute the curve's derivative as a callable, once, rather than
         # nesting AD inside the ODE right-hand side.
-        dcurve = u.experimental.jacfwd(self.curve, units=(tau_unit,))
+        dcurve = u.experimental.jacfwd(curve, units=(tau_unit,))
 
         def speed(tau_q: u.AbstractQuantity, /) -> Any:
             return jnp.linalg.norm(dcurve(tau_q).ustrip(speed_unit))
@@ -174,4 +213,4 @@ class ArcLength(eqx.Module):
 
         sol = self.diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, tau_0_val)
         tau_val = sol.ys[-1]
-        return self.curve(u.Q(tau_val, tau_unit))
+        return curve(u.Q(tau_val, tau_unit))

@@ -5,6 +5,8 @@ implementation modules:
 
 - {mod}`.base` — abstract base classes.
 - {mod}`.arclength` — `ArcLength`, arc-length reparametrisation of a curve.
+- {mod}`.attime` — `AtTime`, binding the evaluation time of a time-dependent
+  curve.
 - {mod}`.frenetserret` — Frenet--Serret transform and frame.
 - {mod}`.bishop` — Bishop (rotation-minimising) transform and frame.
 - {mod}`.chart` — `TubularChart`, on the parameterized branch.
@@ -19,6 +21,7 @@ the curve-charts guide for why, and for the two builders' differing results.
 """
 
 from .arclength import *
+from .attime import *
 from .base import *
 from .bishop import *
 from .chart import *

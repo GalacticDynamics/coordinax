@@ -11,6 +11,7 @@ Public API
     AbstractCurveFrameBuilder
     AbstractParallelTransportFrame
     ArcLength
+    AtTime
     FrenetSerretBuilder
     FrenetSerretFrame
     BishopBuilder
@@ -36,6 +37,7 @@ __all__ = (
     "AbstractCurveFrameBuilder",
     "AbstractParallelTransportFrame",
     "ArcLength",
+    "AtTime",
     "BishopBuilder",
     "BishopFrame",
     "FrenetSerretBuilder",
@@ -51,6 +53,7 @@ with install_import_hook("coordinaxs.curveframes"):
         AbstractCurveFrameBuilder,
         AbstractParallelTransportFrame,
         ArcLength,
+        AtTime,
         BishopBuilder,
         BishopFrame,
         FrenetSerretBuilder,
