@@ -251,46 +251,11 @@ Q([1.5, 0. , 0. ], 'km')
 
 `AtTime(curve, t)` binds the evaluation time of a two-argument curve, turning it into a one-argument one; it is what makes `ArcLength`'s otherwise-two-argument result callable with `s` alone above. Where `AtTime` sits relative to `ArcLength` changes what is being asked: `ArcLength(AtTime(curve, t))` binds `t` first, so `ArcLength` sees a one-argument curve and freezes arc length to that one slice permanently — there is no Eulerian/Lagrangian distinction left to make. `AtTime(ArcLength(curve), t)`, used above, keeps `ArcLength` two-argument and only fixes which slice a given call reads; a later call with a different `t` re-measures on that slice instead.
 
-### Precomputing With `s_max`
+### Cost
 
-Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Passing `s_max` solves it once, at construction, as a dense interpolation of $\tau(s)$ over $s \in [0, s_{\max}]$; each call then evaluates that interpolation instead of re-solving:
+Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
 
-```{code-block} python
->>> plain = cxfc.ArcLength(helix)
->>> cached = cxfc.ArcLength(helix, s_max=u.Q(5.0, "km"))
->>> plain(u.Q(2.0, "km"))
-Q([-0.33806139,  0.94112406,  0.57469577], 'km')
->>> cached(u.Q(2.0, "km"))
-Q([-0.33806139,  0.94112406,  0.57469577], 'km')
-
-```
-
-The two agree to $2.22\times10^{-16}$ — solver tolerance, not an approximation. Measured on this helix, the cached path ran 7.7 times faster per call (6183us to 806us, one construction amortised over many evaluations).
-
-`s_max` has two constraints. Calling with `s` outside $[0, s_{\max}]$ raises rather than silently extrapolating:
-
-```{code-block} python
->>> try:
-...     cached(u.Q(6.0, "km"))
-... except Exception as e:
-...     print("s lies outside the precomputed domain" in str(e))
-True
-
-```
-
-And `s_max` is rejected outright for `ArcLength` over a two-argument curve — the Eulerian reading re-measures arc length per slice, so there is no single $\tau(s)$ map to precompute:
-
-```{code-block} python
->>> cxfc.ArcLength(stretch, s_max=u.Q(5.0, "km"))
-Traceback (most recent call last):
-    ...
-ValueError: s_max is not supported for a two-argument (time-dependent) curve...
-
-```
-
-Bind `t` first with `AtTime(curve, t)` to get a one-argument curve `s_max` accepts, or use `LagrangianArcLength`, whose reference slice `t0` is fixed at construction and so always accepts `s_max`.
-
-(limitations)=
+Amortising that with a precomputed $\tau(s)$ interpolation is [tracked separately](https://github.com/GalacticDynamics/coordinax/issues) -- doing it without breaking gradients with respect to the curve's own parameters needs more than caching the solve.
 
 ## Limitations
 
