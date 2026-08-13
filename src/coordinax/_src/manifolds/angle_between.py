@@ -10,10 +10,11 @@ import jax.numpy as jnp
 import plum
 
 import quaxed.numpy as qnp
+import unxt as u
+from unxt.quantity import AllowValue
 
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
-from ._utils import to_dimensionless as _dimensionless
 from .quadratic_form import gram
 from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
@@ -128,13 +129,13 @@ def angle_between(
         uvec, vvec, chart, at=at, usys=usys, fname="angle_between", require_usys=False
     )
 
-    cos = _dimensionless(inner / qnp.sqrt(uu * vv))
+    cos = jnp.asarray(u.ustrip(AllowValue, "", inner / qnp.sqrt(uu * vv)))
 
     # Compared against zero *in* whatever unit g(v,v) carries -- the one
-    # comparison that needs no common unit -- so only the resulting boolean is
-    # converted, and it is dimensionless by construction.
-    u_spacelike = _dimensionless(uu > 0)
-    v_spacelike = _dimensionless(vv > 0)
+    # comparison needing no common unit -- so only the resulting boolean is
+    # converted, and `AllowValue` lets a bare-array caller through untouched.
+    u_spacelike = jnp.asarray(u.ustrip(AllowValue, "", uu > 0))
+    v_spacelike = jnp.asarray(u.ustrip(AllowValue, "", vv > 0))
 
     # Eagerly this raises, naming the case. Under tracing it cannot -- the values
     # are not concrete -- so it is a no-op there and `valid` below is what stands
@@ -194,8 +195,11 @@ def _check_angle_is_defined(uu: Any, vv: Any, cos: Any, /) -> None:
     Skipped under JAX tracing, where the values are not concrete; the caller
     applies the same conditions as a mask there, yielding `nan` instead.
     """
-    u_neg, v_neg = _dimensionless(uu < 0), _dimensionless(vv < 0)
-    u_zero, v_zero = _dimensionless(uu == 0), _dimensionless(vv == 0)
+    u_neg, v_neg = u.ustrip(AllowValue, "", uu < 0), u.ustrip(AllowValue, "", vv < 0)
+    u_zero, v_zero = (
+        u.ustrip(AllowValue, "", uu == 0),
+        u.ustrip(AllowValue, "", vv == 0),
+    )
     if any(isinstance(x, jax.core.Tracer) for x in (u_neg, v_neg, cos)):  # ty: ignore[possibly-missing-submodule]
         return
 

@@ -21,6 +21,8 @@ import jax.numpy as jnp
 import plum
 
 import quaxed.numpy as qnp
+import unxt as u
+from unxt.quantity import AllowValue
 
 import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import (
@@ -29,7 +31,6 @@ from coordinax._src.base import (
     AbstractMetricField,
 )
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax._src.manifolds._utils import to_dimensionless
 from coordinax._src.manifolds.quadratic_form import gram
 
 #: Slack on ``cosh(phi) >= 1``, so ordinary float error at coincident
@@ -173,13 +174,13 @@ def rapidity_between(
         require_usys=False,
     )  # fmt: skip
 
-    # The ratio's units cancel exactly, so this is a real conversion to
-    # dimensionless, not a discarded unit. The sign tests compare against zero
-    # *in* whatever unit g(v,v) carries -- the one comparison needing no common
-    # unit -- so only the resulting booleans are converted.
-    cosh = to_dimensionless(-inner / qnp.sqrt(uu * vv))
-    u_timelike = to_dimensionless(uu < 0)
-    v_timelike = to_dimensionless(vv < 0)
+    # `ustrip(AllowValue, "")` converts, so it *refuses* anything not actually
+    # dimensionless, and lets a bare-array caller through untouched. The ratio's
+    # units cancel exactly; the sign tests compare against zero *in* whatever
+    # unit g(v,v) carries, so only their booleans are converted.
+    cosh = jnp.asarray(u.ustrip(AllowValue, "", -inner / qnp.sqrt(uu * vv)))
+    u_timelike = jnp.asarray(u.ustrip(AllowValue, "", uu < 0))
+    v_timelike = jnp.asarray(u.ustrip(AllowValue, "", vv < 0))
 
     # Eagerly this raises, naming the case. Under tracing it cannot -- the
     # values are not concrete -- so `valid` below is what stands between the

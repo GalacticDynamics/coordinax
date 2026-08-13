@@ -3,13 +3,9 @@
 __all__: tuple[str, ...] = ()
 
 from jaxtyping import Array
-from typing import Any
-
-import jax.numpy as jnp
 
 import unxt as u
 import unxts.linalg as ul
-from unxt.quantity import is_any_quantity
 
 from coordinax._src.base import AbstractMetricField
 
@@ -95,17 +91,3 @@ def as_quantity_matrix(x: ul.QM | Array, /) -> ul.QM:
         return x
     n_rows, n_cols = x.shape[-2:]
     return ul.QM(value=x, unit=ul.UnitsMatrix.full((n_rows, n_cols), DMLS))
-
-
-def to_dimensionless(x: Any, /) -> Array:
-    """Convert a genuinely dimensionless *x* to a bare array.
-
-    A real unit conversion, not a peek at the magnitude: it raises on anything
-    that is not dimensionless. Two things reach it -- a ratio whose units
-    cancel, and the boolean from a comparison -- and both are dimensionless by
-    construction.
-
-    Callers may pass bare arrays (`check_data(..., values=False)` permits it),
-    which are already in the target form and pass straight through.
-    """
-    return jnp.asarray(u.ustrip("", x) if is_any_quantity(x) else x)
