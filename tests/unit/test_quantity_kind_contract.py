@@ -20,7 +20,7 @@ import jax
 import jax.numpy as jnp
 import plum
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -115,7 +115,6 @@ class TestConversion:
     """Unit conversion is lossless up to float precision."""
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_round_trip_through_another_unit(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -136,7 +135,6 @@ class TestArithmetic:
     """
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_add_returns_same_kind(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -144,13 +142,11 @@ class TestArithmetic:
         assert isinstance(value + value, kind.cls)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_sub_self_is_zero(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy(elements=kind.elements))
         assert jnp.allclose((value - value).value, 0)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_scalar_mul_scales_value(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -158,7 +154,6 @@ class TestArithmetic:
         assert jnp.allclose((2 * value).value, 2 * value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_add_then_sub_roundtrips(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -167,7 +162,6 @@ class TestArithmetic:
         assert jnp.allclose(((a + b) - b).value, a.value, rtol=1e-4, atol=1e-4)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_add_is_commutative(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -176,7 +170,6 @@ class TestArithmetic:
         assert jnp.allclose((a + b).value, (b + a).value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_add_is_associative(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -191,7 +184,6 @@ class TestJAX:
     """PyTree, jit, vmap and grad all round-trip the type."""
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_pytree_roundtrip(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy())
         flat, tree = jax.tree.flatten(value)
@@ -201,7 +193,6 @@ class TestJAX:
         assert jnp.array_equal(restored.value, value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_jit_identity(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy())
         result = jax.jit(lambda x: x)(value)
@@ -209,21 +200,18 @@ class TestJAX:
         assert jnp.array_equal(result.value, value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_jit_add(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy(elements=kind.elements))
         result = jax.jit(lambda x: x + x)(value)
         assert jnp.allclose(result.value, 2 * value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_vmap(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy(shape=(4,), elements=kind.elements))
         result = jax.vmap(lambda x: x + x)(value)
         assert result.shape == (4,)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_grad_through_the_value(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -242,7 +230,6 @@ class TestPlumPromotion:
     """Both kinds promote to, and convert to, a plain Quantity."""
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_promotes_with_quantity(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:
@@ -257,7 +244,6 @@ class TestPlumPromotion:
         assert isinstance(q * value, u.Q)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_converts_to_quantity(
         self, kind: SimpleNamespace, data: st.DataObject
     ) -> None:

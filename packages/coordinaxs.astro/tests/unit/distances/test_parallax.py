@@ -4,7 +4,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import unxt as u
 
@@ -86,7 +86,6 @@ class TestConversionEndpoints:
         assert jnp.all(plx.value >= 0)
 
     @given(plx=cxastrost.parallaxes())
-    @settings(deadline=None)
     def test_pytree_roundtrip(self, plx: cxastro.Parallax) -> None:
         """Parallax survives PyTree flatten/unflatten."""
         flat, tree = jax.tree.flatten(plx)
@@ -96,7 +95,6 @@ class TestConversionEndpoints:
         assert jnp.array_equal(restored.value, plx.value)
 
     @given(plx=cxastrost.parallaxes())
-    @settings(deadline=None)
     def test_jit_identity(self, plx: cxastro.Parallax) -> None:
         """JIT-compiled identity preserves Parallax."""
         result = jax.jit(lambda x: x)(plx)

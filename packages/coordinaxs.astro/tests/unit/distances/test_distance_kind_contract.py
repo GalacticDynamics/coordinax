@@ -18,7 +18,7 @@ import hypothesis.strategies as st
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import unxt as u
 
@@ -141,7 +141,6 @@ class TestJAX:
     """PyTree, jit and vmap behaviour is the same for all three."""
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_pytree_roundtrip(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy())
         flat, tree = jax.tree.flatten(value)
@@ -151,7 +150,6 @@ class TestJAX:
         assert jnp.array_equal(restored.value, value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_jit_identity(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy())
         result = jax.jit(lambda x: x)(value)
@@ -159,14 +157,12 @@ class TestJAX:
         assert jnp.array_equal(result.value, value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_jit_add(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy())
         result = jax.jit(lambda x: x + x)(value)
         assert jnp.allclose(result.value, 2 * value.value)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_vmap(self, kind: SimpleNamespace, data: st.DataObject) -> None:
         value = data.draw(kind.strategy(shape=(3,)))
         result = jax.vmap(lambda x: x + x)(value)

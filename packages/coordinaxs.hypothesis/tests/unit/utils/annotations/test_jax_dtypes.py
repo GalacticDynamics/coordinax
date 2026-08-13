@@ -57,7 +57,7 @@ import coordinaxs.hypothesis.main as cxst
 bad = []
 
 @given(d=st.data())
-@settings(max_examples=150, deadline=None, database=None,
+@settings(max_examples=150, database=None,
           suppress_health_check=list(HealthCheck))
 def run(d):
     try:

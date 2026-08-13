@@ -147,7 +147,7 @@ class TestJacobianPtMapUnits:
     @pytest.mark.parametrize(("chart_a", "chart_b"), CHART_PAIRS)
     @pytest.mark.parametrize("forward", [True, False], ids=["fwd", "rev"])
     @given(data=st.data())
-    @settings(deadline=None, max_examples=10)
+    @settings(max_examples=10)
     def test_every_cell_is_out_over_in(
         self, chart_a, chart_b, forward, data: st.DataObject
     ) -> None:
@@ -508,7 +508,6 @@ class TestJacobianPtMapCompositionProperty:
 
     @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
     @given(data=st.data())
-    @settings(deadline=None)
     def test_composition_is_the_identity(
         self, cart: cxc.AbstractChart, curv: cxc.AbstractChart, data: st.DataObject
     ) -> None:
@@ -558,7 +557,6 @@ class TestJacobianPtMapAgreesWithJacfwd:
     @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
     @pytest.mark.parametrize("forward", [True, False], ids=["cart->curv", "curv->cart"])
     @given(data=st.data())
-    @settings(deadline=None)
     def test_agrees_with_jacfwd(
         self,
         cart: cxc.AbstractChart,
@@ -827,7 +825,7 @@ class TestJacobianPtMapAtExtremeScales:
     @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
     @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
     @given(data=st.data())
-    @settings(deadline=None, max_examples=5)
+    @settings(max_examples=5)
     def test_composition_is_the_identity(
         self,
         cart: cxc.AbstractChart,

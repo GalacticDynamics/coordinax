@@ -34,7 +34,7 @@ import jax.numpy as jnp
 import jax.tree as jt
 import pytest
 from astropy.units import UnitConversionError
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 from plum import convert
 
 import quaxed.numpy as qnp
@@ -285,7 +285,6 @@ class TestDistanceConversionProperties:
     """.distance property always returns a Distance."""
 
     @given(d=cxst.distances(unit="kpc"))
-    @settings(deadline=None)
     def test_distance_property_identity(self, d: cxd.Distance) -> None:
         assert isinstance(d.distance, cxd.Distance)
 
@@ -305,7 +304,6 @@ class TestDistanceJAX:
     """Distance is a valid JAX pytree and works under JIT, vmap, and grad."""
 
     @given(d=cxst.distances())
-    @settings(deadline=None)
     def test_pytree_roundtrip(self, d: cxd.Distance) -> None:
         """Flatten → unflatten recovers an identical Distance."""
         flat, tree = jax.tree.flatten(d)
@@ -315,7 +313,6 @@ class TestDistanceJAX:
         assert jnp.array_equal(restored.value, d.value)
 
     @given(d=cxst.distances())
-    @settings(deadline=None)
     def test_jit_identity(self, d: cxd.Distance) -> None:
         """jax.jit of the identity function preserves the Distance unchanged."""
         result = jax.jit(lambda x: x)(d)
@@ -323,7 +320,6 @@ class TestDistanceJAX:
         assert jnp.array_equal(result.value, d.value)
 
     @given(d=cxst.distances())
-    @settings(deadline=None)
     def test_jit_add(self, d: cxd.Distance) -> None:
         """jax.jit works over Distance addition."""
         result = jax.jit(lambda x: x + x)(d)
@@ -331,7 +327,6 @@ class TestDistanceJAX:
         assert jnp.allclose(result.value, 2 * d.value)
 
     @given(d=cxst.distances(shape=(3,)))
-    @settings(deadline=None)
     def test_vmap(self, d: cxd.Distance) -> None:
         """jax.vmap maps a scalar op over a Distance array."""
         result = jax.vmap(lambda x: x + x)(d)
@@ -340,7 +335,6 @@ class TestDistanceJAX:
         assert jnp.allclose(result.value, 2 * d.value)
 
     @given(d=cxst.distances(unit="kpc", elements=_unit_f32))
-    @settings(deadline=None)
     def test_grad_through_distance(self, d: cxd.Distance) -> None:
         """jax.grad differentiates through quaxed sum; d/dx sum(x) == 1."""
         g = jax.grad(lambda x: qnp.sum(x).value)(d)

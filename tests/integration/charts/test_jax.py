@@ -17,7 +17,7 @@ __all__: tuple[str, ...] = ()
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import unxt as u
 
@@ -104,7 +104,6 @@ class TestJITCompatibility:
         assert u.ustrip("m", result["z"]) == pytest.approx(3)
 
     @given(x=_any_floats, y=_any_floats, z=_pos_floats)
-    @settings(deadline=None)
     def test_jit_agrees_with_eager_property(self, x: float, y: float, z: float) -> None:
         """Property: jit gives the same r as eager for cart3d → sph3d."""
         x_q, y_q, z_q = u.Q(x, "m"), u.Q(y, "m"), u.Q(z, "m")
@@ -169,7 +168,6 @@ class TestVmapCompatibility:
         ys=st.lists(_any_floats, min_size=3, max_size=3),
         zs=st.lists(_pos_floats, min_size=3, max_size=3),
     )
-    @settings(deadline=None)
     def test_vmap_r_equals_norm(self, xs: list, ys: list, zs: list) -> None:
         """vmap: r == ||xyz|| for every point in the batch."""
         xs_q = u.Q(jnp.array(xs, dtype=jnp.float32), "m")
@@ -227,7 +225,6 @@ class TestGradCompatibility:
         assert float(dr_dx) == pytest.approx(1, rel=1e-5)
 
     @given(x=_pos_floats, z=_pos_floats)
-    @settings(deadline=None)
     def test_grad_r_equals_x_over_r_property(self, x: float, z: float) -> None:
         """Property: dr/dx = x/r (analytical Jacobian of spherical r)."""
 

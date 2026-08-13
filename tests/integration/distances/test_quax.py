@@ -19,7 +19,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 import quax
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -339,7 +339,6 @@ class TestJAXTransformsWithQuaxed:
         assert jnp.allclose(g.value, expected_grad, atol=1e-5)
 
     @given(d=_dist_kpc)
-    @settings(deadline=None)
     def test_grad_sum_is_one(self, d: cxd.Distance) -> None:
         """d/dx sum(x) == 1 for any Distance scalar."""
         g = jax.grad(lambda x: qnp.sum(x).value)(d)
@@ -364,7 +363,6 @@ class TestJAXTransformsWithQuaxed:
         assert jnp.allclose(result.value, expected_val, atol=1e-6)
 
     @given(d=cxst.distances(shape=(3,)))
-    @settings(deadline=None)
     def test_vmap_abs(self, d: cxd.Distance) -> None:
         """jax.vmap over qnp.abs maps element-wise and returns a Distance."""
         result = jax.vmap(qnp.abs)(d)
@@ -373,7 +371,6 @@ class TestJAXTransformsWithQuaxed:
         assert jnp.all(result.value >= 0)
 
     @given(d=_dist_kpc_arr)
-    @settings(deadline=None)
     def test_vmap_add(self, d: cxd.Distance) -> None:
         """jax.vmap over qnp.add doubles each element of a Distance array."""
         result = jax.vmap(lambda x: qnp.add(x, x))(d)

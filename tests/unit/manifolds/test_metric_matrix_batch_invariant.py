@@ -44,7 +44,7 @@ CURVILINEAR = [
 
 
 @given(data=st.data())
-@settings(deadline=None, max_examples=50)
+@settings(max_examples=50)
 def test_curvilinear_metric_batches_like_elementwise(data):
     """Batched diagonal equals the per-element unbatched diagonals."""
     manifold, chart = data.draw(st.sampled_from(CURVILINEAR))

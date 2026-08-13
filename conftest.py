@@ -2,6 +2,7 @@
 
 import contextlib
 import importlib
+import os
 import pathlib
 from doctest import ELLIPSIS, NORMALIZE_WHITESPACE
 
@@ -22,9 +23,18 @@ from sybil.python import import_path as sybil_import_path
 # =========================================================
 # Hypothesis settings
 
+# Deadlines measure wall-clock time per example, and JAX compiles on an
+# example's first execution: the same example takes ~400ms then and ~2ms on the
+# replay hypothesis does to confirm it. That is reported as `DeadlineExceeded`
+# or `FlakyFailure` -- a real failure, at a random example, on a loaded machine.
+# It is off everywhere rather than per test, which is what the 100+ scattered
+# `@settings(deadline=None)` decorators were doing one at a time.
+DEADLINE = None
+
 # Quick smoke test profile to check the test infrastructure is working.
 settings.register_profile(
     "smoke",
+    deadline=DEADLINE,
     max_examples=5,
     phases=[Phase.explicit, Phase.reuse, Phase.generate],
     suppress_health_check=[HealthCheck.too_slow],
@@ -32,11 +42,21 @@ settings.register_profile(
 
 # Default profile for development: more examples and allow slow tests.
 settings.register_profile(
-    "dev", max_examples=50, suppress_health_check=[HealthCheck.too_slow]
+    "dev",
+    deadline=DEADLINE,
+    max_examples=50,
+    suppress_health_check=[HealthCheck.too_slow],
 )
 
 # Thorough profile for CI: many examples and all health checks.
-settings.register_profile("thorough", max_examples=500)
+settings.register_profile("thorough", deadline=DEADLINE, max_examples=500)
+
+# What runs unless `HYPOTHESIS_PROFILE` names another. Hypothesis's own
+# defaults otherwise, so only the deadline changes. Without this `load_profile`
+# none of the profiles above was ever selected -- `thorough`'s 500 examples had
+# never run anywhere.
+settings.register_profile("default", deadline=DEADLINE)
+settings.load_profile(os.environ.get("HYPOTHESIS_PROFILE", "default"))
 
 
 # =========================================================

@@ -157,9 +157,7 @@ class TestRadial1DIsNotRadial:
         seen_negative = False
 
         @given(point=cxst.cdicts(cxc.radial1d))
-        @settings(
-            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=100, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             nonlocal seen_negative
             if float(u.ustrip("m", point["r"])) < 0:
@@ -235,9 +233,7 @@ class TestCDictsRespectsDomains:
         domains = component_domains(chart)
 
         @given(point=cxst.cdicts(chart))
-        @settings(
-            max_examples=50, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=50, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             for name, q in point.items():
                 assert _in(domains[name], q), f"{name}={q!r} outside {domains[name]}"
@@ -264,9 +260,7 @@ class TestCDictsRespectsDomains:
         """
 
         @given(point=cxst.cdicts(chart))
-        @settings(
-            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=100, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             assert predicate(float(u.ustrip(unit_str, point[component])))
 
@@ -282,9 +276,7 @@ class TestCDictsRespectsDomains:
         seen: set[tuple[str, ...]] = set()
 
         @given(point=cxst.cdicts(cxc.sph3d))
-        @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=200, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             seen.add(tuple(str(q.unit) for q in point.values()))
 
@@ -297,9 +289,7 @@ class TestMagnitude:
 
     def test_default_bounds_magnitude(self) -> None:
         @given(point=cxst.cdicts(cxc.cart3d))
-        @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=200, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             for q in point.values():
                 assert abs(float(u.ustrip("m", q))) <= 1e3 * (1 + 1e-6)
@@ -308,9 +298,7 @@ class TestMagnitude:
 
     def test_explicit_magnitude_is_honoured(self) -> None:
         @given(point=cxst.cdicts(cxc.cart3d, magnitude=1.0))
-        @settings(
-            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=100, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             for q in point.values():
                 assert abs(float(u.ustrip("m", q))) <= 1.0 * (1 + 1e-6)
@@ -322,9 +310,7 @@ class TestMagnitude:
         biggest = 0.0
 
         @given(point=cxst.cdicts(cxc.cart3d, magnitude=None))
-        @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=200, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             nonlocal biggest
             for q in point.values():
@@ -347,9 +333,7 @@ class TestMagnitudeFloor:
         radii = []
 
         @given(point=cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
-        @settings(
-            max_examples=150, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=150, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             radii.append(float(u.ustrip("m", point["r"])))
 
@@ -366,9 +350,7 @@ class TestMagnitudeFloor:
         seen_small = False
 
         @given(point=cxst.cdicts(cxc.cart3d, magnitude=(0.5, 8.0)))
-        @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=200, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             nonlocal seen_small
             if abs(float(u.ustrip("m", point["x"]))) < 0.5:
@@ -381,9 +363,7 @@ class TestMagnitudeFloor:
         """Backwards-compatible: a bare number is the upper bound only."""
 
         @given(point=cxst.cdicts(cxc.sph3d, magnitude=8.0))
-        @settings(
-            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=100, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             assert float(u.ustrip("m", point["r"])) <= 8.0 * (1 + 1e-6)
 
@@ -404,9 +384,7 @@ class TestMagnitudeFloorIsRadialOnly:
         thetas = []
 
         @given(point=cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
-        @settings(
-            max_examples=150, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=150, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             thetas.append(float(u.ustrip("rad", point["theta"])))
 
@@ -418,9 +396,7 @@ class TestMagnitudeFloorIsRadialOnly:
         """The counterpart: the coordinate the floor is actually for."""
 
         @given(point=cxst.cdicts(cxc.sph3d, magnitude=(0.5, 8.0)))
-        @settings(
-            max_examples=150, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=150, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             assert float(u.ustrip("m", point["r"])) >= 0.5 * (1 - 1e-6)
 
@@ -440,9 +416,7 @@ class TestMappingElementsAreSafe:
         values = []
 
         @given(point=cxst.cdicts(cxc.cart3d, elements={}, magnitude=None))
-        @settings(
-            max_examples=200, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=200, suppress_health_check=list(HealthCheck))
         def collect(point: dict) -> None:
             values.extend(float(u.ustrip("m", q)) for q in point.values())
 
@@ -455,9 +429,7 @@ class TestMappingElementsAreSafe:
         @given(
             point=cxst.cdicts(cxc.cart3d, elements={"min_value": 1.0, "max_value": 2.0})
         )
-        @settings(
-            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=100, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             for q in point.values():
                 assert 1.0 <= float(u.ustrip("m", q)) <= 2.0
@@ -474,9 +446,7 @@ class TestElementsInteraction:
                 cxc.sph3d, elements=st.floats(0.5, 2.0, width=32), magnitude=None
             )
         )
-        @settings(
-            max_examples=100, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=100, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:
             assert float(u.ustrip("m", point["r"])) > 0
             assert 0 < float(u.ustrip("rad", point["theta"])) < math.pi
@@ -492,9 +462,7 @@ class TestElementsInteraction:
         """
 
         @given(point=cxst.cdicts(cxc.sph3d, elements=st.floats(-10.0, -1.0, width=32)))
-        @settings(
-            max_examples=25, deadline=None, suppress_health_check=list(HealthCheck)
-        )
+        @settings(max_examples=25, suppress_health_check=list(HealthCheck))
         def check(point: dict) -> None:  # pragma: no cover - never reached
             pytest.fail("a negative radius should not be reachable")
 

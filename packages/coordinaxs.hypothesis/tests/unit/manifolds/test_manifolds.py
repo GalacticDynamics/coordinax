@@ -137,7 +137,7 @@ class TestNdimIsHonoured:
         """A supported ``ndim`` yields an atlas of exactly that dimensionality."""
 
         @given(atlas=cxst.atlases(cxm.EuclideanAtlas, ndim=ndim))
-        @settings(max_examples=10, deadline=None)
+        @settings(max_examples=10)
         def check(atlas: cxm.EuclideanAtlas) -> None:
             assert atlas.ndim == ndim
 
@@ -153,7 +153,7 @@ class TestNdimIsHonoured:
         """
 
         @given(atlas=cxst.atlases(cxm.EuclideanAtlas, ndim=ndim))
-        @settings(max_examples=10, deadline=None)
+        @settings(max_examples=10)
         def check(atlas: cxm.EuclideanAtlas) -> None:
             pytest.fail(f"ndim={ndim} should be unsatisfiable, got {atlas!r}")
 
@@ -165,7 +165,7 @@ class TestNdimIsHonoured:
         """Factor dimensionalities partition the requested total exactly."""
 
         @given(M=cxst.manifolds(cxm.CartesianProductManifold, ndim=ndim))
-        @settings(max_examples=20, deadline=None)
+        @settings(max_examples=20)
         def check(M: cxm.CartesianProductManifold) -> None:
             assert sum(f.ndim for f in M.factors) == ndim
             assert all(f.ndim >= 1 for f in M.factors)
@@ -178,7 +178,7 @@ class TestNdimIsHonoured:
         """Same contract for the atlas-level product partition."""
 
         @given(atlas=cxst.atlases(cxm.CartesianProductAtlas, ndim=ndim))
-        @settings(max_examples=20, deadline=None)
+        @settings(max_examples=20)
         def check(atlas: cxm.CartesianProductAtlas) -> None:
             assert sum(f.ndim for f in atlas.factors) == ndim
 
@@ -233,7 +233,7 @@ class TestExcludedFromGenericPoolAreStillExplicitlyDrawable:
         """A ``ndim`` other than the type's fixed dimensionality is discarded."""
 
         @given(obj=strategy(cls, ndim=bad_ndim))
-        @settings(max_examples=10, deadline=None)
+        @settings(max_examples=10)
         def check(obj: object) -> None:
             pytest.fail(f"ndim={bad_ndim} should be unsatisfiable, got {obj!r}")
 
@@ -295,7 +295,7 @@ class TestProductFactorCountIsDrawnFeasible:
         """
 
         @given(M=cxst.manifolds(cxm.CartesianProductManifold, ndim=ndim))
-        @settings(max_examples=25, deadline=None)
+        @settings(max_examples=25)
         def check(M: cxm.CartesianProductManifold) -> None:
             assert 1 <= len(M.factors) <= min(5, ndim)
             assert sum(f.ndim for f in M.factors) == ndim
@@ -307,7 +307,7 @@ class TestProductFactorCountIsDrawnFeasible:
         """Same for atlases, whose factors are additionally capped at 3-D."""
 
         @given(atlas=cxst.atlases(cxm.CartesianProductAtlas, ndim=ndim))
-        @settings(max_examples=25, deadline=None)
+        @settings(max_examples=25)
         def check(atlas: cxm.CartesianProductAtlas) -> None:
             n = len(atlas.factors)
             assert n <= ndim <= 3 * n

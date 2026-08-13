@@ -4,7 +4,7 @@ __all__: tuple[str, ...] = ()
 
 import jax.numpy as jnp
 import numpy as np
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import unxt as u
 
@@ -54,7 +54,6 @@ class TestTangentMapRoundTripCart2dPolar2d:
     """
 
     @given(data=st.data(), vx=_v_elem, vy=_v_elem)
-    @settings(deadline=None)
     def test_round_trip(self, data: st.DataObject, vx, vy) -> None:
         """Tangent map round-trip Cart2D → Polar2D → Cart2D recovers original v."""
         # Base point drawn in polar, where the domain guarantees r > 0.
@@ -83,7 +82,6 @@ class TestTangentMapRoundTripCart3dSph3d:
     r"""Round-trip invariant: Cart3D → Sph3D → Cart3D ≈ identity."""
 
     @given(data=st.data(), vx=_v_elem, vy=_v_elem, vz=_v_elem)
-    @settings(deadline=None)
     def test_round_trip(self, data: st.DataObject, vx, vy, vz) -> None:
         """Tangent map round-trip Cart3D → Sph3D → Cart3D recovers v."""
         # Drawn in spherical, whose domain keeps r > 0 and theta off the poles.
@@ -111,7 +109,6 @@ class TestTangentMapRoundTripCart3dCyl3d:
     r"""Round-trip invariant: Cart3D → Cyl3D → Cart3D ≈ identity."""
 
     @given(data=st.data(), vx=_v_elem, vy=_v_elem, vz=_v_elem)
-    @settings(deadline=None)
     def test_round_trip(self, data: st.DataObject, vx, vy, vz) -> None:
         """Tangent map round-trip Cart3D → Cyl3D → Cart3D recovers v."""
         # Drawn in cylindrical, whose domain keeps rho > 0.
@@ -238,7 +235,6 @@ class TestTangentMapLinearity:
         a=st.floats(min_value=-3, max_value=3, allow_nan=False, width=32),
         b=st.floats(min_value=-3, max_value=3, allow_nan=False, width=32),
     )
-    @settings(deadline=None)
     def test_linearity_cart3d_to_sph3d(
         self, data: st.DataObject, ux, uy, uz, wx, wy, wz, a, b
     ) -> None:

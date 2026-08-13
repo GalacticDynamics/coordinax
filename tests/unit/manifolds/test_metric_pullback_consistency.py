@@ -108,7 +108,7 @@ class TestPullbackConsistencyNumerical:
             min_value=0, max_value=6.28, allow_nan=False, allow_infinity=False
         ),
     )
-    @settings(max_examples=30, deadline=None)
+    @settings(max_examples=30)
     def test_hypothesis_s2(self, unit_sphere_embedded, theta, phi):
         pt = {"theta": jnp.array(theta), "phi": jnp.array(phi)}
 
