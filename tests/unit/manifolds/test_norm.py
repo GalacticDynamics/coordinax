@@ -678,21 +678,39 @@ class TestIndefiniteMetricsAreRejected:
         """
         v = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
         at = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
-        with pytest.raises(ValueError, match="must match chart"):
+        with pytest.raises(ValueError, match="needs the chart's own metric"):
             cxm.norm(v, cxm.MinkowskiMetric(), cxc.cart3d, at=at)
 
     def test_guard_follows_the_metric_actually_used(self):
         """A positive-definite *argument* cannot smuggle an indefinite chart past.
 
-        The packed-array overload builds its matrix from ``chart.M`` and has no
-        match check, so guarding the ``metric`` argument would let this call
-        through to the very ``nan`` the guard exists to prevent.
+        Originally this reached the definiteness guard, which had to read
+        ``chart.M.metric`` rather than the argument or it would hand back the
+        very ``nan`` it exists to prevent. The packed-array overload now also
+        checks the metric against the chart, so the call is refused one step
+        earlier -- but the property is the same one, and still holds.
+        """
+        at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
+        with pytest.raises(ValueError, match="needs the chart's own metric"):
+            cxm.norm(
+                jnp.array([5.0, 1.0, 0.0, 0.0]),
+                cxm.FlatMetric(4),
+                cxc.minkowskict,
+                at=at,
+                usys=u.unitsystems.si,
+            )
+
+    def test_definiteness_guard_reads_the_charts_metric(self):
+        """With the metric matching, the indefinite chart is still refused.
+
+        The companion to the above: now that a mismatch cannot get this far,
+        this is what keeps the definiteness guard honest.
         """
         at = {k: jnp.array(0.0) for k in ("ct", "x", "y", "z")}
         with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
             cxm.norm(
                 jnp.array([5.0, 1.0, 0.0, 0.0]),
-                cxm.FlatMetric(4),
+                cxc.minkowskict.M.metric,
                 cxc.minkowskict,
                 at=at,
                 usys=u.unitsystems.si,

@@ -22,7 +22,11 @@ import coordinax.distances as cxd
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import require_positive_definite
-from coordinax._src.base import AbstractChart, AbstractMetricField
+from coordinax._src.base import (
+    AbstractChart,
+    AbstractMetricField,
+    check_metric_is_charts,
+)
 from coordinax._src.custom_types import OptUSys
 from coordinaxs.api.custom_types import CDict
 
@@ -84,6 +88,7 @@ def separation(
     """
     # Duplicated with `norm` so the message names the function the caller
     # invoked. Guards `chart.M.metric` -- the metric actually used.
+    check_metric_is_charts(metric, chart, "separation")
     require_positive_definite(chart.M.metric, "separation")
 
     chart.check_data(a, keys=True, values=False)

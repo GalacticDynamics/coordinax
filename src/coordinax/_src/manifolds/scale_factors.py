@@ -10,7 +10,11 @@ import unxts.linalg as ul
 
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import as_quantity_matrix
-from coordinax._src.base import AbstractChart, AbstractMetricField
+from coordinax._src.base import (
+    AbstractChart,
+    AbstractMetricField,
+    check_metric_is_charts,
+)
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.embedded.manifold import EmbeddedManifold
 from coordinax._src.embedded.metric import PullbackMetric
@@ -65,6 +69,7 @@ def scale_factors(
     QM([1., 1.], '(, )')
 
     """
+    check_metric_is_charts(metric, chart, "scale_factors")
     mm = cxmapi.metric_matrix(chart.M, at, chart)
     if isinstance(mm, DiagonalMetric):
         diag = mm.diagonal

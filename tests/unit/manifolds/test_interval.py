@@ -78,7 +78,7 @@ class TestInterval:
         ``chart.M``, so passing a different metric silently returned the
         chart's answer. Matches `norm`'s metric-level contract.
         """
-        with pytest.raises(ValueError, match="must match chart"):
+        with pytest.raises(ValueError, match="needs the chart's own metric"):
             cxm.interval(cxm.FlatMetric(4), cxc.minkowskict, ORIGIN, event(1.0, 5.0))
 
     def test_bare_arrays_require_usys_like_norm_does(self):
@@ -358,7 +358,7 @@ class TestCausalVerbsValidateTheirMetricArgument:
     )
     def test_lorentzian_metric_with_riemannian_chart_is_rejected(self, verb):
         """The mismatch must be reported, not silently resolved to the chart."""
-        with pytest.raises(ValueError, match="must match chart"):
+        with pytest.raises(ValueError, match="needs the chart's own metric"):
             getattr(cxmapi, verb)(cxm.MinkowskiMetric(), cxc.cart3d, self.A3, self.B3)
 
     @pytest.mark.parametrize(
