@@ -189,7 +189,7 @@ Prefer Bishop for this chart when the metric matters and the diagonal structure 
 `coordinaxs.curveframes` provides `ArcLength`, which wraps a curve $\gamma(\tau)$ and returns $s \mapsto \gamma(\tau(s))$ with $\|\gamma'(s)\| = 1$ everywhere, by solving $d\tau/ds = 1/\|\gamma'(\tau)\|$ rather than integrating speed and inverting it. Because a curve is consumed purely as a callable throughout `coordinaxs.curveframes`, `ArcLength(curve)` is itself a curve: it wraps into `BishopBuilder` or `FrenetSerretBuilder`, and from there into `TubularChart`, unchanged.
 
 ```{code-block} python
->>> arc = cxfc.ArcLength(helix)
+>>> arc = cxfc.ArcLength(helix, "s")
 >>> ch_arc = cxfc.TubularChart(
 ...     cxfc.BishopBuilder(arc, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(5.0, "km"))
 ... )
@@ -237,12 +237,12 @@ The two readings agree wherever the curve moves rigidly — a rotation or transl
 ...     z = jnp.zeros_like(x)
 ...     return u.Q(jnp.stack([x, z, z]), "km")
 
->>> eulerian = cxfc.AtTime(cxfc.ArcLength(stretch), u.Q(1.0, "s"))
+>>> eulerian = cxfc.AtTime(cxfc.ArcLength(stretch, "s"), u.Q(1.0, "s"))
 >>> eulerian(u.Q(1.0, "km"))
 Q([1., 0., 0.], 'km')
 
 >>> lagrangian = cxfc.AtTime(
-...     cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s")), u.Q(1.0, "s")
+...     cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s"), u.Q(1.0, "s")
 ... )
 >>> lagrangian(u.Q(1.0, "km"))
 Q([1.5, 0. , 0. ], 'km')
@@ -377,128 +377,7 @@ Once wrapped this way, every call is the Eulerian reading from [Time-Dependent C
 
 ### A User's Own Curve Type
 
-Nothing above requires a plain function — a curve is consumed purely as a callable, so any callable works, including an `equinox.Module` a user writes. The same shapes from [Four Curve Shapes](#four-curve-shapes) above apply unchanged, whether the module's parameter is time or arc length.
-
-Time-parametrised, wrapped in `ArcLength`. Its `tau_unit` defaults to `"s"`, which is correct here:
-
-```{code-block} python
->>> class Circle(eqx.Module):
-...     radius: u.AbstractQuantity
-...     def __call__(self, tau):
-...         t = tau.ustrip("s")
-...         r = self.radius.ustrip("km")
-...         return u.Q(jnp.stack([r * jnp.cos(t), r * jnp.sin(t), jnp.zeros_like(t)]), "km")
-
->>> time_circle = Circle(radius=u.Q(2.0, "km"))
->>> speed_t = float(jnp.linalg.norm(
-...     jax.jacfwd(lambda x: time_circle(u.Q(x, "s")).ustrip("km"))(0.7)
-... ))
->>> round(speed_t, 9)  # not unit-speed -- a time parametrisation has no reason to be
-2.0
-
->>> arc_time = cxfc.ArcLength(time_circle)
->>> ch_time = cxfc.TubularChart(
-...     cxfc.BishopBuilder(arc_time, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(10.0, "km"))
-... )
->>> at_time = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
->>> round(float(metric_matrix(ch_time.M, at_time, ch_time).matrix[0, 0].ustrip("")), 9)
-1.0
-
-```
-
-Arc-length-parametrised, used directly with no wrapper. This is where `ArcLength`'s default `tau_unit="s"` becomes a trap rather than a convenience: passing a length-parametrised module to `ArcLength` without overriding `tau_unit` fails as soon as it is called, because the length passed to `__call__` cannot convert to the default time unit:
-
-```{code-block} python
->>> class ArcCircle(eqx.Module):
-...     radius: u.AbstractQuantity
-...     def __call__(self, s):
-...         v = s.ustrip("km")
-...         r = self.radius.ustrip("km")
-...         return u.Q(jnp.stack([r * jnp.cos(v / r), r * jnp.sin(v / r), jnp.zeros_like(v)]), "km")
-
->>> arc_circle = ArcCircle(radius=u.Q(2.0, "km"))
->>> speed_at(arc_circle, 1.3)
-1.0
-
->>> try:  # wrong: default tau_unit="s"
-...     cxfc.ArcLength(arc_circle)(u.Q(1.3, "km"))
-... except Exception as e:
-...     print(f"{type(e).__name__}: {e}")
-UnitConversionError: 's' (time) and 'km' (length) are not convertible
-
->>> direct = arc_circle(u.Q(1.3, "km")).ustrip("km")
->>> wrapped = cxfc.ArcLength(arc_circle, "km")(u.Q(1.3, "km")).ustrip("km")  # correct: tau_unit="km"
->>> bool(jnp.max(jnp.abs(direct - wrapped)) < 1e-8)
-True
-
-```
-
-Two-argument, unit-speed in `s` at every slice, same as [the time-series shape](#four-curve-shapes) above: `AtTime` binds a slice and no `ArcLength` wrap is needed. Arity detection reads the module's `__call__` signature with `inspect.signature`, which drops `self` on a bound method exactly as it does the leading parameter of a plain function, so a two-argument module is detected the same way a two-argument function is:
-
-```{code-block} python
->>> class SeriesCircle(eqx.Module):
-...     def __call__(self, s, t):
-...         r = 2.0 + t.ustrip("s")
-...         v = s.ustrip("km")
-...         return u.Q(jnp.stack([r * jnp.cos(v / r), r * jnp.sin(v / r), jnp.zeros_like(v)]), "km")
-
->>> combo = cxfc.AtTime(SeriesCircle(), u.Q(1.0, "s"))
->>> speed_at(combo, 1.3)
-1.0
-
-```
-
-Backed by sampled data: knots and positions interpolated with `jnp.interp`, the shape a fitter's output takes. A chord between two knots is shorter than the arc it approximates, so the interpolant falls measurably short of unit speed between knots -- here on a circle of radius 2 km sampled at 400 evenly spaced knots:
-
-```{code-block} python
->>> class SampledCurve(eqx.Module):
-...     knots: jax.Array
-...     xs: jax.Array
-...     ys: jax.Array
-...     zs: jax.Array
-...     def __call__(self, s):
-...         v = s.ustrip("km")
-...         return u.Q(jnp.stack([
-...             jnp.interp(v, self.knots, self.xs),
-...             jnp.interp(v, self.knots, self.ys),
-...             jnp.interp(v, self.knots, self.zs),
-...         ]), "km")
-
->>> theta = jnp.linspace(0.0, 2 * jnp.pi, 401)
->>> sampled = SampledCurve(
-...     knots=2.0 * theta, xs=2.0 * jnp.cos(theta), ys=2.0 * jnp.sin(theta), zs=jnp.zeros_like(theta)
-... )
->>> round(speed_at(sampled, 1.3), 6)
-0.99999
-
->>> ch_sampled = cxfc.TubularChart(
-...     cxfc.BishopBuilder(sampled, "km"),
-...     tau_bounds=(u.Q(0.0, "km"), u.Q(float(2 * jnp.pi * 2.0), "km")),
-... )
->>> at_sampled = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
->>> round(float(metric_matrix(ch_sampled.M, at_sampled, ch_sampled).matrix[0, 0].ustrip("")), 6)
-0.999979
-
->>> arc_sampled = cxfc.ArcLength(sampled, "km")
->>> round(speed_at(arc_sampled, 1.3), 6)
-1.0
-
-```
-
-`ArcLength` differentiates through a user's own module exactly as it does through a plain function's captures, because `curve` is a pytree field like any other: `jax.grad` reaches the module's fields straight through the ODE solve.
-
-```{code-block} python
->>> def x_of_radius(radius_km):
-...     curve = Circle(radius=u.Q(radius_km, "km"))
-...     return cxfc.ArcLength(curve)(u.Q(1.3, "km")).ustrip("km")[0]
-
->>> analytic = float(jax.grad(x_of_radius)(2.0))
->>> h = 1e-4
->>> numeric = float((x_of_radius(2.0 + h) - x_of_radius(2.0 - h)) / (2 * h))
->>> round(analytic, 9), round(numeric, 9)
-(1.189454962, 1.189454963)
-
-```
+Nothing above requires a plain function — a curve is consumed purely as a callable, so any callable works, including an `equinox.Module` a user writes. For the four shapes worked through with a user's own class — time-parametrised, arc-length-parametrised, a two-argument `γ(s, t)`, and one backed by sampled data — plus differentiating through a fitted field, see {doc}`the BYO curve tutorial <../packages/coordinaxs.curveframes/byo_curve>`.
 
 ### Cost
 

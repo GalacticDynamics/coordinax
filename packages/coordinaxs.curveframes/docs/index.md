@@ -8,6 +8,7 @@ guide.md
 visualizing
 tutorial.md
 tutorial_circle_equivalence.md
+byo_curve.md
 api.md
 spec.md
 ```
@@ -44,6 +45,7 @@ uv add coordinaxs.curveframes
 - {doc}`Visualizing Curve Frames <visualizing>` — plots of the moving Frenet–Serret and Bishop frames along a helix.
 - {doc}`Tutorial: Frenet–Serret Curve Frames <tutorial>` — a complete worked example, including chaining frames and using JAX for JIT and vectorisation.
 - {doc}`Tutorial: Parallel Transport vs Corotating Frame on a Circle <tutorial_circle_equivalence>` — why the Frenet–Serret, Bishop, and rigid-rotation frames coincide on a circle.
+- {doc}`Tutorial: Bring Your Own Curve <byo_curve>` — wrapping a user-defined `equinox.Module` curve through `ArcLength`, in each of its parametrisation shapes.
 - {doc}`API Reference <api>` — complete API documentation.
 - {doc}`Specification <spec>` — the normative specification.
 
