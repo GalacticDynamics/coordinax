@@ -10,6 +10,9 @@ import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 
+_NORTH = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+_OTHER = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
+
 
 class TestSeparationDispatches:
     """The manifold-level `geodesic_distance` accepts several input forms."""
@@ -136,6 +139,20 @@ class TestEmbeddedSphere:
         got = cxm.geodesic_distance(chart, north, south)
         assert bool(qnp.isclose(got.ustrip("m"), 2 * jnp.pi, atol=1e-12))
 
+    def test_refuses_an_embedding_without_a_closed_form(self):
+        """Only the two-sphere embedding has one; the rest must say so."""
+        embed_map = cxm.CustomEmbeddingMap(
+            intrinsic=cxm.S2,
+            ambient=cxm.R3,
+            embed_fn=lambda p, **kw: p,
+            project_fn=lambda p, **kw: p,
+        )
+        M = cxm.EmbeddedManifold(intrinsic=cxm.S2, ambient=cxm.R3, embed_map=embed_map)
+        north = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+        other = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
+        with pytest.raises(NotImplementedError, match="only the two-sphere"):
+            cxm.geodesic_distance(M, cxc.sph2, north, other)
+
     def test_any_intrinsic_chart_agrees(self):
         M = self._manifold()
         a = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.4, "rad")}
@@ -148,3 +165,22 @@ class TestEmbeddedSphere:
             cxc.pt_map(b, cxc.sph2, cxc.lonlat_sph2),
         ).ustrip("m")
         assert bool(qnp.isclose(sph, lonlat, atol=1e-12))
+
+
+class TestRefusals:
+    """Refusing is the design decision here, so it is pinned like any other.
+
+    The alternative -- the norm of the coordinate difference -- is asymmetric
+    on a curved manifold and so is not a distance at all. A silent wrong number
+    is worse than an error, so each of these must keep raising.
+    """
+
+    def test_refuses_a_sphere_that_is_not_the_two_sphere(self):
+        """The closed form is `S2`-specific; `S1` and up must not borrow it."""
+        with pytest.raises(NotImplementedError, match=r"only.*two-sphere"):
+            cxm.geodesic_distance(cxm.S1, cxc.sph2, _NORTH, _OTHER)
+
+    def test_refuses_a_manifold_with_no_rule(self):
+        """The `AbstractManifold` fallback: no closed form, so no answer."""
+        with pytest.raises(NotImplementedError, match="no geodesic distance"):
+            cxm.geodesic_distance(cxm.NoManifold(), cxc.sph2, _NORTH, _OTHER)

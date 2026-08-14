@@ -319,6 +319,13 @@ class TestPointSeparation:
         with pytest.raises(ValueError, match="frame"):
             cx.geodesic_distance(p, q)
 
+    def test_separation_different_manifolds_raises(self):
+        """A 2-D and a 3-D point have no common manifold to measure on."""
+        p = cx.Point.from_([3.0, 0.0], "m")
+        q = cx.Point.from_([0.0, 4.0, 0.0], "m")
+        with pytest.raises(ValueError, match="different manifolds"):
+            cx.geodesic_distance(p, q)
+
     def test_separation_unitless_components(self):
         """Separation works for vectors with plain (unitless) array leaves."""
         p = cx.Point.from_({"x": 3.0, "y": 0.0, "z": 0.0}, cxc.cart3d)
