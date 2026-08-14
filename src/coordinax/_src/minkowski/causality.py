@@ -237,7 +237,7 @@ def proper_distance(
 
 # ---------------------------------------------------------------------------
 # Chart-level convenience: resolve the metric from the chart, then redispatch.
-# Mirrors how `norm` and `separation` layer chart-level over metric-level.
+# Mirrors how `norm` and `geodesic_distance` layer chart-level over metric-level.
 #
 # A chart whose manifold carries a non-Lorentzian metric redispatches to the
 # `AbstractMetricField` fallbacks at the bottom of this module, which raise
@@ -315,8 +315,8 @@ def proper_distance(
 _MSG_NOT_LORENTZIAN = (
     "{fname}() requires a Lorentzian metric -- *exactly one* timelike "
     "direction, signature (-1, 1, ..., 1) -- because the causal character of a "
-    "separation is only well defined against a single time direction. {name} "
-    "has signature {sig}. Use `interval` for the signed square, or `separation` "
+    "geodesic_distance is only well defined against a single time direction. {name} "
+    "has signature {sig}. Use `interval` for the signed square, or `geodesic_distance` "
     "for a Riemannian distance."
 )
 

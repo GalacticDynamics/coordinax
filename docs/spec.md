@@ -2933,34 +2933,34 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - This API is for tangent-space geometry. Point-role coordinates should first be converted into a tangent/displacement representation if that is the intended meaning.
     - The angle is defined intrinsically by the metric at the supplied base point and is therefore chart-invariant under valid coordinate changes.
 
-(software-spec-separation)=
+(software-spec-geodesic_distance)=
 
-!!! info `separation`
+!!! info `geodesic_distance`
 
     The straight-line distance between two points, as a manifold measurement.
 
-    `separation` is a dispatched function that returns the manifold
+    `geodesic_distance` is a dispatched function that returns the manifold
     `~coordinax.manifolds.norm` of the two points' coordinate difference:
 
     $$
-    \mathrm{separation}(a, b) = \| b - a \|_a,
+    \mathrm{geodesic_distance}(a, b) = \| b - a \|_a,
     $$
 
     the Euclidean distance for a flat manifold. It sits alongside `norm` and
-    `angle_between` as the third manifold measurement. `cx.separation` and
-    `cx.manifolds.separation` are the same function object.
+    `angle_between` as the third manifold measurement. `cx.geodesic_distance` and
+    `cx.manifolds.geodesic_distance` are the same function object.
 
     **Signatures:**
 
     ```
     # manifold-level (raw data)
-    cxm.separation(chart, a, b, /, *, usys=None)          # component dicts; uses chart.M.metric
-    cxm.separation(metric, chart, a, b, /, *, usys=None)  # explicit metric: norm(b - a) at a
-    cxm.separation(chart, a, b, /, *, usys=None)          # packed unxt.Quantity operands
-    cxm.separation(chart, a, b, /, *, usys=None)          # packed (unitless) Array operands
+    cxm.geodesic_distance(chart, a, b, /, *, usys=None)          # component dicts; uses chart.M.metric
+    cxm.geodesic_distance(metric, chart, a, b, /, *, usys=None)  # explicit metric: norm(b - a) at a
+    cxm.geodesic_distance(chart, a, b, /, *, usys=None)          # packed unxt.Quantity operands
+    cxm.geodesic_distance(chart, a, b, /, *, usys=None)          # packed (unitless) Array operands
 
     # vector-level
-    cx.separation(a, b, /)                                # two coordinax.vectors.Point objects
+    cx.geodesic_distance(a, b, /)                                # two coordinax.vectors.Point objects
     ```
 
     **Arguments:**
@@ -2978,7 +2978,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Dispatch behavior:**
 
     - The manifold-level overloads measure the norm of the coordinate difference in the given chart (exact for flat manifolds).
-    - The `Point` overload is *frame-strict* (cross-frame raises) and brings both points into a common Cartesian chart before delegating to the manifold-level `separation`, so the result is invariant to the chart and component units each operand happens to use.
+    - The `Point` overload is *frame-strict* (cross-frame raises) and brings both points into a common Cartesian chart before delegating to the manifold-level `geodesic_distance`, so the result is invariant to the chart and component units each operand happens to use.
 
     **Examples**
 
@@ -2987,7 +2987,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> p = cx.Point.from_([3.0, 0.0, 0.0], "m")
     >>> q = cx.Point.from_([0.0, 4.0, 0.0], "m")
-    >>> cx.separation(p, q).round(2)
+    >>> cx.geodesic_distance(p, q).round(2)
     Distance(5., 'm')
     ```
 

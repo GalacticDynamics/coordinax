@@ -1,4 +1,4 @@
-"""Tests for the separation() manifold API dispatches."""
+"""Tests for the geodesic_distance() manifold API dispatches."""
 
 import jax.numpy as jnp
 import pytest
@@ -12,12 +12,12 @@ import coordinax.manifolds as cxm
 
 
 class TestSeparationDispatches:
-    """The manifold-level `separation` accepts several input forms."""
+    """The manifold-level `geodesic_distance` accepts several input forms."""
 
     def test_chart_and_cdicts(self):
         a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
-        d = cxm.separation(cxc.cart3d, a, b)
+        d = cxm.geodesic_distance(cxc.cart3d, a, b)
         assert isinstance(d, cx.Distance)
         assert bool(qnp.isclose(d.ustrip("m"), 5.0))
 
@@ -26,24 +26,28 @@ class TestSeparationDispatches:
         a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
         assert bool(
-            qnp.isclose(cxm.separation(metric, cxc.cart3d, a, b).ustrip("m"), 5.0)
+            qnp.isclose(
+                cxm.geodesic_distance(metric, cxc.cart3d, a, b).ustrip("m"), 5.0
+            )
         )
 
     def test_chart_and_packed_quantities(self):
         a = u.Q([3.0, 0.0, 0.0], "m")
         b = u.Q([0.0, 4.0, 0.0], "m")
-        assert bool(qnp.isclose(cxm.separation(cxc.cart3d, a, b).ustrip("m"), 5.0))
+        assert bool(
+            qnp.isclose(cxm.geodesic_distance(cxc.cart3d, a, b).ustrip("m"), 5.0)
+        )
 
     def test_chart_and_bare_arrays(self):
         a = jnp.array([3.0, 0.0, 0.0])
         b = jnp.array([0.0, 4.0, 0.0])
-        assert bool(qnp.isclose(cxm.separation(cxc.cart3d, a, b), 5.0))
+        assert bool(qnp.isclose(cxm.geodesic_distance(cxc.cart3d, a, b), 5.0))
 
     def test_all_forms_agree_with_the_point_overload(self):
         p = cx.Point.from_([3.0, 0.0, 0.0], "m")
         q = cx.Point.from_([0.0, 4.0, 0.0], "m")
-        ref = cxm.separation(p, q).ustrip("m")
-        packed = cxm.separation(
+        ref = cxm.geodesic_distance(p, q).ustrip("m")
+        packed = cxm.geodesic_distance(
             cxc.cart3d, u.Q([3.0, 0.0, 0.0], "m"), u.Q([0.0, 4.0, 0.0], "m")
         )
         assert bool(qnp.isclose(packed.ustrip("m"), ref))
@@ -51,18 +55,20 @@ class TestSeparationDispatches:
     def test_packed_quantity_is_unit_invariant(self):
         a = u.Q([3.0, 0.0, 0.0], "m")
         b = u.Q([0.0, 0.004, 0.0], "km")
-        assert bool(qnp.isclose(cxm.separation(cxc.cart3d, a, b).ustrip("m"), 5.0))
+        assert bool(
+            qnp.isclose(cxm.geodesic_distance(cxc.cart3d, a, b).ustrip("m"), 5.0)
+        )
 
     def test_batched_packed_quantities(self):
         a = u.Q([[3.0, 0.0, 0.0], [1.0, 0.0, 0.0]], "m")
         b = u.Q([[0.0, 4.0, 0.0], [0.0, 1.0, 0.0]], "m")
-        d = cxm.separation(cxc.cart3d, a, b).ustrip("m")
+        d = cxm.geodesic_distance(cxc.cart3d, a, b).ustrip("m")
         assert bool(qnp.isclose(d[0], 5.0))
         assert bool(qnp.isclose(d[1], qnp.sqrt(2.0)))
 
 
 class TestIndefiniteMetricSeparation:
-    """`separation` inherits `norm`'s guard instead of returning ``nan``.
+    """`geodesic_distance` inherits `norm`'s guard instead of returning ``nan``.
 
     Regression: a timelike pair used to yield ``Distance(nan, 'm')`` while a
     spacelike pair yielded a plausible number, so the failure was invisible
@@ -86,10 +92,12 @@ class TestIndefiniteMetricSeparation:
         del kind
         origin = self._event(0.0, 0.0)
         with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
-            cxm.separation(cxc.minkowskict, origin, self._event(ct, x))
+            cxm.geodesic_distance(cxc.minkowskict, origin, self._event(ct, x))
 
     def test_euclidean_separation_is_unaffected(self):
         """Positive control: the common Riemannian path is untouched."""
         a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
-        assert bool(qnp.isclose(cxm.separation(cxc.cart3d, a, b).ustrip("m"), 5.0))
+        assert bool(
+            qnp.isclose(cxm.geodesic_distance(cxc.cart3d, a, b).ustrip("m"), 5.0)
+        )

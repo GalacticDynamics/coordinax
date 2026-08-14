@@ -10,7 +10,7 @@ __all__ = (
     "pt_project",
     "pt_map",
     "norm",
-    "separation",
+    "geodesic_distance",
     "interval",
     "causal_character",
     "proper_time",
@@ -78,7 +78,7 @@ def scale_factors(chart: Any, /, *args: Any, **kwargs: Any) -> Any:
 
 
 @plum.dispatch.abstract
-def separation(*args: Any, **kwargs: Any) -> Any:
+def geodesic_distance(*args: Any, **kwargs: Any) -> Any:
     """Distance between two points on a manifold.
 
     The straight-line distance is the manifold `norm` of the two points'
@@ -517,10 +517,10 @@ def interval(*args: Any, **kwargs: Any) -> Any:
     """Signed squared interval between two points.
 
     ``interval`` is the metric quadratic form of the coordinate difference,
-    *without* the square root that `norm` and `separation` take.  It is
+    *without* the square root that `norm` and `geodesic_distance` take.  It is
     therefore defined for every metric, including indefinite ones where
-    `separation` has no real value: for a Riemannian metric it is the squared
-    separation, and for a Lorentzian one its sign is the pair's causal
+    `geodesic_distance` has no real value: for a Riemannian metric it is the squared
+    geodesic_distance, and for a Lorentzian one its sign is the pair's causal
     character.
     """
     raise NotImplementedError  # pragma: no cover

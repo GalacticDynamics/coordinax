@@ -1,6 +1,6 @@
 """Tests for `interval`, `causal_character`, `proper_time`, `proper_distance`.
 
-These are the Minkowski-correct replacements for the `separation` call that
+These are the Minkowski-correct replacements for the `geodesic_distance` call that
 `norm`'s positive-definiteness guard now refuses. The sharpest test in here is
 Lorentz invariance: the interval must be unchanged by a boost, which is the
 whole reason it is the right primitive.
@@ -29,7 +29,7 @@ def event(ct, x, y=0.0, z=0.0):
 
 
 class TestInterval:
-    """The signed quadratic form, defined where `separation` is not."""
+    """The signed quadratic form, defined where `geodesic_distance` is not."""
 
     @pytest.mark.parametrize(
         ("ct", "x", "want"),
@@ -40,7 +40,7 @@ class TestInterval:
         assert float(got.ustrip("m2")) == pytest.approx(want, abs=ATOL)
 
     def test_timelike_pair_is_finite_not_nan(self):
-        """The exact case that made `separation` return ``nan``."""
+        """The exact case that made `geodesic_distance` return ``nan``."""
         got = cxm.interval(cxc.minkowskict, ORIGIN, event(5.0, 1.0))
         assert not bool(jnp.isnan(got.ustrip("m2")))
         assert float(got.ustrip("m2")) < 0
@@ -50,7 +50,7 @@ class TestInterval:
         a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
         ds2 = cxm.interval(cxc.cart3d, a, b)
-        sep = cxm.separation(cxc.cart3d, a, b)
+        sep = cxm.geodesic_distance(cxc.cart3d, a, b)
         assert float(ds2.ustrip("m2")) == pytest.approx(
             float(sep.ustrip("m")) ** 2, abs=ATOL
         )

@@ -3,7 +3,7 @@ r"""Measurements that need a timelike direction.
 The verbs here are gated on the metric having a **Lorentzian** signature
 $(-,+,\ldots,+)$ -- exactly one timelike direction -- expressed as the type
 `~coordinax.manifolds.AbstractLorentzianMetricField`.  Without such a direction
-there is no causal structure: every separation has the same character and there
+there is no causal structure: every geodesic_distance has the same character and there
 is nothing to classify, no proper time to elapse.
 
 Why this namespace is named for the *signature* and not for "spacetime": the

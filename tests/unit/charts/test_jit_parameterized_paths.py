@@ -168,7 +168,7 @@ def test_jit_cconvert_tangent_out_of_parameterized_chart():
 
 
 # ---------------------------------------------------------------------------
-# vectors/_src/{base,register_quax,register_compare,register_separation}.py
+# vectors/_src/{base,register_quax,register_compare,register_geodesic_distance}.py
 # and representations/_src/core.py
 
 
@@ -218,12 +218,12 @@ def test_jit_equivalent_across_a_parameterized_chart():
 
 
 def test_jit_separation_in_parameterized_chart():
-    """`separation` compares the two operands' charts."""
+    """`geodesic_distance` compares the two operands' charts."""
 
     @jax.jit
     def f(d):
         c = _chart(d)
-        return cx.separation(cx.Point(AT, chart=c), cx.Point(AT, chart=c)).value
+        return cx.geodesic_distance(cx.Point(AT, chart=c), cx.Point(AT, chart=c)).value
 
     assert jnp.isfinite(f(DELTA))
 
