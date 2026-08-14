@@ -68,8 +68,10 @@ def scale_factors(
     >>> cxm.scale_factors(metric, cxc.sph2, at=at)
     QM([1., 1.], '(, )')
 
-    `LonCosLatSpherical3D` is non-orthogonal -- its ``g_01 = lon_coslat *
-    tan(lat)`` -- and so has no scale factors:
+    `LonCosLatSpherical3D` is non-orthogonal -- its ``g_01 = distance**2 *
+    lon_coslat * tan(lat)`` -- and so has no scale factors. (The unit
+    two-sphere carries no ``distance``, which is why `SphericalTwoSphere`'s
+    sibling message states the same cross term without that factor.)
 
     >>> import unxt as u
     >>> at = {"lon_coslat": u.Angle(0.3, "rad"), "lat": u.Angle(0.6, "rad"),
