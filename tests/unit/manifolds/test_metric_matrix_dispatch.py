@@ -190,7 +190,7 @@ class TestMetricMatrixNumericalValues:
         pt = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0)}
         g = cxmapi.metric_matrix(cxm.S2, pt, cxc.sph2)
         assert isinstance(g, DiagonalMetric)
-        assert jnp.allclose(g.diagonal, jnp.array([1, 1]), atol=1e-6)
+        assert jnp.allclose(g.diagonal.value, jnp.array([1, 1]), atol=1e-6)
 
     def test_hyperspherical_at_off_equator(self):
         """At theta=π/3: diag(S²) = (1, sin²(π/3)) = (1, 3/4)."""
@@ -198,7 +198,7 @@ class TestMetricMatrixNumericalValues:
         g = cxmapi.metric_matrix(cxm.S2, pt, cxc.sph2)
         assert isinstance(g, DiagonalMetric)
         expected = jnp.array([1, jnp.sin(jnp.pi / 3) ** 2])
-        assert jnp.allclose(g.diagonal, expected, atol=1e-6)
+        assert jnp.allclose(g.diagonal.value, expected, atol=1e-6)
 
     def test_euclidean_sph3d_returns_diagonal_metric(self):
         """EuclideanManifold + sph3d uses analytic formula, returning DiagonalMetric."""
@@ -300,7 +300,10 @@ class TestMetricMatrixJIT:
             return cxmapi.metric_matrix(manifold, pt, chart).diagonal
 
         result = compute(*(jnp.asarray(v) for v in point.values()))
-        assert jnp.allclose(result, expected, atol=1e-6)
+        # Parametrized across families: the flat charts' diagonal is a bare
+        # array, the curvilinear ones' a `QuantityMatrix` (dimensionless for
+        # the sphere). Normalise -- `allclose` has no QM overload.
+        assert jnp.allclose(getattr(result, "value", result), expected, atol=1e-6)
 
 
 # ---------------------------------------------------------------------------

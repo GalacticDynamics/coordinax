@@ -84,7 +84,7 @@ def metric_matrix(
     >>> isinstance(g, DiagonalMetric)
     True
     >>> g.diagonal
-    Array([1., 1.], dtype=float64)
+    QM([1., 1.], '(, )')
 
     $S^2$ at $\theta = \pi/6$:
 

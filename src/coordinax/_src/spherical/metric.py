@@ -43,7 +43,7 @@ class RoundMetric(AbstractDiagonalMetricField):
 
     >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
     >>> cxmapi.metric_matrix(cxm.S2, at, cxc.sph2).diagonal
-    Array([1., 1.], dtype=float64)
+    QM([1., 1.], '(, )')
 
     """
 
