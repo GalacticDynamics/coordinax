@@ -159,10 +159,11 @@ class ArcLength(eqx.Module):
         curve, ``(tau, t) -> Quantity[float, (3,)]``, in the parameter unit
         ``tau_unit``.  Make it an `equinox.Module` for differentiable curve
         parameters; a bare function's captures are trace-time constants.
-    tau_unit : AbstractUnit or str, optional
-        Unit of the *wrapped* curve's parameter $\tau$ -- not of $s$, which is
-        instead read off the length `Quantity` passed to `__call__`. Defaults
-        to ``"s"``.
+    tau_unit : AbstractUnit or str
+        Unit of the *wrapped* curve's parameter $\tau$ -- a time for a
+        time-parametrised curve, a length for one already parametrised by
+        arc length. Not the unit of $s$, which is instead read off the
+        length `Quantity` passed to `__call__`.
     tau_0 : Quantity, optional
         Reference parameter where $s = 0$. Defaults to ``Q(0.0, tau_unit)``.
     diffeqsolver : DiffEqSolver, optional
@@ -188,7 +189,7 @@ class ArcLength(eqx.Module):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
-    >>> arc = cxfc.ArcLength(helix)
+    >>> arc = cxfc.ArcLength(helix, "s")
     >>> arc(u.Q(0.0, "km"))
     Q([1., 0., 0.], 'km')
 
@@ -198,9 +199,13 @@ class ArcLength(eqx.Module):
     """The wrapped curve."""
 
     tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        default=u.unit("s"), static=True, converter=u.unit
+        static=True, converter=u.unit
     )
-    """The unit of the wrapped curve's parameter tau."""
+    """Unit of the wrapped curve's parameter tau.
+
+    A time for a time-parametrised curve, a length for one already
+    parametrised by arc length.
+    """
 
     tau_0: u.AbstractQuantity | None = None
     """Reference parameter value where s = 0 (a leaf).
@@ -253,7 +258,7 @@ class ArcLength(eqx.Module):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "km")
 
-        >>> arc = cxfc.ArcLength(circle)
+        >>> arc = cxfc.ArcLength(circle, "s")
         >>> jnp.round(arc(u.Q(0.0, "km")).value, 6)
         Array([1., 0., 0.], dtype=float64)
 
@@ -300,10 +305,11 @@ class LagrangianArcLength(eqx.Module):
         constants.
     t0 : Quantity
         The fixed reference slice on which arc length is measured.
-    tau_unit : AbstractUnit or str, optional
-        Unit of the wrapped curve's parameter $\tau$ -- not of $s$, which is
-        instead read off the length `Quantity` passed to `__call__`. Defaults
-        to ``"s"``.
+    tau_unit : AbstractUnit or str
+        Unit of the wrapped curve's parameter $\tau$ -- a time for a
+        time-parametrised curve, a length for one already parametrised by
+        arc length. Not the unit of $s$, which is instead read off the
+        length `Quantity` passed to `__call__`.
     tau_0 : Quantity, optional
         Reference parameter where $s = 0$. Defaults to ``Q(0.0, tau_unit)``.
     diffeqsolver : DiffEqSolver, optional
@@ -328,7 +334,7 @@ class LagrangianArcLength(eqx.Module):
     ...     z = jnp.zeros_like(x)
     ...     return u.Q(jnp.stack([x, z, z]), "km")
 
-    >>> lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"))
+    >>> lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s")
     >>> lag(u.Q(1.0, "km"), u.Q(1.0, "s"))
     Q([1.5, 0. , 0. ], 'km')
 
@@ -341,9 +347,13 @@ class LagrangianArcLength(eqx.Module):
     """The fixed reference slice on which arc length is measured."""
 
     tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        default=u.unit("s"), static=True, converter=u.unit
+        static=True, converter=u.unit
     )
-    """The unit of the wrapped curve's parameter tau."""
+    """Unit of the wrapped curve's parameter tau.
+
+    A time for a time-parametrised curve, a length for one already
+    parametrised by arc length.
+    """
 
     tau_0: u.AbstractQuantity | None = None
     """Reference parameter value where s = 0 (a leaf).
@@ -384,7 +394,7 @@ class LagrangianArcLength(eqx.Module):
         ...     z = jnp.zeros_like(x)
         ...     return u.Q(jnp.stack([x, z, z]), "km")
 
-        >>> lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"))
+        >>> lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s")
         >>> lag(u.Q(1.0, "km"), u.Q(0.0, "s"))
         Q([1., 0., 0.], 'km')
 

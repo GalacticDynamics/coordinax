@@ -19,7 +19,7 @@ SPEED = (1.0 + 0.09) ** 0.5
 
 def test_reparametrised_curve_has_unit_speed() -> None:
     """The defining property: |d(gamma)/ds| == 1 everywhere."""
-    arc = cxfc.ArcLength(helix)
+    arc = cxfc.ArcLength(helix, "s")
 
     def pos(s_val):
         return arc(u.Q(s_val, "km")).ustrip("km")
@@ -31,7 +31,7 @@ def test_reparametrised_curve_has_unit_speed() -> None:
 
 def test_matches_the_closed_form() -> None:
     """For a constant-speed curve, tau(s) = s / speed exactly."""
-    arc = cxfc.ArcLength(helix)
+    arc = cxfc.ArcLength(helix, "s")
     got = arc(u.Q(2.0, "km")).ustrip("km")
     want = helix(u.Q(2.0 / SPEED, "s")).ustrip("km")
     assert jnp.allclose(got, want, atol=1e-8), (got, want)
@@ -39,7 +39,7 @@ def test_matches_the_closed_form() -> None:
 
 def test_differentiable_through_the_solve() -> None:
     """d(tau)/ds = 1/speed, obtained through the ODE by implicit diff."""
-    arc = cxfc.ArcLength(helix)
+    arc = cxfc.ArcLength(helix, "s")
 
     def z_of_s(s_val):
         return arc(u.Q(s_val, "km")).ustrip("km")[2]
@@ -49,7 +49,7 @@ def test_differentiable_through_the_solve() -> None:
 
 
 def test_s_zero_sits_at_tau_0() -> None:
-    arc = cxfc.ArcLength(helix)
+    arc = cxfc.ArcLength(helix, "s")
     assert jnp.allclose(
         arc(u.Q(0.0, "km")).ustrip("km"), helix(u.Q(0.0, "s")).ustrip("km")
     )
@@ -77,7 +77,7 @@ def test_matches_independent_quadrature_for_nonconstant_speed() -> None:
     speed_grid = jnp.sqrt(1.0 + 4.0 * t_grid**2)
     s_val = jnp.trapezoid(speed_grid, t_grid)
 
-    arc = cxfc.ArcLength(parabola)
+    arc = cxfc.ArcLength(parabola, "s")
     got = arc(u.Q(s_val, "km")).ustrip("km")
     want = parabola(u.Q(tau_target, "s")).ustrip("km")
     assert jnp.allclose(got, want, atol=1e-6), (got, want)
@@ -99,7 +99,7 @@ def test_tau_unit_other_than_s() -> None:
 
 def test_custom_tau_0_shifts_the_origin() -> None:
     """s=0 sits at the custom tau_0, and unit speed still holds there."""
-    arc = cxfc.ArcLength(helix, tau_0=u.Q(1.0, "s"))
+    arc = cxfc.ArcLength(helix, "s", tau_0=u.Q(1.0, "s"))
     assert jnp.allclose(
         arc(u.Q(0.0, "km")).ustrip("km"), helix(u.Q(1.0, "s")).ustrip("km")
     )

@@ -50,7 +50,7 @@ def test_arclength_over_a_time_dependent_curve_measures_the_current_slice() -> N
     2, so the slice genuinely matters. The target arc length comes from
     `_arclen_by_quadrature`, a reference the ODE never sees.
     """
-    arc = cxfc.ArcLength(bend)  # still two-argument
+    arc = cxfc.ArcLength(bend, "s")  # still two-argument
     for t_val in (0.0, 1.0, 2.0):
         s_val = _arclen_by_quadrature(1.2, t_val)
         got = cxfc.AtTime(arc, u.Q(t_val, "s"))(u.Q(s_val, "km")).ustrip("km")
@@ -63,7 +63,7 @@ def test_the_slice_actually_changes_the_answer() -> None:
     A straight-line curve would make the test above pass for the wrong reason,
     so pin that `bend` is genuinely slice-sensitive.
     """
-    arc = cxfc.ArcLength(bend)
+    arc = cxfc.ArcLength(bend, "s")
     xs = [
         float(cxfc.AtTime(arc, u.Q(t, "s"))(u.Q(1.5, "km")).ustrip("km")[0])
         for t in (0.0, 1.0, 2.0)
@@ -73,7 +73,7 @@ def test_the_slice_actually_changes_the_answer() -> None:
 
 def test_binding_time_first_is_still_supported_for_static_use() -> None:
     """`ArcLength(AtTime(...))` is legal -- it is just the frozen slice."""
-    frozen = cxfc.ArcLength(cxfc.AtTime(stretch, u.Q(0.0, "s")))
+    frozen = cxfc.ArcLength(cxfc.AtTime(stretch, u.Q(0.0, "s")), "s")
     got = frozen(u.Q(1.0, "km")).ustrip("km")
     assert jnp.allclose(got, jnp.array([1.0, 0.0, 0.0]), atol=1e-6)
 
@@ -93,7 +93,7 @@ def test_lagrangian_labels_ride_with_the_material_point() -> None:
     The material point at tau=1 is at x=1 when t=0 and x=1.5 when t=1. Its
     Lagrangian label stays 1.0 throughout.
     """
-    lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"))
+    lag = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s")
     assert jnp.allclose(
         cxfc.AtTime(lag, u.Q(0.0, "s"))(u.Q(1.0, "km")).ustrip("km"),
         jnp.array([1.0, 0.0, 0.0]),
@@ -114,8 +114,10 @@ def test_the_two_readings_differ_under_stretching() -> None:
     NOT separate them -- it leaves every arc length untouched -- so the curve
     must stretch.
     """
-    eul = cxfc.AtTime(cxfc.ArcLength(stretch), u.Q(1.0, "s"))
-    lag = cxfc.AtTime(cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s")), u.Q(1.0, "s"))
+    eul = cxfc.AtTime(cxfc.ArcLength(stretch, "s"), u.Q(1.0, "s"))
+    lag = cxfc.AtTime(
+        cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s"), u.Q(1.0, "s")
+    )
     x_eul = eul(u.Q(1.0, "km")).ustrip("km")[0]
     x_lag = lag(u.Q(1.0, "km")).ustrip("km")[0]
     assert jnp.allclose(x_eul, 1.0, atol=1e-6), x_eul
@@ -129,8 +131,8 @@ def test_a_rigid_motion_does_not_separate_them() -> None:
         a = tau.ustrip("s") + t.ustrip("s")
         return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
 
-    eul = cxfc.AtTime(cxfc.ArcLength(rot), u.Q(1.0, "s"))
-    lag = cxfc.AtTime(cxfc.LagrangianArcLength(rot, u.Q(0.0, "s")), u.Q(1.0, "s"))
+    eul = cxfc.AtTime(cxfc.ArcLength(rot, "s"), u.Q(1.0, "s"))
+    lag = cxfc.AtTime(cxfc.LagrangianArcLength(rot, u.Q(0.0, "s"), "s"), u.Q(1.0, "s"))
     assert jnp.allclose(
         eul(u.Q(0.7, "km")).ustrip("km"), lag(u.Q(0.7, "km")).ustrip("km"), atol=1e-6
     )

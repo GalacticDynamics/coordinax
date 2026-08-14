@@ -16,14 +16,14 @@ def helix(tau):
 
 def _chart(builder_cls):
     # NOTE the length unit: an arc-length curve's parameter IS a length.
-    arc = cxfc.ArcLength(helix)
+    arc = cxfc.ArcLength(helix, "s")
     return cxfc.TubularChart(
         builder_cls(arc, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(5.0, "km"))
     )
 
 
 def test_a_builder_accepts_an_arc_length_curve_unchanged() -> None:
-    b = cxfc.BishopBuilder(cxfc.ArcLength(helix), "km")
+    b = cxfc.BishopBuilder(cxfc.ArcLength(helix, "s"), "km")
     R = b.rotation_matrix(u.Q(1.0, "km"))
     assert jnp.allclose(jnp.linalg.norm(R[0]), 1.0, atol=1e-6)
 
