@@ -251,6 +251,130 @@ Q([1.5, 0. , 0. ], 'km')
 
 `AtTime(curve, t)` binds the evaluation time of a two-argument curve, turning it into a one-argument one; it is what makes `ArcLength`'s otherwise-two-argument result callable with `s` alone above. Where `AtTime` sits relative to `ArcLength` changes what is being asked: `ArcLength(AtTime(curve, t))` binds `t` first, so `ArcLength` sees a one-argument curve and freezes arc length to that one slice permanently — there is no Eulerian/Lagrangian distinction left to make. `AtTime(ArcLength(curve), t)`, used above, keeps `ArcLength` two-argument and only fixes which slice a given call reads; a later call with a different `t` re-measures on that slice instead.
 
+### Four Curve Shapes
+
+A curve is not always handed to `ArcLength` to be reparametrised — it can also arrive already arc-length parametrised, in one of a few shapes. This section walks through each.
+
+**Already arc-length parametrised, one argument.** A one-argument curve callable that is already unit-speed works directly, with no `ArcLength` wrapper — wrapping it anyway would only add an unneeded ODE solve:
+
+```{code-block} python
+>>> def arclen_circle(s):
+...     v = s.ustrip("km")
+...     return u.Q(jnp.stack([2 * jnp.cos(v / 2), 2 * jnp.sin(v / 2), jnp.zeros_like(v)]), "km")
+
+>>> def speed_at(curve, s_val):
+...     return float(jnp.linalg.norm(jax.jacfwd(lambda x: curve(u.Q(x, "km")).ustrip("km"))(s_val)))
+
+>>> speed_at(arclen_circle, 1.3)
+1.0
+
+>>> ch_direct = cxfc.TubularChart(
+...     cxfc.BishopBuilder(arclen_circle, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(4 * jnp.pi, "km"))
+... )
+>>> at_direct = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> float(metric_matrix(ch_direct.M, at_direct, ch_direct).matrix[0, 0].ustrip(""))
+1.0
+
+```
+
+`ArcLength` wrapped around it anyway is idempotent — the wrapped and direct curves agree to ODE solver tolerance, not exactly:
+
+```{code-block} python
+>>> arc_on_arc = cxfc.ArcLength(arclen_circle, tau_unit="km")
+>>> diff = jnp.max(jnp.abs(
+...     arclen_circle(u.Q(1.3, "km")).ustrip("km") - arc_on_arc(u.Q(1.3, "km")).ustrip("km")
+... ))
+>>> f"{float(diff):.2e}"
+'6.66e-16'
+
+```
+
+Harmless, but it is an ODE solve the caller did not need — do not wrap a curve in `ArcLength` defensively just because it might already be unit-speed.
+
+**A time-series of arc-length curves.** A curve $\gamma(s, t)$ that is unit-speed in $s$ at every $t$ — the shape a per-timestep fit to already-arc-length data produces — needs no reparametrisation at any slice. `AtTime` binds one slice into a one-argument curve, and that feeds a builder and a chart exactly as any other curve does:
+
+```{code-block} python
+>>> def slice_series(s, t):
+...     r = 2.0 + t.ustrip("s")
+...     v = s.ustrip("km")
+...     return u.Q(jnp.stack([r * jnp.cos(v / r), r * jnp.sin(v / r), jnp.zeros_like(v)]), "km")
+
+>>> [round(speed_at(cxfc.AtTime(slice_series, u.Q(t_val, "s")), 1.3), 6) for t_val in (0.0, 1.0, 3.0)]
+[1.0, 1.0, 1.0]
+
+>>> ch_series = cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(slice_series, u.Q(0.0, "s")), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(30.0, "km")),
+... )
+>>> at_series = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> float(metric_matrix(ch_series.M, at_series, ch_series).matrix[0, 0].ustrip(""))
+1.0
+
+```
+
+**Argument order is positional: station first, time second.** `slice_series` above takes `(s, t)`, not `(t, s)`. Swapping the call order happens to fail here, because a station is a length and a time is not:
+
+```{code-block} python
+>>> slice_series(u.Q(1.0, "s"), u.Q(1.3, "km"))
+Traceback (most recent call last):
+    ...
+astropy.units.errors.UnitConversionError: 'km' (length) and 's' (time) are not convertible
+
+```
+
+That is a lucky accident of units catching a mistake, not a check this library performs: a curve whose two parameters shared a dimension would be silently transposed instead of raising anything.
+
+**The stitching trap.** A linear blend of two unit-speed curves is not itself unit-speed. Take arc-length circles of radius 2 and radius 3, and blend them linearly over $t \in [0, 1]$:
+
+```{code-block} python
+>>> def stitched_blend(s, t):
+...     v = s.ustrip("km")
+...     tv = t.ustrip("s")
+...     c2 = jnp.stack([2 * jnp.cos(v / 2), 2 * jnp.sin(v / 2), jnp.zeros_like(v)])
+...     c3 = jnp.stack([3 * jnp.cos(v / 3), 3 * jnp.sin(v / 3), jnp.zeros_like(v)])
+...     return u.Q((1.0 - tv) * c2 + tv * c3, "km")
+
+```
+
+At the timesteps the blend was actually stitched from, $t=0$ and $t=1$, it collapses to one of the two original circles, so it is exactly unit-speed there. Anywhere in between, it is not — sampled here at station $s=1.3\,\mathrm{km}$:
+
+```{code-block} python
+>>> [round(speed_at(cxfc.AtTime(stitched_blend, u.Q(t_val, "s")), 1.3), 9) for t_val in (0.0, 0.25, 0.5, 1.0)]
+[1.0, 0.995606497, 0.994137681, 1.0]
+
+```
+
+`s` silently stops being arc length between the sampled timesteps, and it is not a rounding-level effect — it reaches the chart metric. On the interpolated slice $t=0.5$, $g_{ss}$ comes out well short of 1 instead of exactly 1:
+
+```{code-block} python
+>>> ch_blend = cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(stitched_blend, u.Q(0.5, "s")), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(20.0, "km")),
+... )
+>>> at_blend = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> f"{float(metric_matrix(ch_blend.M, at_blend, ch_blend).matrix[0, 0].ustrip('')):.9f}"
+'0.988309729'
+
+```
+
+The remedy is to wrap the stitched curve in `ArcLength` before using it, rather than after: `ArcLength(stitched_blend)` stays two-argument (see [Time-Dependent Curves](#time-dependent-curves-eulerian-versus-lagrangian) above) and re-measures speed on whichever slice `AtTime` selects, one ODE solve per slice, rather than trusting the blend's own parametrisation:
+
+```{code-block} python
+>>> arc_blend = cxfc.ArcLength(stitched_blend, tau_unit="km")
+>>> [round(speed_at(cxfc.AtTime(arc_blend, u.Q(t_val, "s")), 1.3), 6) for t_val in (0.25, 0.5)]
+[1.0, 1.0]
+
+>>> ch_blend_fixed = cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(arc_blend, u.Q(0.5, "s")), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(20.0, "km")),
+... )
+>>> round(float(metric_matrix(ch_blend_fixed.M, at_blend, ch_blend_fixed).matrix[0, 0].ustrip("")), 6)
+1.0
+
+```
+
+Once wrapped this way, every call is the Eulerian reading from [Time-Dependent Curves](#time-dependent-curves-eulerian-versus-lagrangian) above: `s` is the arc length of whichever slice is evaluated, so a fixed material point's label still drifts as the stitched track stretches between timesteps. `LagrangianArcLength(curve, t0)` is the alternative when a label should instead follow the material point.
+
 ### Cost
 
 Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.

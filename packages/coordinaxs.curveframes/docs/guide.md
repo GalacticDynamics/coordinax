@@ -424,6 +424,20 @@ p_back = cxfm.act(op_from_bishop, tau, p_bishop)
 - Use **Bishop** when your curve may have zero-curvature segments (e.g. straight-line portions, inflection points) or when you need a twist-free frame.
 - Use **Frenet–Serret** when you want the classical differential-geometry frame that tracks curvature and torsion directly.
 
+## Arc-Length Curves
+
+A builder accepts an arc-length curve exactly as it accepts any other curve — nothing about `FrenetSerretBuilder` or `BishopBuilder` requires the parameter to be time. Wrap a curve in `ArcLength` first when it is not already unit-speed, then build the frame from the wrapped curve:
+
+```python
+arc = cxfc.ArcLength(helix)
+bt_arc = cxfc.BishopBuilder(arc, "km")
+bt_arc.tangent(u.Q(1.0, "km"))
+```
+
+`helix` above is parametrised by time (`tau_unit="s"`), and `arc = cxfc.ArcLength(helix)` is parametrised by length instead, so `"km"` — not `"s"` — is what's passed as `BishopBuilder`'s `tau_unit`.
+
+For the different shapes an arc-length curve can arrive in, the Eulerian/Lagrangian distinction for time-dependent curves, and a stitching pitfall, see [Working With Curve Charts](../../../docs/guides/curve-charts.md#arc-length-reparametrisation)'s _Arc-Length Reparametrisation_ section.
+
 ## Design Notes
 
 ### Builder Evaluation
