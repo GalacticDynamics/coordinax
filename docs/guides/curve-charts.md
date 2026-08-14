@@ -255,7 +255,9 @@ Q([1.5, 0. , 0. ], 'km')
 
 Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
 
-Amortising that with a precomputed $\tau(s)$ interpolation is [tracked separately](https://github.com/GalacticDynamics/coordinax/issues) -- doing it without breaking gradients with respect to the curve's own parameters needs more than caching the solve.
+Amortising that with a precomputed $\tau(s)$ interpolation is [tracked separately](https://github.com/GalacticDynamics/coordinax/issues/713) -- doing it without breaking gradients with respect to the curve's own parameters needs more than caching the solve.
+
+(limitations)=
 
 ## Limitations
 

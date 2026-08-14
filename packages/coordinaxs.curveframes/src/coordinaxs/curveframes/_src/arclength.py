@@ -96,14 +96,23 @@ _MSG_MISSING_TIME = (
     "one-argument curve."
 )
 
+_MSG_UNINSPECTABLE_CURVE = (
+    "could not inspect the signature of the given curve to detect whether it "
+    "is one-argument `tau -> ...` or two-argument `(tau, t) -> ...`. The "
+    "curve must be a plain Python callable with an inspectable signature "
+    "`(tau)` or `(tau, t)`, not a builtin or C-implemented callable."
+)
+
+_MSG_LAGRANGIAN_REQUIRES_TWO_ARGUMENT = (
+    "LagrangianArcLength wraps a two-argument curve `gamma(tau, t)`, but the "
+    "given curve does not accept two required positional arguments. A "
+    "one-argument curve has no distinct time slices for `t0` to fix -- wrap "
+    "it in `ArcLength` instead."
+)
+
 
 def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     """Report whether ``curve`` takes two positional arguments, ``(tau, t)``.
-
-    Inspected once, at `ArcLength` construction, and cached in a static
-    field -- so `__call__` branches on a Python `bool` (resolved at trace
-    time, one compiled variant per curve shape) rather than re-inspecting
-    ``curve`` on every call.
 
     The second parameter must be **required**. Counting parameters instead
     misreads two ordinary idioms as time-dependent curves: a one-argument
@@ -113,7 +122,10 @@ def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     keyword-bound parameter, with a default. Both then receive ``t=None``
     and fail deep inside the ODE solve, nowhere near the real cause.
     """
-    params = list(inspect.signature(curve).parameters.values())
+    try:
+        params = list(inspect.signature(curve).parameters.values())
+    except (TypeError, ValueError) as e:
+        raise TypeError(_MSG_UNINSPECTABLE_CURVE) from e
     return len(params) >= 2 and params[1].default is inspect.Parameter.empty
 
 
@@ -219,13 +231,12 @@ class ArcLength(eqx.Module):
     def __call__(self, s: u.AbstractQuantity, t: Any = None, /) -> Any:
         r"""Evaluate the reparameterised curve at arc length ``s``.
 
-        Solves $d\tau/ds = 1/\|\boldsymbol{\gamma}'(\tau)\|$ from $s = 0$ to
-        ``s``, over the rescaled parameter $\sigma \in [0, 1]$ with
-        $s(\sigma) = \sigma \cdot s_{\mathrm{val}}$. As in
-        `BishopBuilder._solve_U1`, the rescaling is what keeps the solve
-        differentiable in ``s`` at ``s = 0``: integrating over $[0, s]$
-        directly would put ``s`` in the integration bound, where the solver
-        loop takes zero steps and the derivative silently comes back as $0$.
+        Solved over the rescaled parameter $\sigma \in [0, 1]$ with $s(\sigma)
+        = \sigma \cdot s_{\mathrm{val}}$. As in `BishopBuilder._solve_U1`, the
+        rescaling is what keeps the solve differentiable in ``s`` at ``s =
+        0``: integrating over $[0, s]$ directly would put ``s`` in the
+        integration bound, where the solver loop takes zero steps and the
+        derivative silently comes back as $0$.
 
         If the wrapped curve is time-dependent, ``t`` selects the slice on
         which arc length is measured (the Eulerian reading); it is ignored
@@ -251,9 +262,8 @@ class ArcLength(eqx.Module):
         tau_0 = cast("u.AbstractQuantity", self.tau_0)
 
         # Bind `t` into a one-argument curve for a time-dependent wrapped
-        # curve; otherwise use it as-is. `self._two_argument` is a static
-        # field, so this is a Python-level branch resolved once per traced
-        # curve shape, not a per-call runtime branch under jit.
+        # curve; otherwise use it as-is. See `_two_argument`'s docstring for
+        # why this is a static-field branch rather than a per-call one.
         if self._two_argument and t is None:
             # Without this the omission surfaces as an `AttributeError` on
             # `None` from inside the ODE, nowhere near the call that caused it.
@@ -281,13 +291,6 @@ class LagrangianArcLength(eqx.Module):
     time. A label therefore names a fixed material point -- however the
     curve has since moved -- rather than a position on the current curve.
 
-    This is the *Lagrangian* reading, and it differs from `ArcLength` over
-    the same two-argument curve, which stays *Eulerian*: it re-measures arc
-    length on whichever slice ``t`` it is evaluated at, so its label tracks
-    the current curve rather than a material point. The two readings agree
-    exactly when the curve moves rigidly (no slice's arc length differs from
-    any other's); they diverge once the curve stretches or bends.
-
     Parameters
     ----------
     curve : Callable
@@ -305,6 +308,14 @@ class LagrangianArcLength(eqx.Module):
         Reference parameter where $s = 0$. Defaults to ``Q(0.0, tau_unit)``.
     diffeqsolver : DiffEqSolver, optional
         `diffraxtra.DiffEqSolver` configuring the ODE solve; see `ArcLength`.
+
+    See Also
+    --------
+    coordinaxs.curveframes.ArcLength :
+        The *Eulerian* reading of the same two-argument curve: it re-measures
+        arc length on whichever slice is evaluated, rather than a fixed one.
+        The two readings agree exactly under rigid motion and diverge once
+        the curve stretches or bends.
 
     Examples
     --------
@@ -349,6 +360,8 @@ class LagrangianArcLength(eqx.Module):
 
     def __post_init__(self) -> None:
         """Resolve a `None` ``tau_0`` to zero in ``tau_unit`` (a pytree leaf)."""
+        if not _is_two_argument(self.curve):
+            raise TypeError(_MSG_LAGRANGIAN_REQUIRES_TWO_ARGUMENT)
         if self.tau_0 is None:
             self.tau_0 = u.Q(0.0, self.tau_unit)
 

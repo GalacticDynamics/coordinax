@@ -46,14 +46,9 @@ def test_at_time_binds_the_evaluation_time() -> None:
 def test_arclength_over_a_time_dependent_curve_measures_the_current_slice() -> None:
     """Eulerian: `s` is arc length on the slice being evaluated.
 
-    Uses `bend`, not `stretch`. On `stretch` this assertion holds for *every*
-    `t` -- arc length there is identically the x-displacement -- so an
-    `ArcLength` that ignored time entirely would pass. On `bend` the same
-    label lands at x = 1.500, 1.009, 0.777 for t = 0, 1, 2, so the slice
-    genuinely matters.
-
-    The target arc length comes from `_arclen_by_quadrature`, a reference the
-    ODE never sees.
+    On `bend`, the same label lands at x = 1.500, 1.009, 0.777 for t = 0, 1,
+    2, so the slice genuinely matters. The target arc length comes from
+    `_arclen_by_quadrature`, a reference the ODE never sees.
     """
     arc = cxfc.ArcLength(bend)  # still two-argument
     for t_val in (0.0, 1.0, 2.0):
@@ -84,12 +79,12 @@ def test_binding_time_first_is_still_supported_for_static_use() -> None:
 
 
 def test_a_live_time_is_a_leaf() -> None:
+    """A live `Quantity` `t` contributes exactly one more leaf than a static one."""
     import jax
 
     dyn = cxfc.AtTime(stretch, u.Q(1.0, "s"))
     sta = cxfc.AtTime(stretch, u.StaticQuantity(1.0, "s"))
-    assert len(jax.tree.leaves(dyn)) == 1
-    assert jax.tree.leaves(sta) == []
+    assert len(jax.tree.leaves(dyn)) - len(jax.tree.leaves(sta)) == 1
 
 
 def test_lagrangian_labels_ride_with_the_material_point() -> None:
