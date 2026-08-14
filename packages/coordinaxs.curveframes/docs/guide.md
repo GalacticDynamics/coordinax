@@ -436,7 +436,24 @@ bt_arc.tangent(u.Q(1.0, "km"))
 
 `helix` above is parametrised by time (`tau_unit="s"`), and `arc = cxfc.ArcLength(helix)` is parametrised by length instead, so `"km"` — not `"s"` — is what's passed as `BishopBuilder`'s `tau_unit`.
 
-For the different shapes an arc-length curve can arrive in, the Eulerian/Lagrangian distinction for time-dependent curves, and a stitching pitfall, see [Working With Curve Charts](../../../docs/guides/curve-charts.md#arc-length-reparametrisation)'s _Arc-Length Reparametrisation_ section.
+A builder accepts any callable as a curve, not only a plain function — a user's own `equinox.Module` works exactly the same way:
+
+```python
+class Circle(eqx.Module):
+    radius: u.AbstractQuantity
+
+    def __call__(self, tau):
+        t = tau.ustrip("s")
+        r = self.radius.ustrip("km")
+        return u.Q(jnp.stack([r * jnp.cos(t), r * jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+
+arc_circle = cxfc.ArcLength(Circle(radius=u.Q(2.0, "km")))
+bt_circle = cxfc.BishopBuilder(arc_circle, "km")
+bt_circle.tangent(u.Q(1.0, "km"))
+```
+
+For the different shapes an arc-length curve can arrive in — including a user's own class parametrised by time, by arc length, as a two-argument combo, or backed by sampled data — the Eulerian/Lagrangian distinction for time-dependent curves, and a stitching pitfall, see [Working With Curve Charts](../../../docs/guides/curve-charts.md#arc-length-reparametrisation)'s _Arc-Length Reparametrisation_ section, in particular [A User's Own Curve Type](../../../docs/guides/curve-charts.md#a-users-own-curve-type).
 
 ## Design Notes
 
