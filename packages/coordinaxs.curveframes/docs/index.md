@@ -5,6 +5,7 @@
 :hidden:
 
 guide.md
+curve-charts.md
 visualizing
 tutorial.md
 tutorial_circle_equivalence.md
@@ -42,6 +43,7 @@ uv add coordinaxs.curveframes
 ## Learn More
 
 - {doc}`Working With Curve Frames <guide>` — concepts, and a walkthrough of building a curve frame and transforming data through it.
+- {doc}`Working With Curve Charts <curve-charts>` — `TubularChart`, the chart built on these curve frames, its forward/inverse maps, differentiability, and induced metric.
 - {doc}`Visualizing Curve Frames <visualizing>` — plots of the moving Frenet–Serret and Bishop frames along a helix.
 - {doc}`Tutorial: Frenet–Serret Curve Frames <tutorial>` — a complete worked example, including chaining frames and using JAX for JIT and vectorisation.
 - {doc}`Tutorial: Parallel Transport vs Corotating Frame on a Circle <tutorial_circle_equivalence>` — why the Frenet–Serret, Bishop, and rigid-rotation frames coincide on a circle.

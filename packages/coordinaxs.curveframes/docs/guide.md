@@ -453,7 +453,7 @@ bt_circle = cxfc.BishopBuilder(arc_circle, "km")
 bt_circle.tangent(u.Q(1.0, "km"))
 ```
 
-For the different shapes an arc-length curve can arrive in — including a user's own class parametrised by time, by arc length, as a two-argument combo, or backed by sampled data — see {doc}`the BYO curve tutorial <byo_curve>`. For the Eulerian/Lagrangian distinction for time-dependent curves and a stitching pitfall, see [Working With Curve Charts](../../../docs/guides/curve-charts.md#arc-length-reparametrisation)'s _Arc-Length Reparametrisation_ section.
+For the different shapes an arc-length curve can arrive in — including a user's own class parametrised by time, by arc length, as a two-argument combo, or backed by sampled data — see {doc}`the BYO curve tutorial <byo_curve>`. For the Eulerian/Lagrangian distinction for time-dependent curves and a stitching pitfall, see {ref}`Working With Curve Charts <arc-length-reparametrisation>`'s _Arc-Length Reparametrisation_ section.
 
 ## Design Notes
 

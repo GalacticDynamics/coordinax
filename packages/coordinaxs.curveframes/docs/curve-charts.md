@@ -8,7 +8,7 @@ $$
 
 where $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is the triad supplied by a `FrenetSerretBuilder` or `BishopBuilder`. This guide covers construction, the forward and inverse maps, differentiating through a fitted curve, the induced metric, and where the chart stops being valid.
 
-For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`Working With Curve Frames <../packages/coordinaxs.curveframes/guide>`. For the chart system in general, see [Working With Charts](charts.md).
+For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`Working With Curve Frames <guide>`. For the chart system in general, see [Working With Charts](../../../docs/guides/charts.md).
 
 ## Why A Chart, Not A Frame
 
@@ -183,6 +183,8 @@ True
 ```
 
 Prefer Bishop for this chart when the metric matters and the diagonal structure is convenient — it holds regardless of torsion.
+
+(arc-length-reparametrisation)=
 
 ## Arc-Length Reparametrisation
 
@@ -377,7 +379,7 @@ Once wrapped this way, every call is the Eulerian reading from [Time-Dependent C
 
 ### A User's Own Curve Type
 
-Nothing above requires a plain function — a curve is consumed purely as a callable, so any callable works, including an `equinox.Module` a user writes. For the four shapes worked through with a user's own class — time-parametrised, arc-length-parametrised, a two-argument `γ(s, t)`, and one backed by sampled data — plus differentiating through a fitted field, see {doc}`the BYO curve tutorial <../packages/coordinaxs.curveframes/byo_curve>`.
+Nothing above requires a plain function — a curve is consumed purely as a callable, so any callable works, including an `equinox.Module` a user writes. For the four shapes worked through with a user's own class — time-parametrised, arc-length-parametrised, a two-argument `γ(s, t)`, and one backed by sampled data — plus differentiating through a fitted field, see {doc}`the BYO curve tutorial <byo_curve>`.
 
 ### Cost
 
@@ -493,8 +495,8 @@ Q([0.96534082, 0.64836277], 'km')
 
 :::{seealso}
 
-[Working With Charts](charts.md)
+[Working With Charts](../../../docs/guides/charts.md)
 
-{doc}`Working With Curve Frames <../packages/coordinaxs.curveframes/guide>`
+{doc}`Working With Curve Frames <guide>`
 
 :::

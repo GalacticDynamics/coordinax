@@ -2,7 +2,7 @@
 
 A curve is consumed purely as a callable throughout `coordinaxs.curveframes` — `AbstractCurveFrameBuilder.__call__` and `.location` are the only two call sites that touch it. Nothing requires a plain function: an `equinox.Module` works exactly the same way, and gets differentiable curve parameters for free, because its fields are pytree leaves. This tutorial builds one `equinox.Module` curve for each of the parametrisation shapes `ArcLength` and the builders accept, then differentiates through one of them.
 
-**Prerequisites**: {doc}`Working With Curve Frames <guide>`, [Working With Curve Charts](../../../docs/guides/curve-charts.md).
+**Prerequisites**: {doc}`Working With Curve Frames <guide>`, {doc}`Working With Curve Charts <curve-charts>`.
 
 ```pycon
 >>> import equinox as eqx
@@ -213,4 +213,4 @@ Wrapping it in `ArcLength` restores unit speed, re-measuring against the interpo
 | 4 | `__call__(s)`, backed by `jnp.interp` over sampled knots | `ArcLength(curve, "km")` |
 | 5 | Any of the above, with a differentiable field | `jax.grad` reaches straight through |
 
-See [Working With Curve Charts](../../../docs/guides/curve-charts.md#arc-length-reparametrisation) for the Eulerian/Lagrangian distinction on time-dependent curves, and a trap where a linear blend of two unit-speed curves is not itself unit-speed.
+See {ref}`Working With Curve Charts <arc-length-reparametrisation>` for the Eulerian/Lagrangian distinction on time-dependent curves, and a trap where a linear blend of two unit-speed curves is not itself unit-speed.
