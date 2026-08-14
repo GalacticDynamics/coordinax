@@ -8,7 +8,7 @@ import jax.numpy as jnp
 import numpy as np
 import plum
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import unxt as u
 
@@ -59,7 +59,6 @@ class TestDistanceModulusConversionProperties:
     """Tests for DistanceModulus conversion properties."""
 
     @given(dm=cxastrost.distance_moduli(elements={"min_value": -5, "max_value": 25}))
-    @settings(deadline=None)
     def test_distance_property(self, dm: cxastro.DistanceModulus) -> None:
         """.distance property returns a Distance."""
         assert isinstance(dm.distance, cxd.Distance)
@@ -77,14 +76,12 @@ class TestDistanceModulusPlumConvert:
         assert q.value is dm.value
 
     @given(dm=cxastrost.distance_moduli(elements={"min_value": -5, "max_value": 25}))
-    @settings(deadline=None)
     def test_convert_to_distance(self, dm: cxastro.DistanceModulus) -> None:
         """Can convert DistanceModulus to Distance."""
         d = plum.convert(dm, cxd.Distance)
         assert isinstance(d, cxd.Distance)
 
     @given(dm=cxastrost.distance_moduli(elements={"min_value": -5, "max_value": 25}))
-    @settings(deadline=None)
     def test_convert_to_parallax(self, dm: cxastro.DistanceModulus) -> None:
         """Can convert DistanceModulus to Parallax."""
         plx = plum.convert(dm, cxastro.Parallax)

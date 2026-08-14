@@ -74,7 +74,7 @@ def test_is_boost_invariant() -> None:
     )
 
 
-@settings(deadline=None, max_examples=25)
+@settings(max_examples=25)
 @given(
     b1=st.floats(-0.95, 0.95, allow_nan=False),
     b2=st.floats(-0.95, 0.95, allow_nan=False),

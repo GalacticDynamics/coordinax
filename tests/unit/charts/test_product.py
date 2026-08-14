@@ -4,7 +4,7 @@ CartesianProductChart: namespaced and flat component key variants.
 """
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst
@@ -110,7 +110,6 @@ class TestCartesianProductChartPropertyTests:
     """Property tests for CartesianProductChart."""
 
     @given(chart=cxst.charts(cxc.AbstractCartesianProductChart))
-    @settings(deadline=None)
     def test_product_ndim_is_sum_of_factor_ndims(
         self, chart: cxc.CartesianProductChart
     ) -> None:
@@ -119,7 +118,6 @@ class TestCartesianProductChartPropertyTests:
         assert chart.ndim == expected_ndim
 
     @given(chart=cxst.charts(cxc.AbstractCartesianProductChart))
-    @settings(deadline=None)
     def test_product_factors_match_factor_names_length(
         self, chart: cxc.CartesianProductChart
     ) -> None:
@@ -127,7 +125,6 @@ class TestCartesianProductChartPropertyTests:
         assert len(chart.factors) == len(chart.factor_names)
 
     @given(chart=cxst.charts(cxc.AbstractCartesianProductChart))
-    @settings(deadline=None)
     def test_product_factor_names_are_unique(
         self, chart: cxc.CartesianProductChart
     ) -> None:
@@ -135,7 +132,6 @@ class TestCartesianProductChartPropertyTests:
         assert len(set(chart.factor_names)) == len(chart.factor_names)
 
     @given(chart=cxst.charts(cxc.AbstractCartesianProductChart))
-    @settings(deadline=None)
     def test_split_merge_roundtrip(self, chart: cxc.CartesianProductChart) -> None:
         """Property: split then merge is identity."""
         data = {comp: float(i) for i, comp in enumerate(chart.components)}

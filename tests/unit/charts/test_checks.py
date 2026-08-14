@@ -4,7 +4,7 @@ import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import unxt as u
 import unxts.hypothesis as ust
@@ -35,7 +35,6 @@ class TestPolarRange:
         upper=float32s(min_value=2, max_value=PI_F32),
         quantity_cls=angle_classes,
     )
-    @settings(deadline=None)
     def test_angular_within_bounds_passes(
         self, data, lower, upper, quantity_cls
     ) -> None:
@@ -52,14 +51,12 @@ class TestPolarRange:
         assert jnp.array_equal(result.value, angle.value)
 
     @given(ust.quantities("m", elements=float32s(min_value=0, max_value=PI_F32)))
-    @settings(deadline=None)
     def test_non_angular_units_raises(self, x: u.AbstractQuantity) -> None:
         """Non-angular quantities always raise, regardless of value."""
         with pytest.raises(eqx.EquinoxTracetimeError, match="must be in angular units"):
             checks.polar_range(x)
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_angular_outside_bounds_raises(self, data: st.DataObject) -> None:
         """Angular quantities outside [0, pi] raise an error."""
         # Either below 0 or above pi (use finite values to avoid -inf/inf issues)
@@ -85,7 +82,6 @@ class TestStrictlyPositive:
 
     # Use 0.0625 (1/16) which is exactly representable in float32
     @given(ust.quantities(shape=(), elements=float32s(min_value=0.0625, max_value=1e9)))
-    @settings(deadline=None)
     def test_positive_values_pass(self, x: u.AbstractQuantity) -> None:
         """Positive values should pass through unchanged."""
         result = checks.strictly_positive(x)
@@ -132,7 +128,6 @@ class TestLeq:
     """Tests for leq (less than or equal) check."""
 
     @given(data=st.data(), max_val=float32s(min_value=1, max_value=100))
-    @settings(deadline=None)
     def test_values_below_max_pass(self, data: st.DataObject, max_val: float) -> None:
         """Values <= max should pass through unchanged."""
         x = data.draw(

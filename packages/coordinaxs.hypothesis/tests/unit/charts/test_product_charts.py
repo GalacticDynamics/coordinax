@@ -267,7 +267,6 @@ class TestProductChartsEdgeCases:
 
 
 @given(ndim=st.integers(min_value=2, max_value=6), chart=st.data())
-@settings(deadline=None)
 def test_product_charts_with_ndim(ndim: int, chart: st.DataObject) -> None:
     """Test that charts(AbstractCartesianProductChart, ndim=...) respects ndim."""
     # Draw chart with specified ndim
@@ -285,7 +284,6 @@ def test_product_charts_with_ndim(ndim: int, chart: st.DataObject) -> None:
 
 
 @given(kwargs=cxst.chart_init_kwargs(cxc.CartesianProductChart))
-@settings(deadline=None)
 def test_cartesian_product_chart_init_kwargs(kwargs: dict) -> None:
     """Test chart_init_kwargs for CartesianProductChart."""
     # Verify kwargs structure
@@ -361,7 +359,7 @@ class TestProductChartDimensionality:
         totals: set[int] = set()
 
         @given(factors=cxstc.cartesian_product_factors(max_factors=max_factors))
-        @settings(max_examples=100, deadline=None)
+        @settings(max_examples=100)
         def collect(factors: tuple[cxc.AbstractChart, ...]) -> None:
             totals.add(sum(f.ndim for f in factors))
 
@@ -388,7 +386,7 @@ class TestProductChartDimensionality:
         """
 
         @given(chart=cxst.charts(cxc.AbstractCartesianProductChart, ndim=ndim))
-        @settings(max_examples=15, deadline=None)
+        @settings(max_examples=15)
         def check(chart: cxc.AbstractCartesianProductChart) -> None:
             assert chart.ndim == ndim
             assert sum(f.ndim for f in chart.factors) == ndim

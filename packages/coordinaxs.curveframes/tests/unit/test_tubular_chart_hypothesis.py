@@ -34,7 +34,6 @@ def test_charts_can_draw_a_tubular_chart(chart) -> None:
     assert chart.ndim == 3
 
 
-@settings(deadline=None)  # the inverse solve recompiles per draw (new curve/builder)
 @given(chart=cxst.charts(filter=cxfc.TubularChart))
 def test_a_drawn_tubular_chart_round_trips_a_point(chart) -> None:
     """A drawn chart is not just constructible -- it can carry a point.
@@ -82,7 +81,7 @@ def test_component_domains_are_free_for_every_component(chart) -> None:
     assert all(interval == Interval() for interval in domains.values())
 
 
-@settings(deadline=None, suppress_health_check=list(HealthCheck))
+@settings(suppress_health_check=list(HealthCheck))
 @given(chart=cxst.charts(filter=cxfc.TubularChart), data=st.data())
 def test_drawn_points_fall_inside_the_component_domains(chart, data) -> None:
     """The payoff, mirroring `TestCDictsRespectsDomains` in `coordinaxs.hypothesis`.

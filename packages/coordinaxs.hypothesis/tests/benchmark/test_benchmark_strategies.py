@@ -23,7 +23,7 @@ def test_benchmark_chart_classes_simple(benchmark):
         result = []
 
         @given(d=st_data())
-        @settings(max_examples=1, deadline=None)
+        @settings(max_examples=1)
         def inner(d):
             result.append(d.draw(cxst.chart_classes()))
 

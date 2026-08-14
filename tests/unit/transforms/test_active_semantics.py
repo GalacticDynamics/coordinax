@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 import numpy as np
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -85,7 +85,6 @@ class TestActiveSemanticsProperty:
     """Hypothesis-driven property tests for active-transform semantics."""
 
     @given(angle_deg=st.floats(-360, 360, allow_nan=False, allow_infinity=False))
-    @settings(deadline=None)
     def test_euler_z_rotation_sign_convention(self, angle_deg: float) -> None:
         """Active Euler-z rotation by θ maps (1,0,0) to (cos(θ), sin(θ), 0).
 
@@ -105,7 +104,6 @@ class TestActiveSemanticsProperty:
             "m", shape=(3,), elements={"min_value": -1e6, "max_value": 1e6}
         )
     )
-    @settings(deadline=None)
     def test_alice_alex_roundtrip(self, q: u.AbstractQuantity) -> None:
         """Alice→Alex→Alice is the identity for any Cartesian 3-vector."""
         fwd = cxfm.act(cxf.frame_transition(cxf.alice, cxf.alex), None, q)
@@ -121,7 +119,6 @@ class TestActiveSemanticsProperty:
             elements={"min_value": -1e6, "max_value": 1e6, "allow_nan": False},
         ),
     )
-    @settings(deadline=None)
     def test_transformed_frame_roundtrip(self, angle_deg: float, q: object) -> None:
         """TransformedReferenceFrame→base→transformed is the identity on positions."""
         assert isinstance(q, cxv.Point)

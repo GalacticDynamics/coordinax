@@ -9,7 +9,7 @@ __all__: tuple[str, ...] = ()
 
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import unxt as u
 from unxt.quantity import AbstractAngle
@@ -148,10 +148,6 @@ class TestAngleWrapTo:
         ],
     )
     @given(data=st.data())
-    # JAX traces/compiles `wrap_to` on the first call, which can exceed the
-    # default per-example deadline when this test happens to run first under
-    # random ordering (cf. `test_wrap_idempotent` below).
-    @settings(deadline=None)
     def test_wrap_to_range(
         self, unit_str: str, lo: u.Q, hi: u.Q, data: st.DataObject
     ) -> None:
@@ -178,7 +174,6 @@ class TestAngleWrapTo:
         assert jnp.all(angle.value <= 360 + 1e-6)
 
     @given(angle=cxst.angles(unit="deg"))
-    @settings(deadline=None)
     def test_wrap_idempotent(self, angle: cxa.Angle) -> None:
         """Applying wrap_to twice returns the same result as applying it once."""
         lo, hi = u.Q(0, "deg"), u.Q(360, "deg")
@@ -201,7 +196,6 @@ class TestAngleWrapTo:
 
     @given(angle=cxst.angles(unit="deg", shape=(4,)))
     # Same first-call JAX compile as `test_wrap_to_range` above; see its comment.
-    @settings(deadline=None)
     def test_wrap_array_angle(self, angle: cxa.Angle) -> None:
         """wrap_to acts element-wise on array-valued Angles."""
         wrapped = angle.wrap_to(u.Q(0, "deg"), u.Q(360, "deg"))

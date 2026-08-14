@@ -152,21 +152,21 @@ class TestMagnitudeLeavesBoundedComponentsAlone:
         """Regression: this used to raise `InvalidArgument`, not just filter."""
 
         @given(p=cxst.cdicts(chart, magnitude=self.TINY))
-        @settings(max_examples=5, deadline=None)
+        @settings(max_examples=5)
         def check(p) -> None:
             assert set(p) == set(chart.components)
 
         check()
 
     @given(p=cxst.cdicts(cxc.sph3d, magnitude=(1e-12, 1e-11)))
-    @settings(max_examples=20, deadline=None)
+    @settings(max_examples=20)
     def test_radius_reaches_the_requested_scale(self, p) -> None:
         """An explicit floor replaces RADIAL's absolute 1e-3 m margin."""
         r = float(u.ustrip("m", p["r"]))
         assert 1e-12 <= r <= 1e-11
 
     @given(p=cxst.cdicts(cxc.sph3d, magnitude=(1e-12, 1e-11)))
-    @settings(max_examples=20, deadline=None)
+    @settings(max_examples=20)
     def test_angles_keep_their_own_domain(self, p) -> None:
         """Theta stays a colatitude even when the length scale is 1e-12 m."""
         theta = float(u.ustrip("rad", p["theta"]))

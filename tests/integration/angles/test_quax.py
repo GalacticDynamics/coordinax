@@ -18,7 +18,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 import quax
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -319,7 +319,6 @@ class TestJAXTransformsWithQuaxed:
         assert jnp.allclose(g.value, expected_grad, atol=1e-5)
 
     @given(angle=_angle_rad_trig)
-    @settings(deadline=None)
     def test_grad_sin_equals_cos(self, angle: cxa.Angle) -> None:
         """d/dx sin(x) == cos(x) holds for arbitrary angles in [-1, 1] rad."""
         g = jax.grad(lambda x: qnp.sin(x).value)(angle)
@@ -342,7 +341,6 @@ class TestJAXTransformsWithQuaxed:
         assert jnp.allclose(result.value, expected_val, atol=1e-6)
 
     @given(angle=cxst.angles(shape=(3,)))
-    @settings(deadline=None)
     def test_vmap_abs(self, angle: cxa.Angle) -> None:
         """jax.vmap over qnp.abs maps element-wise and returns an Angle."""
         result = jax.vmap(qnp.abs)(angle)
@@ -357,7 +355,6 @@ class TestJAXTransformsWithQuaxed:
             elements=st.floats(min_value=-2, max_value=2, width=32),
         )
     )
-    @settings(deadline=None)
     def test_vmap_sin(self, angle: cxa.Angle) -> None:
         """jax.vmap over qnp.sin returns a dimensionless Quantity array."""
         result = jax.vmap(qnp.sin)(angle)

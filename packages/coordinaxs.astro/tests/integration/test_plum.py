@@ -1,7 +1,7 @@
 """Test `coordinaxs.astro`."""
 
 import plum
-from hypothesis import given, settings
+from hypothesis import given
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -62,7 +62,6 @@ class TestDistanceParallaxRoundtrip:
     @given(
         d=cxdst.distances(unit="kpc", elements={"min_value": 0.125, "max_value": 1e4})
     )
-    @settings(deadline=None)
     def test_distance_to_parallax_to_distance(self, d: cxd.Distance) -> None:
         """Distance -> Parallax -> Distance roundtrip is consistent."""
         plx = plum.convert(d, cxastro.Parallax)
@@ -77,7 +76,6 @@ class TestDistanceParallaxRoundtrip:
             unit="mas", elements={"min_value": 0.125, "max_value": 1e4}
         )
     )
-    @settings(deadline=None)
     def test_parallax_to_distance_to_parallax(self, plx: cxastro.Parallax) -> None:
         """Parallax -> Distance -> Parallax roundtrip is consistent."""
         d = plum.convert(plx, cxd.Distance)
@@ -93,7 +91,6 @@ class TestDistanceDistanceModulusRoundtrip:
     @given(
         d=cxdst.distances(unit="kpc", elements={"min_value": 0.125, "max_value": 1e4})
     )
-    @settings(deadline=None)
     def test_distance_to_dm_to_distance(self, d: cxd.Distance) -> None:
         """Distance -> DM -> Distance roundtrip is consistent."""
         dm = plum.convert(d, cxastro.DistanceModulus)
@@ -103,7 +100,6 @@ class TestDistanceDistanceModulusRoundtrip:
         assert jnp.allclose(d_pc, d_back_pc, rtol=1e-4)
 
     @given(dm=cxastrost.distance_moduli(elements={"min_value": 1, "max_value": 25}))
-    @settings(deadline=None)
     def test_dm_to_distance_to_dm(self, dm: cxastro.DistanceModulus) -> None:
         """DM -> Distance -> DM roundtrip is consistent."""
         d = plum.convert(dm, cxd.Distance)
@@ -119,7 +115,6 @@ class TestParallaxDistanceModulusRoundtrip:
             unit="mas", elements={"min_value": 0.125, "max_value": 1e4}
         )
     )
-    @settings(deadline=None)
     def test_parallax_to_dm_to_parallax(self, plx: cxastro.Parallax) -> None:
         """Parallax -> DM -> Parallax roundtrip is consistent."""
         dm = plum.convert(plx, cxastro.DistanceModulus)
@@ -135,7 +130,6 @@ class TestDistancePlumConvert:
     @given(
         d=cxdst.distances(unit="kpc", elements={"min_value": 0.125, "max_value": 1e6})
     )
-    @settings(deadline=None)
     def test_convert_to_distance_modulus(self, d: cxd.Distance) -> None:
         """Can convert Distance to DistanceModulus."""
         dm = plum.convert(d, cxastro.DistanceModulus)
@@ -145,7 +139,6 @@ class TestDistancePlumConvert:
     @given(
         d=cxdst.distances(unit="kpc", elements={"min_value": 0.125, "max_value": 1e6})
     )
-    @settings(deadline=None)
     def test_convert_to_parallax(self, d: cxd.Distance) -> None:
         """Can convert Distance to Parallax."""
         plx = plum.convert(d, cxastro.Parallax)

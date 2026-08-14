@@ -19,7 +19,7 @@ __all__: tuple[str, ...] = ()
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 from jax.numpy import pi
 
 import unxt as u
@@ -107,7 +107,6 @@ class TestCartesianRoundTrip:
         ],
     )
     @given(data=st.data())
-    @settings(deadline=None)
     def test_roundtrip(
         self, cart: cxc.AbstractChart, curv: cxc.AbstractChart, data: st.DataObject
     ) -> None:
@@ -133,7 +132,6 @@ class TestCartesianRoundTrip1D:
     """cart1d ↔ radial1d round-trips."""
 
     @given(data=st.data())
-    @settings(deadline=None)
     def test_cart1d_radial1d_roundtrip(self, data: st.DataObject) -> None:
         """cart1d -> radial1d -> cart1d is identity, sign included.
 

@@ -23,7 +23,7 @@ import astropy.coordinates as apyc
 import astropy.units as apyu
 import jax.numpy as jnp
 import pytest
-from hypothesis import assume, given, settings, strategies as st
+from hypothesis import assume, given, strategies as st
 
 import unxt as u
 import unxts.hypothesis as ust
@@ -167,7 +167,6 @@ def test_known_point_matches_astropy(src: str, dst: str) -> None:
 
 @pytest.mark.parametrize(("src", "dst"), PAIRS, ids=PAIR_IDS)
 @given(data=st.data())
-@settings(deadline=None)
 def test_arbitrary_point_matches_astropy(
     src: str, dst: str, data: st.DataObject
 ) -> None:

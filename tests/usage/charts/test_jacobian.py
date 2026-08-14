@@ -20,7 +20,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, strategies as st
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -181,7 +181,6 @@ class TestChainRuleViaCurriedForm:
 
     @pytest.mark.parametrize(("cart", "curv"), CHART_PAIRS)
     @given(data=st.data())
-    @settings(deadline=None)
     def test_composition_is_the_identity(
         self, cart: cxc.AbstractChart, curv: cxc.AbstractChart, data: st.DataObject
     ) -> None:

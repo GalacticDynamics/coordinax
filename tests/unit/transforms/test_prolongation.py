@@ -237,7 +237,7 @@ class TestFastPathEqualsGeneric:
         c2=st.floats(-5, 5),
         tau=st.floats(0.1, 10),
     )
-    @settings(max_examples=5, deadline=None)
+    @settings(max_examples=5)
     def test_translate_polynomial_delta(self, c0, c1, c2, tau):
         """Hand ladder rule == generic prolongation for polynomial delta."""
 
@@ -262,7 +262,7 @@ class TestFastPathEqualsGeneric:
         assert allclose_cdict(out_a, out_gen[2], "km/s2", atol=1e-6)
 
     @given(tau=st.floats(0.0, 6.0))
-    @settings(max_examples=5, deadline=None)
+    @settings(max_examples=5)
     def test_rotate_prolongation_vs_closed_form(self, tau):
         """TimeDep-rotate prolongation == the closed form v' = R v + Rdot x."""
         op = rot_z_op()

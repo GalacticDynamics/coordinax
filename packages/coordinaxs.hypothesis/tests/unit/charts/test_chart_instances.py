@@ -1,7 +1,7 @@
 """Tests for the charts strategy (instance generation)."""
 
 import hypothesis.strategies as st
-from hypothesis import given, settings
+from hypothesis import given
 
 import coordinax.charts as cxc
 
@@ -64,7 +64,6 @@ def test_exact_ndim(chart: cxc.AbstractChart) -> None:
 
 
 @given(chart=cxst.charts(ndim=st.integers(min_value=1, max_value=2)))
-@settings(deadline=None)
 def test_ndim_strategy(chart: cxc.AbstractChart) -> None:
     """Test ndim as a strategy."""
     assert 1 <= chart.ndim <= 2

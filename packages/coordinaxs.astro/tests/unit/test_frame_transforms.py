@@ -6,7 +6,7 @@ from collections.abc import Iterable
 
 import numpy as np
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -133,7 +133,6 @@ class TestFrameTransformProperties:
     """Hypothesis-driven property tests for ICRS <-> Galactocentric transforms."""
 
     @given(q=POSITIONS_PC)
-    @settings(deadline=None)
     def test_icrs_gcf_icrs_roundtrip(self, q: u.AbstractQuantity) -> None:
         """ICRS → GCF → ICRS is the identity for arbitrary bounded positions."""
         icrs = cxastro.ICRS()
@@ -148,7 +147,6 @@ class TestFrameTransformProperties:
         )
 
     @given(q=POSITIONS_PC)
-    @settings(deadline=None)
     def test_gcf_icrs_gcf_roundtrip(self, q: u.AbstractQuantity) -> None:
         """GCF → ICRS → GCF is the identity for arbitrary bounded positions."""
         icrs = cxastro.ICRS()
@@ -161,7 +159,6 @@ class TestFrameTransformProperties:
         np.testing.assert_allclose(back.ustrip("pc"), q.ustrip("pc"), rtol=0, atol=1e-6)
 
     @given(q=POSITIONS_PC)
-    @settings(deadline=None)
     def test_inverse_is_frame_transition_in_reverse(
         self, q: u.AbstractQuantity
     ) -> None:
@@ -186,7 +183,6 @@ class TestFrameTransformProperties:
 
     @requires_astropy
     @given(q=POSITIONS_PC)
-    @settings(deadline=None)
     def test_icrs_to_gcf_matches_astropy_on_random_positions(
         self, q: u.AbstractQuantity
     ) -> None:
