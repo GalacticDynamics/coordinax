@@ -83,8 +83,8 @@ def metric_matrix(
     >>> g = metric_matrix(M, at, cxc.sph2)
     >>> isinstance(g, DiagonalMetric)
     True
-    >>> g.diagonal
-    QM([1., 1.], '(, )')
+    >>> bool(jnp.allclose(g.diagonal.value, jnp.array([1.0, 1.0])))
+    True
 
     $S^2$ at $\theta = \pi/6$:
 

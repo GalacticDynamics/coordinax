@@ -366,7 +366,9 @@ def norm(
     # here -- checking the units really are empty rather than assuming so.
     gm = mm.to_dense().matrix  # ty: ignore[unresolved-attribute]
     if isinstance(gm, ul.QuantityMatrix):
-        if gm.unit != ul.UnitsMatrix.full(gm.shape, ""):
+        # `gm.unit.shape`, not `gm.shape`: the latter carries batch axes the
+        # units do not, so a batched dimensionless metric would be rejected.
+        if gm.unit != ul.UnitsMatrix.full(gm.unit.shape, ""):
             msg = (
                 f"norm(): a bare `jax.Array` cannot carry the unit of this "
                 f"chart's metric ({gm.unit}); pass `v` as a Quantity."

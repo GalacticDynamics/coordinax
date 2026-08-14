@@ -63,7 +63,8 @@ def test_curvilinear_metric_batches_like_elementwise(data):
     for idx in np.ndindex(shape):
         pt = {k: v[idx] for k, v in point.items()}
         gi = cxmapi.metric_matrix(manifold, pt, chart).diagonal
-        # Same arithmetic on the same values: rows must match, units unchanged.
+        # Same arithmetic on the same values: rows must match. Every chart
+        # here yields a `QuantityMatrix` diagonal, so both sides unwrap.
         np.testing.assert_allclose(gbv[idx], np.asarray(gi.value), rtol=1e-5)
         assert getattr(gb, "unit", None) == getattr(gi, "unit", None)
 

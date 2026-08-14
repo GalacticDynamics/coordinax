@@ -409,7 +409,11 @@ def _contract(mm: DiagonalMetric, uvec: Array, vvec: Array, /) -> Any:
     """
     d = mm.diagonal
     if isinstance(d, ul.QM):
-        if d.unit != ul.UnitsMatrix.full(d.shape, ""):
+        # `d.unit.shape`, not `d.shape`: a batched diagonal carries units on
+        # the component axis only, so comparing against the *value* shape never
+        # matches and would send every batched dimensionless metric to the
+        # dense path.
+        if d.unit != ul.UnitsMatrix.full(d.unit.shape, ""):
             return jnp.einsum("...i,...ij,...j->...", uvec, mm.to_dense().matrix, vvec)
         d = d.value
     return jnp.sum(d * uvec * vvec, axis=-1)
