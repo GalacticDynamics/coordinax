@@ -315,7 +315,7 @@ def from_(
         frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
-      z_sun=Quantity(f64[], 'pc'),
+      z_sun=Q(f64[], 'pc'),
       galcen_v_sun=Tangent(
         {'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')},
         chart=Cart3D(M=Rn(3)),
@@ -397,7 +397,7 @@ def astropy_galactocentric_to_coordinax_galactocentric(
         frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
-      z_sun=Quantity(f64[], 'pc'),
+      z_sun=Q(f64[], 'pc'),
       galcen_v_sun=Tangent(
         {'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')},
         chart=Cart3D(M=Rn(3)),
