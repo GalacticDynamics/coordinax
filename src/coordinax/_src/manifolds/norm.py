@@ -359,7 +359,21 @@ def norm(
     check_metric_is_charts(metric, chart, "norm")
     require_positive_definite(chart.M.metric, "norm")
     mm = cxmapi.metric_matrix(chart.M, at, chart)
-    return array_norm(mm.to_dense().matrix, v)  # ty: ignore[unresolved-attribute]
+    # Bare in, bare out. `at` arrives unitless here, so the metric comes back
+    # bare (Cartesian charts) or as a *dimensionless* `QuantityMatrix` (the
+    # sphere charts). `array_norm` has no `(QuantityMatrix, Array)` overload,
+    # and `QuantityMatrix.ustrip` will not take a `UnitsMatrix`, so unwrap it
+    # here -- checking the units really are empty rather than assuming so.
+    gm = mm.to_dense().matrix  # ty: ignore[unresolved-attribute]
+    if isinstance(gm, ul.QuantityMatrix):
+        if gm.unit != ul.UnitsMatrix.full(gm.shape, ""):
+            msg = (
+                f"norm(): a bare `jax.Array` cannot carry the unit of this "
+                f"chart's metric ({gm.unit}); pass `v` as a Quantity."
+            )
+            raise ValueError(msg)
+        gm = gm.value
+    return array_norm(gm, v)
 
 
 # ===========================================================================
