@@ -40,7 +40,11 @@ from coordinax._src.base import (
     AbstractMetricField,
     check_metric_is_charts,
 )
-from coordinax._src.charts.d3 import cart3d
+from coordinax._src.charts.d0 import Cart0D
+from coordinax._src.charts.d1 import Cart1D
+from coordinax._src.charts.d2 import Cart2D
+from coordinax._src.charts.d3 import Cart3D, cart3d
+from coordinax._src.charts.dn import CartND
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.embedded.chart import EmbeddedChart
 from coordinax._src.embedded.manifold import EmbeddedManifold
@@ -417,3 +421,57 @@ def geodesic_distance(
     """
     check_metric_is_charts(metric, chart, "geodesic_distance")
     return cxmapi.geodesic_distance(chart.M, chart, a, b, usys=usys)
+
+
+# ===================================================================
+# Fast paths.
+#
+# The packed overloads unpack their operands into component dicts so that a
+# curvilinear chart can be mapped to Cartesian first. In a Cartesian chart
+# there is nothing to map, and plum can skip the unpacking entirely by
+# dispatching on the chart type: 33x for arrays, 3.3x for quantities.
+#
+# There is deliberately no matching `CDict` fast path. The two `pt_map` calls
+# it would skip cost 4.8us of a ~3000us call -- the time is in `norm` and in
+# wrapping the result as a `Distance` -- so it measured as no gain at all, and
+# would have been dispatch surface bought with nothing.
+
+CartesianChart = Cart0D | Cart1D | Cart2D | Cart3D | CartND
+
+
+@plum.dispatch.multi(
+    (CartesianChart, u.AbstractQuantity, u.AbstractQuantity),
+    (CartesianChart, Array, Array),
+)
+def geodesic_distance(
+    chart: CartesianChart, a: Any, b: Any, /, *, usys: OptUSys = None
+) -> Any:
+    """Packed operands in a Cartesian chart: measure without unpacking.
+
+    Registered as two signatures rather than one with a ``Quantity | Array``
+    union: each generic overload it overrides is typed for one of them, and a
+    union would be narrower in the chart but wider in the operands, so plum
+    would rank neither more specific and refuse the call as ambiguous.
+
+    The generic packed overloads split the operands into component dicts so a
+    curvilinear chart can be mapped to Cartesian. Here there is nothing to map,
+    and the components are already on the trailing axis in the right order, so
+    the norm is taken directly.
+
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> a = u.Q(jnp.asarray([3.0, 0.0, 0.0]), "m")
+    >>> b = u.Q(jnp.asarray([0.0, 4.0, 0.0]), "m")
+    >>> cxm.geodesic_distance(cxc.cart3d, a, b).round(2)
+    Distance(5., 'm')
+
+    >>> float(cxm.geodesic_distance(cxc.cart3d, jnp.asarray([3.0, 0.0, 0.0]),
+    ...                             jnp.asarray([0.0, 4.0, 0.0])))
+    5.0
+
+    """
+    del chart, usys
+    return _as_distance(jnp.linalg.norm(b - a, axis=-1))

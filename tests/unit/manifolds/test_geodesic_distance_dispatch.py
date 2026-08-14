@@ -184,3 +184,71 @@ class TestRefusals:
         """The `AbstractManifold` fallback: no closed form, so no answer."""
         with pytest.raises(NotImplementedError, match="no geodesic distance"):
             cxm.geodesic_distance(cxm.NoManifold(), cxc.sph2, _NORTH, _OTHER)
+
+
+class TestChordDistance:
+    """The chord is the ambient straight line, not an approximate geodesic.
+
+    Both are exact; they answer different questions. On a sphere of radius R
+    separated by a central angle t, the geodesic is ``R t`` and the chord is
+    ``2 R sin(t / 2)``.
+    """
+
+    @pytest.mark.parametrize("theta", [1e-3, 0.1, 1.0, 2.0, jnp.pi])
+    def test_matches_the_analytic_chord(self, theta):
+        a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(theta, "rad")}
+        got = jnp.asarray(cxm.chord_distance(cxc.sph2, a, b))
+        assert bool(qnp.isclose(got, 2 * jnp.sin(theta / 2), atol=1e-12))
+
+    def test_is_symmetric_and_chart_invariant(self):
+        a = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.4, "rad")}
+        b = {"theta": u.Angle(1.6, "rad"), "phi": u.Angle(1.2, "rad")}
+        ab = jnp.asarray(cxm.chord_distance(cxc.sph2, a, b))
+        ba = jnp.asarray(cxm.chord_distance(cxc.sph2, b, a))
+        lonlat = jnp.asarray(
+            cxm.chord_distance(
+                cxc.lonlat_sph2,
+                cxc.pt_map(a, cxc.sph2, cxc.lonlat_sph2),
+                cxc.pt_map(b, cxc.sph2, cxc.lonlat_sph2),
+            )
+        )
+        assert bool(qnp.isclose(ab, ba, atol=1e-14))
+        assert bool(qnp.isclose(ab, lonlat, atol=1e-14))
+
+    def test_differs_from_the_geodesic(self):
+        """The two must not be confusable: at a quarter turn they differ by 10%."""
+        a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.pi / 2, "rad")}
+        chord = jnp.asarray(cxm.chord_distance(cxc.sph2, a, b))
+        arc = jnp.asarray(cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad"))
+        assert bool(qnp.isclose(chord, jnp.sqrt(2.0), atol=1e-12))
+        assert bool(qnp.isclose(arc, jnp.pi / 2, atol=1e-12))
+
+    def test_embedded_sphere_carries_its_radius(self):
+        M = cxm.EmbeddedManifold(
+            intrinsic=cxm.S2,
+            ambient=cxm.R3,
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")),
+        )
+        north = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+        south = {"theta": u.Angle(jnp.pi, "rad"), "phi": u.Angle(0.0, "rad")}
+        got = cxm.chord_distance(M, cxc.sph2, north, south)
+        assert bool(qnp.isclose(got.ustrip("m"), 4.0, atol=1e-12))
+
+    def test_flat_space_is_refused(self):
+        """Its own ambient: the chord is the straight line `geodesic_distance` gives."""
+        a = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        b = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        with pytest.raises(NotImplementedError, match="own ambient"):
+            cxm.chord_distance(cxc.cart3d, a, b)
+
+    def test_refuses_a_manifold_with_no_embedding(self):
+        """No ambient space to cut through, so there is no chord to return."""
+        with pytest.raises(NotImplementedError, match="carries no embedding"):
+            cxm.chord_distance(cxm.NoManifold(), cxc.sph2, _NORTH, _OTHER)
+
+    def test_refuses_a_sphere_that_is_not_the_two_sphere(self):
+        """`TwoSphereIn3D` is the only embedding wired up here."""
+        with pytest.raises(NotImplementedError, match=r"only.*two-sphere"):
+            cxm.chord_distance(cxm.S1, cxc.sph2, _NORTH, _OTHER)

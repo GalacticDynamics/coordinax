@@ -11,6 +11,7 @@ __all__ = (
     "pt_map",
     "norm",
     "geodesic_distance",
+    "chord_distance",
     "interval",
     "causal_character",
     "proper_time",
@@ -91,6 +92,17 @@ def geodesic_distance(*args: Any, **kwargs: Any) -> Any:
     (chart/frame extracted automatically), or a ``chart`` / ``metric`` together
     with the two points as component dictionaries, packed quantities, or bare
     arrays.
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def chord_distance(*args: Any, **kwargs: Any) -> Any:
+    """Straight-line distance between two points through their ambient space.
+
+    The chord, as opposed to `geodesic_distance`'s path along the manifold.
+    Defined wherever the manifold carries an embedding; a manifold that is its
+    own ambient space has no distinct chord and is refused.
     """
     raise NotImplementedError  # pragma: no cover
 
