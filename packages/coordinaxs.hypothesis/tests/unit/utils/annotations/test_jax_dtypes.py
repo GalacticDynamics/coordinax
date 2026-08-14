@@ -45,6 +45,11 @@ def test_float64_offered_iff_x64() -> None:
 
 #: Draws `charts()` in a fresh interpreter, printing the count of hard errors.
 #: Out-of-process: the x64 setting is read once, at JAX import.
+#:
+#: This is the one place `deadline=None` is still written by hand. The
+#: subprocess runs `python -c`, which never loads the root `conftest.py`, so
+#: the profile registered there -- the reason no other test needs it -- does
+#: not reach this interpreter.
 _X32_SCRIPT = """
 import warnings
 warnings.filterwarnings("ignore")
@@ -57,7 +62,7 @@ import coordinaxs.hypothesis.main as cxst
 bad = []
 
 @given(d=st.data())
-@settings(max_examples=150, database=None,
+@settings(max_examples=150, deadline=None, database=None,
           suppress_health_check=list(HealthCheck))
 def run(d):
     try:
