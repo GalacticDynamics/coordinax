@@ -9,6 +9,7 @@ import unxts.linalg as ul
 
 from .charts import MinkowskiCT
 from .metric import MinkowskiMetric
+from coordinax._src.base import check_metric_is_charts
 from coordinax._src.custom_types import OptUSys
 from coordinaxs.api.custom_types import CDict
 
@@ -34,7 +35,8 @@ def scale_factors(
     QM([-1.,  1.,  1.,  1.], '(, , , )')
 
     """
-    del chart, at, usys
+    check_metric_is_charts(metric, chart, "scale_factors")
+    del at, usys
     n = metric.ndim
     value = jnp.array(list(metric.signature), dtype=float)
     units = ul.UnitsMatrix.full(n, "")

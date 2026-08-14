@@ -16,7 +16,11 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from ._utils import require_positive_definite
 from .quadratic_form import quadratic_form
-from coordinax._src.base import AbstractChart, AbstractMetricField
+from coordinax._src.base import (
+    AbstractChart,
+    AbstractMetricField,
+    check_metric_is_charts,
+)
 from coordinax._src.charts import Cart0D, Cart1D, Cart2D, Cart3D, CartND
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.euclidean import FlatMetric
@@ -231,8 +235,7 @@ def norm(
     norm() supports only positive-definite metrics, but
 
     """
-    if metric != chart.M.metric:
-        raise ValueError("Metric-level dispatch: metric must match chart's metric")
+    check_metric_is_charts(metric, chart, "norm")
 
     # After the match check, so a mismatched *indefinite* metric still reports the
     # mismatch rather than the definiteness. Guards `chart.M.metric` because that
@@ -289,8 +292,7 @@ def norm(
     # a CDict here only for `quadratic_form` to repack it into a QuantityMatrix
     # was measurable trace-time waste -- and tracing is 30-46% of compile time,
     # so it showed up as slower `jit` compilation, not just slower eager calls.
-    if metric != chart.M.metric:
-        raise ValueError("Metric-level dispatch: metric must match chart's metric")
+    check_metric_is_charts(metric, chart, "norm")
     require_positive_definite(chart.M.metric, "norm")
     return jnp.sqrt(quadratic_form(v, chart, at=at, usys=usys, fname="norm"))
 
@@ -354,6 +356,7 @@ def norm(
     # the matrix from `chart.M` and has no match check, so checking the argument
     # would let `norm(v, FlatMetric(4), minkowskict, ...)` past the guard and
     # straight back to the `nan` this guard exists to prevent.
+    check_metric_is_charts(metric, chart, "norm")
     require_positive_definite(chart.M.metric, "norm")
     mm = cxmapi.metric_matrix(chart.M, at, chart)
     return array_norm(mm.to_dense().matrix, v)  # ty: ignore[unresolved-attribute]
@@ -480,7 +483,8 @@ def norm(
     Array(1., dtype=float64)
 
     """
-    del metric, chart, at, usys  # Unused
+    check_metric_is_charts(metric, chart, "norm")
+    del at, usys  # Unused
     return jnp.linalg.norm(v, axis=-1)
 
 
@@ -515,7 +519,8 @@ def norm(
     Q(5., 'km')
 
     """
-    del metric, at, usys
+    check_metric_is_charts(metric, chart, "norm")
+    del at, usys
     v, unit = pack_uniform_unit(data, chart.components)
     vnorm = jnp.linalg.norm(v, axis=-1)
     return u.Q(vnorm, unit) if unit is not None else vnorm

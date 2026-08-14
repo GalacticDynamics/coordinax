@@ -29,6 +29,7 @@ from coordinax._src.base import (
     AbstractChart,
     AbstractLorentzianMetricField,
     AbstractMetricField,
+    check_metric_is_charts,
 )
 from coordinax._src.custom_types import OptUSys
 from coordinaxs.api.custom_types import CDict
@@ -165,7 +166,7 @@ def rapidity_between(
     rapidity_between is defined only between two timelike tangent vectors
 
     """
-    del metric  # the contraction reads the chart's metric, validated by `gram`
+    check_metric_is_charts(metric, chart, "rapidity_between")
     chart.check_data(at, keys=True, values=False)
     chart.check_data(uvec, keys=True, values=False)
     chart.check_data(vvec, keys=True, values=False)

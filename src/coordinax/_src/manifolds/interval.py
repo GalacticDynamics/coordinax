@@ -30,7 +30,11 @@ import unxt as u
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from .quadratic_form import quadratic_form
-from coordinax._src.base import AbstractChart, AbstractMetricField
+from coordinax._src.base import (
+    AbstractChart,
+    AbstractMetricField,
+    check_metric_is_charts,
+)
 from coordinax._src.custom_types import OptUSys
 from coordinaxs.api.custom_types import CDict
 
@@ -93,23 +97,14 @@ def interval(
     >>> cxm.interval(cxm.MinkowskiMetric(), cxc.minkowskict, o, ev).round(2)
     Q(24., 'm2')
 
-    ``metric`` is a checked selector, not an override: it must be the chart's own
-    metric, matching the contract of the metric-level `~coordinax.manifolds.norm`
-    overload.
-
     >>> try:
     ...     cxm.interval(cxm.FlatMetric(4), cxc.minkowskict, o, ev)
     ... except ValueError as e:
-    ...     print(e)
-    Metric-level dispatch: metric must match chart's metric
+    ...     print(str(e)[:56])
+    interval(): metric-level dispatch needs the chart's own
 
     """
-    # Mirrors `norm`'s metric-level dispatch: the argument is validated against
-    # the chart rather than silently ignored, so a caller who passes a different
-    # metric expecting it to be honoured is told, instead of quietly receiving
-    # the chart's answer.
-    if metric != chart.M.metric:
-        raise ValueError("Metric-level dispatch: metric must match chart's metric")
+    check_metric_is_charts(metric, chart, "interval")
 
     chart.check_data(a, keys=True, values=False)
     chart.check_data(b, keys=True, values=False)

@@ -15,7 +15,7 @@ import coordinaxs.api.manifolds as cxmapi
 from .chart import LonCosLatSphericalTwoSphere, RelabeledTwoSphere
 from .manifold import HyperSphericalManifold
 from .metric import RoundMetric
-from coordinax._src.base import AbstractChart
+from coordinax._src.base import AbstractChart, check_metric_is_charts
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.metric.matrix import DiagonalMetric
 from coordinaxs.api.custom_types import CDict
@@ -64,6 +64,7 @@ def scale_factors(
     """
     # `metric_matrix` interprets bare angle values as radians, so normalise
     # `at` through the chart's angle unit first (radians when no `usys`).
+    check_metric_is_charts(metric, chart, "scale_factors")
     rad = u.unit("rad")
     ang_unit = usys["angle"] if usys is not None else rad
     at_rad = {k: u.uconvert_value(rad, ang_unit, v) for k, v in at.items()}
@@ -86,7 +87,8 @@ def scale_factors(
     usys: OptUSys = None,
 ) -> ul.QuantityMatrix:
     """`LonCosLat` is non-orthogonal, so it has no scale factors at all."""
-    del metric, at, usys
+    check_metric_is_charts(metric, chart, "scale_factors")
+    del at, usys
     msg = (
         "scale_factors is a diagonal (orthogonal-frame) concept and "
         f"{type(chart).__name__} is non-orthogonal: its round metric has a "
@@ -124,7 +126,7 @@ def scale_factors(
     QM([1., 1.], '(, )')
 
     """
-    del metric
+    check_metric_is_charts(metric, chart, "scale_factors")
     components = chart.components
     ang_unit = usys["angle"] if usys is not None else u.unit("rad")
     angles = jnp.stack(

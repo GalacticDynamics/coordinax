@@ -16,7 +16,11 @@ from unxt.quantity import AllowValue
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
 from .quadratic_form import gram
-from coordinax._src.base import AbstractChart, AbstractMetricField
+from coordinax._src.base import (
+    AbstractChart,
+    AbstractMetricField,
+    check_metric_is_charts,
+)
 from coordinax._src.custom_types import OptUSys
 from coordinaxs.api.custom_types import CDict
 
@@ -113,6 +117,7 @@ def angle_between(
     angle_between is undefined for two timelike tangent vectors
 
     """
+    check_metric_is_charts(metric, chart, "angle_between")
     chart.check_data(at, keys=True, values=False)
     chart.check_data(uvec, keys=True, values=False)
     chart.check_data(vvec, keys=True, values=False)
