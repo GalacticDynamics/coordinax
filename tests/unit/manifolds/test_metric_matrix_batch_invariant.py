@@ -59,14 +59,12 @@ def test_curvilinear_metric_batches_like_elementwise(data):
 
     # The Euclidean rules return a united QuantityMatrix; the intrinsic sphere
     # rules return a bare (dimensionless) Array. Compare whichever is carried.
-    gbv = np.asarray(getattr(gb, "value", gb))
+    gbv = np.asarray(gb.value)
     for idx in np.ndindex(shape):
         pt = {k: v[idx] for k, v in point.items()}
         gi = cxmapi.metric_matrix(manifold, pt, chart).diagonal
         # Same arithmetic on the same values: rows must match, units unchanged.
-        np.testing.assert_allclose(
-            gbv[idx], np.asarray(getattr(gi, "value", gi)), rtol=1e-5
-        )
+        np.testing.assert_allclose(gbv[idx], np.asarray(gi.value), rtol=1e-5)
         assert getattr(gb, "unit", None) == getattr(gi, "unit", None)
 
 

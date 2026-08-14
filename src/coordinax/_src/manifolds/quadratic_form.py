@@ -401,8 +401,15 @@ def _contract(mm: DiagonalMetric, uvec: Array, vvec: Array, /) -> Any:
     the per-component units cannot be factored out of a sum against unitless
     vectors. That combination does not work on the dense path either, so this
     keeps the pre-existing failure rather than substituting a different one.
+
+    A *dimensionless* one is unwrapped instead. The intrinsic sphere's metric
+    is a dimensionless `QuantityMatrix` -- angles over angles -- so sending it
+    to the dense path would both drop this $O(n)$ route and return a
+    `Quantity` from bare inputs.
     """
     d = mm.diagonal
     if isinstance(d, ul.QM):
-        return jnp.einsum("...i,...ij,...j->...", uvec, mm.to_dense().matrix, vvec)
+        if d.unit != ul.UnitsMatrix.full(d.shape, ""):
+            return jnp.einsum("...i,...ij,...j->...", uvec, mm.to_dense().matrix, vvec)
+        d = d.value
     return jnp.sum(d * uvec * vvec, axis=-1)

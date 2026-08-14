@@ -92,8 +92,10 @@ class TestPullbackConsistencyNumerical:
         g_pullback = cxmapi.metric_matrix(unit_sphere_embedded, pt, cxc.sph2)
 
         # RoundMetric (diagonal) and Jacobian pullback (dense) must agree.
-        expected = g_round.to_dense().matrix  # plain array, shape (2, 2)
-        actual = g_pullback.matrix.value  # QuantityMatrix.value, shape (2, 2)
+        # Both are `QuantityMatrix` now, so both unwrap the same way -- the
+        # round metric dimensionless, the pullback in `1/rad2`.
+        expected = g_round.to_dense().matrix.value
+        actual = g_pullback.matrix.value
 
         assert jnp.allclose(actual, expected, atol=1e-6), (
             f"Mismatch at theta={theta}, phi={phi}:\n"
@@ -115,7 +117,7 @@ class TestPullbackConsistencyNumerical:
         g_round = cxmapi.metric_matrix(cxm.S2, pt, cxc.sph2)
         g_pullback = cxmapi.metric_matrix(unit_sphere_embedded, pt, cxc.sph2)
 
-        expected = g_round.to_dense().matrix
+        expected = g_round.to_dense().matrix.value
         actual = g_pullback.matrix.value
 
         assert jnp.allclose(actual, expected, atol=1e-5), (
@@ -201,7 +203,7 @@ def _dense_values(g):
     non-orthogonal LonCosLat returns a `DenseMetric`.
     """
     m = g.to_dense().matrix
-    return jnp.asarray(getattr(m, "value", m))
+    return jnp.asarray(m.value)
 
 
 def _embedding_metric(chart, coords_rad):
