@@ -424,6 +424,37 @@ p_back = cxfm.act(op_from_bishop, tau, p_bishop)
 - Use **Bishop** when your curve may have zero-curvature segments (e.g. straight-line portions, inflection points) or when you need a twist-free frame.
 - Use **Frenet–Serret** when you want the classical differential-geometry frame that tracks curvature and torsion directly.
 
+## Arc-Length Curves
+
+A builder accepts an arc-length curve exactly as it accepts any other curve — nothing about `FrenetSerretBuilder` or `BishopBuilder` requires the parameter to be time. Wrap a curve in `ArcLength` first when it is not already unit-speed, then build the frame from the wrapped curve:
+
+```python
+arc = cxfc.ArcLength(helix, "s")
+bt_arc = cxfc.BishopBuilder(arc, "km")
+bt_arc.tangent(u.Q(1.0, "km"))
+```
+
+`helix` above is parametrised by time, so `"s"` is `ArcLength`'s `tau_unit`. The wrapped result `arc = cxfc.ArcLength(helix, "s")` is parametrised by length instead, so `"km"` — not `"s"` — is what's passed as `BishopBuilder`'s `tau_unit`.
+
+A builder accepts any callable as a curve, not only a plain function — a user's own `equinox.Module` works exactly the same way:
+
+```python
+class Circle(eqx.Module):
+    radius: u.AbstractQuantity
+
+    def __call__(self, tau):
+        t = tau.ustrip("s")
+        r = self.radius.ustrip("km")
+        return u.Q(jnp.stack([r * jnp.cos(t), r * jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+
+arc_circle = cxfc.ArcLength(Circle(radius=u.Q(2.0, "km")), "s")
+bt_circle = cxfc.BishopBuilder(arc_circle, "km")
+bt_circle.tangent(u.Q(1.0, "km"))
+```
+
+For the different shapes an arc-length curve can arrive in — including a user's own class parametrised by time, by arc length, as a two-argument combo, or backed by sampled data — see {doc}`the BYO curve tutorial <byo_curve>`. For the Eulerian/Lagrangian distinction for time-dependent curves and a stitching pitfall, see {ref}`Working With Curve Charts <arc-length-reparametrisation>`'s _Arc-Length Reparametrisation_ section.
+
 ## Design Notes
 
 ### Builder Evaluation

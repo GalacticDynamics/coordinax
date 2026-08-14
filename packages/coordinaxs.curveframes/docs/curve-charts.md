@@ -8,7 +8,7 @@ $$
 
 where $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is the triad supplied by a `FrenetSerretBuilder` or `BishopBuilder`. This guide covers construction, the forward and inverse maps, differentiating through a fitted curve, the induced metric, and where the chart stops being valid.
 
-For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`Working With Curve Frames <../packages/coordinaxs.curveframes/guide>`. For the chart system in general, see [Working With Charts](charts.md).
+For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`Working With Curve Frames <guide>`. For the chart system in general, see [Working With Charts](../../../docs/guides/charts.md).
 
 ## Why A Chart, Not A Frame
 
@@ -184,19 +184,214 @@ True
 
 Prefer Bishop for this chart when the metric matters and the diagonal structure is convenient — it holds regardless of torsion.
 
+(arc-length-reparametrisation)=
+
+## Arc-Length Reparametrisation
+
+`coordinaxs.curveframes` provides `ArcLength`, which wraps a curve $\gamma(\tau)$ and returns $s \mapsto \gamma(\tau(s))$ with $\|\gamma'(s)\| = 1$ everywhere, by solving $d\tau/ds = 1/\|\gamma'(\tau)\|$ rather than integrating speed and inverting it. Because a curve is consumed purely as a callable throughout `coordinaxs.curveframes`, `ArcLength(curve)` is itself a curve: it wraps into `BishopBuilder` or `FrenetSerretBuilder`, and from there into `TubularChart`, unchanged.
+
+```{code-block} python
+>>> arc = cxfc.ArcLength(helix, "s")
+>>> ch_arc = cxfc.TubularChart(
+...     cxfc.BishopBuilder(arc, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(5.0, "km"))
+... )
+
+```
+
+A builder over an arc-length curve takes a **length** `tau_unit` — `"km"` above, not `"s"` — because the wrapped curve's parameter now is arc length rather than time. `tau_bounds` follow: they are lengths too, and `coord_dimensions` reports it:
+
+```{code-block} python
+>>> ch_arc.coord_dimensions
+('length', 'length', 'length')
+
+```
+
+### The Payoff
+
+On the curve itself ($n_1 = n_2 = 0$), $g_{ss}$ reduces to the textbook tubular-coordinate form $(1-k_1n_1-k_2n_2)^2 = 1$ — no speed factor. On the plain $\tau$-parameterised `helix`, $g_{\tau\tau}$ still carries the curve's squared speed, $1 + 0.3^2$:
+
+```{code-block} python
+>>> at0 = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> g_plain = metric_matrix(ch_b.M, at0, ch_b).matrix
+>>> f"{g_plain[0, 0].ustrip('km2 / s2'):.4f}"
+'1.0900'
+
+>>> at_arc = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> g_arc = metric_matrix(ch_arc.M, at_arc, ch_arc).matrix
+>>> f"{g_arc[0, 0].ustrip(''):.4f}"
+'1.0000'
+
+```
+
+No metric code changes between the two calls: `metric_matrix` falls through to the same generic Jacobian pullback described in [The Metric](#the-metric) either way. The only difference is which curve the chart wraps.
+
+### Time-Dependent Curves: Eulerian Versus Lagrangian
+
+Over a two-argument curve $\gamma(\tau, t)$, `ArcLength` stays two-argument: `ArcLength(curve)(s, t)` measures arc length on the slice at `t` — the slice being evaluated. This is the **Eulerian** reading: a label is the arc length of the _current_ curve, so a fixed material point's label drifts as the curve moves.
+
+`LagrangianArcLength(curve, t0)` measures arc length on the fixed reference slice `t0` instead, always — never on the `t` supplied at call time — then evaluates the wrapped curve at that _supplied_ `t`. A label therefore names the same material point at every `t`, but it stops being the current arc length once the curve has moved.
+
+The two readings agree wherever the curve moves rigidly — a rotation or translation leaves every arc length untouched — and differ only where the curve stretches or compresses. A uniformly stretching line, $\gamma(\tau, t) = (\tau(1+0.5t), 0, 0)$, makes the difference concrete: at label $s=1\,\mathrm{km}$, $t=1\,\mathrm{s}$, the Eulerian reading gives one unit of arc length along the current (already-stretched) line; the Lagrangian reading gives the position of the material point that was one unit along the line at $t_0=0$:
+
+```{code-block} python
+>>> def stretch(tau, t):
+...     x = tau.ustrip("s") * (1.0 + 0.5 * t.ustrip("s"))
+...     z = jnp.zeros_like(x)
+...     return u.Q(jnp.stack([x, z, z]), "km")
+
+>>> eulerian = cxfc.AtTime(cxfc.ArcLength(stretch, "s"), u.Q(1.0, "s"))
+>>> eulerian(u.Q(1.0, "km"))
+Q([1., 0., 0.], 'km')
+
+>>> lagrangian = cxfc.AtTime(
+...     cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s"), u.Q(1.0, "s")
+... )
+>>> lagrangian(u.Q(1.0, "km"))
+Q([1.5, 0. , 0. ], 'km')
+
+```
+
+`AtTime(curve, t)` binds the evaluation time of a two-argument curve, turning it into a one-argument one; it is what makes `ArcLength`'s otherwise-two-argument result callable with `s` alone above. Where `AtTime` sits relative to `ArcLength` changes what is being asked: `ArcLength(AtTime(curve, t))` binds `t` first, so `ArcLength` sees a one-argument curve and freezes arc length to that one slice permanently — there is no Eulerian/Lagrangian distinction left to make. `AtTime(ArcLength(curve), t)`, used above, keeps `ArcLength` two-argument and only fixes which slice a given call reads; a later call with a different `t` re-measures on that slice instead.
+
+### Four Curve Shapes
+
+A curve is not always handed to `ArcLength` to be reparametrised — it can also arrive already arc-length parametrised, in one of a few shapes. This section walks through each.
+
+**Already arc-length parametrised, one argument.** A one-argument curve callable that is already unit-speed works directly, with no `ArcLength` wrapper — wrapping it anyway would only add an unneeded ODE solve:
+
+```{code-block} python
+>>> def arclen_circle(s):
+...     v = s.ustrip("km")
+...     return u.Q(jnp.stack([2 * jnp.cos(v / 2), 2 * jnp.sin(v / 2), jnp.zeros_like(v)]), "km")
+
+>>> def speed_at(curve, s_val):
+...     return float(jnp.linalg.norm(jax.jacfwd(lambda x: curve(u.Q(x, "km")).ustrip("km"))(s_val)))
+
+>>> speed_at(arclen_circle, 1.3)
+1.0
+
+>>> ch_direct = cxfc.TubularChart(
+...     cxfc.BishopBuilder(arclen_circle, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(4 * jnp.pi, "km"))
+... )
+>>> at_direct = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> float(metric_matrix(ch_direct.M, at_direct, ch_direct).matrix[0, 0].ustrip(""))
+1.0
+
+```
+
+`ArcLength` wrapped around it anyway is idempotent — the wrapped and direct curves agree to ODE solver tolerance, not exactly:
+
+```{code-block} python
+>>> arc_on_arc = cxfc.ArcLength(arclen_circle, tau_unit="km")
+>>> diff = jnp.max(jnp.abs(
+...     arclen_circle(u.Q(1.3, "km")).ustrip("km") - arc_on_arc(u.Q(1.3, "km")).ustrip("km")
+... ))
+>>> bool(diff < 1e-10)
+True
+
+```
+
+Harmless, but it is an ODE solve the caller did not need — do not wrap a curve in `ArcLength` defensively just because it might already be unit-speed.
+
+**A time-series of arc-length curves.** A curve $\gamma(s, t)$ that is unit-speed in $s$ at every $t$ — the shape a per-timestep fit to already-arc-length data produces — needs no reparametrisation at any slice. `AtTime` binds one slice into a one-argument curve, and that feeds a builder and a chart exactly as any other curve does:
+
+```{code-block} python
+>>> def slice_series(s, t):
+...     r = 2.0 + t.ustrip("s")
+...     v = s.ustrip("km")
+...     return u.Q(jnp.stack([r * jnp.cos(v / r), r * jnp.sin(v / r), jnp.zeros_like(v)]), "km")
+
+>>> [round(speed_at(cxfc.AtTime(slice_series, u.Q(t_val, "s")), 1.3), 6) for t_val in (0.0, 1.0, 3.0)]
+[1.0, 1.0, 1.0]
+
+>>> ch_series = cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(slice_series, u.Q(0.0, "s")), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(30.0, "km")),
+... )
+>>> at_series = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> float(metric_matrix(ch_series.M, at_series, ch_series).matrix[0, 0].ustrip(""))
+1.0
+
+```
+
+**Argument order is positional: station first, time second.** `slice_series` above takes `(s, t)`, not `(t, s)`. Swapping the call order happens to fail here, because a station is a length and a time is not:
+
+```{code-block} python
+>>> slice_series(u.Q(1.0, "s"), u.Q(1.3, "km"))
+Traceback (most recent call last):
+    ...
+astropy.units.errors.UnitConversionError: 'km' (length) and 's' (time) are not convertible
+
+```
+
+That is a lucky accident of units catching a mistake, not a check this library performs: a curve whose two parameters shared a dimension would be silently transposed instead of raising anything.
+
+**The stitching trap.** A linear blend of two unit-speed curves is not itself unit-speed. Take arc-length circles of radius 2 and radius 3, and blend them linearly over $t \in [0, 1]$:
+
+```{code-block} python
+>>> def stitched_blend(s, t):
+...     v = s.ustrip("km")
+...     tv = t.ustrip("s")
+...     c2 = jnp.stack([2 * jnp.cos(v / 2), 2 * jnp.sin(v / 2), jnp.zeros_like(v)])
+...     c3 = jnp.stack([3 * jnp.cos(v / 3), 3 * jnp.sin(v / 3), jnp.zeros_like(v)])
+...     return u.Q((1.0 - tv) * c2 + tv * c3, "km")
+
+```
+
+At the timesteps the blend was actually stitched from, $t=0$ and $t=1$, it collapses to one of the two original circles, so it is exactly unit-speed there. Anywhere in between, it is not — sampled here at station $s=1.3\,\mathrm{km}$:
+
+```{code-block} python
+>>> [round(speed_at(cxfc.AtTime(stitched_blend, u.Q(t_val, "s")), 1.3), 9) for t_val in (0.0, 0.25, 0.5, 1.0)]
+[1.0, 0.995606497, 0.994137681, 1.0]
+
+```
+
+`s` silently stops being arc length between the sampled timesteps, and it is not a rounding-level effect — it reaches the chart metric. On the interpolated slice $t=0.5$, $g_{ss}$ comes out well short of 1 instead of exactly 1:
+
+```{code-block} python
+>>> ch_blend = cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(stitched_blend, u.Q(0.5, "s")), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(20.0, "km")),
+... )
+>>> at_blend = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> f"{float(metric_matrix(ch_blend.M, at_blend, ch_blend).matrix[0, 0].ustrip('')):.4f}"
+'0.9883'
+
+```
+
+The remedy is to wrap the stitched curve in `ArcLength` before using it, rather than after: `ArcLength(stitched_blend)` stays two-argument (see [Time-Dependent Curves](#time-dependent-curves-eulerian-versus-lagrangian) above) and re-measures speed on whichever slice `AtTime` selects, one ODE solve per slice, rather than trusting the blend's own parametrisation:
+
+```{code-block} python
+>>> arc_blend = cxfc.ArcLength(stitched_blend, tau_unit="km")
+>>> [round(speed_at(cxfc.AtTime(arc_blend, u.Q(t_val, "s")), 1.3), 6) for t_val in (0.25, 0.5)]
+[1.0, 1.0]
+
+>>> ch_blend_fixed = cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(arc_blend, u.Q(0.5, "s")), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(20.0, "km")),
+... )
+>>> round(float(metric_matrix(ch_blend_fixed.M, at_blend, ch_blend_fixed).matrix[0, 0].ustrip("")), 6)
+1.0
+
+```
+
+Once wrapped this way, every call is the Eulerian reading from [Time-Dependent Curves](#time-dependent-curves-eulerian-versus-lagrangian) above: `s` is the arc length of whichever slice is evaluated, so a fixed material point's label still drifts as the stitched track stretches between timesteps. `LagrangianArcLength(curve, t0)` is the alternative when a label should instead follow the material point.
+
+### A User's Own Curve Type
+
+Nothing above requires a plain function — a curve is consumed purely as a callable, so any callable works, including an `equinox.Module` a user writes. For the four shapes worked through with a user's own class — time-parametrised, arc-length-parametrised, a two-argument `γ(s, t)`, and one backed by sampled data — plus differentiating through a fitted field, see {doc}`the BYO curve tutorial <byo_curve>`.
+
+### Cost
+
+Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
+
+Amortising that with a precomputed $\tau(s)$ interpolation is [tracked separately](https://github.com/GalacticDynamics/coordinax/issues/713) -- doing it without breaking gradients with respect to the curve's own parameters needs more than caching the solve.
+
 (limitations)=
 
 ## Limitations
 
-**$\tau$ is the curve parameter, not arc length.** The builders are $\tau$-parameterised, not unit-speed, so $g_{\tau\tau}$ carries a $\|\gamma'\|^2$ speed factor rather than reducing to the textbook $(1-k_1n_1-k_2n_2)^2$. You can see this in the units alone: for a genuinely unit-speed (arc-length) parameterisation, $g_{\tau\tau}$ would be dimensionless; here it is not:
-
-```{code-block} python
->>> g_b[0, 0].unit
-Unit("km2 / s2")
-
-```
-
-Arc-length reparametrization is planned follow-up work, not a permanent design choice — treat this as a current limitation of the $\tau$-parameterised builders, not a property of the chart itself.
+The builders themselves stay $\tau$-parameterised, not unit-speed: $g_{\tau\tau}$ carries a $\|\gamma'\|^2$ speed factor by default, as seen in [The Metric](#the-metric) above. Wrap the curve in `ArcLength` first (see [Arc-Length Reparametrisation](#arc-length-reparametrisation)) to get a unit-speed $\tau$ instead.
 
 **`tau_bounds` must not span more than one period for a closed curve.** `tau_bounds` seeds the inverse's coarse scan (see [Both Directions](#both-directions) above); for a closed curve, $\gamma(\tau)$ and $\gamma(\tau + \text{period})$ are the same ambient point, so a range wider than one period turns the nearest-point solve into an exact tie:
 
@@ -257,8 +452,8 @@ The factor is a _local_ test only: it says nothing about a point mirrored across
 ```{code-block} python
 >>> far = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(100.0, "km")}
 >>> got_far = cxc.pt_map(far, ch_f.M, cxc.cart3d, ch_f.M, ch_f)
->>> float(got_far["tau"].ustrip("s"))
-333.3333333333333
+>>> f'{float(got_far["tau"].ustrip("s")):.1f}'
+'333.3'
 
 ```
 
@@ -300,8 +495,8 @@ Q([0.96534082, 0.64836277], 'km')
 
 :::{seealso}
 
-[Working With Charts](charts.md)
+[Working With Charts](../../../docs/guides/charts.md)
 
-{doc}`Working With Curve Frames <../packages/coordinaxs.curveframes/guide>`
+{doc}`Working With Curve Frames <guide>`
 
 :::
