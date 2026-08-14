@@ -14,10 +14,9 @@ chart in its atlas.  The rules follow a two-tier scheme:
 * **All other charts** compute the Jacobian pullback ``g = J^T J`` directly
   and return the result as a :class:`~coordinax._src.metric.matrix.DenseMetric`.
 
-Whether a pair returns a diagonal or a dense metric is not a storage detail:
-it is how the library states that a chart is orthogonal, which is what
-:func:`~coordinax.manifolds.scale_factors` keys on. A chart missing from the
-diagonal list is declared non-orthogonal by omission.
+Which subtype a pair returns is how the library states that a chart is
+orthogonal -- see :func:`~coordinax.manifolds.metric_representation`. A chart
+missing from the diagonal list is declared non-orthogonal by omission.
 
 """
 
@@ -485,24 +484,9 @@ def metric_matrix(
     zero up to round-off -- measured at $8\times 10^{-17}$ relative, over a
     grid of $(\Delta, \mu, \nu, \phi)$.
 
-    The pullback is still evaluated, since there is no closed form here; only
-    its diagonal is kept, and the result is *declared* diagonal so callers that
-    need an orthogonal frame -- `coordinax.manifolds.scale_factors` -- can tell
-    this chart from a genuinely non-orthogonal one such as
-    `coordinax.charts.LonCosLatSpherical3D`.
-
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-    >>> from coordinaxs.api.manifolds import metric_matrix
-    >>> from coordinax._src.metric.matrix import DiagonalMetric
-
-    >>> chart = cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m"))
-    >>> at = {"mu": u.Q(2.0, "m2"), "nu": u.Q(0.5, "m2"),
-    ...       "phi": u.Angle(0.3, "rad")}
-    >>> g = metric_matrix(cxm.R3, at, chart)
-    >>> isinstance(g, DiagonalMetric)
-    True
+    No closed form here, so the pullback is evaluated and only its diagonal
+    kept -- but the result is *declared* diagonal, which is what tells
+    `coordinax.manifolds.scale_factors` this chart is orthogonal.
 
     """
     del M

@@ -299,11 +299,7 @@ class TestScaleFactorsRequiresAnOrthogonalChart:
             cxm.scale_factors(chart, at=at)
 
     def test_prolate_spheroidal_is_orthogonal_and_answers(self):
-        """The guard keys on the declared metric, and prolate is declared diagonal.
-
-        Its off-diagonals measure ~1e-16 relative, so refusing it -- as a guard
-        keyed on `DenseMetric` would have -- is wrong.
-        """
+        """Keys on the declaration: off-diagonals are ~1e-16, so refusing is wrong."""
         chart = cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m"))
         at = {"mu": u.Q(2.0, "m2"), "nu": u.Q(0.5, "m2"), "phi": u.Angle(0.3, "rad")}
         assert cxm.scale_factors(chart, at=at).shape == (3,)

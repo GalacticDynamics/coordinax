@@ -85,8 +85,7 @@ def scale_factors(
     """
     mm = cxmapi.metric_matrix(chart.M, at, chart)
     if not isinstance(mm, DiagonalMetric):
-        # Not a storage detail: a `(manifold, chart)` pair reports a diagonal
-        # metric exactly when the library declares that chart orthogonal, so
+        # A diagonal metric is how a pair declares its chart orthogonal, so
         # this is the orthogonality test. See `metric_representation`.
         msg = (
             "scale_factors is a diagonal (orthogonal-frame) concept and the "
