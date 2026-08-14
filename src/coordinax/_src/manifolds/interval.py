@@ -6,17 +6,17 @@ there is the form itself, unrooted:
 
 $$ \Delta s^2 = \Delta x^\top G\, \Delta x, $$
 
-which is what this module exposes as `interval`.  For a Riemannian metric it is
-simply the squared `geodesic_distance`; for a Lorentzian one its **sign** is the causal
-character of the pair, and its magnitude gives proper time (timelike) or proper
-distance (spacelike).
+which is what this module exposes as `interval`.  For a Lorentzian metric its
+**sign** is the causal character of the pair, and its magnitude gives proper
+time (timelike) or proper distance (spacelike).
 
-Like `geodesic_distance`, the metric is evaluated **at the first point** ``a`` and
-applied to the coordinate difference.  This is exact for a flat manifold --
-including Minkowski, the case this module exists for, where the metric is
-constant everywhere -- but on a curved manifold it is a first-order estimate
-rather than a geodesic quantity, and it is asymmetric in ``a`` and ``b``.  Bring
-the points into a Cartesian chart first for a chart-invariant result.
+This is the quadratic form of the *coordinate difference*, with the metric
+evaluated **at the first point** ``a`` -- not a geodesic quantity, and not the
+square of `geodesic_distance`.  The two coincide only where the metric is
+constant along the path: on a flat manifold, including Minkowski, the case this
+module exists for.  On a curved manifold this is a first-order estimate, and it
+is asymmetric in ``a`` and ``b``; `geodesic_distance` is the symmetric,
+chart-invariant length, and is what to reach for when a distance is wanted.
 """
 
 __all__: tuple[str, ...] = ()

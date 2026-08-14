@@ -101,3 +101,50 @@ class TestIndefiniteMetricSeparation:
         assert bool(
             qnp.isclose(cxm.geodesic_distance(cxc.cart3d, a, b).ustrip("m"), 5.0)
         )
+
+
+class TestEmbeddedSphere:
+    """An embedded sphere's geodesic is its radius times the central angle.
+
+    `EmbeddedChart.M` is an `EmbeddedManifold`, so reaching this through a
+    chart lands on the same rule; without it the call fell through to the
+    "no geodesic implemented" refusal.
+    """
+
+    RADIUS = u.Q(2.0, "m")
+
+    def _manifold(self):
+        return cxm.EmbeddedManifold(
+            intrinsic=cxm.S2,
+            ambient=cxm.R3,
+            embed_map=cxm.TwoSphereIn3D(radius=self.RADIUS),
+        )
+
+    @pytest.mark.parametrize(
+        ("theta", "expected"), [(jnp.pi, 2 * jnp.pi), (jnp.pi / 2, jnp.pi)]
+    )
+    def test_arc_length_scales_with_the_radius(self, theta, expected):
+        north = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+        other = {"theta": u.Angle(theta, "rad"), "phi": u.Angle(0.0, "rad")}
+        got = cxm.geodesic_distance(self._manifold(), cxc.sph2, north, other)
+        assert bool(qnp.isclose(got.ustrip("m"), expected, atol=1e-12))
+
+    def test_reached_through_an_embedded_chart(self):
+        chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=self.RADIUS))
+        north = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+        south = {"theta": u.Angle(jnp.pi, "rad"), "phi": u.Angle(0.0, "rad")}
+        got = cxm.geodesic_distance(chart, north, south)
+        assert bool(qnp.isclose(got.ustrip("m"), 2 * jnp.pi, atol=1e-12))
+
+    def test_any_intrinsic_chart_agrees(self):
+        M = self._manifold()
+        a = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.4, "rad")}
+        b = {"theta": u.Angle(1.6, "rad"), "phi": u.Angle(1.2, "rad")}
+        sph = cxm.geodesic_distance(M, cxc.sph2, a, b).ustrip("m")
+        lonlat = cxm.geodesic_distance(
+            M,
+            cxc.lonlat_sph2,
+            cxc.pt_map(a, cxc.sph2, cxc.lonlat_sph2),
+            cxc.pt_map(b, cxc.sph2, cxc.lonlat_sph2),
+        ).ustrip("m")
+        assert bool(qnp.isclose(sph, lonlat, atol=1e-12))

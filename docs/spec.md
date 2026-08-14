@@ -2937,17 +2937,22 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
 !!! info `geodesic_distance`
 
-    The straight-line distance between two points, as a manifold measurement.
+    The length of the shortest path between two points *along the manifold*.
 
-    `geodesic_distance` is a dispatched function that returns the manifold
-    `~coordinax.manifolds.norm` of the two points' coordinate difference:
+    `geodesic_distance` is a dispatched function computed from the manifold's
+    own geometry, so it is a genuine metric: symmetric in its arguments, and
+    independent of the chart the points are handed over in.
 
     $$
-    \mathrm{geodesic_distance}(a, b) = \| b - a \|_a,
+    \mathrm{geodesic\_distance}(a, b) =
+    \begin{cases}
+    \|x(b) - x(a)\| & \text{Euclidean, in the Cartesian chart } x \\
+    R\,\sigma(a, b) & \text{sphere of radius } R,\ \sigma \text{ the central angle}
+    \end{cases}
     $$
 
-    the Euclidean distance for a flat manifold. It sits alongside `norm` and
-    `angle_between` as the third manifold measurement. `cx.geodesic_distance` and
+    It sits alongside `norm` and `angle_between` as the third manifold
+    measurement. `cx.geodesic_distance` and
     `cx.manifolds.geodesic_distance` are the same function object.
 
     **Signatures:**
@@ -2955,7 +2960,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ```
     # manifold-level (raw data)
     cxm.geodesic_distance(chart, a, b, /, *, usys=None)          # component dicts; uses chart.M.metric
-    cxm.geodesic_distance(metric, chart, a, b, /, *, usys=None)  # explicit metric: norm(b - a) at a
+    cxm.geodesic_distance(metric, chart, a, b, /, *, usys=None)  # explicit metric; must be the chart's
     cxm.geodesic_distance(chart, a, b, /, *, usys=None)          # packed unxt.Quantity operands
     cxm.geodesic_distance(chart, a, b, /, *, usys=None)          # packed (unitless) Array operands
 
@@ -2973,11 +2978,14 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Return:**
 
     - A length result is returned as a `coordinax.distances.Distance`; a dimensionless one as a bare array (or dimensionless `Quantity`).
-    - Dimensionality follows the points' manifold: 2-D points give a 2-D distance, 3-D points a 3-D distance. There is no `separation_3d` — map the points into the target space first, then call `separation`.
+    - On the unit sphere the arc length *is* the central angle, so the result is an `coordinax.angles.Angle` in radians; an embedded sphere of radius $R$ scales it and returns a `Distance`.
+    - Dimensionality follows the points' manifold: 2-D points give a 2-D distance, 3-D points a 3-D distance. There is no `geodesic_distance_3d` — map the points into the target space first, then call `geodesic_distance`.
 
     **Dispatch behavior:**
 
-    - The manifold-level overloads measure the norm of the coordinate difference in the given chart (exact for flat manifolds).
+    - Dispatch is on the *manifold*: `EuclideanManifold` maps both points into the Cartesian chart and takes the straight line; `HyperSphericalManifold` takes the great-circle angle; an `EmbeddedManifold` wrapping `TwoSphereIn3D` scales that angle by the radius.
+    - A manifold with no closed-form geodesic raises `NotImplementedError` rather than returning an approximation, as does `MinkowskiManifold`, whose indefinite metric admits no distance — use `interval`, `proper_time` or `proper_distance` there.
+    - The metric-level overload requires the metric to be the one the chart carries, and otherwise refuses; the geodesic is a property of the manifold, not of a metric supplied at the call site.
     - The `Point` overload is *frame-strict* (cross-frame raises) and brings both points into a common Cartesian chart before delegating to the manifold-level `geodesic_distance`, so the result is invariant to the chart and component units each operand happens to use.
 
     **Examples**

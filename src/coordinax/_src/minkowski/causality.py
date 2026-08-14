@@ -315,8 +315,9 @@ def proper_distance(
 _MSG_NOT_LORENTZIAN = (
     "{fname}() requires a Lorentzian metric -- *exactly one* timelike "
     "direction, signature (-1, 1, ..., 1) -- because the causal character of a "
-    "geodesic_distance is only well defined against a single time direction. {name} "
-    "has signature {sig}. Use `interval` for the signed square, or `geodesic_distance` "
+    "separation is only well defined against a single time direction. {name} "
+    "has signature {sig}. Use `interval` for the signed square, or "
+    "`geodesic_distance` "
     "for a Riemannian distance."
 )
 

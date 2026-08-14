@@ -43,6 +43,7 @@ from coordinax._src.base import (
 from coordinax._src.charts.d3 import cart3d
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.embedded.chart import EmbeddedChart
+from coordinax._src.embedded.manifold import EmbeddedManifold
 from coordinax._src.euclidean.manifold import EuclideanManifold
 from coordinax._src.minkowski.manifold import MinkowskiManifold
 from coordinax._src.spherical.chart import sph2
@@ -260,6 +261,62 @@ def geodesic_distance(
     # length *is* the central angle -- reported in radians rather than as a
     # bare number, because that is what it is.
     return _central_angle(to_unit_vector(a), to_unit_vector(b), keys)
+
+
+@plum.dispatch
+def geodesic_distance(
+    M: EmbeddedManifold,
+    chart: AbstractChart,
+    a: CDict,
+    b: CDict,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Any:
+    """Embedded sphere: the arc length, i.e. the radius times the central angle.
+
+    Delegates the angle to the intrinsic manifold's own rule rather than
+    re-deriving it, so there is one implementation of the great circle. Only
+    the radius is applied here, which is what the embedding adds.
+
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> M = cxm.EmbeddedManifold(
+    ...     intrinsic=cxm.S2, ambient=cxm.R3,
+    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")),
+    ... )
+    >>> n = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> s = {"theta": u.Angle(jnp.pi, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> cxm.geodesic_distance(M, cxc.sph2, n, s).round(4)
+    Distance(6.2832, 'm')
+
+    Reached through an `EmbeddedChart` too, whose manifold is this one:
+
+    >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")))
+    >>> cxm.geodesic_distance(chart, n, s).round(4)
+    Distance(6.2832, 'm')
+
+    """
+    embed_map = M.embed_map
+    if not isinstance(embed_map, TwoSphereIn3D):
+        msg = (
+            f"no geodesic distance is implemented for {type(embed_map).__name__}; "
+            "only the two-sphere embedding has a closed form here. Use "
+            "`chord_distance` for the straight line through the ambient space."
+        )
+        raise NotImplementedError(msg)
+
+    # An `EmbeddedChart` names the embedding, not a chart on the intrinsic
+    # manifold, so the angle has to be measured in the intrinsic chart it wraps.
+    intrinsic_chart = chart.intrinsic if isinstance(chart, EmbeddedChart) else chart
+    angle = cxmapi.geodesic_distance(
+        embed_map.intrinsic.M, intrinsic_chart, a, b, usys=usys
+    )
+    radians: Any = u.ustrip("rad", angle)  # dispatch returns `object`
+    return _as_distance(embed_map.radius * radians)
 
 
 @plum.dispatch
