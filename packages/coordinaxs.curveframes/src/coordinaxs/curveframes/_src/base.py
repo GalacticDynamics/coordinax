@@ -27,8 +27,18 @@ import coordinax.frames as cxf
 import coordinax.transforms as cxfm
 import unxt as u
 
+from .arclength import _is_two_argument
+
 FrameT = TypeVar(
     "FrameT", bound=cxf.AbstractReferenceFrame, default=cxf.AbstractReferenceFrame
+)
+
+_MSG_TWO_ARGUMENT_CURVE = (
+    "curve-frame builders take a one-argument curve `gamma(tau)`, but this "
+    "curve requires two positional arguments, `gamma(tau, t)`. A builder is "
+    "called with a single parameter, so a two-argument curve leaves the time "
+    "unbound and every call would fail inside the solve. Bind the slice first "
+    "with `AtTime(curve, t)`, which yields a one-argument curve."
 )
 
 
@@ -112,6 +122,25 @@ class AbstractCurveFrameBuilder(eqx.Module):
     curve: eqx.AbstractVar[Callable[[Any], Any]]
     tau_unit: eqx.AbstractVar[u.AbstractUnit]
     station: eqx.AbstractVar[Any]
+
+    def __check_init__(self) -> None:
+        """Reject a two-argument curve, which a builder cannot evaluate.
+
+        `equinox` runs this for every concrete builder, so `BishopBuilder`
+        and `FrenetSerretBuilder` are both covered here rather than each
+        repeating the check.
+
+        Without it, a ``gamma(tau, t)`` curve constructs happily and then
+        fails on *every* call with ``TypeError: ... missing 1 required
+        positional argument: 't'``, raised from inside the ODE solve --
+        nowhere near the construction that caused it. `AtTime` is the
+        remedy, and it already works, so the message names it.
+
+        An uninspectable curve raises out of `_is_two_argument`, matching
+        how `ArcLength` treats one.
+        """
+        if _is_two_argument(self.curve):
+            raise ValueError(_MSG_TWO_ARGUMENT_CURVE)
 
     # ---------------------------------------------------------------
 
