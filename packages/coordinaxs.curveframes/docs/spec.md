@@ -351,7 +351,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal(tau)` (row 1), `binormal(tau)` (row 2); `location(tau)`, `tangent(tau)` are inherited from `AbstractCurveFrameBuilder`.
 
-    Constructed directly — `FrenetSerretBuilder(curve, tau_unit="s", gamma=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
+    Constructed directly — `FrenetSerretBuilder(curve, tau_unit="s", station=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
 
     JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `gamma` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `gamma`); use `eqx.filter_jit` in that case.
 
@@ -374,7 +374,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `FrenetSerretFrame(base_frame, xop, xop_inv)` — direct construction from a base frame and a `TimeDep`-wrapped `FrenetSerretBuilder` (forward and inverse).
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, gamma)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, station=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, station)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
@@ -426,7 +426,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 
-    Constructed directly — `BishopBuilder(curve, tau_unit="s", gamma=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
+    Constructed directly — `BishopBuilder(curve, tau_unit="s", station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
     JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `gamma`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
@@ -447,7 +447,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `BishopFrame(base_frame, xop, xop_inv)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, station=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, station, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 

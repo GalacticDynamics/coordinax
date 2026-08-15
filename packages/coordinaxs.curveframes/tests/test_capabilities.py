@@ -4,8 +4,8 @@ These exercise what the old closure-based design could not express:
 
 (a) gradients with respect to a *curve parameter* — a field of an
     `equinox.Module` curve, hence a real pytree leaf;
-(b) a fixed-``gamma`` frame *field* along the curve, and ``vmap`` over
-    ``gamma``.
+(b) a fixed-``station`` frame *field* along the curve, and ``vmap`` over
+    ``station``.
 """
 
 from typing import Any
@@ -125,15 +125,15 @@ class TestGradThroughCurveParameter:
 
 
 # ===================================================================
-# (b) Fixed gamma: a frame *field* along the curve
+# (b) Fixed station: a frame *field* along the curve
 
 
-class TestFixedGamma:
-    """With ``gamma`` set, the frame sits at a fixed point of the curve."""
+class TestFixedStation:
+    """With ``station`` set, the frame sits at a fixed point of the curve."""
 
     def test_gamma_frame_is_tau_independent(self):
-        gamma = u.Q(0.7, "s")
-        op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", gamma))
+        station = u.Q(0.7, "s")
+        op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", station))
 
         a = cxfm.act(op, u.Q(0.0, "s"), P).ustrip("km")
         b = cxfm.act(op, u.Q(3.1, "s"), P).ustrip("km")
@@ -149,33 +149,33 @@ class TestFixedGamma:
     def test_gamma_frame_matches_the_moving_frame_at_gamma(
         self, builder_cls, tau_val, atol
     ):
-        gamma = u.Q(0.7, "s")
-        fixed = cxfm.TimeDep(builder_cls(circle, "s", gamma))
+        station = u.Q(0.7, "s")
+        fixed = cxfm.TimeDep(builder_cls(circle, "s", station))
         moving = cxfm.TimeDep(builder_cls(circle))
 
         assert jnp.allclose(
             cxfm.act(fixed, u.Q(tau_val, "s"), P).ustrip("km"),
-            cxfm.act(moving, gamma, P).ustrip("km"),
+            cxfm.act(moving, station, P).ustrip("km"),
             atol=atol,
         )
 
     def test_vmap_over_gamma(self):
         """A frame field: vmap the fixed curve parameter, not tau."""
-        gammas = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
+        stations = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
 
-        def at_gamma(g):
+        def at_station(g):
             op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", g))
             return cxfm.act(op, u.Q(0.0, "s"), P)
 
-        batched = jax.vmap(at_gamma)(gammas).ustrip("km")
+        batched = jax.vmap(at_station)(stations).ustrip("km")
         assert batched.shape == (5, 3)
 
         for i in range(5):
-            expected = at_gamma(gammas[i]).ustrip("km")
+            expected = at_station(stations[i]).ustrip("km")
             assert jnp.allclose(batched[i], expected, atol=1e-6)
 
     def test_grad_w_r_t_gamma(self):
-        """``gamma`` is a leaf, so the frame field is differentiable in it."""
+        """``station`` is a leaf, so the frame field is differentiable in it."""
 
         def loss(g):
             builder = cxfc.FrenetSerretBuilder(circle, "s", u.Q(g, "s"))
@@ -190,9 +190,9 @@ class TestFixedGamma:
         assert jnp.allclose(grad, fd, rtol=1e-5, atol=1e-7)
 
     def test_frame_from_curve_accepts_gamma(self):
-        gamma = u.Q(0.7, "s")
-        frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, gamma=gamma)
-        assert frame.xop.builder.gamma is gamma
+        station = u.Q(0.7, "s")
+        frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, station=station)
+        assert frame.xop.builder.station is station
 
         op = cxf.frame_transition(cxf.Alice(), frame)
         assert jnp.allclose(

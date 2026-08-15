@@ -130,13 +130,13 @@ def test_the_reach_guard_also_fires_under_jit() -> None:
         run(-1.6)
 
 
-def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_gamma() -> None:
+def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_station() -> None:
     """See the `~(f > 0)` vs `f <= 0` comment in `TubularChart.check_data`.
 
-    Reachable via public API: `FrenetSerretBuilder(curve, gamma=...)`.
+    Reachable via public API: `FrenetSerretBuilder(curve, station=...)`.
     """
     ch = cxfc.TubularChart(
-        cxfc.FrenetSerretBuilder(circle, gamma=u.Q(0.5, "s")), tau_bounds=BOUNDS
+        cxfc.FrenetSerretBuilder(circle, station=u.Q(0.5, "s")), tau_bounds=BOUNDS
     )
     at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
     assert jnp.isnan(ch.jacobian_factor(at))

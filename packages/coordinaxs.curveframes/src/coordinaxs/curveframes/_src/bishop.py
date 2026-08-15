@@ -182,8 +182,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         `equinox.Module` for differentiable curve parameters.
     tau_unit : AbstractUnit or str, optional
         Unit of the curve parameter.  Defaults to ``"s"``.
-    gamma : optional
-        A fixed curve parameter; see `AbstractCurveFrameBuilder`.
+    station : optional
+        A fixed station along the curve; see `AbstractCurveFrameBuilder`.
     tau_0 : Quantity, optional
         Reference parameter where the initial frame is defined.  Defaults to
         ``Q(0.0, tau_unit)``.
@@ -286,8 +286,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     )
     """The unit of the curve parameter tau."""
 
-    gamma: Any = None
-    """Optional fixed curve parameter (a leaf); `None` means "use tau"."""
+    station: Any = None
+    """Optional fixed station along the curve (a leaf); `None` means "use tau"."""
 
     tau_0: u.AbstractQuantity | None = None
     """Reference parameter value where the initial frame is defined (a leaf).
@@ -593,7 +593,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         /,
         tau_unit: u.AbstractUnit | str = "s",
         *,
-        gamma: Any = None,
+        station: Any = None,
         tau_0: u.AbstractQuantity | None = None,
         initial_normal: Any | None = None,
         diffeqsolver: DiffEqSolver = _DIFFEQSOLVER,
@@ -608,9 +608,9 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
             A function ``tau -> Quantity[float, (3,)]``.
         tau_unit : str, optional
             Unit of the curve parameter for differentiation.
-        gamma : optional
-            A fixed curve parameter; when given the frame is a fixed frame
-            *field* along the curve rather than a moving frame.
+        station : optional
+            A fixed station along the curve; when given the frame is a fixed
+            frame *field* along the curve rather than a moving frame.
         tau_0 : Quantity, optional
             Reference parameter.  Defaults to ``Q(0.0, tau_unit)``.
         initial_normal : array-like, optional
@@ -645,7 +645,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
 
         """
         builder = BishopBuilder(
-            curve, tau_unit, gamma, tau_0, initial_normal, diffeqsolver
+            curve, tau_unit, station, tau_0, initial_normal, diffeqsolver
         )
         xop = cxfm.TimeDep(builder)
         return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)

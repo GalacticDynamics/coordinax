@@ -88,36 +88,36 @@ class AbstractCurveFrameBuilder(eqx.Module):
     decomposed into ``Translate(-gamma) | Rotate(R)``.
 
     Being an `equinox.Module`, every field is a pytree leaf: the curve's own
-    parameters (when ``curve`` is itself an `equinox.Module`) and ``gamma`` are
-    differentiable and vmappable.  A bare function passed as ``curve`` still
+    parameters (when ``curve`` is itself an `equinox.Module`) and ``station``
+    are differentiable and vmappable.  A bare function passed as ``curve`` still
     works, but whatever it closes over is a trace-time constant.
 
     Fields
     ------
     curve : Callable
-        The curve $\gamma \mapsto \boldsymbol{\gamma}(\gamma)$, mapping a
+        The curve $\tau \mapsto \boldsymbol{\gamma}(\tau)$, mapping a
         parameter `Quantity` to a Cartesian 3-vector `Quantity`.
     tau_unit : AbstractUnit
         Physical unit of the curve parameter (e.g. ``"s"``).  Static: it selects
         the differentiation units, not a numeric value.
-    gamma : Any, optional
-        A *fixed* curve parameter.  When `None` (the default) $\tau$ itself is
-        the curve parameter — the classic moving-frame usage.  When set, the
-        frame sits at a fixed point of the curve and is $\tau$-independent: a
-        frame *field* along the curve, differentiable and vmappable in
-        ``gamma``.
+    station : Any, optional
+        A *fixed* curve parameter — a station along the curve.  When `None`
+        (the default) $\tau$ itself is the curve parameter — the classic
+        moving-frame usage.  When set, the frame sits at that station and is
+        $\tau$-independent: a frame *field* along the curve, differentiable and
+        vmappable in ``station``.
 
     """
 
     curve: eqx.AbstractVar[Callable[[Any], Any]]
     tau_unit: eqx.AbstractVar[u.AbstractUnit]
-    gamma: eqx.AbstractVar[Any]
+    station: eqx.AbstractVar[Any]
 
     # ---------------------------------------------------------------
 
     def _param(self, tau: Any, /) -> Any:
-        """Return the curve parameter: ``tau``, or the fixed ``gamma``."""
-        return tau if self.gamma is None else self.gamma
+        """Return the curve parameter: ``tau``, or the fixed ``station``."""
+        return tau if self.station is None else self.station
 
     @abc.abstractmethod
     def rotation_matrix(self, tau: Any, /) -> Array:
