@@ -395,7 +395,17 @@ True
 
 ```
 
-The two are not equally helped. Measured on this helix, repeated forward evaluations at a fixed curve are a few hundred times cheaper, while gradients with respect to the curve's own parameters gain only about a factor of two: the derivative rule still integrates $\partial S/\partial\theta$ over $[\tau_0, \tau]$ on every call, so only the forward solve is amortised.
+Not every path is helped equally, and it is worth knowing which one you are on. Measured on this helix:
+
+| what you differentiate | cost |
+| --- | --- |
+| nothing (forward evaluation) | a few hundred times cheaper with `s_max` |
+| $s$ alone — the chart Jacobian, the metric, the inverse solve | no integration at all |
+| the curve's own parameters $\theta$ | about a factor of two |
+
+The split is structural. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation. Differentiating with respect to $\theta$ costs a _second_ one — the rule integrates $\partial S/\partial\theta$ over $[\tau_0, \tau]$ — and that one cannot be precomputed, because it depends on which direction in parameter space you are perturbing, which is known only at the call. Differentiating with respect to $s$ needs neither: $d\tau/ds$ is $1/\|\gamma'(\tau)\|$, already to hand.
+
+So fitting a curve's shape pays the sensitivity integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians in the coordinates — does not.
 
 `s` must then fall within $[0, s_{\max}]$, up to a small margin that absorbs the nearest-point solve's own probing past the domain edge. A query beyond that margin raises rather than silently returning `NaN` from outside the interpolation's range. `s_max` also requires a one-argument curve: the Eulerian reading re-measures arc length on whichever slice it is evaluated at, so no single $\tau(s)$ exists to precompute — bind the slice with `AtTime` first, or use `LagrangianArcLength`, whose reference slice is fixed by construction.
 
