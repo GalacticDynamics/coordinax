@@ -396,13 +396,34 @@ def _tau_of_s_jvp(
     speed_unit = s_unit / tau_unit
     speed_at_tau = _speed(curve, tau_unit, speed_unit, tau)
 
-    def arclength(c: Any, t0: u.AbstractQuantity) -> Any:
-        return _arclength_between(c, tau_unit, s_unit, t0, tau, diffeqsolver)
+    # dS/dtheta is the *only* reason this rule integrates anything. When
+    # neither the curve nor tau_0 is being differentiated, both tangents are
+    # symbolically zero, dS is identically zero, and the quadrature below is
+    # a solve whose result is discarded.
+    #
+    # That is not a corner case: it is every derivative taken with respect to
+    # `s` alone, which includes the chart's Jacobian, the induced metric that
+    # pulls back through it, and `nearest_tau`'s root-find. Those all carry a
+    # fixed curve.
+    #
+    # Emptiness of `tree_leaves` is the symbolic-zero test `_tangent_value`
+    # already relies on, and it is a *structure* question, resolved at trace
+    # time -- so this branch is chosen during tracing and stays jit-safe. A
+    # tangent that merely happens to be numerically zero still has a leaf,
+    # and correctly takes the full path.
+    differentiating_curve = bool(jax.tree_util.tree_leaves((dcurve, dtau_0)))
 
-    _, dS = eqx.filter_jvp(arclength, (curve, tau_0), (dcurve, dtau_0))
+    if differentiating_curve:
+
+        def arclength(c: Any, t0: u.AbstractQuantity) -> Any:
+            return _arclength_between(c, tau_unit, s_unit, t0, tau, diffeqsolver)
+
+        _, dS = eqx.filter_jvp(arclength, (curve, tau_0), (dcurve, dtau_0))
+        dS_val = _tangent_value(dS)
+    else:
+        dS_val = 0.0
 
     ds_val = _tangent_value(ds)
-    dS_val = _tangent_value(dS)
     dtau_val = (ds_val - dS_val) / speed_at_tau
     return tau, u.Q(dtau_val, tau_unit)
 
