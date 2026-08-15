@@ -11,7 +11,7 @@ __all__ = (
     "metric_matrix",
     "metric_representation",
     "norm",
-    "separation",
+    "geodesic_distance",
     "interval",
     # Sub-namespaces
     "lorentzian",
@@ -140,6 +140,7 @@ with install_import_hook("coordinax.manifolds"):
     from coordinaxs.api.charts import pt_map
     from coordinaxs.api.manifolds import (
         angle_between,
+        geodesic_distance,
         guess_manifold,
         interval,
         metric_matrix,
@@ -148,7 +149,6 @@ with install_import_hook("coordinax.manifolds"):
         pt_embed,
         pt_project,
         scale_factors,
-        separation,
     )
 
 

@@ -3,7 +3,7 @@
 __all__ = (
     "cconvert",
     "equivalent",
-    "separation",
+    "geodesic_distance",
     "AbstractVector",
     "Point",
     "Coordinate",
@@ -21,7 +21,7 @@ with install_import_hook("coordinax.vectors"):
         Tangent,
         ToUnitsOptions,
         equivalent,
-        separation,
+        geodesic_distance,
     )
     from coordinaxs.api.representations import cconvert
 

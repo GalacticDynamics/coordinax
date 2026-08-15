@@ -6,7 +6,7 @@ same contraction:
 $$ Q_p(v) = v^\top G(p)\, v. $$
 
 `~coordinax.manifolds.norm` is its square root, and
-`~coordinax.manifolds.separation` is that applied to a coordinate difference.
+`~coordinax.manifolds.geodesic_distance` is that applied to a coordinate difference.
 Anything defined on an *indefinite* metric — where the square root has no real
 value — needs the contraction **unrooted** instead.
 

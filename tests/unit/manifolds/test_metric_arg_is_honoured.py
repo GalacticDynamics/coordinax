@@ -62,7 +62,7 @@ MISMATCHED_CALLS = [
             usys=USYS,
         ),
     ),
-    ("separation", lambda: cxm.separation(MINK, cxc.cart3d, Z3, P3)),
+    ("geodesic_distance", lambda: cxm.geodesic_distance(MINK, cxc.cart3d, Z3, P3)),
     ("angle_between-3d", lambda: cxm.angle_between(MINK, cxc.cart3d, P3, P3, at=Z3)),
     ("scale_factors", lambda: cxm.scale_factors(MINK, cxc.cart3d, at=P3)),
     ("interval", lambda: cxm.interval(FLAT4, cxc.minkowskict, Z4, X4)),

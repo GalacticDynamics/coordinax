@@ -3,7 +3,7 @@
 This tutorial works through special relativity in `coordinax`, using a real measurement as the thread: **why cosmic-ray muons reach the ground when, classically, they should not.** You will learn how to:
 
 - Represent events on `MinkowskiManifold` with the `MinkowskiCT` chart
-- Measure with `interval` instead of `separation`, and why that swap is forced
+- Measure with `interval` instead of `geodesic_distance`, and why that swap is forced
 - Classify pairs of events as timelike, null, or spacelike
 - Change inertial frame with `LorentzBoost`
 - See which quantities are frame-dependent and which are invariant
@@ -53,7 +53,7 @@ The metric carries the signature that does all the work:
 
 That single minus sign is the entire difference between this tutorial and Euclidean geometry.
 
-## Step 2: Why `separation` Is Not the Tool
+## Step 2: Why `geodesic_distance` Is Not the Tool
 
 Let us set up the muon's birth and death as two events. We work first in the **muon's own rest frame**, where it does not move: it is born at the origin and decays $2.2\;\mu\text{s}$ later at the same place.
 
@@ -72,18 +72,18 @@ Let us set up the muon's birth and death as two events. We work first in the **m
 >>> death = event(float(ct0.ustrip("m")), 0.0)
 ```
 
-The reflex from Euclidean geometry is to ask for the `separation` between them. That does not work here, and `coordinax` says so rather than handing back a number:
+The reflex from Euclidean geometry is to ask for the `geodesic_distance` between them. That does not work here, and `coordinax` says so rather than handing back a number:
 
 ```pycon
 >>> try:
-...     cxm.separation(cxc.minkowskict, birth, death)
+...     cxm.geodesic_distance(cxc.minkowskict, birth, death)
 ... except NotImplementedError as e:
-...     print(str(e)[:50])
+...     print(str(e).split(";")[0])
 ...
-separation() supports only positive-definite metri
+geodesic_distance() requires a Riemannian (positive-definite) metric
 ```
 
-The refusal is not squeamishness. `separation` is $\sqrt{\Delta x^\top G\, \Delta x}$, and with a $(-1,1,1,1)$ signature that quadratic form goes **negative** whenever the time difference dominates. The square root of a negative number is `nan`, which would be a wrong answer wearing the costume of a right one.
+The refusal is not squeamishness. A distance is the square root of $\Delta x^\top G\, \Delta x$, and with a $(-1,1,1,1)$ signature that quadratic form goes **negative** whenever the time difference dominates. The square root of a negative number is `nan`, which would be a wrong answer wearing the costume of a right one — and worse, a _spacelike_ pair would come back with a plausible-looking number, so the failure would only show itself in the half of spacetime you were less likely to check.
 
 ## Step 3: The Interval
 
@@ -351,7 +351,7 @@ Two boosts of $0.6c$, measured after the fact: $2\,\mathrm{arctanh}\,0.6$. This 
 | **causal character**             | ❌ **invariant** |
 | **relative rapidity**            | ❌ **invariant** |
 
-The practical rule: reach for `interval` and the `cxm.lorentzian` verbs when you want a statement about _physics_, and read coordinates only when you genuinely want a statement about a particular frame. `separation` and `norm` belong to the Riemannian world and will refuse Minkowski input rather than let you mix the two up.
+The practical rule: reach for `interval` and the `cxm.lorentzian` verbs when you want a statement about _physics_, and read coordinates only when you genuinely want a statement about a particular frame. `geodesic_distance` and `norm` belong to the Riemannian world and will refuse Minkowski input rather than let you mix the two up.
 
 ## See Also
 

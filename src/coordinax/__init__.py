@@ -36,7 +36,7 @@ __all__ = (  # distances
     "EmbeddedManifold",
     "CustomAtlas",
     "CustomManifold",
-    "separation",
+    "geodesic_distance",
     # frames -- frames
     "noframe",
     # frame -- transforms
@@ -89,7 +89,7 @@ __all__ = (  # distances
     "Tangent",
     "ToUnitsOptions",
     "equivalent",
-    "separation",
+    "geodesic_distance",
 )
 
 import warnings
@@ -133,7 +133,7 @@ from coordinax.manifolds import (
     FlatMetric,
     Rn,
     embedded_twosphere,
-    separation,
+    geodesic_distance,
 )
 from coordinax.representations import (
     AbstractLinearBasis,
@@ -186,7 +186,7 @@ from coordinax.vectors import (
     Tangent,
     ToUnitsOptions,
     equivalent,
-    separation,
+    geodesic_distance,
 )
 
 # ============================================================================
