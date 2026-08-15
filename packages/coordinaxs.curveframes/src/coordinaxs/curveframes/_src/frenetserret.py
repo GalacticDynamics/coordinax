@@ -155,11 +155,15 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
                [ 0.,  0.,  1.]], dtype=float64)
 
         """
-        # Unit-aware first and second derivatives via unxt
-        dcurve = u.experimental.jacfwd(self.curve, units=(self.tau_unit,))
-        d2curve = u.experimental.jacfwd(dcurve, units=(self.tau_unit,))
+        # For a two-argument curve `tau` is the time: the apparatus is that
+        # of the time slice, at the pinned station. See `_resolve`.
+        b, p = self._resolve(tau)
 
-        g = self._param(tau).astype(float)
+        # Unit-aware first and second derivatives via unxt
+        dcurve = u.experimental.jacfwd(b.curve, units=(b.tau_unit,))
+        d2curve = u.experimental.jacfwd(dcurve, units=(b.tau_unit,))
+
+        g = b._param(p).astype(float)
         dp = dcurve(g)
         d2p = d2curve(g)
 
@@ -200,8 +204,9 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         Q([-0.,  1.,  0.], '')
 
         """
-        dcurve = u.experimental.jacfwd(self.curve, units=(self.tau_unit,))
-        return u.Q(_normalize(dcurve(self._param(tau).astype(float))).value, "")
+        b, p = self._resolve(tau)
+        dcurve = u.experimental.jacfwd(b.curve, units=(b.tau_unit,))
+        return u.Q(_normalize(dcurve(b._param(p).astype(float))).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
         r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).

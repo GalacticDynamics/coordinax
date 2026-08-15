@@ -14,6 +14,7 @@ This module defines the two abstract base classes on which the entire
 __all__ = ("AbstractCurveFrameBuilder", "AbstractParallelTransportFrame")
 
 import abc
+import dataclasses
 
 from collections.abc import Callable
 from jaxtyping import Array
@@ -28,17 +29,29 @@ import coordinax.transforms as cxfm
 import unxt as u
 
 from .arclength import _is_two_argument
+from .attime import AtTime
 
 FrameT = TypeVar(
     "FrameT", bound=cxf.AbstractReferenceFrame, default=cxf.AbstractReferenceFrame
 )
 
-_MSG_TWO_ARGUMENT_CURVE = (
-    "curve-frame builders take a one-argument curve `gamma(tau)`, but this "
-    "curve requires two positional arguments, `gamma(tau, t)`. A builder is "
-    "called with a single parameter, so a two-argument curve leaves the time "
-    "unbound and every call would fail inside the solve. Bind the slice first "
-    "with `AtTime(curve, t)`, which yields a one-argument curve."
+#: `_resolve` returns a builder of the *same* concrete type it was called on,
+#: which is what lets a subclass reach its own helpers on the result.
+#:
+#: `Self` says this more directly, and ruff's PYI019 rewrites to it -- but
+#: `beartype` raises `BeartypeDecorHintPep673Exception` on PEP 673 in a method
+#: whose class it does not itself decorate, so `Self` fails at *runtime* here.
+#: Hence the explicit TypeVar, and the `noqa` at the signature.
+BuilderT = TypeVar("BuilderT", bound="AbstractCurveFrameBuilder")
+
+_MSG_TWO_ARGUMENT_NEEDS_GAMMA = (
+    "this curve takes two positional arguments, `gamma(tau, t)`, so the "
+    "builder's call-time parameter is the time `t` and the station along the "
+    "curve must be pinned with `gamma=`. Without it both are unbound and no "
+    "transform can be built. Either pass `gamma=<station>` to get a frame at "
+    "a fixed station that evolves with `t`, or bind the slice instead with "
+    "`AtTime(curve, t)`, which makes the curve one-argument so the call-time "
+    "parameter is the curve parameter again."
 )
 
 
@@ -124,23 +137,53 @@ class AbstractCurveFrameBuilder(eqx.Module):
     station: eqx.AbstractVar[Any]
 
     def __check_init__(self) -> None:
-        """Reject a two-argument curve, which a builder cannot evaluate.
+        """Require a station when the curve is two-argument.
 
         `equinox` runs this for every concrete builder, so `BishopBuilder`
         and `FrenetSerretBuilder` are both covered here rather than each
         repeating the check.
 
-        Without it, a ``gamma(tau, t)`` curve constructs happily and then
-        fails on *every* call with ``TypeError: ... missing 1 required
-        positional argument: 't'``, raised from inside the ODE solve --
-        nowhere near the construction that caused it. `AtTime` is the
-        remedy, and it already works, so the message names it.
+        A builder is called with a *single* parameter. For a one-argument
+        curve that parameter is the curve parameter. For a two-argument
+        ``gamma(tau, t)`` it is the time, which leaves the station to be
+        supplied as a field -- and with neither pinned, two unknowns face one
+        slot and no transform can be produced. That is arithmetic, not
+        policy, so it is refused at construction rather than at every call.
+
+        What such a caller usually means is already spelled
+        ``AtTime(curve, t)``: that binds the slice, making the curve
+        one-argument again, so the call-time parameter goes back to being
+        the curve parameter. The message names it.
 
         An uninspectable curve raises out of `_is_two_argument`, matching
         how `ArcLength` treats one.
         """
+        if _is_two_argument(self.curve) and self.gamma is None:
+            raise ValueError(_MSG_TWO_ARGUMENT_NEEDS_GAMMA)
+
+    def _resolve(  # noqa: PYI019  (see BuilderT: `Self` breaks beartype)
+        self: BuilderT, tau: Any, /
+    ) -> tuple[BuilderT, Any]:
+        r"""Reduce to a one-argument builder and the parameter to evaluate it at.
+
+        For an ordinary one-argument curve this is the identity: the builder
+        is already evaluable and ``tau`` is already the curve parameter.
+
+        For a two-argument curve, ``tau`` is the *time*, and the frame is the
+        one belonging to that time slice, taken at the pinned station. A
+        slice of $\gamma(\tau, t)$ at fixed $t$ is a one-argument curve --
+        exactly what `AtTime` produces -- so the whole of the existing
+        machinery applies to it unchanged, parallel-transport ODE included.
+        Nothing about the frame mathematics is time-dependent; only which
+        curve it runs on.
+
+        Returning the builder rather than mutating keeps this usable from
+        `__call__`, `location` and `tangent` alike, and keeps the two-argument
+        path a routing decision made in exactly one place.
+        """
         if _is_two_argument(self.curve):
-            raise ValueError(_MSG_TWO_ARGUMENT_CURVE)
+            return dataclasses.replace(self, curve=AtTime(self.curve, tau)), self.gamma
+        return self, tau
 
     # ---------------------------------------------------------------
 
@@ -176,11 +219,16 @@ class AbstractCurveFrameBuilder(eqx.Module):
         >>> isinstance(op, cxfm.Composed)
         True
 
+        For a two-argument curve ``tau`` is the time, and the result is the
+        rigid motion of that time slice at the pinned station -- see
+        `_resolve`.
+
         """
+        b, p = self._resolve(tau)
         cart = cxc.cart3d
-        g = self._param(tau)
-        translate = cxfm.Translate(cxc.cdict(-self.curve(g), cart), chart=cart)
-        return translate | cxfm.Rotate(self.rotation_matrix(tau))
+        g = b._param(p)
+        translate = cxfm.Translate(cxc.cdict(-b.curve(g), cart), chart=cart)
+        return translate | cxfm.Rotate(b.rotation_matrix(p))
 
     # ---------------------------------------------------------------
     # Convenience accessors
@@ -201,8 +249,11 @@ class AbstractCurveFrameBuilder(eqx.Module):
         >>> cxfc.FrenetSerretBuilder(helix).location(u.Q(0.0, "s"))
         Q([1., 0., 0.], 'm')
 
+        For a two-argument curve ``tau`` is the time -- see `_resolve`.
+
         """
-        return self.curve(self._param(tau))
+        b, p = self._resolve(tau)
+        return b.curve(b._param(p))
 
     def tangent(self, tau: Any, /) -> u.Q:
         r"""Return the unit tangent vector $\mathbf{T}$ (row 0 of R).
@@ -221,6 +272,9 @@ class AbstractCurveFrameBuilder(eqx.Module):
         >>> cxfc.FrenetSerretBuilder(circle).tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
+        For a two-argument curve ``tau`` is the time -- see `_resolve`.
+
         """
-        R = self.rotation_matrix(tau.astype(float))
+        b, p = self._resolve(tau)
+        R = b.rotation_matrix(p.astype(float))
         return u.Q(R[0], "")

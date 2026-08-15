@@ -1,20 +1,30 @@
-"""Builders reject a two-argument curve at construction.
+"""Two-argument curves in the frame builders.
 
-A builder is called with a single parameter, so a curve needing
-``(tau, t)`` leaves the time unbound. Before this guard such a curve
-constructed happily and then failed on *every* call, with a `TypeError`
-raised from inside the ODE solve -- nowhere near the construction that
-caused it.
+A builder is called with a *single* parameter. For a one-argument curve
+that is the curve parameter; for a two-argument ``gamma(tau, t)`` it is
+the time, and the station must then be pinned as a field. With neither
+pinned, two unknowns face one slot, so construction raises.
 
-The guard lives on `AbstractCurveFrameBuilder.__check_init__`, so both
-concrete builders inherit it; the tests below pin that, and pin the two
-one-argument idioms that must keep working (#712 found both of these
-misread when arity was decided by counting parameters rather than
-checking whether the second one is required).
+With a station pinned, `builder(t)` is the frame of the time-t slice at
+that station. A slice at fixed t is a one-argument curve -- what `AtTime`
+produces -- so the existing machinery applies unchanged, and the
+equivalence with the hand-built slice is the correctness claim these tests
+turn on.
+
+Before this, a two-argument curve constructed happily and then failed on
+*every* call with a `TypeError` raised from inside the ODE solve, nowhere
+near the construction that caused it.
+
+The routing and the guard both live on `AbstractCurveFrameBuilder`, so
+both concrete builders inherit them. Also pinned here are the two
+one-argument idioms that must keep working: #712 found both misread when
+arity was decided by counting parameters rather than checking whether the
+second one is required.
 """
 
 import functools as ft
 
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -48,9 +58,9 @@ def curve_with_knob(
 @pytest.mark.parametrize(
     "builder", [cxfc.BishopBuilder, cxfc.FrenetSerretBuilder], ids=["bishop", "frenet"]
 )
-def test_two_argument_curve_is_rejected_at_construction(builder) -> None:
+def test_two_argument_curve_without_a_station_is_rejected(builder) -> None:
     """Both builders inherit the guard from `AbstractCurveFrameBuilder`."""
-    with pytest.raises(ValueError, match="one-argument curve"):
+    with pytest.raises(ValueError, match="must be pinned"):
         builder(curve2, "km")
 
 
@@ -60,14 +70,72 @@ def test_the_error_names_the_remedy() -> None:
         cxfc.BishopBuilder(curve2, "km")
 
 
-def test_a_pinned_gamma_does_not_excuse_a_two_argument_curve() -> None:
-    """`gamma` fixes the station, not the time -- the curve is still unusable.
+@pytest.mark.parametrize(
+    "builder", [cxfc.BishopBuilder, cxfc.FrenetSerretBuilder], ids=["bishop", "frenet"]
+)
+def test_a_pinned_station_makes_the_call_time_parameter_the_time(builder) -> None:
+    """The whole correctness claim: routing equals the hand-built slice.
 
-    Fails if the guard is ever narrowed to ``gamma is None`` before the
-    routing that would make a pinned two-argument curve actually work.
+    `builder(t)` on a two-argument curve must give the frame of the time-t
+    slice at the pinned station -- which is what
+    ``builder(AtTime(curve, t), ...)`` builds directly. Fails if `_resolve`
+    binds the wrong slot, or slices at the wrong time.
     """
-    with pytest.raises(ValueError, match="one-argument curve"):
-        cxfc.BishopBuilder(curve2, "km", gamma=u.Q(1.3, "km"))
+    s0 = u.Q(1.3, "km")
+    b = builder(curve2, "km", gamma=s0)
+    # t = 0 is excluded deliberately: `curve2(s, 0)` is the straight line
+    # ``(s, 0, 0)``, where Frenet--Serret is singular (zero curvature, so the
+    # normal is undefined and the rotation is NaN). That is the apparatus's
+    # own degeneracy, not a routing question, and `BishopBuilder` exists
+    # precisely because it does not have it.
+    for t_val in (0.5, 1.7, 2.3):
+        t = u.Q(t_val, "s")
+        manual = builder(cxfc.AtTime(curve2, t), "km", gamma=s0)
+        assert jnp.allclose(
+            b.location(t).ustrip("km"), manual.location(t).ustrip("km"), atol=1e-12
+        ), t_val
+        assert jnp.allclose(
+            b.tangent(t).ustrip(""), manual.tangent(t).ustrip(""), atol=1e-12
+        ), t_val
+        assert jnp.allclose(b.rotation_matrix(t), manual.rotation_matrix(t), atol=1e-12)
+
+
+def test_the_frame_actually_evolves_with_time() -> None:
+    """Guards against `_resolve` being an expensive no-op.
+
+    A routing bug that ignored `t` would still satisfy the equivalence test
+    above if the *manual* side ignored it too. This pins that the frame
+    genuinely differs between two times -- on a curve that bends, so the
+    rotation moves and not merely the origin.
+    """
+    b = cxfc.BishopBuilder(curve2, "km", gamma=u.Q(1.3, "km"))
+    l0 = b.location(u.Q(0.0, "s")).ustrip("km")
+    l1 = b.location(u.Q(1.7, "s")).ustrip("km")
+    t0 = b.tangent(u.Q(0.0, "s")).ustrip("")
+    t1 = b.tangent(u.Q(1.7, "s")).ustrip("")
+    assert float(jnp.linalg.norm(l1 - l0)) > 1.0, (l0, l1)
+    assert float(jnp.linalg.norm(t1 - t0)) > 0.1, (t0, t1)
+
+
+def test_gradients_flow_to_time_and_to_the_station() -> None:
+    """Both slots stay differentiable: `t` at call time, the station as a leaf.
+
+    Checked against the closed form for
+    ``gamma(s, t) = (s(1 + t/2), t s^2/10, 0)``:
+    ``d(y)/dt = s^2/10`` and ``d(y)/ds = t s / 5``.
+    """
+    s0_val, t_val = 1.3, 1.0
+    b = cxfc.BishopBuilder(curve2, "km", gamma=u.Q(s0_val, "km"))
+
+    d_dt = jax.grad(lambda tv: b.location(u.Q(tv, "s")).ustrip("km")[1])(t_val)
+    assert jnp.allclose(d_dt, 0.1 * s0_val**2, atol=1e-10), d_dt
+
+    def loc_of_station(sv: float) -> float:
+        moved = cxfc.BishopBuilder(curve2, "km", gamma=u.Q(sv, "km"))
+        return moved.location(u.Q(t_val, "s")).ustrip("km")[1]
+
+    d_ds = jax.grad(loc_of_station)(s0_val)
+    assert jnp.allclose(d_ds, 0.2 * t_val * s0_val, atol=1e-10), d_ds
 
 
 def test_at_time_makes_a_two_argument_curve_usable() -> None:
