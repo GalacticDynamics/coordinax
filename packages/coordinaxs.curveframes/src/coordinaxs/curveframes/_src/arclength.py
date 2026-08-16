@@ -117,7 +117,7 @@ def _solve_tau_dense(
     ``s = 0`` the solver would otherwise take zero steps and silently return
     a zero derivative. Here the integration bound is the fixed ``s_max``, not
     the ``s`` a caller later evaluates at, and the returned interpolation is
-    only ever consumed through `_tau_of_s`'s custom VJP, never
+    only ever consumed through `_tau_of_s`'s custom JVP, never
     autodifferentiated directly -- see that function for why.
     """
     s_unit = s_max.unit
@@ -141,19 +141,11 @@ def _solve_tau_dense(
     return cast("dfx.DenseInterpolation", sol.interpolation)
 
 
-#: Relative margin (a fraction of `s_max`) that `_eval_tau_dense` clamps
-#: into silently rather than raising on. Sized to the *structural* slack
-#: `nearest_tau` needs, not floating-point noise: its bracketed root-find
-#: (`nearest.py`) evaluates the curve at `tau0 +/- spacing`, one full scan
-#: seed spacing outside `tau_bounds`, for *every* query whose nearest seed
-#: lands at a domain edge -- not a rare event, but the normal case for a
-#: point near either end of the curve. Default `n_seed=64` over one period
-#: gives spacing ~= 1.6% of the range; 5% comfortably covers that with room
-#: to spare down to `n_seed ~= 20`. A caller running `nearest_tau` with a
-#: much smaller `n_seed` against a tightly-fit `s_max` may need a wider
-#: margin than this fixed fraction gives -- widen `s_max` itself, which is
-#: also what `TubularChart.tau_bounds` should already recommend (see
-#: `ArcLength.s_max`).
+#: Fraction of `s_max` that `_eval_tau_dense` clamps into rather than raising
+#: on. Sized to `nearest_tau`'s *structural* slack, not floating-point noise:
+#: its root-find probes one scan-seed spacing outside `tau_bounds` whenever a
+#: seed lands at a domain edge. `n_seed=64` over one period gives ~1.6%, so 5%
+#: covers it down to `n_seed ~= 20`; below that, widen `s_max`.
 _S_MAX_MARGIN = 0.05
 
 _MSG_S_OUT_OF_DOMAIN = (
@@ -185,15 +177,22 @@ def _eval_tau_dense(
     `_S_MAX_MARGIN` of the domain, this clamps and evaluates at the
     boundary rather than raising -- a converged, in-tolerance answer should
     not fail just because the search that found it briefly stepped outside
-    while getting there. Only a query genuinely beyond that margin raises,
-    rather than letting `diffrax.DenseInterpolation` clamp internally and
+    while getting there.
+
+    The cost is real and worth stating: a *caller's* own query within that
+    band is clamped just as silently, and gets $\tau(s_{\max})$ back as
+    though it were the answer. Restricting the slack to the negative side
+    was tried and does not work -- `nearest_tau` probes past the upper edge
+    too, and the chart round-trip fails outright. Only a query beyond the
+    margin raises, rather than letting `diffrax.DenseInterpolation` clamp
+    internally and
     return `NaN` silently.
     """
     s_unit = s_max.unit
     s_val = jnp.asarray(s.ustrip(s_unit))
     s_max_val = jnp.asarray(s_max.ustrip(s_unit))
 
-    slack = _S_MAX_MARGIN * jnp.maximum(1.0, jnp.abs(s_max_val))
+    slack = _S_MAX_MARGIN * jnp.abs(s_max_val)
     out_of_domain = (s_val < -slack) | (s_val > s_max_val + slack)
 
     s_clipped = jnp.clip(s_val, 0.0, s_max_val)
@@ -212,18 +211,15 @@ def _arclength_between(
 ) -> Any:
     r"""$S = \int_{\tau_0}^{\tau} \|\boldsymbol{\gamma}'(u)\|\,du$, as a bare float.
 
-    The one extra quadrature `_tau_of_s`'s backward rule needs -- see its
-    docstring for the implicit-function-theorem derivation this feeds into.
+    The one extra quadrature `_tau_of_s`'s JVP rule needs -- see its docstring
+    for the implicit-function-theorem derivation this feeds into.
     Returned as a plain (unit-stripped, in ``s_unit``) value rather than a
     `unxt.Quantity`: it is only ever scaled and fed straight into a cotangent,
     never displayed or unit-checked on its own.
 
-    Rescaled to $\sigma \in [0, 1]$ exactly as `_solve_tau` is, so this stays
-    differentiable in ``tau_0`` -- one of the two things `_tau_of_s`'s
-    backward rule differentiates it against -- even when ``tau_0 == tau``
-    (the ``s = 0`` case): integrating directly over ``[tau_0, tau]`` would put
-    a differentiated quantity in the integration *bound*, where the solver
-    takes zero steps and the derivative silently comes back as zero.
+    Rescaled to $\sigma \in [0, 1]$ for the reason `_solve_tau_dense` gives,
+    which applies here to ``tau_0`` -- one of the two things `_tau_of_s`'s JVP
+    rule differentiates against.
     """
     speed_unit = s_unit / tau_unit
     # `jnp.asarray` narrows only here, as in `nearest.py`: `ustrip` is typed as
@@ -243,14 +239,10 @@ def _arclength_between(
 
 
 def _tangent_value(t: Any, /) -> Any:
-    r"""Unwrap a `filter_custom_jvp` tangent to a bare float, `0.0` if symbolic zero.
+    r"""Unwrap a tangent to a bare value, `0.0` if it is symbolically zero.
 
-    A tangent that is symbolically zero -- an argument not being
-    differentiated -- arrives as `None` for a bare array, or (since
-    `unxt.Quantity` is a pytree with one array child) as a `Quantity` whose
-    *wrapped value* is `None`. Either way it has no leaves, so
-    `jax.tree_util.tree_leaves` reduces both to the empty list; a genuine
-    tangent always has exactly one.
+    A symbolic zero has no leaves, however it is wrapped; a real tangent has
+    exactly one.
     """
     leaves = jax.tree_util.tree_leaves(t)
     return leaves[0] if leaves else 0.0
@@ -290,39 +282,16 @@ def _tau_of_s(
     ``curve`` here is already one-argument (`ArcLength` passes its own
     ``curve``; `LagrangianArcLength` passes ``AtTime(curve, t0)``).
 
-    **Why a custom JVP, and not the more obviously-named `custom_vjp`.** Two
-    separate problems, one fix each:
-
-    1. When ``interp`` is given, the primal below is just `_eval_tau_dense`
-       reading off a `diffrax.DenseInterpolation` built once, at
-       `ArcLength.__init__` (see `ArcLength.s_max`), from whatever ``curve``
-       looked like *then*. If a caller later perturbs ``curve``'s own leaves
-       -- e.g. via `equinox.tree_at`, replacing a curve parameter without
-       rebuilding the `ArcLength` -- ordinary autodiff through
-       `interp.evaluate` would see no path back to that leaf at all: the
-       interpolation's coefficients are just numbers by that point, computed
-       from the *old* curve. The gradient would silently come back missing
-       the $\partial\tau/\partial\theta$ contribution entirely (this is what
-       #713 measured: a cached gradient of 1.9156525704 against a correct
-       -1.7574794224, and `LagrangianArcLength.t0`'s gradient returning
-       exactly 0.0). No amount of care in `__init__` fixes this -- a
-       precomputed leaf is structurally stale with respect to perturbations
-       of the inputs it was built from. Fixed by not asking autodiff to
-       differentiate through the interpolation at all, and supplying the
-       true derivative directly (below).
-
-    2. `BishopBuilder` differentiates the curve it wraps in *forward* mode
-       too (`_tangent_at` uses `unxt.experimental.jacfwd`) -- that is the
-       entire reason it defaults to `diffrax.DirectAdjoint` rather than
-       `diffrax`'s own default, which is a `custom_vjp` and so cannot be
-       `jvp`-ed (see `BishopBuilder`'s *Choosing an adjoint*). A
-       `jax.custom_vjp`-wrapped reparametrisation would break exactly the
-       same way, the moment it sits inside a curve handed to `BishopBuilder`
-       -- measured: ``TypeError: can't apply forward-mode autodiff (jvp) to a
-       custom_vjp function``. `jax.custom_jvp` does not have this problem,
-       and JAX derives a correct, cheap reverse-mode rule from it
-       automatically (by transposing the linear tangent formula below), so
-       one hand-written rule serves both AD modes.
+    **Why a custom JVP rather than `custom_vjp`.** Two independent reasons.
+    Autodiff through a precomputed ``interp`` cannot reach ``curve``'s leaves
+    at all -- the coefficients are numbers by then, computed from the *old*
+    curve -- so a perturbation via `equinox.tree_at` silently loses the
+    $\partial\tau/\partial\theta$ term (issue #713 has the measured
+    numbers). And `BishopBuilder` differentiates the curve it wraps in
+    forward mode (`bishop.py`'s `_tangent_at` uses `unxt.experimental.jacfwd`),
+    which a `custom_vjp` cannot support -- `bishop.py:68` documents the same
+    trap for `RecursiveCheckpointAdjoint`. A custom JVP serves forward mode
+    directly and reverse mode by transposition, so one rule covers both.
 
     From $s = S(\tau; \theta) = \int_{\tau_0}^{\tau}
     \|\boldsymbol{\gamma}'(u; \theta)\|\,du$, the implicit function theorem
@@ -423,6 +392,11 @@ def _tau_of_s_jvp(
     else:
         dS_val = 0.0
 
+    # Both terms are bare values in `s_unit`, so the subtraction is safe
+    # without a conversion: `dS_val` comes from `_arclength_between`, which
+    # integrates in `s_unit` by construction, and `ds_val` inherits `s`'s own
+    # unit because a JVP tangent shares its primal's pytree structure -- and
+    # a `Quantity`'s unit lives in the treedef, not the leaf.
     ds_val = _tangent_value(ds)
     dtau_val = (ds_val - dS_val) / speed_at_tau
     return tau, u.Q(dtau_val, tau_unit)
@@ -596,8 +570,14 @@ class ArcLength(eqx.Module):
     A `None` passed to `__init__` resolves to ``Q(0.0, tau_unit)``.
     """
 
-    diffeqsolver: DiffEqSolver
-    """Solver, step-size controller, adjoint and step budget for the ODE."""
+    diffeqsolver: DiffEqSolver = eqx.field(static=True)
+    """Solver, step-size controller, adjoint and step budget for the ODE.
+
+    Static, as in `BishopBuilder`: the solver's tolerances and step budget are
+    configuration, not data. Left dynamic they become pytree leaves, so a
+    `jax.tree.map` over the module silently rescales `rtol`/`atol` and can turn
+    `max_steps` into a tracer.
+    """
 
     s_max: u.AbstractQuantity | None
     """If given, precompute tau(s) once over s in [0, s_max] (a leaf).
@@ -618,12 +598,8 @@ class ArcLength(eqx.Module):
 
     Built once in ``__init__`` when ``s_max`` is given (see
     `_solve_tau_dense`); left `None` otherwise, in which case `__call__`
-    solves fresh every time. Gradients never flow through this field
-    directly -- see `_tau_of_s` for why an `equinox.field(init=False)` field
-    (the natural way to spell "derived from other fields") is not enough on
-    its own, and why a plain field set from a custom `__init__` (this
-    module's own workaround, matching `AtTime`'s) is not enough either, and
-    what actually fixes it.
+    solves fresh every time. Gradients bypass this field entirely -- see
+    `_tau_of_s`.
     """
 
     def __init__(
@@ -778,8 +754,14 @@ class LagrangianArcLength(eqx.Module):
     A `None` passed to `__init__` resolves to ``Q(0.0, tau_unit)``.
     """
 
-    diffeqsolver: DiffEqSolver
-    """Solver, step-size controller, adjoint and step budget for the ODE."""
+    diffeqsolver: DiffEqSolver = eqx.field(static=True)
+    """Solver, step-size controller, adjoint and step budget for the ODE.
+
+    Static, as in `BishopBuilder`: the solver's tolerances and step budget are
+    configuration, not data. Left dynamic they become pytree leaves, so a
+    `jax.tree.map` over the module silently rescales `rtol`/`atol` and can turn
+    `max_steps` into a tracer.
+    """
 
     s_max: u.AbstractQuantity | None
     """If given, precompute tau(s) once over s in [0, s_max] (a leaf).

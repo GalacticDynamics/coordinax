@@ -169,6 +169,21 @@ def test_s_far_outside_s_max_raises() -> None:
         fast(u.Q(-0.26, "km"))
 
 
+def test_the_margin_scales_with_a_small_s_max() -> None:
+    """The margin is a *fraction* of `s_max`, not an absolute floor.
+
+    With ``slack = margin * max(1, |s_max|)`` the tolerated overshoot stopped
+    shrinking once ``s_max`` fell below 1: a 0.001 km domain would silently
+    clamp a query at 0.05 km -- fifty times its own length -- and hand back
+    the boundary value as though it were the answer. Fails if that floor
+    comes back.
+    """
+    tiny = cxfc.ArcLength(helix, "s", s_max=u.Q(0.001, "km"))
+    tiny(u.Q(0.00104, "km"))  # 4% past: inside the 5% margin, must not raise
+    with pytest.raises(Exception, match="precomputed domain"):
+        tiny(u.Q(0.002, "km"))  # 100% past: must raise, and did not before
+
+
 def test_lagrangian_s_far_outside_s_max_raises() -> None:
     fast = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s", s_max=u.Q(2.0, "km"))
     with pytest.raises(Exception, match="precomputed domain"):
