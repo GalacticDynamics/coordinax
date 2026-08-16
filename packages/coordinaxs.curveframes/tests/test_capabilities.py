@@ -131,7 +131,7 @@ class TestGradThroughCurveParameter:
 class TestFixedStation:
     """With ``station`` set, the frame sits at a fixed point of the curve."""
 
-    def test_gamma_frame_is_tau_independent(self):
+    def test_station_frame_is_tau_independent(self):
         station = u.Q(0.7, "s")
         op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", station))
 
@@ -146,7 +146,7 @@ class TestFixedStation:
             (cxfc.BishopBuilder, 2.0, 1e-6),  # ODE, so looser
         ],
     )
-    def test_gamma_frame_matches_the_moving_frame_at_gamma(
+    def test_station_frame_matches_the_moving_frame_at_station(
         self, builder_cls, tau_val, atol
     ):
         station = u.Q(0.7, "s")
@@ -159,7 +159,7 @@ class TestFixedStation:
             atol=atol,
         )
 
-    def test_vmap_over_gamma(self):
+    def test_vmap_over_station(self):
         """A frame field: vmap the fixed curve parameter, not tau."""
         stations = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
 
@@ -174,7 +174,7 @@ class TestFixedStation:
             expected = at_station(stations[i]).ustrip("km")
             assert jnp.allclose(batched[i], expected, atol=1e-6)
 
-    def test_grad_w_r_t_gamma(self):
+    def test_grad_w_r_t_station(self):
         """``station`` is a leaf, so the frame field is differentiable in it."""
 
         def loss(g):
@@ -189,7 +189,7 @@ class TestFixedStation:
         fd = (loss(g0 + h) - loss(g0 - h)) / (2 * h)
         assert jnp.allclose(grad, fd, rtol=1e-5, atol=1e-7)
 
-    def test_frame_from_curve_accepts_gamma(self):
+    def test_frame_from_curve_accepts_station(self):
         station = u.Q(0.7, "s")
         frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, station=station)
         assert frame.xop.builder.station is station
