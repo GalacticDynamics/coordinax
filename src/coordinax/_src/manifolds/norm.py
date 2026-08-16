@@ -368,7 +368,15 @@ def norm(
     if isinstance(gm, ul.QuantityMatrix):
         # `gm.unit.shape`, not `gm.shape`: the latter carries batch axes the
         # units do not, so a batched dimensionless metric would be rejected.
-        if gm.unit != ul.UnitsMatrix.full(gm.unit.shape, ""):
+        if gm.unit != ul.UnitsMatrix.full(gm.unit.shape, ""):  # pragma: no cover
+            # Unreachable through any public route today, hence the pragma: a
+            # bare `at` yields a dimensionless metric, and the unitful ones
+            # that exist (an embedded sphere's pullback, m2) belong to charts
+            # `check_metric_is_charts` rejects further up. Kept rather than
+            # deleted for the number it protects: dropping a metric's unit here
+            # would return a norm in the wrong dimension and look fine. A chart
+            # whose metric carries units at a bare base point is a supportable
+            # thing to add; this is what would catch it on the first call.
             msg = (
                 f"norm(): a bare `jax.Array` cannot carry the unit of this "
                 f"chart's metric ({gm.unit}); pass `v` as a Quantity."
