@@ -162,14 +162,7 @@ def _merge(
     a_mat, b_mat = a.matrix, b.matrix
     if a_mat.shape != b_mat.shape:
         return None
-    # `ty` cannot see `groups()`: every concrete transform defines it, but
-    # `AbstractTransform` never declares it, so it is a protocol by convention
-    # only. `Composed.groups` makes the same call and escapes the check merely
-    # because its `transforms` field is loosely typed.
     group = groups.least_common_supergroup(
-        (
-            groups.most_specific_group(a.groups()),  # ty: ignore[unresolved-attribute]
-            groups.most_specific_group(b.groups()),  # ty: ignore[unresolved-attribute]
-        )
+        (groups.most_specific_group(a.groups()), groups.most_specific_group(b.groups()))
     )
     return Linear(b_mat @ a_mat, group)

@@ -71,6 +71,30 @@ class AbstractTransform(eqx.Module):
         """The inverse of the operator."""
         raise NotImplementedError  # pragma: no cover
 
+    @abc.abstractmethod
+    def groups(self) -> frozenset[type]:
+        """Return the transformation groups to which this operator belongs.
+
+        Declared here because callers rely on it -- `Composed.groups` reads it
+        off every component, and `_merge` off both operands -- but until now
+        every implementation was a subclass convention with nothing on the base
+        to point at. A type checker could only see the attribute where the
+        caller happened to hold a concrete type.
+
+        Spelled as an instance method so both forms satisfy it: most operators
+        answer from their type alone and implement it as a `classmethod`, which
+        remains reachable from an instance, while `Composed` and
+        `~coordinax.transforms.Linear` compute it from what they hold.
+
+        Examples
+        --------
+        >>> import coordinax.transforms as cxfm
+        >>> sorted(g.__name__ for g in cxfm.Identity().groups())
+        ['DiffeomorphismGroup', 'IdentityGroup']
+
+        """
+        raise NotImplementedError  # pragma: no cover
+
     @property
     def is_time_dependent(self) -> bool:
         """Whether the point action depends on the time parameter tau.
