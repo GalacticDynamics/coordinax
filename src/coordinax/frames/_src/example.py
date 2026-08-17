@@ -129,7 +129,7 @@ class Bob(AbstractReferenceFrame):
           chart=Cart3D(M=Rn(3))
       ),
       Translate(
-          {'x': Q(2.69813212e+08, 'm / s'), 'y': Q(0., 'm / s'), 'z': Q(0., 'm / s')},
+          {'x': Q(269813212.2, 'm / s'), 'y': Q(0.0, 'm / s'), 'z': Q(0.0, 'm / s')},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       )
@@ -263,7 +263,7 @@ def frame_transition(
     >>> print(cxf.frame_transition(cxf.bob, cxf.alice))
     Composed((
       Translate(
-          {'x': Q(-2.69813212e+08, 'm / s'), ...},
+          {'x': Q(-269813212.2, 'm / s'), ...},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       ),

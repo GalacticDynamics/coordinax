@@ -182,8 +182,18 @@ class AbstractVector(
     chart: eqx.AbstractVar[ChartT]
     """The chart of the vector, e.g. `cxc.cart3d`."""
 
-    rep: eqx.AbstractVar[cxr.Representation[GeomT, BasisT, SemanticT]]
-    """The `coordinax.representations.Representation`, e.g. `cxr.point`."""
+    @property
+    @abc.abstractmethod
+    def rep(self) -> "cxr.Representation[GeomT, BasisT, SemanticT]":
+        """The `coordinax.representations.Representation`, e.g. `cxr.point`.
+
+        An abstract *property*, not an `equinox.AbstractVar`: subclasses derive
+        this rather than store it, so it is not an ``__init__`` parameter.
+        `~coordinax.vectors.Point` returns a constant; `~coordinax.vectors.Tangent`
+        builds one from its static ``basis`` and ``semantic`` fields. Declaring
+        it as a variable made type checkers demand it at every construction site.
+        """
+        raise NotImplementedError  # pragma: no cover
 
     frame: eqx.AbstractVar[cxf.AbstractReferenceFrame]
     """The reference frame of the point. Defaults to ``cxf.noframe``."""

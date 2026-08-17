@@ -628,7 +628,7 @@ requires-dist = [
     { name = "quax-blocks", specifier = ">=0.4.1" },
     { name = "quaxed", specifier = ">=0.10.5" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
-    { name = "unxt", specifier = ">=2.0" },
+    { name = "unxt", specifier = ">=2.0.2" },
     { name = "unxts-linalg", specifier = ">=2.0.3" },
     { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
@@ -2685,7 +2685,7 @@ wheels = [
 
 [[package]]
 name = "quax"
-version = "0.4.1"
+version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
@@ -2694,27 +2694,28 @@ dependencies = [
     { name = "packaging" },
     { name = "plum-dispatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/bf/b82c3951dc90de2ecead6c5bce06e7f4f492133d7a33cd3a0a2f50b7acf7/quax-0.4.1.tar.gz", hash = "sha256:d765430bf0f87a82311da7278e3e24148e854802fe765e6bc608383f059b2cb9", size = 202924, upload-time = "2026-07-22T19:51:31.037Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/7c/b43f62a8246364704ba9335c94ad278c784879017076d5e04572e7eb91fc/quax-0.4.3.tar.gz", hash = "sha256:962f907f9aa8d41a09330e060897af6e6f10d47fc9ff15de163ccfa550f6eed3", size = 203771, upload-time = "2026-08-04T21:14:00.316Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/f4/71ff3476add83f10d17f5e2aaa7d6d48c0aabed39150b2630e1c523564a0/quax-0.4.1-py3-none-any.whl", hash = "sha256:1973f80b5f0e9687253e67ed766299226e4acbd986ada2e566db0f85bfb44b4e", size = 58940, upload-time = "2026-07-22T19:51:29.713Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/80/e64007939af7c63575966fc5b4d5dedd93b60c16b675cc313854d3bd42c9/quax-0.4.3-py3-none-any.whl", hash = "sha256:09de449d07ddfc8b20c2f942efa3b406e64554aea4801a48decdaef268db57d4", size = 59424, upload-time = "2026-08-04T21:13:58.915Z" },
 ]
 
 [[package]]
 name = "quax-blocks"
-version = "0.4.1"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jax" },
     { name = "jaxlib" },
     { name = "jaxtyping" },
     { name = "optype" },
+    { name = "packaging" },
     { name = "plum-dispatch" },
     { name = "quax" },
     { name = "quaxed" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2f/e2/435c5e18e41bfa4c4fe93911111cd2517c7f3a309519a30b885411260ed8/quax_blocks-0.4.1.tar.gz", hash = "sha256:d41cb943fe53a8098cd3a4671088f77f1e02050e16f637c55dd845e926bb2d2a", size = 71821, upload-time = "2026-05-05T04:52:24.191Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/45/40/a9197e785f32ab31037266f4834d44d36f1ea8676f52f1af00a719c802df/quax_blocks-0.5.0.tar.gz", hash = "sha256:874effa5777aaf48a8bc1a2ef5397d93131ac3f00166b69da5d1d5f7e71232ae", size = 138091, upload-time = "2026-07-31T22:50:02.793Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/21/efd636c4243aaaff94ad175ee9726a343f690686c098e4b507f96e9c5329/quax_blocks-0.4.1-py3-none-any.whl", hash = "sha256:7931cae95556b47f6eb3a2331493b62222ed7a4724c46120b1c80d9dafde027d", size = 16204, upload-time = "2026-05-05T04:52:22.865Z" },
+    { url = "https://files.pythonhosted.org/packages/00/e2/f8e50cc72cf5e92d7056d70d396dbee01172133bd081d6d85026c56916c8/quax_blocks-0.5.0-py3-none-any.whl", hash = "sha256:03e9deba2d6c6b51be47108ec52e4b991b7f466529aadab4abddf6fa68be2d60", size = 24809, upload-time = "2026-07-31T22:50:01.726Z" },
 ]
 
 [[package]]
@@ -3380,7 +3381,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "2.0.0"
+version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -3398,13 +3399,12 @@ dependencies = [
     { name = "quaxed" },
     { name = "traitlets" },
     { name = "unxt-api" },
+    { name = "unxts-api" },
     { name = "wadler-lindig" },
-    { name = "xmmutablemap" },
-    { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/ae/23a7be87dc7b41b62ffedb90aacb111af502e24fe67904211d25fda46b9d/unxt-2.0.0.tar.gz", hash = "sha256:b9e8bcef8ac7806d77240150731bb56ad4ff375cbbc6135ad1849063433dc783", size = 712203, upload-time = "2026-07-24T18:00:34.903Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/87/328c9a42e1cc348e2c5cb30b3df763e93153a9fbb3f1884df2721f2ed965/unxt-2.0.2.tar.gz", hash = "sha256:a05f33a5beffee28c858bc42c0947364ca7e099f3d6b311d8a28577fbb8c1b84", size = 724169, upload-time = "2026-08-17T16:53:07.865Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/9f/5125066c2f5ed409f20dc50bd519bf3596e9aa00ddfe00fb328d30d8e86e/unxt-2.0.0-py3-none-any.whl", hash = "sha256:7e1e6883fcb39054ff826a036c493dba0174f18c34174df023adab2d14c38174", size = 114257, upload-time = "2026-07-24T18:00:33.279Z" },
+    { url = "https://files.pythonhosted.org/packages/56/b9/07f352bea2f4820543f7c365e239a636b5a0cf2d564e1cc7c10500906bab/unxt-2.0.2-py3-none-any.whl", hash = "sha256:076c538293eef4dcf8a4cbc55a8097108bffbd1f33abac743ad5b5f200a1051b", size = 119166, upload-time = "2026-08-17T16:53:06.364Z" },
 ]
 
 [[package]]
@@ -3731,15 +3731,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/9f/a6/c4043eb00f297956a5447109985f41fabb0adbbf80786a21c2949f798ba4/xmmutablemap-0.2.1.tar.gz", hash = "sha256:38a881b0fcc54352e2751628d11519d023bc6677e978483736f8f51b45c7147f", size = 97896, upload-time = "2025-10-22T01:22:00.219Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/99/89/4628be42c56e0063b2158a468fc0de3e21285800f8cab07f2d3be684c763/xmmutablemap-0.2.1-py3-none-any.whl", hash = "sha256:002f97986e1cc343d362e38eae62a0a51ca7b76bd3b1de0f70a8f05dbe2b8c5c", size = 7584, upload-time = "2025-10-22T01:21:58.821Z" },
-]
-
-[[package]]
-name = "zeroth"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/93/56/6cb5f7d42030b6be13e2df2933770893dc47e9f3bf856c54b3aa24494063/zeroth-1.1.0.tar.gz", hash = "sha256:e57cd4dba6a2be404da3dfdff487a46a5ad9b278718ffb636af9a81a323e54c7", size = 132502, upload-time = "2026-02-03T01:10:57.645Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/db/0f740959563e8b7836d9c335e889653ccfca97c4e4661ec19dec0744a3af/zeroth-1.1.0-py3-none-any.whl", hash = "sha256:71ddd51a06c0a3552dc0f7e885f5c9932b25be47d1d9ec435a4ca6033e59f13a", size = 4759, upload-time = "2026-02-03T01:10:56.095Z" },
 ]
 
 [[package]]

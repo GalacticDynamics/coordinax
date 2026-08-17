@@ -102,7 +102,9 @@ def add_p_abstractdistances(
     if x_validated is None or (x_validated and y_validated):
         return type(x)._make(total, x.unit)
 
-    return type(x)(total, x.unit, check_negative=x_validated)
+    # `x_validated is not None` above already established that this kind takes
+    # `check_negative`; ty cannot narrow `type(x)` through a `getattr` guard.
+    return type(x)(total, x.unit, check_negative=x_validated)  # ty: ignore[unknown-argument]
 
 
 # ==============================================================================
