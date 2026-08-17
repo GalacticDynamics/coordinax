@@ -11,6 +11,7 @@ from typing import Any, cast
 import jax
 import jax.numpy as jnp
 import numpy as np
+import pytest
 
 import unxt as u
 
@@ -345,3 +346,18 @@ class TestTangentMapSemanticPreservation:
         at = {"x": jnp.array(1), "y": jnp.array(0)}
         result = cxr.tangent_map(v, cxc.cart2d, cxr.coord_acc, cxc.polar2d, at=at)
         np.testing.assert_allclose(result["r"], 1, atol=1e-6)
+
+
+class TestTangentMapMixedCDict:
+    """A CDict mixing Quantity and bare-Array components is rejected."""
+
+    def test_mixed_cdict_raises(self) -> None:
+        """Mixing a unitful and a bare component is ambiguous, so it errors.
+
+        Before this guard the bare-array branch stripped the unit off the
+        `unxt.Quantity` component and returned a silently wrong number.
+        """
+        v = {"x": u.Q(1.0, "km"), "y": jnp.array(0.0)}
+        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        with pytest.raises(TypeError, match="mixed CDict"):
+            cxr.tangent_map(v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, at=at)

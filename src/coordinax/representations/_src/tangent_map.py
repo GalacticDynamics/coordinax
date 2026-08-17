@@ -58,6 +58,8 @@ def _apply_jac(
     {class}`~unxt.AbstractQuantity`, ``v`` is packed into a 1-D
     {class}`~unxts.linalg.QuantityMatrix` and the result is computed
     via ``qnp.matmul(J, v_qm)``, which handles per-element unit conversion.
+    A *mixed* ``v`` raises {class}`TypeError`, matching
+    {func}`~coordinax.manifolds.norm`.
 
     Parameters
     ----------
@@ -77,10 +79,18 @@ def _apply_jac(
         Tangent vector components in the output chart.
 
     """
-    if all(isinstance(v[k], u.AbstractQuantity) for k in from_components):
+    qty_flags = [isinstance(v[k], u.AbstractQuantity) for k in from_components]
+    if all(qty_flags):
         v_qm: ul.QM = cxcapi.carray(v, from_components)  # ty: ignore[invalid-assignment]
         w = qnp.matmul(J, v_qm)  # (n_out,) QuantityMatrix
         return {key: u.Q(w.value[i], w.unit[i]) for i, key in enumerate(to_components)}
+
+    if any(qty_flags):
+        raise TypeError(
+            "tangent_map(): mixed CDict with both Quantity and bare Array values "
+            "is not supported. All components must be either all Quantity or all "
+            "bare Array."
+        )
 
     v_arr = jnp.stack([jnp.asarray(v[k]) for k in from_components])
     # When J is a QuantityMatrix, use J.value to avoid the Quax fallback path

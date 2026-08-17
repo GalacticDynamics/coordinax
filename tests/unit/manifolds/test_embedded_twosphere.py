@@ -54,7 +54,7 @@ class TestEmbeddedTwosphereAmbient:
         p = {"theta": jnp.asarray(jnp.pi / 2), "phi": jnp.asarray(0.0)}
         out = cxm.pt_embed(p, m, usys=u.unitsystems.si)
         assert set(out) == {"x", "y", "z"}
-        np.testing.assert_allclose(np.asarray(out["x"]), 2.0, atol=1e-6)
+        np.testing.assert_allclose(u.ustrip("m", out["x"]), 2.0, atol=1e-6)
 
     def test_non_singleton_spherical_ambient_takes_spherical_path(self) -> None:
         """A non-singleton Spherical3D ambient still embeds to spherical coords.

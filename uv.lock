@@ -628,7 +628,7 @@ requires-dist = [
     { name = "quax-blocks", specifier = ">=0.4.1" },
     { name = "quaxed", specifier = ">=0.10.5" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
-    { name = "unxt", specifier = ">=2.0.1" },
+    { name = "unxt", specifier = ">=2.0.2" },
     { name = "unxts-linalg", specifier = ">=2.0.3" },
     { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
@@ -3381,7 +3381,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "2.0.1"
+version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -3402,9 +3402,9 @@ dependencies = [
     { name = "unxts-api" },
     { name = "wadler-lindig" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/2f/dc699ba80e17a36d987783bcc80cc05619332da0440da4d7b33d5b038c3a/unxt-2.0.1.tar.gz", hash = "sha256:dcb0738821037a0dc96bcf170fa4c49f215dc440cfcbf91c3e2a586c5fd210d1", size = 723138, upload-time = "2026-08-15T08:29:04.845Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/87/328c9a42e1cc348e2c5cb30b3df763e93153a9fbb3f1884df2721f2ed965/unxt-2.0.2.tar.gz", hash = "sha256:a05f33a5beffee28c858bc42c0947364ca7e099f3d6b311d8a28577fbb8c1b84", size = 724169, upload-time = "2026-08-17T16:53:07.865Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/ad/366e36dec12b60302dfa54a2eab8567b024de8be3cf307f0f7fd82905539/unxt-2.0.1-py3-none-any.whl", hash = "sha256:3fb5a74eff91c522f9bc7fb0072683762ac7394318670ba9daad30b1695948dc", size = 118564, upload-time = "2026-08-15T08:29:02.92Z" },
+    { url = "https://files.pythonhosted.org/packages/56/b9/07f352bea2f4820543f7c365e239a636b5a0cf2d564e1cc7c10500906bab/unxt-2.0.2-py3-none-any.whl", hash = "sha256:076c538293eef4dcf8a4cbc55a8097108bffbd1f33abac743ad5b5f200a1051b", size = 119166, upload-time = "2026-08-17T16:53:06.364Z" },
 ]
 
 [[package]]
