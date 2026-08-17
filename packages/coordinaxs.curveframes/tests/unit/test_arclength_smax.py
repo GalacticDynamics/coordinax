@@ -117,6 +117,60 @@ def test_s_max_is_fine_after_binding_time_with_at_time() -> None:
 
 
 # --------------------------------------------------------------------------
+# Units are converted at every boundary, never assumed.
+#
+# The reparametrisation strips `s`, `tau_0` and `s_max` to bare floats to hand
+# to `diffrax`, and rewraps the result. Every one of those must go through
+# `ustrip(unit)`, which *converts*; a raw `.value` read would return whatever
+# number happened to be stored and silently mean a different length. Since
+# unxt 2.0.2 a bare `jnp.asarray(Quantity)` raises rather than stripping
+# silently, so these also pin that no such call sits on these paths.
+
+
+def test_s_and_s_max_are_converted_not_assumed() -> None:
+    """Same physical query in km and in m must give the same point.
+
+    Fails if any of the three strip sites (`_solve_tau`'s `s`,
+    `_eval_tau_dense`'s `s`/`s_max`) reads a raw stored value instead of
+    converting -- a 1000x error, not a rounding one.
+    """
+    arc = cxfc.ArcLength(helix, "s")
+    want = arc(u.Q(2.0, "km")).ustrip("km")
+
+    assert jnp.allclose(arc(u.Q(2000.0, "m")).ustrip("km"), want, atol=1e-9)
+
+    # And across the precompute, in both directions of unit mismatch.
+    for s_max, s in (
+        (u.Q(10.0, "km"), u.Q(2000.0, "m")),
+        (u.Q(10000.0, "m"), u.Q(2.0, "km")),
+    ):
+        got = cxfc.ArcLength(helix, "s", s_max=s_max)(s).ustrip("km")
+        assert jnp.allclose(got, want, atol=1e-8), (s_max, s, got, want)
+
+
+def test_the_jvp_tangent_carries_s_own_unit() -> None:
+    """d/ds in metres must be exactly 1/1000 of d/ds in km.
+
+    `_tau_of_s_jvp` subtracts `dS_val` from `ds_val` without converting,
+    relying on both being in `s.unit` -- `_arclength_between` integrates in
+    it, and a JVP tangent inherits its primal's unit because a `Quantity`
+    keeps its unit in the treedef, not the leaf. Fails if either half stops
+    being true, which a plain same-unit gradient test would not catch.
+    """
+    arc = cxfc.ArcLength(helix, "s")
+    g_km = jax.grad(lambda sv: arc(u.Q(sv, "km")).ustrip("km")[2])(2.0)
+    g_m = jax.grad(lambda sv: arc(u.Q(sv, "m")).ustrip("km")[2])(2000.0)
+    assert jnp.allclose(g_m, g_km / 1000.0, rtol=1e-6), (g_m, g_km)
+
+    h = 1e-6
+    fd = (
+        arc(u.Q(2.0 + h, "km")).ustrip("km")[2]
+        - arc(u.Q(2.0 - h, "km")).ustrip("km")[2]
+    ) / (2 * h)
+    assert jnp.allclose(g_km, fd, rtol=1e-5), (g_km, fd)
+
+
+# --------------------------------------------------------------------------
 # The domain margin: solved data just past each end, and a raise beyond it.
 #
 # Fails if `_eval_tau_dense`'s margin regresses to an exact `[0, s_max]` gate
@@ -323,7 +377,10 @@ def test_chart_round_trip_at_and_near_the_tau_zero_boundary() -> None:
     bishop = cxfc.BishopBuilder(arc, "km")
     ch = cxfc.TubularChart(bishop, tau_bounds=(u.Q(0.0, "km"), s_max))
 
-    s_probe_vals = (0.0, 1e-9, 0.05, 1.0, float(s_max.value) - 1e-6)
+    # `ustrip("km")`, not `.value`: the probes are re-wrapped as km below, so
+    # reading the raw stored number would silently mean something else the
+    # moment `s_max` is written in any other length unit.
+    s_probe_vals = (0.0, 1e-9, 0.05, 1.0, float(s_max.ustrip("km")) - 1e-6)
     for s_val in s_probe_vals:
         on_curve = ch.builder.location(u.Q(s_val, "km"))
         d = {k: on_curve[i] for i, k in enumerate(("x", "y", "z"))}
