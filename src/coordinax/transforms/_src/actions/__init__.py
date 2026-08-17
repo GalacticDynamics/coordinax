@@ -8,6 +8,7 @@ from .composed import *
 from .composite import *
 from .constants import *
 from .custom_types import *
+from .general_linear import *
 from .identity import *
 from .linear import *
 from .lorentz import *

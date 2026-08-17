@@ -236,3 +236,79 @@ class TestScaleMerge:
         got = cxfm.simplify(s[0] | s[1] | s[2])
         assert isinstance(got, cxfm.Scale)
         assert jnp.allclose(jnp.diag(got.matrix), jnp.asarray([30.0, 30.0, 30.0]))
+
+
+class TestLinearFusion:
+    """Mixed linear operators fuse into `Linear`, carrying their group along.
+
+    Same-type rules are more specific and still win, so `Rotate | Rotate`
+    keeps returning a `Rotate` rather than widening to `Linear`.
+    """
+
+    R = cxfm.Rotate.from_euler("z", u.Q(30, "deg"))
+    S = cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 4.0]))
+    RF = cxfm.Reflect.from_normal([0.0, 0.0, 1.0])
+
+    def test_mixed_pair_fuses_to_linear(self):
+        got = cxfm.simplify(self.R | self.S)
+        assert isinstance(got, cxfm.Linear)
+
+    def test_same_type_rules_still_win(self):
+        """`Linear` is the fallback, not a replacement for the tighter types."""
+        r2 = cxfm.Rotate.from_euler("x", u.Q(45, "deg"))
+        assert isinstance(cxfm.simplify(self.R | r2), cxfm.Rotate)
+        s2 = cxfm.Scale.from_factors(jnp.asarray([5.0, 7.0, 11.0]))
+        assert isinstance(cxfm.simplify(self.S | s2), cxfm.Scale)
+
+    def test_fused_matches_sequential_application(self):
+        p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        chain = self.R | self.S | self.RF
+        fused = cxfm.simplify(chain)
+        seq = self.RF(self.S(self.R(p)))
+        for k in ("x", "y", "z"):
+            assert jnp.allclose(fused(p)[k].value, seq[k].value, atol=1e-12)
+
+    def test_chain_collapses_to_one_op(self):
+        got = cxfm.simplify(self.R | self.S | self.RF)
+        assert isinstance(got, cxfm.Linear)
+
+    def test_group_is_the_least_common_supergroup(self):
+        """A rotation with a reflection is still orthogonal, not merely affine."""
+        got = cxfm.simplify(self.R | self.RF)
+        names = {g.__name__ for g in got.groups()}
+        assert "OrthogonalGroup" in names
+        assert "AffineGroup" not in names
+
+    def test_group_widens_only_as_far_as_needed(self):
+        got = cxfm.simplify(self.R | self.S)
+        assert {g.__name__ for g in got.groups()} == {
+            "AffineGroup",
+            "DiffeomorphismGroup",
+        }
+
+    def test_inverse_round_trips_and_keeps_the_group(self):
+        p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        fused = cxfm.simplify(self.R | self.S)
+        back = fused.inverse(fused(p))
+        for k, want in zip(("x", "y", "z"), (1.0, 2.0, 3.0), strict=True):
+            assert jnp.allclose(back[k].value, want, atol=1e-12)
+        assert fused.inverse.groups() == fused.groups()
+
+    def test_mismatched_dimensions_do_not_merge(self):
+        """A 3x3 beside a 4x4 has no product, so the pair stays separate."""
+        got = cxfm.simplify(self.R | cxfm.LorentzBoost([0.6, 0.0, 0.0]))
+        assert isinstance(got, cxfm.Composed)
+        assert len(got.transforms) == 2
+
+    def test_identity_matrix_collapses_to_identity(self):
+        assert cxfm.simplify(cxfm.Linear(jnp.eye(3))) is cxfm.identity
+
+    def test_identity_matrix_is_kept_when_not_approx(self):
+        """The identity check inspects values, so `approx=False` must skip it."""
+        got = cxfm.simplify(cxfm.Linear(jnp.eye(3)), approx=False)
+        assert isinstance(got, cxfm.Linear)
+
+    def test_from_array_builds_a_linear(self):
+        got = cxfm.Linear.from_(jnp.eye(3) * 2.0)
+        assert isinstance(got, cxfm.Linear)
+        assert jnp.allclose(got.matrix, jnp.eye(3) * 2.0)
