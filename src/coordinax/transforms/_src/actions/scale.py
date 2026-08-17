@@ -23,6 +23,10 @@ from coordinax.transforms._src import groups
 SMatrix: TypeAlias = Shaped[Array, " N N"]
 
 _MSG_SINGULAR: Final = "Scale matrix must be invertible."
+_MSG_NOT_DIAGONAL: Final = (
+    "Scale requires a diagonal matrix -- it scales the axes, and nothing else. "
+    "For a general linear map use `Linear`."
+)
 
 
 @final
@@ -35,8 +39,34 @@ class Scale(AbstractLinearTransform):
     x \mapsto Sx,
     $$
 
-    where ``S`` is an invertible scaling matrix. The common case is diagonal
-    anisotropic scaling with per-axis factors.
+    where ``S`` is an invertible **diagonal** matrix: anisotropic scaling with
+    one factor per axis.
+
+    Diagonality is the whole content of the type. A `Scale` holding an
+    off-diagonal matrix would be a general linear map wearing a name that
+    promises otherwise, and `isinstance(op, Scale)` would stop meaning
+    anything. `~coordinax.transforms.Linear` is the type for a general matrix.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax.transforms as cxfm
+
+    >>> jnp.diagonal(cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 4.0])).matrix)
+    Array([2., 3., 4.], dtype=float64)
+
+    A matrix that is already diagonal is accepted:
+
+    >>> jnp.diagonal(cxfm.Scale(jnp.diag(jnp.asarray([2.0, 1.0, 0.5]))).matrix)
+    Array([2. , 1. , 0.5], dtype=float64)
+
+    One that is not is refused, and points at the type that fits:
+
+    >>> try:
+    ...     cxfm.Scale(jnp.asarray([[1.0, 0.5], [0.0, 1.0]])).matrix
+    ... except Exception as e:
+    ...     print("Scale requires a diagonal matrix" in str(e))
+    True
 
     """
 
@@ -66,12 +96,30 @@ class Scale(AbstractLinearTransform):
 
     @property
     def inverse(self) -> "Scale":
-        """Return the inverse scaling transform."""
-        return type(self)(jnp.linalg.inv(self.S))
+        """Return the inverse scaling transform.
+
+        Reciprocals of the diagonal, not `jnp.linalg.inv`: O(n) rather than
+        O(n^3), and exact where the general solve is not. Going through
+        `matrix` rather than the raw field also means a malformed `S` is caught
+        here with the same message as everywhere else, instead of surfacing as
+        a raw LAPACK shape error.
+        """
+        return type(self)(jnp.diag(1.0 / jnp.diagonal(self.matrix)))
 
     @property
     def _raw_matrix(self) -> Any:
-        return self.S
+        return self._validate_diagonal(self.S)
+
+    def _validate_diagonal(self, matrix: Any, /) -> Any:
+        """Check the matrix has no off-diagonal entries.
+
+        Deferred like the singular check so it survives `jit`: a plain `bool`
+        on a traced value raises `TracerBoolConversionError`.
+        """
+        if matrix.ndim != 2:  # let the base's square check produce the message
+            return matrix
+        off = matrix - jnp.diag(jnp.diagonal(matrix))
+        return eqx.error_if(matrix, jnp.any(off != 0), _MSG_NOT_DIAGONAL)
 
 
 @Scale.from_.dispatch  # ty: ignore[unresolved-attribute]
