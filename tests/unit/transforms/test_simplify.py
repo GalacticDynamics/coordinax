@@ -176,3 +176,36 @@ def test_approx_false_works_under_jit() -> None:
 def test_default_simplify_is_not_jit_safe() -> None:
     with pytest.raises(jax.errors.TracerBoolConversionError):
         jax.jit(lambda op: cxfm.simplify(op))(cxfm.Rotate(jnp.eye(3)))
+
+
+class TestLorentzBoostSimplify:
+    """`simplify` dispatches per operator and has no generic fallback.
+
+    So a missing rule is not a missed optimisation -- it is a crash. Every
+    other transform had one; `LorentzBoost` did not, which took out any
+    `Composed` containing a boost as well.
+    """
+
+    def test_boost_with_velocity_is_returned_unchanged(self):
+        op = cxfm.LorentzBoost([0.6, 0.0, 0.0])
+        assert isinstance(cxfm.simplify(op), cxfm.LorentzBoost)
+
+    def test_zero_boost_collapses_to_identity(self):
+        assert cxfm.simplify(cxfm.LorentzBoost([0.0, 0.0, 0.0])) is cxfm.identity
+
+    def test_zero_boost_is_kept_when_not_approx(self):
+        """The zero check inspects values, so `approx=False` must skip it."""
+        op = cxfm.LorentzBoost([0.0, 0.0, 0.0])
+        assert isinstance(cxfm.simplify(op, approx=False), cxfm.LorentzBoost)
+
+    def test_composed_containing_a_boost_simplifies(self):
+        """The regression: this raised `NotFoundLookupError`."""
+        rot = cxfm.Rotate.from_euler("z", u.Q(30, "deg"))
+        got = cxfm.simplify(rot | cxfm.LorentzBoost([0.6, 0.0, 0.0]))
+        assert isinstance(got, cxfm.Composed)
+        assert len(got.transforms) == 2
+
+    def test_boost_is_preserved_through_simplification(self):
+        """Simplifying must not quietly change what the boost does."""
+        op = cxfm.LorentzBoost([0.6, 0.0, 0.0])
+        assert jnp.allclose(cxfm.simplify(op).matrix, op.matrix)

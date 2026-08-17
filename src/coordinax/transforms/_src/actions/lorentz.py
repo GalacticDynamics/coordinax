@@ -8,10 +8,13 @@ from jaxtyping import Array, Shaped
 from typing import Any, final
 
 import equinox as eqx
+import plum
 
 import quaxed.numpy as jnp
 import unxt as u
 
+from .base import AbstractTransform
+from .identity import identity
 from .linear import AbstractLinearTransform
 from coordinax.transforms._src import groups
 
@@ -320,3 +323,39 @@ class LorentzBoost(AbstractLinearTransform):
         top_row = jnp.concatenate([gamma[None], gamma * beta])
         bottom = jnp.concatenate([(gamma * beta)[:, None], spatial], axis=1)
         return jnp.concatenate([top_row[None, :], bottom], axis=0)
+
+
+@plum.dispatch
+def simplify(
+    op: LorentzBoost, /, *, approx: bool = True, **kw: Any
+) -> AbstractTransform:
+    """Simplify a Lorentz boost to identity when its velocity is zero.
+
+    Every other transform has had this rule; `LorentzBoost` did not, and
+    `simplify` dispatches per operator with no generic fallback -- so
+    ``simplify`` of a boost, or of any `~coordinax.transforms.Composed`
+    containing one, raised `NotFoundLookupError` rather than returning the
+    operator unchanged.
+
+    The zero-velocity check inspects values, so it is skipped when
+    ``approx=False``; the point of the rule is that the ``approx=False`` path
+    now returns ``op`` instead of raising.
+
+    Examples
+    --------
+    >>> import coordinax.transforms as cxfm
+
+    A boost with velocity is left alone:
+
+    >>> cxfm.simplify(cxfm.LorentzBoost([0.6, 0.0, 0.0]))
+    LorentzBoost(...)
+
+    A zero boost is the identity:
+
+    >>> cxfm.simplify(cxfm.LorentzBoost([0.0, 0.0, 0.0]))
+    Identity()
+
+    """
+    if approx and jnp.allclose(op.beta, jnp.zeros_like(op.beta), **kw):
+        return identity
+    return op
