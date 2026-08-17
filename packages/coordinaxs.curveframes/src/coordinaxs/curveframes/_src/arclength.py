@@ -62,41 +62,32 @@ def _speed(
     return jnp.linalg.norm(dcurve(tau_q).ustrip(s_unit / tau_unit))
 
 
-def _rhs_sigma(sigma: Any, tau_flat: Any, args: Any) -> Any:
-    r"""$d\tau/d\sigma = s/\|\gamma'(\tau)\|$, the `_solve_tau` right-hand side."""
-    del sigma
-    curve, s_val, tau_unit, s_unit = args
-    return s_val / _speed(curve, tau_unit, s_unit, u.Q(tau_flat, tau_unit))
+def _rhs_dtau(x: Any, tau_flat: Any, args: Any) -> Any:
+    r"""$d\tau/dx = \text{scale}/\|\gamma'(\tau)\|$.
 
-
-def _rhs_s(sigma: Any, tau_flat: Any, args: Any) -> Any:
-    r"""$d\tau/ds = 1/\|\gamma'(\tau)\|$, the `_solve_tau_dense` right-hand side."""
-    del sigma
-    curve, tau_unit, s_unit = args
-    return 1.0 / _speed(curve, tau_unit, s_unit, u.Q(tau_flat, tau_unit))
+    ``scale`` is what makes this serve both solves: ``s`` when the integration
+    variable is the rescaled $\sigma \in [0, 1]$ (`_solve_tau`), and ``1.0``
+    when it is $s$ itself (`_solve_tau_dense`).
+    """
+    del x
+    curve, scale, tau_unit, s_unit = args
+    return scale / _speed(curve, tau_unit, s_unit, u.Q(tau_flat, tau_unit))
 
 
 def _rhs_quad(sigma: Any, s_flat: Any, args: Any) -> Any:
-    r"""$dS/d\sigma = \Delta\tau\,\|\gamma'\|$, the `_arclength_between` integrand."""
     del s_flat
     curve, tau_0_val, dtau, tau_unit, s_unit = args
     tau_q = u.Q(tau_0_val + sigma * dtau, tau_unit)
     return dtau * _speed(curve, tau_unit, s_unit, tau_q)
 
 
-#: The ODE terms, built **once** at import.
-#:
-#: Everything that varies per call -- the curve, the requested ``s``, the units
-#: -- rides in through `diffrax`'s ``args`` rather than being captured in a
-#: closure. That is a performance contract, not a style choice:
+#: The ODE terms, built **once** at import. Everything that varies per call
+#: rides in through `diffrax`'s ``args`` instead of a closure:
 #: `diffraxtra.DiffEqSolver` is filter-jitted with the term in its cache key,
 #: and a closure hashes by identity, so a term rebuilt per call misses the
-#: cache and **recompiles the whole integrator every time**. Measured on a
-#: helix, that was ~390 ms per call against ~0.3 ms of actual integration.
-#: Curve parameters stay correct because they arrive as traced pytree leaves,
-#: so a changed `theta` retraces nothing and is never baked in.
-_TERM_SIGMA = dfx.ODETerm(_rhs_sigma)
-_TERM_S = dfx.ODETerm(_rhs_s)
+#: cache and **recompiles the whole integrator every time** -- measured at
+#: ~390 ms per call against ~0.3 ms of actual integration.
+_TERM_DTAU = dfx.ODETerm(_rhs_dtau)
 _TERM_QUAD = dfx.ODETerm(_rhs_quad)
 
 
@@ -120,7 +111,7 @@ def _solve_tau(
     """
     s_unit = s.unit
     args = (curve, s.ustrip(s_unit), tau_unit, s_unit)
-    sol = diffeqsolver(_TERM_SIGMA, 0.0, 1.0, None, tau_0.ustrip(tau_unit), args)
+    sol = diffeqsolver(_TERM_DTAU, 0.0, 1.0, None, tau_0.ustrip(tau_unit), args)
     return u.Q(sol.ys[-1], tau_unit)
 
 
@@ -153,14 +144,16 @@ def _solve_tau_dense(
     tau_0_val = tau_0.ustrip(tau_unit)
     s_max_val = s_max.ustrip(s_unit)
 
-    args = (curve, tau_unit, s_unit)
+    # scale = 1.0: here the integration variable is `s` itself, not a rescaled
+    # sigma, so d(tau)/ds is just the reciprocal speed.
+    args = (curve, 1.0, tau_unit, s_unit)
     margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
 
     # Backward from the known tau(0) to the low edge, then forward across the
     # whole extended range from there.
-    tau_lo = diffeqsolver(_TERM_S, 0.0, -margin, None, tau_0_val, args).ys[-1]
+    tau_lo = diffeqsolver(_TERM_DTAU, 0.0, -margin, None, tau_0_val, args).ys[-1]
     sol = diffeqsolver(
-        _TERM_S,
+        _TERM_DTAU,
         -margin,
         s_max_val + margin,
         None,

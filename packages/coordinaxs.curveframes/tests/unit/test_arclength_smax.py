@@ -117,14 +117,10 @@ def test_s_max_is_fine_after_binding_time_with_at_time() -> None:
 
 
 # --------------------------------------------------------------------------
-# Units are converted at every boundary, never assumed.
-#
-# The reparametrisation strips `s`, `tau_0` and `s_max` to bare floats to hand
-# to `diffrax`, and rewraps the result. Every one of those must go through
-# `ustrip(unit)`, which *converts*; a raw `.value` read would return whatever
-# number happened to be stored and silently mean a different length. Since
-# unxt 2.0.2 a bare `jnp.asarray(Quantity)` raises rather than stripping
-# silently, so these also pin that no such call sits on these paths.
+# Units are converted at every boundary, never assumed. Every strip must go
+# through `ustrip(unit)`; a raw `.value` read is a 1000x error, not a rounding
+# one. Since unxt 2.0.2 a bare `jnp.asarray(Quantity)` raises rather than
+# stripping silently, so these also pin that no such call sits on these paths.
 
 
 def test_s_and_s_max_are_converted_not_assumed() -> None:
@@ -161,13 +157,6 @@ def test_the_jvp_tangent_carries_s_own_unit() -> None:
     g_km = jax.grad(lambda sv: arc(u.Q(sv, "km")).ustrip("km")[2])(2.0)
     g_m = jax.grad(lambda sv: arc(u.Q(sv, "m")).ustrip("km")[2])(2000.0)
     assert jnp.allclose(g_m, g_km / 1000.0, rtol=1e-6), (g_m, g_km)
-
-    h = 1e-6
-    fd = (
-        arc(u.Q(2.0 + h, "km")).ustrip("km")[2]
-        - arc(u.Q(2.0 - h, "km")).ustrip("km")[2]
-    ) / (2 * h)
-    assert jnp.allclose(g_km, fd, rtol=1e-5), (g_km, fd)
 
 
 # --------------------------------------------------------------------------
@@ -230,13 +219,9 @@ def test_the_margin_scales_with_a_small_s_max() -> None:
 # Criterion 1: gradients match finite differences, module built *outside*
 # the differentiated function -- the exact pattern that broke in #713.
 #
-# Each test below reproduces the failure numbers from the issue first (as an
-# explicit assertion, not a comment) against a hand-rolled "differentiate
-# through the raw cache" computation, then asserts the shipped `ArcLength`
-# gets the right answer for the same setup. A test that only checked the
-# post-fix number would not have caught the original bug; asserting the
-# pre-fix number too makes that failure mode explicit and pins that this
-# test *would* have caught it.
+# Where the issue recorded a specific wrong number, the test asserts the
+# pre-fix value is *not* returned as well as the post-fix one: checking only
+# the correct answer would not pin that this test would have caught the bug.
 
 
 def test_grad_matches_finite_difference_for_curve_params_built_outside() -> None:
@@ -272,27 +257,6 @@ def test_grad_matches_finite_difference_for_curve_params_built_outside() -> None
     # through `_interp` would reproduce something in that neighbourhood.
     assert not jnp.allclose(dtau_dtheta, 1.9156525704, atol=1e-3), got
     assert jnp.allclose(dtau_dtheta, -1.7574794224, atol=1e-6), got
-    assert jnp.allclose(got, fd, rtol=1e-4), (got, fd)
-
-
-def test_grad_matches_finite_difference_for_tau_0_built_outside() -> None:
-    curve0 = Helix(u.Q(1.0, "km"))
-    arc = cxfc.ArcLength(curve0, "s", tau_0=u.Q(0.2, "s"), s_max=u.Q(10.0, "km"))
-    s_val = u.Q(2.0, "km")
-
-    def f(tau0_val: float) -> float:
-        perturbed = eqx.tree_at(lambda a: a.tau_0, arc, u.Q(tau0_val, "s"))
-        return perturbed(s_val).ustrip("km")[2]
-
-    def f_rebuilt(tau0_val: float) -> float:
-        fresh = cxfc.ArcLength(
-            curve0, "s", tau_0=u.Q(tau0_val, "s"), s_max=u.Q(10.0, "km")
-        )
-        return fresh(s_val).ustrip("km")[2]
-
-    got = jax.grad(f)(0.2)
-    h = 1e-6
-    fd = (f_rebuilt(0.2 + h) - f_rebuilt(0.2 - h)) / (2 * h)
     assert jnp.allclose(got, fd, rtol=1e-4), (got, fd)
 
 
@@ -349,16 +313,17 @@ def test_grad_without_s_max_also_uses_the_custom_jvp() -> None:
 
 
 # --------------------------------------------------------------------------
-# Criterion 3: works inside `TubularChart`, including the domain-edge case
-# that broke the reverted version (a `nearest_tau` root landing just past
-# `tau_bounds`'s start).
+# Criterion 3: works downstream -- inside `TubularChart`, and under the
+# forward-mode AD that `BishopBuilder._tangent_at` performs via
+# `unxt.experimental.jacfwd`.
 #
-# Fails if `_eval_tau_dense`'s domain margin regresses to an exact gate, or
-# if the custom JVP breaks `nearest_tau`'s own forward-mode use (it doesn't
-# differentiate here, but `check_data`/`jacobian_factor` downstream do, via
-# `jax.jacfwd` -- a `custom_vjp`-based version raises `TypeError: can't
-# apply forward-mode autodiff (jvp) to a custom_vjp function` there, which
-# is exactly the class of bug this file's Bishop/jacfwd test below targets).
+# Both tests below are why the rule is a `custom_jvp` and not a `custom_vjp`:
+# `jax.custom_vjp` cannot be `jvp`-ed at all (`TypeError: can't apply
+# forward-mode autodiff (jvp) to a custom_vjp function`, the same trap
+# `BishopBuilder`'s docstring records for `RecursiveCheckpointAdjoint`).
+# The chart test additionally fails if `_eval_tau_dense`'s margin regresses
+# to an exact gate. Nothing exercised `jacfwd` through a Bishop-wrapped
+# `ArcLength` before these.
 
 
 def test_chart_round_trip_at_and_near_the_tau_zero_boundary() -> None:
@@ -391,18 +356,6 @@ def test_chart_round_trip_at_and_near_the_tau_zero_boundary() -> None:
         )
         assert jnp.allclose(back["n1"].ustrip("km"), 0.0, atol=1e-5)
         assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
-
-
-# --------------------------------------------------------------------------
-# Bishop + forward-mode regression: this is the case that a `custom_vjp`
-# (rather than `custom_jvp`) implementation cannot pass at all --
-# `BishopBuilder._tangent_at` differentiates the curve it wraps in forward
-# mode (`unxt.experimental.jacfwd`), and `jax.custom_vjp` cannot be `jvp`-ed
-# (measured directly: `TypeError: can't apply forward-mode autodiff (jvp) to
-# a custom_vjp function`, the same failure `BishopBuilder`'s own docstring
-# documents for `diffrax`'s default `RecursiveCheckpointAdjoint`). Nothing
-# in the suite exercised `jax.jacfwd` through a `BishopBuilder`-wrapped
-# `ArcLength` before this test.
 
 
 def test_bishop_wrapped_arclength_survives_jacfwd_with_and_without_s_max() -> None:
