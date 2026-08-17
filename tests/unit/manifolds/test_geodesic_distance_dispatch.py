@@ -14,7 +14,7 @@ _NORTH = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
 _OTHER = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
 
 
-class TestSeparationDispatches:
+class TestGeodesicDistanceDispatches:
     """The manifold-level `geodesic_distance` accepts several input forms."""
 
     def test_chart_and_cdicts(self):
@@ -70,7 +70,7 @@ class TestSeparationDispatches:
         assert bool(qnp.isclose(d[1], qnp.sqrt(2.0)))
 
 
-class TestIndefiniteMetricSeparation:
+class TestIndefiniteMetricGeodesicDistance:
     """`geodesic_distance` inherits `norm`'s guard instead of returning ``nan``.
 
     Regression: a timelike pair used to yield ``Distance(nan, 'm')`` while a
@@ -97,7 +97,7 @@ class TestIndefiniteMetricSeparation:
         with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
             cxm.geodesic_distance(cxc.minkowskict, origin, self._event(ct, x))
 
-    def test_euclidean_separation_is_unaffected(self):
+    def test_euclidean_geodesic_distance_is_unaffected(self):
         """Positive control: the common Riemannian path is untouched."""
         a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}

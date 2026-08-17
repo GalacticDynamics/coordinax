@@ -3,8 +3,11 @@ r"""Measurements that need a timelike direction.
 The verbs here are gated on the metric having a **Lorentzian** signature
 $(-,+,\ldots,+)$ -- exactly one timelike direction -- expressed as the type
 `~coordinax.manifolds.AbstractLorentzianMetricField`.  Without such a direction
-there is no causal structure: the interval has the same sign for every pair, and there
-is nothing to classify, no proper time to elapse.
+there is no causal structure to read off the interval's sign: under a
+positive-definite metric that sign never varies, and under an indefinite metric
+with more than one timelike direction it varies without partitioning pairs into
+past, future, and elsewhere.  Either way there is nothing to classify, and no
+proper time to elapse.
 
 Why this namespace is named for the *signature* and not for "spacetime": the
 library already ships a spacetime that is **not** Lorentzian.

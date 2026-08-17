@@ -275,59 +275,59 @@ class TestPointEquivalence:
         assert not bool(qnp.all(cx.equivalent(t, t)))
 
 
-class TestPointSeparation:
-    """`geodesic_distance` measures the manifold-norm distance between two points."""
+class TestPointGeodesicDistance:
+    """`geodesic_distance` measures the shortest path along the manifold."""
 
-    def test_separation_euclidean(self):
-        """Separation is the straight-line (Cartesian) distance."""
+    def test_geodesic_distance_euclidean(self):
+        """Geodesic distance is the straight-line (Cartesian) distance."""
         p = cx.Point.from_([3.0, 0.0, 0.0], "m")
         q = cx.Point.from_([0.0, 4.0, 0.0], "m")
         d = cx.geodesic_distance(p, q)
         assert isinstance(d, cx.Distance)
         assert bool(qnp.isclose(d.ustrip("m"), 5.0))
 
-    def test_separation_is_chart_invariant(self):
-        """Separation does not depend on the chart of either operand."""
+    def test_geodesic_distance_is_chart_invariant(self):
+        """Geodesic distance does not depend on the chart of either operand."""
         p = cx.Point.from_([3.0, 0.0, 0.0], "m")
         q = cx.Point.from_([0.0, 4.0, 0.0], "m").cconvert(cxc.sph3d)
         assert bool(qnp.isclose(cx.geodesic_distance(p, q).ustrip("m"), 5.0))
 
-    def test_separation_is_unit_invariant(self):
-        """Separation does not depend on the component units."""
+    def test_geodesic_distance_is_unit_invariant(self):
+        """Geodesic distance does not depend on the component units."""
         p = cx.Point.from_([3.0, 0.0, 0.0], "m")
         q = cx.Point.from_([0.0, 0.004, 0.0], "km")
         assert bool(qnp.isclose(cx.geodesic_distance(p, q).ustrip("m"), 5.0))
 
-    def test_separation_elementwise_over_batch(self):
-        """Separation is evaluated element-wise over the batch."""
+    def test_geodesic_distance_elementwise_over_batch(self):
+        """Geodesic distance is evaluated element-wise over the batch."""
         p = cx.Point.from_([[3.0, 0, 0], [1, 0, 0]], "m")
         q = cx.Point.from_([[0.0, 4, 0], [0, 1, 0]], "m")
         d = cx.geodesic_distance(p, q)
         assert bool(qnp.isclose(d.ustrip("m")[0], 5.0))
         assert bool(qnp.isclose(d.ustrip("m")[1], qnp.sqrt(2.0)))
 
-    def test_separation_dimensionality_follows_manifold(self):
-        """2-D points give a 2-D distance -- no separate ``separation_3d``."""
+    def test_geodesic_distance_dimensionality_follows_manifold(self):
+        """2-D points give a 2-D distance -- no separate ``geodesic_distance_3d``."""
         p = cx.Point.from_([3.0, 0.0], "m")
         q = cx.Point.from_([0.0, 4.0], "m")
         assert bool(qnp.isclose(cx.geodesic_distance(p, q).ustrip("m"), 5.0))
 
-    def test_separation_different_frames_raises(self):
-        """Separation across frames is undefined without alignment."""
+    def test_geodesic_distance_different_frames_raises(self):
+        """Geodesic distance across frames is undefined without alignment."""
         p = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
         q = cx.Point.from_([0.0, 1.0, 0.0], "m", cxf.noframe)
         with pytest.raises(ValueError, match="frame"):
             cx.geodesic_distance(p, q)
 
-    def test_separation_different_manifolds_raises(self):
+    def test_geodesic_distance_different_manifolds_raises(self):
         """A 2-D and a 3-D point have no common manifold to measure on."""
         p = cx.Point.from_([3.0, 0.0], "m")
         q = cx.Point.from_([0.0, 4.0, 0.0], "m")
         with pytest.raises(ValueError, match="different manifolds"):
             cx.geodesic_distance(p, q)
 
-    def test_separation_unitless_components(self):
-        """Separation works for vectors with plain (unitless) array leaves."""
+    def test_geodesic_distance_unitless_components(self):
+        """Geodesic distance works for vectors with plain (unitless) array leaves."""
         p = cx.Point.from_({"x": 3.0, "y": 0.0, "z": 0.0}, cxc.cart3d)
         q = cx.Point.from_({"x": 0.0, "y": 4.0, "z": 0.0}, cxc.cart3d)
         assert bool(qnp.isclose(cx.geodesic_distance(p, q), 5.0))

@@ -81,12 +81,16 @@ def scale_factors(chart: Any, /, *args: Any, **kwargs: Any) -> Any:
 def geodesic_distance(*args: Any, **kwargs: Any) -> Any:
     """Distance between two points on a manifold.
 
-    The straight-line distance is the manifold `norm` of the two points'
-    coordinate difference, evaluated in the chart they are given in (exact for a
-    flat manifold).  Dispatches on the inputs: two `~coordinax.vectors.Point`
-    objects (chart/frame extracted automatically), or a ``chart`` / ``metric``
-    together with the two points as component dictionaries, packed quantities,
-    or bare arrays.
+    The length of the shortest path *along the manifold*: the straight line in
+    flat space, the great circle on a sphere.  It is computed from the
+    manifold's geometry, not from the coordinate difference, whose norm is
+    asymmetric on a curved manifold and so is not a distance at all.  A
+    manifold with no closed-form geodesic raises rather than approximating.
+
+    Dispatches on the inputs: two `~coordinax.vectors.Point` objects
+    (chart/frame extracted automatically), or a ``chart`` / ``metric`` together
+    with the two points as component dictionaries, packed quantities, or bare
+    arrays.
     """
     raise NotImplementedError  # pragma: no cover
 
@@ -517,11 +521,16 @@ def interval(*args: Any, **kwargs: Any) -> Any:
     """Signed squared interval between two points.
 
     ``interval`` is the metric quadratic form of the coordinate difference,
-    *without* the square root that `norm` and `geodesic_distance` take.  It is
-    therefore defined for every metric, including indefinite ones where
-    `geodesic_distance` has no real value: for a Riemannian metric it is the squared
-    geodesic_distance, and for a Lorentzian one its sign is the pair's causal
-    character.
+    *without* the square root that `norm` takes.  It is therefore defined for
+    every metric, including indefinite ones, where `norm` has no real value and
+    `geodesic_distance` refuses outright; for a Lorentzian metric its sign is
+    the pair's causal character.
+
+    It is a first-order quantity, not a squared distance: it equals
+    ``geodesic_distance**2`` only where the coordinate difference is itself the
+    geodesic, i.e. on a flat manifold in Cartesian coordinates.  On a curved
+    manifold the two differ -- on the unit sphere at a separation of ~0.92 rad,
+    by 13%.
     """
     raise NotImplementedError  # pragma: no cover
 

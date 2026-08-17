@@ -217,7 +217,7 @@ def test_jit_equivalent_across_a_parameterized_chart():
     assert f(DELTA)
 
 
-def test_jit_separation_in_parameterized_chart():
+def test_jit_geodesic_distance_in_parameterized_chart():
     """`geodesic_distance` compares the two operands' charts."""
 
     @jax.jit

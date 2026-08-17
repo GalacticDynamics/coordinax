@@ -13,8 +13,10 @@ time (timelike) or proper distance (spacelike).
 This is the quadratic form of the *coordinate difference*, with the metric
 evaluated **at the first point** ``a`` -- not a geodesic quantity, and not the
 square of `geodesic_distance`.  The two coincide only where the metric is
-constant along the path: on a flat manifold, including Minkowski, the case this
-module exists for.  On a curved manifold this is a first-order estimate, and it
+constant along the path -- a flat manifold *in Cartesian coordinates*, the
+Minkowski case this module exists for.  Flatness alone is not enough: on the
+plane in `~coordinax.charts.polar2d` the same pair gives 3.467 against a squared
+geodesic of 5.0.  On a curved manifold this is a first-order estimate, and it
 is asymmetric in ``a`` and ``b``; `geodesic_distance` is the symmetric,
 chart-invariant length, and is what to reach for when a distance is wanted.
 """
@@ -113,8 +115,10 @@ def interval(
 
     # The same contraction `norm` takes the square root of, evaluated at `a`.
     # Sharing it is what gives `interval` the unit handling it would otherwise
-    # have to restate -- and makes `geodesic_distance**2 == interval` hold by
-    # construction rather than by the test that asserts it.
+    # have to restate -- and makes `norm(diff)**2 == interval` hold by
+    # construction rather than by the test that asserts it. The identity is
+    # with `norm`, not `geodesic_distance`: on a curved manifold the coordinate
+    # difference is not the geodesic, so the two disagree.
     return quadratic_form(diff, chart, at=a, usys=usys, fname="interval")
 
 

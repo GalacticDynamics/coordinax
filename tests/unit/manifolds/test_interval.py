@@ -45,15 +45,45 @@ class TestInterval:
         assert not bool(jnp.isnan(got.ustrip("m2")))
         assert float(got.ustrip("m2")) < 0
 
-    def test_riemannian_interval_is_squared_separation(self):
-        """For a positive-definite metric the two agree, so nothing forks."""
+    def test_flat_interval_is_squared_geodesic_distance(self):
+        """In flat space the coordinate difference *is* the geodesic."""
         a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
         ds2 = cxm.interval(cxc.cart3d, a, b)
-        sep = cxm.geodesic_distance(cxc.cart3d, a, b)
+        d = cxm.geodesic_distance(cxc.cart3d, a, b)
         assert float(ds2.ustrip("m2")) == pytest.approx(
-            float(sep.ustrip("m")) ** 2, abs=ATOL
+            float(d.ustrip("m")) ** 2, abs=ATOL
         )
+
+    def test_curved_interval_is_not_squared_geodesic_distance(self):
+        """Flatness is the condition, not positive-definiteness.
+
+        The sphere's metric is positive-definite, yet the chord-like quadratic
+        form of the coordinate difference falls short of the arc it subtends.
+        """
+        a = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
+        b = {"theta": u.Angle(1.4, "rad"), "phi": u.Angle(0.9, "rad")}
+        ds2 = float(cxm.interval(cxc.sph2, a, b).ustrip("rad2"))
+        d2 = float(cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad")) ** 2
+        assert ds2 < d2
+        assert ds2 == pytest.approx(0.7335, abs=1e-3)
+        assert d2 == pytest.approx(0.8430, abs=1e-3)
+
+    def test_flatness_alone_is_not_enough(self):
+        """The chart must be Cartesian too, not merely the manifold flat.
+
+        `polar2d` charts the same flat plane, but its metric varies with ``r``,
+        so the coordinate difference is no longer the geodesic.
+        """
+        a = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
+        b = {"x": u.Q(0.0, "m"), "y": u.Q(2.0, "m")}
+        ap = cxc.pt_map(a, cxc.cart2d, cxc.polar2d)
+        bp = cxc.pt_map(b, cxc.cart2d, cxc.polar2d)
+        cart = float(cxm.interval(cxc.cart2d, a, b).ustrip("m2"))
+        polar = float(cxm.interval(cxc.polar2d, ap, bp).ustrip("m2"))
+        d2 = float(cxm.geodesic_distance(cxc.cart2d, a, b).ustrip("m")) ** 2
+        assert cart == pytest.approx(d2, abs=ATOL)
+        assert polar == pytest.approx(3.4674, abs=1e-3)
 
     def test_symmetric_in_its_arguments(self):
         fwd = cxm.interval(cxc.minkowskict, ORIGIN, event(5.0, 1.0))
