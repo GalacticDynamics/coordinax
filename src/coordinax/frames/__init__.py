@@ -12,11 +12,8 @@ Let's transform a position from Alice's frame to Alex's frame:
 >>> op = cxf.frame_transition(cxf.alice, cxf.alex)
 >>> op
 Composed((
-    Translate(
-        {'x': Q(i64[], 'm'), 'y': Q(i64[], 'm'), 'z': Q(i64[], 'm')},
-        chart=Cart3D(M=Rn(3))
-    ),
-    Rotate(f64[3,3](jax))
+  Translate({'x': Q(10, 'm'), 'y': Q(0, 'm'), 'z': Q(0, 'm')}, chart=Cart3D(M=Rn(3))),
+  Rotate(f64[3,3](jax))
 ))
 
 >>> q_alice = cxv.Point.from_([0, 0, 0], "km")
