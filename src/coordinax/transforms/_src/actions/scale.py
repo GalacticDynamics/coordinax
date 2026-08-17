@@ -102,3 +102,9 @@ def simplify(op: Scale, /, *, approx: bool = True, **kw: Any) -> AbstractTransfo
     if approx and jnp.allclose(op.S, jnp.eye(op.S.shape[0], dtype=op.S.dtype), **kw):
         return identity
     return op
+
+
+@plum.dispatch
+def _merge(a: Scale, b: Scale, /) -> AbstractTransform | None:
+    """Merge two adjacent scalings (``a`` applied first) into one, as ``b.S @ a.S``."""
+    return Scale(b.S @ a.S)

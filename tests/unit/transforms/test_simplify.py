@@ -11,6 +11,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import replace
 
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
@@ -209,3 +210,29 @@ class TestLorentzBoostSimplify:
         """Simplifying must not quietly change what the boost does."""
         op = cxfm.LorentzBoost([0.6, 0.0, 0.0])
         assert jnp.allclose(cxfm.simplify(op).matrix, op.matrix)
+
+
+class TestScaleMerge:
+    """Adjacent `Scale`s fuse, as adjacent `Rotate`s already did."""
+
+    def test_two_scalings_merge_into_one(self):
+        s1 = cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 4.0]))
+        s2 = cxfm.Scale.from_factors(jnp.asarray([5.0, 7.0, 11.0]))
+        got = cxfm.simplify(s1 | s2)
+        assert isinstance(got, cxfm.Scale)
+        assert jnp.allclose(jnp.diag(got.matrix), jnp.asarray([10.0, 21.0, 44.0]))
+
+    def test_merge_matches_sequential_application(self):
+        s1 = cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 4.0]))
+        s2 = cxfm.Scale.from_factors(jnp.asarray([5.0, 7.0, 11.0]))
+        p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        merged = cxfm.simplify(s1 | s2)(p)
+        sequential = s2(s1(p))
+        for k in "xyz":
+            assert jnp.allclose(merged[k].value, sequential[k].value)
+
+    def test_chain_collapses_to_a_single_op(self):
+        s = [cxfm.Scale.from_factors(jnp.asarray([f, f, f])) for f in (2.0, 3.0, 5.0)]
+        got = cxfm.simplify(s[0] | s[1] | s[2])
+        assert isinstance(got, cxfm.Scale)
+        assert jnp.allclose(jnp.diag(got.matrix), jnp.asarray([30.0, 30.0, 30.0]))
