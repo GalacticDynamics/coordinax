@@ -557,11 +557,15 @@ class ArcLength(eqx.Module):
     Q([1., 0., 0.], 'km')
 
     Precomputing the reparametrisation over a bounded range of ``s`` trades
-    memory for speed on repeated calls, with no change in behaviour:
+    memory for speed on repeated calls. The two agree to the solver's own
+    tolerance rather than exactly: the precompute starts a little below
+    ``s = 0`` (see `_solve_tau_dense`), so even ``s = 0`` is read off the
+    interpolation instead of being the ODE's initial condition.
 
     >>> fast_arc = cxfc.ArcLength(helix, "s", s_max=u.Q(10.0, "km"))
-    >>> fast_arc(u.Q(0.0, "km"))
-    Q([1., 0., 0.], 'km')
+    >>> bool(jnp.allclose(fast_arc(u.Q(0.0, "km")).ustrip("km"),
+    ...                   arc(u.Q(0.0, "km")).ustrip("km"), atol=1e-9))
+    True
 
     """
 
