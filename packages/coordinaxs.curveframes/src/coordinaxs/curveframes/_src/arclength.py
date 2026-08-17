@@ -62,6 +62,44 @@ def _speed(
     return jnp.linalg.norm(dcurve(tau_q).ustrip(s_unit / tau_unit))
 
 
+def _rhs_sigma(sigma: Any, tau_flat: Any, args: Any) -> Any:
+    r"""$d\tau/d\sigma = s/\|\gamma'(\tau)\|$, the `_solve_tau` right-hand side."""
+    del sigma
+    curve, s_val, tau_unit, s_unit = args
+    return s_val / _speed(curve, tau_unit, s_unit, u.Q(tau_flat, tau_unit))
+
+
+def _rhs_s(sigma: Any, tau_flat: Any, args: Any) -> Any:
+    r"""$d\tau/ds = 1/\|\gamma'(\tau)\|$, the `_solve_tau_dense` right-hand side."""
+    del sigma
+    curve, tau_unit, s_unit = args
+    return 1.0 / _speed(curve, tau_unit, s_unit, u.Q(tau_flat, tau_unit))
+
+
+def _rhs_quad(sigma: Any, s_flat: Any, args: Any) -> Any:
+    r"""$dS/d\sigma = \Delta\tau\,\|\gamma'\|$, the `_arclength_between` integrand."""
+    del s_flat
+    curve, tau_0_val, dtau, tau_unit, s_unit = args
+    tau_q = u.Q(tau_0_val + sigma * dtau, tau_unit)
+    return dtau * _speed(curve, tau_unit, s_unit, tau_q)
+
+
+#: The ODE terms, built **once** at import.
+#:
+#: Everything that varies per call -- the curve, the requested ``s``, the units
+#: -- rides in through `diffrax`'s ``args`` rather than being captured in a
+#: closure. That is a performance contract, not a style choice:
+#: `diffraxtra.DiffEqSolver` is filter-jitted with the term in its cache key,
+#: and a closure hashes by identity, so a term rebuilt per call misses the
+#: cache and **recompiles the whole integrator every time**. Measured on a
+#: helix, that was ~390 ms per call against ~0.3 ms of actual integration.
+#: Curve parameters stay correct because they arrive as traced pytree leaves,
+#: so a changed `theta` retraces nothing and is never baked in.
+_TERM_SIGMA = dfx.ODETerm(_rhs_sigma)
+_TERM_S = dfx.ODETerm(_rhs_s)
+_TERM_QUAD = dfx.ODETerm(_rhs_quad)
+
+
 def _solve_tau(
     curve: Callable[[Any], Any],
     tau_unit: u.AbstractUnit,
@@ -81,16 +119,8 @@ def _solve_tau(
     with `AtTime` by the caller before reaching here.
     """
     s_unit = s.unit
-    s_val = s.ustrip(s_unit)
-    tau_0_val = tau_0.ustrip(tau_unit)
-
-    def ode_rhs(sigma: Any, tau_flat: Any, args: Any) -> Any:
-        """Right-hand side in the rescaled parameter ``sigma``."""
-        del sigma, args
-        tau_q = u.Q(tau_flat, tau_unit)
-        return s_val / _speed(curve, tau_unit, s_unit, tau_q)
-
-    sol = diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, tau_0_val)
+    args = (curve, s.ustrip(s_unit), tau_unit, s_unit)
+    sol = diffeqsolver(_TERM_SIGMA, 0.0, 1.0, None, tau_0.ustrip(tau_unit), args)
     return u.Q(sol.ys[-1], tau_unit)
 
 
@@ -123,19 +153,20 @@ def _solve_tau_dense(
     tau_0_val = tau_0.ustrip(tau_unit)
     s_max_val = s_max.ustrip(s_unit)
 
-    def ode_rhs(sigma: Any, tau_flat: Any, args: Any) -> Any:
-        del sigma, args
-        tau_q = u.Q(tau_flat, tau_unit)
-        return 1.0 / _speed(curve, tau_unit, s_unit, tau_q)
-
-    term = dfx.ODETerm(ode_rhs)
+    args = (curve, tau_unit, s_unit)
     margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
 
     # Backward from the known tau(0) to the low edge, then forward across the
     # whole extended range from there.
-    tau_lo = diffeqsolver(term, 0.0, -margin, None, tau_0_val).ys[-1]
+    tau_lo = diffeqsolver(_TERM_S, 0.0, -margin, None, tau_0_val, args).ys[-1]
     sol = diffeqsolver(
-        term, -margin, s_max_val + margin, None, tau_lo, saveat=dfx.SaveAt(dense=True)
+        _TERM_S,
+        -margin,
+        s_max_val + margin,
+        None,
+        tau_lo,
+        args,
+        saveat=dfx.SaveAt(dense=True),
     )
     return cast("dfx.DenseInterpolation", sol.interpolation)
 
@@ -209,12 +240,8 @@ def _arclength_between(
     tau_val = jnp.asarray(tau.ustrip(tau_unit))
     dtau = tau_val - tau_0_val
 
-    def ode_rhs(sigma: Any, s_flat: Any, args: Any) -> Any:
-        del s_flat, args
-        tau_q = u.Q(tau_0_val + sigma * dtau, tau_unit)
-        return dtau * _speed(curve, tau_unit, s_unit, tau_q)
-
-    sol = diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, 0.0)
+    args = (curve, tau_0_val, dtau, tau_unit, s_unit)
+    sol = diffeqsolver(_TERM_QUAD, 0.0, 1.0, None, 0.0, args)
     return sol.ys[-1]
 
 
