@@ -198,21 +198,19 @@ class TestChordDistance:
     def test_matches_the_analytic_chord(self, theta):
         a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
         b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(theta, "rad")}
-        got = jnp.asarray(cxm.chord_distance(cxc.sph2, a, b))
+        got = cxm.chord_distance(cxc.sph2, a, b).ustrip("")
         assert bool(qnp.isclose(got, 2 * jnp.sin(theta / 2), atol=1e-12))
 
     def test_is_symmetric_and_chart_invariant(self):
         a = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.4, "rad")}
         b = {"theta": u.Angle(1.6, "rad"), "phi": u.Angle(1.2, "rad")}
-        ab = jnp.asarray(cxm.chord_distance(cxc.sph2, a, b))
-        ba = jnp.asarray(cxm.chord_distance(cxc.sph2, b, a))
-        lonlat = jnp.asarray(
-            cxm.chord_distance(
-                cxc.lonlat_sph2,
-                cxc.pt_map(a, cxc.sph2, cxc.lonlat_sph2),
-                cxc.pt_map(b, cxc.sph2, cxc.lonlat_sph2),
-            )
-        )
+        ab = cxm.chord_distance(cxc.sph2, a, b).ustrip("")
+        ba = cxm.chord_distance(cxc.sph2, b, a).ustrip("")
+        lonlat = cxm.chord_distance(
+            cxc.lonlat_sph2,
+            cxc.pt_map(a, cxc.sph2, cxc.lonlat_sph2),
+            cxc.pt_map(b, cxc.sph2, cxc.lonlat_sph2),
+        ).ustrip("")
         assert bool(qnp.isclose(ab, ba, atol=1e-14))
         assert bool(qnp.isclose(ab, lonlat, atol=1e-14))
 
@@ -220,8 +218,8 @@ class TestChordDistance:
         """The two must not be confusable: at a quarter turn they differ by 10%."""
         a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
         b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.pi / 2, "rad")}
-        chord = jnp.asarray(cxm.chord_distance(cxc.sph2, a, b))
-        arc = jnp.asarray(cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad"))
+        chord = cxm.chord_distance(cxc.sph2, a, b).ustrip("")
+        arc = cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad")
         assert bool(qnp.isclose(chord, jnp.sqrt(2.0), atol=1e-12))
         assert bool(qnp.isclose(arc, jnp.pi / 2, atol=1e-12))
 
