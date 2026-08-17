@@ -147,25 +147,43 @@ def test_a_quantity_s_max_is_a_leaf() -> None:
 
 
 # --------------------------------------------------------------------------
-# Domain clamping: near the edge succeeds, genuinely outside raises.
+# The domain margin: solved data just past each end, and a raise beyond it.
 #
 # Fails if `_eval_tau_dense`'s margin regresses to an exact `[0, s_max]` gate
-# (the reverted PR's bug) or grows large enough to silently swallow the
-# `6.0`/`-0.26` misuse cases below.
+# (the reverted PR's bug), or grows large enough to swallow the `6.0`/`-0.26`
+# misuse cases, or goes back to *clamping* into the margin instead of
+# `_solve_tau_dense` integrating across it.
 
 
-def test_s_within_the_margin_of_s_max_does_not_raise() -> None:
-    fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
-    # 5% margin (see `_S_MAX_MARGIN`); 5.24 is 4.8% past s_max = 5.0.
-    fast(u.Q(5.24, "km"))
-    fast(u.Q(-0.24, "km"))
+def test_s_within_the_margin_of_s_max_is_correct_not_clamped() -> None:
+    """The margin is solved data, so a query in it is right, not just accepted.
+
+    This is the whole point of integrating past each end. The earlier version
+    clipped into ``[0, s_max]``, so `fast(5.24)` returned tau(5.0) -- an
+    answer wrong by 6.3e-2 here, handed back with no error at all. Merely
+    asserting "does not raise" passed against that bug; comparing to a fresh
+    solve is what catches it.
+    """
+    s_max = u.Q(5.0, "km")
+    fast = cxfc.ArcLength(helix, "s", s_max=s_max)
+    plain = cxfc.ArcLength(helix, "s")  # ground truth: no precompute at all
+
+    for s_val in (5.24, -0.24, 5.0, 0.0, 2.5):
+        got = fast(u.Q(s_val, "km")).ustrip("km")
+        want = plain(u.Q(s_val, "km")).ustrip("km")
+        assert jnp.allclose(got, want, atol=1e-9), (s_val, got, want)
+
+    # And specifically: it is *not* the boundary value it used to clamp to.
+    at_edge = fast(u.Q(5.0, "km")).ustrip("km")
+    past_edge = fast(u.Q(5.24, "km")).ustrip("km")
+    assert not jnp.allclose(past_edge, at_edge, atol=1e-3), (past_edge, at_edge)
 
 
 def test_s_far_outside_s_max_raises() -> None:
     fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
-    with pytest.raises(Exception, match="precomputed domain"):
+    with pytest.raises(Exception, match="solved domain"):
         fast(u.Q(6.0, "km"))
-    with pytest.raises(Exception, match="precomputed domain"):
+    with pytest.raises(Exception, match="solved domain"):
         fast(u.Q(-0.26, "km"))
 
 
@@ -180,13 +198,13 @@ def test_the_margin_scales_with_a_small_s_max() -> None:
     """
     tiny = cxfc.ArcLength(helix, "s", s_max=u.Q(0.001, "km"))
     tiny(u.Q(0.00104, "km"))  # 4% past: inside the 5% margin, must not raise
-    with pytest.raises(Exception, match="precomputed domain"):
+    with pytest.raises(Exception, match="solved domain"):
         tiny(u.Q(0.002, "km"))  # 100% past: must raise, and did not before
 
 
 def test_lagrangian_s_far_outside_s_max_raises() -> None:
     fast = cxfc.LagrangianArcLength(stretch, u.Q(0.0, "s"), "s", s_max=u.Q(2.0, "km"))
-    with pytest.raises(Exception, match="precomputed domain"):
+    with pytest.raises(Exception, match="solved domain"):
         fast(u.Q(3.0, "km"), u.Q(0.0, "s"))
 
 

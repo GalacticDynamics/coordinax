@@ -407,7 +407,9 @@ The split is structural. Reparametrising costs one ODE solve, which `s_max` repl
 
 So fitting a curve's shape pays the sensitivity integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians in the coordinates — does not.
 
-`s` must then fall within $[0, s_{\max}]$, up to a small margin that absorbs the nearest-point solve's own probing past the domain edge. A query beyond that margin raises rather than silently returning `NaN` from outside the interpolation's range. `s_max` also requires a one-argument curve: the Eulerian reading re-measures arc length on whichever slice it is evaluated at, so no single $\tau(s)$ exists to precompute — bind the slice with `AtTime` first, or use `LagrangianArcLength`, whose reference slice is fixed by construction.
+`s` must then fall within $[0, s_{\max}]$, up to a small margin either side. The precompute integrates a little past both ends rather than stopping exactly at them, because the inverse chart's nearest-point solve genuinely asks for $\tau(s)$ outside the nominal range — one scan-seed spacing, symmetric — while bracketing a root. Those queries are answered from solved data, so they are correct rather than merely tolerated, and a query beyond the solved range raises instead of extrapolating off the end of the interpolation.
+
+`s_max` also requires a one-argument curve: the Eulerian reading re-measures arc length on whichever slice it is evaluated at, so no single $\tau(s)$ exists to precompute — bind the slice with `AtTime` first, or use `LagrangianArcLength`, whose reference slice is fixed by construction.
 
 (limitations)=
 

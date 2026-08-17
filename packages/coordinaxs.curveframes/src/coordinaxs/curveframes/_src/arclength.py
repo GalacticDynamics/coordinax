@@ -103,13 +103,27 @@ def _solve_tau_dense(
     s_max: u.AbstractQuantity,
     /,
 ) -> dfx.DenseInterpolation:
-    r"""Solve the reparametrisation ODE once, densely, over $[0, s_{\max}]$.
+    r"""Solve the reparametrisation ODE once, densely, a little past both ends.
 
     Companion to `_solve_tau`: the same ODE and the same right-hand side, but
     solved a single time over the whole domain with `diffrax`'s dense output
     (``SaveAt(dense=True)``) rather than once per requested ``s``. This is
     what makes the *forward* evaluation cheap under repeated calls at a fixed
     curve -- see `ArcLength.s_max`.
+
+    The solved range is $[-m,\, s_{\max} + m]$ with $m$ = `_S_MAX_MARGIN`
+    $\times s_{\max}$, not $[0, s_{\max}]$. `nearest_tau`'s bracketed
+    root-find genuinely asks for $\tau(s)$ outside the nominal domain --
+    measured at exactly one scan-seed spacing, symmetric, $\pm s_{\max}/63$
+    for the default ``n_seed=64`` -- so *something* has to answer there. The
+    cheap answer is to clamp to the boundary, which returns a wrong value
+    silently. Integrating a little further instead costs one short extra
+    solve at construction and makes those queries **correct**, leaving
+    `_eval_tau_dense` free to raise on everything beyond.
+
+    Two solves rather than one: the initial condition $\tau(0) = \tau_0$ sits
+    in the *middle* of the target range, so a short backward solve to
+    $s = -m$ supplies the starting value for the forward one.
 
     Unlike `_solve_tau`, this does *not* rescale to $\sigma \in [0, 1]$. That
     rescaling exists to keep $d(\text{result})/ds$ well-defined when ``s`` --
@@ -130,30 +144,33 @@ def _solve_tau_dense(
         tau_q = u.Q(tau_flat, tau_unit)
         return 1.0 / _speed(curve, tau_unit, speed_unit, tau_q)
 
+    term = dfx.ODETerm(ode_rhs)
+    margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
+
+    # Backward from the known tau(0) to the low edge, then forward across the
+    # whole extended range from there.
+    tau_lo = diffeqsolver(term, 0.0, -margin, None, tau_0_val).ys[-1]
     sol = diffeqsolver(
-        dfx.ODETerm(ode_rhs),
-        0.0,
-        s_max_val,
-        None,
-        tau_0_val,
-        saveat=dfx.SaveAt(dense=True),
+        term, -margin, s_max_val + margin, None, tau_lo, saveat=dfx.SaveAt(dense=True)
     )
     return cast("dfx.DenseInterpolation", sol.interpolation)
 
 
-#: Fraction of `s_max` that `_eval_tau_dense` clamps into rather than raising
-#: on. Sized to `nearest_tau`'s *structural* slack, not floating-point noise:
-#: its root-find probes one scan-seed spacing outside `tau_bounds` whenever a
-#: seed lands at a domain edge. `n_seed=64` over one period gives ~1.6%, so 5%
-#: covers it down to `n_seed ~= 20`; below that, widen `s_max`.
+#: Fraction of `s_max` that `_solve_tau_dense` integrates *past* each end, so
+#: that queries just outside the nominal domain are answered from real solved
+#: data rather than clamped to the boundary. Sized to `nearest_tau`'s
+#: structural slack: its root-find probes one scan-seed spacing outside
+#: `tau_bounds` whenever a seed lands at a domain edge -- measured at exactly
+#: `s_max / (n_seed - 1)`, symmetric, so ~1.6% for the default `n_seed=64`.
+#: 5% covers that down to `n_seed ~= 21`; below it, widen `s_max`.
 _S_MAX_MARGIN = 0.05
 
 _MSG_S_OUT_OF_DOMAIN = (
-    "s lies outside the precomputed domain [0, s_max] by more than the "
-    "margin _eval_tau_dense tolerates. The dense interpolation only has "
-    "values there -- diffrax would otherwise return NaN silently for a "
-    "query this far outside it. Increase s_max, or leave it `None` to fall "
-    "back to solving the ODE fresh on every call."
+    "s lies outside the solved domain [0, s_max], beyond the margin "
+    "_solve_tau_dense integrates past each end. The interpolation has no "
+    "coefficients there, and extrapolating off the end of it would return a "
+    "plausible-looking wrong answer. Increase s_max, or leave it `None` to "
+    "fall back to solving the ODE fresh on every call."
 )
 
 
@@ -166,38 +183,32 @@ def _eval_tau_dense(
 ) -> u.AbstractQuantity:
     r"""Evaluate a precomputed $\tau(s)$ interpolation at ``s``.
 
-    ``s`` should lie in $[0, s_{\max}]$, the domain `_solve_tau_dense` built
-    the interpolation over. An exact ``[0, s_max]`` gate is too strict: a
-    legitimate caller can land measurably outside it, not just by
-    floating-point noise -- e.g. `nearest_tau`'s own bracketed root-find,
-    which evaluates the curve one full scan-seed spacing beyond
-    `tau_bounds` for any query near a domain edge (see `TubularChart`,
-    measured there at ``s = -4.73e-9`` for a *converged* result, and
-    considerably more for the root-find's own intermediate probes). Within
-    `_S_MAX_MARGIN` of the domain, this clamps and evaluates at the
-    boundary rather than raising -- a converged, in-tolerance answer should
-    not fail just because the search that found it briefly stepped outside
-    while getting there.
+    Valid over $[-m,\, s_{\max} + m]$, the range `_solve_tau_dense` actually
+    integrated, with $m$ = `_S_MAX_MARGIN` $\times s_{\max}$. `nearest_tau`
+    genuinely asks outside the nominal $[0, s_{\max}]$ -- one scan-seed
+    spacing, symmetric -- and every such query is answered from solved data,
+    so it is *correct* rather than merely tolerated.
 
-    The cost is real and worth stating: a *caller's* own query within that
-    band is clamped just as silently, and gets $\tau(s_{\max})$ back as
-    though it were the answer. Restricting the slack to the negative side
-    was tried and does not work -- `nearest_tau` probes past the upper edge
-    too, and the chart round-trip fails outright. Only a query beyond the
-    margin raises, rather than letting `diffrax.DenseInterpolation` clamp
-    internally and
-    return `NaN` silently.
+    Nothing is clamped. An earlier version clipped into $[0, s_{\max}]$ and
+    accepted anything within the margin, which answered the probes but also
+    handed a caller who overshot $\tau(s_{\max})$ as though it were the
+    answer, silently. Solving a little further costs one short extra solve,
+    once, and removes that failure mode rather than documenting it.
+
+    Beyond the solved range this raises, rather than letting
+    `diffrax.DenseInterpolation` extrapolate off the end of its coefficients.
     """
     s_unit = s_max.unit
     s_val = jnp.asarray(s.ustrip(s_unit))
     s_max_val = jnp.asarray(s_max.ustrip(s_unit))
 
-    slack = _S_MAX_MARGIN * jnp.abs(s_max_val)
-    out_of_domain = (s_val < -slack) | (s_val > s_max_val + slack)
+    margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
+    out_of_domain = (s_val < -margin) | (s_val > s_max_val + margin)
 
-    s_clipped = jnp.clip(s_val, 0.0, s_max_val)
-    s_clipped = eqx.error_if(s_clipped, out_of_domain, _MSG_S_OUT_OF_DOMAIN)
-    return u.Q(interp.evaluate(s_clipped), tau_unit)
+    # No clip: every point of the solved range is real data, so the only
+    # thing to do with a genuine overshoot is refuse it.
+    s_val = eqx.error_if(s_val, out_of_domain, _MSG_S_OUT_OF_DOMAIN)
+    return u.Q(interp.evaluate(s_val), tau_unit)
 
 
 def _arclength_between(
