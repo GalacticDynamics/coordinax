@@ -42,8 +42,9 @@ class RoundMetric(AbstractDiagonalMetricField):
     The metric matrix is obtained via the dispatch API on the associated manifold:
 
     >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
-    >>> cxmapi.metric_matrix(cxm.S2, at, cxc.sph2).diagonal
-    Array([1., 1.], dtype=float64)
+    >>> d = cxmapi.metric_matrix(cxm.S2, at, cxc.sph2).diagonal
+    >>> bool(jnp.allclose(d.value, jnp.array([1.0, 1.0])))
+    True
 
     """
 

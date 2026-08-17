@@ -83,8 +83,8 @@ def metric_matrix(
     >>> g = metric_matrix(M, at, cxc.sph2)
     >>> isinstance(g, DiagonalMetric)
     True
-    >>> g.diagonal
-    Array([1., 1.], dtype=float64)
+    >>> bool(jnp.allclose(g.diagonal.value, jnp.array([1.0, 1.0])))
+    True
 
     $S^2$ at $\theta = \pi/6$:
 
@@ -110,7 +110,14 @@ def metric_matrix(
         # empty stack decides the result dtype for S¹.
         else jnp.zeros((0, *vals[-1].shape), dtype=vals[-1].dtype)
     )
-    return DiagonalMetric(_sine_product_diagonal(thetas, 1.0))
+    # Dimensionless, but a `QuantityMatrix` all the same: the sibling rules
+    # below already return one, and a generic consumer should not have to ask
+    # which dispatch produced its metric. `angles -> angles`, so the unit is
+    # empty -- unlike the *embedded* sphere, whose induced metric measures
+    # ambient length and correctly carries `L**2/rad**2`.
+    diag = _sine_product_diagonal(thetas, 1.0)
+    n = len(components)
+    return DiagonalMetric(ul.QM(diag, unit=ul.UnitsMatrix.full(n, "")))
 
 
 @plum.dispatch

@@ -243,13 +243,14 @@ class TestRoundMetric:
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
         assert isinstance(g, DiagonalMetric)
         expected = jnp.array([1, 1])
-        assert jnp.allclose(g.diagonal, expected, atol=1e-6)
+        # dimensionless `QuantityMatrix`; `allclose` has no QM overload
+        assert jnp.allclose(g.diagonal.value, expected, atol=1e-6)
 
     def test_metric_matrix_at_pole_theta_component(self):
         """S^2 metric g_theta_theta = 1 everywhere."""
         p = {"theta": u.Angle(0.1, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
-        assert jnp.allclose(g.diagonal[0], 1, atol=1e-6)
+        assert jnp.allclose(g.diagonal.value[0], 1, atol=1e-6)
 
     @pytest.mark.parametrize("theta", [0.1, jnp.pi / 4, jnp.pi / 2, jnp.pi * 3 / 4])
     def test_metric_matrix_phi_component_at_various_latitudes(self, theta):
@@ -257,8 +258,9 @@ class TestRoundMetric:
         p = {"theta": u.Angle(theta, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
         exp = jnp.sin(theta) ** 2
-        assert jnp.allclose(g.diagonal[1], exp, atol=1e-6), (
-            f"theta={theta}: g_phi_phi={g.diagonal[1]} != sin^2(theta)={exp}"
+        got = g.diagonal.value[1]
+        assert jnp.allclose(got, exp, atol=1e-6), (
+            f"theta={theta}: g_phi_phi={got} != sin^2(theta)={exp}"
         )
 
     def test_metric_matrix_is_diagonal(self):
