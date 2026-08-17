@@ -53,13 +53,13 @@ _DIFFEQSOLVER = DiffEqSolver(
 def _speed(
     curve: Callable[[Any], Any],
     tau_unit: u.AbstractUnit,
-    speed_unit: u.AbstractUnit,
+    s_unit: u.AbstractUnit,
     tau_q: u.AbstractQuantity,
     /,
 ) -> Any:
     r"""Local speed $\|\boldsymbol{\gamma}'(\tau)\|$ of ``curve`` at ``tau_q``."""
     dcurve = u.experimental.jacfwd(curve, units=(tau_unit,))
-    return jnp.linalg.norm(dcurve(tau_q).ustrip(speed_unit))
+    return jnp.linalg.norm(dcurve(tau_q).ustrip(s_unit / tau_unit))
 
 
 def _solve_tau(
@@ -81,7 +81,6 @@ def _solve_tau(
     with `AtTime` by the caller before reaching here.
     """
     s_unit = s.unit
-    speed_unit = s_unit / tau_unit
     s_val = s.ustrip(s_unit)
     tau_0_val = tau_0.ustrip(tau_unit)
 
@@ -89,7 +88,7 @@ def _solve_tau(
         """Right-hand side in the rescaled parameter ``sigma``."""
         del sigma, args
         tau_q = u.Q(tau_flat, tau_unit)
-        return s_val / _speed(curve, tau_unit, speed_unit, tau_q)
+        return s_val / _speed(curve, tau_unit, s_unit, tau_q)
 
     sol = diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, tau_0_val)
     return u.Q(sol.ys[-1], tau_unit)
@@ -103,46 +102,31 @@ def _solve_tau_dense(
     s_max: u.AbstractQuantity,
     /,
 ) -> dfx.DenseInterpolation:
-    r"""Solve the reparametrisation ODE once, densely, a little past both ends.
+    r"""Solve the reparametrisation ODE once, densely, over $[-m, s_{\max} + m]$.
 
-    Companion to `_solve_tau`: the same ODE and the same right-hand side, but
-    solved a single time over the whole domain with `diffrax`'s dense output
-    (``SaveAt(dense=True)``) rather than once per requested ``s``. This is
-    what makes the *forward* evaluation cheap under repeated calls at a fixed
-    curve -- see `ArcLength.s_max`.
+    Companion to `_solve_tau`: the same ODE and right-hand side, but solved a
+    single time with `diffrax`'s dense output (``SaveAt(dense=True)``) rather
+    than once per requested ``s`` -- what makes the *forward* evaluation cheap
+    under repeated calls at a fixed curve (see `ArcLength.s_max`). The margin
+    $m$ and why it is integrated rather than clamped: see `_S_MAX_MARGIN`.
 
-    The solved range is $[-m,\, s_{\max} + m]$ with $m$ = `_S_MAX_MARGIN`
-    $\times s_{\max}$, not $[0, s_{\max}]$. `nearest_tau`'s bracketed
-    root-find genuinely asks for $\tau(s)$ outside the nominal domain --
-    measured at exactly one scan-seed spacing, symmetric, $\pm s_{\max}/63$
-    for the default ``n_seed=64`` -- so *something* has to answer there. The
-    cheap answer is to clamp to the boundary, which returns a wrong value
-    silently. Integrating a little further instead costs one short extra
-    solve at construction and makes those queries **correct**, leaving
-    `_eval_tau_dense` free to raise on everything beyond.
+    Two solves rather than one: $\tau(0) = \tau_0$ sits in the *middle* of the
+    target range, so a short backward solve to $s = -m$ supplies the starting
+    value for the forward one.
 
-    Two solves rather than one: the initial condition $\tau(0) = \tau_0$ sits
-    in the *middle* of the target range, so a short backward solve to
-    $s = -m$ supplies the starting value for the forward one.
-
-    Unlike `_solve_tau`, this does *not* rescale to $\sigma \in [0, 1]$. That
-    rescaling exists to keep $d(\text{result})/ds$ well-defined when ``s`` --
-    the value being differentiated -- is also the integration bound: at
-    ``s = 0`` the solver would otherwise take zero steps and silently return
-    a zero derivative. Here the integration bound is the fixed ``s_max``, not
-    the ``s`` a caller later evaluates at, and the returned interpolation is
-    only ever consumed through `_tau_of_s`'s custom JVP, never
-    autodifferentiated directly -- see that function for why.
+    No $\sigma \in [0, 1]$ rescaling, unlike `_solve_tau`: that exists to keep
+    the derivative well-defined when the differentiated ``s`` is also the
+    integration bound, and here the bound is the fixed ``s_max``. The result
+    is only ever consumed through `_tau_of_s`'s custom JVP anyway.
     """
     s_unit = s_max.unit
-    speed_unit = s_unit / tau_unit
     tau_0_val = tau_0.ustrip(tau_unit)
     s_max_val = s_max.ustrip(s_unit)
 
     def ode_rhs(sigma: Any, tau_flat: Any, args: Any) -> Any:
         del sigma, args
         tau_q = u.Q(tau_flat, tau_unit)
-        return 1.0 / _speed(curve, tau_unit, speed_unit, tau_q)
+        return 1.0 / _speed(curve, tau_unit, s_unit, tau_q)
 
     term = dfx.ODETerm(ode_rhs)
     margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
@@ -184,19 +168,9 @@ def _eval_tau_dense(
     r"""Evaluate a precomputed $\tau(s)$ interpolation at ``s``.
 
     Valid over $[-m,\, s_{\max} + m]$, the range `_solve_tau_dense` actually
-    integrated, with $m$ = `_S_MAX_MARGIN` $\times s_{\max}$. `nearest_tau`
-    genuinely asks outside the nominal $[0, s_{\max}]$ -- one scan-seed
-    spacing, symmetric -- and every such query is answered from solved data,
-    so it is *correct* rather than merely tolerated.
-
-    Nothing is clamped. An earlier version clipped into $[0, s_{\max}]$ and
-    accepted anything within the margin, which answered the probes but also
-    handed a caller who overshot $\tau(s_{\max})$ as though it were the
-    answer, silently. Solving a little further costs one short extra solve,
-    once, and removes that failure mode rather than documenting it.
-
-    Beyond the solved range this raises, rather than letting
-    `diffrax.DenseInterpolation` extrapolate off the end of its coefficients.
+    integrated (see `_S_MAX_MARGIN`); beyond it this raises, rather than
+    letting `diffrax.DenseInterpolation` extrapolate off the end of its
+    coefficients.
     """
     s_unit = s_max.unit
     s_val = jnp.asarray(s.ustrip(s_unit))
@@ -223,16 +197,11 @@ def _arclength_between(
     r"""$S = \int_{\tau_0}^{\tau} \|\boldsymbol{\gamma}'(u)\|\,du$, as a bare float.
 
     The one extra quadrature `_tau_of_s`'s JVP rule needs -- see its docstring
-    for the implicit-function-theorem derivation this feeds into.
-    Returned as a plain (unit-stripped, in ``s_unit``) value rather than a
-    `unxt.Quantity`: it is only ever scaled and fed straight into a cotangent,
-    never displayed or unit-checked on its own.
-
-    Rescaled to $\sigma \in [0, 1]$ for the reason `_solve_tau_dense` gives,
-    which applies here to ``tau_0`` -- one of the two things `_tau_of_s`'s JVP
-    rule differentiates against.
+    for the derivation. Returned unit-stripped (in ``s_unit``) because it is
+    only ever fed straight into a cotangent, never displayed on its own.
+    Rescaled to $\sigma \in [0, 1]$ for the reason `_solve_tau` is, which
+    applies here to ``tau_0``.
     """
-    speed_unit = s_unit / tau_unit
     # `jnp.asarray` narrows only here, as in `nearest.py`: `ustrip` is typed as
     # a broad union that `-` is not defined across, though every runtime member
     # supports it.
@@ -243,20 +212,15 @@ def _arclength_between(
     def ode_rhs(sigma: Any, s_flat: Any, args: Any) -> Any:
         del s_flat, args
         tau_q = u.Q(tau_0_val + sigma * dtau, tau_unit)
-        return dtau * _speed(curve, tau_unit, speed_unit, tau_q)
+        return dtau * _speed(curve, tau_unit, s_unit, tau_q)
 
     sol = diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, 0.0)
     return sol.ys[-1]
 
 
 def _tangent_value(t: Any, /) -> Any:
-    r"""Unwrap a tangent to a bare value, `0.0` if it is symbolically zero.
-
-    A symbolic zero has no leaves, however it is wrapped; a real tangent has
-    exactly one.
-    """
-    leaves = jax.tree_util.tree_leaves(t)
-    return leaves[0] if leaves else 0.0
+    """Unwrap a tangent to a bare value; a symbolic zero has no leaves."""
+    return next(iter(jax.tree_util.tree_leaves(t)), 0.0)
 
 
 def _tau_primal(
@@ -305,41 +269,22 @@ def _tau_of_s(
     directly and reverse mode by transposition, so one rule covers both.
 
     From $s = S(\tau; \theta) = \int_{\tau_0}^{\tau}
-    \|\boldsymbol{\gamma}'(u; \theta)\|\,du$, the implicit function theorem
-    gives, at fixed $s$:
-
-    $$ \frac{\partial \tau}{\partial \theta}
-       = -\frac{(\partial S/\partial\theta)|_\tau}{\|\boldsymbol{\gamma}'(\tau;
-         \theta)\|}, \qquad
-       \frac{\partial \tau}{\partial \tau_0}
-       = \frac{\|\boldsymbol{\gamma}'(\tau_0;\theta)\|}{\|\boldsymbol{\gamma}'(\tau;
-         \theta)\|}, \qquad
-       \frac{\partial \tau}{\partial s} = \frac{1}{\|\boldsymbol{\gamma}'(\tau;
-         \theta)\|}. $$
-
-    Rather than build each of these separately, the JVP rule below computes
-    the total differential in one pass: given tangents $d\theta$, $d\tau_0$,
-    $ds$, the total derivative of $S(\tau;\theta,\tau_0) = s$ at fixed $\tau$
-    is $dS = (\partial S/\partial\theta)\,d\theta +
-    (\partial S/\partial\tau_0)\,d\tau_0 = \|\boldsymbol{\gamma}'(\tau)\|\,
-    d\tau - ds$ rearranges to
+    \|\boldsymbol{\gamma}'(u; \theta)\|\,du$, differentiating at fixed $s$
+    gives $\|\boldsymbol{\gamma}'(\tau)\|\,d\tau - ds + dS = 0$, i.e.
 
     $$ d\tau = \frac{ds - dS}{\|\boldsymbol{\gamma}'(\tau;\theta)\|}, $$
 
-    where $dS$ is obtained with a *single* `equinox.filter_jvp` of one
-    quadrature (`_arclength_between`) in the directions $(d\theta,
-    d\tau_0)$ -- cheap against reverse-mode through nested adaptive ODE
-    solves, which is what this replaces (the $\tau_0$ formula above is what
-    that JVP reduces to automatically when only $d\tau_0$ is nonzero --
-    Leibniz's rule on a variable lower limit -- not a separate special
-    case). ``curve`` and ``tau_0`` here are always the *current* call's
-    values, never anything captured at interpolation-build time.
+    with $dS$ the differential of $S$ at fixed $\tau$ in the directions
+    $(d\theta, d\tau_0)$. Taking it as one total differential rather than
+    three partials means a *single* `equinox.filter_jvp` of one quadrature
+    (`_arclength_between`) covers $\theta$, $\tau_0$ (Leibniz on the lower
+    limit) and $s$ alike. ``curve`` and ``tau_0`` are always the *current*
+    call's values, never anything captured at interpolation-build time.
 
-    This is correct *at* the point ``curve``/``tau_0`` were built with --
-    exactly where a gradient (a local, linear quantity) is asked to be
-    correct, and exactly what #713's acceptance criteria check. It does not
-    make a *stale* interpolation's forward *value* correct far from that
-    point; nothing can, short of rebuilding it (see `ArcLength.s_max`).
+    This makes the *gradient* correct at the point ``curve``/``tau_0`` hold,
+    which is what #713's acceptance criteria check. It does not make a stale
+    interpolation's forward *value* correct far from that point; nothing can,
+    short of rebuilding it (see `ArcLength.s_max`).
     """
     return _tau_primal(
         curve, tau_0, s, interp, s_max, tau_unit=tau_unit, diffeqsolver=diffeqsolver
@@ -373,27 +318,16 @@ def _tau_of_s_jvp(
         curve, tau_0, s, interp, s_max, tau_unit=tau_unit, diffeqsolver=diffeqsolver
     )
     s_unit = s.unit
-    speed_unit = s_unit / tau_unit
-    speed_at_tau = _speed(curve, tau_unit, speed_unit, tau)
+    speed_at_tau = _speed(curve, tau_unit, s_unit, tau)
 
-    # dS/dtheta is the *only* reason this rule integrates anything. When
-    # neither the curve nor tau_0 is being differentiated, both tangents are
-    # symbolically zero, dS is identically zero, and the quadrature below is
-    # a solve whose result is discarded.
-    #
-    # That is not a corner case: it is every derivative taken with respect to
-    # `s` alone, which includes the chart's Jacobian, the induced metric that
-    # pulls back through it, and `nearest_tau`'s root-find. Those all carry a
-    # fixed curve.
-    #
-    # Emptiness of `tree_leaves` is the symbolic-zero test `_tangent_value`
-    # already relies on, and it is a *structure* question, resolved at trace
-    # time -- so this branch is chosen during tracing and stays jit-safe. A
-    # tangent that merely happens to be numerically zero still has a leaf,
-    # and correctly takes the full path.
-    differentiating_curve = bool(jax.tree_util.tree_leaves((dcurve, dtau_0)))
-
-    if differentiating_curve:
+    # dS is the only reason this rule integrates anything, so skip the solve
+    # when neither the curve nor tau_0 is differentiated -- the common case,
+    # covering every derivative in `s` alone (chart Jacobian, induced metric,
+    # `nearest_tau`'s root-find). Symbolically-zero tangents have no leaves,
+    # a *structure* question resolved at trace time, so this stays jit-safe;
+    # a merely numerically-zero tangent still has a leaf and takes the full
+    # path.
+    if jax.tree_util.tree_leaves((dcurve, dtau_0)):
 
         def arclength(c: Any, t0: u.AbstractQuantity) -> Any:
             return _arclength_between(c, tau_unit, s_unit, t0, tau, diffeqsolver)
@@ -507,34 +441,24 @@ class ArcLength(eqx.Module):
     s_max : Quantity, optional
         When given, the reparametrisation ODE is solved **once**, at
         construction, as a dense interpolation of $\tau(s)$ over $s \in [0,
-        s_{\max}]$ (`diffrax`'s ``SaveAt(dense=True)``); `__call__` then
-        evaluates that interpolation instead of re-solving. This is a pure
-        performance knob: within $[0, s_{\max}]$, evaluating with and without
-        `s_max` agrees to solver tolerance, and gradients agree too --
-        `__call__`'s reparametrisation always goes through a hand-supplied
-        VJP (`_tau_of_s`) rather than autodiff through the solve or the
-        interpolation, specifically so that swapping the fast path in does
-        not touch gradient correctness. See `_tau_of_s` for why that is
-        necessary, not just convenient. The default `None` keeps today's
-        behaviour exactly -- solve fresh on every call, no precompute.
+        s_{\max}]$; `__call__` then reads that instead of re-solving. A pure
+        performance knob: values agree to solver tolerance and gradients
+        agree exactly, because `__call__` always reparametrises through the
+        hand-supplied JVP in `_tau_of_s` rather than autodiff through the
+        solve or the interpolation. `None` (the default) solves fresh every
+        call. A query outside $[0, s_{\max}]$ raises rather than
+        extrapolating (up to `_S_MAX_MARGIN`'s slack at either end).
 
-        Only valid for a **one-argument** ``curve``; passing it alongside a
-        two-argument (time-dependent) ``curve`` raises at construction,
-        because the Eulerian reading re-measures arc length per slice and so
-        has no single map to precompute (see `LagrangianArcLength` for the
-        two-argument case that *can* be precomputed). A query outside $[0,
-        s_{\max}]$ raises rather than extrapolating (with a small tolerance
-        for floating-point slack at the endpoints -- see `_eval_tau_dense`).
+        Only valid for a **one-argument** ``curve``: the Eulerian reading
+        re-measures arc length per slice, so there is no single map to
+        precompute (use `LagrangianArcLength`, whose reference slice is
+        fixed). Passing it with a two-argument ``curve`` raises here.
 
-        **Interaction with `TubularChart.tau_bounds`.** Both describe the
-        same valid range of the curve parameter, at two different layers:
-        `TubularChart.tau_bounds` bounds what `nearest_tau` will scan and
-        return when inverting a Cartesian point into this chart, while
-        `s_max` bounds what the precomputed interpolation covers. They do
-        not update each other, and can disagree. Set `s_max` to at least
-        `tau_bounds[1]` (in the same unit) so no in-bounds chart query lands
-        outside the interpolation's domain; a smaller `s_max` will raise on
-        exactly the queries a chart considers valid.
+        `TubularChart.tau_bounds` bounds the same curve parameter at a
+        different layer -- what `nearest_tau` scans -- and the two do not
+        update each other. Set `s_max` to at least `tau_bounds[1]` in the
+        same unit, or in-bounds chart queries will land outside the
+        interpolation and raise.
 
     See Also
     --------
@@ -555,17 +479,6 @@ class ArcLength(eqx.Module):
     >>> arc = cxfc.ArcLength(helix, "s")
     >>> arc(u.Q(0.0, "km"))
     Q([1., 0., 0.], 'km')
-
-    Precomputing the reparametrisation over a bounded range of ``s`` trades
-    memory for speed on repeated calls. The two agree to the solver's own
-    tolerance rather than exactly: the precompute starts a little below
-    ``s = 0`` (see `_solve_tau_dense`), so even ``s = 0`` is read off the
-    interpolation instead of being the ODE's initial condition.
-
-    >>> fast_arc = cxfc.ArcLength(helix, "s", s_max=u.Q(10.0, "km"))
-    >>> bool(jnp.allclose(fast_arc(u.Q(0.0, "km")).ustrip("km"),
-    ...                   arc(u.Q(0.0, "km")).ustrip("km"), atol=1e-9))
-    True
 
     """
 
@@ -617,6 +530,11 @@ class ArcLength(eqx.Module):
     `_tau_of_s`.
     """
 
+    # An explicit `__init__` rather than `__post_init__`: `_interp` is a
+    # dynamic field built from the other arguments, and `equinox` both warns
+    # about `field(init=False)` on one of those and applies field converters
+    # only *after* `__post_init__`, where `_solve_tau_dense` already needs the
+    # converted `tau_unit`.
     def __init__(
         self,
         curve: Callable[[Any], Any],
@@ -727,11 +645,18 @@ class LagrangianArcLength(eqx.Module):
     s_max : Quantity, optional
         When given, precompute tau(s) once as a dense interpolation over $s
         \in [0, s_{\max}]$, exactly as `ArcLength.s_max` does; see there for
-        the full behaviour, including gradient correctness and the
-        interaction with `TubularChart.tau_bounds`. Unlike `ArcLength`, this
-        is always valid here -- the reference slice ``t0`` is fixed, so the
-        map genuinely does not depend on the ``t`` supplied at call time.
-        `None` (the default) keeps the per-call solve.
+        the full behaviour. Unlike `ArcLength`, this is always valid here --
+        the reference slice ``t0`` is fixed, so the map genuinely does not
+        depend on the ``t`` supplied at call time. `None` (the default) keeps
+        the per-call solve.
+
+    See Also
+    --------
+    coordinaxs.curveframes.ArcLength :
+        The *Eulerian* reading of the same two-argument curve: it re-measures
+        arc length on whichever slice is evaluated, rather than a fixed one.
+        The two readings agree exactly under rigid motion and diverge once
+        the curve stretches or bends.
 
     Examples
     --------
@@ -795,6 +720,7 @@ class LagrangianArcLength(eqx.Module):
     on this field's own connectedness to `curve`/`t0`.
     """
 
+    # Explicit `__init__` for the reasons `ArcLength.__init__` gives.
     def __init__(
         self,
         curve: Callable[[Any, Any], Any],

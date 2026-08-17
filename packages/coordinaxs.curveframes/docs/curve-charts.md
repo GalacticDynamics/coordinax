@@ -403,11 +403,9 @@ Not every path is helped equally, and it is worth knowing which one you are on. 
 | $s$ alone — the chart Jacobian, the metric, the inverse solve | no integration at all |
 | the curve's own parameters $\theta$ | about a factor of two |
 
-The split is structural. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation. Differentiating with respect to $\theta$ costs a _second_ one — the rule integrates $\partial S/\partial\theta$ over $[\tau_0, \tau]$ — and that one cannot be precomputed, because it depends on which direction in parameter space you are perturbing, which is known only at the call. Differentiating with respect to $s$ needs neither: $d\tau/ds$ is $1/\|\gamma'(\tau)\|$, already to hand.
+The split is structural. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation; differentiating with respect to $\theta$ costs a _second_ one, integrating $\partial S/\partial\theta$ over $[\tau_0, \tau]$, and that one cannot be precomputed because it depends on the perturbation direction, known only at the call. So fitting a curve's shape pays that integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians — does not.
 
-So fitting a curve's shape pays the sensitivity integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians in the coordinates — does not.
-
-`s` must then fall within $[0, s_{\max}]$, up to a small margin either side. The precompute integrates a little past both ends rather than stopping exactly at them, because the inverse chart's nearest-point solve genuinely asks for $\tau(s)$ outside the nominal range — one scan-seed spacing, symmetric — while bracketing a root. Those queries are answered from solved data, so they are correct rather than merely tolerated, and a query beyond the solved range raises instead of extrapolating off the end of the interpolation.
+`s` must then fall within $[0, s_{\max}]$, up to a small margin either side: the precompute integrates a little past both ends, because the inverse chart's nearest-point solve genuinely asks for $\tau(s)$ outside the nominal range while bracketing a root. Beyond the solved range a query raises rather than extrapolating off the end of the interpolation.
 
 `s_max` also requires a one-argument curve: the Eulerian reading re-measures arc length on whichever slice it is evaluated at, so no single $\tau(s)$ exists to precompute — bind the slice with `AtTime` first, or use `LagrangianArcLength`, whose reference slice is fixed by construction.
 
