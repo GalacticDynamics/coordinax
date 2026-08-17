@@ -382,6 +382,14 @@ _MSG_UNINSPECTABLE_CURVE = (
     "`(tau)` or `(tau, t)`, not a builtin or C-implemented callable."
 )
 
+_MSG_REQUIRED_KEYWORD_ONLY = (
+    "the given curve's second parameter `{name}` is keyword-only and has no "
+    "default, so the curve can be called neither as `curve(tau)` (it is "
+    "missing) nor as `curve(tau, t)` (it cannot be reached positionally). "
+    "Give it a default if it is a tuning knob, make it positional if it is "
+    "the time, or bind it with `functools.partial(curve, {name}=...)`."
+)
+
 _MSG_LAGRANGIAN_REQUIRES_TWO_ARGUMENT = (
     "LagrangianArcLength wraps a two-argument curve `gamma(tau, t)`, but the "
     "given curve does not accept two required positional arguments. A "
@@ -400,21 +408,56 @@ _MSG_S_MAX_TWO_ARGUMENT = (
 
 
 def _is_two_argument(curve: Callable[..., Any], /) -> bool:
-    """Report whether ``curve`` takes two positional arguments, ``(tau, t)``.
+    """Report whether ``curve`` takes ``(tau, t)`` rather than just ``(tau)``.
 
-    The second parameter must be **required**. Counting parameters instead
-    misreads two ordinary idioms as time-dependent curves: a one-argument
-    curve carrying a tuning knob, ``def curve(tau, smoothing=0.1)``, and a
-    curve whose time a caller has already frozen with
-    ``functools.partial(curve, t=...)`` -- `inspect.signature` keeps a
-    keyword-bound parameter, with a default. Both then receive ``t=None``
-    and fail deep inside the ODE solve, nowhere near the real cause.
+    The question is what the *call* accepts, so the second parameter must be
+    both **positional** and **required**. Weakening either half misreads
+    ordinary signatures:
+
+    ============================  ====================  ==================
+    signature                     ``curve(tau)`` works  reading
+    ============================  ====================  ==================
+    ``(tau, t)``                  no                    two-argument
+    ``(tau, smoothing=0.1)``      yes                   one-argument
+    ``partial(curve, t=...)``     yes                   one-argument
+    ``(tau, *args)``              yes                   one-argument
+    ``(tau, **kw)``               yes                   one-argument
+    ``(tau, *, resolution)``      no                    neither -- raises
+    ============================  ====================  ==================
+
+    The defaulted cases are why "required" is checked rather than counting
+    parameters: `inspect.signature` keeps a `functools.partial`-bound
+    parameter, with a default. The variadic cases are why "positional" is
+    checked rather than "required" alone -- ``*args`` and ``**kw`` have no
+    default, yet ``curve(tau)`` binds them empty and works. Reading either as
+    time-dependent sends the curve down the two-argument path, where it fails
+    deep inside the ODE solve, nowhere near the real cause.
+
+    A **required keyword-only** second parameter is neither reading: it
+    cannot be reached positionally, so ``curve(tau, t)`` fails, and it has no
+    default, so ``curve(tau)`` fails too. That is a broken curve rather than
+    an ambiguous one, so it raises here with its own message instead of being
+    forced into a reading that cannot work.
     """
     try:
         params = list(inspect.signature(curve).parameters.values())
     except (TypeError, ValueError) as e:
         raise TypeError(_MSG_UNINSPECTABLE_CURVE) from e
-    return len(params) >= 2 and params[1].default is inspect.Parameter.empty
+
+    if len(params) < 2:
+        return False
+    second = params[1]
+
+    if second.kind in (
+        inspect.Parameter.VAR_POSITIONAL,  # *args: curve(tau) still binds
+        inspect.Parameter.VAR_KEYWORD,  # **kw: likewise
+    ):
+        return False
+    if second.default is not inspect.Parameter.empty:
+        return False
+    if second.kind is inspect.Parameter.KEYWORD_ONLY:
+        raise TypeError(_MSG_REQUIRED_KEYWORD_ONLY.format(name=second.name))
+    return True
 
 
 @final

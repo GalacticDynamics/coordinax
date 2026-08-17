@@ -152,6 +152,45 @@ def test_a_defaulted_second_parameter_is_still_one_argument() -> None:
     cxfc.BishopBuilder(curve_with_knob, "s")
 
 
+def test_a_variadic_second_parameter_is_still_one_argument() -> None:
+    """``*args``/``**kw`` have no default, but ``curve(tau)`` binds them empty.
+
+    Checking only "the second parameter is required" read both as
+    time-dependent, sending an ordinary one-argument curve down the
+    two-argument path. ``**kw`` is the sharper case: it cannot be called as
+    ``curve(tau, t)`` at all, so that reading was not merely pessimistic but
+    unusable.
+    """
+
+    def with_args(tau: u.AbstractQuantity, *args: object) -> u.AbstractQuantity:
+        del args
+        return curve1(tau)
+
+    def with_kwargs(tau: u.AbstractQuantity, **kw: object) -> u.AbstractQuantity:
+        del kw
+        return curve1(tau)
+
+    cxfc.BishopBuilder(with_args, "s")
+    cxfc.BishopBuilder(with_kwargs, "s")
+
+
+def test_a_required_keyword_only_second_parameter_is_rejected() -> None:
+    """Callable neither way, so it gets its own error rather than a reading.
+
+    ``def curve(tau, *, resolution)`` cannot be reached positionally, so
+    ``curve(tau, t)`` fails, and has no default, so ``curve(tau)`` fails too.
+    Reading it as two-argument named `AtTime(curve, t)` as the remedy, which
+    would not have worked.
+    """
+
+    def kw_only(tau: u.AbstractQuantity, *, resolution: float) -> u.AbstractQuantity:
+        del resolution
+        return curve1(tau)
+
+    with pytest.raises(TypeError, match="keyword-only"):
+        cxfc.BishopBuilder(kw_only, "s")
+
+
 def test_a_partial_frozen_time_is_still_one_argument() -> None:
     """`ft.partial` leaves the bound parameter visible, with a default."""
     frozen = ft.partial(curve2, t=u.Q(0.5, "s"))
