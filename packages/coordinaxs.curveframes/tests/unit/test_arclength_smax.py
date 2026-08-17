@@ -17,6 +17,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
+import coordinax.charts as cxc
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
@@ -335,8 +336,6 @@ def test_chart_round_trip_at_and_near_the_tau_zero_boundary() -> None:
     tau=s_max. #713 measured a *converged* result of s=-4.73e-9 hitting an
     exact `[0, s_max]` gate and failing 4 of these 5 cases.
     """
-    import coordinax.charts as cxc
-
     s_max = u.Q(2 * jnp.pi, "km")
     arc = cxfc.ArcLength(helix, "s", s_max=s_max)
     bishop = cxfc.BishopBuilder(arc, "km")
