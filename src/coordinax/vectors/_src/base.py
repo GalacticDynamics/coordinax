@@ -187,10 +187,11 @@ class AbstractVector(
     def rep(self) -> "cxr.Representation[GeomT, BasisT, SemanticT]":
         """The `coordinax.representations.Representation`, e.g. `cxr.point`.
 
-        An abstract *property*, not an `equinox.AbstractVar`: every concrete
-        subclass fixes this to a constant and implements it as a property, so
-        it is not an ``__init__`` parameter. Declaring it as a variable made
-        type checkers demand it at every construction site.
+        An abstract *property*, not an `equinox.AbstractVar`: subclasses derive
+        this rather than store it, so it is not an ``__init__`` parameter.
+        `~coordinax.vectors.Point` returns a constant; `~coordinax.vectors.Tangent`
+        builds one from its static ``basis`` and ``semantic`` fields. Declaring
+        it as a variable made type checkers demand it at every construction site.
         """
         raise NotImplementedError  # pragma: no cover
 
