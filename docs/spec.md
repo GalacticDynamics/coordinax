@@ -3745,9 +3745,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Dispatch behavior:**
 
-    - Orthogonal charts declare `DiagonalMetric`, which is what lets `metric_matrix` keep the $O(n)$ diagonal path rather than contracting a full $n \times n$ einsum.
+    - Charts whose metric is diagonal in their own components declare `DiagonalMetric`, which is what lets `metric_matrix` keep the $O(n)$ diagonal path rather than contracting a full $n \times n$ einsum. This is declared per chart, not inferred from the manifold: on `S2`, `sph2` and `lonlat_sph2` are diagonal while `loncoslat_sph2` is `DenseMetric`.
     - An `EmbeddedManifold` declares `DenseMetric`: the pullback of an ambient metric through an arbitrary embedding has no reason to be diagonal, even when the intrinsic chart is orthogonal.
-    - The `(AbstractManifold, AbstractChart)` fallback is the conservative one -- a manifold that has not declared itself orthogonal must not be assumed so, since claiming `DiagonalMetric` wrongly would silently discard off-diagonal terms.
+    - The `(AbstractManifold, AbstractChart)` fallback is `DenseMetric`, the conservative answer: a pair that has not declared itself diagonal must not be assumed so, since claiming `DiagonalMetric` wrongly would silently discard off-diagonal terms. Dense is only slower; diagonal would be wrong.
 
     **Examples**
 
@@ -3764,6 +3764,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     'DiagonalMetric'
     >>> cxm.metric_representation(cxm.S2, cxc.sph2).__name__
     'DiagonalMetric'
+
+    ```
+
+    But it is the chart that decides, not the manifold -- another chart on the
+    same sphere is dense:
+
+    ```pycon
+    >>> cxm.metric_representation(cxm.S2, cxc.loncoslat_sph2).__name__
+    'DenseMetric'
     ```
 
     A pullback through an embedding does not:
@@ -5023,11 +5032,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signatures:**
 
     ```
-    cxm.pt_project(p, M, /, *, usys=None)                        # EmbeddedManifold
-    cxm.pt_project(p, chart, /, *, usys=None)                    # EmbeddedChart
-    cxm.pt_project(p, from_chart, to_chart, M, /, *, usys=None)  # explicit charts
-    cxm.pt_project(p, chart, M, /, *, usys=None)                 # HyperSphericalManifold
-    cxm.pt_project(p, M, /)                                      # coordinax.vectors.Point
+    cxm.pt_project(p, M, /, *, usys=None)                          # EmbeddedManifold
+    cxm.pt_project(p, chart, /, *, usys=None)                      # EmbeddedChart
+    cxm.pt_project(p, from_chart, to_chart, M, /, *, usys=None)    # explicit charts
+    cxm.pt_project(p, from_chart, to_chart, emb, /, *, usys=None)  # explicit embedding map
+    cxm.pt_project(p, from_chart, embedding, /, *, usys=None)      # EmbeddedChart, source named
+    cxm.pt_project(p, from_chart, M, /, *, usys=None)              # HyperSphericalManifold
+    cxm.pt_project(p, M, /, *, usys=None)                          # coordinax.vectors.Point
     ```
 
     **Return:**
