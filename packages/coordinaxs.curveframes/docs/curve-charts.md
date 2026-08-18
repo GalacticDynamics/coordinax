@@ -383,9 +383,9 @@ Nothing above requires a plain function — a curve is consumed purely as a call
 
 ### Cost
 
-By default, every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
+By default, every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs compound: measured on a helix, a forward `pt_map` is ~3x slower than over the un-reparametrised curve, and ~4x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
 
-Passing `s_max` amortises the forward cost. The ODE is then solved once, at construction, over $[0, s_{\max}]$, and stored as a dense interpolation that later calls read from instead of re-solving:
+Passing `s_max` amortises that solve. The ODE is then done once, at construction, over $[0, s_{\max}]$, and stored as a dense interpolation that later calls read from instead of re-solving:
 
 ```{code-block} python
 >>> fast = cxfc.ArcLength(helix, "s", s_max=u.Q(10.0, "km"))
@@ -395,15 +395,17 @@ True
 
 ```
 
-Not every path is helped equally, and it is worth knowing which one you are on. Measured on this helix:
+`s_max` pays where the curve is evaluated many times per call, which is exactly what a frame builder does. Measured on this helix, eager, float64:
 
-| what you differentiate | cost |
+| what you are doing | does `s_max` help? |
 | --- | --- |
-| nothing (forward evaluation) | a few hundred times cheaper with `s_max` |
-| $s$ alone — the chart Jacobian, the metric, the inverse solve | no integration at all |
-| the curve's own parameters $\theta$ | about a factor of two |
+| forward `pt_map` under `BishopBuilder` | yes — roughly halves the reparametrisation overhead, and about the same under `jax.grad` |
+| a single `ArcLength` call | marginally: ~1.5x once jitted, nothing measurable eager |
+| differentiating, whether in $s$ or in the curve's own $\theta$ | no measurable difference |
 
-The split is structural. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation; differentiating with respect to $\theta$ costs a _second_ one, integrating $\partial S/\partial\theta$ over $[\tau_0, \tau]$, and that one cannot be precomputed because it depends on the perturbation direction, known only at the call. So fitting a curve's shape pays that integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians — does not.
+A single reparametrised call is already about a millisecond, so replacing that solve with an interpolation saves little on its own; it is the repetition inside the parallel-transport solve that makes it worth setting.
+
+Differentiating is unhelped for a structural reason worth knowing. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation; differentiating with respect to $\theta$ costs a _second_ one, integrating $\partial S/\partial\theta$ over $[\tau_0, \tau]$, and that one cannot be precomputed because it depends on the perturbation direction, known only at the call. So fitting a curve's shape pays that integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians — needs no integration at all, being $d\tau/ds = 1/\|\gamma'(\tau)\|$, already to hand.
 
 `s` must then fall within $[0, s_{\max}]$, up to a small margin either side: the precompute integrates a little past both ends, because the inverse chart's nearest-point solve genuinely asks for $\tau(s)$ outside the nominal range while bracketing a root. Beyond the solved range a query raises rather than extrapolating off the end of the interpolation.
 
