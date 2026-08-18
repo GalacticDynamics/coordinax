@@ -129,7 +129,7 @@ class Bob(AbstractReferenceFrame):
           chart=Cart3D(M=Rn(3))
       ),
       Translate(
-          {'x': Q(269813212.2, 'm / s'), 'y': Q(0.0, 'm / s'), 'z': Q(0.0, 'm / s')},
+          {'x': Q(269813212.2, 'm / s'), ...},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       )
