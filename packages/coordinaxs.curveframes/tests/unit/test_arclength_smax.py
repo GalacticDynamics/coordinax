@@ -10,6 +10,9 @@ around that independence, not around `s_max` alone.
 
 Per this codebase's testing standard, every test states what would have to
 break in `_src/arclength.py` for it to fail.
+
+`s_max=None` is `ArcLength`'s own default, so the no-precompute case is
+parametrised as a value rather than a separate branch.
 """
 
 import equinox as eqx
@@ -64,6 +67,12 @@ class Helix(eqx.Module):
         return u.Q(jnp.stack([th * jnp.cos(t), th * jnp.sin(t), 0.3 * t]), "km")
 
 
+#: One period of the helix, used as both the chart's `tau_bounds` upper edge
+#: and the precompute's `s_max`, so the round-trip probes below sit exactly on
+#: the boundary `nearest_tau` overshoots.
+_CHART_S_MAX_KM = float(2 * jnp.pi)
+
+
 # --------------------------------------------------------------------------
 # Criterion 2: fast and slow paths agree, on a curve whose speed varies.
 #
@@ -72,31 +81,24 @@ class Helix(eqx.Module):
 # point) -- a bug that a constant-speed curve's linear tau(s) would hide.
 
 
-def test_fast_and_slow_agree_for_nonconstant_speed() -> None:
+@pytest.mark.parametrize("s_val", [0.1, 1.0, 3.0, 4.99])
+def test_fast_and_slow_agree_for_nonconstant_speed(s_val: float) -> None:
     plain = cxfc.ArcLength(parabola, "s")
     fast = cxfc.ArcLength(parabola, "s", s_max=u.Q(5.0, "km"))
-    for s_val in (0.1, 1.0, 3.0, 4.99):
-        got_plain = plain(u.Q(s_val, "km")).ustrip("km")
-        got_fast = fast(u.Q(s_val, "km")).ustrip("km")
-        assert jnp.allclose(got_plain, got_fast, atol=1e-8), (
-            s_val,
-            got_plain,
-            got_fast,
-        )
+    got_plain = plain(u.Q(s_val, "km")).ustrip("km")
+    got_fast = fast(u.Q(s_val, "km")).ustrip("km")
+    assert jnp.allclose(got_plain, got_fast, atol=1e-8), (got_plain, got_fast)
 
 
-def test_fast_and_slow_agree_for_lagrangian_nonconstant_speed() -> None:
+@pytest.mark.parametrize(("s_val", "t_val"), [(0.1, 0.0), (1.0, 0.5), (3.0, 1.2)])
+def test_fast_and_slow_agree_for_lagrangian_nonconstant_speed(
+    s_val: float, t_val: float
+) -> None:
     plain = cxfc.LagrangianArcLength(stretch, u.Q(0.3, "s"), "s")
     fast = cxfc.LagrangianArcLength(stretch, u.Q(0.3, "s"), "s", s_max=u.Q(5.0, "km"))
-    for s_val, t_val in ((0.1, 0.0), (1.0, 0.5), (3.0, 1.2)):
-        got_plain = plain(u.Q(s_val, "km"), u.Q(t_val, "s")).ustrip("km")
-        got_fast = fast(u.Q(s_val, "km"), u.Q(t_val, "s")).ustrip("km")
-        assert jnp.allclose(got_plain, got_fast, atol=1e-6), (
-            s_val,
-            t_val,
-            got_plain,
-            got_fast,
-        )
+    got_plain = plain(u.Q(s_val, "km"), u.Q(t_val, "s")).ustrip("km")
+    got_fast = fast(u.Q(s_val, "km"), u.Q(t_val, "s")).ustrip("km")
+    assert jnp.allclose(got_plain, got_fast, atol=1e-6), (got_plain, got_fast)
 
 
 # --------------------------------------------------------------------------
@@ -124,25 +126,26 @@ def test_s_max_is_fine_after_binding_time_with_at_time() -> None:
 # stripping silently, so these also pin that no such call sits on these paths.
 
 
-def test_s_and_s_max_are_converted_not_assumed() -> None:
+@pytest.mark.parametrize(
+    ("s_max", "s"),
+    [
+        pytest.param(None, u.Q(2000.0, "m"), id="no-precompute"),
+        pytest.param(u.Q(10.0, "km"), u.Q(2000.0, "m"), id="s_max-km-query-m"),
+        pytest.param(u.Q(10000.0, "m"), u.Q(2.0, "km"), id="s_max-m-query-km"),
+    ],
+)
+def test_s_and_s_max_are_converted_not_assumed(
+    s_max: u.AbstractQuantity | None, s: u.AbstractQuantity
+) -> None:
     """Same physical query in km and in m must give the same point.
 
     Fails if any of the three strip sites (`_solve_tau`'s `s`,
     `_eval_tau_dense`'s `s`/`s_max`) reads a raw stored value instead of
     converting -- a 1000x error, not a rounding one.
     """
-    arc = cxfc.ArcLength(helix, "s")
-    want = arc(u.Q(2.0, "km")).ustrip("km")
-
-    assert jnp.allclose(arc(u.Q(2000.0, "m")).ustrip("km"), want, atol=1e-9)
-
-    # And across the precompute, in both directions of unit mismatch.
-    for s_max, s in (
-        (u.Q(10.0, "km"), u.Q(2000.0, "m")),
-        (u.Q(10000.0, "m"), u.Q(2.0, "km")),
-    ):
-        got = cxfc.ArcLength(helix, "s", s_max=s_max)(s).ustrip("km")
-        assert jnp.allclose(got, want, atol=1e-8), (s_max, s, got, want)
+    want = cxfc.ArcLength(helix, "s")(u.Q(2.0, "km")).ustrip("km")
+    got = cxfc.ArcLength(helix, "s", s_max=s_max)(s).ustrip("km")
+    assert jnp.allclose(got, want, atol=1e-8), (got, want)
 
 
 def test_the_jvp_tangent_carries_s_own_unit() -> None:
@@ -169,7 +172,8 @@ def test_the_jvp_tangent_carries_s_own_unit() -> None:
 # `_solve_tau_dense` integrating across it.
 
 
-def test_s_within_the_margin_of_s_max_is_correct_not_clamped() -> None:
+@pytest.mark.parametrize("s_val", [5.24, -0.24, 5.0, 0.0, 2.5])
+def test_s_within_the_margin_of_s_max_is_correct_not_clamped(s_val: float) -> None:
     """The margin is solved data, so a query in it is right, not just accepted.
 
     This is the whole point of integrating past each end. The earlier version
@@ -178,27 +182,31 @@ def test_s_within_the_margin_of_s_max_is_correct_not_clamped() -> None:
     asserting "does not raise" passed against that bug; comparing to a fresh
     solve is what catches it.
     """
-    s_max = u.Q(5.0, "km")
-    fast = cxfc.ArcLength(helix, "s", s_max=s_max)
+    fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
     plain = cxfc.ArcLength(helix, "s")  # ground truth: no precompute at all
+    got = fast(u.Q(s_val, "km")).ustrip("km")
+    want = plain(u.Q(s_val, "km")).ustrip("km")
+    assert jnp.allclose(got, want, atol=1e-9), (got, want)
 
-    for s_val in (5.24, -0.24, 5.0, 0.0, 2.5):
-        got = fast(u.Q(s_val, "km")).ustrip("km")
-        want = plain(u.Q(s_val, "km")).ustrip("km")
-        assert jnp.allclose(got, want, atol=1e-9), (s_val, got, want)
 
-    # And specifically: it is *not* the boundary value it used to clamp to.
+def test_past_the_edge_is_not_the_clamped_boundary_value() -> None:
+    """Companion to the above: the margin query is *not* tau(s_max) rebadged.
+
+    The comparison against a fresh solve already implies this, but only if
+    the two differ measurably -- this states the separation outright, so a
+    clamping regression fails here even if tolerances elsewhere drifted.
+    """
+    fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
     at_edge = fast(u.Q(5.0, "km")).ustrip("km")
     past_edge = fast(u.Q(5.24, "km")).ustrip("km")
     assert not jnp.allclose(past_edge, at_edge, atol=1e-3), (past_edge, at_edge)
 
 
-def test_s_far_outside_s_max_raises() -> None:
+@pytest.mark.parametrize("s_val", [6.0, -0.26])
+def test_s_far_outside_s_max_raises(s_val: float) -> None:
     fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
-    with pytest.raises(Exception, match="solved domain"):
-        fast(u.Q(6.0, "km"))
-    with pytest.raises(Exception, match="solved domain"):
-        fast(u.Q(-0.26, "km"))
+    with pytest.raises(RuntimeError, match="solved domain"):
+        fast(u.Q(s_val, "km"))
 
 
 def test_the_margin_scales_with_a_small_s_max() -> None:
@@ -212,7 +220,7 @@ def test_the_margin_scales_with_a_small_s_max() -> None:
     """
     tiny = cxfc.ArcLength(helix, "s", s_max=u.Q(0.001, "km"))
     tiny(u.Q(0.00104, "km"))  # 4% past: inside the 5% margin, must not raise
-    with pytest.raises(Exception, match="solved domain"):
+    with pytest.raises(RuntimeError, match="solved domain"):
         tiny(u.Q(0.002, "km"))  # 100% past: must raise, and did not before
 
 
@@ -327,8 +335,9 @@ def test_grad_without_s_max_also_uses_the_custom_jvp() -> None:
 # `ArcLength` before these.
 
 
-def test_chart_round_trip_at_and_near_the_tau_zero_boundary() -> None:
-    """5 round trips at/near the boundary `nearest_tau` probes past s_max's edge.
+@pytest.mark.parametrize("s_val", [0.0, 1e-9, 0.05, 1.0, _CHART_S_MAX_KM - 1e-6])
+def test_chart_round_trip_at_and_near_the_tau_zero_boundary(s_val: float) -> None:
+    """Round trips at/near the boundary `nearest_tau` probes past s_max's edge.
 
     `nearest_tau`'s bracketed root-find evaluates the curve up to one scan-seed
     spacing outside `tau_bounds` whenever the nearest seed sits at an edge --
@@ -336,43 +345,31 @@ def test_chart_round_trip_at_and_near_the_tau_zero_boundary() -> None:
     tau=s_max. #713 measured a *converged* result of s=-4.73e-9 hitting an
     exact `[0, s_max]` gate and failing 4 of these 5 cases.
     """
-    s_max = u.Q(2 * jnp.pi, "km")
+    s_max = u.Q(_CHART_S_MAX_KM, "km")
     arc = cxfc.ArcLength(helix, "s", s_max=s_max)
     bishop = cxfc.BishopBuilder(arc, "km")
     ch = cxfc.TubularChart(bishop, tau_bounds=(u.Q(0.0, "km"), s_max))
 
-    # `ustrip("km")`, not `.value`: the probes are re-wrapped as km below, so
-    # reading the raw stored number would silently mean something else the
-    # moment `s_max` is written in any other length unit.
-    s_probe_vals = (0.0, 1e-9, 0.05, 1.0, float(s_max.ustrip("km")) - 1e-6)
-    for s_val in s_probe_vals:
-        on_curve = ch.builder.location(u.Q(s_val, "km"))
-        d = {k: on_curve[i] for i, k in enumerate(("x", "y", "z"))}
-        back = cxc.pt_map(d, ch.M, cxc.cart3d, ch.M, ch)
-        assert jnp.allclose(back["tau"].ustrip("km"), s_val, atol=1e-5), (
-            s_val,
-            back["tau"].ustrip("km"),
-        )
-        assert jnp.allclose(back["n1"].ustrip("km"), 0.0, atol=1e-5)
-        assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
+    on_curve = ch.builder.location(u.Q(s_val, "km"))
+    d = {k: on_curve[i] for i, k in enumerate(("x", "y", "z"))}
+    back = cxc.pt_map(d, ch.M, cxc.cart3d, ch.M, ch)
+    assert jnp.allclose(back["tau"].ustrip("km"), s_val, atol=1e-5), back["tau"]
+    assert jnp.allclose(back["n1"].ustrip("km"), 0.0, atol=1e-5)
+    assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
 
 
-def test_bishop_wrapped_arclength_survives_jacfwd_with_and_without_s_max() -> None:
-    def bishop_tip_z(theta_val: float, *, s_max: u.AbstractQuantity | None) -> float:
-        curve = Helix(u.Q(theta_val, "km"))
-        kw = {} if s_max is None else {"s_max": s_max}
-        arc = cxfc.ArcLength(curve, "s", **kw)
-        b = cxfc.BishopBuilder(arc, "km")
-        return b.location(u.Q(2.0, "km")).ustrip("km")[2]
+@pytest.mark.parametrize(
+    "s_max",
+    [pytest.param(None, id="no-precompute"), pytest.param(u.Q(10.0, "km"), id="s_max")],
+)
+def test_bishop_wrapped_arclength_survives_jacfwd(
+    s_max: u.AbstractQuantity | None,
+) -> None:
+    def f(theta_val: float) -> float:
+        arc = cxfc.ArcLength(Helix(u.Q(theta_val, "km")), "s", s_max=s_max)
+        return cxfc.BishopBuilder(arc, "km").location(u.Q(2.0, "km")).ustrip("km")[2]
 
     h = 1e-6
-    for s_max in (None, u.Q(10.0, "km")):
-
-        def f(th: float, s_max: u.AbstractQuantity | None = s_max) -> float:
-            return bishop_tip_z(th, s_max=s_max)
-
-        grad_fwd = jax.jacfwd(f)(1.0)
-        grad_rev = jax.grad(f)(1.0)
-        fd = (f(1.0 + h) - f(1.0 - h)) / (2 * h)
-        assert jnp.allclose(grad_fwd, fd, rtol=1e-3), (s_max, grad_fwd, fd)
-        assert jnp.allclose(grad_rev, fd, rtol=1e-3), (s_max, grad_rev, fd)
+    fd = (f(1.0 + h) - f(1.0 - h)) / (2 * h)
+    assert jnp.allclose(jax.jacfwd(f)(1.0), fd, rtol=1e-3), fd
+    assert jnp.allclose(jax.grad(f)(1.0), fd, rtol=1e-3), fd
