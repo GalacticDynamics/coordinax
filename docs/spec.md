@@ -2598,9 +2598,9 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     >>> pv_sph = pv.cconvert(cxc.sph3d)
     >>> pv_sph.point.chart
-    Spherical3D()
+    Spherical3D(M=Rn(3))
     >>> pv_sph["velocity"].chart
-    Spherical3D()
+    Spherical3D(M=Rn(3))
     ```
 
 !!! info `ToUnitsOptions`
@@ -2675,9 +2675,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> # Spherical manifold inference
     >>> cxm.guess_manifold(cxc.sph2)
     HyperSphericalManifold(ndim=2)
+    ```
 
+    Component *names* are not enough to infer a sphere -- unlike ``x/y/z``,
+    which do resolve -- so a bare mapping of angles falls back to the sentinel.
+    Hand over the chart when the manifold matters.
+
+    ```pycon
     >>> cxm.guess_manifold({"theta": 1.0, "phi": 0.5})
-    HyperSphericalManifold(ndim=2)
+    NoManifold()
     ```
 
     **Notes:**
@@ -2832,7 +2838,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> # Via metric directly:
     >>> metric = cxm.FlatMetric(3)
-    >>> metric.norm(v, chart)
+    >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+    >>> metric.norm(v, chart, at=at)
     Q(5., 'm / s')
 
     >>> # Metric-level functional form on a curved chart (at is required):
@@ -3059,20 +3066,24 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
+    ```
 
     A quarter turn along the equator: the arc is ``pi / 2``, the chord through
     the interior is ``sqrt(2)``.
 
+    ```pycon
     >>> a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.pi / 2, "rad")}
     >>> round(float(cxm.chord_distance(cxc.sph2, a, b)), 6)
     1.414214
     >>> round(float(cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad")), 6)
     1.570796
+    ```
 
     An embedded sphere carries its radius: antipodes are one diameter apart
     through the middle, half the great-circle distance around the outside.
 
+    ```pycon
     >>> M = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.S2,
     ...     ambient=cxm.R3,
@@ -3153,9 +3164,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
+    ```
 
     The sign is the causal character of the pair.
 
+    ```pycon
     >>> o = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> def event(ct, x):
     ...     return {
@@ -3172,11 +3185,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Q(24., 'm2')
     >>> cxm.interval(cxc.minkowskict, o, event(3.0, 3.0))  # null
     Q(0., 'm2')
+    ```
 
     The identity with `norm`, on a chart whose metric actually varies. `b - a`
     is not defined for a `CDict`, so the difference is component-wise and the
     metric is pinned at `a`:
 
+    ```pycon
     >>> import coordinax.charts as cxc
     >>> a = {"r": u.Q(2.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.3, "rad")}
     >>> b = {"r": u.Q(2.5, "m"), "theta": u.Angle(1.3, "rad"), "phi": u.Angle(0.9, "rad")}
@@ -3285,7 +3300,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     The metric matrix is obtained via the dispatch function, not via a method on the metric field object:
 
-    ```python
+    ```
     import coordinaxs.api.manifolds as cxmapi
 
     g = cxmapi.metric_matrix(manifold, point, chart)  # → DiagonalMetric or DenseMetric
@@ -3511,7 +3526,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     `NoManifold` is a degenerate placeholder manifold with no charts and no geometry. It serves as a sentinel value when a manifold object is required by the API but none has been specified by the user.
 
-    - `ndim == -1` (sentinel for "no manifold specified").
+    - `ndim == 0` (sentinel for "no manifold specified"). Note this does *not*
+      distinguish it from a genuine zero-dimensional manifold: `Rn(0).ndim` is
+      also `0`. Test with `isinstance(M, NoManifold)`, never on `ndim`.
     - `has_chart(chart)` always returns `False`.
 
     `no_manifold` is the canonical module-level instance of `NoManifold`. It should be used in preference to constructing `NoManifold()` directly, since `NoManifold` carries no state and a shared instance is cheaper.
@@ -3522,7 +3539,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     NoManifold()
 
     >>> cxm.no_manifold.ndim
-    -1
+    0
 
     >>> import coordinax.charts as cxc
     >>> cxm.no_manifold.has_chart(cxc.cart3d)
@@ -3703,7 +3720,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> M = cxm.R3
     >>> M.ndim
     3
-    >>> M.default_chart
+    >>> M.default_chart()
     Cart3D(M=Rn(3))
     >>> M.metric.signature
     (1, 1, 1)
@@ -3797,7 +3814,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     2
     >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
     >>> cxmapi.metric_matrix(cxm.S2, at, cxc.sph2).diagonal
-    Array([1., 1.], dtype=float64)
+    QM([1., 1.], '(, )')
     ```
 
 (software-spec-twospheremanifold)=
@@ -3857,8 +3874,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> M.ndim
     2
 
-    >>> M.default_chart
-    SphericalTwoSphere()
+    >>> M.default_chart()
+    SphericalTwoSphere(M=Sn(2))
 
     >>> M.metric.signature
     (1, 1)
@@ -4140,8 +4157,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> M.ndim
     2
-    >>> M.default_chart
-    Cart2D()
+    >>> M.default_chart()
+    Cart2D(M=Rn(2))
     >>> M.metric.signature
     (1, 1)
 
@@ -4210,7 +4227,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> default = atlas.default_chart()
     >>> default
     CartesianProductChart(
-        factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
+        factors=(SphericalTwoSphere(M=Sn(2)), Cart1D(M=Rn(1))),
+        factor_names=('S2', 'R1')
     )
 
     >>> atlas["S2"]
@@ -4333,9 +4351,10 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> M.ndim
     3
 
-    >>> M.default_chart
+    >>> M.default_chart()
     CartesianProductChart(
-        factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
+        factors=(SphericalTwoSphere(M=Sn(2)), Cart1D(M=Rn(1))),
+        factor_names=('S2', 'R1')
     )
 
     >>> M.atlas["S2"]
@@ -4443,7 +4462,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ...     project_fn=project_fn,
     ... )
     >>> embed_map
-    CustomEmbeddingMap(intrinsic=Cart1D(), ambient=Cart2D(), ...)
+    CustomEmbeddingMap(intrinsic=Cart1D(M=Rn(1)), ambient=Cart2D(M=Rn(2)), ...)
     ```
 
 (software-spec-pullbackmetric)=
@@ -4505,7 +4524,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> g = cxmapi.metric_matrix(M_emb, at, cxc.sph2)
     >>> g.matrix.value
     Array([[1., 0.],
-           [0., 1.]], dtype=float64, weak_type=True)
+           [0., 1.]], dtype=float64)
     ```
 
 (software-spec-embeddedmanifold)=
@@ -4587,11 +4606,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> manifold.metric.signature
     (1, 1)
 
-    >>> # Embed a point from spherical (theta, phi) to Cartesian (x, y, z)
+    >>> # Embed a point from the intrinsic (theta, phi) into the ambient.
+    >>> # `TwoSphereIn3D` defaults its ambient to `Spherical3D`, so the result
+    >>> # is (r, theta, phi) at fixed r = R; pass `ambient=cxc.cart3d` for (x, y, z).
     >>> p_int = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> p_amb = cxm.pt_embed(p_int, manifold)
     >>> p_amb
-    {'x': Q(2., 'km'), 'y': Q(0., 'km'), 'z': Q(0., 'km')}
+    {'r': Q(2., 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     >>> # Project back from ambient to intrinsic
     >>> p_int_recovered = cxm.pt_project(p_amb, manifold)
@@ -5220,13 +5241,17 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     >>> v = {"x": jnp.array(2.0), "y": jnp.array(3.0), "z": jnp.array(0.0)}
     >>> cxfm.act(boost, None, v, cxc.cart3d, cxr.coord_vel)
-    {'x': Array(3., dtype=float64), 'y': Array(3., dtype=float64), 'z': Array(0., dtype=float64)}
+    {'x': Array(3., dtype=float64, weak_type=True), 'y': Array(3., dtype=float64, weak_type=True),
+     'z': Array(0., dtype=float64, weak_type=True)}
+    ```
 
     Points move by ``delta * tau`` (a time parameter is required):
 
+    ```pycon
     >>> p = {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}
     >>> cxfm.act(boost, jnp.array(2.0), p, cxc.cart3d, cxr.point)
-    {'x': Array(3., dtype=float64), 'y': Array(2., dtype=float64), 'z': Array(3., dtype=float64)}
+    {'x': Array(3., dtype=float64, weak_type=True), 'y': Array(2., dtype=float64, weak_type=True),
+     'z': Array(3., dtype=float64, weak_type=True)}
     ```
 
 </br>

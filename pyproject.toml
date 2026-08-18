@@ -285,7 +285,6 @@ similarities.ignore-imports = "yes"
 [tool.pytest.ini_options]
 addopts = [
   "--arraydiff",
-  "--ignore-glob=docs/spec.md",                                 # exclude the spec file
   "--ignore-glob=*/coordinaxs.curveframes/docs/visualizing.md", # executed by the docs build (matplotlib), not sybil
   "--import-mode=importlib",
   "--showlocals",
