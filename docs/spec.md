@@ -3714,6 +3714,66 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     <class 'coordinax._src.metric.matrix.DiagonalMetric'>
     ```
 
+(software-spec-metric_representation)=
+
+!!! info `metric_representation`
+
+    Declare which `AbstractMetricMatrix` **container** a manifold's metric uses
+    in a given chart, without computing any components.
+
+    Where [`metric_matrix`](#software-spec-metric-matrix-dispatch) evaluates the
+    metric at a point and returns a populated matrix, `metric_representation`
+    answers the cheaper, purely structural question one layer up: *would that
+    result be diagonal or dense?* It is the declaration the dispatch layer
+    consults; it takes no base point because sparsity structure is a property of
+    the (manifold, chart) pair, not of where you stand on it.
+
+    **Signatures:**
+
+    ```
+    cxm.metric_representation(M, chart, /)
+    ```
+
+    **Arguments:**
+
+    - `M`: the manifold.
+    - `chart`: the chart whose components the metric would be expressed in.
+
+    **Return:**
+
+    - A **class**, not an instance: `DiagonalMetric` or `DenseMetric`. Nothing is evaluated, so there is no point argument and no `usys`.
+
+    **Dispatch behavior:**
+
+    - Orthogonal charts declare `DiagonalMetric`, which is what lets `metric_matrix` keep the $O(n)$ diagonal path rather than contracting a full $n \times n$ einsum.
+    - An `EmbeddedManifold` declares `DenseMetric`: the pullback of an ambient metric through an arbitrary embedding has no reason to be diagonal, even when the intrinsic chart is orthogonal.
+    - The `(AbstractManifold, AbstractChart)` fallback is the conservative one -- a manifold that has not declared itself orthogonal must not be assumed so, since claiming `DiagonalMetric` wrongly would silently discard off-diagonal terms.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    ```
+
+    Orthogonal charts, flat or curved, declare the diagonal container:
+
+    ```pycon
+    >>> cxm.metric_representation(cxm.R3, cxc.cart3d).__name__
+    'DiagonalMetric'
+    >>> cxm.metric_representation(cxm.S2, cxc.sph2).__name__
+    'DiagonalMetric'
+    ```
+
+    A pullback through an embedding does not:
+
+    ```pycon
+    >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
+    >>> cxm.metric_representation(M, cxc.sph2).__name__
+    'DenseMetric'
+    ```
+
 (software-spec-abstractmetricmatrix)=
 
 !!! info `AbstractMetricMatrix`, `DiagonalMetric`, `DenseMetric`
@@ -4894,6 +4954,153 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> p_int_recovered = cxm.pt_project(p_amb, manifold)
     >>> p_int_recovered
     {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
+    ```
+
+(software-spec-pt_embed)=
+
+!!! info `pt_embed`
+
+    Map intrinsic coordinates to their image in the **ambient** chart.
+
+    The forward half of the embedding pair; [`pt_project`](#software-spec-pt_project)
+    is the inverse. Both are dispatched on the embedding carrier, so the same
+    call works whether you hold an `EmbeddedManifold`, an `EmbeddedChart`, or a
+    bare `AbstractEmbeddingMap`.
+
+    **Signatures:**
+
+    ```
+    cxm.pt_embed(p, M, /, *, usys=None)                        # EmbeddedManifold
+    cxm.pt_embed(p, chart, /, *, usys=None)                    # EmbeddedChart
+    cxm.pt_embed(p, from_chart, to_chart, M, /, *, usys=None)  # explicit charts
+    cxm.pt_embed(p, from_chart, to_chart, emb, /, *, usys=None)
+    ```
+
+    **Return:**
+
+    - A `CDict` in the ambient chart's components. **Which** components depends on the embedding's `ambient`, which is a property of the embedding and not of this call.
+
+    **Dispatch behavior:**
+
+    - `TwoSphereIn3D` defaults its ambient to `Spherical3D`, so the result is $(r, \theta, \phi)$ at fixed $r = R$ unless the embedding was built with `ambient=cxc.cart3d`.
+    - All coordinate-level work routes through an intermediate 3D spherical chart regardless of the ambient selected, so the Cartesian route is `SphericalTwoSphere -> Spherical3D -> Cart3D`.
+
+    **Examples**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    ```
+
+    The default ambient is spherical, so the embedding shows up as "radius is
+    now a coordinate, pinned at R":
+
+    ```pycon
+    >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
+    >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> cxm.pt_embed(p, M)
+    {'r': Q(2., 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
+    ```
+
+    Ask for a Cartesian ambient and the same point comes back as $(x, y, z)$:
+
+    ```pycon
+    >>> Mc = cxm.embedded_twosphere(radius=u.Q(2.0, "km"), ambient=cxc.cart3d)
+    >>> north = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> cxm.pt_embed(north, Mc)
+    {'x': Q(0., 'km'), 'y': Q(0., 'km'), 'z': Q(2., 'km')}
+    ```
+
+(software-spec-pt_project)=
+
+!!! info `pt_project`
+
+    Map ambient coordinates back to the intrinsic chart — the inverse of
+    [`pt_embed`](#software-spec-pt_embed).
+
+    **Signatures:**
+
+    ```
+    cxm.pt_project(p, M, /, *, usys=None)                        # EmbeddedManifold
+    cxm.pt_project(p, chart, /, *, usys=None)                    # EmbeddedChart
+    cxm.pt_project(p, from_chart, to_chart, M, /, *, usys=None)  # explicit charts
+    cxm.pt_project(p, chart, M, /, *, usys=None)                 # HyperSphericalManifold
+    cxm.pt_project(p, M, /)                                      # coordinax.vectors.Point
+    ```
+
+    **Return:**
+
+    - A `CDict` in the intrinsic chart's components.
+
+    **Dispatch behavior:**
+
+    - It is a genuine projection, not merely an inverse: an ambient point *off* the embedded surface is carried to the intrinsic coordinates of its image, so `pt_project` is defined on all of the ambient and only round-trips exactly for points already on the surface.
+    - It carries more overloads than `pt_embed`, including a `HyperSphericalManifold` pair and a `coordinax.vectors.Point` one, because projecting *onto* a sphere is meaningful without an `EmbeddedManifold` to hand while embedding *from* one is not.
+
+    **Examples**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
+    >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> cxm.pt_project(cxm.pt_embed(p, M), M)
+    {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
+    ```
+
+    The angle *container* tracks the ambient chart. Round-tripping through a
+    Cartesian ambient returns the same value and unit in a plain `Quantity`
+    rather than an `Angle`:
+
+    ```pycon
+    >>> Mc = cxm.embedded_twosphere(radius=u.Q(2.0, "km"), ambient=cxc.cart3d)
+    >>> q = {"theta": u.Angle(jnp.pi / 3, "rad"), "phi": u.Angle(0.4, "rad")}
+    >>> cxm.pt_project(cxm.pt_embed(q, Mc), Mc)["theta"]
+    Q(1.04719755, 'rad')
+    ```
+
+    against `Angle(1.04719755, 'rad')` on the spherical route. Recorded as
+    observed behaviour rather than endorsed: an angle is an element of $S^1$
+    and the container is what carries that, so the ambient chart arguably
+    should not decide it.
+
+(software-spec-embedded_twosphere)=
+
+!!! info `embedded_twosphere`
+
+    Convenience constructor for the most common `EmbeddedManifold`: a 2-sphere
+    of radius $R$ sitting in $\mathbb{R}^3$.
+
+    A plain function rather than a dispatched verb — it assembles
+    `EmbeddedManifold(intrinsic=S2, ambient=R3, embed_map=TwoSphereIn3D(...))`
+    and exists so the three-part construction does not have to be spelled out
+    at every call site.
+
+    **Signature:**
+
+    ```
+    cxm.embedded_twosphere(radius, ambient=cxc.spherical3d)
+    ```
+
+    **Arguments:**
+
+    - `radius`: the sphere radius, a `float` or `unxt.Quantity`. A unitful radius is what makes downstream measurements carry a length unit.
+    - `ambient`: the ambient chart, defaulting to `Spherical3D`. Pass `cxc.cart3d` for $(x, y, z)$.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.manifolds as cxm
+
+    >>> cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
+    EmbeddedManifold(intrinsic=HyperSphericalManifold(ndim=2), ambient=Rn(3),
+                     embed_map=TwoSphereIn3D(radius=Q(2., 'km'), ...))
     ```
 
 (software-spec-embeddedchart)=
