@@ -3202,6 +3202,287 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Q(1.629626, 'm2')
     ```
 
+(software-spec-lorentzian)=
+
+!!! info `coordinax.manifolds.lorentzian`
+
+    The verbs that read the **sign** of `interval` rather than its magnitude
+    alone. They live in a sub-namespace because they are gated on a stronger
+    precondition than the rest of the manifold API: the metric must be
+    `AbstractLorentzianMetricField`, meaning a signature $(-,+,\ldots,+)$ with
+    **exactly one** timelike direction.
+
+    Named for the *signature* and not for "spacetime": `coordinax.charts.galileanct`
+    is a 4-dimensional spacetime and is **not** Lorentzian, so a `spacetime`
+    namespace would promise membership these verbs refuse. Named `lorentzian`
+    and not `minkowski` because the gate is the signature alone — a curved
+    spacetime metric (Schwarzschild, FLRW) carries the marker and acquires all
+    of them.
+
+    Without exactly one timelike direction there is nothing to classify: a
+    positive-definite metric gives the interval one sign for every pair, and an
+    indefinite metric with several timelike directions gives varying signs that
+    do not partition pairs into past, future and elsewhere. Each verb raises
+    `NotImplementedError` rather than returning a value that could be read as a
+    classification.
+
+    | verb | reads | defined for |
+    |---|---|---|
+    | [`causal_character`](#software-spec-causal_character) | the sign of `interval` | any pair |
+    | [`proper_time`](#software-spec-proper_time) | $\sqrt{-\Delta s^2}/c$ | timelike pairs |
+    | [`proper_distance`](#software-spec-proper_distance) | $\sqrt{+\Delta s^2}$ | spacelike pairs |
+    | [`rapidity_between`](#software-spec-rapidity_between) | the hyperbolic angle | two timelike *tangents* |
+
+    `interval` itself is canonical in `coordinax.manifolds` and re-exported here,
+    since the signed quadratic form is defined for every metric.
+
+(software-spec-causal_character)=
+
+!!! info `causal_character`
+
+    Classify a pair of events by the sign of the interval between them.
+
+    $$
+    \mathrm{causal\_character}(a, b) =
+    \begin{cases}
+    \texttt{'timelike'}  & \Delta s^2 < 0 \\
+    \texttt{'null'}      & \Delta s^2 = 0 \\
+    \texttt{'spacelike'} & \Delta s^2 > 0
+    \end{cases}
+    $$
+
+    **Signatures:**
+
+    ```
+    cxm.lorentzian.causal_character(chart, a, b, /, *, atol=..., usys=None)
+    cxm.lorentzian.causal_character(metric, chart, a, b, /, *, atol=..., usys=None)
+    ```
+
+    **Arguments:**
+
+    - `chart`: the chart in whose components `a` and `b` are expressed.
+    - `metric`: an explicit Lorentzian metric; must be the chart's own.
+    - `a`, `b`: the two events, as `CDict` component dicts.
+    - `atol` (keyword): tolerance for calling $\Delta s^2$ exactly zero. A null separation is a measure-zero condition in floating point, so it needs a band rather than an equality test.
+    - `usys` (keyword, optional): unit system forwarded to metric evaluation.
+
+    **Return:**
+
+    - One of the Python strings `'timelike'`, `'null'`, `'spacelike'` — not an enum and not a number, so it cannot be accidentally arithmetic.
+
+    **Dispatch behavior:**
+
+    - It is the sign of `interval`, and inherits that verb's symmetry properties: the *classification* is symmetric in `a` and `b` even though the underlying magnitude need not be, since flipping the pair negates neither the sign of $\Delta s^2$ on a flat metric nor the class it names.
+    - The metric-level overload delegates to metric-level `interval`, which validates that `metric` is the chart's own. Going via the chart would ignore the argument, so a Lorentzian metric passed with a Riemannian chart would classify using the chart's metric and slip the precondition.
+    - A non-Lorentzian metric raises `NotImplementedError`.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> o = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> def event(ct, x):
+    ...     return {
+    ...         "ct": u.Q(ct, "m"),
+    ...         "x": u.Q(x, "m"),
+    ...         "y": u.Q(0.0, "m"),
+    ...         "z": u.Q(0.0, "m"),
+    ...     }
+    ...
+    ```
+
+    More time than space is timelike; more space than time is spacelike; equal
+    parts is exactly a light ray.
+
+    ```pycon
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, event(5.0, 1.0))
+    'timelike'
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, event(1.0, 5.0))
+    'spacelike'
+    >>> cxm.lorentzian.causal_character(cxc.minkowskict, o, event(3.0, 3.0))
+    'null'
+    ```
+
+    A Riemannian metric has no timelike direction to classify against:
+
+    ```pycon
+    >>> a = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> b = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+    >>> try:
+    ...     cxm.lorentzian.causal_character(cxc.cart3d, a, b)
+    ... except NotImplementedError as e:
+    ...     print(str(e)[:60])
+    ...
+    causal_character() requires a Lorentzian metric -- *exactly
+    ```
+
+(software-spec-proper_time)=
+
+!!! info `proper_time`
+
+    The time elapsed on a clock carried between two **timelike-separated**
+    events — the one duration all observers agree on.
+
+    $$ \tau = \frac{\sqrt{-\Delta s^2}}{c} $$
+
+    **Signatures:**
+
+    ```
+    cxm.lorentzian.proper_time(chart, a, b, /, *, usys=None)
+    cxm.lorentzian.proper_time(metric, chart, a, b, /, *, usys=None)
+    ```
+
+    **Return:**
+
+    - A `unxt.Quantity` with dimensions of **time**. The interval is a length-squared in a chart whose time axis is `ct`, so the square root is a length and the division by $c$ is what makes this a duration rather than a distance.
+
+    **Dispatch behavior:**
+
+    - Raises `ValueError` on a spacelike or null pair rather than returning `nan`: there is no clock that travels between spacelike-separated events, so the answer is not "undefined", it is "the question does not apply". Use `proper_distance` there.
+    - A non-Lorentzian metric raises `NotImplementedError`.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> o = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> ev = {"ct": u.Q(5.0, "m"), "x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+
+    >>> cxm.lorentzian.proper_time(cxc.minkowskict, o, ev).uconvert("ns").round(4)
+    Q(16.3412, 'ns')
+    ```
+
+    A spacelike pair has no proper time, and says so:
+
+    ```pycon
+    >>> sp = {"ct": u.Q(1.0, "m"), "x": u.Q(5.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> try:
+    ...     cxm.lorentzian.proper_time(cxc.minkowskict, o, sp)
+    ... except ValueError as e:
+    ...     print(str(e)[:52])
+    ...
+    proper_time() is defined only for timelike-separated
+    ```
+
+(software-spec-proper_distance)=
+
+!!! info `proper_distance`
+
+    The distance between two **spacelike-separated** events, measured in the
+    frame where they are simultaneous.
+
+    $$ \ell = \sqrt{+\Delta s^2} $$
+
+    **Signatures:**
+
+    ```
+    cxm.lorentzian.proper_distance(chart, a, b, /, *, usys=None)
+    cxm.lorentzian.proper_distance(metric, chart, a, b, /, *, usys=None)
+    ```
+
+    **Return:**
+
+    - A `unxt.Quantity` with dimensions of **length**. No division by $c$ here, unlike `proper_time`.
+
+    **Dispatch behavior:**
+
+    - The mirror of `proper_time`: raises `ValueError` on a timelike or null pair, since no frame makes timelike-separated events simultaneous.
+    - A non-Lorentzian metric raises `NotImplementedError`.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> o = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> sp = {"ct": u.Q(1.0, "m"), "x": u.Q(5.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+
+    >>> cxm.lorentzian.proper_distance(cxc.minkowskict, o, sp).round(6)
+    Q(4.898979, 'm')
+    ```
+
+(software-spec-rapidity_between)=
+
+!!! info `rapidity_between`
+
+    The hyperbolic angle between two timelike **tangent vectors** — the
+    relative rapidity of two observers.
+
+    $$ \cosh\zeta = \frac{-g(u,v)}{\sqrt{g(u,u)\,g(v,v)}} $$
+
+    This is the one verb here that takes tangents rather than points, and it
+    exists because `angle_between` cannot serve. That verb refuses a timelike
+    pair, correctly: $g(u,u)$ and $g(v,v)$ are both negative, so `arccos` of
+    their ratio would clip to $0$ or $\pi$ and report two observers in relative
+    motion as parallel. The invariant that *does* separate them is hyperbolic,
+    so it gets its own name rather than an extra branch inside a
+    circular-angle function.
+
+    Rapidity is additive under collinear boosts where velocity is not, which is
+    what makes it the natural parameter.
+
+    **Signatures:**
+
+    ```
+    cxm.lorentzian.rapidity_between(chart, uvec, vvec, /, *, at, usys=None)
+    cxm.lorentzian.rapidity_between(metric, chart, uvec, vvec, /, *, at, usys=None)
+    ```
+
+    **Arguments:**
+
+    - `uvec`, `vvec`: the two tangent vectors, as `CDict`s. Both must be timelike.
+    - `at` (keyword, **required**): the base point at which the metric is evaluated. Unlike the point-pair verbs there is no first argument to take it from, so it must be supplied.
+
+    **Return:**
+
+    - A dimensionless bare `Array`. Rapidity is a pure number, not an angle: it is unbounded, and `rad` would wrongly suggest it wraps.
+
+    **Dispatch behavior:**
+
+    - Raises `ValueError` unless **both** operands are timelike.
+    - Calls `check_metric_is_charts` directly, where the causal verbs inherit the same guard through metric-level `interval`.
+    - A non-Lorentzian metric raises `NotImplementedError`.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    ```
+
+    An observer at rest, and one moving at $v/c = 0.6$; the rapidity is
+    $\operatorname{artanh}(0.6) = \ln 2$.
+
+    ```pycon
+    >>> at = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> rest = {"ct": u.Q(1.0, ""), "x": u.Q(0.0, ""), "y": u.Q(0.0, ""), "z": u.Q(0.0, "")}
+    >>> moving = {"ct": u.Q(1.25, ""), "x": u.Q(0.75, ""), "y": u.Q(0.0, ""), "z": u.Q(0.0, "")}
+
+    >>> cxm.lorentzian.rapidity_between(cxc.minkowskict, rest, moving, at=at).round(6)
+    Array(0.693147, dtype=float64)
+    ```
+
+    A spacelike operand is refused rather than clipped:
+
+    ```pycon
+    >>> space = {"ct": u.Q(0.0, ""), "x": u.Q(1.0, ""), "y": u.Q(0.0, ""), "z": u.Q(0.0, "")}
+    >>> try:
+    ...     cxm.lorentzian.rapidity_between(cxc.minkowskict, rest, space, at=at)
+    ... except ValueError as e:
+    ...     print(str(e)[:54])
+    ...
+    rapidity_between is defined only between two timelike
+    ```
+
 (software-spec-abstractatlas)=
 
 !!! info `AbstractAtlas`
