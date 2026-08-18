@@ -82,11 +82,13 @@ def _rhs_quad(sigma: Any, s_flat: Any, args: Any) -> Any:
 
 
 #: The ODE terms, built **once** at import. Everything that varies per call
-#: rides in through `diffrax`'s ``args`` instead of a closure:
-#: `diffraxtra.DiffEqSolver` is filter-jitted with the term in its cache key,
-#: and a closure hashes by identity, so a term rebuilt per call misses the
-#: cache and **recompiles the whole integrator every time** -- measured at
-#: ~390 ms per call against ~0.3 ms of actual integration.
+#: rides in through `diffrax`'s ``args`` instead of a closure: this is a
+#: property of `diffrax.diffeqsolve` itself, which `diffraxtra.DiffEqSolver`
+#: inherits by wrapping it -- both are filter-jitted, which puts the term in
+#: the static half of the cache key, and a closure hashes by identity. A term
+#: rebuilt per call therefore misses the cache and **recompiles the whole
+#: integrator every time**: measured at ~350 ms through bare `diffrax` and
+#: ~415 ms through `diffraxtra`, against ~0.3 ms of actual integration.
 _TERM_DTAU = dfx.ODETerm(_rhs_dtau)
 _TERM_QUAD = dfx.ODETerm(_rhs_quad)
 
