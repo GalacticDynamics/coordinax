@@ -24,8 +24,12 @@ dependencies = [
   "coordinaxs.api>=0.24",
   "dataclassish>=0.9.0",
   "equinox>=0.13.8",
-  "jax>=0.6.0",
-  "jaxlib>=0.6.0",
+  # >=0.7.2 is unxt 2.0.2's own floor, not a preference; 0.6.x cannot resolve
+  # alongside it. `jnp.asarray` only routes through `Quantity.__array__` from
+  # jax 0.10, so between 0.7.2 and 0.9 it still rejects a Quantity outright --
+  # strip explicitly rather than relying on the coercion in that range.
+  "jax>=0.7.2",
+  "jaxlib>=0.7.2",
   "jaxtyping>=0.3.3",
   "optional-dependencies>=0.5.0",
   "optype>=0.17.0",
@@ -35,6 +39,9 @@ dependencies = [
   "quax-blocks>=0.4.1",
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
+  # 2.0.2 makes `np.asarray(Quantity)` raise rather than silently drop the
+  # unit. Relied upon: dropping a unit yields a number in the wrong dimension
+  # that looks entirely plausible.
   "unxt>=2.0.2",
   "unxts.linalg>=2.0.3",
   "wadler-lindig>=0.1.6",
@@ -533,3 +540,39 @@ constraint-dependencies = [
 
 [tool.uv.workspace]
 members = ["packages/*"]
+
+# `equinox.AbstractVar` is `Annotated[T, "AbstractVar"]` to a type checker (see
+# equinox `_better_abstract.py`), i.e. indistinguishable from a real field, so
+# `dataclass_transform` counts it in the synthesised `__init__`. At runtime
+# equinox strips it -- `dataclasses.fields(Point)` is `(data, chart, frame)` and
+# `Point.__abstractvars__` is empty -- so these constructor calls are correct.
+#
+# Latent until quax 0.4.2, whose metaclass `__call__` went from `-> Any` to
+# `type[_T] -> _T`; the old signature erased the synthesised constructor and
+# checkers skipped argument checking entirely. That change is right, so this is
+# not a quax bug. `pyright` reports the same errors, so it is not ty-specific.
+# Upstream: https://github.com/patrick-kidger/equinox/issues/1256
+#
+# Scoped to the files that construct these classes, so the rules stay live
+# everywhere else. Remove when equinox can express "not a field" statically.
+[[tool.ty.overrides]]
+include = [
+  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy/_src/frames.py",
+  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy/_src/vec_constructors.py",
+  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy/_src/vec_converters.py",
+  "src/coordinax/vectors/_src/point.py",
+  "src/coordinax/vectors/_src/register_cx.py",
+  "src/coordinax/vectors/_src/tangent.py",
+]
+
+[tool.ty.overrides.rules]
+missing-argument = "ignore"
+
+# Same cause, different symptom: `type(x)(...)` on an `AbstractDistance`
+# resolves to the abstract base, whose synthesised `__init__` does not carry
+# `check_negative`. `Distance.__init__` does accept it -- verified at runtime.
+[[tool.ty.overrides]]
+include = ["src/coordinax/distances/_src/register_primitives.py"]
+
+[tool.ty.overrides.rules]
+unknown-argument = "ignore"

@@ -54,6 +54,10 @@ class TestEmbeddedTwosphereAmbient:
         p = {"theta": jnp.asarray(jnp.pi / 2), "phi": jnp.asarray(0.0)}
         out = cxm.pt_embed(p, m, usys=u.unitsystems.si)
         assert set(out) == {"x", "y", "z"}
+        # `ustrip`, not `np.asarray`: the radius is 2 m, so the output carries
+        # metres. Coercing it to a bare array asserted "2.0" against a number
+        # whose unit was never checked -- the test would have passed just the
+        # same had the embedding returned 2 km.
         np.testing.assert_allclose(u.ustrip("m", out["x"]), 2.0, atol=1e-6)
 
     def test_non_singleton_spherical_ambient_takes_spherical_path(self) -> None:
