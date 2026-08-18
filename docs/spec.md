@@ -2951,8 +2951,10 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     \end{cases}
     $$
 
-    It sits alongside `norm` and `angle_between` as the third manifold
-    measurement. `cx.geodesic_distance` and
+    It sits alongside `norm` and `angle_between` as a manifold measurement,
+    and is paired with [`chord_distance`](#software-spec-chord_distance),
+    which measures the straight line *through* the ambient space rather than
+    along the manifold. `cx.geodesic_distance` and
     `cx.manifolds.geodesic_distance` are the same function object.
 
     **Signatures:**
@@ -2997,6 +2999,192 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> q = cx.Point.from_([0.0, 4.0, 0.0], "m")
     >>> cx.geodesic_distance(p, q).round(2)
     Distance(5., 'm')
+    ```
+
+(software-spec-chord_distance)=
+
+!!! info `chord_distance`
+
+    The length of the straight line between two points *through the ambient
+    space* they are embedded in — the tunnel rather than the surface path.
+
+    `chord_distance` is a different measurement from `geodesic_distance`, not
+    an approximation to it. Both are exact and symmetric; they answer different
+    questions. On a sphere of radius $R$ separated by a central angle $\theta$:
+
+    $$
+    d_{\mathrm{geodesic}} = R\,\theta,
+    \qquad
+    d_{\mathrm{chord}} = 2R\sin(\theta/2)
+    $$
+
+    They agree to first order and diverge as the points separate: $\sqrt{2}$
+    against $\pi/2$ at a quarter turn on the unit sphere, and $2R$ against
+    $\pi R$ at antipodes. A great-circle flight path is the geodesic; a line of
+    sight through the body is the chord. `cx.chord_distance` and
+    `cx.manifolds.chord_distance` are the same function object.
+
+    **Signatures:**
+
+    ```
+    cxm.chord_distance(chart, a, b, /, *, usys=None)     # component dicts; uses chart.M
+    cxm.chord_distance(M, chart, a, b, /, *, usys=None)  # explicit manifold
+    ```
+
+    **Arguments:**
+
+    - `chart`: the coordinate chart in whose components `a` and `b` are expressed.
+    - `M`: the manifold to measure on; when omitted, `chart.M` is used.
+    - `a`, `b`: the two points, as `CDict` component dicts.
+    - `usys` (keyword, optional): unit system forwarded to the embedding and to metric evaluation.
+
+    **Return:**
+
+    - A `coordinax.distances.Distance` carrying the ambient's length unit when the embedding has one — an `EmbeddedManifold` built on `TwoSphereIn3D(radius=Q(2, "m"))` returns metres.
+    - A dimensionless `Quantity` on the bare `HyperSphericalManifold`, whose canonical embedding is the *unit* sphere: there is no length scale on the manifold, so the chord is a pure ratio. Note this differs from `geodesic_distance` on the same manifold, which returns an `Angle` in radians — an arc is an angle, a chord is not.
+
+    **Dispatch behavior:**
+
+    - Implemented by embedding both points and taking the **ambient** manifold's `geodesic_distance`, which for flat ambient space *is* the straight line. There is no second distance formula to keep in step, and it works for any embedding rather than only spheres.
+    - Dispatch is on the *manifold*: `HyperSphericalManifold` uses the canonical unit-sphere embedding; an `EmbeddedManifold` uses its own `embed_map`, so the result carries the radius.
+    - The result is invariant to the chart the points are handed over in: `sph2` and `lonlat_sph2` agree.
+    - A `EuclideanManifold` **raises** `NotImplementedError`. It is its own ambient, so its chord *is* its geodesic; returning the same number under a second name would invite a reader to think two things were measured. The error points at `geodesic_distance`.
+    - A manifold carrying no embedding raises `NotImplementedError`: there is no ambient space to cut through. Wrap it in an `EmbeddedManifold`, or use `geodesic_distance` for the distance along the manifold.
+    - Only the two-sphere is wired up; `HyperSphericalManifold` of any other dimension raises.
+
+    **Examples**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    A quarter turn along the equator: the arc is ``pi / 2``, the chord through
+    the interior is ``sqrt(2)``.
+
+    >>> a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.pi / 2, "rad")}
+    >>> round(float(cxm.chord_distance(cxc.sph2, a, b)), 6)
+    1.414214
+    >>> round(float(cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad")), 6)
+    1.570796
+
+    An embedded sphere carries its radius: antipodes are one diameter apart
+    through the middle, half the great-circle distance around the outside.
+
+    >>> M = cxm.EmbeddedManifold(
+    ...     intrinsic=cxm.S2,
+    ...     ambient=cxm.R3,
+    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")),
+    ... )
+    >>> n = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> s = {"theta": u.Angle(jnp.pi, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> cxm.chord_distance(M, cxc.sph2, n, s).round(6)
+    Distance(4., 'm')
+    ```
+
+(software-spec-interval)=
+
+!!! info `interval`
+
+    The signed squared interval between two points: the metric quadratic form
+    of the **coordinate difference**, evaluated at the first point, *without*
+    the square root that `norm` takes.
+
+    $$
+    \Delta s^2 = \Delta x^\top G(a)\, \Delta x,
+    \qquad \Delta x = x(b) - x(a)
+    $$
+
+    Dropping the square root is what makes it defined for **every** metric,
+    including indefinite ones where `norm` has no real value and
+    `geodesic_distance` refuses outright. For a Lorentzian metric its sign is
+    the pair's causal character, and its magnitude gives proper time (timelike)
+    or proper distance (spacelike). This is the reason `interval` exists, and
+    the setting the rest of this entry should be read against.
+
+    **`interval` is not a distance.** Unlike `norm`, `angle_between`,
+    `geodesic_distance` and `chord_distance`, it is neither chart-invariant nor
+    symmetric in general:
+
+    - **Chart-dependent.** It is built from a *coordinate* difference, which is
+      only meaningful where the metric is constant. On the flat plane, the same
+      two points give $5\,\mathrm{m}^2$ in `cart2d` and $3.467\,\mathrm{m}^2$ in
+      `polar2d`, while `geodesic_distance` gives $2.236\,\mathrm{m}$ in both.
+    - **Asymmetric.** The metric is taken at `a`. On `sph2`, one pair gives
+      $0.813\,\mathrm{rad}^2$ one way and $0.999\,\mathrm{rad}^2$ the other.
+
+    Consequently $\Delta s^2 = \mathrm{geodesic\_distance}^2$ holds only where
+    the coordinate difference *is* the geodesic — on a flat manifold **in
+    Cartesian coordinates**. Flatness alone is not enough: a curvilinear chart
+    on flat space has a varying metric. When a distance is wanted, reach for
+    `geodesic_distance`.
+
+    **Signatures:**
+
+    ```
+    cxm.interval(chart, a, b, /, *, usys=None)          # component dicts; uses chart.M.metric
+    cxm.interval(metric, chart, a, b, /, *, usys=None)  # explicit metric; must be the chart's
+    cxm.interval(chart, a, b, /, *, usys=None)          # packed unxt.Quantity operands
+    ```
+
+    **Arguments:**
+
+    - `chart`: the coordinate chart in whose components `a` and `b` are expressed.
+    - `metric`: an explicit `AbstractMetricField`; when omitted, `chart.M.metric` is used.
+    - `a`, `b`: the two points, as `CDict` component dicts or packed `unxt.Quantity` vectors (trailing axis in `chart.components` order). The metric is evaluated at `a`.
+    - `usys` (keyword, optional): unit system forwarded to metric evaluation.
+
+    **Return:**
+
+    - A `unxt.Quantity` in the *square* of the coordinates' unit — `m2` for a Minkowski chart in metres, `rad2` on the unit sphere. It is signed, so it is not a `Distance`.
+
+    **Dispatch behavior:**
+
+    - It shares its contraction with `norm`, which is what gives it the unit handling it would otherwise have to restate. Stated precisely, for `diff = {k: b[k] - a[k] for k in chart.components}`, `norm(diff, chart, at=a) ** 2 == interval(chart, a, b)` — by construction rather than by a test that asserts it. Note that `b - a` is *not* itself defined: `CDict` is a plain mapping, so the difference is taken component-wise, and `norm` needs both the chart and the base point `at=a` that fixes where the metric is evaluated.
+    - The metric-level overload requires the metric to be the one the chart carries and otherwise raises `ValueError`; supplying a foreign metric would silently measure in a geometry the chart does not have.
+    - It does **not** refuse indefinite metrics — that is the point. `MinkowskiManifold` yields negative values for timelike pairs, positive for spacelike, exactly zero for null.
+    - The verbs that read its sign — `causal_character`, `proper_time`, `proper_distance` — need a timelike direction and live in the `coordinax.manifolds.lorentzian` sub-namespace.
+
+    **Examples**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    The sign is the causal character of the pair.
+
+    >>> o = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> def event(ct, x):
+    ...     return {
+    ...         "ct": u.Q(ct, "m"),
+    ...         "x": u.Q(x, "m"),
+    ...         "y": u.Q(0.0, "m"),
+    ...         "z": u.Q(0.0, "m"),
+    ...     }
+    ...
+
+    >>> cxm.interval(cxc.minkowskict, o, event(5.0, 1.0))  # timelike
+    Q(-24., 'm2')
+    >>> cxm.interval(cxc.minkowskict, o, event(1.0, 5.0))  # spacelike
+    Q(24., 'm2')
+    >>> cxm.interval(cxc.minkowskict, o, event(3.0, 3.0))  # null
+    Q(0., 'm2')
+
+    The identity with `norm`, on a chart whose metric actually varies. `b - a`
+    is not defined for a `CDict`, so the difference is component-wise and the
+    metric is pinned at `a`:
+
+    >>> import coordinax.charts as cxc
+    >>> a = {"r": u.Q(2.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.3, "rad")}
+    >>> b = {"r": u.Q(2.5, "m"), "theta": u.Angle(1.3, "rad"), "phi": u.Angle(0.9, "rad")}
+    >>> diff = {k: b[k] - a[k] for k in cxc.sph3d.components}
+    >>> (cxm.norm(diff, cxc.sph3d, at=a) ** 2).round(6)
+    Q(1.629626, 'm2')
+    >>> cxm.interval(cxc.sph3d, a, b).round(6)
+    Q(1.629626, 'm2')
     ```
 
 (software-spec-abstractatlas)=
