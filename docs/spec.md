@@ -3236,6 +3236,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     `interval` itself is canonical in `coordinax.manifolds` and re-exported here,
     since the signed quadratic form is defined for every metric.
 
+    **Tracing.** The three causal verbs return, or branch on, a Python value --
+    `causal_character` a `str`, the other two an exception chosen by the class --
+    so they are eager-only and raise `ConcretizationTypeError` under `jax.jit`.
+    Classify outside the traced region, or use `interval` inside it and branch on
+    its sign yourself. `rapidity_between` is the exception: it is traceable, and
+    substitutes `nan` for the refusal it would raise eagerly.
+
 (software-spec-causal_character)=
 
 !!! info `causal_character`
@@ -3272,7 +3279,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Dispatch behavior:**
 
-    - It is the sign of `interval`, and inherits that verb's symmetry properties: the *classification* is symmetric in `a` and `b` even though the underlying magnitude need not be, since flipping the pair negates neither the sign of $\Delta s^2$ on a flat metric nor the class it names.
+    - It is the sign of `interval`, which evaluates the metric **at the first point**. Where the metric is constant along the path the classification is therefore symmetric in `a` and `b` -- true of every Lorentzian metric currently shipped, `MinkowskiMetric` being flat. It is *not* guaranteed for a position-dependent one: $\Delta x^\top G(a)\, \Delta x$ and $\Delta x^\top G(b)\, \Delta x$ can differ, and near a null separation they can differ in sign. Do not rely on symmetry on a curved spacetime metric.
     - The metric-level overload delegates to metric-level `interval`, which validates that `metric` is the chart's own. Going via the chart would ignore the argument, so a Lorentzian metric passed with a Riemannian chart would classify using the chart's metric and slip the precondition.
     - A non-Lorentzian metric raises `NotImplementedError`.
 
@@ -3331,8 +3338,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signatures:**
 
     ```
-    cxm.lorentzian.proper_time(chart, a, b, /, *, usys=None)
-    cxm.lorentzian.proper_time(metric, chart, a, b, /, *, usys=None)
+    cxm.lorentzian.proper_time(chart, a, b, /, *, atol=..., usys=None)
+    cxm.lorentzian.proper_time(metric, chart, a, b, /, *, atol=..., usys=None)
     ```
 
     **Return:**
@@ -3342,6 +3349,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Dispatch behavior:**
 
     - Raises `ValueError` on a spacelike or null pair rather than returning `nan`: there is no clock that travels between spacelike-separated events, so the answer is not "undefined", it is "the question does not apply". Use `proper_distance` there.
+    - `atol` is forwarded to the same classification `causal_character` performs, so it is what decides how near null a pair may be before being refused.
     - A non-Lorentzian metric raises `NotImplementedError`.
 
     **Examples**
@@ -3382,8 +3390,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signatures:**
 
     ```
-    cxm.lorentzian.proper_distance(chart, a, b, /, *, usys=None)
-    cxm.lorentzian.proper_distance(metric, chart, a, b, /, *, usys=None)
+    cxm.lorentzian.proper_distance(chart, a, b, /, *, atol=..., usys=None)
+    cxm.lorentzian.proper_distance(metric, chart, a, b, /, *, atol=..., usys=None)
     ```
 
     **Return:**
@@ -3393,6 +3401,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Dispatch behavior:**
 
     - The mirror of `proper_time`: raises `ValueError` on a timelike or null pair, since no frame makes timelike-separated events simultaneous.
+    - `atol` is forwarded to the same classification, as for `proper_time`.
     - A non-Lorentzian metric raises `NotImplementedError`.
 
     **Examples**
@@ -3447,7 +3456,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Dispatch behavior:**
 
-    - Raises `ValueError` unless **both** operands are timelike.
+    - Eagerly, raises `ValueError` unless **both** operands are timelike. Under `jax.jit` it cannot: the condition is a traced value, so the same test becomes a mask and the result is `nan`. Check the output rather than relying on the exception inside a traced function.
     - Calls `check_metric_is_charts` directly, where the causal verbs inherit the same guard through metric-level `interval`.
     - A non-Lorentzian metric raises `NotImplementedError`.
 
