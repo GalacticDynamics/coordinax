@@ -3219,12 +3219,10 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     spacetime metric (Schwarzschild, FLRW) carries the marker and acquires all
     of them.
 
-    Without exactly one timelike direction there is nothing to classify: a
-    positive-definite metric gives the interval one sign for every pair, and an
-    indefinite metric with several timelike directions gives varying signs that
-    do not partition pairs into past, future and elsewhere. Each verb raises
-    `NotImplementedError` rather than returning a value that could be read as a
-    classification.
+    Neither a definite metric nor one with several timelike directions
+    partitions pairs into past, future and elsewhere, so **every verb here
+    raises `NotImplementedError`** on one rather than returning a value that
+    could be read as a classification.
 
     | verb | reads | defined for |
     |---|---|---|
@@ -3279,9 +3277,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Dispatch behavior:**
 
-    - It is the sign of `interval`, which evaluates the metric **at the first point**. Where the metric is constant along the path the classification is therefore symmetric in `a` and `b` -- true of every Lorentzian metric currently shipped, `MinkowskiMetric` being flat. It is *not* guaranteed for a position-dependent one: $\Delta x^\top G(a)\, \Delta x$ and $\Delta x^\top G(b)\, \Delta x$ can differ, and near a null separation they can differ in sign. Do not rely on symmetry on a curved spacetime metric.
-    - The metric-level overload delegates to metric-level `interval`, which validates that `metric` is the chart's own. Going via the chart would ignore the argument, so a Lorentzian metric passed with a Riemannian chart would classify using the chart's metric and slip the precondition.
-    - A non-Lorentzian metric raises `NotImplementedError`.
+    - It is the sign of `interval`, which evaluates the metric **at the first point**. The classification is therefore symmetric in `a` and `b` only where the metric is constant along the path -- true of `MinkowskiMetric`, the only Lorentzian metric shipped. On a position-dependent one the two orderings can differ in sign near a null separation; do not rely on symmetry there.
+    - The metric-level overload delegates to metric-level `interval`, which validates that `metric` is the chart's own; the chart-level path would ignore the argument entirely.
 
     **Examples**
 
@@ -3344,13 +3341,12 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Return:**
 
-    - A `unxt.Quantity` with dimensions of **time**. The interval is a length-squared in a chart whose time axis is `ct`, so the square root is a length and the division by $c$ is what makes this a duration rather than a distance.
+    - A `unxt.Quantity` with dimensions of **time**: the interval is a length-squared, so it is the division by $c$ that makes this a duration.
 
     **Dispatch behavior:**
 
     - Raises `ValueError` on a spacelike or null pair rather than returning `nan`: there is no clock that travels between spacelike-separated events, so the answer is not "undefined", it is "the question does not apply". Use `proper_distance` there.
     - `atol` is forwarded to the same classification `causal_character` performs, so it is what decides how near null a pair may be before being refused.
-    - A non-Lorentzian metric raises `NotImplementedError`.
 
     **Examples**
 
@@ -3402,7 +3398,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     - The mirror of `proper_time`: raises `ValueError` on a timelike or null pair, since no frame makes timelike-separated events simultaneous.
     - `atol` is forwarded to the same classification, as for `proper_time`.
-    - A non-Lorentzian metric raises `NotImplementedError`.
 
     **Examples**
 
@@ -3427,16 +3422,10 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     $$ \cosh\zeta = \frac{-g(u,v)}{\sqrt{g(u,u)\,g(v,v)}} $$
 
-    This is the one verb here that takes tangents rather than points, and it
-    exists because `angle_between` cannot serve. That verb refuses a timelike
-    pair, correctly: $g(u,u)$ and $g(v,v)$ are both negative, so `arccos` of
-    their ratio would clip to $0$ or $\pi$ and report two observers in relative
-    motion as parallel. The invariant that *does* separate them is hyperbolic,
-    so it gets its own name rather than an extra branch inside a
-    circular-angle function.
-
-    Rapidity is additive under collinear boosts where velocity is not, which is
-    what makes it the natural parameter.
+    The one verb here taking tangents rather than points. `angle_between`
+    cannot serve: $g(u,u)$ and $g(v,v)$ are both negative, so `arccos` of their
+    ratio clips to $0$ or $\pi$ and reports two observers in relative motion as
+    parallel. Rapidity is additive under collinear boosts; velocity is not.
 
     **Signatures:**
 
@@ -3458,20 +3447,17 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     - Eagerly, raises `ValueError` unless **both** operands are timelike. Under `jax.jit` it cannot: the condition is a traced value, so the same test becomes a mask and the result is `nan`. Check the output rather than relying on the exception inside a traced function.
     - Calls `check_metric_is_charts` directly, where the causal verbs inherit the same guard through metric-level `interval`.
-    - A non-Lorentzian metric raises `NotImplementedError`.
 
     **Examples**
-
-    ```pycon
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-    ```
 
     An observer at rest, and one moving at $v/c = 0.6$; the rapidity is
     $\operatorname{artanh}(0.6) = \ln 2$.
 
     ```pycon
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
     >>> at = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> rest = {"ct": u.Q(1.0, ""), "x": u.Q(0.0, ""), "y": u.Q(0.0, ""), "z": u.Q(0.0, "")}
     >>> moving = {"ct": u.Q(1.25, ""), "x": u.Q(0.75, ""), "y": u.Q(0.0, ""), "z": u.Q(0.0, "")}
