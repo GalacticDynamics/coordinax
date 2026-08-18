@@ -9,7 +9,7 @@ import plum
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart, AbstractManifold
 from coordinax._src.charts.d0 import Cart0D
-from coordinax._src.charts.d1 import Cart1D, Radial1D
+from coordinax._src.charts.d1 import Cart1D, Radial1D, Time1D
 from coordinax._src.charts.d2 import Cart2D, Polar2D
 from coordinax._src.charts.d3 import (
     AbstractSpherical3D,
@@ -40,12 +40,18 @@ def guess_manifold(obj: AbstractManifold, /) -> AbstractManifold:
 
 @plum.dispatch
 def guess_manifold(_: type[AbstractChart], /) -> AbstractManifold:
-    """Infer manifold from a chart class.
+    """Return `no_manifold` for a chart class with no rule of its own.
+
+    Reached only where the class genuinely does not fix a manifold: `CartND`
+    carries its dimension per instance, and `PoincarePolar6D` has no manifold
+    even as an instance. Every other concrete chart class declares a rule, and
+    `TestGuessManifoldOnChartClasses` fails if one stops doing so --
+    the fallback is silent by design, so nothing else would notice.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> cxm.guess_manifold(cxc.Cart3D)
-    Rn(3)
+    >>> cxm.guess_manifold(cxc.CartND)
+    NoManifold()
 
     """
     return no_manifold
@@ -78,12 +84,19 @@ def guess_manifold(_: type[Cart0D], /) -> EuclideanManifold:
 
 
 @plum.dispatch
-def guess_manifold(_: type[Cart1D | Radial1D], /) -> EuclideanManifold:
+def guess_manifold(_: type[Cart1D | Radial1D | Time1D], /) -> EuclideanManifold:
     """Infer manifold from a chart class.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> cxm.guess_manifold(cxc.Cart1D)
+    Rn(1)
+
+    `Time1D` is 1-dimensional too, and its instances already report `Rn(1)`:
+
+    >>> cxm.guess_manifold(cxc.Time1D)
+    Rn(1)
+    >>> cxc.Time1D().M
     Rn(1)
 
     """
