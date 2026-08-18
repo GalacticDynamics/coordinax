@@ -3142,7 +3142,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Dispatch behavior:**
 
-    - It shares its contraction with `norm`, which is what gives it unit handling it would otherwise have to restate, and makes `norm(b - a)**2 == interval(a, b)` hold by construction.
+    - It shares its contraction with `norm`, which is what gives it the unit handling it would otherwise have to restate. Stated precisely, for `diff = {k: b[k] - a[k] for k in chart.components}`, `norm(diff, chart, at=a) ** 2 == interval(chart, a, b)` — by construction rather than by a test that asserts it. Note that `b - a` is *not* itself defined: `CDict` is a plain mapping, so the difference is taken component-wise, and `norm` needs both the chart and the base point `at=a` that fixes where the metric is evaluated.
     - The metric-level overload requires the metric to be the one the chart carries and otherwise raises `ValueError`; supplying a foreign metric would silently measure in a geometry the chart does not have.
     - It does **not** refuse indefinite metrics — that is the point. `MinkowskiManifold` yields negative values for timelike pairs, positive for spacelike, exactly zero for null.
     - The verbs that read its sign — `causal_character`, `proper_time`, `proper_distance` — need a timelike direction and live in the `coordinax.manifolds.lorentzian` sub-namespace.
@@ -3172,6 +3172,19 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Q(24., 'm2')
     >>> cxm.interval(cxc.minkowskict, o, event(3.0, 3.0))  # null
     Q(0., 'm2')
+
+    The identity with `norm`, on a chart whose metric actually varies. `b - a`
+    is not defined for a `CDict`, so the difference is component-wise and the
+    metric is pinned at `a`:
+
+    >>> import coordinax.charts as cxc
+    >>> a = {"r": u.Q(2.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.3, "rad")}
+    >>> b = {"r": u.Q(2.5, "m"), "theta": u.Angle(1.3, "rad"), "phi": u.Angle(0.9, "rad")}
+    >>> diff = {k: b[k] - a[k] for k in cxc.sph3d.components}
+    >>> (cxm.norm(diff, cxc.sph3d, at=a) ** 2).round(6)
+    Q(1.629626, 'm2')
+    >>> cxm.interval(cxc.sph3d, a, b).round(6)
+    Q(1.629626, 'm2')
     ```
 
 (software-spec-abstractatlas)=
