@@ -1,5 +1,6 @@
 """Time-dependent curves: binding the evaluation time, and the Eulerian reading."""
 
+import jax
 import jax.numpy as jnp
 
 import unxt as u
@@ -80,8 +81,6 @@ def test_binding_time_first_is_still_supported_for_static_use() -> None:
 
 def test_a_live_time_is_a_leaf() -> None:
     """A live `Quantity` `t` contributes exactly one more leaf than a static one."""
-    import jax
-
     dyn = cxfc.AtTime(stretch, u.Q(1.0, "s"))
     sta = cxfc.AtTime(stretch, u.StaticQuantity(1.0, "s"))
     assert len(jax.tree.leaves(dyn)) - len(jax.tree.leaves(sta)) == 1
