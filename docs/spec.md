@@ -2675,11 +2675,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> # Spherical manifold inference
     >>> cxm.guess_manifold(cxc.sph2)
     HyperSphericalManifold(ndim=2)
+    ```
 
     Component *names* are not enough to infer a sphere -- unlike ``x/y/z``,
     which do resolve -- so a bare mapping of angles falls back to the sentinel.
     Hand over the chart when the manifold matters.
 
+    ```pycon
     >>> cxm.guess_manifold({"theta": 1.0, "phi": 0.5})
     NoManifold()
     ```
@@ -3064,20 +3066,24 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
+    ```
 
     A quarter turn along the equator: the arc is ``pi / 2``, the chord through
     the interior is ``sqrt(2)``.
 
+    ```pycon
     >>> a = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> b = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.pi / 2, "rad")}
     >>> round(float(cxm.chord_distance(cxc.sph2, a, b)), 6)
     1.414214
     >>> round(float(cxm.geodesic_distance(cxc.sph2, a, b).ustrip("rad")), 6)
     1.570796
+    ```
 
     An embedded sphere carries its radius: antipodes are one diameter apart
     through the middle, half the great-circle distance around the outside.
 
+    ```pycon
     >>> M = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.S2,
     ...     ambient=cxm.R3,
@@ -3158,9 +3164,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
+    ```
 
     The sign is the causal character of the pair.
 
+    ```pycon
     >>> o = {"ct": u.Q(0.0, "m"), "x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> def event(ct, x):
     ...     return {
@@ -3177,11 +3185,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Q(24., 'm2')
     >>> cxm.interval(cxc.minkowskict, o, event(3.0, 3.0))  # null
     Q(0., 'm2')
+    ```
 
     The identity with `norm`, on a chart whose metric actually varies. `b - a`
     is not defined for a `CDict`, so the difference is component-wise and the
     metric is pinned at `a`:
 
+    ```pycon
     >>> import coordinax.charts as cxc
     >>> a = {"r": u.Q(2.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.3, "rad")}
     >>> b = {"r": u.Q(2.5, "m"), "theta": u.Angle(1.3, "rad"), "phi": u.Angle(0.9, "rad")}
@@ -5233,9 +5243,11 @@ Each group corresponds to a set of transformations preserving a particular geome
     >>> cxfm.act(boost, None, v, cxc.cart3d, cxr.coord_vel)
     {'x': Array(3., dtype=float64, weak_type=True), 'y': Array(3., dtype=float64, weak_type=True),
      'z': Array(0., dtype=float64, weak_type=True)}
+    ```
 
     Points move by ``delta * tau`` (a time parameter is required):
 
+    ```pycon
     >>> p = {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}
     >>> cxfm.act(boost, jnp.array(2.0), p, cxc.cart3d, cxr.point)
     {'x': Array(3., dtype=float64, weak_type=True), 'y': Array(2., dtype=float64, weak_type=True),
