@@ -95,8 +95,8 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     tau_unit : AbstractUnit or str, optional
         Unit of the curve parameter, used by {func}`unxt.experimental.jacfwd` to
         compute unit-correct derivatives.  Defaults to ``"s"``.
-    gamma : optional
-        A fixed curve parameter; see `AbstractCurveFrameBuilder`.
+    station : optional
+        A fixed station along the curve; see `AbstractCurveFrameBuilder`.
 
     Examples
     --------
@@ -124,8 +124,8 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     )
     """The unit of the curve parameter tau."""
 
-    gamma: Any = None
-    """Optional fixed curve parameter (a leaf); `None` means "use tau"."""
+    station: Any = None
+    """Optional fixed station along the curve (a leaf); `None` means "use tau"."""
 
     def rotation_matrix(self, tau: Any, /) -> Array:
         r"""Compute the full rotation matrix $R = [T; N; B]$.
@@ -326,7 +326,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         /,
         tau_unit: u.AbstractUnit | str = "s",
         *,
-        gamma: Any = None,
+        station: Any = None,
     ) -> "FrenetSerretFrame[FrameT]":
         """Construct a FrenetSerretFrame from a base frame and curve.
 
@@ -339,9 +339,9 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
             a smooth space curve.
         tau_unit : str, optional
             Unit of the curve parameter for differentiation.
-        gamma : optional
-            A fixed curve parameter; when given the frame is a fixed frame
-            *field* along the curve rather than a moving frame.
+        station : optional
+            A fixed station along the curve; when given the frame is a fixed
+            frame *field* along the curve rather than a moving frame.
 
         Returns
         -------
@@ -365,6 +365,6 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         Alice()
 
         """
-        builder = FrenetSerretBuilder(curve, tau_unit, gamma)
+        builder = FrenetSerretBuilder(curve, tau_unit, station)
         xop = cxfm.TimeDep(builder)
         return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)

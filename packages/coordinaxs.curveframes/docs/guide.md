@@ -188,7 +188,7 @@ def transform_point(tau, p):
     return cxfm.act(op_to_curve, tau, p)
 ```
 
-This works because `op_to_curve` never becomes a traced argument of `transform_point` — it's baked in at trace time. Passing a builder holding **array leaves** — `BishopBuilder`'s `tau_0`, a `gamma`, or any curve that is itself an `equinox.Module` with array fields — as an _argument_ to a plain `jax.jit` is a different story: `jax.jit` treats a bound-method argument as a static, hashable value, and JAX cannot hash an array leaf:
+This works because `op_to_curve` never becomes a traced argument of `transform_point` — it's baked in at trace time. Passing a builder holding **array leaves** — `BishopBuilder`'s `tau_0`, a `station`, or any curve that is itself an `equinox.Module` with array fields — as an _argument_ to a plain `jax.jit` is a different story: `jax.jit` treats a bound-method argument as a static, hashable value, and JAX cannot hash an array leaf:
 
 ```python
 class Helix(eqx.Module):
@@ -237,7 +237,7 @@ trajectory = jax.jit(jax.vmap(lambda t: cxfm.act(op_to_curve, t, p)))(taus)
 
 The **Bishop transform** (also called rotation-minimising or parallel-transport frame) provides an alternative to the Frenet–Serret frame. Its key advantage is that it is **well-defined even when the curvature vanishes** ($\kappa = 0$), where the Frenet–Serret normal is singular.
 
-`BishopBuilder` extends `AbstractCurveFrameBuilder` with two more fields, in addition to `curve`, `tau_unit`, `gamma`:
+`BishopBuilder` extends `AbstractCurveFrameBuilder` with two more fields, in addition to `curve`, `tau_unit`, `station`:
 
 | Field | Meaning |
 | --- | --- |
@@ -459,7 +459,7 @@ For the different shapes an arc-length curve can arrive in — including a user'
 
 ### Builder Evaluation
 
-A curve-frame builder is an `equinox.Module`: `curve`, `gamma` (and, for `BishopBuilder`, `tau_0`, `initial_normal`) are pytree **leaves**, not lazy callables stashed on the instance. Nothing is pre-computed at construction time — `rotation_matrix(tau)` and `__call__(tau)` are ordinary methods that derive the tangent/normal/binormal (or Bishop's parallel-transported normals) from `curve` afresh, on every call, via `unxt.experimental.jacfwd`. This means:
+A curve-frame builder is an `equinox.Module`: `curve`, `station` (and, for `BishopBuilder`, `tau_0`, `initial_normal`) are pytree **leaves**, not lazy callables stashed on the instance. Nothing is pre-computed at construction time — `rotation_matrix(tau)` and `__call__(tau)` are ordinary methods that derive the tangent/normal/binormal (or Bishop's parallel-transported normals) from `curve` afresh, on every call, via `unxt.experimental.jacfwd`. This means:
 
 - **Structural, not procedural, JAX integration**: because the parameters are real pytree data, `jit`, `vmap`, and `grad` operate on a builder — or a whole frame — the same way they operate on any other pytree; there's no separate "make it JAX-compatible" step.
 - **Differentiable curve parameters**: if `curve` is itself an `equinox.Module` with leaf fields, gradients flow through curve construction and into the frame (see "Differentiating the Curve" below) — not possible when a curve was a bare Python closure.
@@ -497,9 +497,9 @@ assert abs(float(grad_radius)) > 1e-3
 
 `jax.grad` differentiates through the Gram–Schmidt tangent/normal construction and the rigid-body transform, all the way back to the helix radius. This is the capability the old closure-based `curve` fields could not offer: whatever a plain Python closure captured was a trace-time constant, invisible to `jax.grad`.
 
-#### A Frame Field via `vmap` over `gamma`
+#### A Frame Field via `vmap` over `station`
 
-With `gamma` set, a builder produces a fixed, $\tau$-independent frame anchored at $\boldsymbol{\gamma}(\gamma)$ — a frame _field_ rather than a moving frame. Because `gamma` is a pytree leaf, `jax.vmap` over a batch of `gamma` values builds a batch of frames in a single call — the frame field along the whole curve, not a Python loop over frames:
+With `station` set, a builder produces a fixed, $\tau$-independent frame anchored at $\boldsymbol{\gamma}(\text{station})$ — a frame _field_ rather than a moving frame. Because `station` is a pytree leaf, `jax.vmap` over a batch of `station` values builds a batch of frames in a single call — the frame field along the whole curve, not a Python loop over frames:
 
 ```python
 def circle(tau):
@@ -508,19 +508,19 @@ def circle(tau):
 
 
 p = u.Q(jnp.array([2.0, 1.0, -0.5]), "km")
-gammas = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
+stations = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
 
 
-def at_gamma(g):
+def at_station(g):
     op = cxfm.TimeDep(cxfc.FrenetSerretBuilder(circle, "s", g))
     return cxfm.act(op, u.Q(0.0, "s"), p)
 
 
-field = jax.vmap(at_gamma)(gammas)
+field = jax.vmap(at_station)(stations)
 assert field.ustrip("km").shape == (5, 3)
 ```
 
-Each row of `field` is the same point `p` expressed in the frame anchored at the corresponding `gamma` value.
+Each row of `field` is the same point `p` expressed in the frame anchored at the corresponding `station` value.
 
 ### Active Semantics
 
@@ -528,4 +528,4 @@ Curve frames follow coordinax's **active transformation** convention. `act(op, t
 
 ### Scalar-First Design
 
-`rotation_matrix`, `__call__`, and the convenience accessors operate on scalar $\tau$ and scalar-component vectors — a builder's fields hold a single curve, not a batch of curves. Batching over $\tau$, over `gamma`, or over a curve's own parameters is achieved by `jax.vmap`-ing the builder or the `TimeDep` operator, not by passing shaped arrays into the builder's fields. This keeps the builder implementation simple and composes cleanly with all JAX transformations.
+`rotation_matrix`, `__call__`, and the convenience accessors operate on scalar $\tau$ and scalar-component vectors — a builder's fields hold a single curve, not a batch of curves. Batching over $\tau$, over `station`, or over a curve's own parameters is achieved by `jax.vmap`-ing the builder or the `TimeDep` operator, not by passing shaped arrays into the builder's fields. This keeps the builder implementation simple and composes cleanly with all JAX transformations.

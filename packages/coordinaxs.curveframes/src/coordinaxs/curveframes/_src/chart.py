@@ -124,7 +124,7 @@ class TubularChart(AbstractParameterizedChart):
             # global self-approach distance (see the curve-charts guide's
             # Limitations section).
             #
-            # `~(f > 0)`, not `f <= 0`: a pinned-gamma builder makes the
+            # `~(f > 0)`, not `f <= 0`: a pinned-station builder makes the
             # on-curve speed (and factor) `0/0 = nan`, and `nan <= 0` is
             # False too -- negating `nan > 0` (also False) catches it.
             #

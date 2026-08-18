@@ -332,7 +332,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Methods:
 
     - `rotation_matrix(tau) -> Array` — **abstract**, implemented by concrete subclasses; the $3\times3$ rotation matrix $R$ whose rows are the frame vectors.
-    - `__call__(tau) -> Composed` — builds `Translate(-gamma(param)) | Rotate(rotation_matrix(tau))`, where `param` is `tau` or the fixed `gamma`.
+    - `__call__(tau) -> Composed` — builds `Translate(-gamma(param)) | Rotate(rotation_matrix(tau))`, where `param` is `tau` or the fixed `station`.
     - `location(tau)`, `tangent(tau)` — convenience accessors; `location` evaluates $\boldsymbol{\gamma}$ at the resolved parameter, `tangent` returns row 0 of `rotation_matrix(tau)`.
 
 (curveframes-sw-frenet-transform)=
@@ -341,19 +341,19 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     A `@final` subclass of `AbstractCurveFrameBuilder` computing the $(\mathbf{T}, \mathbf{N}, \mathbf{B})$ triad.
 
-    Fields (in addition to the ABC's `curve`, `tau_unit`, `gamma`): none — `FrenetSerretBuilder` adds no fields beyond the base class.
+    Fields (in addition to the ABC's `curve`, `tau_unit`, `station`): none — `FrenetSerretBuilder` adds no fields beyond the base class.
 
     - `curve : Callable[[Any], Any]` — the constructing curve.
     - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter, used by `unxt.experimental.jacfwd` to compute unit-correct derivatives. Defaults to `"s"`. Static.
-    - `gamma : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
+    - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
 
     `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{N}; \mathbf{B}]$: unit-aware first and second derivatives of `curve` via `unxt.experimental.jacfwd`, then $\mathbf{T} = \gamma'/\lVert\gamma'\rVert$, Gram–Schmidt rejection of $\gamma''$ onto $\mathbf{T}$ normalised to give $\mathbf{N}$, and $\mathbf{B} = \mathbf{T}\times\mathbf{N}$.
 
     Convenience accessors: `normal(tau)` (row 1), `binormal(tau)` (row 2); `location(tau)`, `tangent(tau)` are inherited from `AbstractCurveFrameBuilder`.
 
-    Constructed directly — `FrenetSerretBuilder(curve, tau_unit="s", gamma=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
+    Constructed directly — `FrenetSerretBuilder(curve, tau_unit="s", station=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
 
-    JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `gamma` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `gamma`); use `eqx.filter_jit` in that case.
+    JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `station` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `station`); use `eqx.filter_jit` in that case.
 
     `act` dispatches on `TimeDep(FrenetSerretBuilder(...))`, not on the builder directly — see {ref}`TimeDep <software-spec-transforms-timedep>` in the root spec. `act(TimeDep(F), tau, x)` evaluates `F(tau)` and applies the resulting `Composed` transform.
 
@@ -374,7 +374,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `FrenetSerretFrame(base_frame, xop, xop_inv)` — direct construction from a base frame and a `TimeDep`-wrapped `FrenetSerretBuilder` (forward and inverse).
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, gamma)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, station=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, station)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
@@ -411,11 +411,11 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     A `@final` subclass of `AbstractCurveFrameBuilder` computing the $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ triad via parallel transport.
 
-    Fields (the ABC's `curve`, `tau_unit`, `gamma`, plus two more):
+    Fields (the ABC's `curve`, `tau_unit`, `station`, plus two more):
 
     - `curve : Callable[[Any], Any]` — the constructing curve.
     - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter. Defaults to `"s"`. Static.
-    - `gamma : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
+    - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
     - `tau_0 : unxt.AbstractQuantity | None` — reference parameter where the initial frame is defined (a leaf). `None` is resolved to `Q(0.0, tau_unit)` by `__post_init__`.
     - `initial_normal : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `None` for auto-selection via Gram–Schmidt.
     - `diffeqsolver : diffraxtra.DiffEqSolver` — the whole `diffrax` configuration (solver, step-size controller, adjoint, step budget) in one **static** field (hashable, contributes no array leaves, so the builder's pytree stays about the curve). Defaults below.
@@ -426,9 +426,9 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 
-    Constructed directly — `BishopBuilder(curve, tau_unit="s", gamma=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
+    Constructed directly — `BishopBuilder(curve, tau_unit="s", station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
-    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `gamma`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
+    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
     `act` dispatches on `TimeDep(BishopBuilder(...))`, identically to `FrenetSerretBuilder`.
 
@@ -447,7 +447,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `BishopFrame(base_frame, xop, xop_inv)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, gamma=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, gamma, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit="s", *, station=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, station, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
