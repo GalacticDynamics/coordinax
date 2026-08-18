@@ -3,6 +3,7 @@
 import jax
 import jax.numpy as jnp
 import pytest
+from coordinaxs.api.manifolds import metric_matrix
 
 import coordinax.charts as cxc
 import unxt as u
@@ -253,8 +254,6 @@ def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
     `test_frenet_metric_has_torsion_cross_terms` for the contrast on the same
     curve.
     """
-    from coordinaxs.api.manifolds import metric_matrix
-
     ch = cxfc.TubularChart(cxfc.BishopBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
 
@@ -270,8 +269,6 @@ def test_frenet_metric_has_torsion_cross_terms() -> None:
     Same `_helix` and same point as the Bishop test above: Bishop is
     diagonal there, Frenet--Serret is not, ten orders of magnitude apart.
     """
-    from coordinaxs.api.manifolds import metric_matrix
-
     ch = cxfc.TubularChart(cxfc.FrenetSerretBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
     assert not jnp.allclose(g[0, 1].ustrip("km / s"), 0.0, atol=1e-6)

@@ -383,9 +383,31 @@ Nothing above requires a plain function — a curve is consumed purely as a call
 
 ### Cost
 
-Every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
+By default, every call into `ArcLength` or `LagrangianArcLength` solves the reparametrisation ODE from $s=0$ to the requested $s$. Under `BishopBuilder` that sits inside Bishop's own parallel-transport solve, which evaluates the curve many times per call, so the costs multiply: measured on a helix, a forward `pt_map` is ~46x slower than over the un-reparametrised curve, and ~86x under `jax.grad`. Frenet--Serret is far cheaper, having no ODE of its own.
 
-Amortising that with a precomputed $\tau(s)$ interpolation is [tracked separately](https://github.com/GalacticDynamics/coordinax/issues/713) -- doing it without breaking gradients with respect to the curve's own parameters needs more than caching the solve.
+Passing `s_max` amortises the forward cost. The ODE is then solved once, at construction, over $[0, s_{\max}]$, and stored as a dense interpolation that later calls read from instead of re-solving:
+
+```{code-block} python
+>>> fast = cxfc.ArcLength(helix, "s", s_max=u.Q(10.0, "km"))
+>>> bool(jnp.allclose(fast(u.Q(2.0, "km")).ustrip("km"),
+...                   arc(u.Q(2.0, "km")).ustrip("km"), atol=1e-8))
+True
+
+```
+
+Not every path is helped equally, and it is worth knowing which one you are on. Measured on this helix:
+
+| what you differentiate | cost |
+| --- | --- |
+| nothing (forward evaluation) | a few hundred times cheaper with `s_max` |
+| $s$ alone — the chart Jacobian, the metric, the inverse solve | no integration at all |
+| the curve's own parameters $\theta$ | about a factor of two |
+
+The split is structural. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation; differentiating with respect to $\theta$ costs a _second_ one, integrating $\partial S/\partial\theta$ over $[\tau_0, \tau]$, and that one cannot be precomputed because it depends on the perturbation direction, known only at the call. So fitting a curve's shape pays that integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians — does not.
+
+`s` must then fall within $[0, s_{\max}]$, up to a small margin either side: the precompute integrates a little past both ends, because the inverse chart's nearest-point solve genuinely asks for $\tau(s)$ outside the nominal range while bracketing a root. Beyond the solved range a query raises rather than extrapolating off the end of the interpolation.
+
+`s_max` also requires a one-argument curve: the Eulerian reading re-measures arc length on whichever slice it is evaluated at, so no single $\tau(s)$ exists to precompute — bind the slice with `AtTime` first, or use `LagrangianArcLength`, whose reference slice is fixed by construction.
 
 (limitations)=
 
