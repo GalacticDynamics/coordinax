@@ -15,6 +15,8 @@ break in `_src/arclength.py` for it to fail.
 parametrised as a value rather than a separate branch.
 """
 
+from collections.abc import Callable
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -73,6 +75,33 @@ class Helix(eqx.Module):
 _CHART_S_MAX_KM = float(2 * jnp.pi)
 
 
+#: The `s_max` most tests precompute over, and the point they query at.
+_S_MAX = u.Q(5.0, "km")
+_S_PROBE = u.Q(2.0, "km")
+
+
+def central_diff(f: Callable[[float], float], x: float, h: float = 1e-6) -> float:
+    """Central finite difference, the ground truth every gradient test uses."""
+    return (f(x + h) - f(x - h)) / (2 * h)
+
+
+@pytest.fixture(scope="module")
+def plain_helix_arc() -> cxfc.ArcLength:
+    """`helix` with no precompute -- the ground truth for the fast path.
+
+    Module-scoped, and safe to share: `ArcLength` is a frozen `equinox.Module`
+    and every test that perturbs one goes through `equinox.tree_at`, which
+    returns a new object rather than mutating this one.
+    """
+    return cxfc.ArcLength(helix, "s")
+
+
+@pytest.fixture(scope="module")
+def fast_helix_arc() -> cxfc.ArcLength:
+    """`helix` precomputed over ``[0, _S_MAX]``. Shared as `plain_helix_arc` is."""
+    return cxfc.ArcLength(helix, "s", s_max=_S_MAX)
+
+
 # --------------------------------------------------------------------------
 # Criterion 2: fast and slow paths agree, on a curve whose speed varies.
 #
@@ -84,7 +113,7 @@ _CHART_S_MAX_KM = float(2 * jnp.pi)
 @pytest.mark.parametrize("s_val", [0.1, 1.0, 3.0, 4.99])
 def test_fast_and_slow_agree_for_nonconstant_speed(s_val: float) -> None:
     plain = cxfc.ArcLength(parabola, "s")
-    fast = cxfc.ArcLength(parabola, "s", s_max=u.Q(5.0, "km"))
+    fast = cxfc.ArcLength(parabola, "s", s_max=_S_MAX)
     got_plain = plain(u.Q(s_val, "km")).ustrip("km")
     got_fast = fast(u.Q(s_val, "km")).ustrip("km")
     assert jnp.allclose(got_plain, got_fast, atol=1e-8), (got_plain, got_fast)
@@ -95,7 +124,7 @@ def test_fast_and_slow_agree_for_lagrangian_nonconstant_speed(
     s_val: float, t_val: float
 ) -> None:
     plain = cxfc.LagrangianArcLength(stretch, u.Q(0.3, "s"), "s")
-    fast = cxfc.LagrangianArcLength(stretch, u.Q(0.3, "s"), "s", s_max=u.Q(5.0, "km"))
+    fast = cxfc.LagrangianArcLength(stretch, u.Q(0.3, "s"), "s", s_max=_S_MAX)
     got_plain = plain(u.Q(s_val, "km"), u.Q(t_val, "s")).ustrip("km")
     got_fast = fast(u.Q(s_val, "km"), u.Q(t_val, "s")).ustrip("km")
     assert jnp.allclose(got_plain, got_fast, atol=1e-6), (got_plain, got_fast)
@@ -107,12 +136,12 @@ def test_fast_and_slow_agree_for_lagrangian_nonconstant_speed(
 
 def test_s_max_raises_for_a_two_argument_curve() -> None:
     with pytest.raises(ValueError, match="two-argument"):
-        cxfc.ArcLength(stretch, "s", s_max=u.Q(5.0, "km"))
+        cxfc.ArcLength(stretch, "s", s_max=_S_MAX)
 
 
 def test_s_max_is_fine_after_binding_time_with_at_time() -> None:
     frozen = cxfc.AtTime(stretch, u.Q(0.0, "s"))
-    fast = cxfc.ArcLength(frozen, "s", s_max=u.Q(5.0, "km"))
+    fast = cxfc.ArcLength(frozen, "s", s_max=_S_MAX)
     plain = cxfc.ArcLength(frozen, "s")
     assert jnp.allclose(
         plain(u.Q(2.0, "km")).ustrip("km"), fast(u.Q(2.0, "km")).ustrip("km"), atol=1e-8
@@ -135,7 +164,9 @@ def test_s_max_is_fine_after_binding_time_with_at_time() -> None:
     ],
 )
 def test_s_and_s_max_are_converted_not_assumed(
-    s_max: u.AbstractQuantity | None, s: u.AbstractQuantity
+    s_max: u.AbstractQuantity | None,
+    s: u.AbstractQuantity,
+    plain_helix_arc: cxfc.ArcLength,
 ) -> None:
     """Same physical query in km and in m must give the same point.
 
@@ -143,12 +174,12 @@ def test_s_and_s_max_are_converted_not_assumed(
     `_eval_tau_dense`'s `s`/`s_max`) reads a raw stored value instead of
     converting -- a 1000x error, not a rounding one.
     """
-    want = cxfc.ArcLength(helix, "s")(u.Q(2.0, "km")).ustrip("km")
+    want = plain_helix_arc(_S_PROBE).ustrip("km")
     got = cxfc.ArcLength(helix, "s", s_max=s_max)(s).ustrip("km")
     assert jnp.allclose(got, want, atol=1e-8), (got, want)
 
 
-def test_the_jvp_tangent_carries_s_own_unit() -> None:
+def test_the_jvp_tangent_carries_s_own_unit(plain_helix_arc: cxfc.ArcLength) -> None:
     """d/ds in metres must be exactly 1/1000 of d/ds in km.
 
     `_tau_of_s_jvp` subtracts `dS_val` from `ds_val` without converting,
@@ -157,7 +188,7 @@ def test_the_jvp_tangent_carries_s_own_unit() -> None:
     keeps its unit in the treedef, not the leaf. Fails if either half stops
     being true, which a plain same-unit gradient test would not catch.
     """
-    arc = cxfc.ArcLength(helix, "s")
+    arc = plain_helix_arc
     g_km = jax.grad(lambda sv: arc(u.Q(sv, "km")).ustrip("km")[2])(2.0)
     g_m = jax.grad(lambda sv: arc(u.Q(sv, "m")).ustrip("km")[2])(2000.0)
     assert jnp.allclose(g_m, g_km / 1000.0, rtol=1e-6), (g_m, g_km)
@@ -173,7 +204,9 @@ def test_the_jvp_tangent_carries_s_own_unit() -> None:
 
 
 @pytest.mark.parametrize("s_val", [5.24, -0.24, 5.0, 0.0, 2.5])
-def test_s_within_the_margin_of_s_max_is_correct_not_clamped(s_val: float) -> None:
+def test_s_within_the_margin_of_s_max_is_correct_not_clamped(
+    s_val: float, fast_helix_arc: cxfc.ArcLength, plain_helix_arc: cxfc.ArcLength
+) -> None:
     """The margin is solved data, so a query in it is right, not just accepted.
 
     This is the whole point of integrating past each end. The earlier version
@@ -182,31 +215,31 @@ def test_s_within_the_margin_of_s_max_is_correct_not_clamped(s_val: float) -> No
     asserting "does not raise" passed against that bug; comparing to a fresh
     solve is what catches it.
     """
-    fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
-    plain = cxfc.ArcLength(helix, "s")  # ground truth: no precompute at all
-    got = fast(u.Q(s_val, "km")).ustrip("km")
-    want = plain(u.Q(s_val, "km")).ustrip("km")
+    got = fast_helix_arc(u.Q(s_val, "km")).ustrip("km")
+    want = plain_helix_arc(u.Q(s_val, "km")).ustrip("km")
     assert jnp.allclose(got, want, atol=1e-9), (got, want)
 
 
-def test_past_the_edge_is_not_the_clamped_boundary_value() -> None:
+def test_past_the_edge_is_not_the_clamped_boundary_value(
+    fast_helix_arc: cxfc.ArcLength,
+) -> None:
     """Companion to the above: the margin query is *not* tau(s_max) rebadged.
 
     The comparison against a fresh solve already implies this, but only if
     the two differ measurably -- this states the separation outright, so a
     clamping regression fails here even if tolerances elsewhere drifted.
     """
-    fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
-    at_edge = fast(u.Q(5.0, "km")).ustrip("km")
-    past_edge = fast(u.Q(5.24, "km")).ustrip("km")
+    at_edge = fast_helix_arc(_S_MAX).ustrip("km")
+    past_edge = fast_helix_arc(u.Q(5.24, "km")).ustrip("km")
     assert not jnp.allclose(past_edge, at_edge, atol=1e-3), (past_edge, at_edge)
 
 
 @pytest.mark.parametrize("s_val", [6.0, -0.26])
-def test_s_far_outside_s_max_raises(s_val: float) -> None:
-    fast = cxfc.ArcLength(helix, "s", s_max=u.Q(5.0, "km"))
+def test_s_far_outside_s_max_raises(
+    s_val: float, fast_helix_arc: cxfc.ArcLength
+) -> None:
     with pytest.raises(RuntimeError, match="solved domain"):
-        fast(u.Q(s_val, "km"))
+        fast_helix_arc(u.Q(s_val, "km"))
 
 
 def test_the_margin_scales_with_a_small_s_max() -> None:
@@ -237,7 +270,7 @@ def test_grad_matches_finite_difference_for_curve_params_built_outside() -> None
     """#713's own worked example: helix pitch, s=2, theta=1."""
     curve0 = Helix(u.Q(1.0, "km"))
     arc = cxfc.ArcLength(curve0, "s", s_max=u.Q(10.0, "km"))  # built OUTSIDE grad
-    s_val = u.Q(2.0, "km")
+    s_val = _S_PROBE
 
     def f(theta_val: float) -> float:
         new_curve = Helix(u.Q(theta_val, "km"))
@@ -252,8 +285,7 @@ def test_grad_matches_finite_difference_for_curve_params_built_outside() -> None
         return fresh(s_val).ustrip("km")[2]
 
     got = jax.grad(f)(1.0)
-    h = 1e-6
-    fd = (f_rebuilt(1.0 + h) - f_rebuilt(1.0 - h)) / (2 * h)
+    fd = central_diff(f_rebuilt, 1.0)
 
     # `f` returns the *z* component, and z = 0.3 * tau, so the chain rule puts
     # dz/dtheta at 0.3 * dtau/dtheta. Divide the pitch back out to compare
@@ -273,9 +305,9 @@ def test_lagrangian_t0_grad_matches_finite_difference_built_outside() -> None:
     """#713: `LagrangianArcLength.t0`'s gradient came back exactly 0.0. Not here."""
     t0_0 = u.Q(0.3, "s")
     lag = cxfc.LagrangianArcLength(
-        stretch, t0_0, "s", s_max=u.Q(5.0, "km")
+        stretch, t0_0, "s", s_max=_S_MAX
     )  # built OUTSIDE grad
-    s_val = u.Q(2.0, "km")
+    s_val = _S_PROBE
     t_eval = u.Q(1.0, "s")
 
     def f(t0_val: float) -> float:
@@ -283,14 +315,11 @@ def test_lagrangian_t0_grad_matches_finite_difference_built_outside() -> None:
         return perturbed(s_val, t_eval).ustrip("km")[1]
 
     def f_rebuilt(t0_val: float) -> float:
-        fresh = cxfc.LagrangianArcLength(
-            stretch, u.Q(t0_val, "s"), "s", s_max=u.Q(5.0, "km")
-        )
+        fresh = cxfc.LagrangianArcLength(stretch, u.Q(t0_val, "s"), "s", s_max=_S_MAX)
         return fresh(s_val, t_eval).ustrip("km")[1]
 
     got = jax.grad(f)(0.3)
-    h = 1e-6
-    fd = (f_rebuilt(0.3 + h) - f_rebuilt(0.3 - h)) / (2 * h)
+    fd = central_diff(f_rebuilt, 0.3)
 
     # The reverted implementation returned exactly 0.0 here (#713).
     assert not jnp.allclose(got, 0.0, atol=1e-8), got
@@ -308,7 +337,7 @@ def test_grad_without_s_max_also_uses_the_custom_jvp() -> None:
     """
     curve0 = Helix(u.Q(1.0, "km"))
     arc = cxfc.ArcLength(curve0, "s")  # no s_max
-    s_val = u.Q(2.0, "km")
+    s_val = _S_PROBE
 
     def f(theta_val: float) -> float:
         new_curve = Helix(u.Q(theta_val, "km"))
@@ -369,7 +398,6 @@ def test_bishop_wrapped_arclength_survives_jacfwd(
         arc = cxfc.ArcLength(Helix(u.Q(theta_val, "km")), "s", s_max=s_max)
         return cxfc.BishopBuilder(arc, "km").location(u.Q(2.0, "km")).ustrip("km")[2]
 
-    h = 1e-6
-    fd = (f(1.0 + h) - f(1.0 - h)) / (2 * h)
+    fd = central_diff(f, 1.0)
     assert jnp.allclose(jax.jacfwd(f)(1.0), fd, rtol=1e-3), fd
     assert jnp.allclose(jax.grad(f)(1.0), fd, rtol=1e-3), fd
