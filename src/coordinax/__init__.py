@@ -36,6 +36,7 @@ __all__ = (  # distances
     "EmbeddedManifold",
     "CustomAtlas",
     "CustomManifold",
+    "chord_distance",
     "geodesic_distance",
     # frames -- frames
     "noframe",
@@ -132,6 +133,7 @@ from coordinax.manifolds import (
     EuclideanManifold,
     FlatMetric,
     Rn,
+    chord_distance,
     embedded_twosphere,
     geodesic_distance,
 )

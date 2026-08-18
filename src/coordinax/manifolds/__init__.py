@@ -11,6 +11,7 @@ __all__ = (
     "metric_matrix",
     "metric_representation",
     "norm",
+    "chord_distance",
     "geodesic_distance",
     "interval",
     # Sub-namespaces
@@ -140,6 +141,7 @@ with install_import_hook("coordinax.manifolds"):
     from coordinaxs.api.charts import pt_map
     from coordinaxs.api.manifolds import (
         angle_between,
+        chord_distance,
         geodesic_distance,
         guess_manifold,
         interval,
