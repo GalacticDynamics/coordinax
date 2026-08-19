@@ -312,3 +312,52 @@ class TestLinearFusion:
         got = cxfm.Linear.from_(jnp.eye(3) * 2.0)
         assert isinstance(got, cxfm.Linear)
         assert jnp.allclose(got.matrix, jnp.eye(3) * 2.0)
+
+
+class TestScaleIsDiagonal:
+    """`Scale` scales the axes; an off-diagonal matrix belongs to `Linear`.
+
+    Before `Linear` existed there was nowhere else to put a general matrix, so
+    `Scale` accepted one and its name over-promised.
+    """
+
+    def test_from_factors_is_accepted(self):
+        op = cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 4.0]))
+        assert jnp.allclose(jnp.diagonal(op.matrix), jnp.asarray([2.0, 3.0, 4.0]))
+
+    def test_an_already_diagonal_matrix_is_accepted(self):
+        op = cxfm.Scale(jnp.diag(jnp.asarray([2.0, 1.0, 0.5])))
+        assert jnp.allclose(jnp.diagonal(op.matrix), jnp.asarray([2.0, 1.0, 0.5]))
+
+    def test_an_off_diagonal_matrix_is_refused(self):
+        shear = jnp.asarray([[1.0, 0.5, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        with pytest.raises(Exception, match="diagonal"):
+            _ = cxfm.Scale(shear).matrix
+
+    def test_a_rotation_is_refused(self):
+        """The case that motivated the narrowing: a rotation is not a scaling."""
+        rot = cxfm.Rotate.from_euler("z", u.Q(30, "deg"))
+        with pytest.raises(Exception, match="diagonal"):
+            _ = cxfm.Scale(rot.matrix).matrix
+
+    def test_inverse_is_reciprocals_and_round_trips(self):
+        op = cxfm.Scale.from_factors(jnp.asarray([2.0, 4.0, 5.0]))
+        assert jnp.allclose(
+            jnp.diagonal(op.inverse.matrix), jnp.asarray([0.5, 0.25, 0.2])
+        )
+        p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        back = op.inverse(op(p))
+        for k, want in zip(("x", "y", "z"), (1.0, 2.0, 3.0), strict=True):
+            assert jnp.allclose(back[k].value, want, atol=1e-12)
+
+    def test_inverse_of_a_malformed_scale_reports_the_real_problem(self):
+        """It used to surface a raw `jnp.linalg.inv` shape error (see #726)."""
+        with pytest.raises(Exception, match="square"):
+            _ = cxfm.Scale(jnp.asarray([2.0, 3.0, 4.0])).inverse
+
+    def test_merged_scales_stay_diagonal(self):
+        s1 = cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 4.0]))
+        s2 = cxfm.Scale.from_factors(jnp.asarray([5.0, 7.0, 11.0]))
+        got = cxfm.simplify(s1 | s2)
+        assert isinstance(got, cxfm.Scale)
+        assert jnp.allclose(jnp.diagonal(got.matrix), jnp.asarray([10.0, 21.0, 44.0]))
