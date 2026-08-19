@@ -406,3 +406,44 @@ class TestLinearValidatesItsGroup:
         raw_init = inspect.unwrap(cxfm.Linear.__init__)
         with pytest.raises(TypeError, match="must be an AbstractTransformGroup"):
             raw_init(object.__new__(cxfm.Linear), jnp.eye(3), NotAGroup)
+
+
+class TestMalformedMatricesReportTheSharedMessage:
+    """Every route to a malformed matrix reports the base's square-check message.
+
+    `Scale.inverse` already did (#731). These are the routes that still reached
+    a raw JAX error first: a non-*square* 2D matrix slipped past the diagonal
+    check's `ndim` guard, and `simplify`/`_merge`/`Linear.inverse` read the raw
+    field rather than the validated `matrix`.
+    """
+
+    NONSQUARE = (3, 2)
+
+    def _nonsquare(self):
+        return jnp.ones(self.NONSQUARE)
+
+    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    def test_matrix_reports_square(self, op_type):
+        with pytest.raises(Exception, match="square"):
+            _ = op_type(self._nonsquare()).matrix
+
+    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    def test_inverse_reports_square(self, op_type):
+        with pytest.raises(Exception, match="square"):
+            _ = op_type(self._nonsquare()).inverse.matrix
+
+    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    def test_simplify_reports_square(self, op_type):
+        with pytest.raises(Exception, match="square"):
+            cxfm.simplify(op_type(self._nonsquare()))
+
+    def test_merging_two_scales_reports_square(self):
+        bad = cxfm.Scale(self._nonsquare())
+        with pytest.raises(Exception, match="square"):
+            cxfm.simplify(bad | bad)
+
+    def test_a_square_non_diagonal_still_reports_diagonal(self):
+        """The square check must not swallow the diagonal one."""
+        shear = jnp.asarray([[1.0, 0.5, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        with pytest.raises(Exception, match="diagonal"):
+            _ = cxfm.Scale(shear).matrix
