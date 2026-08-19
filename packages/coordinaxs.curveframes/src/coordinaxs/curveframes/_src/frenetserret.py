@@ -92,9 +92,12 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         A function ``tau -> Quantity[float, (3,)]`` representing a smooth space
         curve.  Make it an `equinox.Module` for differentiable curve parameters;
         a bare function's captures are trace-time constants.
-    tau_unit : AbstractUnit or str, optional
+    tau_unit : AbstractUnit or str
         Unit of the curve parameter, used by {func}`unxt.experimental.jacfwd` to
-        compute unit-correct derivatives.  Defaults to ``"s"``.
+        compute unit-correct derivatives.  Required: there is no neutral
+        default, since a curve parameter may be a time, an arc length, or an
+        affine parameter, and the wrong unit is silently rescaled rather than
+        rejected when it is dimensionally compatible.
     station : optional
         A fixed station along the curve; see `AbstractCurveFrameBuilder`.
 

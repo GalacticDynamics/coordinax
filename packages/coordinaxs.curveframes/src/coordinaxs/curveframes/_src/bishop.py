@@ -191,8 +191,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     curve : Callable
         A function ``tau -> Quantity[float, (3,)]``.  Make it an
         `equinox.Module` for differentiable curve parameters.
-    tau_unit : AbstractUnit or str, optional
-        Unit of the curve parameter.  Defaults to ``"s"``.
+    tau_unit : AbstractUnit or str
+        Unit of the curve parameter.  Required: there is no neutral default,
+        since a curve parameter may be a time, an arc length, or an affine
+        parameter, and the wrong unit is silently rescaled rather than
+        rejected when it is dimensionally compatible.
     station : optional
         A fixed station along the curve; see `AbstractCurveFrameBuilder`.
     tau_0 : Quantity, optional

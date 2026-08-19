@@ -46,11 +46,11 @@ BuilderT = TypeVar("BuilderT", bound="AbstractCurveFrameBuilder")
 
 _MSG_TAU_UNIT_DIMENSION = (
     "this curve exposes a parameter of dimension {want}, but `tau_unit` is "
-    "{unit!r}, which is {got}. `tau_unit` defaults to 's', so this is usually "
-    "a forgotten argument: a builder over an arc-length curve needs a length, "
-    "e.g. `BishopBuilder(ArcLength(curve, 'km'), 'km')`. Left as-is, "
-    "`location` would still return correct positions -- it never consults the "
-    "unit -- while `tangent` and `rotation_matrix` would fail later inside "
+    "{unit!r}, which is {got}. A builder over an arc-length curve needs a "
+    "length, e.g. `BishopBuilder(ArcLength(curve, 'km'), 'km')` -- a common "
+    "way to land here is migrating mechanically to 's'. Left as-is, "
+    "`location` would still return correct positions, since it never consults "
+    "the unit, while `tangent` and `rotation_matrix` would fail later inside "
     "the derivative."
 )
 
@@ -187,7 +187,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
             if got != want:
                 raise ValueError(
                     _MSG_TAU_UNIT_DIMENSION.format(
-                        want=want, unit=str(self.tau_unit), got=got
+                        want=want, unit=self.tau_unit, got=got
                     )
                 )
 
