@@ -4972,17 +4972,20 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Map intrinsic coordinates to their image in the **ambient** chart.
 
     The forward half of the embedding pair; [`pt_project`](#software-spec-pt_project)
-    is the inverse. Both are dispatched on the embedding carrier, so the same
-    call works whether you hold an `EmbeddedManifold`, an `EmbeddedChart`, or a
-    bare `AbstractEmbeddingMap`.
+    is the inverse. Both dispatch on the embedding carrier, but not uniformly:
+    an `EmbeddedManifold` and an `EmbeddedChart` each have a two-argument form,
+    while a bare `AbstractEmbeddingMap` is reachable only through the
+    explicit-chart signature. Note this is an asymmetry in the API rather than
+    a necessity -- an embedding map does carry `intrinsic` and `ambient`, so it
+    has the charts a two-argument form would need.
 
     **Signatures:**
 
     ```
-    cxm.pt_embed(p, M, /, *, usys=None)                        # EmbeddedManifold
-    cxm.pt_embed(p, chart, /, *, usys=None)                    # EmbeddedChart
-    cxm.pt_embed(p, from_chart, to_chart, M, /, *, usys=None)  # explicit charts
-    cxm.pt_embed(p, from_chart, to_chart, emb, /, *, usys=None)
+    cxm.pt_embed(p, M, /, *, usys=None)                          # EmbeddedManifold
+    cxm.pt_embed(p, chart, /, *, usys=None)                      # EmbeddedChart
+    cxm.pt_embed(p, from_chart, to_chart, M, /, *, usys=None)    # explicit charts
+    cxm.pt_embed(p, from_chart, to_chart, emb, /, *, usys=None)  # explicit embedding map
     ```
 
     **Return:**
@@ -4992,6 +4995,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Dispatch behavior:**
 
     - `TwoSphereIn3D` defaults its ambient to `Spherical3D`, so the result is $(r, \theta, \phi)$ at fixed $r = R$ unless the embedding was built with `ambient=cxc.cart3d`.
+    - A bare `AbstractEmbeddingMap` has no two-argument overload; `pt_embed(p, emb)` raises `NotFoundLookupError`. Pass `from_chart` and `to_chart`, or wrap it in an `EmbeddedChart`.
     - All coordinate-level work routes through an intermediate 3D spherical chart regardless of the ambient selected, so the Cartesian route is `SphericalTwoSphere -> Spherical3D -> Cart3D`.
 
     **Examples**
