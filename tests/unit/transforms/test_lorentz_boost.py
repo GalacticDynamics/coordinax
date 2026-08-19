@@ -353,12 +353,9 @@ _BETA = [0.6, 0.0, 0.0]
 class TestBetaAcceptsOnlyDimensionlessQuantities:
     """`beta` is v/c, so a `Quantity` must be dimensionless or refused.
 
-    Regression: the field converter was a bare ``jnp.asarray``, and ``jnp`` in
-    that module is `quaxed.numpy`, whose `asarray` is unit-aware and hands a
-    `Quantity` straight back. A `Quantity` was therefore stored in a field
-    annotated `Array`, and nothing complained until `matrix` failed with a
-    `TypeError` about ``unvmap_any`` -- an error naming nothing the caller had
-    written.
+    Regression: the converter was a bare quaxed ``jnp.asarray``, which returns
+    a `Quantity` unchanged, so one was stored in an `Array` field and `matrix`
+    failed later on ``unvmap_any``.
     """
 
     def test_dimensionless_quantity_is_stripped_to_an_array(self):
@@ -375,11 +372,7 @@ class TestBetaAcceptsOnlyDimensionlessQuantities:
 
     @pytest.mark.parametrize("unit", ["m/s", "km/s", "pc/Myr", "m"])
     def test_a_dimensionful_quantity_is_refused_and_redirected(self, unit):
-        """``0.6 m/s`` is not ``0.6 c`` -- off by eight orders of magnitude.
-
-        A length is in here too: the guard is "dimensionless or nothing", not
-        "not a velocity".
-        """
+        """``0.6 m/s`` is not ``0.6 c`` -- off by eight orders of magnitude."""
         with pytest.raises(ValueError, match="from_velocity"):
             cxfm.LorentzBoost(u.Q(jnp.asarray(_BETA), unit))
 
@@ -388,3 +381,34 @@ class TestBetaAcceptsOnlyDimensionlessQuantities:
         c = u.Q(299792458.0, "m/s")
         b = cxfm.LorentzBoost.from_velocity(u.Q(jnp.asarray([0.6, 0.0, 0.0]), "") * c)
         assert bool(jnp.allclose(b.beta, jnp.asarray(_BETA), atol=1e-12))
+
+
+class TestBetaDtypePromotion:
+    """Integers are promoted; a float dtype is preserved, not overridden.
+
+    ``dtype=float`` names the *default* float, so under ``jax_enable_x64`` it
+    widened an f32 input to f64 -- discarding a choice a caller makes for
+    memory or accelerator reasons. Asserted as the promotion contract rather
+    than by toggling x64, so it holds either way round.
+    """
+
+    @pytest.mark.parametrize(
+        "given",
+        [
+            jnp.asarray([0, 0, 0]),
+            jnp.asarray([0.6, 0.0, 0.0], dtype=jnp.float32),
+            jnp.asarray([0.6, 0.0, 0.0]),
+        ],
+        ids=["int", "f32", "default-float"],
+    )
+    def test_dtype_follows_result_type(self, given):
+        assert cxfm.LorentzBoost(given).beta.dtype == jnp.result_type(given, float)
+
+    def test_an_integer_beta_becomes_floating(self):
+        """Integer arithmetic in ``1 - beta**2`` would be a trap."""
+        beta = cxfm.LorentzBoost(jnp.asarray([0, 0, 0])).beta
+        assert jnp.issubdtype(beta.dtype, jnp.floating)
+
+    def test_a_python_list_still_works(self):
+        """Regression: `result_type` cannot read a list, `asarray` must run first."""
+        assert cxfm.LorentzBoost([0.6, 0.0, 0.0]).beta.shape == (3,)
