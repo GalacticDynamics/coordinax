@@ -36,34 +36,39 @@ _MSG_ZERO_DIRECTION = (
 )
 
 
+def _float(x: Any, /) -> Array:
+    """Convert to an array, promoting integers to float but preserving f32.
+
+    ``dtype=float`` would name the *default* float, silently widening an f32
+    input to f64 under ``jax_enable_x64`` and discarding a deliberate choice of
+    single precision. `jnp.result_type` promotes only what needs promoting.
+    """
+    arr = jnp.asarray(x)
+    return arr.astype(jnp.result_type(arr, float))
+
+
 def _as_beta(b: Any, /) -> Shaped[Array, "3"]:
     """Normalise ``beta`` to a bare array, requiring it to be dimensionless.
 
     ``jnp`` here is `quaxed.numpy`, whose `asarray` is unit-aware and returns a
-    `~unxt.Quantity` unchanged. A plain ``jnp.asarray`` converter therefore did
-    nothing for a `~unxt.Quantity`, storing one in a field annotated `Array`;
-    the failure surfaced much later and unrecognisably, inside `matrix`.
+    `~unxt.Quantity` unchanged, so it cannot be used to coerce one.
 
-    A dimensionless quantity is stripped. A velocity is refused rather than
-    reinterpreted: ``0.6 m/s`` is not ``0.6 c``, and taking its number would be
-    wrong by eight orders of magnitude while looking perfectly ordinary.
+    A dimensionless quantity is stripped; a velocity is refused rather than
+    reinterpreted, since ``0.6 m/s`` is not ``0.6 c``.
     """
     if isinstance(b, u.AbstractQuantity):
         try:
             b = u.ustrip("", b)
         except UnitConversionError as e:
-            # A note rather than a new exception: `UnitConversionError` is
-            # already a `ValueError`, so nothing catching the latter is lost,
-            # and astropy's own message names both units and the physical type
-            # ("speed/velocity"). Re-raising would restate that in a second
-            # traceback and swap a precise type for a vaguer one.
+            # `UnitConversionError` is already a `ValueError`, so a bare
+            # `raise` loses no caller; its message already names the units.
             e.add_note(
                 "LorentzBoost `beta` is a velocity in units of c, and so "
                 "dimensionless. For a velocity use "
                 "`LorentzBoost.from_velocity(v)`, which divides by c."
             )
             raise
-    return jnp.asarray(b, dtype=float)
+    return _float(b)
 
 
 @final
@@ -237,12 +242,12 @@ class LorentzBoost(AbstractLinearTransform):
         True
 
         """
-        d = jnp.asarray(direction, dtype=float)
+        d = _float(direction)
         norm = jnp.linalg.norm(d)
         # A zero direction has no boost axis to normalise onto; dividing would
         # give `nan` betas that then propagate silently into every matrix entry.
         norm = eqx.error_if(norm, norm == 0.0, _MSG_ZERO_DIRECTION)
-        return cls(jnp.tanh(jnp.asarray(rapidity, dtype=float)) * (d / norm))
+        return cls(jnp.tanh(_float(rapidity)) * (d / norm))
 
     # -----------------------------------------------------
     # Derived quantities

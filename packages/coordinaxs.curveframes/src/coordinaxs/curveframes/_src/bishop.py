@@ -95,6 +95,17 @@ _MSG_PARALLEL_NORMAL = (
 )
 
 
+def _float(x: Any, /) -> Array:
+    """Convert to an array, promoting integers to float but preserving f32.
+
+    ``dtype=float`` would name the *default* float, silently widening an f32
+    input to f64 under ``jax_enable_x64`` and discarding a deliberate choice of
+    single precision. `jnp.result_type` promotes only what needs promoting.
+    """
+    arr = jnp.asarray(x)
+    return arr.astype(jnp.result_type(arr, float))
+
+
 def _orthonormalize(v: Any, T0_val: Any) -> Any:
     r"""Gram--Schmidt ``v`` against the unit tangent, then normalise.
 
@@ -365,9 +376,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
             # A supplied vector is NOT trusted to be unit or normal-plane: the
             # transport ODE conserves any error in it forever, so R would not
             # be a rotation.  Gram--Schmidt it exactly as the auto path does.
-            U1_0_val = _orthonormalize(
-                jnp.asarray(self.initial_normal, dtype=float), T0_val
-            )
+            U1_0_val = _orthonormalize(_float(self.initial_normal), T0_val)
         else:
             U1_0_val = _auto_initial_normal(T0_val)
 
@@ -376,8 +385,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # for JAX to trace.
         dTangent_fn = u.experimental.jacfwd(self._tangent_at, units=(tau_unit,))
 
-        tau_val = jnp.asarray(g.ustrip(tau_unit), dtype=float)
-        tau_0_val = jnp.asarray(tau_0.ustrip(tau_unit), dtype=float)
+        tau_val = _float(g.ustrip(tau_unit))
+        tau_0_val = _float(tau_0.ustrip(tau_unit))
 
         dtau = tau_val - tau_0_val
 
