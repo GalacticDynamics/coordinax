@@ -255,10 +255,11 @@ class TestGuessManifoldOnChartClasses:
     same class default-constructed to `HyperSphericalManifold(ndim=2)`.
     """
 
-    #: Classes that genuinely cannot fix a manifold from the class alone.
-    #: `CartND` carries its dimension per instance; `PoincarePolar6D` has no
-    #: manifold even as an instance.
-    NO_CLASS_LEVEL_MANIFOLD: ClassVar[set[str]] = {"CartND", "PoincarePolar6D"}
+    #: The only class reaching the silent fallback. `PoincarePolar6D` has no
+    #: manifold even as an instance, so class-level and instance-level agree
+    #: on `NoManifold()` -- it needs no exemption from the invariant below,
+    #: only from the list of what may legitimately reach the fallback.
+    ONLY_FALLBACK: ClassVar[set[str]] = {"PoincarePolar6D"}
 
     @staticmethod
     def _default_constructible() -> list[type]:
@@ -268,7 +269,10 @@ class TestGuessManifoldOnChartClasses:
                 continue
             try:
                 cls()
-            except Exception:  # noqa: BLE001, S112  # needs constructor arguments
+            except TypeError:  # requires constructor arguments
+                # Deliberately only `TypeError`. A constructor that fails any
+                # other way is a regression, and swallowing it here would hide
+                # the class from every assertion below.
                 continue
             out.append(cls)
         return sorted(out, key=lambda c: c.__name__)
@@ -282,8 +286,6 @@ class TestGuessManifoldOnChartClasses:
         """
         mismatched = {}
         for cls in self._default_constructible():
-            if cls.__name__ in self.NO_CLASS_LEVEL_MANIFOLD:
-                continue
             from_class = cxm.guess_manifold(cls)
             from_instance = cls().M
             if from_class != from_instance:
@@ -299,7 +301,7 @@ class TestGuessManifoldOnChartClasses:
             for cls in self._default_constructible()
             if isinstance(cxm.guess_manifold(cls), cxm.NoManifold)
         }
-        assert fell_back == self.NO_CLASS_LEVEL_MANIFOLD
+        assert fell_back == self.ONLY_FALLBACK
 
     def test_guessed_chart_carries_its_manifold(self) -> None:
         """The user-visible symptom: an inferred chart must not carry the sentinel."""

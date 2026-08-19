@@ -17,7 +17,8 @@ from coordinax._src.charts.d3 import (
     Cylindrical3D,
     ProlateSpheroidal3D,
 )
-from coordinax._src.euclidean import R0, R1, R2, R3, EuclideanManifold
+from coordinax._src.charts.dn import CartND
+from coordinax._src.euclidean import R0, R1, R2, R3, RN, EuclideanManifold
 from coordinax._src.null import no_manifold
 from coordinaxs.api.custom_types import CDict
 
@@ -42,15 +43,15 @@ def guess_manifold(obj: AbstractManifold, /) -> AbstractManifold:
 def guess_manifold(_: type[AbstractChart], /) -> AbstractManifold:
     """Return `no_manifold` for a chart class with no rule of its own.
 
-    Reached only where the class genuinely does not fix a manifold: `CartND`
-    carries its dimension per instance, and `PoincarePolar6D` has no manifold
-    even as an instance. Every other concrete chart class declares a rule, and
-    `TestGuessManifoldOnChartClasses` fails if one stops doing so --
-    the fallback is silent by design, so nothing else would notice.
+    Reached only by `PoincarePolar6D`, which has no manifold even as an
+    instance, so class-level and instance-level agree on `NoManifold()` there.
+    Every other concrete chart class declares a rule, and
+    `TestGuessManifoldOnChartClasses` fails if one stops doing so -- the
+    fallback is silent by design, so nothing else would notice.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> cxm.guess_manifold(cxc.CartND)
+    >>> cxm.guess_manifold(cxc.PoincarePolar6D)
     NoManifold()
 
     """
@@ -144,3 +145,24 @@ def guess_manifold(obj: CDict, /) -> AbstractManifold:
     """
     chart = cast("AbstractChart", cxcapi.guess_chart(obj))
     return chart.M
+
+
+@plum.dispatch
+def guess_manifold(_: type[CartND], /) -> EuclideanManifold:
+    """Return the manifold of the N-dimensional Cartesian chart class.
+
+    `CartND` stores its components as a single array, so the dimension is
+    per-instance -- but the *default* is not undefined: `CartND()` and the
+    exported `cxc.cartnd` both carry `RN`, and this returns the same, so
+    `guess_chart({"q": ...})` no longer builds a chart disagreeing with them.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> cxm.guess_manifold(cxc.CartND)
+    Rn(True)
+    >>> cxm.guess_manifold(cxc.CartND) == cxc.CartND().M == cxc.cartnd.M
+    True
+
+    """
+    return RN
