@@ -43,17 +43,13 @@ from .attime import AtTime
 #: differentiable in both forward and reverse mode -- see that module's
 #: comment for the full rationale.
 #:
-#: `DirectAdjoint` is load-bearing on **every** solve here, including the
-#: primal one in `_solve_tau`. It is tempting to reason that `_tau_of_s`
-#: supplies its own JVP, so autodiff never descends into the primal solve,
-#: which could then use the cheaper `RecursiveCheckpointAdjoint`. That is
-#: false, and measurably so: swapping it in fails 10 tests with ``TypeError:
-#: can't apply forward-mode autodiff (jvp) to a custom_vjp function``, raised
-#: across ``test_arclength_integration.py`` and ``test_arclength_shapes.py`` --
-#: the induced-metric and chart round-trip paths, which forward-differentiate
-#: through the chart and so reach the primal solve. The swap does not even
-#: pay: measured on a helix in alternating trials, it was consistently
-#: slower to construct and to evaluate, and indistinguishable on gradients.
+#: `DirectAdjoint` is load-bearing on the *primal* solve too, not only the
+#: JVP's quadrature: `_tau_of_s`'s custom rule does not keep autodiff out,
+#: because the induced-metric and chart round-trip paths differentiate
+#: through the chart in forward mode and so reach `_solve_tau`. Swapping in
+#: `RecursiveCheckpointAdjoint` there fails 10 tests with ``can't apply
+#: forward-mode autodiff (jvp) to a custom_vjp function``, and measured no
+#: faster anyway.
 _DIFFEQSOLVER = DiffEqSolver(
     solver=dfx.Tsit5(),
     stepsize_controller=dfx.PIDController(rtol=1e-10, atol=1e-10),
