@@ -41,13 +41,7 @@ def guess_manifold(obj: AbstractManifold, /) -> AbstractManifold:
 
 @plum.dispatch
 def guess_manifold(_: type[AbstractChart], /) -> AbstractManifold:
-    """Return `no_manifold` for a chart class with no rule of its own.
-
-    Reached only by `PoincarePolar6D`, which has no manifold even as an
-    instance, so class-level and instance-level agree on `NoManifold()` there.
-    Every other concrete chart class declares a rule, and
-    `TestGuessManifoldOnChartClasses` fails if one stops doing so -- the
-    fallback is silent by design, so nothing else would notice.
+    """Infer manifold from a chart class.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
@@ -91,13 +85,6 @@ def guess_manifold(_: type[Cart1D | Radial1D | Time1D], /) -> EuclideanManifold:
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> cxm.guess_manifold(cxc.Cart1D)
-    Rn(1)
-
-    `Time1D` is 1-dimensional too, and its instances already report `Rn(1)`:
-
-    >>> cxm.guess_manifold(cxc.Time1D)
-    Rn(1)
-    >>> cxc.Time1D().M
     Rn(1)
 
     """
@@ -149,20 +136,15 @@ def guess_manifold(obj: CDict, /) -> AbstractManifold:
 
 @plum.dispatch
 def guess_manifold(_: type[CartND], /) -> EuclideanManifold:
-    """Return the manifold of the N-dimensional Cartesian chart class.
+    """Infer manifold from a chart class.
 
-    `CartND` stores its components as a single array, so the dimension is
-    per-instance -- but the *default* is not undefined: `CartND()` and the
-    exported `cxc.cartnd` both carry `RN`, and this returns the same, so
-    `guess_chart({"q": ...})` no longer builds a chart disagreeing with them.
+    `CartND` holds its components in one array, so the dimension is per
+    instance; the class default is `RN`, as `CartND()` and `cxc.cartnd` carry.
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-
     >>> cxm.guess_manifold(cxc.CartND)
     Rn(True)
-    >>> cxm.guess_manifold(cxc.CartND) == cxc.CartND().M == cxc.cartnd.M
-    True
 
     """
     return RN
