@@ -9,6 +9,7 @@ from typing import Any, final
 
 import equinox as eqx
 import plum
+from astropy.units import UnitConversionError
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -33,6 +34,31 @@ _MSG_ZERO_DIRECTION = (
     "LorentzBoost.from_rapidity requires a non-zero `direction`; the zero "
     "vector has no boost axis to normalise onto."
 )
+
+
+def _as_beta(b: Any, /) -> Shaped[Array, "3"]:
+    """Normalise ``beta`` to a bare array, requiring it to be dimensionless.
+
+    ``jnp`` here is `quaxed.numpy`, whose `asarray` is unit-aware and returns a
+    `~unxt.Quantity` unchanged. A plain ``jnp.asarray`` converter therefore did
+    nothing for a `~unxt.Quantity`, storing one in a field annotated `Array`;
+    the failure surfaced much later and unrecognisably, inside `matrix`.
+
+    A dimensionless quantity is stripped. A velocity is refused rather than
+    reinterpreted: ``0.6 m/s`` is not ``0.6 c``, and taking its number would be
+    wrong by eight orders of magnitude while looking perfectly ordinary.
+    """
+    if isinstance(b, u.AbstractQuantity):
+        try:
+            b = u.ustrip("", b)
+        except UnitConversionError as e:
+            msg = (
+                f"LorentzBoost `beta` is a velocity in units of c, and so "
+                f"dimensionless; got {u.unit_of(b)}. For a velocity use "
+                f"`LorentzBoost.from_velocity(v)`, which divides by c."
+            )
+            raise ValueError(msg) from e
+    return jnp.asarray(b, dtype=float)
 
 
 @final
@@ -144,9 +170,7 @@ class LorentzBoost(AbstractLinearTransform):
 
     """
 
-    beta: Shaped[Array, "3"] = eqx.field(
-        converter=lambda b: jnp.asarray(b, dtype=float)
-    )
+    beta: Shaped[Array, "3"] = eqx.field(converter=_as_beta)
     """Boost velocity in units of ``c`` (dimensionless 3-vector)."""
 
     @classmethod
