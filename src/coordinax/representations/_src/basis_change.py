@@ -226,6 +226,40 @@ def change_basis(
 def change_basis(
     v: CDict,
     chart: cxc.AbstractChart,
+    from_basis: CoordinateBasis,
+    to_basis: PhysicalBasis,
+    /,
+    *,
+    at: CDict,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""Change from coordinate basis to physical basis using the chart's manifold.
+
+    Falls back to ``chart.M`` when no explicit manifold is supplied, mirroring
+    the physical-to-coordinate rule below. Without it only the charts with a
+    bespoke rule -- the Cartesian family and `~coordinax.charts.Spherical3D` --
+    could make this change without being handed a manifold, and every other
+    orthogonal chart raised `NotFoundLookupError`.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v = {"rho": u.Q(1.0, "m/s"), "phi": u.Q(2.0, "rad/s"), "z": u.Q(3.0, "m/s")}
+    >>> at = {"rho": u.Q(2.0, "m"), "phi": u.Q(0.4, "rad"), "z": u.Q(1.0, "m")}
+    >>> cxr.change_basis(v, cxc.cyl3d, cxr.coord_basis, cxr.phys_basis, at=at)
+    {'rho': Q(1., 'm / s'), 'phi': Q(4., 'm / s'), 'z': Q(3., 'm / s')}
+
+    """
+    return cxrapi.change_basis(
+        v, chart, chart.M, from_basis, to_basis, at=at, usys=usys
+    )  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def change_basis(
+    v: CDict,
+    chart: cxc.AbstractChart,
     from_basis: PhysicalBasis,
     to_basis: CoordinateBasis,
     /,
