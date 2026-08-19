@@ -49,7 +49,7 @@ from .attime import AtTime
 #: which could then use the cheaper `RecursiveCheckpointAdjoint`. That is
 #: false, and measurably so: swapping it in fails 10 tests with ``TypeError:
 #: can't apply forward-mode autodiff (jvp) to a custom_vjp function``, raised
-#: across `test_arclength_integration.py` and `test_arclength_shapes.py` --
+#: across ``test_arclength_integration.py`` and ``test_arclength_shapes.py`` --
 #: the induced-metric and chart round-trip paths, which forward-differentiate
 #: through the chart and so reach the primal solve. The swap does not even
 #: pay: measured on a helix in alternating trials, it was consistently
