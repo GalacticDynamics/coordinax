@@ -8,10 +8,12 @@ import dataclasses
 from typing import Any, override
 
 import jax.tree_util as jtu
+import plum
 
 from .atlas import NoAtlas, no_atlas
 from .metric import NoMetric, no_metric
-from coordinax._src.base import AbstractManifold
+from coordinax._src.base import AbstractChart, AbstractManifold
+from coordinax._src.metric.matrix import AbstractMetricMatrix
 
 
 @jtu.register_static
@@ -56,3 +58,25 @@ class NoManifold(AbstractManifold):
 
 no_manifold = NoManifold()
 """Canonical instance of `coordinax.manifolds.NoManifold`."""
+
+
+@plum.dispatch
+def metric_matrix(
+    M: NoManifold, point: dict, chart: AbstractChart, /
+) -> AbstractMetricMatrix:
+    """Refuse, naming the manifold as the reason.
+
+    The generic fallback tells the caller to register a rule. That is the wrong
+    advice here: `NoManifold` is the sentinel for "no manifold specified", and a
+    chart that declares one -- `~coordinax.charts.PoincarePolar6D`, whose phase
+    space carries a symplectic form rather than a metric -- has no metric to
+    register in the first place.
+    """
+    del M, point
+    msg = (
+        f"{type(chart).__name__!r} has no manifold (`M` is `no_manifold`), so it "
+        "has no metric to compute. A chart on phase space carries a symplectic "
+        "form rather than a metric; if this chart should have one, pair it with "
+        "the manifold whose geometry you mean."
+    )
+    raise NotImplementedError(msg)

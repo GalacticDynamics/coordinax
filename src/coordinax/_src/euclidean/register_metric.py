@@ -3,7 +3,7 @@
 Covers :class:`~coordinax.manifolds.EuclideanManifold` paired with every
 chart in its atlas.  The rules follow a two-tier scheme:
 
-* **Cartesian charts** (``Cart0D``, ``Cart1D``, ``Cart2D``, ``Cart3D``,
+* **Cartesian charts** (``Cart1D``, ``Cart2D``, ``Cart3D``,
   ``CartND``) and **orthogonal curvilinear charts** (``Radial1D``,
   ``Polar2D``, ``Cylindrical3D``, ``Spherical3D``, ``MathSpherical3D``,
   ``LonLatSpherical3D``) have explicit analytic diagonal metrics and return
@@ -13,6 +13,8 @@ chart in its atlas.  The rules follow a two-tier scheme:
   :class:`~coordinax._src.metric.matrix.DiagonalMetric`.
 * **All other charts** compute the Jacobian pullback ``g = J^T J`` directly
   and return the result as a :class:`~coordinax._src.metric.matrix.DenseMetric`.
+  ``Cart0D`` lands here too: a 0-dimensional chart has no coordinates to
+  differentiate, so it short-circuits to the empty ``0 x 0`` metric.
 
 Which subtype a pair returns is how the library states that a chart is
 orthogonal -- see :func:`~coordinax.manifolds.metric_representation`. A chart
@@ -499,6 +501,17 @@ def metric_matrix(
 # =====================================================================
 
 
+def _identity_dense(n: int, /) -> DenseMetric:
+    """Dimensionless identity metric of dimension ``n``.
+
+    `UnitsMatrix.full`, not a nested tuple: they agree for every ``n > 0``, and
+    only `full` can express the empty ``0 x 0`` case.
+    """
+    return DenseMetric(
+        ul.QuantityMatrix(jnp.eye(n), unit=ul.UnitsMatrix.full((n, n), ""))
+    )
+
+
 @plum.dispatch
 def metric_matrix(
     M: EuclideanManifold, point: dict, chart: AbstractChart, /
@@ -527,12 +540,15 @@ def metric_matrix(
     True
 
     """
+    # A 0-dimensional chart is a point: nothing to differentiate, and the
+    # pullback is the unique empty form. Taken before the Jacobian because
+    # `jac_pt_map` stacks over the components and cannot build a (0, 0) one.
+    if not chart.components:
+        return _identity_dense(0)
     try:
         cart_chart = chart.cartesian
     except NoGlobalCartesianChartError:
-        n = M.ndim
-        unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
-        return DenseMetric(ul.QuantityMatrix(jnp.eye(n), unit=ul.UnitsMatrix(unit_tup)))
+        return _identity_dense(M.ndim)
     J = cxcapi.jac_pt_map(point, chart, cart_chart, usys=None)
     JT = J.T  # ty: ignore[unresolved-attribute]
     return DenseMetric(JT @ J)
