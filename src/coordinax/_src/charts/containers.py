@@ -86,17 +86,26 @@ def canonical_containers(p: CDict, chart: Any, /) -> CDict:
         v = p.get(k)
         if dim != "angle" or v is None or isinstance(v, u.quantity.AbstractAngle):
             continue
-        unit = u.unit_of(v)
-        # Promote only what `Angle` will actually accept. A chart may declare a
+        # Promote only what `Angle` will accept. A chart may declare a
         # component angular and still be handed a dimensionless value -- a
         # sphere built with a bare `radius=1` does exactly that -- and `Angle`
         # rejects it. Canonicalising a container must never make a value
         # invalid, so anything non-angular is passed through untouched.
-        if unit is None or not _angular(unit):
+        #
+        # `v.unit` rather than `u.unit_of(v)`: on an `AbstractQuantity` the
+        # field is exactly what `unit_of` returns, and reading it costs ~0.5us
+        # against ~8us of dispatch. Anything without one has no unit to
+        # promote from.
+        if not isinstance(v, u.AbstractQuantity) or not _angular(v.unit):
             continue
-        # `v.value`, not `u.ustrip(unit, v)`: `unit` came from `v`, so there is
-        # nothing to convert, and `ustrip` is ~68us of dispatch to prove it.
-        promoted[k] = u.Angle(v.value, unit)
+        unit = v.unit
+        # `_mk` writes the fields and returns, skipping the `plum`-dispatched
+        # field converters and `__check_init__`. Its precondition is an
+        # already-normalised value and unit, which holds here: both come off
+        # `v`, an `AbstractQuantity` that normalised them on its own
+        # construction, and `_angular` above has just established the angular
+        # dimension that `AbstractAngle.__check_init__` would re-derive.
+        promoted[k] = u.Angle._mk(value=v.value, unit=unit)
 
     # Nothing to do is the common case -- every Cartesian chart, and any point
     # already canonical. Returning `p` itself rather than a copy keeps
