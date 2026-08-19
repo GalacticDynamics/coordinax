@@ -29,10 +29,12 @@ from .utils import is_flat_chart, require_matching_keys
 from coordinax.internal import pack_uniform_unit
 
 
-def _matmul_cdict(matrix: Array, d: CDict, comps: tuple[str, ...], /) -> CDict:
+def _matmul_cdict(
+    op: "AbstractLinearTransform", matrix: Array, d: CDict, comps: tuple[str, ...], /
+) -> CDict:
     """Apply ``matrix`` to a Cartesian cdict ``d``, packed into a shared unit."""
     v, unit = pack_uniform_unit(d, keys=comps)
-    return cast("CDict", cxc.cdict(jnp.einsum("ij,...j->...i", matrix, v), unit, comps))
+    return cast("CDict", cxc.cdict(op._contract(matrix, v), unit, comps))
 
 
 class AbstractLinearTransform(AbstractTransform):
@@ -104,6 +106,10 @@ class AbstractLinearTransform(AbstractTransform):
             f"canonical Cartesian chart {type(cart).__name__} (ndim={cart.ndim!r}).",
         )
 
+    def _contract(self, matrix: Array, arr: Any, /) -> Any:
+        """Contract the validated ``matrix`` with trailing-axis components."""
+        return jnp.einsum("ij,...j->...i", matrix, arr)
+
     def _matrix(
         self, cart: cxc.AbstractChart[Any, Any, Any], tau: Any = None, /
     ) -> Array:
@@ -144,7 +150,7 @@ def act(
         raise TypeError(msg)
 
     matrix = op._matrix(chart, tau)
-    return jnp.einsum("ij,...j->...i", matrix, x_arr)
+    return op._contract(matrix, x_arr)
 
 
 @plum.dispatch
@@ -169,7 +175,7 @@ def act(
         raise ValueError(msg)
 
     matrix = op._matrix(cart, tau)
-    return jnp.einsum("ij,...j->...i", matrix, x)  # ty: ignore[invalid-return-type]
+    return op._contract(matrix, x)
 
 
 @plum.dispatch
@@ -216,7 +222,7 @@ def act(
     matrix = op._matrix(cart, tau)
 
     p_cart = cxc.pt_map(x, chart, cart, usys=usys)
-    p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
+    p_cart_out = _matmul_cdict(op, matrix, p_cart, comps_cart)
     out = cxc.pt_map(p_cart_out, cart, chart, usys=usys)
     return cast("CDict", out)
 
@@ -325,7 +331,7 @@ def pushforward(
 
     # Flat chart: the Jacobian is the identity, so M acts directly, no base point.
     if is_flat_chart(chart):
-        return _matmul_cdict(matrix, v, comps_cart)
+        return _matmul_cdict(op, matrix, v, comps_cart)
 
     # Non-flat: push the tangent through the chart Jacobian at `at`, apply M in
     # Cartesian, then pull back (anchoring the inverse Jacobian at M @ at).
@@ -338,8 +344,8 @@ def pushforward(
         raise TypeError(msg)
     at_cart = cxc.pt_map(at, chart, cart, usys=usys)
     p_cart = cxr.tangent_map(v, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
-    p_cart_out = _matmul_cdict(matrix, p_cart, comps_cart)
-    at_out = _matmul_cdict(matrix, at_cart, comps_cart)
+    p_cart_out = _matmul_cdict(op, matrix, p_cart, comps_cart)
+    at_out = _matmul_cdict(op, matrix, at_cart, comps_cart)
     return cxr.tangent_map(p_cart_out, cart, rep, chart, at=at_out, usys=usys)  # ty: ignore[missing-argument]
 
 

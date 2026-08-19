@@ -2,6 +2,8 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import ClassVar
+
 import equinox as eqx
 import jax
 import numpy as np
@@ -237,3 +239,52 @@ def test_matrix_rejects_a_non_square_field() -> None:
     op = cxfm.Rotate(jnp.zeros((2, 3)))
     with pytest.raises(eqx.EquinoxTracetimeError, match="requires a square matrix"):
         _ = op.matrix
+
+
+class TestScaleContractsElementwise:
+    """`Scale` scales each axis instead of contracting a mostly-zero matrix.
+
+    An optimisation, so the tests are about it staying *equivalent*: same
+    numbers as the dense path, and the same shape validation.
+    """
+
+    FACTORS: ClassVar = (2.0, 3.0, 4.0)
+
+    def _pair(self):
+        """The same map as a `Scale` and as a dense `Linear`."""
+        return (
+            cxfm.Scale.from_factors(jnp.asarray(self.FACTORS)),
+            cxfm.Linear(jnp.diag(jnp.asarray(self.FACTORS))),
+        )
+
+    @pytest.mark.parametrize("shape", [(), (10,)])
+    def test_point_action_matches_the_dense_contraction(self, shape):
+        """`Linear` holds the same matrix and still uses the einsum."""
+        op, dense = self._pair()
+        comps = ("x", "y", "z")
+        pt = {k: u.Q(jnp.full(shape, i + 1.0), "m") for i, k in enumerate(comps)}
+        got = cxfm.act(op, None, pt, cxc.cart3d, cxr.point)
+        want = cxfm.act(dense, None, pt, cxc.cart3d, cxr.point)
+        for k in comps:
+            np.testing.assert_allclose(_to_np(got[k], "m"), _to_np(want[k], "m"))
+
+    def test_pushforward_matches_the_dense_contraction(self):
+        op, dense = self._pair()
+        comps = ("x", "y", "z")
+        v = {k: u.Q(1.0, "m/s") for k in comps}
+        got = cxfm.act(op, None, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel)
+        want = cxfm.act(dense, None, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel)
+        for k in comps:
+            np.testing.assert_allclose(_to_np(got[k], "m/s"), _to_np(want[k], "m/s"))
+
+    def test_the_chart_dimension_check_still_fires(self):
+        """The reason `_contract` reads the *validated matrix*, not `s`.
+
+        The shape checks ride on that array as deferred `error_if` nodes;
+        reading the field directly would drop them and let a 3x3 `Scale` act on
+        a 2D chart.
+        """
+        op, _ = self._pair()
+        pt = {k: u.Q(1.0, "m") for k in ("x", "y")}
+        with pytest.raises(Exception, match="does not match"):
+            cxfm.act(op, None, pt, cxc.cart2d, cxr.point)
