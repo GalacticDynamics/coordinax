@@ -5586,7 +5586,7 @@ Each group corresponds to a set of transformations preserving a particular geome
     its own. It acts on the Cartesian components of whatever chart the data is
     in. Holding the diagonal rather than the full matrix is what makes
     diagonality structural — a vector has no off-diagonal entry to check. A
-    general matrix belongs to `Linear`.
+    general matrix belongs to [`Linear`](#software-spec-transforms-linear).
 
     `Scale(S)` takes the matrix and keeps its diagonal, refusing one that is not
     square or not diagonal; `Scale.from_factors(s)` takes the factors directly.
@@ -5623,20 +5623,46 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `factor : float` — the shear factor $k$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
-    - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
+    - `H : Array[N, N]` — the shear matrix. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
+    `H` is the only field: a `Shear` is a bare matrix, with no chart of its own.
+    It acts on the Cartesian components of whatever chart the data is in.
 
-    **Inverse:**
-
-    ```text
-    shear.inverse == Shear(-factor, chart)
-    ```
-
-    **Composition:** Two `Shear` instances with the same chart combine by adding their `factor` values:
+    **Inverse:** the inverse matrix:
 
     ```text
-    Shear(k1) + Shear(k2) == Shear(k1 + k2)
+    shear.inverse == Shear(inv(H))
     ```
+
+    **Composition:** `Shear` implements no composition operator. Pipe two with
+    `|`; `simplify` fuses them into a [`Linear`](#software-spec-transforms-linear),
+    which is where a product of shear matrices lands.
+
+(software-spec-transforms-linear)=
+
+!!! info `Linear`
+
+    A **Linear** is a transformation that applies a general invertible linear map to position components while leaving other representations unchanged.
+
+    **Mathematical definition**:
+
+    $$
+    F(p) = M p, \qquad M \in GL(n, \mathbb{R}).
+    $$
+
+    Every other linear transform names a structure it preserves — `Rotate` an orientation and a metric, `Reflect` a metric, `Scale` the axes, `Shear` parallelism. `Linear` names none, which is what makes it the type a fused chain lands in: composing a rotation with a scaling leaves a matrix that is neither, and `simplify` needs somewhere to put it.
+
+    **Fields:**
+
+    - `M : Array[N, N]` — the matrix $M$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
+    - `group : type[AbstractTransformGroup]` — the most specific group this matrix is known to belong to (static, default `AffineGroup`). A field rather than a class-level declaration because the answer depends on what was fused, not on the type.
+
+    **Inverse:** the inverse matrix, carrying the group across — a group is closed under inverses, so whatever the matrix belonged to, its inverse does too:
+
+    ```text
+    linear.inverse == Linear(inv(M), group)
+    ```
+
+    **Composition:** `Linear` implements no composition operator. Pipe with `|`; `simplify` fuses adjacent linear maps and sets the result's `group` to the least common supergroup of the pair, so a rotation composed with a reflection still reports `OrthogonalGroup` rather than falling all the way back to `AffineGroup`.
 
 (software-spec-transforms-timedep)=
 
