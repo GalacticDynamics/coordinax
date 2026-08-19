@@ -57,8 +57,8 @@ systems.
 >>> q = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
 >>> q_sph = cxc.pt_map(q, cxc.cart3d, cxc.sph3d)
 >>> q_sph
-{'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'),
- 'phi': Q(1.10714872, 'rad')}
+{'r': Q(3.74165739, 'km'), 'theta': Angle(0.64052231, 'rad'),
+ 'phi': Angle(1.10714872, 'rad')}
 
 We can also compute the Jacobian of the point map:
 

@@ -62,7 +62,7 @@ def pt_map(
     >>> import unxt as u
     >>> p = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> cxc.pt_map(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
-    {'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     **Cylindrical to Cartesian (without units):**
 
@@ -81,7 +81,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(45, "deg"), "phi": u.Q(0, "deg")}
     >>> cxc.pt_map(p, cxc.sph3d, cxr.point, cxc.lonlat_sph3d, cxr.point)
-    {'lon': Q(0, 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'm')}
+    {'lon': Angle(0, 'deg'), 'lat': Angle(45., 'deg'), 'distance': Q(1., 'm')}
 
     **Identity conversion (same chart):**
 

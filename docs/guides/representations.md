@@ -93,7 +93,7 @@ Use `cmap` when you repeatedly apply the same conversion pattern.
 >>> to_sph = cxr.cmap(cxc.cart3d, cxr.point, cxc.sph3d)
 >>> p = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
 >>> to_sph(p)
-{'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+{'r': Q(1., 'm'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 ```
 
 ## Realization Context (Intrinsic vs. Ambient)

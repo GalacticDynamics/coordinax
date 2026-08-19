@@ -404,12 +404,13 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
     >>> p_cart = {"x": u.Q(0.5, "km"), "y": u.Q(0.5, "km"), "z": u.Q(0.707, "km")}
     >>> p_sphere = cxm.pt_project(p_cart, cxc.cart3d, sphere)
     >>> p_sphere
-    {'theta': Q(0.78547367, 'rad'), 'phi': Q(0.78539816, 'rad')}
+    {'theta': Angle(0.78547367, 'rad'), 'phi': Angle(0.78539816, 'rad')}
 
     The projection normalizes the point to lie exactly on the sphere.  Verify
     round-trip accuracy (project after embed returns original point):
 
-    >>> q_sphere = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(jnp.pi / 4, "rad")}
+    >>> q_sphere = {"theta": u.Angle(jnp.pi / 3, "rad"),
+    ...             "phi": u.Angle(jnp.pi / 4, "rad")}
     >>> q_cart = cxm.pt_embed(q_sphere, sphere)
     >>> q_recovered = cxm.pt_project(q_cart, sphere)
     >>> all(jax.tree.map(jnp.isclose, q_sphere, q_recovered))
@@ -422,7 +423,7 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
     >>> p_normalized = cxm.pt_project(p_far, cxc.cart3d, sphere)
     >>> # Direction is preserved: all coordinates equal → theta ≈ 54.7°, phi = 45°
     >>> p_normalized
-    {'theta': Q(0.95531662, 'rad'), 'phi': Q(0.78539816, 'rad')}
+    {'theta': Angle(0.95531662, 'rad'), 'phi': Angle(0.78539816, 'rad')}
 
     Handle coordinate singularities at the poles.
     At the north pole ($\theta = 0$), $\phi$ is conventionally set to 0:
@@ -430,13 +431,13 @@ def pt_project(*args: object, usys: u.AbstractUnitSystem | None = None) -> CDict
     >>> p_north = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"),
     ...            "z": u.Q(1.0, "km")}  # North pole
     >>> cxm.pt_project(p_north, cxc.cart3d, sphere)
-    {'theta': Q(0., 'rad'), 'phi': Q(0., 'rad')}
+    {'theta': Angle(0., 'rad'), 'phi': Angle(0., 'rad')}
 
     At the south pole ($\theta = \pi$), $\phi$ is also set to 0:
 
     >>> p_south = { "x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(-1, "km")}
     >>> cxm.pt_project(p_south, cxc.cart3d, sphere)
-    {'theta': Q(3.14159265, 'rad'), 'phi': Q(0., 'rad')}
+    {'theta': Angle(3.14159265, 'rad'), 'phi': Angle(0., 'rad')}
 
     """
     raise NotImplementedError  # pragma: no cover

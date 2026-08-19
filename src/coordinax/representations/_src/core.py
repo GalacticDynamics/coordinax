@@ -45,8 +45,8 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
 
     >>> q = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> map(q)
-    {'r': Q(3.74165739, 'm'), 'theta': Q(0.64052231, 'rad'),
-     'phi': Q(1.10714872, 'rad')}
+    {'r': Q(3.74165739, 'm'), 'theta': Angle(0.64052231, 'rad'),
+     'phi': Angle(1.10714872, 'rad')}
 
     Apply to a Point:
 
@@ -54,8 +54,11 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
     >>> vec = cxv.Point.from_(q, cxc.cart3d)
     >>> map(vec)
     Point(
-      {'r': Q(3.74165739, 'm'), 'theta': Q(0.64052231, 'rad'),
-       'phi': Q(1.10714872, 'rad')},
+      {
+        'r': Q(3.74165739, 'm'),
+        'theta': Angle(0.64052231, 'rad'),
+        'phi': Angle(1.10714872, 'rad')
+      },
       chart=Spherical3D(M=Rn(3))
     )
 
@@ -150,7 +153,7 @@ def cconvert(
     >>> import unxt as u
     >>> p = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> cxr.cconvert(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
-    {'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     **Cylindrical to Cartesian (without units):**
 
@@ -169,7 +172,7 @@ def cconvert(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(45, "deg"), "phi": u.Q(0, "deg")}
     >>> cxr.cconvert(p, cxc.sph3d, cxr.point, cxc.lonlat_sph3d, cxr.point)
-    {'lon': Q(0, 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'm')}
+    {'lon': Angle(0, 'deg'), 'lat': Angle(45., 'deg'), 'distance': Q(1., 'm')}
 
     **Identity conversion (same chart):**
 

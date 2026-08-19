@@ -21,6 +21,7 @@ from .chart import (
 )
 from .manifold import Sn
 from coordinax._src.base import AbstractChart
+from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.utils import uconvert_to_rad
 from coordinaxs.api.custom_types import CDict
@@ -46,23 +47,29 @@ def pt_map(
 ) -> CDict:
     """Identity conversion for matching charts.
 
+    Returns the input object itself when it is already canonical -- angular
+    components held as `unxt.Angle`, as the chart declares. A non-canonical
+    input is canonicalised instead, so it necessarily comes back as a new dict:
+    the alternative is `pt_map(q, chart, chart)` preserving a container that
+    every other route to the same chart would have normalised.
+
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    >>> q = {"theta": u.Q(30, "deg"), "phi": u.Q(60, "deg")}
+    >>> q = {"theta": u.Angle(30, "deg"), "phi": u.Angle(60, "deg")}
     >>> cxc.pt_map(q, cxc.sph2, cxc.sph2) is q
     True
 
-    >>> q = {"lon": u.Q(45, "deg"), "lat": u.Q(10, "deg")}
+    >>> q = {"lon": u.Angle(45, "deg"), "lat": u.Angle(10, "deg")}
     >>> cxc.pt_map(q, cxc.lonlat_sph2, cxc.lonlat_sph2) is q
     True
 
-    >>> q = {"lon_coslat": u.Q(30, "deg"), "lat": u.Q(20, "deg")}
+    >>> q = {"lon_coslat": u.Angle(30, "deg"), "lat": u.Angle(20, "deg")}
     >>> cxc.pt_map(q, cxc.loncoslat_sph2, cxc.loncoslat_sph2) is q
     True
 
-    >>> q = {"theta": u.Q(60, "deg"), "phi": u.Q(30, "deg")}
+    >>> q = {"theta": u.Angle(60, "deg"), "phi": u.Angle(30, "deg")}
     >>> cxc.pt_map(q, cxc.math_sph2, cxc.math_sph2) is q
     True
 
@@ -71,7 +78,7 @@ def pt_map(
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
 
-    return p
+    return canonical_containers(p, to_chart)
 
 
 @plum.dispatch
@@ -112,7 +119,7 @@ def pt_map(
     canon = SphericalTwoSphere(M=to_M)
     p_canon = cxcapi.pt_map(p, from_M, from_chart, to_M, canon, usys=usys)
     out = cxcapi.pt_map(p_canon, to_M, canon, to_M, to_chart, usys=usys)
-    return cast("CDict", out)
+    return canonical_containers(cast("CDict", out), to_chart)
 
 
 # ===================================================================
@@ -140,11 +147,11 @@ def pt_map(
 
     >>> p = {"theta": u.Q(0, "rad"), "phi": u.Q(0, "rad")}  # North pole
     >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.lonlat_sph2)
-    {'lon': Q(0, 'rad'), 'lat': Q(90., 'deg')}
+    {'lon': Angle(0, 'rad'), 'lat': Angle(90., 'deg')}
 
     >>> p = {"theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}  # Equator
     >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.lonlat_sph2)
-    {'lon': Q(45, 'deg'), 'lat': Q(0, 'deg')}
+    {'lon': Angle(45, 'deg'), 'lat': Angle(0, 'deg')}
 
     """
     del usys  # Unused
@@ -153,7 +160,7 @@ def pt_map(
 
     lat = p["theta"]
     lat = u.Q(90, "deg") - lat if is_any_quantity(lat) else jnp.pi / 2 - lat
-    return {"lon": p["phi"], "lat": lat}
+    return canonical_containers({"lon": p["phi"], "lat": lat}, to_chart)
 
 
 @plum.dispatch
@@ -177,7 +184,7 @@ def pt_map(
 
     >>> p = {"lon": u.Q(45, "deg"), "lat": u.Q(0, "deg")}
     >>> cxc.pt_map(p, cxm.S2, cxc.lonlat_sph2, cxm.S2, cxc.sph2)
-    {'theta': Q(90, 'deg'), 'phi': Q(45, 'deg')}
+    {'theta': Angle(90, 'deg'), 'phi': Angle(45, 'deg')}
 
     """
     del usys
@@ -186,7 +193,7 @@ def pt_map(
 
     theta = p["lat"]
     theta = u.Q(90, "deg") - theta if is_any_quantity(theta) else jnp.pi / 2 - theta
-    return {"theta": theta, "phi": p["lon"]}
+    return canonical_containers({"theta": theta, "phi": p["lon"]}, to_chart)
 
 
 # ===================================================================
@@ -215,7 +222,7 @@ def pt_map(
 
     >>> p = {"theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}  # equator
     >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.loncoslat_sph2)
-    {'lon_coslat': Q(45., 'deg'), 'lat': Q(0., 'deg')}
+    {'lon_coslat': Angle(45., 'deg'), 'lat': Angle(0., 'deg')}
 
     >>> p = {"theta": u.Q(0, "deg"), "phi": u.Q(45, "deg")}  # north pole
     >>> result = cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.loncoslat_sph2)
@@ -230,7 +237,7 @@ def pt_map(
         u.Q(90, "deg") if is_any_quantity(p["theta"]) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
     lon_coslat = p["phi"] * jnp.cos(lat)
-    return {"lon_coslat": lon_coslat, "lat": lat}
+    return canonical_containers({"lon_coslat": lon_coslat, "lat": lat}, to_chart)
 
 
 @plum.dispatch
@@ -254,7 +261,7 @@ def pt_map(
 
     >>> p = {"lon_coslat": u.Q(45, "deg"), "lat": u.Q(0, "deg")}
     >>> cxc.pt_map(p, cxm.S2, cxc.loncoslat_sph2, cxm.S2, cxc.sph2)
-    {'theta': Q(90., 'deg'), 'phi': Q(45., 'deg')}
+    {'theta': Angle(90., 'deg'), 'phi': Angle(45., 'deg')}
 
     """
     assert from_M == from_chart.M  # noqa: S101
@@ -263,7 +270,7 @@ def pt_map(
     lat = uconvert_to_rad(p["lat"], usys)
     theta = (u.Q(90, "deg") if is_any_quantity(p["lat"]) else jnp.pi / 2) - lat
     phi = p["lon_coslat"] / jnp.cos(lat)
-    return {"theta": theta, "phi": phi}
+    return canonical_containers({"theta": theta, "phi": phi}, to_chart)
 
 
 # ===================================================================
@@ -291,13 +298,13 @@ def pt_map(
 
     >>> p = {"theta": u.Q(30, "deg"), "phi": u.Q(60, "deg")}
     >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.math_sph2)
-    {'theta': Q(60, 'deg'), 'phi': Q(30, 'deg')}
+    {'theta': Angle(60, 'deg'), 'phi': Angle(30, 'deg')}
 
     """
     del usys  # Unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    return {"theta": p["phi"], "phi": p["theta"]}
+    return canonical_containers({"theta": p["phi"], "phi": p["theta"]}, to_chart)
 
 
 @plum.dispatch
@@ -321,11 +328,11 @@ def pt_map(
 
     >>> p = {"theta": u.Q(60, "deg"), "phi": u.Q(30, "deg")}
     >>> cxc.pt_map(p, cxm.S2, cxc.math_sph2, cxm.S2, cxc.sph2)
-    {'theta': Q(30, 'deg'), 'phi': Q(60, 'deg')}
+    {'theta': Angle(30, 'deg'), 'phi': Angle(60, 'deg')}
 
     """
     del usys  # Unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
 
-    return {"theta": p["phi"], "phi": p["theta"]}
+    return canonical_containers({"theta": p["phi"], "phi": p["theta"]}, to_chart)

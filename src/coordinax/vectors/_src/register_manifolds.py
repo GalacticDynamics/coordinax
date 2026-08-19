@@ -31,7 +31,10 @@ def pt_project(
     ...     {"r": u.Q(1, "m"), "theta": u.Q(2, "rad"), "phi": u.Q(3, "rad")},
     ...     cx.sph3d)
     >>> cxm.pt_project(q, cxm.S2)
-    Point({'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')}, chart=SphericalTwoSphere(M=Sn(2)))
+    Point(
+      {'theta': Angle(2, 'rad'), 'phi': Angle(3, 'rad')},
+      chart=SphericalTwoSphere(M=Sn(2))
+    )
 
     """
     data = cxm.pt_project(p_ambient.data, p_ambient.chart, M, usys=usys)
