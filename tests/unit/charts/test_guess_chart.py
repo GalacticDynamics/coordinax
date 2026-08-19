@@ -21,9 +21,11 @@ import numpy as np
 import pytest
 from hypothesis import given, strategies as st
 
+import unxt as u
 import unxts.hypothesis as ust
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 import coordinaxs.hypothesis.main as cxst
 from .conftest import SHAPE_CART_MAP, xps
 from coordinax._src.base import NON_ABC_CHART_CLASSES, AbstractFixedComponentsChart
@@ -241,3 +243,68 @@ class TestGuessChartFromArrayLike:
         """A NumPy array with trailing dim > 3 guesses to the N-D Cartesian chart."""
         guessed = cxc.guess_chart(np.ones((2, 5)))
         assert type(guessed) is cxc.CartND
+
+
+class TestGuessManifoldOnChartClasses:
+    """`guess_chart` dispatches `guess_manifold` on the chart *class*.
+
+    The `type[AbstractChart]` fallback returns `no_manifold` silently, so a
+    chart class that never declared a rule produced instances carrying
+    `NoManifold()` and nothing raised. That is how `guess_chart({"theta": ...,
+    "phi": ...})` came to return `SphericalTwoSphere(M=NoManifold())` while the
+    same class default-constructed to `HyperSphericalManifold(ndim=2)`.
+    """
+
+    #: The only class reaching the silent fallback. `PoincarePolar6D` has no
+    #: manifold even as an instance, so class-level and instance-level agree
+    #: on `NoManifold()` -- it needs no exemption from the invariant below,
+    #: only from the list of what may legitimately reach the fallback.
+    ONLY_FALLBACK: ClassVar[set[str]] = {"PoincarePolar6D"}
+
+    @staticmethod
+    def _default_constructible() -> list[type]:
+        out = []
+        for cls in NON_ABC_CHART_CLASSES:
+            if not issubclass(cls, AbstractFixedComponentsChart):
+                continue
+            try:
+                cls()
+            except TypeError:  # requires constructor arguments
+                # Deliberately only `TypeError`. A constructor that fails any
+                # other way is a regression, and swallowing it here would hide
+                # the class from every assertion below.
+                continue
+            out.append(cls)
+        return sorted(out, key=lambda c: c.__name__)
+
+    def test_class_level_matches_instance_level(self) -> None:
+        """`guess_manifold(cls)` must agree with `cls().M`.
+
+        Asserting agreement rather than a hard-coded table, so a new chart is
+        covered the day it is added instead of the day someone remembers to
+        extend a list.
+        """
+        mismatched = {}
+        for cls in self._default_constructible():
+            from_class = cxm.guess_manifold(cls)
+            from_instance = cls().M
+            if from_class != from_instance:
+                mismatched[cls.__name__] = (from_class, from_instance)
+        assert not mismatched, (
+            f"class-level guess disagrees with instance: {mismatched}"
+        )
+
+    def test_no_chart_class_silently_yields_no_manifold(self) -> None:
+        """The fallback must be reached only by the classes named above."""
+        fell_back = {
+            cls.__name__
+            for cls in self._default_constructible()
+            if isinstance(cxm.guess_manifold(cls), cxm.NoManifold)
+        }
+        assert fell_back == self.ONLY_FALLBACK
+
+    def test_guessed_chart_carries_its_manifold(self) -> None:
+        """The user-visible symptom: an inferred chart must not carry the sentinel."""
+        assert cxc.guess_chart({"theta": 1.0, "phi": 0.5}).M == cxm.S2
+        assert cxm.Rn(1) == cxc.guess_chart({"t": u.Q(1.0, "s")}).M
+        assert cxm.guess_manifold({"theta": 1.0, "phi": 0.5}) == cxm.S2

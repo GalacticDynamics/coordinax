@@ -6,7 +6,7 @@ __all__: tuple[str, ...] = ()
 import plum
 
 from .atlas import HyperSphericalAtlas
-from .chart import AbstractSphericalTwoSphere, SphericalTwoSphere
+from .chart import AbstractSphericalTwoSphere, CircularOneSphere, SphericalTwoSphere
 from .manifold import HyperSphericalManifold
 from coordinax._src.charts.register_guess import register_canonical_chart
 
@@ -43,3 +43,31 @@ def guess_manifold(obj: AbstractSphericalTwoSphere, /) -> HyperSphericalManifold
 
     """
     return HyperSphericalManifold(obj.ndim)
+
+
+@plum.dispatch
+def guess_manifold(_: type[AbstractSphericalTwoSphere], /) -> HyperSphericalManifold:
+    """Return a HyperSphericalManifold manifold, from the chart class.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> cxm.guess_manifold(cxc.SphericalTwoSphere)
+    HyperSphericalManifold(ndim=2)
+
+    """
+    return HyperSphericalManifold(2)
+
+
+@plum.dispatch
+def guess_manifold(_: type[CircularOneSphere], /) -> HyperSphericalManifold:
+    """Return a HyperSphericalManifold manifold, from the chart class.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> cxm.guess_manifold(cxc.CircularOneSphere)
+    HyperSphericalManifold(ndim=1)
+
+    """
+    return HyperSphericalManifold(1)

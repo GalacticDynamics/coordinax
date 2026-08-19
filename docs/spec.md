@@ -2708,15 +2708,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> # Spherical manifold inference
     >>> cxm.guess_manifold(cxc.sph2)
     HyperSphericalManifold(ndim=2)
-    ```
 
-    Component *names* are not enough to infer a sphere -- unlike ``x/y/z``,
-    which do resolve -- so a bare mapping of angles falls back to the sentinel.
-    Hand over the chart when the manifold matters.
-
-    ```pycon
     >>> cxm.guess_manifold({"theta": 1.0, "phi": 0.5})
-    NoManifold()
+    HyperSphericalManifold(ndim=2)
     ```
 
     **Notes:**

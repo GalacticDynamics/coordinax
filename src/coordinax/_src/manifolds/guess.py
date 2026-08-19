@@ -9,7 +9,7 @@ import plum
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.base import AbstractChart, AbstractManifold
 from coordinax._src.charts.d0 import Cart0D
-from coordinax._src.charts.d1 import Cart1D, Radial1D
+from coordinax._src.charts.d1 import Cart1D, Radial1D, Time1D
 from coordinax._src.charts.d2 import Cart2D, Polar2D
 from coordinax._src.charts.d3 import (
     AbstractSpherical3D,
@@ -17,7 +17,8 @@ from coordinax._src.charts.d3 import (
     Cylindrical3D,
     ProlateSpheroidal3D,
 )
-from coordinax._src.euclidean import R0, R1, R2, R3, EuclideanManifold
+from coordinax._src.charts.dn import CartND
+from coordinax._src.euclidean import R0, R1, R2, R3, RN, EuclideanManifold
 from coordinax._src.null import no_manifold
 from coordinaxs.api.custom_types import CDict
 
@@ -44,8 +45,8 @@ def guess_manifold(_: type[AbstractChart], /) -> AbstractManifold:
 
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
-    >>> cxm.guess_manifold(cxc.Cart3D)
-    Rn(3)
+    >>> cxm.guess_manifold(cxc.PoincarePolar6D)
+    NoManifold()
 
     """
     return no_manifold
@@ -78,7 +79,7 @@ def guess_manifold(_: type[Cart0D], /) -> EuclideanManifold:
 
 
 @plum.dispatch
-def guess_manifold(_: type[Cart1D | Radial1D], /) -> EuclideanManifold:
+def guess_manifold(_: type[Cart1D | Radial1D | Time1D], /) -> EuclideanManifold:
     """Infer manifold from a chart class.
 
     >>> import coordinax.charts as cxc
@@ -131,3 +132,19 @@ def guess_manifold(obj: CDict, /) -> AbstractManifold:
     """
     chart = cast("AbstractChart", cxcapi.guess_chart(obj))
     return chart.M
+
+
+@plum.dispatch
+def guess_manifold(_: type[CartND], /) -> EuclideanManifold:
+    """Infer manifold from a chart class.
+
+    `CartND` holds its components in one array, so the dimension is per
+    instance; the class default is `RN`, as `CartND()` and `cxc.cartnd` carry.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> cxm.guess_manifold(cxc.CartND)
+    Rn(True)
+
+    """
+    return RN
