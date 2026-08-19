@@ -52,12 +52,17 @@ def _as_beta(b: Any, /) -> Shaped[Array, "3"]:
         try:
             b = u.ustrip("", b)
         except UnitConversionError as e:
-            msg = (
-                f"LorentzBoost `beta` is a velocity in units of c, and so "
-                f"dimensionless; got {u.unit_of(b)}. For a velocity use "
-                f"`LorentzBoost.from_velocity(v)`, which divides by c."
+            # A note rather than a new exception: `UnitConversionError` is
+            # already a `ValueError`, so nothing catching the latter is lost,
+            # and astropy's own message names both units and the physical type
+            # ("speed/velocity"). Re-raising would restate that in a second
+            # traceback and swap a precise type for a vaguer one.
+            e.add_note(
+                "LorentzBoost `beta` is a velocity in units of c, and so "
+                "dimensionless. For a velocity use "
+                "`LorentzBoost.from_velocity(v)`, which divides by c."
             )
-            raise ValueError(msg) from e
+            raise
     return jnp.asarray(b, dtype=float)
 
 
