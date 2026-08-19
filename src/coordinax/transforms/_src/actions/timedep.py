@@ -97,7 +97,7 @@ class ComposedBuilder(eqx.Module):
 
     That ``|`` fallback is why `simplify` never builds one of these: for a
     fibre offset it yields, at every tau, a `Composed` holding an offset of
-    ladder order >= 1 -- exactly the spelling `add.py` rejects. Only an
+    ladder order >= 1 -- exactly the spelling ``add.py`` rejects. Only an
     EXPLICIT ``a @ b`` gets here, where the caller has asked for pointwise
     composition and owns that constraint.
 
@@ -454,7 +454,7 @@ def _try_matmul(a: Any, b: Any, /) -> AbstractTransform | None:
 
 # NOTE: there is deliberately no `_merge` rule for `TimeDep`. Folding two
 # families into one requires the `ComposedBuilder` `|` fallback, which for a
-# fibre offset materializes a `Composed` that `add.py` rejects -- turning a
+# fibre offset materializes a `Composed` that ``add.py`` rejects -- turning a
 # working pipeline into one that raises. `Composed` already represents the
 # pair correctly; the merge was only ever an optimization. An explicit
 # `a @ b` still composes pointwise: that is the caller asking for it.

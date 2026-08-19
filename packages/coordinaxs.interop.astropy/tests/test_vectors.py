@@ -2,7 +2,7 @@
 
 `Point.cconvert(target)` must agree with Astropy's `represent_as(target)` for
 every supported chart pair; that correspondence is the `CCONVERT_CASES` table.
-CDict-level agreement is covered separately in `test_ptmap_cdict.py`.
+CDict-level agreement is covered separately in ``test_ptmap_cdict.py``.
 """
 
 __all__: tuple[str, ...] = ()

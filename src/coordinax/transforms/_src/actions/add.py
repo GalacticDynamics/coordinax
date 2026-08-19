@@ -351,7 +351,7 @@ def _prolong_slotwise(
 # generic tangent funnel in prolong.py — which recovers time dependence by
 # differentiating the point action — has nothing to differentiate and is
 # provably blind to it (it would silently return the data unchanged). The
-# rules below are the ladder rule that `translate.py` applies to a static
+# rules below are the ladder rule that ``translate.py`` applies to a static
 # fibre offset, re-homed for the `TimeDep` families that now carry all
 # time dependence.
 #

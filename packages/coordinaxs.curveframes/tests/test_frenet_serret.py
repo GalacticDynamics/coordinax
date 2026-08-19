@@ -2,7 +2,7 @@
 
 Structural guarantees shared with Bishop -- orthonormality, right-handedness,
 inverse semantics, `act`, `frame_transition`, jit/vmap -- are asserted once in
-`test_parallel_transport_contract.py`. What is left here is what is specific to
+``test_parallel_transport_contract.py``. What is left here is what is specific to
 Frenet-Serret: the actual (T, N, B) values, which Bishop does not share because
 its normals are parallel-transported rather than curvature-derived.
 
