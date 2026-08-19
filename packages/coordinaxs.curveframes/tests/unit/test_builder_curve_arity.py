@@ -24,6 +24,7 @@ second one is required.
 
 import functools as ft
 
+import astropy.units as apyu
 import jax
 import jax.numpy as jnp
 import pytest
@@ -305,7 +306,7 @@ def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
     got = b.location(s_val).ustrip("km")
     assert jnp.allclose(got, jnp.array([1.0, 0.0, 0.0])), got
 
-    with pytest.raises(Exception, match="not convertible"):
+    with pytest.raises(apyu.UnitConversionError, match="not convertible"):
         b.tangent(s_val)
 
 
@@ -313,3 +314,22 @@ def test_a_plain_curve_keeps_the_default() -> None:
     """No breaking change: a curve that advertises nothing is unconstrained."""
     assert str(cxfc.BishopBuilder(curve1).tau_unit) == "s"
     cxfc.BishopBuilder(curve1, "km")  # and an unusual unit is still allowed
+
+
+def test_a_wrapper_forwards_the_dimension_it_wraps() -> None:
+    """`AtTime(ArcLength(curve), t)` still exposes an arc length.
+
+    Binding the time changes the arity, not the dimension of the remaining
+    parameter. Reading `_param_dimension` off the *type* missed this, so the
+    guard did not fire and `tangent` failed later with a conversion error --
+    and this is the composition the docs recommend as the remedy for a
+    two-argument curve, so it is the one most worth catching.
+    """
+    frozen = cxfc.AtTime(cxfc.ArcLength(curve2, "km"), u.Q(0.5, "s"))
+    assert frozen._param_dimension == "length"
+    with pytest.raises(ValueError, match="dimension length"):
+        cxfc.BishopBuilder(frozen, "s")
+    cxfc.BishopBuilder(frozen, "km")  # correct unit is unaffected
+
+    # A wrapper over a curve that claims nothing must claim nothing itself.
+    assert cxfc.AtTime(curve2, u.Q(0.5, "s"))._param_dimension is None

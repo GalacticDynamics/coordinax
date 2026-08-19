@@ -67,6 +67,17 @@ class AtTime(eqx.Module):
         self.t = t
 
     @property
+    def _param_dimension(self) -> str | None:
+        """Forward what the wrapped curve exposes, if it says.
+
+        Binding the time changes the arity, not the dimension of the
+        remaining parameter: `AtTime(ArcLength(curve), t)` still exposes an
+        arc length. A builder checks this against its `tau_unit`, so
+        forwarding is what lets that check see through the wrapper.
+        """
+        return getattr(self.curve, "_param_dimension", None)
+
+    @property
     def curve(self) -> Callable[[Any, Any], Any]:
         """The wrapped, time-dependent curve, reassembled from its two halves."""
         return eqx.combine(self._curve_dynamic, self._curve_static)
