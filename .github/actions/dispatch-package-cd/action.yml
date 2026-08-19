@@ -27,13 +27,19 @@ runs:
   using: composite
   steps:
     - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        WORKFLOW_ID: ${{ inputs.workflow_id }}
+        WORKFLOW_NAME: ${{ inputs.workflow_name }}
+        TAG_REF: ${{ inputs.tag_ref }}
+        TAG_SHA: ${{ inputs.tag_sha }}
+        TRIGGER_CD: ${{ inputs.trigger_cd }}
       with:
         script: |
-          const workflowId = "${{ inputs.workflow_id }}";
-          const workflowName = "${{ inputs.workflow_name }}";
-          const tagRef = "${{ inputs.tag_ref }}";
-          const tagSha = "${{ inputs.tag_sha }}";
-          const shouldDispatch = "${{ inputs.trigger_cd }}" === "true";
+          const workflowId = process.env.WORKFLOW_ID;
+          const workflowName = process.env.WORKFLOW_NAME;
+          const tagRef = process.env.TAG_REF;
+          const tagSha = process.env.TAG_SHA;
+          const shouldDispatch = process.env.TRIGGER_CD === "true";
 
           if (!shouldDispatch) {
             const existingRuns = await github.paginate(
