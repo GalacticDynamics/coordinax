@@ -48,7 +48,7 @@ class PackageEnum(_StrEnumWithPaths):
     def __repr__(self) -> str:
         return f"{self.value!r}"
 
-    coordinax = ("coordinax", ("README.md", "docs", "src/", "tests/"))
+    coordinax = ("coordinax", ("README.md", "docs", "skills/", "src/", "tests/"))
     api = ("api", ("packages/coordinaxs.api/",))
     astro = ("astro", ("packages/coordinaxs.astro/",))
     curveframes = ("curveframes", ("packages/coordinaxs.curveframes/",))

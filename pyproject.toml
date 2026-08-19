@@ -331,6 +331,7 @@ pythonpath = ["tests"] # for importable test utility modules
 testpaths = [
   "README.md",
   "packages/coordinaxs.api/",
+  "skills/",
   "src/",
   "docs/",
   "tests/",
