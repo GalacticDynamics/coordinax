@@ -3,6 +3,8 @@
 __all__: tuple[str, ...] = ()
 
 
+import inspect
+
 import jax
 import numpy as np
 import pytest
@@ -387,3 +389,20 @@ class TestLinearValidatesItsGroup:
     def test_a_real_group_is_accepted(self):
         op = cxfm.Linear(jnp.eye(3), cxfm.groups.OrthogonalGroup)
         assert cxfm.groups.OrthogonalGroup in op.groups()
+
+    def test_the_guard_itself_rejects_it(self):
+        """Exercise the `__init__` guard, not the runtime type-checker.
+
+        The suite runs under `COORDINAX_ENABLE_RUNTIME_TYPECHECKING`, so
+        jaxtyping rejects a bad `group` at the decorator boundary and the tests
+        above never reach the body. Installations do not typecheck at runtime,
+        which is exactly where the guard has to hold, so unwrap the decorator
+        and call the real `__init__`.
+        """
+
+        class NotAGroup:
+            pass
+
+        raw_init = inspect.unwrap(cxfm.Linear.__init__)
+        with pytest.raises(TypeError, match="must be an AbstractTransformGroup"):
+            raw_init(object.__new__(cxfm.Linear), jnp.eye(3), NotAGroup)
