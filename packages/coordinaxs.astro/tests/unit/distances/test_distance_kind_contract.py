@@ -7,7 +7,7 @@ across all three, so they are asserted once here.
 
 What genuinely differs -- Parallax's non-negativity check, DistanceModulus's
 fixed 'mag' unit, and the conversions between them -- stays in
-`test_parallax.py` / `test_distance_modulus.py`.
+``test_parallax.py`` / ``test_distance_modulus.py``.
 """
 
 __all__: tuple[str, ...] = ()

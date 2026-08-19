@@ -66,7 +66,7 @@ def test_every_concrete_chart_is_covered() -> None:
     but this package cannot add them to `CHARTS` without depending on the
     satellite package, which is backwards. Each satellite package is
     responsible for its own `component_domains` coverage in its own tests
-    (see `coordinaxs.curveframes`'s `test_tubular_chart_hypothesis.py`).
+    (see `coordinaxs.curveframes`'s ``test_tubular_chart_hypothesis.py``).
     """
     concrete = {
         c.__name__

@@ -1,7 +1,7 @@
 """Bishop-specific behaviour: the straight line, tau_0, and the helix.
 
 Structural guarantees shared with Frenet-Serret are asserted once in
-`test_parallel_transport_contract.py`. What is left here is what Bishop does
+``test_parallel_transport_contract.py``. What is left here is what Bishop does
 that Frenet-Serret cannot: stay well-defined on a curve with kappa=0, where the
 Frenet frame is singular -- plus the `tau_0` / `initial_normal` transport
 parameters, which only a parallel-transported frame has.

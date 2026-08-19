@@ -9,7 +9,7 @@ fast path and gradient correctness are independent; the tests are organised
 around that independence, not around `s_max` alone.
 
 Per this codebase's testing standard, every test states what would have to
-break in `_src/arclength.py` for it to fail.
+break in ``_src/arclength.py`` for it to fail.
 
 `s_max=None` is `ArcLength`'s own default, so the no-precompute case is
 parametrised as a value rather than a separate branch.

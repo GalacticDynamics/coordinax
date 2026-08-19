@@ -12,7 +12,7 @@ carries the frame *fields* (``location``, ``tangent``, ...) and the
 `TimeDep` carries the *transform* algebra (``act``, ``inverse``,
 ``evaluate_at``). Both halves are exercised here.
 
-Closed-form values live in `test_frenet_serret.py` / `test_bishop.py`.
+Closed-form values live in ``test_frenet_serret.py`` / ``test_bishop.py``.
 """
 
 __all__: tuple[str, ...] = ()

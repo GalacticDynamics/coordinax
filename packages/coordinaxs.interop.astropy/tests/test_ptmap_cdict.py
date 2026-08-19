@@ -10,7 +10,7 @@ The chart <-> representation correspondence is the whole of the test:
 * ``lonlat_sph3d`` <-> ``SphericalRepresentation``        (lon, lat, distance)
 
 Only CDict (dict of `unxt.Quantity`) inputs are covered here;
-`coordinax.vectors.Point` <-> Astropy lives in `test_vectors.py`.
+`coordinax.vectors.Point` <-> Astropy lives in ``test_vectors.py``.
 """
 
 __all__: tuple[str, ...] = ()

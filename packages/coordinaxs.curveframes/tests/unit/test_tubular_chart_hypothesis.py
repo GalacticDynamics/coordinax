@@ -69,7 +69,7 @@ def test_component_domains_are_free_for_every_component(chart) -> None:
     of the split.
 
     No `component_domains` overload is registered for `TubularChart`, so it
-    falls through to the generic `AbstractChart` rule at `domains.py:124`:
+    falls through to the generic `AbstractChart` rule at ``domains.py:124``:
     unconstrained (`Interval()`, i.e. `FREE`) for every component. That is the
     sensible answer here, not just the default one: `n1`/`n2`'s legal range is
     the curve's local reach, which depends on curvature at a *point*, not a

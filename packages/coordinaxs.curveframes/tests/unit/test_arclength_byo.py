@@ -1,6 +1,6 @@
 """Bring-your-own curve types through the arc-length machinery.
 
-`test_arclength_shapes.py` covers the four parameterisation shapes built from
+``test_arclength_shapes.py`` covers the four parameterisation shapes built from
 plain functions. This module is the complement: the same shapes, but built
 from a user's own class -- an `equinox.Module` -- rather than a plain
 function. A curve is consumed purely as a callable throughout
