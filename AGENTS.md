@@ -58,21 +58,18 @@ The root `tests/` and `docs/` trees exercise the whole workspace, so a change in
 - **Scalar-first.** Write for a single point; let callers `vmap`. But components may carry arbitrary leading shape — see Pitfalls.
 - **Immutable.** Methods return new objects; update via `dataclassish.replace()`.
 - **`__all__` is a tuple**, unless it is mutated with `+=`.
+- **Roles obey affine vs tangent semantics.** A point is not a displacement; check this before anything else in vector work.
 - Prefer `u.Q` over `u.Quantity`. Import third-party names from their own packages; coordinax does not re-export them.
+- Never write scratch or generated files to `/tmp`, `/var/tmp`, or `~`; use a repo-relative path such as `scratch/`.
 
 ## Pitfalls
 
-- **Batch safety is the largest landed-bug class.** Scalar-first code plus batched components: matrix assembly (`jnp.diag`, `jnp.stack`, fixed `reshape`), rank-assuming indexing, and unbroadcast arithmetic all break on a batch while every scalar test passes (#590, #591, #613, #618, #621, #653, #751). Property-test the batch invariant against the vmapped scalar (#612).
-- **A missing route composes rather than failing.** Chart conversions and basis changes compose registered maps, so an absent direct map yields a wrong number by another path — not an exception (#593 recursion, #594 non-canonical route).
-- **Validation must survive tracing.** A Python `if` on array data works eagerly and breaks under `jit`. Use `eqx.error_if` (#558, #561, #564).
-- **Dispatch caching is a real hot path.** Plum method-cache regressions keep every correctness test green (#540). `tests/benchmark/` runs on CodSpeed.
-- **A dispatch nobody imports does nothing.** #709 guards the two ways one can quietly go missing.
-- Charts, representations, and frames are static pytrees — keep them off the traced side of a jit boundary.
+The recurring defect classes — batch safety, routes that compose instead of failing, validation that does not survive tracing, plum cache regressions — are enumerated with their PR history in [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md). Read it before changing chart, metric, or dispatch code; it is the single source of truth for that list.
 
 ## Testing
 
 - `tests/unit/`, `tests/integration/`, `tests/benchmark/`, `tests/usage/`; unit tests mirror the source layout.
-- **Doctests are real tests, in `.py` and `.md`.** The root [`conftest.py`](conftest.py) wires Sybil over both. `README.md`, `docs/` (including `docs/spec.md`), and `skills/coordinax/SKILL.md` all run under `nox -s test`. A `pycon` or `python` fence is executed; an **unlabelled** fence is not — use one for illustrative pseudo-code.
+- **Doctests are real tests, in `.py` and `.md`.** The root [`conftest.py`](conftest.py) wires Sybil over both. `README.md`, `docs/` (including `docs/spec.md`), and `skills/coordinax/SKILL.md` all run under `nox -s test`. In a collected file a `pycon` or `python` fence is executed and an **unlabelled** fence is not — use an unlabelled fence for illustrative pseudo-code. (This file is not collected; it has no runnable examples.)
 - The suite runs with `JAX_ENABLE_X64=1` and beartype runtime typechecking (see `[tool.pytest_env]`), so doctest output is float64 and annotations are enforced at test time.
 - **Prefer Hypothesis over a second worked example** for properties: round trips, type preservation, batch invariants, jit/vmap compatibility. Strategies live in `coordinaxs.hypothesis`; profiles are `smoke`, `dev`, `thorough`. A strategy must draw only _feasible_ values — that package has its own long bug tail of strategies generating what the library then rejects.
 - `conftest.py` patches pytest's and Sybil's import-path resolution so workspace files import under their canonical `coordinax.*` / `coordinaxs.*` names. Do not add a second import root that would reintroduce duplicate module identities.
@@ -80,53 +77,7 @@ The root `tests/` and `docs/` trees exercise the whole workspace, so a change in
 
 ## Adding a workspace package
 
-New packages under `packages/` follow one versioning pattern, driven by git tags:
-
-```toml
-[build-system]
-build-backend = "hatchling.build"
-requires      = ["hatch-vcs", "hatchling"]
-
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.version.raw-options]
-local_scheme              = "no-local-version"
-root                      = "../.."
-search_parent_directories = true
-
-[tool.hatch.version.raw-options.scm.git]
-describe_command = [
-  "git", "describe", "--dirty", "--tags", "--long", "--match", "<package-name>-v*",
-]
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/<package_name>/_version.py"
-version-file-template = """\
-version: str = {version!r}
-version_tuple: tuple[int, int, int] | tuple[int, int, int, str, str]
-version_tuple = {version_tuple!r}
-"""
-
-[tool.uv.sources]
-coordinax = { workspace = true }
-```
-
-Substitute the distribution name into `--match` (e.g. `coordinaxs-hypothesis-v*`) and the module path into the version-file paths. Also add the package to `PackageEnum` in [`noxfile.py`](noxfile.py), to `[tool.mypy] files`/`mypy_path`, and to `[tool.ty] environment.extra-paths`.
-
-## Scratch files stay in the repo
-
-Never write generated, temporary, or scratch files to `/tmp`, `/var/tmp`, or the home directory. Use a repo-relative path; `scratch/` is the conventional spot (pylint already excludes it) — add it to `.gitignore` locally if you keep anything there.
-
-## Before you submit
-
-- [ ] The change matches the relevant `docs/spec.md` (the right one, for the package being edited)
-- [ ] Roles obey affine vs tangent semantics
-- [ ] New behavior is tested, and tested under `jax.jit` and `jax.vmap`
-- [ ] Anything shape-sensitive is tested on a batch, not only a scalar
-- [ ] `coordinaxs.hypothesis` updated if semantics changed
-- [ ] The docs in the table below are updated, or the PR says why none apply
-- [ ] `uv run nox -s all` passes
+Copy [`packages/coordinaxs.hypothesis/pyproject.toml`](packages/coordinaxs.hypothesis/pyproject.toml) and substitute the distribution name (the `--match` glob and the version-file paths). Then register the package in `PackageEnum` in [`noxfile.py`](noxfile.py), in `[tool.mypy]` `files`/`mypy_path`, and in `[tool.ty] environment.extra-paths`.
 
 ## Keep these docs current
 

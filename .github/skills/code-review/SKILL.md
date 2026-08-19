@@ -106,8 +106,7 @@ The triple is (geometry kind, basis, semantic kind), and the three are orthogona
 
 ## Tests
 
-- **Doctests are real tests, in `.py` _and_ `.md`.** Sybil collects both; `README.md`, `docs/` (including `docs/spec.md` since #733), and `skills/coordinax/SKILL.md` all run under `nox -s test`. A changed repr or signature breaks them, and the fix belongs in the same PR.
-- **Prefer Hypothesis over a second worked example** for properties and invariants — round-trips, type preservation, batch invariants, jit/vmap compatibility. Strategies live in `coordinaxs.hypothesis`.
+- **A changed repr or signature breaks doctests, and the fix belongs in the same PR.** Sybil runs the `.md` and `.py` examples — see [`AGENTS.md`](../../../AGENTS.md) for which paths are collected.
 - **A strategy must generate only feasible values.** This package has its own long bug tail — #651, #657, #658, #660, #663, #664, #667, #677 — all strategies drawing values the library then rejects, which surfaces as a confusing failure in an unrelated test. A new chart or manifold type needs its strategy updated, and the strategy needs to respect the type's domain.
 - **Semantics changed ⇒ `coordinaxs.hypothesis` changed.** This is on the repo's own agent checklist.
 - Every test must assert something. A test that only calls a function is not a test.
@@ -129,11 +128,7 @@ A PR with none of these is fine — it should just say so. The failure mode is s
 
 ## Repo conventions
 
-- **`uv run nox -s ...` for everything** — never bare `python` or `pytest`. `nox -s lint`, `nox -s test`, `nox -s docs`; parametrized sessions need quoting: `nox -s "pytest(package='hypothesis')"`.
-- Commits use gitmoji plus conventional commits — see [`.github/skills/gitmoji-commit/SKILL.md`](../gitmoji-commit/SKILL.md).
-- `__all__` is a tuple, not a list, unless it is mutated with `+=`.
-- Abstract-final: abstract bases define the interface, concrete classes are `@final`, no intermediate hierarchies. Test-suite classes are exempt.
-- Nothing outside `src/coordinax/_src/` should import from it; downstream extends `coordinaxs.api`.
+`uv run nox -s ...` for everything, gitmoji commits, and the code conventions are in [`AGENTS.md`](../../../AGENTS.md) — review against that, do not restate it here.
 
 ## Further reading
 
