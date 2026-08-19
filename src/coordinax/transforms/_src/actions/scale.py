@@ -132,9 +132,13 @@ class Scale(AbstractLinearTransform):
         """Return the inverse scaling transform.
 
         Reciprocals of the factors, not `jnp.linalg.inv`: O(n) rather than
-        O(n^3), and exact where the general solve is not. A malformed `S` is
-        carried in `s` by the deferred check from `__init__`, so it still
-        reports the shared message rather than a raw LAPACK shape error.
+        O(n^3), and exact where the general solve is not.
+
+        Nothing is re-checked here, and `s` carries no deferred check of its
+        own: `__init__` validates the matrix when it takes the diagonal, so an
+        `s` that exists has already passed. A malformed input therefore reports
+        from construction -- eagerly at the call, under `jit` when the traced
+        graph runs -- never from this property.
         """
         return self._from_diagonal(1.0 / self.s)
 
@@ -195,9 +199,8 @@ def _merge(a: Scale, b: Scale, /) -> AbstractTransform | None:
     """Merge two adjacent scalings (``a`` applied first) into ``b.s * a.s``.
 
     Elementwise on the factors: composing two diagonal maps multiplies them
-    axis by axis, so this is the $O(n)$ form of ``b.matrix @ a.matrix``. Under
-    `jit` a malformed operand carries its deferred check into the product and
-    still reports the shared message; eagerly it cannot get this far, having
-    been rejected when it was built.
+    axis by axis, so this is the $O(n)$ form of ``b.matrix @ a.matrix``. No
+    validation here either -- both operands were checked when they were built,
+    so a malformed one reports from its own construction and never reaches this.
     """
     return Scale._from_diagonal(b.s * a.s)

@@ -5581,19 +5581,28 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Fields:**
 
-    - `factor : float` — the scaling factor $s$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
-    - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
+    - `s : Array[N]` — the scale factors $(s_1, \ldots, s_n)$, the diagonal of $S$. Always constant; wrap in `TimeDep` for time dependence (see [`TimeDep`](#software-spec-transforms-timedep)).
+    `s` is the only field: a `Scale` is a bare set of factors, with no chart of
+    its own. It acts on the Cartesian components of whatever chart the data is
+    in. Holding the diagonal rather than the full matrix is what makes
+    diagonality structural — a vector has no off-diagonal entry to check. A
+    general matrix belongs to `Linear`.
 
-    **Inverse:**
+    `Scale(S)` takes the matrix and keeps its diagonal, refusing one that is not
+    square or not diagonal; `Scale.from_factors(s)` takes the factors directly.
+
+    **Inverse:** reciprocals of the factors, which is $O(n)$ and exact:
 
     ```text
-    scaling.inverse == Scaling(1 / factor, chart)
+    scale.inverse == Scale.from_factors(1 / s)
     ```
 
-    **Composition:** Two `Scaling` instances with the same chart combine by multiplying their `factor` values:
+    **Composition:** `Scale` implements no composition operator. Pipe two with
+    `|`, and `simplify` fuses them by multiplying the factors axis by axis:
 
     ```text
-    Scaling(s1) + Scaling(s2) == Scaling(s1 * s2)
+    simplify(Scale.from_factors(s1) | Scale.from_factors(s2))
+        == Scale.from_factors(s1 * s2)
     ```
 
 !!! info `Shear`
