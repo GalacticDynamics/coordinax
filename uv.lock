@@ -615,8 +615,8 @@ requires-dist = [
     { name = "coordinaxs-interop-astropy", marker = "extra == 'workspace'", editable = "packages/coordinaxs.interop.astropy" },
     { name = "dataclassish", specifier = ">=0.9.0" },
     { name = "equinox", specifier = ">=0.13.8" },
-    { name = "jax", specifier = ">=0.6.0" },
-    { name = "jaxlib", specifier = ">=0.6.0" },
+    { name = "jax", specifier = ">=0.7.2" },
+    { name = "jaxlib", specifier = ">=0.7.2" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "optional-dependencies", specifier = ">=0.5.0" },
     { name = "optype", specifier = ">=0.17.0" },
@@ -3447,7 +3447,7 @@ wheels = [
 
 [[package]]
 name = "unxts-linalg"
-version = "2.0.3"
+version = "2.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
@@ -3456,9 +3456,9 @@ dependencies = [
     { name = "quax" },
     { name = "unxt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1a/c4/307dcab757c6ebc933b6f11c78aac1a98dd82f6b9b96839f1364cc12abb5/unxts_linalg-2.0.3.tar.gz", hash = "sha256:8c745be6a4d4ed599159ea21c75ac0a6fcd9492ad687c30a585f7e9f2e59905a", size = 55864, upload-time = "2026-07-28T13:17:05.384Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/5d/8ce961bce94d27d9c2edd3ce9ca8531b1121436f095b0c3be5a8e276fd29/unxts_linalg-2.0.4.tar.gz", hash = "sha256:e13c23b46429919f5bc4bf22655be6e3375afcfc28cf917977910c2760eb7c0b", size = 59021, upload-time = "2026-08-15T07:58:49.628Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/11/78/56ee7aa4159f24ed467034ce6514393758a2e5400f5212f0e357f1134f99/unxts_linalg-2.0.3-py3-none-any.whl", hash = "sha256:46181cf364dc8086ab066f178258f2a923ca7ea3460955c0b509e3883b160cfc", size = 34365, upload-time = "2026-07-28T13:17:04.222Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/56/883884e2b32a5ed6a3613fe96017310f29abb78e383d2198128d875965a7/unxts_linalg-2.0.4-py3-none-any.whl", hash = "sha256:b837161b05f9d0f3e3779e0140dd91a0f8407e8859249a938ac57829392b7939", size = 35944, upload-time = "2026-08-15T07:58:48.461Z" },
 ]
 
 [[package]]
