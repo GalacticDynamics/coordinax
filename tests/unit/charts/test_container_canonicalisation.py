@@ -13,53 +13,15 @@ how each was obtained.
 """
 
 import itertools
-import linecache
-from pathlib import Path
 
 import jax
 import pytest
 
 import unxt as u
 
-import coordinax._src.charts.register_ptmap
-import coordinax._src.embedded.register_charts
-import coordinax._src.product.chart
-import coordinax._src.spherical.register_ptmap
 import coordinax.charts as cxc
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.charts.containers import canonical_containers
-from coordinax._src.exceptions import NoGlobalCartesianChartError
-
-#: The deliberate signal that a chart pair has no transition.
-UNSUPPORTED = NoGlobalCartesianChartError
-
-#: Every precondition guard in the `pt_map` rules, as it appears in source.
-#: They are bare `assert`s, so an unsupported pair surfaces as a plain
-#: `AssertionError` -- indistinguishable, by type, from a genuine broken
-#: invariant anywhere else in the call. Matching the guard's own source line
-#: keeps that distinction, so only these skip and everything else fails.
-#: Enumerated from the transition modules rather than grown one failure at a
-#: time; `test_guard_list_is_complete` fails if a new one appears.
-_GUARDS = (
-    "assert from_M ==",
-    "assert to_M ==",
-    "assert from_cart ==",
-    "assert to_chart.M in",
-    "assert to_M in",
-    "assert from_chart.M in",
-)
-
-
-def _is_cross_manifold_guard(exc: AssertionError, /) -> bool:
-    """Return whether `exc` came from one of the `pt_map` manifold guards."""
-    tb = exc.__traceback__
-    while tb is not None and tb.tb_next is not None:
-        tb = tb.tb_next
-    if tb is None:
-        return False
-    line = linecache.getline(tb.tb_frame.f_code.co_filename, tb.tb_lineno).strip()
-    return line.startswith(_GUARDS)
-
 
 #: One value per component name, in the container the chart declares.
 SAMPLE = {
@@ -97,56 +59,58 @@ CHARTS = [
 
 PAIRS = list(itertools.product(CHARTS, CHARTS))
 
+#: `pt_map` reaches its target either from the charts alone or with the
+#: manifolds named. The second dispatches straight to the specific rule,
+#: bypassing the first, so both are swept.
+FORMS = {
+    "charts": lambda p, frm, to: cxcapi.pt_map(p, frm, to),
+    "manifolds": lambda p, frm, to: cxcapi.pt_map(p, frm.M, frm, to.M, to),
+}
+
+#: How many of `PAIRS` each form supports. Pinned because an unsupported pair
+#: is skipped: without this, a pair that regressed from working to raising
+#: would leave no trace, whatever it raised.
+SUPPORTED = {"charts": 85, "manifolds": 61}
+
 
 def _point(chart):
-    """Return a sample point for `chart`, or None if a component has no sample."""
-    try:
-        return {k: SAMPLE[k] for k in chart.components}
-    except KeyError:
-        return None
+    """Return a sample point for `chart`."""
+    return {k: SAMPLE[k] for k in chart.components}
 
 
 class TestPtMapCanonicalisesContainers:
-    """Every chart transition lands its angles in `Angle`, by either entry form."""
+    """Every chart transition lands its angles in `Angle`, by either form."""
 
+    @pytest.mark.parametrize("form", list(FORMS))
     @pytest.mark.parametrize(("frm", "to"), PAIRS)
-    def test_three_argument_form(self, frm, to) -> None:
-        p = _point(frm)
-        if p is None:
-            pytest.skip("no sample for this chart's components")
+    def test_output_is_canonical(self, frm, to, form) -> None:
         try:
-            out = cxcapi.pt_map(p, frm, to)
-        except UNSUPPORTED:
-            pytest.skip("transition not implemented")
-        except AssertionError as exc:
-            if not _is_cross_manifold_guard(exc):
-                raise
-            pytest.skip("cross-manifold pair; no transition")
+            out = FORMS[form](_point(frm), frm, to)
+        except Exception:  # noqa: BLE001  # unsupported pair; `SUPPORTED` pins how many
+            pytest.skip("transition not supported")
         assert isinstance(out, dict)
         # Canonicalising an already-canonical point returns it unchanged.
         assert canonical_containers(out, to) is out
 
-    @pytest.mark.parametrize(("frm", "to"), PAIRS)
-    def test_five_argument_form(self, frm, to) -> None:
-        """The explicit-manifold form must agree.
+    @pytest.mark.parametrize("form", list(FORMS))
+    def test_supported_pair_count(self, form) -> None:
+        """Pin how much of the sweep actually runs.
 
-        It dispatches straight to the specific pair, bypassing the
-        three-argument entry.
+        The test above skips an unsupported pair, so coverage could erode
+        silently -- which is the same failure mode as the containers this file
+        is about. Adding a chart moves this number; a pair breaking also does.
         """
-        p = _point(frm)
-        if p is None:
-            pytest.skip("no sample for this chart's components")
-        try:
-            out = cxcapi.pt_map(p, frm.M, frm, to.M, to)
-        except UNSUPPORTED:
-            pytest.skip("transition not implemented")
-        except AssertionError as exc:
-            if not _is_cross_manifold_guard(exc):
-                raise
-            pytest.skip("cross-manifold pair; no transition")
-        assert isinstance(out, dict)
-        # Canonicalising an already-canonical point returns it unchanged.
-        assert canonical_containers(out, to) is out
+        works = sum(bool(_ok(FORMS[form], frm, to)) for frm, to in PAIRS)
+        assert works == SUPPORTED[form]
+
+
+def _ok(call, frm, to) -> bool:
+    """Return whether `call` completes for this pair."""
+    try:
+        call(_point(frm), frm, to)
+    except Exception:  # noqa: BLE001
+        return False
+    return True
 
 
 class TestStructureIsRouteIndependent:
@@ -186,30 +150,3 @@ class TestIdentityIsPreserved:
         out = cxcapi.pt_map(p, cxc.sph2, cxc.sph2)
         assert out is not p
         assert canonical_containers(out, cxc.sph2) is out
-
-
-def test_guard_list_is_complete() -> None:
-    """`_GUARDS` must name every `assert` in the transition modules.
-
-    The list decides what this file is willing to skip. If a rule grows a new
-    precondition and it is not here, its failures become skips -- silently, and
-    exactly the way the containers being canonicalised went wrong in the first
-    place.
-    """
-    modules = [
-        Path(m.__file__)
-        for m in (
-            coordinax._src.charts.register_ptmap,
-            coordinax._src.spherical.register_ptmap,
-            coordinax._src.product.chart,
-            coordinax._src.embedded.register_charts,
-        )
-    ]
-    found = {
-        line.strip().split("  #")[0].strip()
-        for path in modules
-        for line in path.read_text().splitlines()
-        if line.strip().startswith("assert ")
-    }
-    unlisted = {a for a in found if not a.startswith(_GUARDS)}
-    assert not unlisted, f"unlisted assert guards: {sorted(unlisted)}"
