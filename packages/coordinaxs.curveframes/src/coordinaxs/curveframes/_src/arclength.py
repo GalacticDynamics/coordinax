@@ -42,6 +42,14 @@ from .attime import AtTime
 #: `PIDController` and `DirectAdjoint`, the only adjoint that is
 #: differentiable in both forward and reverse mode -- see that module's
 #: comment for the full rationale.
+#:
+#: `DirectAdjoint` is load-bearing on the *primal* solve too, not only the
+#: JVP's quadrature: `_tau_of_s`'s custom rule does not keep autodiff out,
+#: because the induced-metric and chart round-trip paths differentiate
+#: through the chart in forward mode and so reach `_solve_tau`. Swapping in
+#: `RecursiveCheckpointAdjoint` there fails 10 tests with ``can't apply
+#: forward-mode autodiff (jvp) to a custom_vjp function``, and measured no
+#: faster anyway.
 _DIFFEQSOLVER = DiffEqSolver(
     solver=dfx.Tsit5(),
     stepsize_controller=dfx.PIDController(rtol=1e-10, atol=1e-10),
