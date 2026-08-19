@@ -25,7 +25,7 @@ __all__ = ("ArcLength", "LagrangianArcLength")
 import inspect
 
 from collections.abc import Callable
-from typing import Any, cast, final
+from typing import Any, ClassVar, cast, final
 
 import diffrax as dfx
 import equinox as eqx
@@ -600,6 +600,12 @@ class ArcLength(eqx.Module):
     one-argument ``curve``; see the class docstring.
     """
 
+    #: Dimension of the parameter this wrapper *exposes*. Reparametrising by
+    #: arc length makes it a length, whatever the wrapped curve was
+    #: parametrised by -- so a builder over this can check its `tau_unit`
+    #: against it at construction rather than failing later (#718).
+    _param_dimension: ClassVar[str] = "length"
+
     _two_argument: bool = eqx.field(static=True)
     """Whether ``curve`` takes ``(tau, t)`` rather than just ``tau``.
 
@@ -760,6 +766,10 @@ class LagrangianArcLength(eqx.Module):
     Q([1.5, 0. , 0. ], 'km')
 
     """
+
+    #: Same as `ArcLength`: the exposed parameter is an arc length, though
+    #: measured on the fixed reference slice `t0` rather than the current one.
+    _param_dimension: ClassVar[str] = "length"
 
     curve: Callable[[Any, Any], Any]
     """The wrapped, two-argument curve."""

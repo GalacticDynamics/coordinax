@@ -261,3 +261,55 @@ def test_eulerian_holds_arc_length_where_lagrangian_follows_the_material_point()
     # then they separate: the Eulerian one stays put, the Lagrangian one does not
     assert abs(radius(eul, 1.7) - 1.3) < 0.01, radius(eul, 1.7)
     assert radius(lag, 1.7) > 2.0, radius(lag, 1.7)
+
+
+# --------------------------------------------------------------------------
+# #718: a curve that knows what it exposes is checked against `tau_unit` at
+# construction, rather than failing unevenly later.
+
+
+def test_tau_unit_must_match_the_dimension_the_curve_exposes() -> None:
+    """`BishopBuilder(ArcLength(curve, "km"))` -- forgetting the second unit.
+
+    `tau_unit` defaults to "s", so this is an easy omission, and it used to
+    construct happily.
+    """
+    arc = cxfc.ArcLength(curve1, "s")  # exposes arc length: a *length*
+    with pytest.raises(ValueError, match="dimension length"):
+        cxfc.BishopBuilder(arc)
+    with pytest.raises(ValueError, match="dimension length"):
+        cxfc.FrenetSerretBuilder(arc)
+    cxfc.BishopBuilder(arc, "km")  # correct, and still fine
+
+
+def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
+    """Why this is checked at construction, and what the guard does not reach.
+
+    With the wrong `tau_unit`, `location` returns *correct* positions -- it
+    never consults the unit -- while the autodiff paths raise. Anyone who
+    sanity-checks positions first would conclude it works.
+
+    A plain function cannot advertise what it exposes, so a length-parametrised
+    one still slips through with the default "s". That is the residual case the
+    `_param_dimension` guard does not cover; the wrappers do advertise, which
+    is where the mistake is easiest to make.
+    """
+
+    def by_length(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        d = tau.ustrip("km")
+        return u.Q(jnp.stack([d, jnp.zeros_like(d), jnp.zeros_like(d)]), "km")
+
+    b = cxfc.BishopBuilder(by_length)  # default "s", but the curve wants a length
+    s_val = u.Q(1.0, "km")
+
+    got = b.location(s_val).ustrip("km")
+    assert jnp.allclose(got, jnp.array([1.0, 0.0, 0.0])), got
+
+    with pytest.raises(Exception, match="not convertible"):
+        b.tangent(s_val)
+
+
+def test_a_plain_curve_keeps_the_default() -> None:
+    """No breaking change: a curve that advertises nothing is unconstrained."""
+    assert str(cxfc.BishopBuilder(curve1).tau_unit) == "s"
+    cxfc.BishopBuilder(curve1, "km")  # and an unusual unit is still allowed
