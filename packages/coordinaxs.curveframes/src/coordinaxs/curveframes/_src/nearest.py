@@ -170,7 +170,7 @@ def nearest_tau(
     )
 
     # Must surface non-convergence, not return silently (hybrid form,
-    # matching `_src/charts/checks.py`). The return value MUST be threaded
+    # matching ``_src/charts/checks.py``). The return value MUST be threaded
     # through -- an unused `eqx.error_if` result is dead-code-eliminated and
     # the guard vanishes under `jit`.
     msg = "nearest-point solve did not converge"

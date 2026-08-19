@@ -79,7 +79,7 @@ def chart_init_kwargs(
 ) -> dict[str, Any]:
     """`chart_init_kwargs()` overload for `TubularChart`.
 
-    `tests/unit/charts/test_chart_classes.py`-style tests call
+    ``tests/unit/charts/test_chart_classes.py``-style tests call
     `chart_init_kwargs(chart_cls)` directly (not only through `charts()`), so
     this needs its own overload rather than relying on the `charts()`
     overload below to shadow the generic annotation-derived one.

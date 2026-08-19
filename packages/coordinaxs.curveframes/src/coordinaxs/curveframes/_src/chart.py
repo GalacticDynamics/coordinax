@@ -128,7 +128,7 @@ class TubularChart(AbstractParameterizedChart):
             # on-curve speed (and factor) `0/0 = nan`, and `nan <= 0` is
             # False too -- negating `nan > 0` (also False) catches it.
             #
-            # Hybrid form, matching `_src/charts/checks.py` (see `nearest.py`
+            # Hybrid form, matching ``_src/charts/checks.py`` (see ``nearest.py``
             # for the full mechanics): `eqx.error_if` under trace, plain
             # `ValueError` when concrete. The return value MUST be threaded
             # back into `data` -- an unused result silently vanishes under
@@ -157,8 +157,8 @@ class TubularChart(AbstractParameterizedChart):
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
         unit = self.builder.tau_unit
-        # Derive the unit from the curve (as `nearest.py` and
-        # `register_ptmap.py` do), not hardcode `"km"`: the scale cancels in
+        # Derive the unit from the curve (as ``nearest.py`` and
+        # ``register_ptmap.py`` do), not hardcode `"km"`: the scale cancels in
         # `dot(dx,T)/speed`, but a hardcoded unit raises `UnitConversionError`
         # for a dimensionless curve.
         ambient_unit = self.builder.location(tau).unit

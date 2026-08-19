@@ -236,7 +236,7 @@ def _arclength_between(
     Rescaled to $\sigma \in [0, 1]$ for the reason `_solve_tau` is, which
     applies here to ``tau_0``.
     """
-    # `jnp.asarray` narrows only here, as in `nearest.py`: `ustrip` is typed as
+    # `jnp.asarray` narrows only here, as in ``nearest.py``: `ustrip` is typed as
     # a broad union that `-` is not defined across, though every runtime member
     # supports it.
     tau_0_val = jnp.asarray(tau_0.ustrip(tau_unit))
@@ -293,8 +293,8 @@ def _tau_of_s(
     curve -- so a perturbation via `equinox.tree_at` silently loses the
     $\partial\tau/\partial\theta$ term (issue #713 has the measured
     numbers). And `BishopBuilder` differentiates the curve it wraps in
-    forward mode (`bishop.py`'s `_tangent_at` uses `unxt.experimental.jacfwd`),
-    which a `custom_vjp` cannot support -- `bishop.py:68` documents the same
+    forward mode (``bishop.py``'s `_tangent_at` uses `unxt.experimental.jacfwd`),
+    which a `custom_vjp` cannot support -- ``bishop.py:68`` documents the same
     trap for `RecursiveCheckpointAdjoint`. A custom JVP serves forward mode
     directly and reverse mode by transposition, so one rule covers both.
 
