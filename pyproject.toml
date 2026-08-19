@@ -35,8 +35,6 @@ dependencies = [
   "optype>=0.17.0",
   "plum>=2.8.0; python_version < '3.14'",
   "plum>=2.9.0; python_version >= '3.14'",
-  # Already forced by unxt; stated because coordinax depends on them directly
-  # -- quax 0.4.2 is where constructor signatures became checkable (#725).
   "quax>=0.4.2",
   "quax-blocks>=0.5.0",
   "quaxed>=0.10.5",
