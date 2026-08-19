@@ -34,6 +34,20 @@ r"""The 4-dimensional Galilean spacetime manifold, $\mathbb{R} \times \mathbb{R}
 C_DEFAULT = u.StaticQuantity(np.array(299_792.458), "km/s")
 
 
+_MSG_TIME_DEPENDENT_SPATIAL = (
+    "GalileanCT is a product, `time1d x spatial_chart`, but this spatial "
+    "chart is time-dependent, so there is no single spatial factor to "
+    "multiply by: its coordinates label different points of space at "
+    "different times. That is a fibre bundle over the time axis rather than a "
+    "product, and the datum a product cannot carry is the connection -- the "
+    "velocity of the coordinate frame, equivalently which spatial point at "
+    "`t` counts as the same point at `t'`. Galilean spacetime supplies no "
+    "canonical choice (that is what it means to have no absolute space), so "
+    "it has to be stated rather than assumed. Evaluate the chart on one time "
+    "slice, e.g. with `AtTime`, if a product is what you want."
+)
+
+
 @final
 @chart_dataclass_decorator
 class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
@@ -41,6 +55,28 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     This is a Cartesian product chart: GalileanCT(spatial_chart) ≡ time1d x
     spatial_chart
+
+    **The product is a choice, not a given.** Galilean spacetime is
+    intrinsically a *fibre bundle* over the time axis: the time function is
+    canonical, and the fibres are the simultaneity slices, but there is no
+    canonical identification between the slices -- that absence is what "no
+    absolute space" means. Writing the chart as a product therefore fixes one:
+    a notion of which spatial point at ``t`` is the same point at ``t'``,
+    i.e. a rest frame. A Galilean boost ``x -> x + vt`` acts precisely by
+    changing it, so the factorisation this class asserts is not boost
+    invariant.
+
+    That is legitimate and useful for an inertial frame with a spatial chart
+    that does not move, which is what this class is for. It is *not* the
+    general case: a spatial chart whose coordinates move with ``t`` needs the
+    connection the product cannot carry -- the frame velocity -- and is
+    rejected in ``__post_init__``.
+
+    Contrast Minkowski, where a boost mixes ``ct`` with ``x`` so that neither
+    projection is canonical and no preferred foliation exists at all; that is
+    why `coordinax.charts.MinkowskiCT` is a single chart rather than a
+    product. The two spacetimes differ in *which* factorisation is unavailable,
+    not merely in the metric signature.
 
     The time axis coordinate is ``x^0 = ct`` — a *length* — stored directly on
     the chart (component ``"ct"``, dimension ``"length"``). The underlying time
@@ -103,6 +139,27 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
     M: ClassVar[AbstractManifold]
+
+    def __post_init__(self) -> None:
+        """Reject a *time-dependent* spatial chart, which is not a factor.
+
+        The array check inherited from `AbstractStaticChart` is about JAX
+        safety, not geometry: it stops a live array hiding inside a static
+        node. It does not answer this question, and a time-dependent chart can
+        pass it -- a `TubularChart` over a two-argument curve holds only the
+        curve, a non-array leaf.
+
+        The geometric question is separate. `GalileanCT` asserts a *product*,
+        ``time1d x spatial_chart``, and a product asserts that the spatial
+        factor is the same at every time. A chart whose coordinates move with
+        ``t`` makes that false: what it describes is a **fibre bundle** over
+        the time axis, whose extra datum is a connection -- the frame
+        velocity. There is no canonical choice of one, so it cannot be
+        supplied silently here (see the class docstring).
+        """
+        super().__post_init__()
+        if getattr(self.spatial_chart, "is_time_dependent", False):
+            raise TypeError(_MSG_TIME_DEPENDENT_SPATIAL)
 
     @property
     def M(self) -> AbstractManifold:

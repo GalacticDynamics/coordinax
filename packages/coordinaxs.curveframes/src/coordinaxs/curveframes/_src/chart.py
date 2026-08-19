@@ -29,6 +29,7 @@ import coordinax.manifolds as cxm
 import unxt as u
 from coordinax._src.base import AbstractParameterizedChart
 
+from .arclength import _is_two_argument
 from .base import AbstractCurveFrameBuilder
 
 
@@ -111,6 +112,20 @@ class TubularChart(AbstractParameterizedChart):
     @property
     def cartesian(self) -> cxc.Cart3D:
         return cxc.cart3d
+
+    @property
+    def is_time_dependent(self) -> bool:
+        """Whether this chart's coordinates depend on a time supplied at call.
+
+        True when the builder wraps a two-argument curve ``gamma(s, t)``: the
+        builder's call-time parameter is then the *time*, so ``tau`` labels a
+        station and the chart's spatial coordinates move with ``t``.
+
+        A spacetime chart needs this: a time-dependent spatial chart is a
+        *fibre bundle* over time, not a product with it (see
+        `coordinax.charts.GalileanCT`).
+        """
+        return _is_two_argument(self.builder.curve)
 
     def check_data(self, data: dict, /, *, values: bool = False, **kw: Any) -> dict:
         # Forward `values`: the base class gates its coordinate-dimension check
