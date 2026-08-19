@@ -26,6 +26,24 @@ import unxt as u
 
 from coordinaxs.api.custom_types import CDict
 
+#: Resolved once. `u.dimension("angle")` is ~4us, and this runs per component.
+_ANGLE = u.dimension("angle")
+
+#: `u.dimension_of` is ~68us per call and `pt_map` is already dispatch-bound
+#: (#719), so the answer is memoised on the unit. Units are few, hashable and
+#: immutable, so the cache is bounded by the units a program actually uses.
+_IS_ANGULAR: dict[object, bool] = {}
+
+
+def _angular(unit: object, /) -> bool:
+    """Return whether `unit` has angular dimension, memoised."""
+    try:
+        return _IS_ANGULAR[unit]
+    except KeyError:
+        result = u.dimension_of(unit) == _ANGLE
+        _IS_ANGULAR[unit] = result
+        return result
+
 
 def canonical_containers(p: CDict, chart: Any, /) -> CDict:
     """Return `p` with each component in the container its chart declares.
@@ -74,9 +92,11 @@ def canonical_containers(p: CDict, chart: Any, /) -> CDict:
         # sphere built with a bare `radius=1` does exactly that -- and `Angle`
         # rejects it. Canonicalising a container must never make a value
         # invalid, so anything non-angular is passed through untouched.
-        if unit is None or u.dimension_of(unit) != u.dimension("angle"):
+        if unit is None or not _angular(unit):
             continue
-        promoted[k] = u.Angle(u.ustrip(unit, v), unit)
+        # `v.value`, not `u.ustrip(unit, v)`: `unit` came from `v`, so there is
+        # nothing to convert, and `ustrip` is ~68us of dispatch to prove it.
+        promoted[k] = u.Angle(v.value, unit)
 
     # Nothing to do is the common case -- every Cartesian chart, and any point
     # already canonical. Returning `p` itself rather than a copy keeps
