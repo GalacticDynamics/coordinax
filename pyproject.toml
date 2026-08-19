@@ -35,8 +35,13 @@ dependencies = [
   "optype>=0.17.0",
   "plum>=2.8.0; python_version < '3.14'",
   "plum>=2.9.0; python_version >= '3.14'",
-  "quax>=0.3.6",
-  "quax-blocks>=0.4.1",
+  # Floors that `unxt` already forces (it requires quax>=0.4.2,
+  # quax-blocks>=0.5.0), stated here because coordinax depends on them
+  # directly: quax 0.4.2 is the release whose metaclass `__call__` stopped
+  # erasing the dataclass_transform-synthesised constructor signature, which
+  # is what makes the `ty` config in this file meaningful (see #725).
+  "quax>=0.4.2",
+  "quax-blocks>=0.5.0",
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
   # 2.0.2 makes `np.asarray(Quantity)` raise rather than silently drop the
