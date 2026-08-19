@@ -8,8 +8,10 @@ from dataclasses import replace
 from jaxtyping import Array, Shaped
 from typing import Any, final
 
+import equinox as eqx
 import jax.scipy.spatial.transform as jtransform
 import plum
+from astropy.units import UnitConversionError
 from jax.typing import ArrayLike
 
 import quaxed.numpy as jnp
@@ -24,6 +26,33 @@ from .identity import identity
 from .linear import AbstractLinearTransform
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
+
+
+def _as_rotation_matrix(R: Any, /) -> Array:
+    """Normalise ``R`` to a bare array, requiring it to be dimensionless.
+
+    ``jnp`` here is `quaxed.numpy`, whose `asarray` is unit-aware and hands a
+    `~unxt.Quantity` back unchanged, so it cannot be used to coerce one.
+
+    A rotation matrix preserves lengths, so its entries are ratios: a
+    dimensionless quantity is stripped and anything else refused.
+
+    The return stays `Array`, not ``Shaped[Array, " N N"]`` -- jaxtyping
+    enforces annotations, and requiring squareness here would preempt
+    `_validate_square` and its clearer message.
+    """
+    if isinstance(R, u.AbstractQuantity):
+        try:
+            R = u.ustrip("", R)
+        except UnitConversionError as e:
+            # `UnitConversionError` is already a `ValueError`, so a bare
+            # `raise` loses no caller; its message already names the units.
+            e.add_note(
+                "Rotate `R` is a rotation matrix, whose entries are ratios and "
+                "so dimensionless."
+            )
+            raise
+    return jnp.asarray(R)
 
 
 @final
@@ -129,7 +158,7 @@ class Rotate(AbstractLinearTransform):
 
     """
 
-    R: Shaped[Array, " N N"]
+    R: Shaped[Array, " N N"] = eqx.field(converter=_as_rotation_matrix)
     """The rotation matrix."""
 
     @classmethod
@@ -245,10 +274,10 @@ class Rotate(AbstractLinearTransform):
 
         >>> op3 = op1 @ op2
         >>> op3
-        Rotate(Q(f64[3,3], ''))
+        Rotate(f64[3,3](jax))
 
         >>> jnp.allclose(op3.R, op2.R @ op1.R)
-        Q(True, '')
+        Array(True, dtype=bool)
 
         """
         if not isinstance(other, Rotate):

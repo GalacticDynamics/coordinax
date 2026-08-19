@@ -88,3 +88,31 @@ def test_rotation_about_axis_zero_axis_raises():
     b = cxfm.builders.RotationAboutAxis(u.Q(1, "rad/s"), axis=jnp.zeros(3))
     with pytest.raises(Exception, match="must be non-zero"):
         b(u.Q(1.0, "s"))
+
+
+class TestAxisAcceptsQuantity:
+    """`axis` is normalised on use, so a unit on it cancels exactly.
+
+    Regression: no converter, and quaxed's `asarray` returns a `Quantity`
+    unchanged, so one was stored in an `Array` field and `__call__` failed on
+    ``unvmap_any``.
+    """
+
+    OMEGA = u.Q(90, "deg/s")
+    ZHAT = jnp.asarray([0.0, 0.0, 1.0])
+
+    def _rotation(self, axis):
+        return cxfm.builders.RotationAboutAxis(self.OMEGA, axis=axis)(u.Q(1.0, "s"))
+
+    @pytest.mark.parametrize("unit", [None, "", "m"])
+    def test_axis_is_stored_bare(self, unit):
+        axis = self.ZHAT if unit is None else u.Q(self.ZHAT, unit)
+        b = cxfm.builders.RotationAboutAxis(self.OMEGA, axis=axis)
+        assert not isinstance(b.axis, u.AbstractQuantity)
+
+    @pytest.mark.parametrize("unit", ["", "m", "km"])
+    def test_quantity_axis_gives_the_same_rotation(self, unit):
+        """Scale and unit both cancel: only the direction survives."""
+        ref = self._rotation(self.ZHAT)
+        got = self._rotation(u.Q(2.0 * self.ZHAT, unit))
+        assert bool(jnp.allclose(got.R, ref.R, atol=1e-12))
