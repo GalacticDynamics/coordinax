@@ -69,7 +69,7 @@ jobs:
           import os
 
           versions = json.loads(os.environ["PYTHON_VERSIONS"])
-          edge_versions = list(dict.fromkeys([versions[0], versions[-1]]))
+          edge_versions = [versions[-1]]
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
               f.write(f"python-all={json.dumps(versions)}\n")
