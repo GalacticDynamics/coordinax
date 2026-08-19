@@ -361,3 +361,29 @@ class TestScaleIsDiagonal:
         got = cxfm.simplify(s1 | s2)
         assert isinstance(got, cxfm.Scale)
         assert jnp.allclose(jnp.diagonal(got.matrix), jnp.asarray([10.0, 21.0, 44.0]))
+
+
+class TestLinearValidatesItsGroup:
+    """`Linear` refuses a `group` that is not a transform group."""
+
+    def test_a_non_group_type_is_refused(self):
+        """Silently dropped otherwise: `groups()` would report only the widest.
+
+        `most_specific_group` filters to `AbstractTransformGroup` subclasses, so
+        an unrelated type never raises -- it just vanishes, and the operator
+        fuses as though it had claimed nothing.
+        """
+
+        class NotAGroup:
+            pass
+
+        with pytest.raises(TypeError, match="AbstractTransformGroup"):
+            cxfm.Linear(jnp.eye(3), NotAGroup)
+
+    def test_a_non_type_is_refused(self):
+        with pytest.raises(TypeError, match="AbstractTransformGroup"):
+            cxfm.Linear(jnp.eye(3), "AffineGroup")
+
+    def test_a_real_group_is_accepted(self):
+        op = cxfm.Linear(jnp.eye(3), cxfm.groups.OrthogonalGroup)
+        assert cxfm.groups.OrthogonalGroup in op.groups()

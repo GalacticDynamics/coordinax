@@ -94,6 +94,13 @@ class Linear(AbstractLinearTransform):
     def __init__(
         self, M: Any, group: type[AbstractTransformGroup] = groups.AffineGroup
     ) -> None:
+        # Checked here because nothing downstream will: `most_specific_group`
+        # keeps only `AbstractTransformGroup` subclasses, so a stray type is
+        # dropped in silence and the operator reports the widest group it has
+        # left. That surfaces as a wrong fusion result, far from the cause.
+        if not (isinstance(group, type) and issubclass(group, AbstractTransformGroup)):
+            msg = f"group must be an AbstractTransformGroup subclass, got {group!r}."
+            raise TypeError(msg)
         object.__setattr__(self, "M", jnp.asarray(M))
         object.__setattr__(self, "group", group)
 
