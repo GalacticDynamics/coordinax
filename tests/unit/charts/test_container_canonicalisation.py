@@ -13,20 +13,53 @@ how each was obtained.
 """
 
 import itertools
+import linecache
+from pathlib import Path
 
 import jax
 import pytest
 
 import unxt as u
 
+import coordinax._src.charts.register_ptmap
+import coordinax._src.embedded.register_charts
+import coordinax._src.product.chart
+import coordinax._src.spherical.register_ptmap
 import coordinax.charts as cxc
 import coordinaxs.api.charts as cxcapi
 from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
-#: Unsupported pairs signal via these two, and nothing else does. Catching more
-#: broadly would let a genuine regression register as a skip.
-UNSUPPORTED = (NoGlobalCartesianChartError, AssertionError)
+#: The deliberate signal that a chart pair has no transition.
+UNSUPPORTED = NoGlobalCartesianChartError
+
+#: Every precondition guard in the `pt_map` rules, as it appears in source.
+#: They are bare `assert`s, so an unsupported pair surfaces as a plain
+#: `AssertionError` -- indistinguishable, by type, from a genuine broken
+#: invariant anywhere else in the call. Matching the guard's own source line
+#: keeps that distinction, so only these skip and everything else fails.
+#: Enumerated from the transition modules rather than grown one failure at a
+#: time; `test_guard_list_is_complete` fails if a new one appears.
+_GUARDS = (
+    "assert from_M ==",
+    "assert to_M ==",
+    "assert from_cart ==",
+    "assert to_chart.M in",
+    "assert to_M in",
+    "assert from_chart.M in",
+)
+
+
+def _is_cross_manifold_guard(exc: AssertionError, /) -> bool:
+    """Return whether `exc` came from one of the `pt_map` manifold guards."""
+    tb = exc.__traceback__
+    while tb is not None and tb.tb_next is not None:
+        tb = tb.tb_next
+    if tb is None:
+        return False
+    line = linecache.getline(tb.tb_frame.f_code.co_filename, tb.tb_lineno).strip()
+    return line.startswith(_GUARDS)
+
 
 #: One value per component name, in the container the chart declares.
 SAMPLE = {
@@ -85,6 +118,10 @@ class TestPtMapCanonicalisesContainers:
             out = cxcapi.pt_map(p, frm, to)
         except UNSUPPORTED:
             pytest.skip("transition not implemented")
+        except AssertionError as exc:
+            if not _is_cross_manifold_guard(exc):
+                raise
+            pytest.skip("cross-manifold pair; no transition")
         assert isinstance(out, dict)
         # Canonicalising an already-canonical point returns it unchanged.
         assert canonical_containers(out, to) is out
@@ -103,6 +140,10 @@ class TestPtMapCanonicalisesContainers:
             out = cxcapi.pt_map(p, frm.M, frm, to.M, to)
         except UNSUPPORTED:
             pytest.skip("transition not implemented")
+        except AssertionError as exc:
+            if not _is_cross_manifold_guard(exc):
+                raise
+            pytest.skip("cross-manifold pair; no transition")
         assert isinstance(out, dict)
         # Canonicalising an already-canonical point returns it unchanged.
         assert canonical_containers(out, to) is out
@@ -145,3 +186,30 @@ class TestIdentityIsPreserved:
         out = cxcapi.pt_map(p, cxc.sph2, cxc.sph2)
         assert out is not p
         assert canonical_containers(out, cxc.sph2) is out
+
+
+def test_guard_list_is_complete() -> None:
+    """`_GUARDS` must name every `assert` in the transition modules.
+
+    The list decides what this file is willing to skip. If a rule grows a new
+    precondition and it is not here, its failures become skips -- silently, and
+    exactly the way the containers being canonicalised went wrong in the first
+    place.
+    """
+    modules = [
+        Path(m.__file__)
+        for m in (
+            coordinax._src.charts.register_ptmap,
+            coordinax._src.spherical.register_ptmap,
+            coordinax._src.product.chart,
+            coordinax._src.embedded.register_charts,
+        )
+    ]
+    found = {
+        line.strip().split("  #")[0].strip()
+        for path in modules
+        for line in path.read_text().splitlines()
+        if line.strip().startswith("assert ")
+    }
+    unlisted = {a for a in found if not a.startswith(_GUARDS)}
+    assert not unlisted, f"unlisted assert guards: {sorted(unlisted)}"
