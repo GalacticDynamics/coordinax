@@ -3,6 +3,8 @@
 __all__: tuple[str, ...] = ()
 
 
+import inspect
+
 import jax
 import numpy as np
 import pytest
@@ -361,3 +363,46 @@ class TestScaleIsDiagonal:
         got = cxfm.simplify(s1 | s2)
         assert isinstance(got, cxfm.Scale)
         assert jnp.allclose(jnp.diagonal(got.matrix), jnp.asarray([10.0, 21.0, 44.0]))
+
+
+class TestLinearValidatesItsGroup:
+    """`Linear` refuses a `group` that is not a transform group."""
+
+    def test_a_non_group_type_is_refused(self):
+        """Silently dropped otherwise: `groups()` would report only the widest.
+
+        `most_specific_group` filters to `AbstractTransformGroup` subclasses, so
+        an unrelated type never raises -- it just vanishes, and the operator
+        fuses as though it had claimed nothing.
+        """
+
+        class NotAGroup:
+            pass
+
+        with pytest.raises(TypeError, match="AbstractTransformGroup"):
+            cxfm.Linear(jnp.eye(3), NotAGroup)
+
+    def test_a_non_type_is_refused(self):
+        with pytest.raises(TypeError, match="AbstractTransformGroup"):
+            cxfm.Linear(jnp.eye(3), "AffineGroup")
+
+    def test_a_real_group_is_accepted(self):
+        op = cxfm.Linear(jnp.eye(3), cxfm.groups.OrthogonalGroup)
+        assert cxfm.groups.OrthogonalGroup in op.groups()
+
+    def test_the_guard_itself_rejects_it(self):
+        """Exercise the `__init__` guard, not the runtime type-checker.
+
+        The suite runs under `COORDINAX_ENABLE_RUNTIME_TYPECHECKING`, so
+        jaxtyping rejects a bad `group` at the decorator boundary and the tests
+        above never reach the body. Installations do not typecheck at runtime,
+        which is exactly where the guard has to hold, so unwrap the decorator
+        and call the real `__init__`.
+        """
+
+        class NotAGroup:
+            pass
+
+        raw_init = inspect.unwrap(cxfm.Linear.__init__)
+        with pytest.raises(TypeError, match="must be an AbstractTransformGroup"):
+            raw_init(object.__new__(cxfm.Linear), jnp.eye(3), NotAGroup)
