@@ -15,24 +15,22 @@ _RZ90 = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
 class TestRotationMatrixIsDimensionless:
     """`R`'s entries are ratios, so a dimensionful matrix is refused.
 
-    Regression: the field is annotated `Shaped[Array, " N N"]` but had no
-    converter, and `jnp` in that module is `quaxed.numpy`, whose `asarray`
-    returns a `Quantity` unchanged. `Rotate(u.Q(eye, ""))` therefore stored a
-    `Quantity` and failed later inside `jnp.linalg.det`, naming nothing the
-    caller had written.
+    Regression: no converter, and quaxed's `asarray` returns a `Quantity`
+    unchanged, so one was stored in an `Array` field and `matrix` failed later
+    inside `jnp.linalg.det`.
     """
 
-    def test_dimensionless_quantity_is_stripped(self):
-        """Also pins that the converter runs despite `Rotate.__init__`.
+    @pytest.mark.parametrize(
+        "R", [_RZ90, u.Q(_RZ90, "")], ids=["bare", "dimensionless"]
+    )
+    def test_r_is_stored_bare(self, R):
+        """The converter runs despite `Rotate.__init__`.
 
-        `Rotate` defines a custom ``__init__`` that assigns ``R`` through
-        `object.__setattr__`, which looks like it would bypass the field
-        converter. Equinox re-applies converters after ``__init__`` regardless,
-        so it does not -- but the reading is easy to get wrong, and deleting
-        the converter on that belief would restore the bug silently.
+        Equinox re-applies converters after ``__init__``, so that
+        ``object.__setattr__`` does not bypass this one -- deleting it on that
+        reading would restore the bug silently.
         """
-        op = cxfm.Rotate(u.Q(_RZ90, ""))
-        assert not isinstance(op.R, u.AbstractQuantity)
+        assert not isinstance(cxfm.Rotate(R).R, u.AbstractQuantity)
 
     def test_agrees_with_the_bare_array(self):
         """Stripping must give the same operator, not merely a working one."""
@@ -44,7 +42,3 @@ class TestRotationMatrixIsDimensionless:
     def test_dimensionful_matrix_is_refused(self, unit):
         with pytest.raises(ValueError, match="dimensionless"):
             cxfm.Rotate(u.Q(_RZ90, unit))
-
-    def test_bare_array_is_unaffected(self):
-        """Positive control: the ordinary path still works."""
-        assert not isinstance(cxfm.Rotate(_RZ90).R, u.AbstractQuantity)

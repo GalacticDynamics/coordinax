@@ -93,11 +93,9 @@ def test_rotation_about_axis_zero_axis_raises():
 class TestAxisAcceptsQuantity:
     """`axis` is normalised on use, so a unit on it cancels exactly.
 
-    Regression: the field is annotated `Shaped[Array, "3"]` but had no
-    converter, and `jnp` in this module is `quaxed.numpy`, whose `asarray`
-    returns a `Quantity` unchanged. A `Quantity` axis was therefore stored as
-    one, and `__call__` failed with `TypeError: Error interpreting argument to
-    unvmap_any as a JAX value` -- naming nothing the caller had written.
+    Regression: no converter, and quaxed's `asarray` returns a `Quantity`
+    unchanged, so one was stored in an `Array` field and `__call__` failed on
+    ``unvmap_any``.
     """
 
     OMEGA = u.Q(90, "deg/s")
@@ -106,8 +104,10 @@ class TestAxisAcceptsQuantity:
     def _rotation(self, axis):
         return cxfm.builders.RotationAboutAxis(self.OMEGA, axis=axis)(u.Q(1.0, "s"))
 
-    def test_bare_array_is_stored_bare(self):
-        b = cxfm.builders.RotationAboutAxis(self.OMEGA, axis=self.ZHAT)
+    @pytest.mark.parametrize("unit", [None, "", "m"])
+    def test_axis_is_stored_bare(self, unit):
+        axis = self.ZHAT if unit is None else u.Q(self.ZHAT, unit)
+        b = cxfm.builders.RotationAboutAxis(self.OMEGA, axis=axis)
         assert not isinstance(b.axis, u.AbstractQuantity)
 
     @pytest.mark.parametrize("unit", ["", "m", "km"])
@@ -116,7 +116,3 @@ class TestAxisAcceptsQuantity:
         ref = self._rotation(self.ZHAT)
         got = self._rotation(u.Q(2.0 * self.ZHAT, unit))
         assert bool(jnp.allclose(got.R, ref.R, atol=1e-12))
-
-    def test_quantity_axis_is_not_stored_as_a_quantity(self):
-        b = cxfm.builders.RotationAboutAxis(self.OMEGA, axis=u.Q(self.ZHAT, "m"))
-        assert not isinstance(b.axis, u.AbstractQuantity)

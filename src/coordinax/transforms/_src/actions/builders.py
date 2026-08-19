@@ -29,7 +29,7 @@ def _as_axis(axis: Any, /) -> Shaped[Array, "3"]:
     cancels exactly and stripping it is lossless rather than a silent drop.
     """
     if isinstance(axis, u.AbstractQuantity):
-        axis = u.ustrip(u.unit_of(axis), axis)
+        axis = axis.value
     return jnp.asarray(axis)
 
 
