@@ -159,7 +159,7 @@ def simplify(op: Scale, /, *, approx: bool = True, **kw: Any) -> AbstractTransfo
 
 @plum.dispatch
 def _merge(a: Scale, b: Scale, /) -> AbstractTransform | None:
-    """Merge two adjacent scalings (``a`` applied first) into one, as ``b.S @ a.S``.
+    """Merge two adjacent scalings (``a`` applied first) into ``b.matrix @ a.matrix``.
 
     Through `matrix` rather than the raw fields, so a malformed operand is
     reported by the shared validation instead of a raw matmul shape error.
