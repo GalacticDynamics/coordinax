@@ -5627,8 +5627,7 @@ Each group corresponds to a set of transformations preserving a particular geome
     `H` is the only field: a `Shear` is a bare matrix, with no chart of its own.
     It acts on the Cartesian components of whatever chart the data is in.
 
-    **Inverse:** the inverse matrix, which for a shear negates the off-diagonal
-    entries:
+    **Inverse:** the inverse matrix:
 
     ```text
     shear.inverse == Shear(inv(H))
