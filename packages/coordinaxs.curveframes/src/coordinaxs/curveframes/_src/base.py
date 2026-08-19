@@ -44,11 +44,11 @@ FrameT = TypeVar(
 #: Hence the explicit TypeVar, and the `noqa` at the signature.
 BuilderT = TypeVar("BuilderT", bound="AbstractCurveFrameBuilder")
 
-_MSG_TWO_ARGUMENT_NEEDS_GAMMA = (
+_MSG_TWO_ARGUMENT_NEEDS_STATION = (
     "this curve takes two positional arguments, `gamma(tau, t)`, so the "
     "builder's call-time parameter is the time `t` and the station along the "
-    "curve must be pinned with `gamma=`. Without it both are unbound and no "
-    "transform can be built. Either pass `gamma=<station>` to get a frame at "
+    "curve must be pinned with `station=`. Without it both are unbound and no "
+    "transform can be built. Either pass `station=<value>` to get a frame at "
     "a fixed station that evolves with `t`, or bind the slice instead with "
     "`AtTime(curve, t)`, which makes the curve one-argument so the call-time "
     "parameter is the curve parameter again."
@@ -158,8 +158,8 @@ class AbstractCurveFrameBuilder(eqx.Module):
         An uninspectable curve raises out of `_is_two_argument`, matching
         how `ArcLength` treats one.
         """
-        if _is_two_argument(self.curve) and self.gamma is None:
-            raise ValueError(_MSG_TWO_ARGUMENT_NEEDS_GAMMA)
+        if _is_two_argument(self.curve) and self.station is None:
+            raise ValueError(_MSG_TWO_ARGUMENT_NEEDS_STATION)
 
     def _resolve(  # noqa: PYI019  (see BuilderT: `Self` breaks beartype)
         self: BuilderT, tau: Any, /
@@ -182,7 +182,9 @@ class AbstractCurveFrameBuilder(eqx.Module):
         path a routing decision made in exactly one place.
         """
         if _is_two_argument(self.curve):
-            return dataclasses.replace(self, curve=AtTime(self.curve, tau)), self.gamma
+            return dataclasses.replace(
+                self, curve=AtTime(self.curve, tau)
+            ), self.station
         return self, tau
 
     # ---------------------------------------------------------------

@@ -82,7 +82,7 @@ def test_a_pinned_station_makes_the_call_time_parameter_the_time(builder) -> Non
     binds the wrong slot, or slices at the wrong time.
     """
     s0 = u.Q(1.3, "km")
-    b = builder(curve2, "km", gamma=s0)
+    b = builder(curve2, "km", station=s0)
     # t = 0 is excluded deliberately: `curve2(s, 0)` is the straight line
     # ``(s, 0, 0)``, where Frenet--Serret is singular (zero curvature, so the
     # normal is undefined and the rotation is NaN). That is the apparatus's
@@ -90,7 +90,7 @@ def test_a_pinned_station_makes_the_call_time_parameter_the_time(builder) -> Non
     # precisely because it does not have it.
     for t_val in (0.5, 1.7, 2.3):
         t = u.Q(t_val, "s")
-        manual = builder(cxfc.AtTime(curve2, t), "km", gamma=s0)
+        manual = builder(cxfc.AtTime(curve2, t), "km", station=s0)
         assert jnp.allclose(
             b.location(t).ustrip("km"), manual.location(t).ustrip("km"), atol=1e-12
         ), t_val
@@ -108,7 +108,7 @@ def test_the_frame_actually_evolves_with_time() -> None:
     genuinely differs between two times -- on a curve that bends, so the
     rotation moves and not merely the origin.
     """
-    b = cxfc.BishopBuilder(curve2, "km", gamma=u.Q(1.3, "km"))
+    b = cxfc.BishopBuilder(curve2, "km", station=u.Q(1.3, "km"))
     l0 = b.location(u.Q(0.0, "s")).ustrip("km")
     l1 = b.location(u.Q(1.7, "s")).ustrip("km")
     t0 = b.tangent(u.Q(0.0, "s")).ustrip("")
@@ -125,13 +125,13 @@ def test_gradients_flow_to_time_and_to_the_station() -> None:
     ``d(y)/dt = s^2/10`` and ``d(y)/ds = t s / 5``.
     """
     s0_val, t_val = 1.3, 1.0
-    b = cxfc.BishopBuilder(curve2, "km", gamma=u.Q(s0_val, "km"))
+    b = cxfc.BishopBuilder(curve2, "km", station=u.Q(s0_val, "km"))
 
     d_dt = jax.grad(lambda tv: b.location(u.Q(tv, "s")).ustrip("km")[1])(t_val)
     assert jnp.allclose(d_dt, 0.1 * s0_val**2, atol=1e-10), d_dt
 
     def loc_of_station(sv: float) -> float:
-        moved = cxfc.BishopBuilder(curve2, "km", gamma=u.Q(sv, "km"))
+        moved = cxfc.BishopBuilder(curve2, "km", station=u.Q(sv, "km"))
         return moved.location(u.Q(t_val, "s")).ustrip("km")[1]
 
     d_ds = jax.grad(loc_of_station)(s0_val)
