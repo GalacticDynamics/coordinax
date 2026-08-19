@@ -270,16 +270,17 @@ def test_eulerian_holds_arc_length_where_lagrangian_follows_the_material_point()
 
 
 def test_tau_unit_must_match_the_dimension_the_curve_exposes() -> None:
-    """`BishopBuilder(ArcLength(curve, "km"))` -- forgetting the second unit.
+    """Passing a time where the curve exposes a length.
 
-    `tau_unit` defaults to "s", so this is an easy omission, and it used to
-    construct happily.
+    `tau_unit` is required now, so plain omission is a `TypeError` before any
+    object exists. This covers the other half: a unit supplied and *wrong*,
+    which no amount of required-ness catches.
     """
     arc = cxfc.ArcLength(curve1, "s")  # exposes arc length: a *length*
     with pytest.raises(ValueError, match="dimension length"):
-        cxfc.BishopBuilder(arc)
+        cxfc.BishopBuilder(arc, "s")
     with pytest.raises(ValueError, match="dimension length"):
-        cxfc.FrenetSerretBuilder(arc)
+        cxfc.FrenetSerretBuilder(arc, "s")
     cxfc.BishopBuilder(arc, "km")  # correct, and still fine
 
 
@@ -291,7 +292,7 @@ def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
     sanity-checks positions first would conclude it works.
 
     A plain function cannot advertise what it exposes, so a length-parametrised
-    one still slips through with the default "s". That is the residual case the
+    one still slips through when "s" is passed. That is the residual case the
     `_param_dimension` guard does not cover; the wrappers do advertise, which
     is where the mistake is easiest to make.
     """
@@ -300,7 +301,7 @@ def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
         d = tau.ustrip("km")
         return u.Q(jnp.stack([d, jnp.zeros_like(d), jnp.zeros_like(d)]), "km")
 
-    b = cxfc.BishopBuilder(by_length)  # default "s", but the curve wants a length
+    b = cxfc.BishopBuilder(by_length, "s")  # a time, but the curve wants a length
     s_val = u.Q(1.0, "km")
 
     got = b.location(s_val).ustrip("km")
@@ -308,12 +309,6 @@ def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
 
     with pytest.raises(apyu.UnitConversionError, match="not convertible"):
         b.tangent(s_val)
-
-
-def test_a_plain_curve_keeps_the_default() -> None:
-    """No breaking change: a curve that advertises nothing is unconstrained."""
-    assert str(cxfc.BishopBuilder(curve1).tau_unit) == "s"
-    cxfc.BishopBuilder(curve1, "km")  # and an unusual unit is still allowed
 
 
 def test_a_wrapper_forwards_the_dimension_it_wraps() -> None:
@@ -333,3 +328,19 @@ def test_a_wrapper_forwards_the_dimension_it_wraps() -> None:
 
     # A wrapper over a curve that claims nothing must claim nothing itself.
     assert cxfc.AtTime(curve2, u.Q(0.5, "s"))._param_dimension is None
+
+
+def test_tau_unit_is_required() -> None:
+    """There is no default to be wrong: omission fails before an object exists.
+
+    Seconds are not a neutral fallback -- in galactic dynamics the natural
+    parameter is Myr or Gyr, and a Gyr curve read as seconds is off by 3.15e16
+    with no error anywhere, because the units are dimensionally compatible and
+    `ustrip` simply rescales.
+    """
+    with pytest.raises(TypeError, match="tau_unit"):
+        cxfc.BishopBuilder(curve1)
+    with pytest.raises(TypeError, match="tau_unit"):
+        cxfc.FrenetSerretBuilder(curve1)
+    cxfc.BishopBuilder(curve1, "s")  # any unit is allowed, none is assumed
+    cxfc.BishopBuilder(curve1, "Gyr")

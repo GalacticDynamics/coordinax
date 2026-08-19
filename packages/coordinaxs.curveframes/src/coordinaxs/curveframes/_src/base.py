@@ -246,7 +246,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     t = tau.ustrip("s")
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-        >>> builder = cxfc.FrenetSerretBuilder(helix)
+        >>> builder = cxfc.FrenetSerretBuilder(helix, "s")
         >>> op = builder(u.Q(0.0, "s"))
         >>> isinstance(op, cxfm.Composed)
         True
@@ -278,7 +278,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     t = tau.ustrip("s")
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(helix).location(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(helix, "s").location(u.Q(0.0, "s"))
         Q([1., 0., 0.], 'm')
 
         For a two-argument curve ``tau`` is the time -- see `_resolve`.
@@ -301,7 +301,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).tangent(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         For a two-argument curve ``tau`` is the time -- see `_resolve`.

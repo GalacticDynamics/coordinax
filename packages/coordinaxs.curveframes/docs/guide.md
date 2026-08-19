@@ -50,7 +50,7 @@ def helix(tau: u.Q) -> u.Q:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-fs_transform = cxfc.FrenetSerretBuilder(helix)
+fs_transform = cxfc.FrenetSerretBuilder(helix, "s")
 ```
 
 `FrenetSerretBuilder` uses `unxt.experimental.jacfwd` to compute unit-correct first and second derivatives of the curve, then derives the tangent, normal, and binormal via Gram–Schmidt orthogonalisation. Nothing is precomputed: `tangent`, `normal`, and `binormal` are methods on the builder, each evaluated at the $\tau$ you pass it.
@@ -103,7 +103,7 @@ fs_frame = cxfc.FrenetSerretFrame(
 `from_curve` combines both steps — it builds the transform and wraps it:
 
 ```python
-fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), helix)
+fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), helix, "s")
 ```
 
 This is equivalent to the direct construction above.
@@ -202,7 +202,7 @@ class Helix(eqx.Module):
         )
 
 
-builder = cxfc.FrenetSerretBuilder(Helix(jnp.asarray(1.5)))
+builder = cxfc.FrenetSerretBuilder(Helix(jnp.asarray(1.5)), "s")
 
 try:
     jax.jit(builder.rotation_matrix)(tau)
@@ -273,7 +273,7 @@ def helix(tau: u.Q) -> u.Q:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-bt = cxfc.BishopBuilder(helix)
+bt = cxfc.BishopBuilder(helix, "s")
 ```
 
 `BishopBuilder` automatically:
@@ -305,7 +305,7 @@ import dataclasses
 
 import diffrax as dfx
 
-bt = cxfc.BishopBuilder(helix)
+bt = cxfc.BishopBuilder(helix, "s")
 fast = dataclasses.replace(
     bt,
     diffeqsolver=dataclasses.replace(
@@ -337,13 +337,13 @@ For `RecursiveCheckpointAdjoint`, "forward: no" means tangent and jet propagatio
 By default, the builder picks the standard basis vector least aligned with $\mathbf{T}(\tau_0)$ via Gram–Schmidt. You can provide an explicit initial normal:
 
 ```python
-bt_custom = cxfc.BishopBuilder(helix, initial_normal=jnp.array([0.0, 0.0, 1.0]))
+bt_custom = cxfc.BishopBuilder(helix, "s", initial_normal=jnp.array([0.0, 0.0, 1.0]))
 ```
 
 The reference parameter $\tau_0$ can also be set:
 
 ```python
-bt_shifted = cxfc.BishopBuilder(helix, tau_0=u.Q(1.0, "s"))
+bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"))
 ```
 
 ### Straight Lines
@@ -356,7 +356,7 @@ def line(tau):
     return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
 
 
-bt_line = cxfc.BishopBuilder(line)
+bt_line = cxfc.BishopBuilder(line, "s")
 bt_line.normal1(u.Q(5.0, "s"))  # well-defined unit vector
 ```
 
@@ -401,7 +401,7 @@ A `BishopFrame` pairs a `BishopBuilder` with a base frame, exactly like `FrenetS
 ### Convenience Constructor
 
 ```python
-b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix)
+b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s")
 ```
 
 ### Frame Transitions
@@ -527,7 +527,7 @@ class Helix(eqx.Module):
 
 
 def readout(radius):
-    builder = cxfc.FrenetSerretBuilder(Helix(radius))
+    builder = cxfc.FrenetSerretBuilder(Helix(radius), "s")
     op = cxfm.TimeDep(builder)
     p = u.Q(jnp.array([2.0, 1.0, -0.5]), "km")
     out = cxfm.act(op, u.Q(0.4, "s"), p)

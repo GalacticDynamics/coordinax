@@ -30,7 +30,7 @@ def helix(tau):
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-fs = cxfc.FrenetSerretBuilder(helix)
+fs = cxfc.FrenetSerretBuilder(helix, "s")
 
 # Dense sampling for the curve line, sparse sampling for the frame triads.
 ts = np.linspace(0.0, 4.0 * np.pi, 300)
@@ -67,7 +67,7 @@ The tangent always points along the direction of travel, the normal points towar
 The {doc}`Bishop frame <guide>` is _rotation-minimising_: instead of tracking the principal normal (which spins around the tangent as the curve twists), it transports its cross-section axes as smoothly as possible. On the helix this shows up as a visible lag between the Frenet normal and the Bishop `normal1` axis.
 
 ```{code-cell} python
-bishop = cxfc.BishopBuilder(helix)
+bishop = cxfc.BishopBuilder(helix, "s")
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111, projection="3d")

@@ -40,7 +40,7 @@ def _helix(tau):
 
 @pytest.fixture
 def frame():
-    return cxfm.TimeDep(cxfc.FrenetSerretBuilder(_helix))
+    return cxfm.TimeDep(cxfc.FrenetSerretBuilder(_helix, "s"))
 
 
 TAU = u.Q(0.7, "s")

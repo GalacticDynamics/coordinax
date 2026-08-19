@@ -16,7 +16,7 @@ directly for $\tau(s)$.  Because a curve is consumed purely as a callable
 throughout `coordinaxs.curveframes` (`AbstractCurveFrameBuilder.__call__` and
 `.location` are the only two call sites), `ArcLength(curve)` is itself a curve
 and can be wrapped in any of the existing frame builders with no further
-change: e.g. ``BishopBuilder(ArcLength(curve))``.
+change: e.g. ``BishopBuilder(ArcLength(curve), "s")``.
 
 """
 

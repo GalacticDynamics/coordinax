@@ -83,7 +83,7 @@ class TestGradThroughCurveParameter:
         r0 = 1.5
 
         def loss(radius):
-            return _readout(builder_cls(Helix(radius)))
+            return _readout(builder_cls(Helix(radius), "s"))
 
         g = jax.grad(loss)(r0)
 
@@ -96,7 +96,7 @@ class TestGradThroughCurveParameter:
 
     def test_grad_through_the_whole_builder_pytree(self):
         """`jax.grad` over the builder returns a gradient in ``curve.radius``."""
-        builder = cxfc.FrenetSerretBuilder(Helix(1.5))
+        builder = cxfc.FrenetSerretBuilder(Helix(1.5), "s")
         gbuilder = jax.grad(_readout)(builder)
 
         assert isinstance(gbuilder, cxfc.FrenetSerretBuilder)
@@ -104,7 +104,7 @@ class TestGradThroughCurveParameter:
 
         # The scalar-argument route must agree.
         def loss(radius):
-            return _readout(cxfc.FrenetSerretBuilder(Helix(radius)))
+            return _readout(cxfc.FrenetSerretBuilder(Helix(radius), "s"))
 
         assert jnp.allclose(gbuilder.curve.radius, jax.grad(loss)(1.5))
 
@@ -116,7 +116,7 @@ class TestGradThroughCurveParameter:
         """
 
         def loss(radius):
-            return _readout(cxfc.FrenetSerretBuilder(StaticHelix(radius)))
+            return _readout(cxfc.FrenetSerretBuilder(StaticHelix(radius), "s"))
 
         # equinox refuses to stash a tracer in a static field (UserWarning,
         # promoted to an error by the project's filterwarnings config).
@@ -151,7 +151,7 @@ class TestFixedStation:
     ):
         station = u.Q(0.7, "s")
         fixed = cxfm.TimeDep(builder_cls(circle, "s", station))
-        moving = cxfm.TimeDep(builder_cls(circle))
+        moving = cxfm.TimeDep(builder_cls(circle, "s"))
 
         assert jnp.allclose(
             cxfm.act(fixed, u.Q(tau_val, "s"), P).ustrip("km"),
@@ -191,7 +191,9 @@ class TestFixedStation:
 
     def test_frame_from_curve_accepts_station(self):
         station = u.Q(0.7, "s")
-        frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, station=station)
+        frame = cxfc.FrenetSerretFrame.from_curve(
+            cxf.Alice(), circle, "s", station=station
+        )
         assert frame.xop.builder.station is station
 
         op = cxf.frame_transition(cxf.Alice(), frame)
@@ -206,7 +208,7 @@ class TestJitWithArrayLeaves:
     """A builder holding array leaves needs `eqx.filter_jit`, not `jax.jit`."""
 
     def test_filter_jit_works_where_jax_jit_cannot_hash(self):
-        builder = cxfc.FrenetSerretBuilder(Helix(jnp.asarray(1.5)))
+        builder = cxfc.FrenetSerretBuilder(Helix(jnp.asarray(1.5)), "s")
 
         # Plain jax.jit hashes the bound method, hence the module, hence the
         # array leaf -- the ergonomic cliff of the differentiable-curve design.

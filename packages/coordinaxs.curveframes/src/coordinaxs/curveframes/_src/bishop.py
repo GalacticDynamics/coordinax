@@ -258,7 +258,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-    >>> bt = cxfc.BishopBuilder(helix)
+    >>> bt = cxfc.BishopBuilder(helix, "s")
     >>> bt.location(u.Q(0.0, "s"))
     Q([1., 0., 0.], 'm')
 
@@ -283,7 +283,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     ...     return u.Q(jnp.stack([t, jnp.zeros_like(t),
     ...                           jnp.zeros_like(t)]), "m")
 
-    >>> U1 = cxfc.BishopBuilder(line).normal1(u.Q(5.0, "s"))
+    >>> U1 = cxfc.BishopBuilder(line, "s").normal1(u.Q(5.0, "s"))
     >>> jnp.sqrt(jnp.sum(U1.value**2))
     Array(1., dtype=float64)
 
@@ -293,7 +293,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     """The constructing curve."""
 
     tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        default=u.unit("s"), static=True, converter=u.unit
+        static=True, converter=u.unit
     )
     """The unit of the curve parameter tau."""
 
@@ -429,7 +429,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> R = cxfc.BishopBuilder(circle).rotation_matrix(u.Q(0.0, "s"))
+        >>> R = cxfc.BishopBuilder(circle, "s").rotation_matrix(u.Q(0.0, "s"))
         >>> bool(jnp.allclose(R @ R.T, jnp.eye(3), atol=1e-6))
         True
 
@@ -465,7 +465,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.BishopBuilder(circle).tangent(u.Q(0.0, "s"))
+        >>> cxfc.BishopBuilder(circle, "s").tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         """
@@ -497,7 +497,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> U1 = cxfc.BishopBuilder(circle).normal1(u.Q(0.0, "s"))
+        >>> U1 = cxfc.BishopBuilder(circle, "s").normal1(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U1.value))
         1.0
 
@@ -525,7 +525,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> U2 = cxfc.BishopBuilder(circle).normal2(u.Q(0.0, "s"))
+        >>> U2 = cxfc.BishopBuilder(circle, "s").normal2(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U2.value))
         1.0
 
@@ -577,7 +577,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
 
     Build a frame relative to Alice:
 
-    >>> b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), circle)
+    >>> b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), circle, "s")
     >>> b_frame.base_frame
     Alice()
 
@@ -604,7 +604,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         base_frame: FrameT,
         curve: Callable[[Any], Any],
         /,
-        tau_unit: u.AbstractUnit | str = "s",
+        tau_unit: u.AbstractUnit | str,
         *,
         station: Any = None,
         tau_0: u.AbstractQuantity | None = None,
@@ -652,7 +652,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "km")
 
-        >>> frame = cxfc.BishopFrame.from_curve(cxf.Alice(), circle)
+        >>> frame = cxfc.BishopFrame.from_curve(cxf.Alice(), circle, "s")
         >>> frame.base_frame
         Alice()
 

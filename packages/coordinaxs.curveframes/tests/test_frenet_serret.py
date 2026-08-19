@@ -33,7 +33,7 @@ from .conftest import circle, circle_yr, helix, inverse_rotation
 
 @pytest.fixture
 def circle_fs() -> cxfc.FrenetSerretBuilder:
-    return cxfc.FrenetSerretBuilder(circle)
+    return cxfc.FrenetSerretBuilder(circle, "s")
 
 
 @pytest.fixture
@@ -138,7 +138,7 @@ class TestTangentFastPathMatchesBase:
 
     @pytest.mark.parametrize("tau", [0.0, 0.7, 2.3])
     def test_override_equals_row0_of_R(self, tau: float):
-        builder = cxfc.FrenetSerretBuilder(helix)
+        builder = cxfc.FrenetSerretBuilder(helix, "s")
         t = u.Q(tau, "s")
         base = cxfc.AbstractCurveFrameBuilder.tangent(builder, t)
         np.testing.assert_allclose(base.value, builder.tangent(t).value, atol=1e-6)

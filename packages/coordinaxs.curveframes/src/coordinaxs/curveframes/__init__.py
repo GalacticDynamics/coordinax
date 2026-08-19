@@ -24,8 +24,8 @@ Typical usage::
 
     import coordinaxs.curveframes as cxfc
 
-    fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve)
-    b_frame  = cxfc.BishopFrame.from_curve(base_frame, curve)
+    fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve, tau_unit)
+    b_frame  = cxfc.BishopFrame.from_curve(base_frame, curve, tau_unit)
 
 See Also
 --------

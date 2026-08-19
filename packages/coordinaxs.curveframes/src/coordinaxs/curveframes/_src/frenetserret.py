@@ -110,7 +110,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-    >>> fs = cxfc.FrenetSerretBuilder(helix)
+    >>> fs = cxfc.FrenetSerretBuilder(helix, "s")
     >>> fs.location(u.Q(0.0, "s"))
     Q([1., 0., 0.], 'm')
 
@@ -120,7 +120,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     """The constructing curve."""
 
     tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        default=u.unit("s"), static=True, converter=u.unit
+        static=True, converter=u.unit
     )
     """The unit of the curve parameter tau."""
 
@@ -149,7 +149,8 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).rotation_matrix(u.Q(0.0, "s")).round(3)
+        >>> fs = cxfc.FrenetSerretBuilder(circle, "s")
+        >>> fs.rotation_matrix(u.Q(0.0, "s")).round(3)
         Array([[-0.,  1.,  0.],
                [-1., -0.,  0.],
                [ 0.,  0.,  1.]], dtype=float64)
@@ -200,7 +201,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).tangent(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         """
@@ -229,7 +230,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).normal(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").normal(u.Q(0.0, "s"))
         Q([-1., -0.,  0.], '')
 
         """
@@ -255,7 +256,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).binormal(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").binormal(u.Q(0.0, "s"))
         Q([0., 0., 1.], '')
 
         """
@@ -303,7 +304,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
 
     Build a frame relative to Alice:
 
-    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> fs_frame.base_frame
     Alice()
 
@@ -329,7 +330,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         base_frame: FrameT,
         curve: Callable[[Any], Any],
         /,
-        tau_unit: u.AbstractUnit | str = "s",
+        tau_unit: u.AbstractUnit | str,
         *,
         station: Any = None,
     ) -> "FrenetSerretFrame[FrameT]":
@@ -365,7 +366,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "km")
 
-        >>> frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+        >>> frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
         >>> frame.base_frame
         Alice()
 

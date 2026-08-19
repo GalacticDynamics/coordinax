@@ -26,7 +26,7 @@ BOUNDS = (u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s"))
 
 
 def _chart(**kw):
-    return cxfc.TubularChart(cxfc.BishopBuilder(circle), tau_bounds=BOUNDS, **kw)
+    return cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS, **kw)
 
 
 def test_is_on_the_parameterized_branch() -> None:
@@ -72,7 +72,7 @@ def test_the_chart_carries_the_builders_leaves() -> None:
 def test_static_bounds_drop_their_leaves() -> None:
     """`tau_bounds` follows the usual opt-in rule for chart parameters."""
     ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(circle),
+        cxfc.BishopBuilder(circle, "s"),
         tau_bounds=(u.StaticQuantity(-1.0, "s"), u.StaticQuantity(7.0, "s")),
     )
     assert len(jax.tree.leaves(ch)) == 2  # builder only
@@ -134,10 +134,10 @@ def test_the_reach_guard_also_fires_under_jit() -> None:
 def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_station() -> None:
     """See the `~(f > 0)` vs `f <= 0` comment in `TubularChart.check_data`.
 
-    Reachable via public API: `FrenetSerretBuilder(curve, station=...)`.
+    Reachable via public API: `FrenetSerretBuilder(curve, "s", station=...)`.
     """
     ch = cxfc.TubularChart(
-        cxfc.FrenetSerretBuilder(circle, station=u.Q(0.5, "s")), tau_bounds=BOUNDS
+        cxfc.FrenetSerretBuilder(circle, "s", station=u.Q(0.5, "s")), tau_bounds=BOUNDS
     )
     at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
     assert jnp.isnan(ch.jacobian_factor(at))
@@ -211,7 +211,7 @@ def test_identity_falls_back_through_cartesian_for_different_charts() -> None:
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.ones_like(t)]), "km")
 
     ch1 = _chart()
-    ch2 = cxfc.TubularChart(cxfc.BishopBuilder(shifted), tau_bounds=BOUNDS)
+    ch2 = cxfc.TubularChart(cxfc.BishopBuilder(shifted, "s"), tau_bounds=BOUNDS)
     p = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
     got = cxc.pt_map(p, ch1.M, ch1, ch2.M, ch2)
 
@@ -254,7 +254,7 @@ def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
     `test_frenet_metric_has_torsion_cross_terms` for the contrast on the same
     curve.
     """
-    ch = cxfc.TubularChart(cxfc.BishopBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
+    ch = cxfc.TubularChart(cxfc.BishopBuilder(_helix, "s"), tau_bounds=_HELIX_BOUNDS)
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
 
     assert jnp.allclose(g[0, 1].ustrip("km / s"), 0.0, atol=1e-8)
@@ -269,6 +269,8 @@ def test_frenet_metric_has_torsion_cross_terms() -> None:
     Same `_helix` and same point as the Bishop test above: Bishop is
     diagonal there, Frenet--Serret is not, ten orders of magnitude apart.
     """
-    ch = cxfc.TubularChart(cxfc.FrenetSerretBuilder(_helix), tau_bounds=_HELIX_BOUNDS)
+    ch = cxfc.TubularChart(
+        cxfc.FrenetSerretBuilder(_helix, "s"), tau_bounds=_HELIX_BOUNDS
+    )
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
     assert not jnp.allclose(g[0, 1].ustrip("km / s"), 0.0, atol=1e-6)
