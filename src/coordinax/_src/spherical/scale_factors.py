@@ -17,7 +17,7 @@ from .manifold import HyperSphericalManifold
 from .metric import RoundMetric
 from coordinax._src.base import AbstractChart, check_metric_is_charts
 from coordinax._src.custom_types import OptUSys
-from coordinax._src.metric.matrix import DiagonalMetric
+from coordinax._src.metric.matrix import DiagonalMetric, _sine_product_diagonal
 from coordinaxs.api.custom_types import CDict
 
 
@@ -129,14 +129,19 @@ def scale_factors(
     check_metric_is_charts(metric, chart, "scale_factors")
     components = chart.components
     ang_unit = usys["angle"] if usys is not None else u.unit("rad")
-    angles = jnp.stack(
-        [
+    vals = [
+        jnp.asarray(
             u.ustrip(AllowValue, u.uconvert_value(u.unit("rad"), ang_unit, at[k]))
-            for k in components[:-1]
-        ]
+        )
+        for k in components
+    ]
+    # Same construction as the `metric_matrix` rule this shortcuts -- see
+    # `spherical/register_metric.py` for why the empty case sets dtype itself.
+    thetas = (
+        jnp.stack(vals[:-1])
+        if len(vals) > 1
+        else jnp.zeros((0, *vals[-1].shape), dtype=vals[-1].dtype)
     )
-    sin2 = jnp.sin(angles) ** 2
-    value = jnp.concatenate([jnp.ones(1, dtype=sin2.dtype), jnp.cumprod(sin2)])
-    n = len(components)
-    units = ul.UnitsMatrix.full(n, "")
+    value = _sine_product_diagonal(thetas, 1.0)
+    units = ul.UnitsMatrix.full(len(components), "")
     return ul.QM(value, unit=units)
