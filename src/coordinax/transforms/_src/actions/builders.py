@@ -18,6 +18,21 @@ from .translate import Translate
 _MSG_ZERO_AXIS = "`RotationAboutAxis.axis` must be non-zero; got a zero-length axis."
 
 
+def _as_axis(axis: Any, /) -> Shaped[Array, "3"]:
+    """Normalise ``axis`` to a bare array, keeping any unit's *direction*.
+
+    ``jnp`` here is `quaxed.numpy`, whose `asarray` hands a `~unxt.Quantity`
+    back unchanged, so it cannot be used to coerce one.
+
+    Unlike a rotation matrix or a boost's beta, the axis is normalised on use:
+    ``[0, 0, 2] m`` and ``[0, 0, 1]`` name the same rotation, so the unit
+    cancels exactly and stripping it is lossless rather than a silent drop.
+    """
+    if isinstance(axis, u.AbstractQuantity):
+        axis = u.ustrip(u.unit_of(axis), axis)
+    return jnp.asarray(axis)
+
+
 @final
 class RotationAboutAxis(eqx.Module):
     r"""Uniform rotation about a fixed axis: :math:`\theta(\tau) = \omega \tau + \phi`.
@@ -53,7 +68,7 @@ class RotationAboutAxis(eqx.Module):
     """
 
     omega: u.AbstractQuantity
-    axis: Shaped[Array, "3"]
+    axis: Shaped[Array, "3"] = eqx.field(converter=_as_axis)
     phase: u.AbstractQuantity = u.Q(0.0, "rad")
 
     def __call__(self, tau: Any, /) -> Rotate:
