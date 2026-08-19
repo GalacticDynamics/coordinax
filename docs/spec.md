@@ -37,7 +37,9 @@ In this section we fix the _mathematical objects_ that `coordinax` represents an
 
 A **quantity** is a pair $(x, u)$ where $x \in \mathbb{R}$ (or $\mathbb{R}^n$) is a numerical value and $u$ is a unit of measurement. Two quantities are physically equivalent when their values scale inversely with their units; unit conversion is a bijection on $\mathbb{R}$. _(Unit arithmetic is handled by `unxt`.)_
 
-An **angular quantity** is special because it represents an element of the circle $S^1 = \mathbb{R}/2\pi\mathbb{Z}$, not of $\mathbb{R}$. $S^1$ is compact and has no boundary: there is no intrinsically "first" or "last" angle, and the space wraps. To store an angle as a real number one must choose a **branch cut** — a point excluded from the circle used as the interval endpoint. The two standard choices are $[0, 2\pi)$ and $(-\pi, \pi]$; both represent the same $S^1$. The cut is an artifact of representation: arithmetic that crosses it requires explicit wrapping, and the same physical angle has different numerical values under the two conventions.
+An **angular quantity** is special because it represents an element of the circle $S^1 = \mathbb{R}/2\pi\mathbb{Z}$, not of $\mathbb{R}$. $S^1$ is compact and has no boundary: there is no intrinsically "first" or "last" angle, and the space wraps. A stored angle is a real **representative** of one of those classes, and nothing reduces it: $7$ rad and $7 - 2\pi$ rad denote the same element of $S^1$, and both are well-formed stored values.
+
+Picking a _unique_ representative means naming a **branch cut** — a half-open interval of width $2\pi$, so that every class has exactly one representative inside it. That choice belongs to the **context**, never to the quantity. $[0, 2\pi)$ and $(-\pi, \pi]$ are the familiar ones, but the cut may sit anywhere, and an angle that has passed through neither a chart domain nor an explicit wrap carries no cut at all. Arithmetic acts on the representative and is indifferent to all of this; crossing a cut matters only where something re-imposes one. See [Angles](#software-spec-angles) for the type and `wrap_to` for imposing a cut deliberately.
 
 A **distance quantity** has dimensions of length and, in the strict metric sense, is non-negative: it measures the magnitude of a displacement. A **radial coordinate**, however, can be signed — either because the coordinate system parameterizes a full line ($r \in \mathbb{R}$), or because a negative value is given physical meaning via the antipodal map $(r, \theta, \phi) \equiv (-r,\, \pi - \theta,\, \phi + \pi)$. The distinction between "distance" ($r \geq 0$) and "signed radial coordinate" ($r \in \mathbb{R}$) is a domain constraint on the same dimensional quantity. The point $r = 0$ is a coordinate singularity in spherical and cylindrical systems: the angular coordinates are degenerate there.
 
@@ -1025,13 +1027,44 @@ The `coordinax.angles` module provides the angle-facing scalar API used by chart
 
 !!! info `Angle`
 
-     Concrete angular scalar type (value + angular unit), built on `unxt`. Angles represent directions on $S^1$ and do not encode branch-cut convention in the type itself.
+    Concrete angular scalar type (value + angular unit), built on `unxt`. Angles represent directions on $S^1$ and do **not** encode a branch-cut convention in the type itself.
 
     - `wrap_to` method that calls `coordinax.angles.wrap_to` on the `Angle`.
 
+    The stored value is an unreduced representative: any real is well-formed, and
+    none of them is canonicalised on construction.
+
+    ```pycon
+    >>> import unxt as u
+
+    >>> u.Angle(7.0, "rad")
+    Angle(7., 'rad')
+    >>> u.Angle(-3.0, "rad")
+    Angle(-3., 'rad')
+    ```
+
 !!! info `wrap_to`
 
-    Functional API for explicit interval wrapping. It remaps an angle into a caller-specified interval (for example $[0, 2\pi)$ or $(-\pi, \pi]$).
+    Functional API for explicit interval wrapping. It remaps an angle into a caller-specified interval of width $2\pi$.
+
+    The interval is the caller's, not the library's. $[0, 2\pi)$ and $(-\pi, \pi]$
+    are conventional, but any cut is honoured, which is what makes the choice
+    contextual rather than a property of the angle:
+
+    ```pycon
+    >>> import unxt as u
+    >>> from coordinax.angles import wrap_to
+
+    >>> TAU = 6.283185307179586
+    >>> theta = u.Angle(7.0, "rad")
+
+    >>> wrap_to(theta, u.Angle(0.0, "rad"), u.Angle(TAU, "rad")).round(8)
+    Angle(0.71681469, 'rad')
+    >>> wrap_to(theta, u.Angle(10.0, "rad"), u.Angle(10.0 + TAU, "rad")).round(8)
+    Angle(13.28318531, 'rad')
+    ```
+
+    The same direction, two representatives, neither more correct than the other.
 
 </br>
 
