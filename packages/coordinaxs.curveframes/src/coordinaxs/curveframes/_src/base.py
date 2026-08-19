@@ -47,11 +47,12 @@ BuilderT = TypeVar("BuilderT", bound="AbstractCurveFrameBuilder")
 _MSG_TAU_UNIT_DIMENSION = (
     "this curve exposes a parameter of dimension {want}, but `tau_unit` is "
     "{unit!r}, which is {got}. A builder over an arc-length curve needs a "
-    "length, e.g. `BishopBuilder(ArcLength(curve, 'km'), 'km')` -- a common "
-    "way to land here is migrating mechanically to 's'. Left as-is, "
-    "`location` would still return correct positions, since it never consults "
-    "the unit, while `tangent` and `rotation_matrix` would fail later inside "
-    "the derivative."
+    "length, e.g. `BishopBuilder(ArcLength(curve, 's'), 'km')`: `ArcLength` "
+    "takes the *wrapped* curve's unit, typically a time, while the builder "
+    "takes the arc length the wrapper exposes. A common way to land here is "
+    "migrating mechanically to 's'. Left as-is, `location` would still return "
+    "correct positions, since it never consults the unit, while `tangent` and "
+    "`rotation_matrix` would fail later inside the derivative."
 )
 
 _MSG_TWO_ARGUMENT_NEEDS_STATION = (

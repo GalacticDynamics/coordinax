@@ -346,8 +346,11 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         curve : Callable
             A function ``tau -> Quantity[float, (3,)]`` representing
             a smooth space curve.
-        tau_unit : str, optional
-            Unit of the curve parameter for differentiation.
+        tau_unit : AbstractUnit or str
+            Unit of the curve parameter for differentiation.  Required: there
+            is no neutral default, since a curve parameter may be a time, an
+            arc length, or an affine parameter, and the wrong unit is silently
+            rescaled rather than rejected when it is dimensionally compatible.
         station : optional
             A fixed station along the curve; when given the frame is a fixed
             frame *field* along the curve rather than a moving frame.
