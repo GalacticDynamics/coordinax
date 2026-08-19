@@ -395,7 +395,7 @@ True
 
 ```
 
-`s_max` pays where the curve is evaluated many times per call, which is exactly what a frame builder does. Measured on this helix, eager, float64:
+`s_max` pays where the curve is evaluated many times per call, which is exactly what a frame builder does — a single reparametrised call is already about a millisecond, so swapping that solve for an interpolation saves little on its own. Measured on this helix, eager, float64:
 
 | what you are doing | does `s_max` help? |
 | --- | --- |
@@ -404,9 +404,7 @@ True
 | a single `ArcLength` call | marginally: ~1.5x once jitted, nothing measurable eager |
 | differentiating, whether in $s$ or in the curve's own $\theta$ | no measurable difference |
 
-A single reparametrised call is already about a millisecond, so replacing that solve with an interpolation saves little on its own; it is the repetition inside the parallel-transport solve that makes it worth setting.
-
-Differentiating is unhelped for a structural reason worth knowing. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation; differentiating with respect to $\theta$ costs a _second_ one, integrating $\partial S/\partial\theta$ over $[\tau_0, \tau]$, and that one cannot be precomputed because it depends on the perturbation direction, known only at the call. So fitting a curve's shape pays that integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians — pays no _second_ one: once $\tau(s)$ is in hand, $d\tau/ds$ is just $1/\|\gamma'(\tau)\|$, already to hand. They still pay for $\tau(s)$ itself, and inverting the chart runs `nearest_tau`'s bracketed root-find on top of that. What the geometric path avoids is the sensitivity integral, not iterative work in general.
+Differentiating is unhelped structurally. Reparametrising costs one ODE solve, which `s_max` replaces with an interpolation; differentiating with respect to $\theta$ costs a _second_ one, integrating $\partial S/\partial\theta$ over $[\tau_0, \tau]$, and that one cannot be precomputed because it depends on the perturbation direction, known only at the call. So fitting a curve's shape pays that integral on every step, while everything geometric — pulling back the metric, inverting the chart, taking Jacobians — pays no _second_ one: once $\tau(s)$ is in hand, $d\tau/ds$ is just $1/\|\gamma'(\tau)\|$, already to hand. They still pay for $\tau(s)$ itself, and inverting the chart runs `nearest_tau`'s bracketed root-find on top of that.
 
 `s` must then fall within $[0, s_{\max}]$, up to a small margin either side: the precompute integrates a little past both ends, because the inverse chart's nearest-point solve genuinely asks for $\tau(s)$ outside the nominal range while bracketing a root. Beyond the solved range a query raises rather than extrapolating off the end of the interpolation.
 
