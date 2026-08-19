@@ -345,3 +345,46 @@ class TestTimeDepComposition:
         g = jax.grad(gamma_of_rate)(0.1)
         assert jnp.isfinite(g)
         assert float(g) > 0.0  # faster rate -> larger gamma
+
+
+_BETA = [0.6, 0.0, 0.0]
+
+
+class TestBetaAcceptsOnlyDimensionlessQuantities:
+    """`beta` is v/c, so a `Quantity` must be dimensionless or refused.
+
+    Regression: the field converter was a bare ``jnp.asarray``, and ``jnp`` in
+    that module is `quaxed.numpy`, whose `asarray` is unit-aware and hands a
+    `Quantity` straight back. A `Quantity` was therefore stored in a field
+    annotated `Array`, and nothing complained until `matrix` failed with a
+    `TypeError` about ``unvmap_any`` -- an error naming nothing the caller had
+    written.
+    """
+
+    def test_dimensionless_quantity_is_stripped_to_an_array(self):
+        b = cxfm.LorentzBoost(u.Q(jnp.asarray(_BETA), ""))
+        assert not isinstance(b.beta, u.AbstractQuantity)
+        assert bool(jnp.allclose(b.beta, jnp.asarray(_BETA)))
+
+    def test_stripped_quantity_matches_a_bare_array(self):
+        """The two spellings must give the same operator, not merely both work."""
+        from_q = cxfm.LorentzBoost(u.Q(jnp.asarray(_BETA), ""))
+        from_arr = cxfm.LorentzBoost(jnp.asarray(_BETA))
+        assert bool(jnp.allclose(from_q.matrix, from_arr.matrix, atol=1e-14))
+        assert bool(jnp.allclose(from_q.gamma, 1.25, atol=1e-12))
+
+    @pytest.mark.parametrize("unit", ["m/s", "km/s", "pc/Myr", "m"])
+    def test_a_dimensionful_quantity_is_refused_and_redirected(self, unit):
+        """``0.6 m/s`` is not ``0.6 c`` -- off by eight orders of magnitude.
+
+        A length is in here too: the guard is "dimensionless or nothing", not
+        "not a velocity".
+        """
+        with pytest.raises(ValueError, match="from_velocity"):
+            cxfm.LorentzBoost(u.Q(jnp.asarray(_BETA), unit))
+
+    def test_from_velocity_is_the_supported_route(self):
+        """Positive control: the redirect the error names actually works."""
+        c = u.Q(299792458.0, "m/s")
+        b = cxfm.LorentzBoost.from_velocity(u.Q(jnp.asarray([0.6, 0.0, 0.0]), "") * c)
+        assert bool(jnp.allclose(b.beta, jnp.asarray(_BETA), atol=1e-12))
