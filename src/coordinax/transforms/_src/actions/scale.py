@@ -21,6 +21,7 @@ from .linear import AbstractLinearTransform
 from coordinax.transforms._src import groups
 
 SMatrix: TypeAlias = Shaped[Array, " N N"]
+SFactors: TypeAlias = Shaped[Array, " N"]
 
 _MSG_SINGULAR: Final = "Scale matrix must be invertible."
 _MSG_NOT_DIAGONAL: Final = (
@@ -70,8 +71,14 @@ class Scale(AbstractLinearTransform):
 
     """
 
-    S: SMatrix
-    """The scaling matrix."""
+    s: SFactors
+    """The scaling factors -- the diagonal of $S$, one per axis.
+
+    The diagonal rather than the whole matrix, so diagonality is structural
+    instead of re-checked: a vector cannot have an off-diagonal entry. The
+    matrix is rebuilt on demand by `_raw_matrix`, the same way
+    `~coordinax.transforms.LorentzBoost` derives its own from a stored velocity.
+    """
 
     @classmethod
     def groups(cls) -> frozenset[type]:
@@ -80,7 +87,33 @@ class Scale(AbstractLinearTransform):
         return frozenset((groups.AffineGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, S: Any) -> None:
-        object.__setattr__(self, "S", jnp.asarray(S))
+        # Takes the matrix, stores its diagonal. Both checks run here, once,
+        # rather than on every `matrix` access: what is stored cannot be
+        # non-diagonal, so there is nothing left to re-check.
+        #
+        # This moves *when* a bad matrix is reported. Extracting the diagonal
+        # consumes the checked value, so eagerly the error now surfaces at
+        # construction rather than at the first `matrix` access. Under `jit` it
+        # is deferred to runtime exactly as before, which is what the `error_if`
+        # is for -- a plain `bool` on a tracer would raise at trace time.
+        #
+        # The `ndim` branch reads a static shape, so it survives tracing; a
+        # non-2D input has no diagonal to take and carries the square error
+        # forward in its place.
+        S = self._validate_diagonal(self._validate_square(jnp.asarray(S)))
+        object.__setattr__(self, "s", jnp.diagonal(S) if S.ndim == 2 else jnp.ravel(S))
+
+    @classmethod
+    def _from_diagonal(cls, s: Any, /) -> "Scale":
+        """Build directly from factors, skipping the matrix round-trip.
+
+        The diagonal is what the type stores, so every internal producer of one
+        (`from_factors`, `inverse`, `_merge`) would otherwise inflate it to a
+        matrix purely for `__init__` to take it apart again.
+        """
+        obj = object.__new__(cls)
+        object.__setattr__(obj, "s", jnp.asarray(s))
+        return obj
 
     @classmethod
     def from_factors(cls: type["Scale"], factors: Any, /) -> "Scale":
@@ -92,23 +125,24 @@ class Scale(AbstractLinearTransform):
         # Defer the singular check so it survives jit (a plain `bool` on a
         # traced value raises TracerBoolConversionError).
         s = eqx.error_if(s, jnp.any(jnp.isclose(s, 0)), _MSG_SINGULAR)
-        return cls(jnp.diag(s))
+        return cls._from_diagonal(s)
 
     @property
     def inverse(self) -> "Scale":
         """Return the inverse scaling transform.
 
-        Reciprocals of the diagonal, not `jnp.linalg.inv`: O(n) rather than
-        O(n^3), and exact where the general solve is not. Going through
-        `matrix` rather than the raw field also means a malformed `S` is caught
-        here with the same message as everywhere else, instead of surfacing as
-        a raw LAPACK shape error.
+        Reciprocals of the factors, not `jnp.linalg.inv`: O(n) rather than
+        O(n^3), and exact where the general solve is not. A malformed `S` is
+        carried in `s` by the deferred check from `__init__`, so it still
+        reports the shared message rather than a raw LAPACK shape error.
         """
-        return type(self)(jnp.diag(1.0 / jnp.diagonal(self.matrix)))
+        return self._from_diagonal(1.0 / self.s)
 
     @property
     def _raw_matrix(self) -> Any:
-        return self._validate_diagonal(self.S)
+        # No re-validation: `s` is a vector, so the matrix it builds is square
+        # and diagonal by construction.
+        return jnp.diag(self.s)
 
     def _validate_diagonal(self, matrix: Any, /) -> Any:
         """Check the matrix has no off-diagonal entries.
@@ -151,17 +185,19 @@ def simplify(op: Scale, /, *, approx: bool = True, **kw: Any) -> AbstractTransfo
     The identity-matrix check inspects values, so it is skipped when
     ``approx=False``.
     """
-    m = op.matrix
-    if approx and jnp.allclose(m, jnp.eye(m.shape[0], dtype=m.dtype), **kw):
+    if approx and jnp.allclose(op.s, 1.0, **kw):
         return identity
     return op
 
 
 @plum.dispatch
 def _merge(a: Scale, b: Scale, /) -> AbstractTransform | None:
-    """Merge two adjacent scalings (``a`` applied first) into ``b.matrix @ a.matrix``.
+    """Merge two adjacent scalings (``a`` applied first) into ``b.s * a.s``.
 
-    Through `matrix` rather than the raw fields, so a malformed operand is
-    reported by the shared validation instead of a raw matmul shape error.
+    Elementwise on the factors: composing two diagonal maps multiplies them
+    axis by axis, so this is the $O(n)$ form of ``b.matrix @ a.matrix``. Under
+    `jit` a malformed operand carries its deferred check into the product and
+    still reports the shared message; eagerly it cannot get this far, having
+    been rejected when it was built.
     """
-    return Scale(b.matrix @ a.matrix)
+    return Scale._from_diagonal(b.s * a.s)

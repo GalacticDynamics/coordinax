@@ -437,10 +437,16 @@ class TestMalformedMatricesReportTheSharedMessage:
         with pytest.raises(Exception, match="square"):
             cxfm.simplify(op_type(self._nonsquare()))
 
-    def test_merging_two_scales_reports_square(self):
-        bad = cxfm.Scale(self._nonsquare())
+    def test_a_malformed_scale_cannot_be_built_at_all(self):
+        """Was a `_merge` test; a malformed `Scale` no longer survives `__init__`.
+
+        `Scale` stores the diagonal, and extracting it consumes the checked
+        value, so the square error now fires at construction. There is no
+        malformed `Scale` left to reach `_merge` with -- which is the point.
+        `Linear` still stores its matrix, so its own routes are covered above.
+        """
         with pytest.raises(Exception, match="square"):
-            cxfm.simplify(bad | bad)
+            cxfm.Scale(self._nonsquare())
 
     def test_a_square_non_diagonal_still_reports_diagonal(self):
         """The square check must not swallow the diagonal one."""

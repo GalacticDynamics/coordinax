@@ -24,13 +24,13 @@ def test_scale_from_factors_singular_raises_under_jit() -> None:
     """A zero scale factor is rejected even under jit (no tracer bool)."""
     build = eqx.filter_jit(cxfm.Scale.from_factors)
     with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
-        jax.block_until_ready(build(jnp.asarray([2.0, 0.0, 4.0])).S)
+        jax.block_until_ready(build(jnp.asarray([2.0, 0.0, 4.0])).s)
 
 
 def test_scale_from_factors_nonsingular_jits() -> None:
     """A valid Scale builds cleanly under jit."""
     op = eqx.filter_jit(cxfm.Scale.from_factors)(jnp.asarray([2.0, 3.0, 4.0]))
-    np.testing.assert_allclose(np.asarray(jnp.diag(op.S)), [2.0, 3.0, 4.0])
+    np.testing.assert_allclose(np.asarray(op.s), [2.0, 3.0, 4.0])
 
 
 def test_public_surface_includes_scale_and_shear() -> None:
@@ -208,19 +208,28 @@ def test_linear_velocity_on_nested_product_charts_recurses() -> None:
 
 
 def test_matrix_is_the_stored_field() -> None:
-    """For the four that store a matrix, the accessor is that matrix.
+    """For the three that store a matrix, the accessor is that matrix.
 
     Value equality, not identity: `_validate_square` routes through
     `eqx.error_if`, which returns a fresh array wrapping the same value.
+
+    `Scale` is not among them -- it stores the diagonal and rebuilds the matrix
+    -- so it has its own check below.
     """
     R = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     for op, field in [
         (cxfm.Rotate(R), "R"),
         (cxfm.Reflect.from_normal([1.0, 0.0, 0.0]), "H"),
-        (cxfm.Scale.from_factors([2.0, 3.0, 4.0]), "S"),
         (cxfm.Shear(R), "H"),
     ]:
         assert np.array_equal(np.asarray(op.matrix), np.asarray(getattr(op, field)))
+
+
+def test_scale_matrix_is_rebuilt_from_its_factors() -> None:
+    """`Scale` stores the diagonal, so `matrix` is `diag(s)`, not a field."""
+    op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+    assert op.s.shape == (3,)
+    assert np.array_equal(np.asarray(op.matrix), np.diag([2.0, 3.0, 4.0]))
 
 
 def test_matrix_rejects_a_non_square_field() -> None:
