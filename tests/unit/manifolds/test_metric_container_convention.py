@@ -37,6 +37,9 @@ _FLAT = [
     ("cart2d", cxc.cart2d, {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}),
     ("cart3d", cxc.cart3d, {k: u.Q(1.0, "m") for k in ("x", "y", "z")}),
     ("minkowskict", cxc.minkowskict, {k: u.Q(1.0, "m") for k in ("ct", "x", "y", "z")}),
+    # `cartnd` has its own rule, keyed on the point's trailing axis rather than
+    # on the chart's component count, so it can regress independently.
+    ("cartnd", cxc.cartnd, {"q": u.Q(jnp.asarray([1.0, 2.0, 3.0]), "m")}),
 ]
 
 _UNITED = [
@@ -78,7 +81,7 @@ def test_curvilinear_charts_carry_their_units(name, chart, point):
     del name
     d = _diagonal(chart, point)
     assert isinstance(d, ul.QuantityMatrix)
-    assert any(str(d.unit[i]) != "" for i in range(len(chart.components)))
+    assert any(d.unit[i] != u.unit("") for i in range(len(chart.components)))
 
 
 @pytest.mark.parametrize(
@@ -94,7 +97,7 @@ def test_intrinsic_charts_are_a_dimensionless_quantity_matrix(name, chart, point
     del name
     d = _diagonal(chart, point)
     assert isinstance(d, ul.QuantityMatrix)
-    assert all(str(d.unit[i]) == "" for i in range(len(chart.components)))
+    assert all(d.unit[i] == u.unit("") for i in range(len(chart.components)))
 
 
 def test_the_embedded_sphere_scales_as_radius_squared():
