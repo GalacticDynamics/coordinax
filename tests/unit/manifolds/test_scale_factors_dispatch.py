@@ -303,3 +303,30 @@ class TestScaleFactorsRequiresAnOrthogonalChart:
         chart = cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m"))
         at = {"mu": u.Q(2.0, "m2"), "nu": u.Q(0.5, "m2"), "phi": u.Angle(0.3, "rad")}
         assert cxm.scale_factors(chart, at=at).shape == (3,)
+
+
+class TestRoundMetricAgreesWithTheMatrixItShortcuts:
+    """The `RoundMetric` rule is a fast path for `metric_matrix`'s diagonal.
+
+    It skips forming the nxn matrix, so it must agree with the matrix rule
+    wherever both are defined.
+    """
+
+    def test_one_sphere_agrees_with_metric_matrix(self):
+        """S1 has no polar angle: ``components[:-1]`` is empty."""
+        at = {"phi": u.Angle(0.4, "rad")}
+        got = cxm.scale_factors(cxm.RoundMetric(1), cxc.sph1, at=at)
+        want = mm_dispatch(cxm.Sn(1), at, cxc.sph1)
+        assert got.shape == (1,)
+        assert jnp.allclose(got.value, want.diagonal.value)
+
+    def test_batched_agrees_with_metric_matrix(self):
+        """A batch must not be concatenated into the component axis."""
+        at = {
+            "theta": u.Angle(jnp.asarray([0.9, 1.1, 0.5]), "rad"),
+            "phi": u.Angle(jnp.asarray([0.4, 0.2, 0.3]), "rad"),
+        }
+        got = cxm.scale_factors(cxm.RoundMetric(2), cxc.sph2, at=at)
+        want = mm_dispatch(cxm.Sn(2), at, cxc.sph2)
+        assert got.shape == (3, 2)
+        assert jnp.allclose(got.value, want.diagonal.value)
