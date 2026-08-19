@@ -453,6 +453,49 @@ bt_circle = cxfc.BishopBuilder(arc_circle, "km")
 bt_circle.tangent(u.Q(1.0, "km"))
 ```
 
+### A Station on a Curve That Moves
+
+When the wrapped curve is time-dependent, `gamma(s, t)`, the builder's call-time parameter becomes the **time**, and `station` fixes where along the curve the frame sits. Which wrapper you reach for decides what "where" means:
+
+```python
+def stretching(s, t):
+    """A curve that stretches and bends as t grows."""
+    sv, tv = s.ustrip("km"), t.ustrip("s")
+    return u.Q(
+        jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, jnp.zeros_like(sv)]), "km"
+    )
+
+
+s0 = u.Q(1.3, "km")
+
+# Eulerian: a fixed *arc length* along whatever the curve is now
+eulerian = cxfc.BishopBuilder(cxfc.ArcLength(stretching, "km"), "km", station=s0)
+
+# Lagrangian: the material point that was at s0 on the reference slice
+material = cxfc.BishopBuilder(
+    cxfc.LagrangianArcLength(stretching, u.Q(0.0, "s"), "km"), "km", station=s0
+)
+```
+
+On a curve that stretches, the two separate. The Eulerian station stays put — it is defined by arc length, which is re-measured on each slice — while the material one is carried outwards with the curve:
+
+| t   | Eulerian distance from origin | Lagrangian |
+| --- | ----------------------------- | ---------- |
+| 0.0 | 1.300                         | 1.300      |
+| 0.8 | 1.299                         | 1.825      |
+| 1.7 | 1.299                         | 2.422      |
+
+```python
+def radius(b, t_val):
+    return float(jnp.linalg.norm(b.location(u.Q(t_val, "s")).ustrip("km")))
+
+
+assert abs(radius(eulerian, 1.7) - 1.3) < 0.01  # Eulerian holds its arc length
+assert radius(material, 1.7) > 2.0  # the material point is carried out
+```
+
+They coincide at `t = 0` only because that is the reference slice. A rigid motion cannot tell them apart; a stretching one can, which is why it is the honest test.
+
 For the different shapes an arc-length curve can arrive in — including a user's own class parametrised by time, by arc length, as a two-argument combo, or backed by sampled data — see {doc}`the BYO curve tutorial <byo_curve>`. For the Eulerian/Lagrangian distinction for time-dependent curves and a stitching pitfall, see {ref}`Working With Curve Charts <arc-length-reparametrisation>`'s _Arc-Length Reparametrisation_ section.
 
 ## Design Notes

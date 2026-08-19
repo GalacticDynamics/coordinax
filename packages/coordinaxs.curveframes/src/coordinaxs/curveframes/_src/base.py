@@ -44,6 +44,16 @@ FrameT = TypeVar(
 #: Hence the explicit TypeVar, and the `noqa` at the signature.
 BuilderT = TypeVar("BuilderT", bound="AbstractCurveFrameBuilder")
 
+_MSG_TAU_UNIT_DIMENSION = (
+    "this curve exposes a parameter of dimension {want}, but `tau_unit` is "
+    "{unit!r}, which is {got}. `tau_unit` defaults to 's', so this is usually "
+    "a forgotten argument: a builder over an arc-length curve needs a length, "
+    "e.g. `BishopBuilder(ArcLength(curve, 'km'), 'km')`. Left as-is, "
+    "`location` would still return correct positions -- it never consults the "
+    "unit -- while `tangent` and `rotation_matrix` would fail later inside "
+    "the derivative."
+)
+
 _MSG_TWO_ARGUMENT_NEEDS_STATION = (
     "this curve takes two positional arguments, `gamma(tau, t)`, so the "
     "builder's call-time parameter is the time `t` and the station along the "
@@ -160,6 +170,26 @@ class AbstractCurveFrameBuilder(eqx.Module):
         """
         if _is_two_argument(self.curve) and self.station is None:
             raise ValueError(_MSG_TWO_ARGUMENT_NEEDS_STATION)
+
+        # A curve that knows what it exposes is checked against `tau_unit`
+        # here, where the mistake is, rather than left to surface unevenly
+        # later: `location` ignores `tau_unit` and returns correct positions,
+        # while the autodiff paths raise a conversion error far from the
+        # construction that caused it (#718).
+        #
+        # Read from the *instance*, not the type, so a wrapper can forward
+        # what it wraps -- `AtTime(ArcLength(...), t)` still exposes a
+        # length, and that is the composition the docs recommend, so it is
+        # the one most worth catching.
+        want = getattr(self.curve, "_param_dimension", None)
+        if want is not None:
+            got = str(u.dimension_of(self.tau_unit))
+            if got != want:
+                raise ValueError(
+                    _MSG_TAU_UNIT_DIMENSION.format(
+                        want=want, unit=str(self.tau_unit), got=got
+                    )
+                )
 
     def _resolve(  # noqa: PYI019  (see BuilderT: `Self` breaks beartype)
         self: BuilderT, tau: Any, /

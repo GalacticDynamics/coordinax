@@ -25,7 +25,7 @@ __all__ = ("ArcLength", "LagrangianArcLength")
 import inspect
 
 from collections.abc import Callable
-from typing import Any, cast, final
+from typing import Any, ClassVar, cast, final
 
 import diffrax as dfx
 import equinox as eqx
@@ -418,9 +418,18 @@ _MSG_S_MAX_TWO_ARGUMENT = (
 def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     """Report whether ``curve`` takes ``(tau, t)`` rather than just ``(tau)``.
 
-    The question is what the *call* accepts, so the second parameter must be
-    both **positional** and **required**. Weakening either half misreads
-    ordinary signatures:
+    A wrapper that *knows* its own arity is asked first, via a
+    ``_two_argument`` attribute. `ArcLength` defaults ``t`` in its
+    ``__call__`` so that a wrapped one-argument curve can still be called
+    ``arc(s)`` -- convenient, but it makes the signature describe the
+    wrapper rather than what it wraps, and a builder consulting that
+    signature concludes "one-argument" for a wrapper that genuinely needs a
+    time. `AtTime` needs no such attribute: it binds the time, so being
+    one-argument is the truth about it (see #748).
+
+    Otherwise the signature is read. The question is then what the *call*
+    accepts, so the second parameter must be both **positional** and
+    **required**. Weakening either half misreads ordinary signatures:
 
     ============================  ====================  ==================
     signature                     ``curve(tau)`` works  reading
@@ -447,6 +456,10 @@ def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     an ambiguous one, so it raises here with its own message instead of being
     forced into a reading that cannot work.
     """
+    declared = getattr(curve, "_two_argument", None)
+    if isinstance(declared, bool):
+        return declared
+
     try:
         params = list(inspect.signature(curve).parameters.values())
     except (TypeError, ValueError) as e:
@@ -586,6 +599,12 @@ class ArcLength(eqx.Module):
     `None` (the default) keeps the per-call solve. Only valid for a
     one-argument ``curve``; see the class docstring.
     """
+
+    #: Dimension of the parameter this wrapper *exposes*. Reparametrising by
+    #: arc length makes it a length, whatever the wrapped curve was
+    #: parametrised by -- so a builder over this can check its `tau_unit`
+    #: against it at construction rather than failing later (#718).
+    _param_dimension: ClassVar[str] = "length"
 
     _two_argument: bool = eqx.field(static=True)
     """Whether ``curve`` takes ``(tau, t)`` rather than just ``tau``.
@@ -747,6 +766,10 @@ class LagrangianArcLength(eqx.Module):
     Q([1.5, 0. , 0. ], 'km')
 
     """
+
+    #: Same as `ArcLength`: the exposed parameter is an arc length, though
+    #: measured on the fixed reference slice `t0` rather than the current one.
+    _param_dimension: ClassVar[str] = "length"
 
     curve: Callable[[Any, Any], Any]
     """The wrapped, two-argument curve."""
