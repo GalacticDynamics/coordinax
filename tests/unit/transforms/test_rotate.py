@@ -23,6 +23,14 @@ class TestRotationMatrixIsDimensionless:
     """
 
     def test_dimensionless_quantity_is_stripped(self):
+        """Also pins that the converter runs despite `Rotate.__init__`.
+
+        `Rotate` defines a custom ``__init__`` that assigns ``R`` through
+        `object.__setattr__`, which looks like it would bypass the field
+        converter. Equinox re-applies converters after ``__init__`` regardless,
+        so it does not -- but the reading is easy to get wrong, and deleting
+        the converter on that belief would restore the bug silently.
+        """
         op = cxfm.Rotate(u.Q(_RZ90, ""))
         assert not isinstance(op.R, u.AbstractQuantity)
 
