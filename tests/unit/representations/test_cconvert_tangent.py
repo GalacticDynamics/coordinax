@@ -155,3 +155,63 @@ class TestCconvertAtRequired:
             cxr.cconvert(
                 v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, cxr.coord_disp, usys=usys
             )
+
+
+_T = 0.7
+
+
+def _gamma(t):
+    """A helix in cart3d: the trajectory both transformation laws are read off."""
+    return jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t])
+
+
+def _to_sph(xyz):
+    x, y, z = xyz
+    r = jnp.sqrt(x**2 + y**2 + z**2)
+    return jnp.stack([r, jnp.arccos(z / r), jnp.arctan2(y, x)])
+
+
+def _sph_of_t(t):
+    return _to_sph(_gamma(t))
+
+
+_XYZ = _gamma(_T)
+_V = jax.jacfwd(_gamma)(_T)
+_A = jax.jacfwd(jax.jacfwd(_gamma))(_T)
+_AT = dict(zip("xyz", _XYZ, strict=True))
+
+
+def _convert(vec, kind):
+    """Convert a cart3d tangent vector to sph3d, at the point on the curve."""
+    v = dict(zip("xyz", vec, strict=True))
+    got = cxr.cconvert(v, cxc.cart3d, kind, cxc.sph3d, kind, at=_AT, usys=usys)
+    return np.asarray([float(got[k]) for k in ("r", "theta", "phi")])
+
+
+class TestAccelerationPushesForwardAsAVector:
+    """An acceleration is a tangent vector, so it converts as ``J a``.
+
+    The two differ by the Christoffel term, so they disagree in spherical
+    coordinates on flat R^3.
+    """
+
+    def test_it_is_the_linear_pushforward(self):
+        """``J a`` exactly -- the transformation law for a tangent vector."""
+        want = np.asarray(jax.jacfwd(_to_sph)(_XYZ) @ _A)
+        got = _convert(_A, cxr.coord_acc)
+        np.testing.assert_allclose(got, want, rtol=0, atol=1e-14)
+
+    def test_it_is_not_the_coordinate_second_derivative(self):
+        """The two differ by the Christoffel term, here on *flat* R^3.
+
+        If this ever starts passing, `cconvert` has begun adding the
+        non-tensorial term and accelerations no longer transform as vectors.
+        """
+        qddot = np.asarray(jax.jacfwd(jax.jacfwd(_sph_of_t))(_T))
+        assert np.max(np.abs(_convert(_A, cxr.coord_acc) - qddot)) > 0.5
+
+    def test_velocity_has_no_such_gap(self):
+        """First derivatives *are* tangent vectors, so velocity agrees with d/dt."""
+        want = np.asarray(jax.jacfwd(_sph_of_t)(_T))
+        got = _convert(_V, cxr.coord_vel)
+        np.testing.assert_allclose(got, want, rtol=0, atol=1e-14)
