@@ -539,39 +539,3 @@ constraint-dependencies = [
 
 [tool.uv.workspace]
 members = ["packages/*"]
-
-# `equinox.AbstractVar` is `Annotated[T, "AbstractVar"]` to a type checker (see
-# equinox `_better_abstract.py`), i.e. indistinguishable from a real field, so
-# `dataclass_transform` counts it in the synthesised `__init__`. At runtime
-# equinox strips it -- `dataclasses.fields(Point)` is `(data, chart, frame)` and
-# `Point.__abstractvars__` is empty -- so these constructor calls are correct.
-#
-# Latent until quax 0.4.2, whose metaclass `__call__` went from `-> Any` to
-# `type[_T] -> _T`; the old signature erased the synthesised constructor and
-# checkers skipped argument checking entirely. That change is right, so this is
-# not a quax bug. `pyright` reports the same errors, so it is not ty-specific.
-# Upstream: https://github.com/patrick-kidger/equinox/issues/1256
-#
-# Scoped to the files that construct these classes, so the rules stay live
-# everywhere else. Remove when equinox can express "not a field" statically.
-[[tool.ty.overrides]]
-include = [
-  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy/_src/frames.py",
-  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy/_src/vec_constructors.py",
-  "packages/coordinaxs.interop.astropy/src/coordinaxs/interop/astropy/_src/vec_converters.py",
-  "src/coordinax/vectors/_src/point.py",
-  "src/coordinax/vectors/_src/register_cx.py",
-  "src/coordinax/vectors/_src/tangent.py",
-]
-
-[tool.ty.overrides.rules]
-missing-argument = "ignore"
-
-# Same cause, different symptom: `type(x)(...)` on an `AbstractDistance`
-# resolves to the abstract base, whose synthesised `__init__` does not carry
-# `check_negative`. `Distance.__init__` does accept it -- verified at runtime.
-[[tool.ty.overrides]]
-include = ["src/coordinax/distances/_src/register_primitives.py"]
-
-[tool.ty.overrides.rules]
-unknown-argument = "ignore"
