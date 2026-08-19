@@ -46,29 +46,49 @@ _MSG_NOT_SPACELIKE = (
 )
 
 
-def _as_float(x: Any, /) -> float:
+_MSG_NOT_SCALAR = (
+    "causal_character, proper_time and proper_distance need scalar input, and "
+    "{what} is not. Each branches on the sign of the interval, so a batch of "
+    "events has no single causal character and a per-element tolerance has "
+    "nothing to apply to. Map over the batch yourself -- `jax.vmap` cannot "
+    "help, as the result is a Python branch. `interval` itself is batched, so "
+    "classify its output if that is enough."
+)
+
+
+def _as_float(x: Any, what: str, /) -> float:
     """Return *x* as a plain float, stripping units only if it has any.
 
     `chart.check_data(..., values=False)` permits bare arrays alongside
     quantities, so a components-have-units assumption would break the
     bare-array path.
+
+    Non-scalar input is refused here rather than by `float`, whose
+    ``Only scalar arrays can be converted to Python scalars`` names nothing the
+    caller wrote. ``what`` names the offending argument: everything these verbs
+    branch on funnels through here, the events and ``atol`` alike.
     """
     unit = u.unit_of(x)
-    return float(x if unit is None else u.ustrip(unit, x))
+    val = x if unit is None else u.ustrip(unit, x)
+    if jnp.ndim(val) != 0:
+        raise ValueError(_MSG_NOT_SCALAR.format(what=what))
+    return float(val)
 
 
 def _classify(ds2: Any, a: CDict, b: CDict, keys: tuple[str, ...], atol: Any, /) -> str:
     """Classify a precomputed interval, so callers evaluate it only once."""
-    ds2_val = _as_float(ds2)
+    ds2_val = _as_float(ds2, "the event pair")
 
     if atol is None:
         # Scale-free default: compare against the largest squared coordinate
         # difference, so "close to zero" means small *relative to the data*
         # rather than small in whatever unit the caller happened to use.
-        scale = max((_as_float(b[k] - a[k]) ** 2 for k in keys), default=1.0)
+        scale = max(
+            (_as_float(b[k] - a[k], "the event pair") ** 2 for k in keys), default=1.0
+        )
         tol = 1e-8 * max(scale, 1.0)
     else:
-        tol = _as_float(atol)
+        tol = _as_float(atol, "`atol`")
 
     if ds2_val < -tol:
         return "timelike"
