@@ -425,9 +425,12 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         True
 
         """
-        g = self._param(tau)
-        T_val = self._tangent_at(g).value
-        U1_val = self._solve_U1(g)
+        # For a two-argument curve `tau` is the time: transport runs along
+        # that time slice, at the pinned station. See `_resolve`.
+        b, p = self._resolve(tau)
+        g = b._param(p)
+        T_val = b._tangent_at(g).value
+        U1_val = b._solve_U1(g)
         U2_val = jnp.cross(T_val, U1_val)
         return jnp.stack([T_val, U1_val, U2_val])
 
@@ -457,7 +460,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         Q([-0.,  1.,  0.], '')
 
         """
-        return u.Q(self._tangent_at(self._param(tau)).value, "")
+        b, p = self._resolve(tau)
+        return u.Q(b._tangent_at(b._param(p)).value, "")
 
     def normal1(self, tau: Any, /) -> u.Q:
         r"""First parallel-transported normal $\mathbf{U}_1(\tau)$ (row 1 of R).
