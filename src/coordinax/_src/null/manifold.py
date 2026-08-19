@@ -64,19 +64,18 @@ no_manifold = NoManifold()
 def metric_matrix(
     M: NoManifold, point: dict, chart: AbstractChart, /
 ) -> AbstractMetricMatrix:
-    """Refuse, naming the manifold as the reason.
+    """Refuse, naming the missing manifold as the reason.
 
-    The generic fallback tells the caller to register a rule. That is the wrong
-    advice here: `NoManifold` is the sentinel for "no manifold specified", and a
-    chart that declares one -- `~coordinax.charts.PoincarePolar6D`, whose phase
-    space carries a symplectic form rather than a metric -- has no metric to
-    register in the first place.
+    The generic fallback advises registering a dispatch rule -- wrong for both
+    populations that reach here: a chart that left `M` unset, and one that
+    declares `no_manifold` by design.
     """
     del M, point
     msg = (
-        f"{type(chart).__name__!r} has no manifold (`M` is `no_manifold`), so it "
-        "has no metric to compute. A chart on phase space carries a symplectic "
-        "form rather than a metric; if this chart should have one, pair it with "
-        "the manifold whose geometry you mean."
+        f"{type(chart).__name__!r} has no manifold (`M` is `no_manifold`), so "
+        "there is no metric to compute. Pair the chart with the manifold whose "
+        "geometry you mean. Some charts declare no manifold by design -- a "
+        "phase-space chart carries a symplectic form rather than a metric -- "
+        "and for those there is no metric to ask for."
     )
     raise NotImplementedError(msg)

@@ -395,25 +395,12 @@ class TestChartsWithoutAnOrdinaryMetric:
     """Two edge charts that reached a raw error instead of an answer or a reason."""
 
     def test_zero_dimensional_chart_has_the_empty_metric(self):
-        """A point has no coordinates, so its metric is the unique 0x0 form.
-
-        The generic rule differentiates the chart's map to Cartesian; with no
-        components there is nothing to stack into a Jacobian, and it raised
-        ``Need at least one array to stack.``
-        """
+        """A point has no coordinates, so its metric is the unique 0x0 form."""
         g = cxmapi.metric_matrix(cxm.R0, {}, cxc.cart0d)
         assert jnp.asarray(g.matrix.value).shape == (0, 0)
 
     def test_a_metricless_chart_says_why_rather_than_how_to_register(self):
-        """`PoincarePolar6D` is phase space: a symplectic form, not a metric.
-
-        The generic fallback told the caller to register a dispatch rule, which
-        is the one thing that would be wrong here.
-        """
-        with pytest.raises(NotImplementedError, match="no manifold"):
-            cxmapi.metric_matrix(cxc.poincarepolar6d.M, {}, cxc.poincarepolar6d)
-
-    def test_the_refusal_does_not_advise_registering_a_rule(self):
-        with pytest.raises(NotImplementedError) as excinfo:
+        """`PoincarePolar6D` is phase space: a symplectic form, not a metric."""
+        with pytest.raises(NotImplementedError, match="no manifold") as excinfo:
             cxmapi.metric_matrix(cxc.poincarepolar6d.M, {}, cxc.poincarepolar6d)
         assert "@plum.dispatch" not in str(excinfo.value)

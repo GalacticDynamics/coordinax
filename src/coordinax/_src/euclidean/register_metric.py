@@ -502,11 +502,7 @@ def metric_matrix(
 
 
 def _identity_dense(n: int, /) -> DenseMetric:
-    """Dimensionless identity metric of dimension ``n``.
-
-    `UnitsMatrix.full`, not a nested tuple: they agree for every ``n > 0``, and
-    only `full` can express the empty ``0 x 0`` case.
-    """
+    """Dimensionless identity metric of dimension ``n``."""
     return DenseMetric(
         ul.QuantityMatrix(jnp.eye(n), unit=ul.UnitsMatrix.full((n, n), ""))
     )
