@@ -119,8 +119,12 @@ class Linear(AbstractLinearTransform):
 
         The group is carried across unchanged -- a group is closed under
         inverses, so whatever the matrix belonged to, its inverse does too.
+
+        Through `matrix` rather than the raw field, so a malformed one is caught
+        with the same message as everywhere else instead of surfacing as a raw
+        shape error out of `jnp.linalg.inv`.
         """
-        return type(self)(jnp.linalg.inv(self.M), self.group)
+        return type(self)(jnp.linalg.inv(self.matrix), self.group)
 
     @property
     def _raw_matrix(self) -> Any:
@@ -146,7 +150,8 @@ def simplify(op: Linear, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     The identity-matrix check inspects values, so it is skipped when
     ``approx=False``.
     """
-    if approx and jnp.allclose(op.M, jnp.eye(op.M.shape[0], dtype=op.M.dtype), **kw):
+    m = op.matrix
+    if approx and jnp.allclose(m, jnp.eye(m.shape[0], dtype=m.dtype), **kw):
         return identity
     return op
 

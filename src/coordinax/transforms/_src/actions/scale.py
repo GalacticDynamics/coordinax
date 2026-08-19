@@ -116,7 +116,11 @@ class Scale(AbstractLinearTransform):
         Deferred like the singular check so it survives `jit`: a plain `bool`
         on a traced value raises `TracerBoolConversionError`.
         """
-        if matrix.ndim != 2:  # let the base's square check produce the message
+        # Non-square too, not just non-2D: `jnp.diag(jnp.diagonal(m))` on a
+        # (3, 2) builds a (2, 2), and the subtraction below then dies with a
+        # raw broadcasting error before the base can say "requires a square
+        # matrix". Both shapes are the base's to report.
+        if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
             return matrix
         off = matrix - jnp.diag(jnp.diagonal(matrix))
         return eqx.error_if(matrix, jnp.any(off != 0), _MSG_NOT_DIAGONAL)
@@ -147,12 +151,17 @@ def simplify(op: Scale, /, *, approx: bool = True, **kw: Any) -> AbstractTransfo
     The identity-matrix check inspects values, so it is skipped when
     ``approx=False``.
     """
-    if approx and jnp.allclose(op.S, jnp.eye(op.S.shape[0], dtype=op.S.dtype), **kw):
+    m = op.matrix
+    if approx and jnp.allclose(m, jnp.eye(m.shape[0], dtype=m.dtype), **kw):
         return identity
     return op
 
 
 @plum.dispatch
 def _merge(a: Scale, b: Scale, /) -> AbstractTransform | None:
-    """Merge two adjacent scalings (``a`` applied first) into one, as ``b.S @ a.S``."""
-    return Scale(b.S @ a.S)
+    """Merge two adjacent scalings (``a`` applied first) into ``b.matrix @ a.matrix``.
+
+    Through `matrix` rather than the raw fields, so a malformed operand is
+    reported by the shared validation instead of a raw matmul shape error.
+    """
+    return Scale(b.matrix @ a.matrix)
