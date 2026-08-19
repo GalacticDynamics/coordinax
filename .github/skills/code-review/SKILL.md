@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Review a change to coordinax. Use when reviewing a pull request, diff, or commit in this repository, and when asked what to check before merging. Covers spec conformance, batch safety of scalar-first chart and metric code, plum/quax dispatch hygiene, chart transition routing, representation and basis semantics, metric signature and units, jit-safe validation, dispatch caching on hot paths, Hypothesis strategy feasibility, and which docs a diff should have updated.
+---
+
 # Reviewing coordinax changes
 
 `coordinax` is differential geometry as data structures: numbers plus a chart, a representation, and a frame, in JAX. Two structural properties follow, and between them they account for nearly every real defect in this repository:
