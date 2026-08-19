@@ -142,6 +142,16 @@ class Scale(AbstractLinearTransform):
         """
         return self._from_diagonal(1.0 / self.s)
 
+    def _contract(self, matrix: Any, arr: Any, /) -> Any:
+        """Scale each axis, rather than contracting a mostly-zero matrix.
+
+        Takes the diagonal of the *validated* ``matrix`` rather than reading
+        `s` directly: the shape checks ride along on that array as deferred
+        `equinox.error_if` nodes, and reading the field instead would silently
+        drop them.
+        """
+        return jnp.diagonal(matrix) * arr
+
     @property
     def _raw_matrix(self) -> Any:
         # No re-validation: `s` is a vector, so the matrix it builds is square
