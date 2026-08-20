@@ -18,6 +18,7 @@ caught rather than absorbed.
 
 import math
 
+import equinox as eqx
 import pytest
 
 import unxt as u
@@ -58,8 +59,15 @@ def test_core_rejects_outside_the_generated_domain(chart, component, bounds) -> 
     _lo, hi = bounds
     point = {
         k: u.Angle(0.1, "rad") if d == "angle" else u.Q(1.0, "m")
-        for k, d in zip(chart.components, chart.coord_dimensions, strict=False)
+        # `strict=True`: these are the chart's own parallel declarations, so a
+        # length mismatch is a broken chart. Dropping components silently would
+        # fail this test on a missing key rather than on the bound it is about.
+        for k, d in zip(chart.components, chart.coord_dimensions, strict=True)
     }
     point[component] = u.Angle(hi + 0.5, "rad")
-    with pytest.raises(Exception, match=r"(?i)must be|range|between"):
+    # The pair `tests/unit/charts/test_checks.py` uses: `eqx.error_if` raises
+    # `EquinoxRuntimeError` from inside JIT and `ValueError` outside it.
+    with pytest.raises(
+        (eqx.EquinoxRuntimeError, ValueError), match="must be in the range"
+    ):
         chart.check_data(point, keys=False, values=True)
