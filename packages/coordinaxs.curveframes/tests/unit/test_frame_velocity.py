@@ -8,6 +8,7 @@ and these tests pin that the library never overrides it.
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 import unxt as u
 
@@ -52,10 +53,18 @@ def test_plain_curve_is_material() -> None:
 
 
 def test_arclength_is_eulerian() -> None:
-    """Wrapping in `ArcLength` re-measures per slice, so the label advects."""
+    """Wrapping in `ArcLength` re-measures per slice, so the label advects.
+
+    Asserted as the size of the departure rather than as `not allclose`: a NaN
+    compares False against everything, so the negative form alone would pass
+    on an all-NaN result -- the exact failure mode the guards in this package
+    exist to prevent.
+    """
     arc = cxfc.ArcLength(stretch_and_bend, "km")
     got = dt_at_fixed_label(arc, S0, T0)
-    assert not jnp.allclose(got, MATERIAL_VELOCITY)
+    assert jnp.isfinite(got).all()
+    advection = float(jnp.linalg.norm(got - MATERIAL_VELOCITY))
+    assert advection == pytest.approx(0.6677, abs=1e-3)
 
 
 def test_lagrangian_arclength_restores_the_material_velocity() -> None:
