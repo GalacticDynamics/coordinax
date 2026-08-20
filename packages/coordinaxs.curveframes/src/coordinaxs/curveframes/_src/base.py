@@ -18,7 +18,7 @@ import dataclasses
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any
+from typing import Any, cast
 from typing_extensions import TypeVar
 
 import equinox as eqx
@@ -54,6 +54,46 @@ _MSG_TAU_UNIT_DIMENSION = (
     "correct positions, since it never consults the unit, while `tangent` and "
     "`rotation_matrix` would fail later inside the derivative."
 )
+
+
+_MSG_TAU_UNIT_UNINFERABLE = (
+    "this builder has no `tau_unit` and was called with a parameter that "
+    "carries no unit, so there is nothing to read it off. Either pass a "
+    "`Quantity` parameter, e.g. `builder(u.Q(1.0, 's'))`, or declare the unit "
+    "on the builder, e.g. `BishopBuilder(curve, 's')`, which is what a raw "
+    "(unitless) parameter needs."
+)
+
+
+def unit_or_none(obj: Any, /) -> u.AbstractUnit | None:
+    """Field converter: pass `None` through, otherwise coerce to a unit.
+
+    `None` is not "no unit", it is *infer the unit from the parameter the
+    builder is called with* -- see `AbstractCurveFrameBuilder._tau_unit_at`.
+    """
+    return None if obj is None else cast("u.AbstractUnit", u.unit(obj))
+
+
+def check_param_dimension(curve: Any, tau_unit: u.AbstractUnit, /) -> None:
+    """Raise if ``tau_unit`` contradicts the dimension ``curve`` declares.
+
+    Read from the *instance*, not the type, so a wrapper can forward what it
+    wraps -- `AtTime(ArcLength(...), t)` still exposes a length, and that is
+    the composition the docs recommend, so it is the one most worth catching.
+
+    A curve that declares nothing is unconstrained: most curves are bare
+    functions, and a Python callable cannot be asked what unit its argument
+    takes.
+    """
+    want = getattr(curve, "_param_dimension", None)
+    if want is None:
+        return
+    got = str(u.dimension_of(tau_unit))
+    if got != want:
+        raise ValueError(
+            _MSG_TAU_UNIT_DIMENSION.format(want=want, unit=tau_unit, got=got)
+        )
+
 
 _MSG_TWO_ARGUMENT_NEEDS_STATION = (
     "this curve takes two positional arguments, `gamma(tau, t)`, so the "
@@ -131,9 +171,11 @@ class AbstractCurveFrameBuilder(eqx.Module):
     curve : Callable
         The curve $\tau \mapsto \boldsymbol{\gamma}(\tau)$, mapping a
         parameter `Quantity` to a Cartesian 3-vector `Quantity`.
-    tau_unit : AbstractUnit
+    tau_unit : AbstractUnit, optional
         Physical unit of the curve parameter (e.g. ``"s"``).  Static: it selects
-        the differentiation units, not a numeric value.
+        the differentiation units, not a numeric value.  `None` (the default)
+        reads it off the parameter the builder is called with, which is what
+        a `Quantity` already carries -- see `_tau_unit_at`.
     station : Any, optional
         A *fixed* curve parameter — a station along the curve.  When `None`
         (the default) $\tau$ itself is the curve parameter — the classic
@@ -144,7 +186,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
     """
 
     curve: eqx.AbstractVar[Callable[[Any], Any]]
-    tau_unit: eqx.AbstractVar[u.AbstractUnit]
+    tau_unit: eqx.AbstractVar[u.AbstractUnit | None]
     station: eqx.AbstractVar[Any]
 
     def __check_init__(self) -> None:
@@ -172,25 +214,17 @@ class AbstractCurveFrameBuilder(eqx.Module):
         if _is_two_argument(self.curve) and self.station is None:
             raise ValueError(_MSG_TWO_ARGUMENT_NEEDS_STATION)
 
-        # A curve that knows what it exposes is checked against `tau_unit`
-        # here, where the mistake is, rather than left to surface unevenly
-        # later: `location` ignores `tau_unit` and returns correct positions,
-        # while the autodiff paths raise a conversion error far from the
-        # construction that caused it (#718).
+        # A curve that knows what it exposes is checked against a *declared*
+        # `tau_unit` here, where the mistake is, rather than left to surface
+        # unevenly later: `location` ignores `tau_unit` and returns correct
+        # positions, while the autodiff paths raise a conversion error far
+        # from the construction that caused it (#718).
         #
-        # Read from the *instance*, not the type, so a wrapper can forward
-        # what it wraps -- `AtTime(ArcLength(...), t)` still exposes a
-        # length, and that is the composition the docs recommend, so it is
-        # the one most worth catching.
-        want = getattr(self.curve, "_param_dimension", None)
-        if want is not None:
-            got = str(u.dimension_of(self.tau_unit))
-            if got != want:
-                raise ValueError(
-                    _MSG_TAU_UNIT_DIMENSION.format(
-                        want=want, unit=self.tau_unit, got=got
-                    )
-                )
+        # An undeclared unit has nothing to check yet -- there is no wrong
+        # answer to catch until a parameter arrives. `_tau_unit_at` runs the
+        # same check on the inferred unit at that point.
+        if self.tau_unit is not None:
+            check_param_dimension(self.curve, self.tau_unit)
 
     def _resolve(  # noqa: PYI019  (see BuilderT: `Self` breaks beartype)
         self: BuilderT, tau: Any, /
@@ -219,6 +253,38 @@ class AbstractCurveFrameBuilder(eqx.Module):
         return self, tau
 
     # ---------------------------------------------------------------
+
+    def _tau_unit_at(self, param: Any, /) -> u.AbstractUnit:
+        r"""Resolve the curve parameter's unit: declared, or read off ``param``.
+
+        A declared `tau_unit` wins, so the explicit form keeps working
+        unchanged. `None` reads `unxt.unit_of` on the parameter actually being
+        evaluated -- the station when one is pinned, otherwise the call-time
+        $\tau$ -- which is the unit the caller has already stated by handing
+        over a `Quantity`.
+
+        Inferring is *safer* than any default, including a correct one: a
+        declared unit is a second, independent statement of the same fact, and
+        two statements can disagree. `unxt.experimental.jacfwd` converts rather
+        than reinterprets, so on a curve that reads its argument with `ustrip`
+        the disagreement is absorbed and the answer stays right; on a curve
+        that reads `.value` it is not, and the frame comes back silently wrong.
+        Reading the unit off the parameter removes the second statement, so
+        there is nothing left to disagree.
+
+        Declaring it still earns its place in two cases the parameter cannot
+        settle: a curve that reads `.value` rather than converting, and a raw
+        (unitless) parameter, which carries no unit to read.
+        """
+        if self.tau_unit is not None:
+            return self.tau_unit
+        tau_unit = cast("u.AbstractUnit | None", u.unit_of(param))
+        if tau_unit is None:
+            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE)
+        # Same check `__check_init__` runs on a declared unit -- for an
+        # inferred one this is the first moment it can run at all.
+        check_param_dimension(self.curve, tau_unit)
+        return tau_unit
 
     def _param(self, tau: Any, /) -> Any:
         """Return the curve parameter: ``tau``, or the fixed ``station``."""

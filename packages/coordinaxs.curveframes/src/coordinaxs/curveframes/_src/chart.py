@@ -107,7 +107,13 @@ class TubularChart(AbstractParameterizedChart):
     def coord_dimensions(self) -> tuple[str, str, str]:
         # The first coordinate inherits whatever the curve is parameterised by,
         # so this cannot be a class-level tuple the way most charts declare it.
-        return (str(u.dimension_of(self.builder.tau_unit)), "length", "length")
+        #
+        # `tau_bounds` is the source rather than the builder: it is a required
+        # field holding the tau range as a `Quantity`, so it carries the unit
+        # structurally -- which is what this property needs and an inferring
+        # builder, having no call parameter here, cannot supply.
+        tau_unit = self.builder._tau_unit_at(self.tau_bounds[0])
+        return (str(u.dimension_of(tau_unit)), "length", "length")
 
     @property
     def cartesian(self) -> cxc.Cart3D:
@@ -174,7 +180,7 @@ class TubularChart(AbstractParameterizedChart):
         matters.
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
-        unit = self.builder.tau_unit
+        unit = self.builder._tau_unit_at(tau)
         # Derive the unit from the curve (as ``nearest.py`` and
         # ``register_ptmap.py`` do), not hardcode `"km"`: the scale cancels in
         # `dot(dx,T)/speed`, but a hardcoded unit raises `UnitConversionError`

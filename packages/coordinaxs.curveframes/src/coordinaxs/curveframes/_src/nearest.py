@@ -96,7 +96,9 @@ def nearest_tau(
     True
 
     """
-    unit = builder.tau_unit
+    # The bounds are the tau range, so they carry tau's unit themselves -- no
+    # need to consult the builder, which may not have one declared.
+    unit = builder._tau_unit_at(bounds[0])
     # `jnp.asarray` narrows only here: `ustrip` is typed as a broad union, and
     # `ty` rejects `hi - lo` between two of them. Everywhere else the bare
     # `ustrip` is enough.

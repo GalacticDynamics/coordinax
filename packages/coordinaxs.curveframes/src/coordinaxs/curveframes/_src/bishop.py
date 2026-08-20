@@ -49,7 +49,7 @@ __all__ = ("BishopBuilder", "BishopFrame")
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, cast, final
+from typing import Any, final
 
 import diffrax as dfx
 import equinox as eqx
@@ -59,7 +59,12 @@ from diffraxtra import DiffEqSolver
 import coordinax.transforms as cxfm
 import unxt as u
 
-from .base import AbstractCurveFrameBuilder, AbstractParallelTransportFrame, FrameT
+from .base import (
+    AbstractCurveFrameBuilder,
+    AbstractParallelTransportFrame,
+    FrameT,
+    unit_or_none,
+)
 from .frenetserret import _normalize
 
 #: Default integrator for the parallel-transport ODE.  `DirectAdjoint` is the
@@ -191,11 +196,14 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     curve : Callable
         A function ``tau -> Quantity[float, (3,)]``.  Make it an
         `equinox.Module` for differentiable curve parameters.
-    tau_unit : AbstractUnit or str
-        Unit of the curve parameter.  Required: there is no neutral default,
-        since a curve parameter may be a time, an arc length, or an affine
-        parameter, and the wrong unit is silently rescaled rather than
-        rejected when it is dimensionally compatible.
+    tau_unit : AbstractUnit or str, optional
+        Unit of the curve parameter.  `None` (the default) reads it off the
+        parameter the builder is called with.  There is no neutral unit to
+        default to -- a curve parameter may be a time, an arc length, or an
+        affine parameter -- so rather than pick one, take the one the caller
+        already stated by passing a `Quantity`.  Declare it for a curve that
+        reads its argument's ``.value`` rather than converting, or for a raw
+        (unitless) parameter, which carries no unit to read.
     station : optional
         A fixed station along the curve; see `AbstractCurveFrameBuilder`.
     tau_0 : Quantity, optional
@@ -279,6 +287,17 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     >>> type(fast.diffeqsolver.adjoint).__name__, fast.diffeqsolver.max_steps
     ('DirectAdjoint', 16384)
 
+    The unit may be left off, in which case it is read off the parameter --
+    which is a `Quantity`, so it states its own unit already:
+
+    >>> cxfc.BishopBuilder(helix).tangent(u.Q(0.0, "s"))
+    Q([-0.        ,  0.70710678,  0.70710678], '')
+
+    Declaring it is still accepted and gives the same answer:
+
+    >>> cxfc.BishopBuilder(helix, "s").tangent(u.Q(0.0, "s"))
+    Q([-0.        ,  0.70710678,  0.70710678], '')
+
     The Bishop frame works on a straight line (where Frenet-Serret is singular):
 
     >>> def line(tau: u.Q) -> u.Q:
@@ -295,10 +314,10 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     curve: Callable[[Any], Any]
     """The constructing curve."""
 
-    tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        static=True, converter=u.unit
+    tau_unit: u.AbstractUnit | None = eqx.field(
+        default=None, static=True, converter=unit_or_none
     )
-    """The unit of the curve parameter tau."""
+    """The unit of the curve parameter tau; `None` infers it from the call."""
 
     station: Any = None
     """Optional fixed station along the curve (a leaf); `None` means "use tau"."""
@@ -306,7 +325,9 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     tau_0: u.AbstractQuantity | None = None
     """Reference parameter value where the initial frame is defined (a leaf).
 
-    `None` is resolved to ``Q(0.0, tau_unit)`` by ``__post_init__``.
+    `None` is resolved to ``Q(0.0, tau_unit)`` by ``__post_init__`` when the
+    unit is declared, and at call time when it is being inferred -- the
+    earliest that unit is known.
     """
 
     initial_normal: Any = None
@@ -341,15 +362,25 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     """
 
     def __post_init__(self) -> None:
-        """Resolve a `None` ``tau_0`` to zero in ``tau_unit`` (a pytree leaf)."""
-        if self.tau_0 is None:
+        """Resolve a `None` ``tau_0`` to zero in a *declared* ``tau_unit``.
+
+        Materialising it is what makes the default ``tau_0`` a pytree leaf, and
+        so differentiable and vmappable exactly like an explicit one.
+
+        An inferred ``tau_unit`` is not known until a parameter arrives, so
+        there the resolution moves to `_solve_U1` and the *default* ``tau_0``
+        is not a leaf. Pass it explicitly to differentiate through it -- which
+        also declares its unit, and is the only way to say "start somewhere
+        other than zero" regardless.
+        """
+        if self.tau_0 is None and self.tau_unit is not None:
             self.tau_0 = u.Q(0.0, self.tau_unit)
 
     # ---------------------------------------------------------------
 
     def _tangent_at(self, g: Any, /) -> u.AbstractQuantity:
         r"""Compute unit tangent $\mathbf{T} = \gamma'/\|\gamma'\|$."""
-        dcurve = u.experimental.jacfwd(self.curve, units=(self.tau_unit,))
+        dcurve = u.experimental.jacfwd(self.curve, units=(self._tau_unit_at(g),))
         return _normalize(dcurve(g.astype(float)))
 
     def _solve_U1(self, g: Any, /) -> Array:
@@ -371,8 +402,16 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         derivative survives.  Both signs of $\Delta$ are handled by the same
         expression -- no forward-only workaround is needed.
         """
-        tau_unit = self.tau_unit
-        tau_0 = cast("u.AbstractQuantity", self.tau_0)
+        tau_unit = self._tau_unit_at(g)
+        # Resolve `tau_0` and restate it in `tau_unit`, so the nested
+        # `_tangent_at` below infers the same unit as this solve rather than
+        # whichever convertible one `tau_0` happened to be given in.
+        tau_0_in = self.tau_0
+        tau_0 = (
+            u.Q(0.0, tau_unit)
+            if tau_0_in is None
+            else u.Q(tau_0_in.ustrip(tau_unit), tau_unit)
+        )
 
         T0_val = self._tangent_at(tau_0).value
         if self.initial_normal is not None:
@@ -607,7 +646,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         base_frame: FrameT,
         curve: Callable[[Any], Any],
         /,
-        tau_unit: u.AbstractUnit | str,
+        tau_unit: u.AbstractUnit | str | None = None,
         *,
         station: Any = None,
         tau_0: u.AbstractQuantity | None = None,
@@ -622,11 +661,13 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
             The ambient reference frame.
         curve : Callable
             A function ``tau -> Quantity[float, (3,)]``.
-        tau_unit : AbstractUnit or str
-            Unit of the curve parameter for differentiation.  Required: there
-            is no neutral default, since a curve parameter may be a time, an
-            arc length, or an affine parameter, and the wrong unit is silently
-            rescaled rather than rejected when it is dimensionally compatible.
+        tau_unit : AbstractUnit or str, optional
+            Unit of the curve parameter for differentiation.  `None` (the
+            default) reads it off the parameter the frame is evaluated at.
+            There is no neutral unit to default to -- a curve parameter may be
+            a time, an arc length, or an affine parameter -- so rather than
+            pick one, take the one the caller already stated by passing a
+            `Quantity`.
         station : optional
             A fixed station along the curve; when given the frame is a fixed
             frame *field* along the curve rather than a moving frame.
