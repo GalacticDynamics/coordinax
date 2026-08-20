@@ -6,33 +6,38 @@
 A raw route is normally the cheap one, so these pin what it actually costs
 here.
 
-The answer is that it costs the same, and these exist to keep that honest
+The answer is that it is not a fastpath, and these exist to keep that honest
 rather than to celebrate it. A raw parameter is wrapped into a `Quantity` at
 `_param` and the identical computation follows, so the routes converge almost
-immediately. Measured medians on the helix below:
+immediately. Medians over three runs:
 
-===================  ==========  ==========
-call                 quantity    raw
-===================  ==========  ==========
-``location`` eager   423 us      456 us
-``tangent``  eager   3434 us     3136 us
-``tangent``  jitted  36.7 us     34.8 us
-===================  ==========  ==========
+===================  ================  ================
+call                 quantity          raw
+===================  ================  ================
+``location`` eager   424-452 us        456-487 us
+``tangent``  eager   3627-3769 us      3136-3918 us
+``tangent``  jitted  36.6-40.5 us      34.8-37.3 us
+===================  ================  ================
 
-The eager pair disagree in *opposite directions*, and the run-to-run spread
-(210-310 us on ``tangent``) is larger than the gap between them: that is two
-routes indistinguishable from each other, not one winning.
+Read that as three different answers, none of them "raw is faster":
+
+* ``location`` eager consistently favours the `Quantity` by ~7%, which is the
+  wrap being paid for and is the honest cost of the raw route.
+* ``tangent`` jitted consistently favours raw by ~6% -- one pytree node fewer
+  crossing the `jax.jit` boundary.
+* ``tangent`` eager **flipped ordering between runs**, and its spread is
+  larger than the gap. There is no answer there to report.
 
 What dominates is neither the wrapper nor the units: it is eager JAX op
 dispatch inside the user's curve. ``curve(tau)`` alone accounted for roughly
 340 us of ``location``'s ~425, and ``jacfwd``'s call for roughly 2250 us of
-``tangent``'s ~3400. Against that the parameter's wrapper is noise -- as is
-the per-call arity check, `inspect.signature`, an obvious suspect that
-measured 4.2 us, under 0.1% of a ``tangent`` call.
+``tangent``'s ~3400. Against that the parameter's wrapper is a rounding error
+-- as is the per-call arity check, `inspect.signature`, an obvious suspect
+that measured 4.2 us, under 0.1% of a ``tangent`` call.
 
-The lever is `jax.jit`, not the input type: it takes ``tangent`` from ~3400
-us to ~36, a ~95x, and it does so equally for both routes. A raw route that
-is genuinely faster would have to stay unitless end to end, which means the
+The lever is `jax.jit`, not the input type: it takes ``tangent`` from ~3700
+us to ~37, a ~100x, and it does so for both routes alike. A raw route that is
+genuinely faster would have to stay unitless end to end, which means the
 *curve* must accept magnitudes -- a change to the curve protocol, not to the
 builders, and not one these benchmarks assume.
 """
@@ -76,13 +81,21 @@ class TestEagerInputRoutes:
     @pytest.mark.parametrize("tau", [TAU_Q, TAU_RAW], ids=["quantity", "raw"])
     def test_eager_location(self, benchmark, builder, tau):
         """`location` -- one curve evaluation, no derivative."""
-        builder.location(tau)
+        # Blocked: JAX dispatch is async, so an unblocked warm-up can still be
+        # in flight when the first measured iteration starts. Tracing and
+        # compilation finish synchronously either way, but the device compute
+        # would overlap the first round.
+        jax.block_until_ready(builder.location(tau))
         benchmark(lambda: jax.block_until_ready(builder.location(tau)))
 
     @pytest.mark.parametrize("tau", [TAU_Q, TAU_RAW], ids=["quantity", "raw"])
     def test_eager_tangent(self, benchmark, builder, tau):
         """`tangent` -- adds the `jacfwd` that dominates the call."""
-        builder.tangent(tau)
+        # Blocked: JAX dispatch is async, so an unblocked warm-up can still be
+        # in flight when the first measured iteration starts. Tracing and
+        # compilation finish synchronously either way, but the device compute
+        # would overlap the first round.
+        jax.block_until_ready(builder.tangent(tau))
         benchmark(lambda: jax.block_until_ready(builder.tangent(tau)))
 
 
