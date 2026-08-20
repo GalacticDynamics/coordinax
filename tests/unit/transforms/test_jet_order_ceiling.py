@@ -165,3 +165,45 @@ def test_the_fibre_ladder_path_takes_at_jet_too() -> None:
         assert jnp.allclose(u.ustrip("km/s", via_at[k]), u.ustrip("km/s", via_jet[k]))
     # and the ladder actually did something: 1 km/s + the offset's 1 km/s
     assert jnp.allclose(u.ustrip("km/s", via_jet["x"]), 2.0, atol=1e-6)
+
+
+def test_the_missing_slot_errors_name_at_jet() -> None:
+    """Both spellings are offered, since both now work.
+
+    The messages previously named only `at`/`at_vel`. Asserting on the text is
+    the point here: I once "fixed" this by adding the new constants and left
+    the raise sites pointing at the old ones, which a constants-only check
+    would not have caught.
+    """
+    acc = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.acc)
+    data = {k: u.Q(1.0, "km/s2") for k in ("x", "y", "z")}
+
+    with pytest.raises(TypeError, match=r"'at'.*or as slot 0 of 'at_jet'"):
+        cxfm.act(_OP, _TAU, data, cxc.cart3d, acc, at_vel=_SLOTS[1])
+
+    with pytest.raises(TypeError, match=r"'at_vel'.*or as slot 1 of 'at_jet'"):
+        cxfm.act(_OP, _TAU, data, cxc.cart3d, acc, at=_SLOTS[0])
+
+
+def test_the_ladder_path_refuses_a_doubly_given_base_point() -> None:
+    """Matching the generic path: two spellings of one slot is an error.
+
+    Silently preferring `at=` would hide a wrong anchor.
+    """
+    op = cxfm.TimeDep.from_(
+        lambda tau: cxfm.Translate(
+            {
+                "x": u.Q(1.0, "km/s") * (tau / u.Q(1.0, "s")),
+                "y": u.Q(0.0, "km/s"),
+                "z": u.Q(0.0, "km/s"),
+            },
+            cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+    rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.vel)
+    data = {k: u.Q(1.0, "km/s") for k in ("x", "y", "z")}
+    at = {k: u.Q(1.0, "km") for k in ("x", "y", "z")}
+
+    with pytest.raises(TypeError, match="given twice"):
+        cxfm.act(op, _TAU, data, cxc.cart3d, rep, at=at, at_jet={0: at})

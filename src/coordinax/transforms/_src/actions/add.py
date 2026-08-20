@@ -27,6 +27,7 @@ from .composite import AbstractCompositeTransform
 from .custom_types import CDict
 from .identity import Identity, identity
 from .prolong import (
+    _MSG_AT_JET_CONFLICT,
     _MSG_JET_SLOT0_MISSING,
     _slot_jet,
     prolong_jet,
@@ -566,8 +567,14 @@ def act(
     # The ladder needs only the base point, but it has to accept it in either
     # spelling: `at_jet` is the general anchor form, so a caller who passes
     # `at_jet={0: at}` and omits `at=` must not hit a downstream "pass 'at'".
-    if at is None and at_jet is not None:
-        at = at_jet.get(0)
+    # Given both, raise rather than pick one -- silently preferring `at=` would
+    # hide a wrong anchor, and the generic path already refuses the same way.
+    if at_jet is not None and 0 in at_jet:
+        if at is not None:
+            raise TypeError(
+                _MSG_AT_JET_CONFLICT.format(op=type(op).__name__, k=0, alias="at")
+            )
+        at = at_jet[0]
     return _ladder_act(op, op0, k, tau, m, x, chart, rep, at=at, usys=usys, **kw)
 
 

@@ -730,9 +730,9 @@ def _slot_jet(
         slots[k] = value
 
     if 0 not in slots:
-        raise TypeError(_MSG_AT_REQUIRED.format(verb="act", op=type(op).__name__, m=m))
+        raise TypeError(_MSG_SLOT0_REQUIRED.format(op=type(op).__name__, m=m))
     if m >= 2 and 1 not in slots:
-        raise TypeError(_MSG_AT_VEL_REQUIRED.format(op=type(op).__name__, m=m))
+        raise TypeError(_MSG_SLOT1_REQUIRED.format(op=type(op).__name__, m=m))
 
     missing = [k for k in range(1, m) if k not in slots]
     if missing:
