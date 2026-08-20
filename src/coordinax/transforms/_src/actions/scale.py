@@ -23,7 +23,9 @@ from coordinax.transforms._src import groups
 SMatrix: TypeAlias = Shaped[Array, " N N"]
 SFactors: TypeAlias = Shaped[Array, " N"]
 
-_MSG_SINGULAR: Final = "Scale matrix must be invertible."
+_MSG_SINGULAR: Final = (
+    "Scale matrix must be invertible: every factor finite and non-zero."
+)
 _MSG_NOT_DIAGONAL: Final = (
     "Scale requires a diagonal matrix -- it scales the axes, and nothing else. "
     "For a general linear map use `Linear`."
@@ -122,9 +124,14 @@ class Scale(AbstractLinearTransform):
         if s.ndim != 1:
             msg = f"Scale.from_factors requires a vector; got shape={s.shape!r}."
             raise ValueError(msg)
-        # Defer the singular check so it survives jit (a plain `bool` on a
-        # traced value raises TracerBoolConversionError).
-        s = eqx.error_if(s, jnp.any(jnp.isclose(s, 0)), _MSG_SINGULAR)
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # TracerBoolConversionError). A factor must also be finite: `isclose(s, 0)`
+        # is False for both NaN and `inf`, and an `inf` factor was the worst of the
+        # three -- its reciprocal is 0.0, so `inverse` came back finite, singular,
+        # and silent.
+        s = eqx.error_if(
+            s, jnp.any(jnp.isclose(s, 0) | ~jnp.isfinite(s)), _MSG_SINGULAR
+        )
         return cls._from_diagonal(s)
 
     @property
