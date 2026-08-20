@@ -78,3 +78,30 @@ class TestChordDistancePoint:
         moved = cx.Point(q.data, chart=q.chart, frame=cx.frames.Alice())
         with pytest.raises(ValueError, match="different frames"):
             cx.chord_distance(p, moved)
+
+    def test_is_evaluated_elementwise_over_batch(self) -> None:
+        """Chord distance is evaluated element-wise over the batch."""
+        p = cx.Point(
+            {
+                "theta": u.Angle(jnp.full(2, math.pi / 2), "rad"),
+                "phi": u.Angle(jnp.zeros(2), "rad"),
+            },
+            chart=cxc.sph2,
+        )
+        q = cx.Point(
+            {
+                "theta": u.Angle(jnp.full(2, math.pi / 2), "rad"),
+                "phi": u.Angle(jnp.array([math.pi / 2, math.pi]), "rad"),
+            },
+            chart=cxc.sph2,
+        )
+        d = cx.chord_distance(p, q)
+        assert float(d[0]) == pytest.approx(math.sqrt(2), abs=1e-9)
+        assert float(d[1]) == pytest.approx(2.0, abs=1e-9)
+
+    def test_different_manifolds_is_refused(self) -> None:
+        """A 2-sphere point and a Euclidean point share no manifold to measure on."""
+        p = _sph2(math.pi / 2, 0.0)
+        q = cx.Point.from_([0.0, 4.0, 0.0], "m")
+        with pytest.raises(ValueError, match="different manifolds"):
+            cx.chord_distance(p, q)
