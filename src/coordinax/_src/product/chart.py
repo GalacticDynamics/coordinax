@@ -24,6 +24,7 @@ from coordinax._src.base import (
     AbstractStaticChart,
     chart_dataclass_decorator,
 )
+from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.custom_types import Ds, Ks, OptUSys
 from coordinaxs.api.custom_types import CDict
 
@@ -456,7 +457,7 @@ def pt_map(
         )
     )
     transformed = cast("tuple[CDict, ...]", transformed)
-    return to_chart.merge_components(transformed)
+    return canonical_containers(to_chart.merge_components(transformed), to_chart)
 
 
 @plum.dispatch

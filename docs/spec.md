@@ -5097,21 +5097,22 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
     ```
 
-    The angle *container* tracks the ambient chart. Round-tripping through a
-    Cartesian ambient returns the same value and unit in a plain `Quantity`
-    rather than an `Angle`:
+    The container is the chart's, not the route's. Round-tripping through a
+    Cartesian ambient gives the same `Angle` as the spherical route, because
+    the intrinsic chart declares both components angular and every transition
+    canonicalises against that declaration:
 
     ```pycon
     >>> Mc = cxm.embedded_twosphere(radius=u.Q(2.0, "km"), ambient=cxc.cart3d)
     >>> q = {"theta": u.Angle(jnp.pi / 3, "rad"), "phi": u.Angle(0.4, "rad")}
     >>> cxm.pt_project(cxm.pt_embed(q, Mc), Mc)["theta"]
-    Q(1.04719755, 'rad')
+    Angle(1.04719755, 'rad')
     ```
 
-    against `Angle(1.04719755, 'rad')` on the spherical route. Recorded as
-    observed behaviour rather than endorsed: an angle is an element of $S^1$
-    and the container is what carries that, so the ambient chart arguably
-    should not decide it.
+    This matters beyond tidiness: `Angle` and `Quantity` are distinct pytree
+    nodes, so a route-dependent container would be a route-dependent pytree
+    *structure* -- `jit` cache misses and `jax.tree.map` failures decided by
+    how a point was obtained rather than by what it is.
 
 (software-spec-embedded_twosphere)=
 

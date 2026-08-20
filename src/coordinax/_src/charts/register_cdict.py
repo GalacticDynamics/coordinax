@@ -13,6 +13,7 @@ import unxt as u
 import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
+from .containers import canonical_containers
 from coordinax._src.base import AbstractChart
 from coordinaxs.api.custom_types import CDict, CKeys
 
@@ -321,6 +322,12 @@ def cdict(obj: ArrayLike, usys: u.AbstractUnitSystem, chart: AbstractChart, /) -
     >>> cx.cdict(arr, u.unitsystems.si, cx.cart3d)
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
+    Angular components arrive as `unxt.Angle`, per the chart's declaration:
+
+    >>> import coordinax.charts as cxc
+    >>> cx.cdict(arr, u.unitsystems.si, cxc.sph3d)
+    {'r': Q(1., 'm'), 'theta': Angle(2., 'rad'), 'phi': Angle(3., 'rad')}
+
     """
     obj: Array = jnp.asarray(obj)  # TODO: asanyarray
 
@@ -330,9 +337,12 @@ def cdict(obj: ArrayLike, usys: u.AbstractUnitSystem, chart: AbstractChart, /) -
             f"chart with {len(chart.components)} components."
         )
         raise ValueError(msg)
-    return {
-        k: u.Q(obj[..., i], usys[d])
-        for i, (k, d) in enumerate(
-            zip(chart.components, chart.coord_dimensions, strict=False)
-        )
-    }
+    return canonical_containers(
+        {
+            k: u.Q(obj[..., i], usys[d])
+            for i, (k, d) in enumerate(
+                zip(chart.components, chart.coord_dimensions, strict=False)
+            )
+        },
+        chart,
+    )

@@ -67,14 +67,18 @@ class Identity(AbstractTransform):
     >>> tau = u.Q(0, "Gyr")
     >>> op(tau, vec)
     Point(
-      {'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'), 'phi': Q(1.10714872, 'rad')},
+      {
+        'r': Q(3.74165739, 'km'),
+        'theta': Angle(0.64052231, 'rad'),
+        'phi': Angle(1.10714872, 'rad')
+      },
       chart=Spherical3D(M=Rn(3))
     )
 
     >>> op(tau, q)
     Q([1, 2, 3], 'km')
 
-    """  # noqa: E501
+    """
 
     @classmethod
     def groups(cls) -> frozenset[type]:

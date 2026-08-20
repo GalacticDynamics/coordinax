@@ -11,6 +11,7 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from .manifold import EmbeddedManifold
 from coordinax._src.base import AbstractChart
+from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.custom_types import OptUSys
 from coordinaxs.api.custom_types import CDict
 
@@ -46,7 +47,7 @@ def pt_map(
 
     >>> x_sph2 = cxc.pt_map(x_cart, M, cxc.cart3d, cxc.loncoslat_sph2)
     >>> x_sph2
-    {'lon_coslat': Q(0.66164791, 'rad'), 'lat': Q(53.3007748, 'deg')}
+    {'lon_coslat': Angle(0.66164791, 'rad'), 'lat': Angle(53.3007748, 'deg')}
 
     >>> cxc.pt_map(x_sph2, M, cxc.loncoslat_sph2, cxc.cart3d)
     {'x': Q(0.26726124, 'kpc'), 'y': Q(0.53452248, 'kpc'),
@@ -57,7 +58,7 @@ def pt_map(
     # case we can just delegate to the chart-level transition map.
     if M.intrinsic == M.ambient:
         out = cxcapi.pt_map(p, from_chart, to_chart, usys=usys)
-        return cast("CDict", out)
+        return canonical_containers(cast("CDict", out), to_chart)
 
     # Now that we know the intrinsic and ambient manifolds are different, we can
     # check for ambiguity in whether the charts are for the intrinsic or ambient
@@ -83,4 +84,4 @@ def pt_map(
     map_fn = cxmapi.pt_embed if M.intrinsic.has_chart(from_chart) else cxmapi.pt_project
     out = map_fn(p, from_chart, to_chart, M, usys=usys)
 
-    return cast("CDict", out)
+    return canonical_containers(cast("CDict", out), to_chart)

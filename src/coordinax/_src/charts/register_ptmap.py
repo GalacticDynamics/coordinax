@@ -16,6 +16,7 @@ import unxts.linalg as ul
 from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
 import coordinaxs.api.charts as cxcapi
+from .containers import canonical_containers
 from .d0 import Cart0D
 from .d1 import Cart1D, Radial1D, Time1D
 from .d2 import Cart2D, Polar2D
@@ -92,7 +93,7 @@ def pt_map(q: None, /, *fixed_args: Any, **fixed_kw: Any) -> Callable[..., Any]:
     >>> q = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d)
     >>> map(q)
-    {'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     Coordinates without units are also accepted, interpreted having units of the
     `unxt.AbstractUnitSystem`, which must be passed.
@@ -141,7 +142,7 @@ def pt_map(
     >>> p = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map = cxc.pt_map(cxc.cart3d, cxc.sph3d)
     >>> map(p)
-    {'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     Coordinates without units are also accepted, interpreted having units of the
     `unxt.AbstractUnitSystem`, which must be passed.
@@ -247,7 +248,7 @@ def pt_map(
     # Even though there's a dispatch for the Self-to-Self case, we still check
     # for it here to avoid infinite recursion.
     if from_chart == to_chart:
-        return p
+        return canonical_containers(p, to_chart)
 
     # Now we know from_chart and to_chart are different, so we can safely call.
     from_cart = from_chart.cartesian
@@ -256,7 +257,7 @@ def pt_map(
 
     p_cart = cxcapi.pt_map(p, from_M, from_chart, to_M, from_cart, usys=usys)
     p_out = cxcapi.pt_map(p_cart, from_M, from_cart, to_M, to_chart, usys=usys)
-    return cast("CDict", p_out)
+    return canonical_containers(cast("CDict", p_out), to_chart)
 
 
 ##############################################################################
@@ -328,7 +329,7 @@ def pt_map(
     del usys  # unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    return p
+    return canonical_containers(p, to_chart)
 
 
 # ---------------------------------------------------------
@@ -370,7 +371,7 @@ def pt_map(
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
 
-    return {"x": p["r"]}
+    return canonical_containers({"x": p["r"]}, to_chart)
 
 
 @plum.dispatch
@@ -407,7 +408,7 @@ def pt_map(
     del usys  # unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    return {"r": p["x"]}
+    return canonical_containers({"r": p["x"]}, to_chart)
 
 
 # -----------------------------------------------
@@ -450,7 +451,7 @@ def pt_map(
     theta = uconvert_to_rad(p["theta"], usys)
     x = p["r"] * jnp.cos(theta)
     y = p["r"] * jnp.sin(theta)
-    return {"x": x, "y": y}
+    return canonical_containers({"x": x, "y": y}, to_chart)
 
 
 @plum.dispatch
@@ -474,7 +475,7 @@ def pt_map(
 
     >>> p = {"x": u.Q(3, "m"), "y": u.Q(4, "m")}
     >>> cxc.pt_map(p, cxm.R2, cxc.cart2d, cxm.R2, cxc.polar2d)
-    {'r': Q(5., 'm'), 'theta': Q(0.92729522, 'rad')}
+    {'r': Q(5., 'm'), 'theta': Angle(0.92729522, 'rad')}
 
     >>> p = {"x": 3, "y": 4}  # No units
     >>> cxc.pt_map(p, cxm.R2, cxc.cart2d, cxm.R2, cxc.polar2d)
@@ -488,7 +489,7 @@ def pt_map(
 
     r_ = jnp.hypot(p["x"], p["y"])
     theta = jnp.arctan2(p["y"], p["x"])
-    return {"r": r_, "theta": theta}
+    return canonical_containers({"r": r_, "theta": theta}, to_chart)
 
 
 # -----------------------------------------------
@@ -528,7 +529,7 @@ def pt_map(
     phi = uconvert_to_rad(p["phi"], usys)
     x = p["rho"] * jnp.cos(phi)
     y = p["rho"] * jnp.sin(phi)
-    return {"x": x, "y": y, "z": p["z"]}
+    return canonical_containers({"x": x, "y": y, "z": p["z"]}, to_chart)
 
 
 @plum.dispatch
@@ -573,7 +574,7 @@ def pt_map(
     x = r_ * jnp.sin(theta) * jnp.cos(phi)
     y = r_ * jnp.sin(theta) * jnp.sin(phi)
     z = r_ * jnp.cos(theta)
-    return {"x": x, "y": y, "z": z}
+    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -616,7 +617,7 @@ def pt_map(
     x = r_ * jnp.cos(lat) * jnp.cos(lon)
     y = r_ * jnp.cos(lat) * jnp.sin(lon)
     z = r_ * jnp.sin(lat)
-    return {"x": x, "y": y, "z": z}
+    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -670,7 +671,7 @@ def pt_map(
     x = r_ * jnp.cos(lat) * jnp.cos(lon)
     y = r_ * jnp.cos(lat) * jnp.sin(lon)
     z = r_ * jnp.sin(lat)
-    return {"x": x, "y": y, "z": z}
+    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -714,7 +715,7 @@ def pt_map(
     x = r_ * jnp.sin(phi) * jnp.cos(theta)
     y = r_ * jnp.sin(phi) * jnp.sin(theta)
     z = r_ * jnp.cos(phi)
-    return {"x": x, "y": y, "z": z}
+    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -781,7 +782,7 @@ def pt_map(
     y = rho * jnp.sin(phi)
     z = jnp.sqrt(mu * nu_D2) * jnp.sign(nu)
 
-    return {"x": x, "y": y, "z": z}
+    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -802,7 +803,7 @@ def pt_map(
 
     >>> p = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(5.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, cxc.cyl3d)
-    {'rho': Q(5., 'm'), 'phi': Q(0.92729522, 'rad'), 'z': Q(5., 'm')}
+    {'rho': Q(5., 'm'), 'phi': Angle(0.92729522, 'rad'), 'z': Q(5., 'm')}
 
     >>> p = {"x": 3.0, "y": 4.0, "z": 5.0}  # No units
     >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, cxc.cyl3d)
@@ -816,7 +817,7 @@ def pt_map(
     assert to_M == to_chart.M  # noqa: S101
     rho = jnp.hypot(p["x"], p["y"])
     phi = jnp.atan2(p["y"], p["x"])
-    return {"rho": rho, "phi": phi, "z": p["z"]}
+    return canonical_containers({"rho": rho, "phi": phi, "z": p["z"]}, to_chart)
 
 
 @plum.dispatch.multi(
@@ -840,7 +841,7 @@ def pt_map(
 
     >>> p = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(1.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, cxc.loncoslat_sph3d)
-    {'lon_coslat': Q(0., 'rad'), 'lat': Q(90., 'deg'), 'distance': Q(1., 'm')}
+    {'lon_coslat': Angle(0., 'rad'), 'lat': Angle(90., 'deg'), 'distance': Q(1., 'm')}
 
     >>> p = {"rho": 0, "phi": 180, "z": 1}
     >>> usys = u.unitsystem("m", "deg")
@@ -856,7 +857,7 @@ def pt_map(
     sph3d = Spherical3D(M=from_chart.M)
     p_sph = cxcapi.pt_map(p, from_M, from_chart, to_M, sph3d, usys=usys)
     out = cxcapi.pt_map(p_sph, from_M, sph3d, to_M, to_chart, usys=usys)
-    return cast("CDict", out)
+    return canonical_containers(cast("CDict", out), to_chart)
 
 
 @plum.dispatch
@@ -879,7 +880,7 @@ def pt_map(
 
     >>> p = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(1.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, cxc.sph3d)
-    {'r': Q(1., 'm'), 'theta': Q(0., 'rad'), 'phi': Q(0., 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(0., 'rad'), 'phi': Angle(0., 'rad')}
 
     A point on the +x axis:
 
@@ -899,7 +900,7 @@ def pt_map(
     theta = jnp.acos(jnp.where(r == 0, jnp.ones(r.shape), z / r))
     # atan2 handles the case when x = y = 0, returning phi = 0
     phi = jnp.atan2(y, x)
-    return {"r": r, "theta": theta, "phi": phi}
+    return canonical_containers({"r": r, "theta": theta, "phi": phi}, to_chart)
 
 
 @plum.dispatch
@@ -923,7 +924,7 @@ def pt_map(
 
     >>> p = {"rho": u.Q(0.0, "m"), "phi": u.Q(0, "rad"), "z": u.Q(1.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cyl3d, cxm.R3, cxc.sph3d)
-    {'r': Q(1., 'm'), 'theta': Q(0., 'rad'), 'phi': Q(0, 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(0., 'rad'), 'phi': Angle(0, 'rad')}
 
     A point in the xy-plane (z=0):
 
@@ -939,7 +940,7 @@ def pt_map(
     r_ = jnp.hypot(p["rho"], p["z"])
     # Avoid division by zero: when r == 0, set theta = 0 by convention
     theta = jnp.acos(jnp.where(r_ == 0, jnp.ones(r_.shape), p["z"] / r_))
-    return {"r": r_, "theta": theta, "phi": p["phi"]}
+    return canonical_containers({"r": r_, "theta": theta, "phi": p["phi"]}, to_chart)
 
 
 @plum.dispatch
@@ -963,7 +964,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(0, "rad"), "phi": u.Q(0, "rad")}
     >>> cxc.pt_map(p, cxm.R3, cxc.sph3d, cxm.R3, cxc.cyl3d)
-    {'rho': Q(0., 'm'), 'phi': Q(0, 'rad'), 'z': Q(1., 'm')}
+    {'rho': Q(0., 'm'), 'phi': Angle(0, 'rad'), 'z': Q(1., 'm')}
 
     A point on the equator (theta=90 deg):
 
@@ -979,7 +980,7 @@ def pt_map(
     theta = uconvert_to_rad(p["theta"], usys)
     rho = p["r"] * jnp.sin(theta)
     z = p["r"] * jnp.cos(theta)
-    return {"rho": rho, "phi": p["phi"], "z": z}
+    return canonical_containers({"rho": rho, "phi": p["phi"], "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -1003,7 +1004,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(0, "rad"), "phi": u.Q(0, "rad")}
     >>> cxc.pt_map(p, cxm.R3, cxc.sph3d, cxm.R3, cxc.lonlat_sph3d)
-    {'lon': Q(0, 'rad'), 'lat': Q(90., 'deg'), 'distance': Q(1., 'm')}
+    {'lon': Angle(0, 'rad'), 'lat': Angle(90., 'deg'), 'distance': Q(1., 'm')}
 
     Spherical theta=90 deg corresponds to lat=0 (equator):
 
@@ -1017,7 +1018,9 @@ def pt_map(
     lat = (
         u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
-    return {"lon": p["phi"], "lat": lat, "distance": p["r"]}
+    return canonical_containers(
+        {"lon": p["phi"], "lat": lat, "distance": p["r"]}, to_chart
+    )
 
 
 @plum.dispatch
@@ -1041,7 +1044,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}
     >>> cxc.pt_map(p, cxm.R3, cxc.sph3d, cxm.R3, cxc.loncoslat_sph3d)
-    {'lon_coslat': Q(45., 'deg'), 'lat': Q(0., 'deg'), 'distance': Q(1., 'm')}
+    {'lon_coslat': Angle(45., 'deg'), 'lat': Angle(0., 'deg'), 'distance': Q(1., 'm')}
 
     At the north pole (theta=0), lon_coslat = 0 regardless of phi:
 
@@ -1058,7 +1061,9 @@ def pt_map(
         u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
     lon_coslat = p["phi"] * jnp.cos(lat)
-    return {"lon_coslat": lon_coslat, "lat": lat, "distance": p["r"]}
+    return canonical_containers(
+        {"lon_coslat": lon_coslat, "lat": lat, "distance": p["r"]}, to_chart
+    )
 
 
 @plum.dispatch
@@ -1083,7 +1088,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(30, "deg"), "phi": u.Q(60, "deg")}
     >>> cxc.pt_map(p, cxm.R3, cxc.sph3d, cxm.R3, cxc.math_sph3d)
-    {'r': Q(1., 'm'), 'theta': Q(60, 'deg'), 'phi': Q(30, 'deg')}
+    {'r': Q(1., 'm'), 'theta': Angle(60, 'deg'), 'phi': Angle(30, 'deg')}
 
     >>> p = {"r": 1.0, "theta": 30, "phi": 60}  # No units
     >>> usys = u.unitsystem("m", "deg")
@@ -1094,7 +1099,9 @@ def pt_map(
     del usys  # Unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    return {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
+    return canonical_containers(
+        {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}, to_chart
+    )
 
 
 @plum.dispatch
@@ -1119,7 +1126,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(60, "deg"), "phi": u.Q(30, "deg")}
     >>> cxc.pt_map(p, cxm.R3, cxc.math_sph3d, cxm.R3, cxc.sph3d)
-    {'r': Q(1., 'm'), 'theta': Q(30, 'deg'), 'phi': Q(60, 'deg')}
+    {'r': Q(1., 'm'), 'theta': Angle(30, 'deg'), 'phi': Angle(60, 'deg')}
 
     >>> p = {"r": 1.0, "theta": 60, "phi": 30}  # No units
     >>> usys = u.unitsystem("m", "deg")
@@ -1130,7 +1137,9 @@ def pt_map(
     del usys  # Unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
-    return {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
+    return canonical_containers(
+        {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}, to_chart
+    )
 
 
 @plum.dispatch
@@ -1168,7 +1177,7 @@ def pt_map(
 
     >>> p = {"mu": u.Q(5.0, "m2"), "nu": u.Q(1.0, "m2"), "phi": u.Q(0, "rad")}
     >>> cxc.pt_map(p, cxm.R3, prolatesph3d, cxm.R3, cxc.cyl3d)
-    {'rho': Q(0.8660254, 'm'), 'phi': Q(0, 'rad'), 'z': Q(1.11803399, 'm')}
+    {'rho': Q(0.8660254, 'm'), 'phi': Angle(0, 'rad'), 'z': Q(1.11803399, 'm')}
 
     >>> p = {"mu": 5.0, "nu": 1.0, "phi": 0}  # No units
     >>> usys = u.unitsystem("m", "rad")
@@ -1192,7 +1201,7 @@ def pt_map(
     nu_D2 = jnp.abs(nu) / Delta2
     rho = jnp.sqrt((mu - Delta2) * (1 - nu_D2))
     z = jnp.sqrt(mu * nu_D2) * jnp.sign(nu)
-    return {"rho": rho, "phi": p["phi"], "z": z}
+    return canonical_containers({"rho": rho, "phi": p["phi"], "z": z}, to_chart)
 
 
 @plum.dispatch
@@ -1233,13 +1242,13 @@ def pt_map(
 
     >>> p = {"rho": u.Q(0.0, "m"), "phi": u.Q(0, "rad"), "z": u.Q(3.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cyl3d, cxm.R3, prolatesph3d)
-    {'mu': Q(9., 'm2'), 'nu': Q(4., 'm2'), 'phi': Q(0, 'rad')}
+    {'mu': Q(9., 'm2'), 'nu': Q(4., 'm2'), 'phi': Angle(0, 'rad')}
 
     A point in the xy-plane (z=0):
 
     >>> p = {"rho": u.Q(2.0, "m"), "phi": u.Q(0, "rad"), "z": u.Q(0.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cyl3d, cxm.R3, prolatesph3d)
-    {'mu': Q(8., 'm2'), 'nu': Q(0., 'm2'), 'phi': Q(0, 'rad')}
+    {'mu': Q(8., 'm2'), 'nu': Q(0., 'm2'), 'phi': Angle(0, 'rad')}
 
     Without units:
 
@@ -1295,7 +1304,7 @@ def pt_map(
 
     nu = abs_nu * jnp.sign(p["z"])
 
-    return {"mu": mu, "nu": nu, "phi": p["phi"]}
+    return canonical_containers({"mu": mu, "nu": nu, "phi": p["phi"]}, to_chart)
 
 
 @plum.dispatch
@@ -1323,7 +1332,7 @@ def pt_map(
     >>> prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
     >>> p = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(3.0, "m")}
     >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, prolate)
-    {'mu': Q(9., 'm2'), 'nu': Q(4., 'm2'), 'phi': Q(0., 'rad')}
+    {'mu': Q(9., 'm2'), 'nu': Q(4., 'm2'), 'phi': Angle(0., 'rad')}
 
     """
     assert from_M == from_chart.M  # noqa: S101
@@ -1331,7 +1340,7 @@ def pt_map(
     cyl = Cylindrical3D(M=from_chart.M)
     p_cyl = cxcapi.pt_map(p, from_M, from_chart, to_M, cyl, usys=usys)
     out = cxcapi.pt_map(p_cyl, from_M, cyl, to_M, to_chart, usys=usys)
-    return cast("CDict", out)
+    return canonical_containers(cast("CDict", out), to_chart)
 
 
 @plum.dispatch
@@ -1363,9 +1372,7 @@ def pt_map(
     >>> prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
     >>> p = {"mu": u.Q(5.0, "m2"), "nu": u.Q(1.0, "m2"), "phi": u.Q(0, "rad")}
     >>> cxc.pt_map(p, cxm.R3, prolate, cxm.R3, prolate)
-    {'mu': Q(5., 'm2'),
-     'nu': Q(1., 'm2'),
-     'phi': Q(0., 'rad')}
+    {'mu': Q(5., 'm2'), 'nu': Q(1., 'm2'), 'phi': Angle(0., 'rad')}
 
     Different focal lengths (converts via cylindrical):
 
@@ -1373,9 +1380,7 @@ def pt_map(
     >>> prolate_out = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(3.0, "m"))
     >>> p = {"mu": u.Q(5.0, "m2"), "nu": u.Q(1.0, "m2"), "phi": u.Q(0, "rad")}
     >>> cxc.pt_map(p, cxm.R3, prolate_in, cxm.R3, prolate_out)
-    {'mu': Q(9.85889894, 'm2'),
-     'nu': Q(1.14110106, 'm2'),
-     'phi': Q(0., 'rad')}
+    {'mu': Q(9.85889894, 'm2'), 'nu': Q(1.14110106, 'm2'), 'phi': Angle(0., 'rad')}
 
     """
     assert from_M == from_chart.M  # noqa: S101
@@ -1393,9 +1398,13 @@ def pt_map(
     # traced `Delta` alike. Cost: a `Delta` of the wrong dimension now raises
     # `UnitConversionError` here, instead of taking the conversion branch.
     unit = from_chart.Delta.unit
+    # Both branches must agree on pytree *structure*, and `Angle` and `Quantity`
+    # are different nodes, so the pass-through branch canonicalises too. Without
+    # it the converting branch returns `Angle` while this one hands back
+    # whatever the caller built, and `lax.cond` rejects the mismatched pair.
     return jax.lax.cond(
         u.ustrip(unit, to_chart.Delta) == u.ustrip(unit, from_chart.Delta),
-        lambda p: p,
+        lambda p: canonical_containers(p, to_chart),
         lambda p: cxcapi.pt_map(
             cxcapi.pt_map(p, from_M, from_chart, to_M, cyl3d, usys=usys),
             from_M,
@@ -1437,13 +1446,13 @@ def pt_map(
 
     >>> p = {"q": u.Q([1.0, 0.0, 0.0], "m")}
     >>> cxc.pt_map(p, cxm.RN, cxc.cartnd, cxm.R3, cxc.sph3d)
-    {'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     Convert 2D CartND to Polar:
 
     >>> p = {"q": u.Q([3.0, 4.0], "m")}
     >>> cxc.pt_map(p, cxm.RN, cxc.cartnd, cxm.R2, cxc.polar2d)
-    {'r': Q(5., 'm'), 'theta': Q(0.92729522, 'rad')}
+    {'r': Q(5., 'm'), 'theta': Angle(0.92729522, 'rad')}
 
     Convert 1D CartND to Radial:
 
@@ -1493,11 +1502,11 @@ def pt_map(
 
     # If target is already the Cartesian chart, return directly
     if type(to_chart) is type(cart_chart):
-        return p_cart
+        return canonical_containers(p_cart, to_chart)
 
     # Otherwise, transform from Cartesian to target chart
     out = cxcapi.pt_map(p_cart, cart_chart.M, cart_chart, to_M, to_chart, usys=usys)
-    return cast("CDict", out)
+    return canonical_containers(cast("CDict", out), to_chart)
 
 
 @plum.dispatch
@@ -1570,7 +1579,7 @@ def pt_map(
     # Convert fixed-dimensional Cartesian to CartND
     q = jnp.stack([p_cart[k] for k in cart_chart.components], axis=-1)
 
-    return {"q": q}
+    return canonical_containers({"q": q}, to_chart)
 
 
 # ===================================================================
@@ -1932,4 +1941,4 @@ def pt_map(
         "y": cosp * dt_rho + sinp * lz_over_rho,
         "z": dt_z,
     }
-    return to_chart.merge_components((pos, vel))
+    return canonical_containers(to_chart.merge_components((pos, vel)), to_chart)

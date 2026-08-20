@@ -228,7 +228,7 @@ def pt_map(*args: Any, **kwargs: Any) -> CDict:
 
     >>> p_xyz = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(5.0, "m")}
     >>> cxc.pt_map(p_xyz, cxc.cart3d, cxc.cyl3d)
-    {'rho': Q(5., 'm'), 'phi': Q(0.92729522, 'rad'), 'z': Q(5., 'm')}
+    {'rho': Q(5., 'm'), 'phi': Angle(0.92729522, 'rad'), 'z': Q(5., 'm')}
 
     """
     del args, kwargs  # Unused in abstract method

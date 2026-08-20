@@ -182,7 +182,7 @@ def pt_embed(
     >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
     >>> p_intrinsic = {"theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")}
     >>> cxm.pt_embed(p_intrinsic, chart)
-    {'r': Q(2., 'km'), 'theta': Q(45, 'deg'), 'phi': Q(30, 'deg')}
+    {'r': Q(2., 'km'), 'theta': Angle(45, 'deg'), 'phi': Angle(30, 'deg')}
 
     """
     # Redispatch to the more general pt_embed that handles chart
@@ -211,7 +211,7 @@ def pt_project(
     >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
     >>> p_amb = {"r": u.Q(2.0, "km"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")}
     >>> cxm.pt_project(p_amb, chart)
-    {'theta': Q(45, 'deg'), 'phi': Q(30, 'deg')}
+    {'theta': Angle(45, 'deg'), 'phi': Angle(30, 'deg')}
 
     """
     # Redispatch to the more general pt_project that handles chart
@@ -242,7 +242,7 @@ def pt_project(
     >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
     >>> p_amb = {"r": u.Q(2.0, "km"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")}
     >>> cxm.pt_project(p_amb, cxc.sph3d, chart)
-    {'theta': Q(45, 'deg'), 'phi': Q(30, 'deg')}
+    {'theta': Angle(45, 'deg'), 'phi': Angle(30, 'deg')}
 
     """
     p_ambient: CDict = cxcapi.pt_map(  # ty: ignore[invalid-assignment]
@@ -298,7 +298,7 @@ def pt_map(
     >>> p = {"theta": u.Q(45, "deg"), "phi": u.Q(0, "deg")}
     >>> p2 = cxc.pt_map(p, sphere1, sphere2)
     >>> {k: v.uconvert("deg") for k, v in p2.items()}
-    {'theta': Q(45, 'deg'), 'phi': Q(0, 'deg')}
+    {'theta': Angle(45, 'deg'), 'phi': Angle(0, 'deg')}
 
     The angular coordinates are preserved (both spheres share the same
     angular parameterization via projection through the shared ambient space).
@@ -348,7 +348,7 @@ def pt_map(
 
     >>> p_cart = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> cxc.pt_map(p_cart, cxc.cart3d, sphere)
-    {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     **From Spherical ambient to SphericalTwoSphere intrinsic:**
 
@@ -402,7 +402,7 @@ def pt_map(
 
     >>> p_sph = {"theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
     >>> cxc.pt_map(p_sph, sphere, cxc.sph3d)
-    {'r': Q(1., 'm'), 'theta': Q(1., 'rad'), 'phi': Q(0.5, 'rad')}
+    {'r': Q(1., 'm'), 'theta': Angle(1., 'rad'), 'phi': Angle(0.5, 'rad')}
 
     """
     p_ambient = cxmapi.pt_embed(p, from_chart, usys=usys)

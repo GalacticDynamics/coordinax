@@ -43,7 +43,7 @@ def pt_project(
 
     >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> cxm.pt_project(q, cxc.cart3d, cxm.S2)
-    {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     """
     del M
@@ -78,7 +78,7 @@ def pt_map(
 
     >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     >>> cxc.pt_map(q, cxc.cart3d, cxc.sph2)
-    {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
+    {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     """
     # Delegate to the projection map, which handles the intermediate Spherical3D
