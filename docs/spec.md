@@ -2451,14 +2451,15 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     |------------|--------------------------|----------------------------------------|
     | `data`     | `dict[str, V]`           | component name → scalar value          |
     | `chart`    | `ChartT`                 | coordinate system; static (JAX-frozen) |
-    | `manifold` | `AbstractManifold`       | manifold the tangent lives in          |
     | `basis`    | `BasisT`                 | linear basis; static                   |
     | `semantic` | `SemanticT`              | physical interpretation; static        |
     | `frame`    | `AbstractReferenceFrame` | defaults to `cxf.noframe`              |
 
-    **Post-init checks:**
+    The manifold is not a field: `M` is a property, derived from the chart.
 
-    - `manifold.has_chart(chart)` — chart must belong to the manifold's atlas.
+    **Init checks** (`__check_init__`):
+
+    - `M.check_chart(chart)` — chart must belong to the manifold's atlas.
     - `chart.check_data(data, keys=True)` — data keys must match the chart's component schema.
 
     **Methods & Properties:**
