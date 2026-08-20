@@ -86,6 +86,7 @@ __all__ = (
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
+    "ManifoldMismatchError",
     "NoGlobalCartesianChartError",
     # -------------------------------------------
     "cartesian_chart",
@@ -220,7 +221,10 @@ with install_import_hook("coordinax.charts"):
         sph3d,
         time1d,
     )
-    from coordinax._src.exceptions import NoGlobalCartesianChartError
+    from coordinax._src.exceptions import (
+        ManifoldMismatchError,
+        NoGlobalCartesianChartError,
+    )
     from coordinax._src.minkowski import MinkowskiCT, minkowskict
     from coordinax._src.product import (
         AbstractCartesianProductChart,

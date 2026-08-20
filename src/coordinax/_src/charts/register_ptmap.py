@@ -16,6 +16,7 @@ import unxts.linalg as ul
 from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
 import coordinaxs.api.charts as cxcapi
+from .checks import check_manifolds_match_charts
 from .containers import canonical_containers
 from .d0 import Cart0D
 from .d1 import Cart1D, Radial1D, Time1D
@@ -36,6 +37,7 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.base.manifold import AbstractManifold
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
+from coordinax._src.exceptions import ManifoldMismatchError
 from coordinax._src.null import NoManifold
 from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
@@ -242,8 +244,7 @@ def pt_map(
     {'x': Q(3.061617e-16, 'm'), 'y': Q(5., 'm')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     # Even though there's a dispatch for the Self-to-Self case, we still check
     # for it here to avoid infinite recursion.
@@ -253,7 +254,12 @@ def pt_map(
     # Now we know from_chart and to_chart are different, so we can safely call.
     from_cart = from_chart.cartesian
     to_cart = to_chart.cartesian
-    assert from_cart == to_cart  # noqa: S101
+    if from_cart != to_cart:
+        msg = (
+            f"no transition from {from_chart} to {to_chart}: their Cartesian "
+            f"charts differ ({from_cart} vs {to_cart})"
+        )
+        raise ManifoldMismatchError(msg)
 
     p_cart = cxcapi.pt_map(p, from_M, from_chart, to_M, from_cart, usys=usys)
     p_out = cxcapi.pt_map(p_cart, from_M, from_cart, to_M, to_chart, usys=usys)
@@ -327,8 +333,7 @@ def pt_map(
 
     """
     del usys  # unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     return canonical_containers(p, to_chart)
 
 
@@ -368,8 +373,7 @@ def pt_map(
 
     """
     del usys  # unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     return canonical_containers({"x": p["r"]}, to_chart)
 
@@ -406,8 +410,7 @@ def pt_map(
 
     """
     del usys  # unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     return canonical_containers({"r": p["x"]}, to_chart)
 
 
@@ -445,8 +448,7 @@ def pt_map(
      'y': Array(5., dtype=float64, ...)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     theta = uconvert_to_rad(p["theta"], usys)
     x = p["r"] * jnp.cos(theta)
@@ -484,8 +486,7 @@ def pt_map(
 
     """
     del usys  # unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     r_ = jnp.hypot(p["x"], p["y"])
     theta = jnp.arctan2(p["y"], p["x"])
@@ -523,8 +524,7 @@ def pt_map(
      'z': 2.0}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     phi = uconvert_to_rad(p["phi"], usys)
     x = p["rho"] * jnp.cos(phi)
@@ -565,8 +565,7 @@ def pt_map(
      'z': Array(1.2246468e-16, dtype=float64, ...)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     r_ = p["r"]
     theta = uconvert_to_rad(p["theta"], usys)
@@ -608,8 +607,7 @@ def pt_map(
      'z': Array(0., dtype=float64, ...)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     r_ = p["distance"]
     lon = uconvert_to_rad(p["lon"], usys)
@@ -655,8 +653,7 @@ def pt_map(
     {'x': Q(1.2246468e-16, 'm'), 'y': Q(0., 'm'), 'z': Q(2., 'm')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lon_coslat, r_ = p["lon_coslat"], p["distance"]
     lat = uconvert_to_rad(p["lat"], usys)
@@ -706,8 +703,7 @@ def pt_map(
     {'x': Q(2., 'm'), 'y': Q(0., 'm'), 'z': Q(1.2246468e-16, 'm')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     r_ = p["r"]
     theta = uconvert_to_rad(p["theta"], usys)
@@ -759,8 +755,7 @@ def pt_map(
      'z': Array(1.11803399, dtype=float64)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     # Calculate cylindrical distance
     nu, mu = p["nu"], p["mu"]
@@ -813,8 +808,7 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     rho = jnp.hypot(p["x"], p["y"])
     phi = jnp.atan2(p["y"], p["x"])
     return canonical_containers({"rho": rho, "phi": phi, "z": p["z"]}, to_chart)
@@ -851,8 +845,7 @@ def pt_map(
      'distance': Array(1., dtype=float64, weak_type=True)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     # from_chart -> Spherical3D -> to_chart
     sph3d = Spherical3D(M=from_chart.M)
     p_sph = cxcapi.pt_map(p, from_M, from_chart, to_M, sph3d, usys=usys)
@@ -892,8 +885,7 @@ def pt_map(
 
     """
     del usys
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     x, y, z = p["x"], p["y"], p["z"]
     r = jnp.sqrt(x**2 + y**2 + z**2)
     # Avoid division by zero: when r == 0, set theta = 0 by convention
@@ -935,8 +927,7 @@ def pt_map(
 
     """
     del usys  # unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     r_ = jnp.hypot(p["rho"], p["z"])
     # Avoid division by zero: when r == 0, set theta = 0 by convention
     theta = jnp.acos(jnp.where(r_ == 0, jnp.ones(r_.shape), p["z"] / r_))
@@ -975,8 +966,7 @@ def pt_map(
      'z': Array(1.2246468e-16, dtype=float64, ...)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     theta = uconvert_to_rad(p["theta"], usys)
     rho = p["r"] * jnp.sin(theta)
     z = p["r"] * jnp.cos(theta)
@@ -1013,8 +1003,7 @@ def pt_map(
     {'lon': 0, 'lat': 1.5707963267948966, 'distance': 1.0}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     lat = (
         u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
@@ -1055,8 +1044,7 @@ def pt_map(
      'lat': 1.5707963267948966, 'distance': 1.0}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     lat = (
         u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
@@ -1097,8 +1085,7 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     return canonical_containers(
         {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}, to_chart
     )
@@ -1135,8 +1122,7 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     return canonical_containers(
         {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}, to_chart
     )
@@ -1186,8 +1172,7 @@ def pt_map(
      'z': Array(1.11803399, dtype=float64)}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     nu, mu = p["nu"], p["mu"]
     if not isinstance(nu, ABCQ) or not isinstance(mu, ABCQ):
@@ -1259,8 +1244,7 @@ def pt_map(
      'nu': Array(2.47920271, dtype=float64), 'phi': 0}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     # Pre-compute common terms
     R2 = p["rho"] ** 2
@@ -1335,8 +1319,7 @@ def pt_map(
     {'mu': Q(9., 'm2'), 'nu': Q(4., 'm2'), 'phi': Angle(0., 'rad')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     cyl = Cylindrical3D(M=from_chart.M)
     p_cyl = cxcapi.pt_map(p, from_M, from_chart, to_M, cyl, usys=usys)
     out = cxcapi.pt_map(p_cyl, from_M, cyl, to_M, to_chart, usys=usys)
@@ -1383,8 +1366,7 @@ def pt_map(
     {'mu': Q(9.85889894, 'm2'), 'nu': Q(1.14110106, 'm2'), 'phi': Angle(0., 'rad')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     # Cast to the result type
     dtype = jnp.result_type(
@@ -1467,8 +1449,12 @@ def pt_map(
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
     """
-    assert from_chart.M in (from_M, to_chart.M)  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    if from_chart.M not in (from_M, to_chart.M) or to_M != to_chart.M:
+        msg = (
+            f"no transition from {from_chart} on {from_M} to {to_chart} on "
+            f"{to_M}: the manifolds do not line up"
+        )
+        raise ManifoldMismatchError(msg)
 
     # If target is CartND, we can't convert (would be infinite recursion)
     if isinstance(to_chart, CartND):
@@ -1555,9 +1541,16 @@ def pt_map(
     {'q': Q([0., 0., 5.], 'm')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_chart.M in (from_M, RN)  # noqa: S101
-    assert to_M in (from_M, RN)  # noqa: S101
+    if (
+        from_M != from_chart.M
+        or to_chart.M not in (from_M, RN)
+        or to_M not in (from_M, RN)
+    ):
+        msg = (
+            f"no transition from {from_chart} on {from_M} to {to_chart} on "
+            f"{to_M}: the manifolds do not line up"
+        )
+        raise ManifoldMismatchError(msg)
 
     # If source is CartND, we can't convert (would be infinite recursion)
     if isinstance(from_chart, CartND):
@@ -1644,8 +1637,7 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     return q
 
 
@@ -1856,8 +1848,7 @@ def pt_map(
 
     """
     del usys
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     _require_cart3d_phase_space(from_chart, direction="to")
 
     pos, vel = from_chart.split_components(p)
@@ -1922,8 +1913,7 @@ def pt_map(
 
     """
     del usys
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     _require_cart3d_phase_space(to_chart, direction="from")
 
     rho, z, dt_rho, dt_z = p["rho"], p["z"], p["dt_rho"], p["dt_z"]
