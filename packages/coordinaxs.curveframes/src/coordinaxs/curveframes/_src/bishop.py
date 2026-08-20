@@ -160,7 +160,11 @@ def _orthonormalize(v: Any, T0_val: Any) -> Any:
     w = v - jnp.dot(v, T0_val) * T0_val
     norm = jnp.linalg.norm(w)
     # `<=`, not `<`, so that an all-zero `v` (threshold 0) still raises.
-    w = eqx.error_if(w, norm <= 1e-12 * jnp.linalg.norm(v), _MSG_PARALLEL_NORMAL)
+    # `~(norm > tol)`, not `norm <= tol`: a NaN compares False against both, so
+    # the `<=` form admits a NaN `v` and returns a NaN triad with nothing
+    # raised. Same reason `TubularChart`'s reach guard is written `~(f > 0)`.
+    tol = 1e-12 * jnp.linalg.norm(v)
+    w = eqx.error_if(w, ~(norm > tol), _MSG_PARALLEL_NORMAL)
     return w / norm
 
 
