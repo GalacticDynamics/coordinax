@@ -155,8 +155,8 @@ jobs:
 
       - name: Test package
         run: >-
-          uv run --group test-all --extra workspace --resolution lowest-direct pytest --cov
-          --cov-report=xml --cov-report=term --durations=20
+          uv run --group test-all --extra workspace --resolution lowest-direct pytest -n logical
+          --dist=loadfile --cov --cov-report=xml --cov-report=term --durations=20
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7.0.0

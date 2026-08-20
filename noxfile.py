@@ -141,8 +141,19 @@ def test(s: nox.Session, /) -> None:
 
     # This session installs the `workspace` extra (interop included), so the
     # interop order-independence tests must run, not silently skip.
+    # -n logical: parallelize across cores. --dist=loadfile: keep each file's
+    # tests on one worker -- Sybil doctests share sequential state across
+    # `>>>` examples within a source file, which breaks if xdist scatters
+    # them across workers. posargs after these let callers override (e.g.
+    # `-n0` for --pdb, which xdist can't run under).
     s.run(
-        "pytest", *ignore_args, *posargs, env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"}
+        "pytest",
+        "-n",
+        "logical",
+        "--dist=loadfile",
+        *ignore_args,
+        *posargs,
+        env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"},
     )
     # s.notify("pytest_benchmark", posargs=s.posargs)
 
