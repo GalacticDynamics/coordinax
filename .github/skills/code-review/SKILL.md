@@ -109,6 +109,10 @@ The triple is (geometry kind, basis, semantic kind), and the three are orthogona
 
 `tests/benchmark/` runs on CodSpeed. A change touching dispatch registration, `aval`, shape computation, chart equality/hashing, or the transform hot paths should say what happened to the benchmarks — a caching regression keeps every correctness test green and only shows up here (#540, #648, #654, #692).
 
+- **A closure rebuilt inside a loop or method is not the same object twice.** `jax.jit` caches on the Python identity of the function it wraps, not on argument equality, so `jax.jit(cx.pt_map(...))` (or any `pt_map`/`jit`/`vmap` stack) constructed fresh per call recompiles every call instead of hitting the cache — a ~1000x-class regression that every correctness test still passes. It should be built once, at module or `__init__` scope. See [`docs/guides/perf.md`](../../../docs/guides/perf.md).
+- **A new hot-path helper that repeatedly re-dispatches on statically-known argument types** should follow the `array_norm` / `_generic_tangent_act` idiom (`AGENTS.md`, "Conventions that bite"): `@ft.cache` around a `.invoke(...)` call, not a bare call to the dispatched function on every invocation. This is a narrow win (~1.1-1.2x) — flag it as a missed opportunity only on an actual hot path, not as a general style preference.
+- **`jacfwd`/`grad` over a batch must `vmap` the scalar function**, not be applied directly to a function that already takes a batch. The direct route does not error — it silently returns a dense, wrong-shaped Jacobian (every output point with respect to every input point, not just its own) and pays for the extra shape in both time and memory.
+
 ## Tests
 
 - **A changed repr or signature breaks doctests, and the fix belongs in the same PR.** Sybil runs the `.md` and `.py` examples — see [`AGENTS.md`](../../../AGENTS.md) for which paths are collected.

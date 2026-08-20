@@ -150,6 +150,19 @@ c2s_cx(xarr)
 
 There is NONE! The performance is the same as the hardcoded version. This is because we closed over the static arguments (the charts and unit system) so that JAX can optimize the computation effectively. The `coordinax` objects are only used inside the JIT-compiled function, so there is no overhead from pytrees or wrappers at the boundary.
 
+**But only if the closure itself is built once.** `_c2s_cx` and `c2s_cx` above are each built exactly once, at module scope, and every timing reuses that same object. `jax.jit` caches on the _identity_ of the Python function it wraps, not on argument equality -- so a fresh `cx.pt_map(...)` closure re-wrapped in a fresh `jax.jit(...)` on every call is a cache miss every time, not a cheap re-dispatch:
+
+```{code-cell} ipython3
+def rebuild_each_call(x):
+    fn = jax.jit(cx.pt_map(cx.cart3d, cx.sph3d, usys=usys))
+    return jax.block_until_ready(fn(x))
+
+%timeit rebuild_each_call(xarr)
+%timeit jax.block_until_ready(c2s_cx(xarr))
+```
+
+Rebuilding pays a full retrace-and-compile on every call -- tens of milliseconds instead of low microseconds, roughly a 1000-4000x difference depending on the function. Build the `pt_map`/`jit`/`vmap` stack once, at module scope or in `__init__`, and call that same object every time; if several call sites need the same conversion, define it once in a shared helper module and import the built closure rather than re-deriving it at each site.
+
 Let's see what happens if we don't close over the static arguments:
 
 ```{code-cell} ipython3

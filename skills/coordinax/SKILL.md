@@ -306,6 +306,7 @@ Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so
 | Velocity components are off by a factor of `r` or `r*sin(theta)` | `coord_basis` vs `phys_basis`. Convert with `change_basis(..., at=point)`. |
 | Shape/broadcast error inside a metric or chart function | Scalar-first code given batched input. `vmap` the call; if it is a library function, that is a batch-safety bug worth reporting. |
 | Correct but ~100x slower than expected | A chart/representation is crossing the jit boundary as a traced arg, or pytrees are crossing per call. Close over the static objects. |
+| `jax.jacfwd`/`grad` over a batch returns a dense `(N, k, N, k)` array | Applied directly to a function that already takes a batch — this does not error, it silently computes every output point's derivative with respect to every input point. Write the function scalar (single point) and use `jax.vmap(jax.jacfwd(fn))`; `jac_pt_map` does exactly this. |
 | `jnp.<f>` returns a bare `Array`, stripping the coordinax type | The quaxed fallback, not a coordinax defect. See the quaxed skill. |
 | Astro frames missing (`cxf.ICRS` absent) | `coordinaxs.astro` not installed. `pip install "coordinax[astro]"`. |
 
