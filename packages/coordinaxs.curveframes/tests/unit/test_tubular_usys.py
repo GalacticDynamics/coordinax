@@ -82,3 +82,33 @@ def test_quantities_and_raw_values_can_be_mixed(chart) -> None:
     want = cxc.pt_map(allraw, chart.M, chart, chart.M, cxc.cart3d, usys=USYS)
     for k in ("x", "y", "z"):
         assert jnp.allclose(got[k], want[k]), k
+
+
+def test_raw_tau_bounds_are_where_the_raw_route_stops() -> None:
+    """`tau_bounds` states the chart's own tau range, so it must carry a unit.
+
+    A `usys` interprets the coordinates of a *call*; `tau_bounds` is
+    structural -- read by `coord_dimensions` with no call in sight, so there
+    is no `usys` in scope to consult. The raw route stops here, with the
+    builder's own message rather than an `AttributeError`.
+
+    Worth pinning now that raw coordinates work everywhere else in this
+    chart: passing raw bounds too is the natural next assumption.
+
+    `nearest_tau` is deliberately not exercised here -- its ``bounds`` is
+    annotated `tuple[AbstractQuantity, AbstractQuantity]`, so beartype
+    rejects a raw pair before any of this runs. `TubularChart.tau_bounds` is
+    `tuple[Any, Any]`, which is why the chart is the path that reaches it.
+    """
+    chart = cxfc.TubularChart(
+        cxfc.BishopBuilder(circle),  # inferring, so nothing declared
+        tau_bounds=(0.0, 2 * jnp.pi),
+    )
+    with pytest.raises(TypeError, match="carries no unit"):
+        _ = chart.coord_dimensions
+
+    # Declaring the unit is the way through, exactly as for a raw parameter.
+    declared = cxfc.TubularChart(
+        cxfc.BishopBuilder(circle, "s"), tau_bounds=(0.0, 2 * jnp.pi)
+    )
+    assert declared.coord_dimensions == ("time", "length", "length")
