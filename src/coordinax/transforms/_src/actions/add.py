@@ -492,6 +492,7 @@ def act(
     *,
     at: CDict | None = None,
     at_vel: CDict | None = None,
+    at_jet: dict[int, CDict] | None = None,
     usys: Any = None,
     **kw: Any,
 ) -> CDict:
@@ -533,7 +534,17 @@ def act(
         return cast(
             "CDict",
             _generic_tangent_act()(
-                op, tau, x, chart, geom, rep, at=at, at_vel=at_vel, usys=usys, **kw
+                op,
+                tau,
+                x,
+                chart,
+                geom,
+                rep,
+                at=at,
+                at_vel=at_vel,
+                at_jet=at_jet,
+                usys=usys,
+                **kw,
             ),
         )
 
@@ -549,7 +560,7 @@ def act(
         # second materialization is a whole ODE solve for a curve-frame
         # builder, so assemble the jet with the engine's own validator and
         # call the engine's jet function directly.
-        jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel)
+        jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel, at_jet=at_jet)
         return prolong_jet(op, tau, jet, chart, usys=usys)[m]
 
     return _ladder_act(op, op0, k, tau, m, x, chart, rep, at=at, usys=usys, **kw)
