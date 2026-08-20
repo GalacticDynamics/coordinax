@@ -6,7 +6,7 @@ the Jacobian pushforward (CoordinateBasis) or frame matrix rotation (PhysicalBas
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import jax
 import jax.numpy as jnp
@@ -361,3 +361,64 @@ class TestTangentMapMixedCDict:
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
         with pytest.raises(TypeError, match="mixed CDict"):
             cxr.tangent_map(v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, at=at)
+
+
+class TestTheBasePointIsRequiredWhenTheChartChanges:
+    """`at=None` past the same-chart short-circuit used to fail unrecognisably.
+
+    `jac_pt_map(None, ...)` resolves to the higher-order rule and returns a
+    *function*, so the failure surfaced from `_apply_jac` as ``unsupported
+    operand type(s) for @: 'function' and 'ArrayImpl'`` -- naming nothing the
+    caller wrote. Pre-existing on the scalar path; the batched path added by
+    #776 inherited it.
+    """
+
+    V: ClassVar = {k: jnp.asarray(1.0) for k in "xyz"}
+    V_BATCH: ClassVar = {k: jnp.asarray([1.0, 2.0]) for k in "xyz"}
+
+    @pytest.mark.parametrize("basis", ["coord_basis", "phys_basis"])
+    def test_a_missing_base_point_is_named(self, basis):
+        with pytest.raises(ValueError, match="needs the base point"):
+            cxr.tangent_map(
+                self.V,
+                cxc.cart3d,
+                getattr(cxr, basis),
+                cxc.sph3d,
+                at=None,
+                usys=u.unitsystems.si,
+            )
+
+    def test_the_batched_path_refuses_it_too(self):
+        """The vmapped branch must not reach `jac_pt_map` with `None` either."""
+        with pytest.raises(ValueError, match="needs the base point"):
+            cxr.tangent_map(
+                self.V_BATCH,
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxc.sph3d,
+                at=None,
+                usys=u.unitsystems.si,
+            )
+
+    def test_the_message_says_which_charts(self):
+        with pytest.raises(ValueError, match="Cart3D to Spherical3D"):
+            cxr.tangent_map(
+                self.V,
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxc.sph3d,
+                at=None,
+                usys=u.unitsystems.si,
+            )
+
+    def test_a_same_chart_conversion_still_needs_no_base_point(self):
+        """It is the identity, so there is no Jacobian to evaluate anywhere."""
+        got = cxr.tangent_map(
+            self.V,
+            cxc.cart3d,
+            cxr.coord_basis,
+            cxc.cart3d,
+            at=None,
+            usys=u.unitsystems.si,
+        )
+        assert {k: float(got[k]) for k in got} == {"x": 1.0, "y": 1.0, "z": 1.0}

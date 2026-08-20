@@ -1294,6 +1294,15 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         both to build the correct 2-D `UnitsMatrix` and returns
         `QuantityMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
 
+      - **Batched base points**: components may carry arbitrary leading batch
+        axes. A chart map is pointwise, so `N` points give `N` independent
+        Jacobians and the result is `(*batch, n_out, n_in)` — the per-point
+        matrices, not the Jacobian of the batch as one function. That larger
+        object, `(*batch, n_out, *batch, n_in)`, is what `jax.jacfwd` returns if
+        applied to a batched input directly: it is block-diagonal, every
+        off-diagonal block is identically zero, and it costs `O(N^2)` to hold.
+        Both branches map over the leading axes to avoid it (#776).
+
     **`usys` parameter:** required for the `None`-partial, curried, and plain-`Array`
     dispatches. Optional (`None`) for the `CDict` generic dispatch's quantity-valued
     branch, and for all analytical dispatches.
@@ -1885,7 +1894,7 @@ A representation is therefore **not** the same thing as a chart: the chart deter
 
     **Semantics by basis:**
 
-    - **`CoordinateBasis`**: delegates to `jac_pt_map(at, from_chart, to_chart)` to obtain the Jacobian $J^j{}_i = \partial\tilde{q}^j/\partial q^i$, then applies $\tilde{v}^j = J^j{}_i v^i$.
+    - **`CoordinateBasis`**: delegates to `jac_pt_map(at, from_chart, to_chart)` to obtain the Jacobian $J^j{}_i = \partial\tilde{q}^j/\partial q^i$, then applies $\tilde{v}^j = J^j{}_i v^i$. `at` is required whenever `from_chart != to_chart`, since the Jacobian is evaluated at a point; only the same-chart case, being the identity, may omit it. A batched `at` gives one Jacobian per point; a batched `v` at a single `at` shares the one Jacobian.
     - **`PhysicalBasis`**: fetch the orthonormal frame matrices $B_{\rm from}$ (columns = physical basis vectors in Cartesian) and $B_{\rm to}$ via `frame_cart`, compute $R = B_{\rm to}^T B_{\rm from}$, apply $\hat{v}' = R \hat{v}$.
 
     **Same-chart optimisation:** when `from_chart is to_chart`, returns `v` unchanged.

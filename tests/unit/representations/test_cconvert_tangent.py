@@ -2,6 +2,8 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import ClassVar
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -215,3 +217,124 @@ class TestAccelerationPushesForwardAsAVector:
         want = np.asarray(jax.jacfwd(_sph_of_t)(_T))
         got = _convert(_V, cxr.coord_vel)
         np.testing.assert_allclose(got, want, rtol=0, atol=1e-14)
+
+
+class TestTangentConversionOfABatch:
+    """A batch of tangent vectors converts element by element (#776).
+
+    `_apply_jac` takes the 2-D Jacobian and single vector it documents, so the
+    batch is mapped one level up rather than threaded through it and the unit
+    handling inside.
+    """
+
+    N = 4
+    AT: ClassVar = {
+        "x": jnp.asarray([1.0, 2.0, 0.5, 3.0]),
+        "y": jnp.asarray([2.0, 1.0, -1.5, 0.5]),
+        "z": jnp.asarray([3.0, 0.5, 2.0, 1.0]),
+    }
+    V: ClassVar = {
+        "x": jnp.asarray([1.0, 0.0, 0.0, 1.0]),
+        "y": jnp.asarray([0.0, 1.0, 0.0, 2.0]),
+        "z": jnp.asarray([0.0, 0.0, 1.0, 3.0]),
+    }
+
+    @pytest.mark.parametrize("kind_name", ["coord_disp", "coord_vel", "coord_acc"])
+    @pytest.mark.parametrize("to_chart", [cxc.sph3d, cxc.cyl3d])
+    def test_it_matches_element_by_element(self, kind_name, to_chart):
+        kind = getattr(cxr, kind_name)
+        got = cxr.cconvert(
+            self.V, cxc.cart3d, kind, to_chart, kind, at=self.AT, usys=usys
+        )
+        keys = tuple(got)
+        for i in range(self.N):
+            one = cxr.cconvert(
+                {k: self.V[k][i] for k in self.V},
+                cxc.cart3d,
+                kind,
+                to_chart,
+                kind,
+                at={k: self.AT[k][i] for k in self.AT},
+                usys=usys,
+            )
+            for k in keys:
+                np.testing.assert_allclose(
+                    np.asarray(got[k])[i], np.asarray(one[k]), rtol=0, atol=0
+                )
+
+    def test_many_vectors_at_one_point_share_the_single_jacobian(self):
+        """A batched `v` with a scalar `at` must not take the mapped path.
+
+        The base point decides: one point needs one Jacobian, which
+        `_apply_jac` already broadcasts across the vectors. Keying the choice
+        off `v` instead broke this with a `vmap` rank error.
+        """
+        at_one = {k: self.AT[k][0] for k in self.AT}
+        got = cxr.cconvert(
+            self.V,
+            cxc.cart3d,
+            cxr.coord_vel,
+            cxc.sph3d,
+            cxr.coord_vel,
+            at=at_one,
+            usys=usys,
+        )
+        for k in got:
+            assert np.asarray(got[k]).shape == (self.N,)
+        for i in range(self.N):
+            one = cxr.cconvert(
+                {k: self.V[k][i] for k in self.V},
+                cxc.cart3d,
+                cxr.coord_vel,
+                cxc.sph3d,
+                cxr.coord_vel,
+                at=at_one,
+                usys=usys,
+            )
+            for k in got:
+                np.testing.assert_allclose(
+                    np.asarray(got[k])[i], np.asarray(one[k]), rtol=0, atol=1e-15
+                )
+
+    def test_one_vector_at_many_points_gives_one_result_each(self):
+        """The mirror case: a scalar `v` with a batched `at`."""
+        v_one = {k: self.V[k][0] for k in self.V}
+        got = cxr.cconvert(
+            v_one,
+            cxc.cart3d,
+            cxr.coord_vel,
+            cxc.sph3d,
+            cxr.coord_vel,
+            at=self.AT,
+            usys=usys,
+        )
+        for k in got:
+            assert np.asarray(got[k]).shape == (self.N,)
+        for i in range(self.N):
+            one = cxr.cconvert(
+                v_one,
+                cxc.cart3d,
+                cxr.coord_vel,
+                cxc.sph3d,
+                cxr.coord_vel,
+                at={k: self.AT[k][i] for k in self.AT},
+                usys=usys,
+            )
+            for k in got:
+                np.testing.assert_allclose(
+                    np.asarray(got[k])[i], np.asarray(one[k]), rtol=0, atol=0
+                )
+
+    def test_the_batch_axis_leads_and_components_stay_separate(self):
+        """Each component keeps the batch shape; nothing folds into it."""
+        got = cxr.cconvert(
+            self.V,
+            cxc.cart3d,
+            cxr.coord_vel,
+            cxc.sph3d,
+            cxr.coord_vel,
+            at=self.AT,
+            usys=usys,
+        )
+        for k in got:
+            assert np.asarray(got[k]).shape == (self.N,)

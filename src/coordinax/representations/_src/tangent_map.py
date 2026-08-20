@@ -3,10 +3,12 @@
 __all__ = ("tangent_map",)
 
 from jaxtyping import Array
-from typing import Any
+from typing import Any, Final
 
+import jax
 import jax.numpy as jnp
 import plum
+from zeroth import zeroth
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -43,6 +45,14 @@ def _check_linear_basis(rep: Representation, label: str) -> None:
 # ---------------------------------------------------------------------------
 # Shared helper: apply a QuantityMatrix Jacobian to a tangent vector CDict
 # ---------------------------------------------------------------------------
+
+
+_MSG_AT_REQUIRED: Final = (
+    "tangent_map() needs the base point: pushing a tangent vector from {frm} to "
+    "{to} evaluates the Jacobian of the transition map somewhere, and the "
+    "transition is not linear. Pass `at=` with the point the vector sits at. "
+    "Only a same-chart conversion may omit it, being the identity."
+)
 
 
 def _apply_jac(
@@ -137,6 +147,39 @@ def tangent_map(
     # Same-chart optimization: identity transform
     if from_chart == to_chart:
         return v
+
+    # Past that point a Jacobian must be evaluated somewhere, so `at` is
+    # not optional. Without this it reaches `jac_pt_map` as `None`, which
+    # resolves to the higher-order rule and returns a *function*; the
+    # failure then surfaces from `_apply_jac` as an unsupported `@`
+    # between a function and an array, naming nothing the caller wrote.
+    if at is None:
+        msg = _MSG_AT_REQUIRED.format(
+            frm=type(from_chart).__name__, to=type(to_chart).__name__
+        )
+        raise ValueError(msg)
+
+    # The *base point* decides this, not the vector: a batch of points needs
+    # one Jacobian each, whereas a batch of vectors at a single point shares
+    # one and `_apply_jac` already broadcasts it. So a scalar `at` keeps the
+    # unbatched path below, whatever shape `v` has.
+    #
+    # `_apply_jac` takes the 2-D Jacobian and single vector it documents, so
+    # the mapping happens here rather than being threaded through it and the
+    # unit handling inside.
+    at_batch = jnp.shape(zeroth(at.values()))
+    if at_batch:
+        # `v` rides along when it is batched too, pairing element with
+        # element; when it is not, every Jacobian acts on the same vector.
+        v_axis = 0 if jnp.shape(zeroth(v.values())) else None
+
+        def one(v_i: CDict, at_i: CDict) -> CDict:
+            J_i = cxc.jac_pt_map(at_i, from_chart, to_chart, usys=usys)
+            return _apply_jac(J_i, from_chart.components, to_chart.components, v_i)
+
+        for _ in at_batch:
+            one = jax.vmap(one, in_axes=(v_axis, 0))
+        return one(v, at)
 
     J = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys)
     return _apply_jac(J, from_chart.components, to_chart.components, v)

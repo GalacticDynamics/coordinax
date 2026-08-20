@@ -46,6 +46,7 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 import plum
+from zeroth import zeroth
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -263,6 +264,29 @@ def jac_pt_map(
     # array-valued, we can skip the packing and unit handling and directly
     # compute the Jacobian as an array.
     at = from_chart.check_data(at, keys=True)
+
+    # A chart map is pointwise, so a batch of points is a batch of
+    # independent Jacobians. Differentiating the batch as one function
+    # would instead give the (*batch, n_out, *batch, n_in) Jacobian of
+    # R^(N*n) -> R^(N*n): correct for *that* function, but block-diagonal
+    # with every off-diagonal block identically zero, and O(N^2) to hold.
+    # Map over the leading axes instead.
+    #
+    # `jnp.vectorize` would express the same mapping in one call, but it
+    # coerces its inputs with `asarray` and so cannot carry the Quantity
+    # route; measured, the two are within noise. Scalar components take
+    # the `not batch` branch, so the unbatched path is untouched -- the
+    # shape is static, so this costs nothing at trace time.
+    batch = jnp.shape(zeroth(at.values()))
+    if batch:
+
+        def one(at_i: CDict) -> Any:
+            return cxcapi.jac_pt_map(at_i, from_chart, to_chart, usys=usys)
+
+        for _ in batch:
+            one = jax.vmap(one)
+        return one(at)
+
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)

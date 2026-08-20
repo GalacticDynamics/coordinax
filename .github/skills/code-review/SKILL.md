@@ -51,6 +51,8 @@ Treat as suspect, in metric/chart/vector code:
 - Indexing that assumes rank: `x[0]`, `x[..., 2]` mixed with `x[2]`, bare `len(...)`, `.shape[0]`.
 - Matrix assembly — `jnp.diag`, `jnp.stack`, `jnp.eye`, `reshape` to a fixed `(n, n)` — where the batch dimensions must lead. #613, #618, #621, and #751 were all metric matrices built as if unbatched.
 - `jnp.where`/arithmetic between a batched component and a scalar constant without an explicit broadcast (#653).
+- `jax.jacfwd`/`jacrev` applied to a function that already takes a batch. It does not error: it returns the `(*batch, n_out, *batch, n_in)` Jacobian of the batch as one map, block-diagonal with structurally-zero off-diagonal blocks, `O(N^2)` to hold, and wrong for any consumer expecting per-point matrices (#776). Write the function for one point and map it.
+- When one branch handles batches, check _which_ operand decides. #782 keyed the choice off the tangent vector, which broke a batched vector at a single base point; the base point is what needs one Jacobian each.
 
 The check that settles it: **is there a test that runs the changed function on a non-trivial batch shape and compares against the vmapped scalar?** #612 is the model — a property test asserting the batch invariant, not a second worked example. A batch-safety fix without such a test will regress.
 

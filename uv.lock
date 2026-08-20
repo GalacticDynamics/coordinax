@@ -471,6 +471,7 @@ dependencies = [
     { name = "unxts-linalg" },
     { name = "wadler-lindig" },
     { name = "xmmutablemap" },
+    { name = "zeroth" },
 ]
 
 [package.optional-dependencies]
@@ -633,6 +634,7 @@ requires-dist = [
     { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
+    { name = "zeroth", specifier = ">=1.2.0" },
 ]
 provides-extras = ["astro", "benchmark", "curveframes", "interop-astropy", "parametric", "workspace"]
 
@@ -3731,6 +3733,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/9f/a6/c4043eb00f297956a5447109985f41fabb0adbbf80786a21c2949f798ba4/xmmutablemap-0.2.1.tar.gz", hash = "sha256:38a881b0fcc54352e2751628d11519d023bc6677e978483736f8f51b45c7147f", size = 97896, upload-time = "2025-10-22T01:22:00.219Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/99/89/4628be42c56e0063b2158a468fc0de3e21285800f8cab07f2d3be684c763/xmmutablemap-0.2.1-py3-none-any.whl", hash = "sha256:002f97986e1cc343d362e38eae62a0a51ca7b76bd3b1de0f70a8f05dbe2b8c5c", size = 7584, upload-time = "2025-10-22T01:21:58.821Z" },
+]
+
+[[package]]
+name = "zeroth"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/d3/e1cb496be02859e42763dd351e834f537a214e8deaebf0af247bbc2809f2/zeroth-1.2.0.tar.gz", hash = "sha256:9d484a5f70800ab44189b5252401d18e9ce537c917081ee4e87dd86871d6b77f", size = 115154, upload-time = "2026-05-12T19:02:21.102Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/66/3400e437c761dcfdc355d24620ae57d71fb29be0c339380864260069068e/zeroth-1.2.0-py3-none-any.whl", hash = "sha256:5eb008cd02eb6e44a2387b5d5421d39a86a8abfc5eae8d1ca8d09b97f572a075", size = 4664, upload-time = "2026-05-12T19:02:19.889Z" },
 ]
 
 [[package]]
