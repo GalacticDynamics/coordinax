@@ -24,12 +24,7 @@ def _to_np(x: object, unit: str) -> np.ndarray:
 
 @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
 def test_scale_from_factors_singular_raises_under_jit(bad: float) -> None:
-    """A non-invertible scale factor is rejected, even under jit.
-
-    `isclose(s, 0)` is False for both NaN and `inf`. The `inf` case was the
-    quietest: its reciprocal is 0.0, so `inverse` came back finite, singular,
-    and with nothing to notice.
-    """
+    """A non-invertible scale factor is rejected, even under jit."""
     build = eqx.filter_jit(cxfm.Scale.from_factors)
     with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
         jax.block_until_ready(build(jnp.asarray([2.0, bad, 4.0])).s)

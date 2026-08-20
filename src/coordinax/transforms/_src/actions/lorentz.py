@@ -17,6 +17,7 @@ import unxt as u
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import _unnormalisable
 from coordinax.transforms._src import groups
 
 #: Speed of light, used only to convert a velocity into a dimensionless beta.
@@ -244,14 +245,10 @@ class LorentzBoost(AbstractLinearTransform):
         """
         d = _float(direction)
         norm = jnp.linalg.norm(d)
-        # `d / norm` is a unit vector only where `norm` is finite and positive: it
-        # is NaN iff a component of `d` is, `inf` iff a component is, and 0 iff `d`
-        # is. Testing `norm == 0.0` alone caught only the last, so a NaN direction
-        # built the `nan` betas this guard exists to prevent -- reported later by
-        # `gamma`'s subluminal check, which names the wrong cause.
-        norm = eqx.error_if(
-            norm, ~((norm > 0.0) & jnp.isfinite(norm)), _MSG_ZERO_DIRECTION
-        )
+        # Anything but a finite positive norm builds the `nan` betas this guard
+        # exists to prevent -- reported later by `gamma`'s subluminal check,
+        # which names the wrong cause.
+        norm = eqx.error_if(norm, _unnormalisable(norm), _MSG_ZERO_DIRECTION)
         return cls(jnp.tanh(_float(rapidity)) * (d / norm))
 
     # -----------------------------------------------------

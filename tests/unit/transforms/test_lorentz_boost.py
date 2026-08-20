@@ -165,23 +165,14 @@ class TestDerivedQuantities:
         """Every derived quantity guards, not just ``gamma``.
 
         ``rapidity`` used to reach ``arctanh(|beta| >= 1)`` and hand back
-        ``inf``/``nan`` while ``gamma`` on the same object raised. A ``nan``
-        beta needs the guard written as ``~(beta_sq < 1)``: it is False for
-        ``beta_sq >= 1`` too, so the direct form let it through and returned
-        the non-finite value the guard exists to prevent.
+        ``inf``/``nan`` while ``gamma`` on the same object raised.
         """
         with pytest.raises(eqx.EquinoxRuntimeError, match="subluminal"):
             _ = getattr(cxfm.LorentzBoost([beta, 0.0, 0.0]), attr)
 
     @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
     def test_an_unnormalisable_direction_is_rejected(self, bad):
-        """A ``direction`` that cannot be normalised has no boost axis.
-
-        Dividing by its norm produced ``nan`` betas that then propagated
-        silently into every entry of the matrix. ``norm == 0.0`` caught only
-        the zero case; the other two were reported later by ``gamma``'s
-        subluminal check, which names the wrong cause.
-        """
+        """A ``direction`` that cannot be normalised has no boost axis."""
         with pytest.raises(eqx.EquinoxRuntimeError, match="non-zero"):
             cxfm.LorentzBoost.from_rapidity(0.5, (bad, 0.0, 0.0))
 
