@@ -10,6 +10,12 @@ So the cost is not something coordinax can dispatch its way out of; what it can
 do is keep the raw-array route open, which is what these tests guard. Counting
 dispatches rather than timing keeps the guard deterministic: the numbers below
 are exact and repeatable, where wall-clock would flake in CI.
+
+Counting also survives a change in how `plum` caches. `plum#290` would let the
+unfaithful signatures on this path be cached, cutting the *cost* of a dispatch
+without changing how many happen -- `unit` already caches and is still counted
+27 times per call, which is what shows this counter tallies calls rather than
+resolutions.
 """
 
 __all__: tuple[str, ...] = ()

@@ -74,6 +74,10 @@ Pre-resolving the dispatch with `plum`'s `Function.invoke` is therefore not the 
 
 So the 300x figure is a statement about _many small eager calls_, not about throughput. Batch, and it disappears; stay eager and per-point, and the route you choose is worth 20x.
 
+```{note}
+The eager timings above were measured against `plum` as it stands today, where several functions on this path -- `ustrip`, `uconvert`, `dimension_of` -- carry signatures that are not _faithful_ (`Literal`, `Mapping[...]`, `type[...]`) and so run with their method cache disabled. [plum#290](https://github.com/beartype/plum/issues/290) proposes separating `is_cacheable` from `is_faithful`, which would let exactly those signatures be cached. Expect the `Quantity` column to improve when that lands; the shape of the advice -- batch, jit, and prefer raw arrays at the boundary -- does not depend on it.
+```
+
 ## Coordinate Changes
 
 Let's start by importing the libraries we'll need and setting up some test data.

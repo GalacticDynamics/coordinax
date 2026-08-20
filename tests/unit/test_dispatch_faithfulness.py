@@ -59,7 +59,14 @@ def _coordinax_unfaithful() -> dict[str, list[str]]:
 
 
 def test_no_new_unfaithful_signatures() -> None:
-    """A new unfaithful signature silently disables plum's method cache."""
+    """A new unfaithful signature silently disables plum's method cache.
+
+    Watch `plum#290`: it proposes separating `is_cacheable` from `is_faithful`,
+    so that `Literal` and generic signatures can be cached despite being
+    unfaithful. If that lands, this guard is stricter than it needs to be --
+    the question becomes cacheability, and several entries in
+    `UNFAITHFUL_BY_DESIGN` may stop costing anything.
+    """
     unexpected = {
         name: sigs
         for name, sigs in _coordinax_unfaithful().items()
