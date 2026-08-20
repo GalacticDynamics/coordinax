@@ -277,7 +277,10 @@ class LorentzBoost(AbstractLinearTransform):
 
         """
         beta_sq = jnp.sum(self.beta**2)
-        beta_sq = eqx.error_if(beta_sq, beta_sq >= 1.0, _MSG_SUPERLUMINAL)
+        # `~(x < 1)`, not `x >= 1`: a NaN is False for both comparisons, so the
+        # direct form admits it and leaks the non-finite value this guard exists
+        # to stop.
+        beta_sq = eqx.error_if(beta_sq, ~(beta_sq < 1.0), _MSG_SUPERLUMINAL)
         return 1.0 / jnp.sqrt(1.0 - beta_sq)
 
     @property
@@ -297,7 +300,7 @@ class LorentzBoost(AbstractLinearTransform):
         # same condition as `gamma`, so every derived quantity reports the same
         # superluminal error rather than one of them leaking a non-finite value.
         speed = self.speed
-        speed = eqx.error_if(speed, speed >= 1.0, _MSG_SUPERLUMINAL)
+        speed = eqx.error_if(speed, ~(speed < 1.0), _MSG_SUPERLUMINAL)
         return jnp.arctanh(speed)
 
     # -----------------------------------------------------

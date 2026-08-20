@@ -111,7 +111,9 @@ def leq(
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be less than or equal to {comp_name}."
-    return eqx.error_if(x, u.ustrip("", jnp.any(x > max_val)), msg)
+    # `~(x <= max)` rather than `x > max`: a NaN is False for both, so the
+    # direct form admits it silently.
+    return eqx.error_if(x, u.ustrip("", jnp.any(~(x <= max_val))), msg)
 
 
 def geq(
@@ -140,4 +142,5 @@ def geq(
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be greater than or equal to {comp_name}."
-    return eqx.error_if(x, u.ustrip("", jnp.any(x < min_val)), msg)
+    # `~(x >= min)`, for the NaN reason given in `leq`.
+    return eqx.error_if(x, u.ustrip("", jnp.any(~(x >= min_val))), msg)
