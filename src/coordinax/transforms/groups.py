@@ -30,6 +30,7 @@ __all__ = (
     "PoincareGroup",
     "LorentzGroup",
     "ProperOrthochronousLorentzGroup",
+    "is_subgroup",
 )
 
 from ._src.groups import (
@@ -43,4 +44,5 @@ from ._src.groups import (
     PoincareGroup,
     ProperOrthochronousLorentzGroup,
     SpecialOrthogonalGroup,
+    is_subgroup,
 )
