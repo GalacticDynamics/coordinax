@@ -130,7 +130,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     naming ``binormal`` or ``normal2``.
     """
     spec = PARALLEL_TRANSPORT_TYPES[request.param]
-    builder = spec.builder_cls(circle)
+    builder = spec.builder_cls(circle, "s")
 
     def fields(bldr: object, tau: u.AbstractQuantity) -> tuple:
         return tuple(getattr(bldr, name)(tau) for name in spec.triad)
@@ -141,7 +141,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
         builder_cls=spec.builder_cls,
         yr_builder=spec.builder_cls(circle_yr, "yr"),
         xop=cxfm.TimeDep(builder),
-        frame=spec.frame_cls.from_curve(cxf.Alice(), circle),
+        frame=spec.frame_cls.from_curve(cxf.Alice(), circle, "s"),
         frame_cls=spec.frame_cls,
         triad=spec.triad,
         tol=SimpleNamespace(**TOLERANCES[request.param]),

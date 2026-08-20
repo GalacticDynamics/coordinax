@@ -45,7 +45,7 @@ def pt_map(
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
     >>> chart = cxfc.TubularChart(
-    ...     cxfc.BishopBuilder(circle),
+    ...     cxfc.BishopBuilder(circle, "s"),
     ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
     >>> p = {"tau": u.Q(0.0, "s"), "n1": u.Q(0.1, "km"), "n2": u.Q(0.0, "km")}
@@ -89,7 +89,7 @@ def pt_map(
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
     >>> chart = cxfc.TubularChart(
-    ...     cxfc.BishopBuilder(circle),
+    ...     cxfc.BishopBuilder(circle, "s"),
     ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
 
@@ -152,7 +152,7 @@ def pt_map(
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
     >>> chart = cxfc.TubularChart(
-    ...     cxfc.BishopBuilder(circle),
+    ...     cxfc.BishopBuilder(circle, "s"),
     ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
     >>> p = {"tau": u.Q(0.0, "s"), "n1": u.Q(0.1, "km"), "n2": u.Q(0.0, "km")}

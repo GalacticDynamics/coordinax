@@ -46,12 +46,13 @@ BuilderT = TypeVar("BuilderT", bound="AbstractCurveFrameBuilder")
 
 _MSG_TAU_UNIT_DIMENSION = (
     "this curve exposes a parameter of dimension {want}, but `tau_unit` is "
-    "{unit!r}, which is {got}. `tau_unit` defaults to 's', so this is usually "
-    "a forgotten argument: a builder over an arc-length curve needs a length, "
-    "e.g. `BishopBuilder(ArcLength(curve, 'km'), 'km')`. Left as-is, "
-    "`location` would still return correct positions -- it never consults the "
-    "unit -- while `tangent` and `rotation_matrix` would fail later inside "
-    "the derivative."
+    "{unit!r}, which is {got}. A builder over an arc-length curve needs a "
+    "length, e.g. `BishopBuilder(ArcLength(curve, 's'), 'km')`: `ArcLength` "
+    "takes the *wrapped* curve's unit, typically a time, while the builder "
+    "takes the arc length the wrapper exposes. A common way to land here is "
+    "migrating mechanically to 's'. Left as-is, `location` would still return "
+    "correct positions, since it never consults the unit, while `tangent` and "
+    "`rotation_matrix` would fail later inside the derivative."
 )
 
 _MSG_TWO_ARGUMENT_NEEDS_STATION = (
@@ -187,7 +188,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
             if got != want:
                 raise ValueError(
                     _MSG_TAU_UNIT_DIMENSION.format(
-                        want=want, unit=str(self.tau_unit), got=got
+                        want=want, unit=self.tau_unit, got=got
                     )
                 )
 
@@ -246,7 +247,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     t = tau.ustrip("s")
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-        >>> builder = cxfc.FrenetSerretBuilder(helix)
+        >>> builder = cxfc.FrenetSerretBuilder(helix, "s")
         >>> op = builder(u.Q(0.0, "s"))
         >>> isinstance(op, cxfm.Composed)
         True
@@ -278,7 +279,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     t = tau.ustrip("s")
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(helix).location(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(helix, "s").location(u.Q(0.0, "s"))
         Q([1., 0., 0.], 'm')
 
         For a two-argument curve ``tau`` is the time -- see `_resolve`.
@@ -301,7 +302,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).tangent(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         For a two-argument curve ``tau`` is the time -- see `_resolve`.

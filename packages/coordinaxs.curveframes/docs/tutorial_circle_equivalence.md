@@ -38,7 +38,7 @@ Q([1., 0., 0.], 'km')
 The Frenet–Serret frame has axes $(\mathbf{T}, \mathbf{N}, \mathbf{B})$ computed from the curve's first and second derivatives:
 
 ```pycon
->>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.alice, circle)
+>>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.alice, circle, "s")
 ```
 
 ### 2b — Bishop (parallel-transport) frame
@@ -49,6 +49,7 @@ The Bishop frame $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is obtained by paral
 >>> bishop_frame = cxfc.BishopFrame.from_curve(
 ...     cxf.alice,
 ...     circle,
+...     "s",
 ...     initial_normal=jnp.array([-1.0, 0.0, 0.0]),
 ... )
 ```
@@ -184,9 +185,10 @@ Let's verify on a helix that the three frames **disagree**:
 ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "km")
 ...
 
->>> fs_helix = cxfc.FrenetSerretBuilder(helix)
+>>> fs_helix = cxfc.FrenetSerretBuilder(helix, "s")
 >>> bp_helix = cxfc.BishopBuilder(
 ...     helix,
+...     "s",
 ...     initial_normal=jnp.array([-1.0, 0.0, 0.0]),
 ... )
 

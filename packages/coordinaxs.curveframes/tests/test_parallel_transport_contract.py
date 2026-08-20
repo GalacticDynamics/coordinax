@@ -241,7 +241,7 @@ class TestConstructors:
     """A builder is built from a bare curve; the frame wraps it in TimeDep."""
 
     def test_builder_from_bare_curve(self, pt_case: SimpleNamespace) -> None:
-        built = pt_case.builder_cls(circle)
+        built = pt_case.builder_cls(circle, "s")
         np.testing.assert_allclose(
             built.location(u.Q(0, "s")).value, [1, 0, 0], atol=pt_case.tol.tight
         )

@@ -92,9 +92,12 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         A function ``tau -> Quantity[float, (3,)]`` representing a smooth space
         curve.  Make it an `equinox.Module` for differentiable curve parameters;
         a bare function's captures are trace-time constants.
-    tau_unit : AbstractUnit or str, optional
+    tau_unit : AbstractUnit or str
         Unit of the curve parameter, used by {func}`unxt.experimental.jacfwd` to
-        compute unit-correct derivatives.  Defaults to ``"s"``.
+        compute unit-correct derivatives.  Required: there is no neutral
+        default, since a curve parameter may be a time, an arc length, or an
+        affine parameter, and the wrong unit is silently rescaled rather than
+        rejected when it is dimensionally compatible.
     station : optional
         A fixed station along the curve; see `AbstractCurveFrameBuilder`.
 
@@ -110,7 +113,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-    >>> fs = cxfc.FrenetSerretBuilder(helix)
+    >>> fs = cxfc.FrenetSerretBuilder(helix, "s")
     >>> fs.location(u.Q(0.0, "s"))
     Q([1., 0., 0.], 'm')
 
@@ -120,7 +123,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     """The constructing curve."""
 
     tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        default=u.unit("s"), static=True, converter=u.unit
+        static=True, converter=u.unit
     )
     """The unit of the curve parameter tau."""
 
@@ -149,7 +152,8 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).rotation_matrix(u.Q(0.0, "s")).round(3)
+        >>> fs = cxfc.FrenetSerretBuilder(circle, "s")
+        >>> fs.rotation_matrix(u.Q(0.0, "s")).round(3)
         Array([[-0.,  1.,  0.],
                [-1., -0.,  0.],
                [ 0.,  0.,  1.]], dtype=float64)
@@ -200,7 +204,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).tangent(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         """
@@ -229,7 +233,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).normal(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").normal(u.Q(0.0, "s"))
         Q([-1., -0.,  0.], '')
 
         """
@@ -255,7 +259,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.FrenetSerretBuilder(circle).binormal(u.Q(0.0, "s"))
+        >>> cxfc.FrenetSerretBuilder(circle, "s").binormal(u.Q(0.0, "s"))
         Q([0., 0., 1.], '')
 
         """
@@ -303,7 +307,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
 
     Build a frame relative to Alice:
 
-    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> fs_frame.base_frame
     Alice()
 
@@ -329,7 +333,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         base_frame: FrameT,
         curve: Callable[[Any], Any],
         /,
-        tau_unit: u.AbstractUnit | str = "s",
+        tau_unit: u.AbstractUnit | str,
         *,
         station: Any = None,
     ) -> "FrenetSerretFrame[FrameT]":
@@ -342,8 +346,11 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         curve : Callable
             A function ``tau -> Quantity[float, (3,)]`` representing
             a smooth space curve.
-        tau_unit : str, optional
-            Unit of the curve parameter for differentiation.
+        tau_unit : AbstractUnit or str
+            Unit of the curve parameter for differentiation.  Required: there
+            is no neutral default, since a curve parameter may be a time, an
+            arc length, or an affine parameter, and the wrong unit is silently
+            rescaled rather than rejected when it is dimensionally compatible.
         station : optional
             A fixed station along the curve; when given the frame is a fixed
             frame *field* along the curve rather than a moving frame.
@@ -365,7 +372,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "km")
 
-        >>> frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+        >>> frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
         >>> frame.base_frame
         Alice()
 

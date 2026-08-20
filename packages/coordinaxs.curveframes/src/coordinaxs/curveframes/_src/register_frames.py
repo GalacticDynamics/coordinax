@@ -72,7 +72,7 @@ def frame_transition(
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
     ...                           jnp.zeros_like(t)]), "km")
 
-    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> op = cxf.frame_transition(cxf.Alice(), fs_frame)
     >>> isinstance(op, cxt.AbstractTransform)
     True
@@ -109,7 +109,7 @@ def frame_transition(
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
     ...                           jnp.zeros_like(t)]), "km")
 
-    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+    >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> op = cxf.frame_transition(fs_frame, cxf.Alice())
     >>> isinstance(op, cxt.AbstractTransform)
     True
@@ -151,8 +151,8 @@ def frame_transition(
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
     ...                           jnp.zeros_like(t)]), "km")
 
-    >>> fs1 = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
-    >>> fs2 = cxfc.FrenetSerretFrame.from_curve(cxf.Alex(), circle)
+    >>> fs1 = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
+    >>> fs2 = cxfc.FrenetSerretFrame.from_curve(cxf.Alex(), circle, "s")
     >>> op = cxf.frame_transition(fs1, fs2)
     >>> isinstance(op, cxt.AbstractTransform)
     True

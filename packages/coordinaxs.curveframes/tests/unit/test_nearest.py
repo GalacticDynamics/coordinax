@@ -28,7 +28,7 @@ def _point_at(builder, tau_v, n1, n2):
 
 @pytest.mark.parametrize("builder_cls", [cxfc.BishopBuilder, cxfc.FrenetSerretBuilder])
 def test_recovers_the_generating_tau(builder_cls) -> None:
-    b = builder_cls(helix)
+    b = builder_cls(helix, "s")
     x = _point_at(b, 0.7, 0.13, -0.21)
     got = nearest_tau(b, x, bounds=BOUNDS)
     assert jnp.allclose(got.ustrip("s"), 0.7, atol=1e-6)
@@ -40,14 +40,14 @@ def test_finds_the_nearest_root_not_merely_a_stationary_one() -> None:
     The helix has stationary points of the distance near tau = 3.99 and
     -2.87; the seeded scan must still return 0.7.
     """
-    b = cxfc.BishopBuilder(helix)
+    b = cxfc.BishopBuilder(helix, "s")
     x = _point_at(b, 0.7, 0.13, -0.21)
     got = nearest_tau(b, x, bounds=(u.Q(-4.0, "s"), u.Q(12.0, "s")), n_seed=128)
     assert jnp.allclose(got.ustrip("s"), 0.7, atol=1e-6)
 
 
 def test_is_jittable() -> None:
-    b = cxfc.BishopBuilder(helix)
+    b = cxfc.BishopBuilder(helix, "s")
     x = _point_at(b, 0.7, 0.13, -0.21)
     got = jax.jit(lambda xx: nearest_tau(b, xx, bounds=BOUNDS))(x)
     assert jnp.allclose(got.ustrip("s"), 0.7, atol=1e-6)
@@ -60,7 +60,7 @@ def test_nonconvergence_raises_eagerly() -> None:
     deterministic way to exercise the non-convergence guard independent of
     the default-tolerance dtype scaling.
     """
-    b = cxfc.BishopBuilder(helix)
+    b = cxfc.BishopBuilder(helix, "s")
     x = _point_at(b, 0.7, 0.13, -0.21)
     with pytest.raises(RuntimeError, match="did not converge"):
         nearest_tau(b, x, bounds=BOUNDS, rtol=1e-300, atol=1e-300)
@@ -77,7 +77,7 @@ def test_polish_does_not_walk_onto_a_local_maximum() -> None:
         t = tau.ustrip("s")
         return u.Q(jnp.stack([t, 0.6 * jnp.sin(6 * t), jnp.zeros_like(t)]), "km")
 
-    b = cxfc.FrenetSerretBuilder(wavy)
+    b = cxfc.FrenetSerretBuilder(wavy, "s")
     x = u.Q(jnp.array([4.4, -1.4, 0.0]), "km")
     got = nearest_tau(b, x, bounds=(u.Q(-5.0, "s"), u.Q(5.0, "s")), n_seed=64)
 
@@ -91,7 +91,7 @@ def test_nonconvergence_raises_under_jit() -> None:
     A bare `eqx.error_if` whose result is unused is dead-code-eliminated, so
     the traced branch can pass silently while the eager branch still works.
     """
-    b = cxfc.BishopBuilder(helix)
+    b = cxfc.BishopBuilder(helix, "s")
     x = _point_at(b, 0.7, 0.13, -0.21)
 
     @jax.jit

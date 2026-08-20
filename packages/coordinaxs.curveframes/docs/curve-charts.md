@@ -24,7 +24,7 @@ For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`W
 ...     t = tau.ustrip("s")
 ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
->>> op = cxfm.TimeDep(cxfc.BishopBuilder(circle))
+>>> op = cxfm.TimeDep(cxfc.BishopBuilder(circle, "s"))
 >>> x = u.Q(jnp.array([0.5, 0.0, 0.0]), "km")
 >>> tau = u.Q(0.7, "s")
 >>> cxfm.act(op, tau, x)  # tau supplied separately from x
@@ -38,7 +38,7 @@ Q([...], 'km')
 >>> import coordinax.charts as cxc
 
 >>> BOUNDS = (u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s"))
->>> chart = cxfc.TubularChart(cxfc.BishopBuilder(circle), tau_bounds=BOUNDS)
+>>> chart = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS)
 >>> p = {"x": u.Q(0.5, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
 >>> got = cxc.pt_map(p, chart.M, cxc.cart3d, chart.M, chart)
 >>> sorted(got)
@@ -53,13 +53,13 @@ That is a categorical difference, not a stylistic one. A frame transform has no 
 `TubularChart` wraps either builder unchanged — it is agnostic to which triad supplies $\mathbf{U}_1,\mathbf{U}_2$:
 
 ```{code-block} python
->>> ch_bishop = cxfc.TubularChart(cxfc.BishopBuilder(circle), tau_bounds=BOUNDS)
+>>> ch_bishop = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS)
 >>> ch_bishop.components
 ('tau', 'n1', 'n2')
 >>> ch_bishop.coord_dimensions
 ('time', 'length', 'length')
 
->>> ch_frenet = cxfc.TubularChart(cxfc.FrenetSerretBuilder(circle), tau_bounds=BOUNDS)
+>>> ch_frenet = cxfc.TubularChart(cxfc.FrenetSerretBuilder(circle, "s"), tau_bounds=BOUNDS)
 >>> ch_frenet.components
 ('tau', 'n1', 'n2')
 
@@ -123,7 +123,7 @@ Make the curve's radius a live, fittable parameter by holding it in an `equinox.
 >>> HELIX_BOUNDS = (u.Q(-1.0, "s"), u.Q(6.0, "s"))
 >>> def chart_for(radius_km):
 ...     curve = Helix(radius=u.Q(radius_km, "km"))
-...     return cxfc.TubularChart(cxfc.BishopBuilder(curve), tau_bounds=HELIX_BOUNDS)
+...     return cxfc.TubularChart(cxfc.BishopBuilder(curve, "s"), tau_bounds=HELIX_BOUNDS)
 
 >>> import coordinax.manifolds as cxm
 >>> x = {"x": u.Q(1.1, "km"), "y": u.Q(0.4, "km"), "z": u.Q(0.2, "km")}
@@ -160,12 +160,12 @@ No `metric_matrix` rule is registered for `TubularChart` — it has no closed fo
 
 >>> at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
 
->>> ch_b = cxfc.TubularChart(cxfc.BishopBuilder(helix), tau_bounds=HELIX_BOUNDS)
+>>> ch_b = cxfc.TubularChart(cxfc.BishopBuilder(helix, "s"), tau_bounds=HELIX_BOUNDS)
 >>> g_b = metric_matrix(ch_b.M, at, ch_b).matrix
 >>> bool(jnp.abs(g_b[0, 1].ustrip("km / s")) < 1e-8)  # Bishop: no d(tau).d(n1) cross term
 True
 
->>> ch_f = cxfc.TubularChart(cxfc.FrenetSerretBuilder(helix), tau_bounds=HELIX_BOUNDS)
+>>> ch_f = cxfc.TubularChart(cxfc.FrenetSerretBuilder(helix, "s"), tau_bounds=HELIX_BOUNDS)
 >>> g_f = metric_matrix(ch_f.M, at, ch_f).matrix
 >>> bool(jnp.abs(g_f[0, 1].ustrip("km / s")) < 1e-8)  # Frenet-Serret: torsion cross term
 False
@@ -427,7 +427,7 @@ The builders themselves stay $\tau$-parameterised, not unit-speed: $g_{\tau\tau}
 A bounds range spanning two periods recovers the _wrong_ branch for a point that was originally at $\tau=0.7\,\mathrm{s}$:
 
 ```{code-block} python
->>> wide = cxfc.TubularChart(cxfc.BishopBuilder(circle), tau_bounds=(u.Q(0.0, "s"), u.Q(4 * jnp.pi, "s")))
+>>> wide = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(4 * jnp.pi, "s")))
 >>> on_curve = circle(u.Q(0.7, "s"))
 >>> d = {"x": on_curve[0], "y": on_curve[1], "z": on_curve[2]}
 >>> recovered = cxc.pt_map(d, wide.M, cxc.cart3d, wide.M, wide)["tau"]
@@ -505,7 +505,7 @@ Use `jax.vmap` over single points, which works and is the fast path anyway -- th
 >>> import jax
 
 >>> tubular = cxfc.TubularChart(
-...     cxfc.BishopBuilder(circle),
+...     cxfc.BishopBuilder(circle, "s"),
 ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
 ... )
 >>> def to_cart(tau, n1):

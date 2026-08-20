@@ -64,7 +64,10 @@ def _tubular_kwargs(draw: st.DrawFn, /) -> dict[str, Any]:
     """Shared draw logic behind both `charts()` and `chart_init_kwargs()`."""
     curve, (lo, hi) = draw(st.sampled_from(_CURVES))
     builder_cls = draw(st.sampled_from(_BUILDERS))
-    return {"builder": builder_cls(curve), "tau_bounds": (u.Q(lo, "s"), u.Q(hi, "s"))}
+    return {
+        "builder": builder_cls(curve, "s"),
+        "tau_bounds": (u.Q(lo, "s"), u.Q(hi, "s")),
+    }
 
 
 @plum.dispatch

@@ -344,14 +344,14 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Fields (in addition to the ABC's `curve`, `tau_unit`, `station`): none — `FrenetSerretBuilder` adds no fields beyond the base class.
 
     - `curve : Callable[[Any], Any]` — the constructing curve.
-    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter, used by `unxt.experimental.jacfwd` to compute unit-correct derivatives. Defaults to `"s"`. Static.
+    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter, used by `unxt.experimental.jacfwd` to compute unit-correct derivatives. Static. **Required**: there is no neutral default, since a curve parameter may be a time, an arc length, or an affine parameter.
     - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
 
     `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{N}; \mathbf{B}]$: unit-aware first and second derivatives of `curve` via `unxt.experimental.jacfwd`, then $\mathbf{T} = \gamma'/\lVert\gamma'\rVert$, Gram–Schmidt rejection of $\gamma''$ onto $\mathbf{T}$ normalised to give $\mathbf{N}$, and $\mathbf{B} = \mathbf{T}\times\mathbf{N}$.
 
     Convenience accessors: `normal(tau)` (row 1), `binormal(tau)` (row 2); `location(tau)`, `tangent(tau)` are inherited from `AbstractCurveFrameBuilder`.
 
-    Constructed directly — `FrenetSerretBuilder(curve, tau_unit="s", station=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
+    Constructed directly — `FrenetSerretBuilder(curve, tau_unit, station=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
 
     JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `station` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `station`); use `eqx.filter_jit` in that case.
 
@@ -374,7 +374,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `FrenetSerretFrame(base_frame, xop, xop_inv)` — direct construction from a base frame and a `TimeDep`-wrapped `FrenetSerretBuilder` (forward and inverse).
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, station=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, station)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit, *, station=None)` — convenience constructor that builds `FrenetSerretBuilder(curve, tau_unit, station)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
@@ -398,7 +398,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "m")
 
 
-    fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle)
+    fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     op = cxf.frame_transition(cxf.Alice(), fs_frame)
     tau = u.Q(0.0, "s")
     p_ambient = u.Q(jnp.array([1.0, 0.0, 0.0]), "m")
@@ -414,7 +414,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Fields (the ABC's `curve`, `tau_unit`, `station`, plus two more):
 
     - `curve : Callable[[Any], Any]` — the constructing curve.
-    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter. Defaults to `"s"`. Static.
+    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter. Static. **Required**: there is no neutral default, since a curve parameter may be a time, an arc length, or an affine parameter.
     - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
     - `tau_0 : unxt.AbstractQuantity | None` — reference parameter where the initial frame is defined (a leaf). `None` is resolved to `Q(0.0, tau_unit)` by `__post_init__`.
     - `initial_normal : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `None` for auto-selection via Gram–Schmidt.
@@ -426,7 +426,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 
-    Constructed directly — `BishopBuilder(curve, tau_unit="s", station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
+    Constructed directly — `BishopBuilder(curve, tau_unit, station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
     JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
@@ -447,7 +447,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `BishopFrame(base_frame, xop, xop_inv)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit="s", *, station=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, station, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit, *, station=None, tau_0=None, initial_normal=None)` — convenience constructor that builds `BishopBuilder(curve, tau_unit, station, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
@@ -468,7 +468,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "m")
 
 
-    b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), curve)
+    b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), curve, "s")
     op = cxf.frame_transition(cxf.Alice(), b_frame)
     tau = u.Q(0.0, "s")
     p_ambient = u.Q(jnp.array([1.0, 0.0, 0.0]), "m")

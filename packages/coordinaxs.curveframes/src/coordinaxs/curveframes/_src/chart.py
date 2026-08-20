@@ -59,7 +59,7 @@ class TubularChart(AbstractParameterizedChart):
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
     >>> chart = cxfc.TubularChart(
-    ...     cxfc.BishopBuilder(circle),
+    ...     cxfc.BishopBuilder(circle, "s"),
     ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     ... )
     >>> chart.components

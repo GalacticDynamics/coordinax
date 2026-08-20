@@ -89,7 +89,7 @@ def nearest_tau(
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
-    >>> b = cxfc.BishopBuilder(circle)
+    >>> b = cxfc.BishopBuilder(circle, "s")
     >>> tau = cxfc.nearest_tau(b, u.Q(jnp.array([2.0, 0.0, 0.0]), "km"),
     ...                        bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")))
     >>> bool(jnp.allclose(tau.ustrip("s"), 0.0, atol=1e-6))
