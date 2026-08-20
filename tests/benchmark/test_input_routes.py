@@ -9,14 +9,16 @@ here.
 The answer is that it is not a fastpath, and these exist to keep that honest
 rather than to celebrate it. A raw parameter is wrapped into a `Quantity` at
 `_param` and the identical computation follows, so the routes converge almost
-immediately. Medians over three runs:
+immediately. Medians over four runs on one developer machine -- indicative
+of the *relationship* between the routes, not absolute numbers; CodSpeed
+tracks the real trend:
 
 ===================  ================  ================
 call                 quantity          raw
 ===================  ================  ================
-``location`` eager   424-452 us        456-487 us
-``tangent``  eager   3627-3769 us      3136-3918 us
-``tangent``  jitted  36.6-40.5 us      34.8-37.3 us
+``location`` eager   424-459 us        456-487 us
+``tangent``  eager   3492-3769 us      3136-3918 us
+``tangent``  jitted  36.6-40.8 us      34.8-37.7 us
 ===================  ================  ================
 
 Read that as three different answers, none of them "raw is faster":
