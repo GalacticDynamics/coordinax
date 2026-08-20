@@ -139,10 +139,22 @@ def test(s: nox.Session, /) -> None:
 
     ignore_args = [f"--ignore={path}" for path in dict.fromkeys(ignore_paths)]
 
+    # -n logical: parallelize across cores. --dist=loadfile: keep each file's
+    # tests on one worker -- Sybil doctests share sequential state across
+    # `>>>` examples within a source file, which breaks if xdist scatters
+    # them across workers. xdist breaks --pdb/--trace, so skip it when either
+    # is requested rather than relying on the caller to also pass `-n0`.
+    debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in posargs)
+    xdist_args = [] if debugging else ["-n", "logical", "--dist=loadfile"]
+
     # This session installs the `workspace` extra (interop included), so the
     # interop order-independence tests must run, not silently skip.
     s.run(
-        "pytest", *ignore_args, *posargs, env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"}
+        "pytest",
+        *xdist_args,
+        *ignore_args,
+        *posargs,
+        env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"},
     )
     # s.notify("pytest_benchmark", posargs=s.posargs)
 
