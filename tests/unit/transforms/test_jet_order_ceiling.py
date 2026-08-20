@@ -135,3 +135,33 @@ def test_giving_a_slot_twice_is_refused() -> None:
     """Silently preferring one would be a wrong anchor, not a convenience."""
     with pytest.raises(TypeError, match="given twice"):
         cxfm.act(_OP, _TAU, _DATA, cxc.cart3d, _JERK_REP, at=_SLOTS[0], at_jet=_SLOTS)
+
+
+def test_the_fibre_ladder_path_takes_at_jet_too() -> None:
+    """`at_jet` is the general anchor form, so every path must accept it.
+
+    A `TimeDep` holding a fibre offset routes through the ladder rule rather
+    than the generic prolongation, and that rule read only `at=`. A caller
+    passing the base point as slot 0 of `at_jet` hit a downstream "pass 'at'".
+    """
+    op = cxfm.TimeDep.from_(
+        lambda tau: cxfm.Translate(
+            {
+                "x": u.Q(1.0, "km/s") * (tau / u.Q(1.0, "s")),
+                "y": u.Q(0.0, "km/s"),
+                "z": u.Q(0.0, "km/s"),
+            },
+            cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+    rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.vel)
+    data = {k: u.Q(1.0, "km/s") for k in ("x", "y", "z")}
+    at = {k: u.Q(1.0, "km") for k in ("x", "y", "z")}
+
+    via_at = cxfm.act(op, _TAU, data, cxc.cart3d, rep, at=at)
+    via_jet = cxfm.act(op, _TAU, data, cxc.cart3d, rep, at_jet={0: at})
+    for k in ("x", "y", "z"):
+        assert jnp.allclose(u.ustrip("km/s", via_at[k]), u.ustrip("km/s", via_jet[k]))
+    # and the ladder actually did something: 1 km/s + the offset's 1 km/s
+    assert jnp.allclose(u.ustrip("km/s", via_jet["x"]), 2.0, atol=1e-6)

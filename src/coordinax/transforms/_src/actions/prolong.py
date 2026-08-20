@@ -651,8 +651,12 @@ def act(
     - Order-0 (displacement) data and all data under time-independent
       transforms transform by the frozen-$\tau$ ``pushforward``.
     - Under a time-dependent transform, order-$m$ data ($m \geq 1$) transforms
-      by the $m$-th prolongation, which requires the lower jet slots: the base
-      point ``at`` and, for $m = 2$, the velocity ``at_vel``.
+      by the $m$-th prolongation, which requires jet slots $0 \ldots m-1$.
+
+    Supply those slots with ``at_jet``, a dict keyed by slot order. ``at`` and
+    ``at_vel`` are shorthand for slots 0 and 1 and cover $m \leq 2$; beyond
+    that -- an order-3 kind needs slot 2 -- ``at_jet`` is the only spelling
+    that reaches. Giving one slot both ways raises rather than picking one.
 
     Examples
     --------

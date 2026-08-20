@@ -563,6 +563,11 @@ def act(
         jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel, at_jet=at_jet)
         return prolong_jet(op, tau, jet, chart, usys=usys)[m]
 
+    # The ladder needs only the base point, but it has to accept it in either
+    # spelling: `at_jet` is the general anchor form, so a caller who passes
+    # `at_jet={0: at}` and omits `at=` must not hit a downstream "pass 'at'".
+    if at is None and at_jet is not None:
+        at = at_jet.get(0)
     return _ladder_act(op, op0, k, tau, m, x, chart, rep, at=at, usys=usys, **kw)
 
 
