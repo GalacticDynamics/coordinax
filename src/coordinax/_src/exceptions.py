@@ -43,7 +43,7 @@ class MismatchedManifoldError(Exception):
 
     >>> p = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
     >>> try:
-    ...     cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R2, cxc.cart2d)
+    ...     cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)
     ... except cxc.MismatchedManifoldError as e:
     ...     print(e)
     to_M Rn(2) is not to_chart's manifold Rn(3)

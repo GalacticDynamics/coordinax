@@ -170,9 +170,29 @@ def check_manifolds_match_charts(
     to_M Rn(2) is not to_chart's manifold Rn(3)
 
     """
-    if from_M != from_chart.M:
-        msg = f"from_M {from_M} is not from_chart's manifold {from_chart.M}"
-        raise MismatchedManifoldError(msg)
-    if to_M != to_chart.M:
-        msg = f"to_M {to_M} is not to_chart's manifold {to_chart.M}"
+    check_manifold_matches_chart(from_M, from_chart, "from_M")
+    check_manifold_matches_chart(to_M, to_chart, "to_M")
+
+
+def check_manifold_matches_chart(M: Any, chart: Any, label: str, /) -> None:
+    """Refuse one manifold argument that is not its chart's own.
+
+    The single-sided form, for the rules that take both manifolds but only use
+    one -- `coordinaxs.curveframes` has two, each `del`-ing the other.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinax._src.charts.checks import check_manifold_matches_chart
+
+    >>> check_manifold_matches_chart(cxm.R3, cxc.sph3d, "to_M")
+
+    >>> try:
+    ...     check_manifold_matches_chart(cxm.R2, cxc.sph3d, "to_M")
+    ... except cxc.MismatchedManifoldError as e:
+    ...     print(e)
+    to_M Rn(2) is not to_chart's manifold Rn(3)
+
+    """
+    if M != chart.M:
+        msg = f"{label} {M} is not {label.replace('_M', '_chart')}'s manifold {chart.M}"
         raise MismatchedManifoldError(msg)

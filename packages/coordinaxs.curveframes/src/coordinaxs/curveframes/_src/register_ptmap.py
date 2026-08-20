@@ -14,6 +14,7 @@ import plum
 
 import coordinax.charts as cxc
 import unxt as u
+from coordinax._src.charts.checks import check_manifold_matches_chart
 from coordinax._src.custom_types import OptUSys
 from coordinax.manifolds import Rn
 from coordinaxs.api.custom_types import CDict
@@ -98,7 +99,7 @@ def pt_map(
 
     """
     del to_M
-    assert from_M == from_chart.M  # noqa: S101
+    check_manifold_matches_chart(from_M, from_chart, "from_M")
     b = from_chart.builder
 
     # Raw in -> raw out, as everywhere else in `pt_map`: the caller who came
@@ -166,7 +167,7 @@ def pt_map(
 
     """
     del from_M
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifold_matches_chart(to_M, to_chart, "to_M")
     b = to_chart.builder
 
     raw = u.unit_of(p["x"]) is None
