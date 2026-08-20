@@ -117,12 +117,15 @@ class TubularChart(AbstractParameterizedChart):
     def is_time_dependent(self) -> bool:
         """Whether this chart's coordinates depend on a time supplied at call.
 
-        True when the builder wraps a two-argument curve ``gamma(s, t)``: the
-        builder's call-time parameter is then the *time*, so ``tau`` labels a
-        station and the chart's spatial coordinates move with ``t``.
+        True when the builder wraps a two-argument curve ``gamma(s, t)``.
+        `AbstractCurveFrameBuilder._resolve` then reads the builder's single
+        argument as the **time**, taking the station from ``builder.station``
+        -- so this chart's ``tau`` coordinate is a time too, and only ``n1``
+        and ``n2`` remain spatial.
 
-        A spacetime chart needs this: a time-dependent spatial chart is a
-        *fibre bundle* over time, not a product with it (see
+        A spacetime chart needs to know: such a chart is a *fibre bundle* over
+        time rather than a factor to multiply time by, and pairing it with a
+        time axis would give two time coordinates (see
         `coordinax.charts.GalileanCT`).
         """
         return _is_two_argument(self.builder.curve)

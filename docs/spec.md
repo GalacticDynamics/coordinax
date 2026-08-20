@@ -1630,6 +1630,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `GalileanCT(spatial_chart=cart3d, *, c=Quantity(299_792.458, "km/s"))` — `spatial_chart` defaults to `cart3d`; `c` is the speed of light used for the $ct$ convention.
     - The time factor is always `time1d`; it is not user-selectable.
+    - `spatial_chart` must not be **time-dependent**: a chart that declares `is_time_dependent` is rejected with a `TypeError`. Writing the chart as a product asserts one spatial factor shared by every time, which fixes an identification between the simultaneity slices — a rest frame, changed by a Galilean boost. A spatial chart whose coordinates move with $t$ makes that false: it is a fibre bundle over the time axis, and the datum a product cannot carry is the connection (the frame velocity). Galilean spacetime supplies no canonical choice, so it cannot be assumed. Bind a single slice first — `coordinaxs.curveframes.AtTime(curve, t)` — if a product is wanted.
 
     Component schema (for the default `spatial_chart=cart3d`):
 

@@ -43,8 +43,9 @@ _MSG_TIME_DEPENDENT_SPATIAL = (
     "velocity of the coordinate frame, equivalently which spatial point at "
     "`t` counts as the same point at `t'`. Galilean spacetime supplies no "
     "canonical choice (that is what it means to have no absolute space), so "
-    "it has to be stated rather than assumed. Evaluate the chart on one time "
-    "slice, e.g. with `AtTime`, if a product is what you want."
+    "it has to be stated rather than assumed. Evaluate the curve on one time "
+    "slice first -- `coordinaxs.curveframes.AtTime(curve, t)` -- if a product "
+    "is what you want."
 )
 
 

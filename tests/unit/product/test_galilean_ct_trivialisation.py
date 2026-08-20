@@ -11,6 +11,7 @@ about JAX safety: an array inside a static node is invisible to `jit`. A
 time-dependent chart can pass it, which is what these tests pin.
 """
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 import pytest
@@ -54,8 +55,11 @@ def test_a_time_dependent_spatial_chart_is_not_a_factor() -> None:
     )
     assert moving.is_time_dependent
 
-    # the array guard has no objection: the only leaf is the curve itself
-    assert not any(isinstance(leaf, jax.Array) for leaf in jax.tree.leaves(moving)), (
+    # The array guard has no objection: the only leaf is the curve itself.
+    # `eqx.is_array` is the predicate that guard uses, so match it exactly --
+    # `isinstance(..., jax.Array)` would miss a NumPy array or a tracer, and
+    # this assertion would then pass while the guard had in fact fired.
+    assert not any(eqx.is_array(leaf) for leaf in jax.tree.leaves(moving)), (
         "this test is vacuous if the array guard would already reject it"
     )
 
