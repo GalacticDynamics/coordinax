@@ -409,8 +409,42 @@ def test_a_unitless_parameter_has_nothing_to_infer_from() -> None:
     It fails with a message naming both ways out, rather than an
     `AttributeError` from inside the derivative.
     """
-    with pytest.raises(TypeError, match="carries no unit"):
-        cxfc.BishopBuilder(curve_gyr).tangent(2.0)
+    for cls in (cxfc.BishopBuilder, cxfc.FrenetSerretBuilder):
+        # Both accessors, because they resolve the unit on separate paths:
+        # `FrenetSerretBuilder` reached `.astype(float)` first and reported the
+        # accident rather than the cause.
+        with pytest.raises(TypeError, match="carries no unit"):
+            cls(curve_gyr).tangent(2.0)
+        with pytest.raises(TypeError, match="carries no unit"):
+            cls(curve_gyr).rotation_matrix(2.0)
+
+
+def test_a_raw_array_parameter_works_when_the_unit_is_declared() -> None:
+    """The array fastpath: bare arrays, given meaning by the declared unit.
+
+    This is what `tau_unit` is *for* once inference covers the `Quantity`
+    case. It is wrapped at `_param`, the single funnel every accessor takes
+    its curve parameter from, so all of them accept a raw parameter and every
+    one agrees with the `Quantity` call to the bit.
+
+    Before this, a raw parameter died with `NotFoundLookupError` from inside
+    `unxt`'s `ustrip` dispatch, several frames below the call -- declaring the
+    unit did not help, so the fastpath was documented but unreachable.
+    """
+    raw, quantity = jnp.asarray(0.7), u.Q(0.7, "s")
+    for cls in (cxfc.BishopBuilder, cxfc.FrenetSerretBuilder):
+        b = cls(curve1, "s")
+        for meth in ("location", "tangent", "rotation_matrix"):
+            got, want = getattr(b, meth)(raw), getattr(b, meth)(quantity)
+            got, want = getattr(got, "value", got), getattr(want, "value", want)
+            assert jnp.allclose(jnp.asarray(got), jnp.asarray(want)), (cls, meth)
+
+    # A raw `station` takes the same funnel, so it is covered by the same wrap.
+    pinned = cxfc.BishopBuilder(curve1, "s", station=jnp.asarray(0.3))
+    assert jnp.allclose(
+        pinned.tangent(quantity).value,
+        cxfc.BishopBuilder(curve1, "s", station=u.Q(0.3, "s")).tangent(quantity).value,
+    )
 
 
 def test_the_dimension_guard_still_fires_on_an_inferred_unit() -> None:

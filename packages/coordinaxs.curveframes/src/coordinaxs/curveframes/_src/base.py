@@ -287,8 +287,28 @@ class AbstractCurveFrameBuilder(eqx.Module):
         return tau_unit
 
     def _param(self, tau: Any, /) -> Any:
-        """Return the curve parameter: ``tau``, or the fixed ``station``."""
-        return tau if self.station is None else self.station
+        r"""Return the curve parameter as a `Quantity`: ``tau``, or the station.
+
+        A raw (unitless) parameter is the **array fastpath**: bare arrays
+        carrying no unit, which is the cheapest way in and the reason
+        `tau_unit` is still worth declaring. Those numbers mean nothing on
+        their own, so they are wrapped here with the declared `tau_unit` --
+        the same role a `unxt.AbstractUnitSystem` plays for the raw-array
+        route elsewhere in `coordinax`.
+
+        Doing it at this one funnel covers every accessor at once: `__call__`,
+        `location`, and both builders' triads all take their curve parameter
+        from here, so none of them has to know whether it arrived wrapped.
+
+        A raw parameter with no declared unit is the one combination that
+        cannot be served -- nothing anywhere states the unit -- and raises.
+        """
+        param = tau if self.station is None else self.station
+        if u.unit_of(param) is not None:
+            return param
+        if self.tau_unit is None:
+            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE)
+        return u.Q(param, self.tau_unit)
 
     @abc.abstractmethod
     def rotation_matrix(self, tau: Any, /) -> Array:

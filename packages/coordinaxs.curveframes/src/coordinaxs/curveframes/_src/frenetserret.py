@@ -173,8 +173,13 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         # Unit-aware first and second derivatives via unxt. `g` is built
         # first: it is what the parameter unit is read off when undeclared.
-        g = b._param(p).astype(float)
+        # Resolve the unit *before* `.astype`: a unitless parameter has no
+        # `.astype`, so doing it the other way round reports the accident
+        # (`AttributeError`) instead of the cause (`_tau_unit_at`'s message,
+        # which names both ways to fix it).
+        g = b._param(p)
         tau_unit = b._tau_unit_at(g)
+        g = g.astype(float)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
         d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
 
@@ -219,8 +224,9 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         """
         b, p = self._resolve(tau)
-        g = b._param(p).astype(float)
+        g = b._param(p)
         dcurve = u.experimental.jacfwd(b.curve, units=(b._tau_unit_at(g),))
+        g = g.astype(float)
         return u.Q(_normalize(dcurve(g)).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
