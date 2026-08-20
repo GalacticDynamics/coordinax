@@ -160,14 +160,18 @@ class TestDerivedQuantities:
         assert float(in_kms.speed) == pytest.approx(0.5, abs=1e-4)
 
     @pytest.mark.parametrize("attr", ["gamma", "rapidity"])
-    def test_superluminal_boost_is_rejected(self, attr):
+    @pytest.mark.parametrize("beta", [1.5, jnp.nan], ids=["superluminal", "nan"])
+    def test_a_non_subluminal_boost_is_rejected(self, attr, beta):
         """Every derived quantity guards, not just ``gamma``.
 
         ``rapidity`` used to reach ``arctanh(|beta| >= 1)`` and hand back
-        ``inf``/``nan`` while ``gamma`` on the same object raised.
+        ``inf``/``nan`` while ``gamma`` on the same object raised. A ``nan``
+        beta needs the guard written as ``~(beta_sq < 1)``: it is False for
+        ``beta_sq >= 1`` too, so the direct form let it through and returned
+        the non-finite value the guard exists to prevent.
         """
         with pytest.raises(eqx.EquinoxRuntimeError, match="subluminal"):
-            _ = getattr(cxfm.LorentzBoost([1.5, 0.0, 0.0]), attr)
+            _ = getattr(cxfm.LorentzBoost([beta, 0.0, 0.0]), attr)
 
     def test_zero_direction_is_rejected(self):
         """A zero ``direction`` has no axis to normalise onto.
