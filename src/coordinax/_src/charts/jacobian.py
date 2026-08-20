@@ -264,14 +264,18 @@ def jac_pt_map(
     # compute the Jacobian as an array.
     at = from_chart.check_data(at, keys=True)
 
-    # A chart map is pointwise, so a batch of points is a batch of independent
-    # Jacobians. Differentiating the batch as one function would instead give
-    # the (*batch, n_out, *batch, n_in) Jacobian of R^(N*n) -> R^(N*n): correct
-    # for *that* function, but block-diagonal with every off-diagonal block
-    # identically zero, and O(N^2) to hold. Map over the leading axes instead.
+    # A chart map is pointwise, so a batch of points is a batch of
+    # independent Jacobians. Differentiating the batch as one function
+    # would instead give the (*batch, n_out, *batch, n_in) Jacobian of
+    # R^(N*n) -> R^(N*n): correct for *that* function, but block-diagonal
+    # with every off-diagonal block identically zero, and O(N^2) to hold.
+    # Map over the leading axes instead.
     #
-    # Scalar components take the `not batch` branch, so the unbatched path is
-    # unchanged -- the shape is static, so this costs nothing at trace time.
+    # `jnp.vectorize` would express the same mapping in one call, but it
+    # coerces its inputs with `asarray` and so cannot carry the Quantity
+    # route; measured, the two are within noise. Scalar components take
+    # the `not batch` branch, so the unbatched path is untouched -- the
+    # shape is static, so this costs nothing at trace time.
     batch = jnp.shape(next(iter(at.values())))
     if batch:
 

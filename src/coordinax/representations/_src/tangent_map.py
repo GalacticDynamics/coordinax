@@ -3,7 +3,7 @@
 __all__ = ("tangent_map",)
 
 from jaxtyping import Array
-from typing import Any
+from typing import Any, Final
 
 import jax
 import jax.numpy as jnp
@@ -46,7 +46,7 @@ def _check_linear_basis(rep: Representation, label: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-_MSG_AT_REQUIRED = (
+_MSG_AT_REQUIRED: Final = (
     "tangent_map() needs the base point: pushing a tangent vector from {frm} to "
     "{to} evaluates the Jacobian of the transition map somewhere, and the "
     "transition is not linear. Pass `at=` with the point the vector sits at. "
@@ -147,21 +147,21 @@ def tangent_map(
     if from_chart == to_chart:
         return v
 
-    # Past that point a Jacobian has to be evaluated somewhere, so `at` is not
-    # optional. Without this the base point reaches `jac_pt_map` as `None`,
-    # which resolves to the higher-order rule and returns a *function*; the
-    # failure then surfaces from `_apply_jac` as ``unsupported operand type(s)
-    # for @: 'function' and 'ArrayImpl'``, naming nothing the caller wrote.
+    # Past that point a Jacobian must be evaluated somewhere, so `at` is
+    # not optional. Without this it reaches `jac_pt_map` as `None`, which
+    # resolves to the higher-order rule and returns a *function*; the
+    # failure then surfaces from `_apply_jac` as an unsupported `@`
+    # between a function and an array, naming nothing the caller wrote.
     if at is None:
         msg = _MSG_AT_REQUIRED.format(
             frm=type(from_chart).__name__, to=type(to_chart).__name__
         )
         raise ValueError(msg)
 
-    # `_apply_jac` takes the 2-D Jacobian and the single tangent vector it
-    # documents, so a batch is mapped here rather than threaded through it and
-    # the unit handling inside. Scalar components skip this entirely: the shape
-    # is static, so the unbatched path is untouched.
+    # `_apply_jac` takes the 2-D Jacobian and single vector it documents,
+    # so a batch is mapped here rather than threaded through it and the
+    # unit handling inside. Scalar components skip this entirely: the
+    # shape is static, so the unbatched path is untouched.
     batch = jnp.shape(next(iter(v.values())))
     if batch:
 
