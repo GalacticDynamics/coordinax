@@ -344,7 +344,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Fields (in addition to the ABC's `curve`, `tau_unit`, `station`): none — `FrenetSerretBuilder` adds no fields beyond the base class.
 
     - `curve : Callable[[Any], Any]` — the constructing curve.
-    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter, used by `unxt.experimental.jacfwd` to compute unit-correct derivatives. Defaults to `"s"`. Static.
+    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter, used by `unxt.experimental.jacfwd` to compute unit-correct derivatives. Static. **Required**: there is no neutral default, since a curve parameter may be a time, an arc length, or an affine parameter.
     - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
 
     `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{N}; \mathbf{B}]$: unit-aware first and second derivatives of `curve` via `unxt.experimental.jacfwd`, then $\mathbf{T} = \gamma'/\lVert\gamma'\rVert$, Gram–Schmidt rejection of $\gamma''$ onto $\mathbf{T}$ normalised to give $\mathbf{N}$, and $\mathbf{B} = \mathbf{T}\times\mathbf{N}$.
@@ -414,7 +414,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Fields (the ABC's `curve`, `tau_unit`, `station`, plus two more):
 
     - `curve : Callable[[Any], Any]` — the constructing curve.
-    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter. Defaults to `"s"`. Static.
+    - `tau_unit : unxt.AbstractUnit` — unit of the curve parameter. Static. **Required**: there is no neutral default, since a curve parameter may be a time, an arc length, or an affine parameter.
     - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
     - `tau_0 : unxt.AbstractQuantity | None` — reference parameter where the initial frame is defined (a leaf). `None` is resolved to `Q(0.0, tau_unit)` by `__post_init__`.
     - `initial_normal : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `None` for auto-selection via Gram–Schmidt.
@@ -426,7 +426,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 
-    Constructed directly — `BishopBuilder(curve, tau_unit="s", station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
+    Constructed directly — `BishopBuilder(curve, tau_unit, station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
     JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
