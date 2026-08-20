@@ -868,3 +868,70 @@ class TestJacobianPtMapAtExtremeScales:
 
         assert np.all(np.isfinite(got))
         assert_allclose(got, expected, rtol=1e-5)
+
+
+class TestJacobianOfABatchIsABatchOfJacobians:
+    """A chart map is pointwise, so N points give N independent Jacobians.
+
+    Differentiating the batch as one function instead gives the
+    ``(*batch, n_out, *batch, n_in)`` Jacobian of ``R^(N*n) -> R^(N*n)``:
+    correct for that function, but block-diagonal with every off-diagonal block
+    identically zero, and ``O(N^2)`` to hold. Consumers -- ``_apply_jac``,
+    ``metric_matrix`` -- read it as ``(*batch, n_out, n_in)``, so the mismatch
+    surfaced as silently wrong numbers rather than a shape error (#776).
+    """
+
+    N = 4
+    XS = (1.0, 2.0, 0.5, 3.0)
+    YS = (2.0, 1.0, -1.5, 0.5)
+    ZS = (3.0, 0.5, 2.0, 1.0)
+
+    def _batched(self, *, quantity):
+        wrap = (lambda a: u.Q(a, "m")) if quantity else (lambda a: a)
+        return {
+            "x": wrap(jnp.asarray(self.XS)),
+            "y": wrap(jnp.asarray(self.YS)),
+            "z": wrap(jnp.asarray(self.ZS)),
+        }
+
+    @staticmethod
+    def _value(j):
+        return np.asarray(j.value if hasattr(j, "value") else j)
+
+    @pytest.mark.parametrize("quantity", [True, False])
+    def test_it_matches_the_per_point_jacobians(self, quantity):
+        """Bit-exact, not merely close: these are the same computation."""
+        kw = {} if quantity else {"usys": u.unitsystems.si}
+        at = self._batched(quantity=quantity)
+        got = self._value(cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d, **kw))
+        want = np.stack(
+            [
+                self._value(
+                    cxc.jac_pt_map(
+                        {k: at[k][i] for k in at}, cxc.cart3d, cxc.sph3d, **kw
+                    )
+                )
+                for i in range(self.N)
+            ]
+        )
+        assert got.shape == (self.N, 3, 3)
+        assert_allclose(got, want, rtol=0, atol=0)
+
+    def test_a_scalar_point_still_gives_one_matrix(self):
+        """The unbatched shape is unchanged: no batch axis is invented."""
+        at = {k: u.Q(v, "m") for k, v in (("x", 1.0), ("y", 2.0), ("z", 3.0))}
+        assert self._value(cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)).shape == (3, 3)
+
+    def test_several_leading_axes_are_all_mapped(self):
+        """Batch axes are arbitrary in number, not just one."""
+        rng = np.random.default_rng(0)
+        at = {k: u.Q(jnp.asarray(rng.uniform(1, 2, (2, 3))), "m") for k in "xyz"}
+        shape = self._value(cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)).shape
+        assert shape == (2, 3, 3, 3)
+
+    def test_it_does_not_grow_with_the_square_of_the_batch(self):
+        """The old shape held N^2 blocks, all but N of them structurally zero."""
+        n = 64
+        at = {k: u.Q(jnp.ones(n), "m") for k in "xyz"}
+        size = self._value(cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)).size
+        assert size == n * 3 * 3

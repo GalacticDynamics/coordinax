@@ -5,6 +5,7 @@ __all__ = ("tangent_map",)
 from jaxtyping import Array
 from typing import Any
 
+import jax
 import jax.numpy as jnp
 import plum
 
@@ -137,6 +138,21 @@ def tangent_map(
     # Same-chart optimization: identity transform
     if from_chart == to_chart:
         return v
+
+    # `_apply_jac` takes the 2-D Jacobian and the single tangent vector it
+    # documents, so a batch is mapped here rather than threaded through it and
+    # the unit handling inside. Scalar components skip this entirely: the shape
+    # is static, so the unbatched path is untouched.
+    batch = jnp.shape(next(iter(v.values())))
+    if batch:
+
+        def one(v_i: CDict, at_i: CDict) -> CDict:
+            J_i = cxc.jac_pt_map(at_i, from_chart, to_chart, usys=usys)
+            return _apply_jac(J_i, from_chart.components, to_chart.components, v_i)
+
+        for _ in batch:
+            one = jax.vmap(one)
+        return one(v, at)
 
     J = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys)
     return _apply_jac(J, from_chart.components, to_chart.components, v)
