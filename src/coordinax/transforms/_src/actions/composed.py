@@ -110,7 +110,18 @@ class Composed(AbstractCompositeTransform, Generic[*Ts]):
     Composed(( Translate(...), Rotate(...), Identity() ))
 
     >>> cxfm.simplify(pipe3)
-    Composed(( Translate(...), Rotate(...) ))
+    Affine(...)
+
+    The identity is gone -- and so is the pipe: a translation followed by a
+    rotation is affine, so `simplify` fuses the pair into a single
+    `~coordinax.transforms.Affine` rather than leaving two kernels to apply.
+    A pair that is *not* static affine stays a `Composed`:
+
+    >>> import coordinax.representations as cxr
+    >>> from dataclassish import replace
+    >>> kick = replace(shift, semantic_kind=cxr.vel)
+    >>> cxfm.simplify(rotate | kick)
+    Composed(( Rotate(...), Translate(...) ))
 
     """
 

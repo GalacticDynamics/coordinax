@@ -49,18 +49,21 @@ def frame_transition(
     >>> op = cxf.frame_transition(my_frame, gcf_frame)
     >>> op
     Composed((
-      Rotate(f64[3,3](jax)),
-      Translate(
-          {...},
-          chart=Cart3D(M=Rn(3))
+      Affine(
+        f64[3,3](jax),
+        {...},
+        Cart3D(M=Rn(3))
       ),
-      Rotate(f64[3,3](jax)),
       Translate(
           {...},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       )
     ))
+
+    The rotation and the position offset fused into one
+    `~coordinax.transforms.Affine`; the velocity kick cannot join them, since it
+    shifts the tangent rather than the point.
 
     """  # noqa: E501
     fromframe_to_icrs = frame_transition(from_frame, icrs)
@@ -197,23 +200,16 @@ def frame_transition(
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       ),
-      Rotate(f64[3,3](jax)),
-      Translate(
-          {...},
-          chart=Cart3D(M=Rn(3))
-      ),
-      Rotate(f64[3,3](jax)),
-      Translate(
-          {...},
-          chart=Cart3D(M=Rn(3))
-      ),
-      Rotate(f64[3,3](jax)),
+      Linear(f64[3,3](jax)),
       Translate(
           {...},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       )
     ))
+
+    The two position offsets cancel exactly here, so the fused `Affine` reduces
+    further to a pure `~coordinax.transforms.Linear`.
 
     """
     if from_frame == to_frame:

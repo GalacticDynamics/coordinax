@@ -72,12 +72,18 @@ def test_identity_strip_re_exposes_adjacency() -> None:
 
 
 def test_non_mergeable_pair_is_preserved() -> None:
+    """A pair with no combining rule survives `simplify` untouched.
+
+    `Rotate | Translate` used to be the example here, but that pair is static
+    affine and now fuses into an `Affine` (#546). A fibre kick does not: it
+    shifts the tangent, not the point, so there is no `A x + b` to fuse it into.
+    """
     R = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-    T = cxfm.Translate.from_([1, 0, 0], "km")
-    out = cxfm.simplify(cxfm.Composed((R, T)))
+    kick = replace(cxfm.Translate.from_([1, 0, 0], "km"), semantic_kind=cxr.vel)
+    out = cxfm.simplify(cxfm.Composed((R, kick)))
     assert isinstance(out, cxfm.Composed)
     assert len(out.transforms) == 2
-    _acts_equal(out, cxfm.Composed((R, T)))
+    _acts_equal(out, cxfm.Composed((R, kick)))
 
 
 def test_different_semantic_kind_translates_do_not_merge() -> None:
