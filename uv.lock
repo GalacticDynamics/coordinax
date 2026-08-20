@@ -3381,7 +3381,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "2.0.2"
+version = "2.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -3402,9 +3402,9 @@ dependencies = [
     { name = "unxts-api" },
     { name = "wadler-lindig" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/87/328c9a42e1cc348e2c5cb30b3df763e93153a9fbb3f1884df2721f2ed965/unxt-2.0.2.tar.gz", hash = "sha256:a05f33a5beffee28c858bc42c0947364ca7e099f3d6b311d8a28577fbb8c1b84", size = 724169, upload-time = "2026-08-17T16:53:07.865Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6d/f7/a24b34abec0756f5d79807131732d7209b818affe19630ddc4240b6aaf31/unxt-2.0.3.tar.gz", hash = "sha256:8abe1cb77a29c2fbb00d1d4b7e8e2745328d5bb9acb2d7a22b0e6bd16e78b220", size = 724115, upload-time = "2026-08-20T13:11:16.829Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/b9/07f352bea2f4820543f7c365e239a636b5a0cf2d564e1cc7c10500906bab/unxt-2.0.2-py3-none-any.whl", hash = "sha256:076c538293eef4dcf8a4cbc55a8097108bffbd1f33abac743ad5b5f200a1051b", size = 119166, upload-time = "2026-08-17T16:53:06.364Z" },
+    { url = "https://files.pythonhosted.org/packages/85/5f/f63b3708237ef8c43d396599ac3808ce29c0cdc470dd21fdbae0f7405148/unxt-2.0.3-py3-none-any.whl", hash = "sha256:1a5ac6b81d20b5c9a752f0651a1dc9b99b91b9842b8a7e31f72c99b4fbd06165", size = 119121, upload-time = "2026-08-20T13:11:15.554Z" },
 ]
 
 [[package]]
