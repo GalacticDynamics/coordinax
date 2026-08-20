@@ -102,15 +102,16 @@ class Composed(AbstractCompositeTransform, Generic[*Ts]):
     >>> pipe2
     Composed(( Translate(...), Rotate(...) ))
 
-    The pipe can be simplified. For this example, we add an identity operator to
-    the sequence and simplify, which will remove the identity operator.
+    The pipe can be simplified. Adding an identity operator shows it being
+    stripped; the remaining translation and rotation are both affine, so they
+    then fuse into a single `~coordinax.transforms.Affine` kernel.
 
     >>> pipe3 = pipe2 | cxfm.Identity()
     >>> pipe3
     Composed(( Translate(...), Rotate(...), Identity() ))
 
     >>> cxfm.simplify(pipe3)
-    Composed(( Translate(...), Rotate(...) ))
+    Affine(...)
 
     """
 

@@ -72,11 +72,25 @@ def test_identity_strip_re_exposes_adjacency() -> None:
 
 
 def test_non_mergeable_pair_is_preserved() -> None:
+    """A pair with no combining rule survives simplification intact.
+
+    `Rotate | Translate` used to be the example here; since #546 it fuses into
+    an `Affine`, so the pair has to be one that genuinely cannot combine. A
+    `LorentzBoost` is 4x4 on spacetime, so it composes with nothing spatial.
+    """
+    R = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    B = cxfm.LorentzBoost([0.6, 0.0, 0.0])
+    out = cxfm.simplify(cxfm.Composed((R, B)))
+    assert isinstance(out, cxfm.Composed)
+    assert len(out.transforms) == 2
+
+
+def test_an_affine_pair_now_fuses() -> None:
+    """The counterpart: what used to be preserved is now one operator."""
     R = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
     T = cxfm.Translate.from_([1, 0, 0], "km")
     out = cxfm.simplify(cxfm.Composed((R, T)))
-    assert isinstance(out, cxfm.Composed)
-    assert len(out.transforms) == 2
+    assert isinstance(out, cxfm.Affine)
     _acts_equal(out, cxfm.Composed((R, T)))
 
 
