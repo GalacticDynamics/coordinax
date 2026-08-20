@@ -19,11 +19,7 @@ from .conftest import EXPECTED_IDENTITY, EXPECTED_REFLECT
 
 @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
 def test_reflect_from_normal_unnormalisable_raises_under_jit(bad: float) -> None:
-    """A normal that cannot be normalised is rejected, even under jit.
-
-    Deferred so no tracer bool is taken. `allclose(norm, 0)` was False for a
-    NaN or `inf` norm, so those reached `n / norm` and gave a NaN `H`.
-    """
+    """A normal that cannot be normalised is rejected, even under jit."""
     build = eqx.filter_jit(cxfm.Reflect.from_normal)
     with pytest.raises(eqx.EquinoxRuntimeError, match="nonzero normal"):
         jax.block_until_ready(build(jnp.asarray([bad, 0.0, 0.0])).H)

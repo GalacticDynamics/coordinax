@@ -86,12 +86,7 @@ def test_uniform_translation_differentiable_in_rate():
 
 @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
 def test_rotation_about_axis_unnormalisable_axis_raises(bad):
-    """An axis that cannot be normalised must fail loudly, not give a NaN `R`.
-
-    `axis / norm` is a unit vector only for a finite positive norm. A NaN or
-    `inf` axis is False for `norm == 0` and used to normalise straight through
-    to nine NaN entries in `R`.
-    """
+    """An axis that cannot be normalised must fail loudly, not give a NaN `R`."""
     b = cxfm.builders.RotationAboutAxis(
         u.Q(1, "rad/s"), axis=jnp.array([bad, 0.0, 0.0])
     )

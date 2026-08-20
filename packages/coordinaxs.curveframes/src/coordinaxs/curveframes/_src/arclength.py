@@ -215,8 +215,7 @@ def _eval_tau_dense(
     # Negated `in-domain` rather than the two out-of-domain comparisons: a NaN
     # `s` compares False against both, so the direct form admits it and hands
     # back a NaN position with nothing raised.
-    in_domain = (s_val >= -margin) & (s_val <= s_max_val + margin)
-    out_of_domain = ~in_domain
+    out_of_domain = ~((s_val >= -margin) & (s_val <= s_max_val + margin))
 
     # No clip: every point of the solved range is real data, so the only
     # thing to do with a genuine overshoot is refuse it.
