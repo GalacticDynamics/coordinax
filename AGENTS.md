@@ -29,7 +29,7 @@ uv run nox -s "pytest(package='coordinax')" -- tests/unit/charts -q
 uv run nox -s "ty(package='hypothesis')"
 ```
 
-`nox -s test` runs under `pytest-xdist` (`-n logical --dist=loadfile`) by default. It auto-disables itself for `--pdb`/`--trace`; for any other reason to force serial, pass `-n0`.
+`uv run nox -s test` runs under `pytest-xdist` (`-n logical --dist=loadfile`) by default. It auto-disables itself for `--pdb`/`--trace`; for any other reason to force serial, pass `-n0`.
 
 Always `uv run` — never bare `python` or `pytest`.
 
