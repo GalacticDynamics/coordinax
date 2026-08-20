@@ -160,23 +160,21 @@ class TestDerivedQuantities:
         assert float(in_kms.speed) == pytest.approx(0.5, abs=1e-4)
 
     @pytest.mark.parametrize("attr", ["gamma", "rapidity"])
-    def test_superluminal_boost_is_rejected(self, attr):
+    @pytest.mark.parametrize("beta", [1.5, jnp.nan], ids=["superluminal", "nan"])
+    def test_a_non_subluminal_boost_is_rejected(self, attr, beta):
         """Every derived quantity guards, not just ``gamma``.
 
         ``rapidity`` used to reach ``arctanh(|beta| >= 1)`` and hand back
         ``inf``/``nan`` while ``gamma`` on the same object raised.
         """
         with pytest.raises(eqx.EquinoxRuntimeError, match="subluminal"):
-            _ = getattr(cxfm.LorentzBoost([1.5, 0.0, 0.0]), attr)
+            _ = getattr(cxfm.LorentzBoost([beta, 0.0, 0.0]), attr)
 
-    def test_zero_direction_is_rejected(self):
-        """A zero ``direction`` has no axis to normalise onto.
-
-        Dividing by its zero norm produced ``nan`` betas that then propagated
-        silently into every entry of the matrix.
-        """
+    @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
+    def test_an_unnormalisable_direction_is_rejected(self, bad):
+        """A ``direction`` that cannot be normalised has no boost axis."""
         with pytest.raises(eqx.EquinoxRuntimeError, match="non-zero"):
-            cxfm.LorentzBoost.from_rapidity(0.5, (0.0, 0.0, 0.0))
+            cxfm.LorentzBoost.from_rapidity(0.5, (bad, 0.0, 0.0))
 
 
 class TestPhysicalPredictions:
