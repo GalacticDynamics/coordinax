@@ -38,6 +38,42 @@ def optimized_function(*arrays: Array):
     ...
 ```
 
+## What Eager Costs, and Why
+
+The guide above teaches jitting. It is worth saying plainly what you pay if you do not, because the number is larger than most people expect.
+
+One `pt_map` from `sph3d` to `cart3d`, at a single point:
+
+| call                         | eager   | jitted, reused |
+| ---------------------------- | ------- | -------------- |
+| `dict[str, Quantity]`        | 3650 us | 23.0 us        |
+| `dict[str, Array]` + `usys=` | 179 us  | 10.4 us        |
+
+Two things follow.
+
+**Raw arrays are ~20x cheaper than quantities, before jit is involved.** Both routes compute the identical numbers -- bit for bit -- so if a pipeline is already carrying bare arrays, handing them straight to `pt_map` with an explicit `usys=` avoids the wrapper entirely. Under jit the gap narrows but does not close: 10.4 us against 23.0 us.
+
+**Almost none of that overhead is `coordinax`.** Counting `plum` dispatch resolutions for one eager call:
+
+| route                 | dispatches | of which `pt_map` |
+| --------------------- | ---------- | ----------------- |
+| `dict[str, Quantity]` | 178        | 2                 |
+| `dict[str, Array]`    | 17         | 2                 |
+
+The other 176 are `unxt` and `quax` resolving arithmetic on `Quantity` operands -- `convert`, `unit`, `ustrip`, roughly one set per primitive operation. That is inherent to eager unit-aware arithmetic rather than something `coordinax` can dispatch its way out of, which is why the remedy is to choose the route rather than to micro-optimise the call.
+
+Pre-resolving the dispatch with `plum`'s `Function.invoke` is therefore not the lever it looks like here: it removes 2 resolutions of 178, and measures 1.05x. It pays where a hot loop repeatedly re-resolves _its own_ call, which is why `norm` keeps a module-level `array_norm = norm.invoke(Array, Array)`.
+
+**Dispatch is per call, not per element.** Batched and jitted, the routes converge -- at 10,000 points, all of them land within a few percent of each other:
+
+| route, N = 10,000, jitted            | per point |
+| ------------------------------------ | --------- |
+| `dict[str, Array]`, broadcast        | 24.3 ns   |
+| `dict[str, Quantity]`, broadcast     | 23.5 ns   |
+| `dict[str, Array]`, `jit(vmap(...))` | 22.0 ns   |
+
+So the 300x figure is a statement about _many small eager calls_, not about throughput. Batch, and it disappears; stay eager and per-point, and the route you choose is worth 20x.
+
 ## Coordinate Changes
 
 Let's start by importing the libraries we'll need and setting up some test data.
