@@ -187,6 +187,7 @@ from coordinax.vectors import (
     Point,
     Tangent,
     ToUnitsOptions,
+    chord_distance,
     equivalent,
     geodesic_distance,
 )
