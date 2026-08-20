@@ -49,14 +49,21 @@ def test_generated_domain_matches_core_bounds(chart, component, bounds) -> None:
     assert math.isclose(float(got_hi), hi, abs_tol=1e-12)
 
 
+@pytest.mark.parametrize("side", ["below", "above"])
 @pytest.mark.parametrize(("chart", "component", "bounds"), CORE_BOUNDS)
-def test_core_rejects_outside_the_generated_domain(chart, component, bounds) -> None:
-    """A value past the declared bound must actually be refused by core.
+def test_core_rejects_outside_the_generated_domain(
+    chart, component, bounds, side
+) -> None:
+    """A value past either bound must actually be refused by core.
 
     Pins the direction the equality above cannot: that the numbers are the
     bounds core *enforces*, not merely numbers both sides happen to store.
+
+    Both sides, because they are separately enforceable. Probing only the
+    upper one would miss core dropping the lower -- which for `LATITUDE` is
+    the whole of `-pi/2`, not a degenerate endpoint.
     """
-    _lo, hi = bounds
+    lo, hi = bounds
     point = {
         k: u.Angle(0.1, "rad") if d == "angle" else u.Q(1.0, "m")
         # `strict=True`: these are the chart's own parallel declarations, so a
@@ -64,7 +71,7 @@ def test_core_rejects_outside_the_generated_domain(chart, component, bounds) -> 
         # fail this test on a missing key rather than on the bound it is about.
         for k, d in zip(chart.components, chart.coord_dimensions, strict=True)
     }
-    point[component] = u.Angle(hi + 0.5, "rad")
+    point[component] = u.Angle(lo - 0.5 if side == "below" else hi + 0.5, "rad")
     # The pair `tests/unit/charts/test_checks.py` uses: `eqx.error_if` raises
     # `EquinoxRuntimeError` from inside JIT and `ValueError` outside it.
     with pytest.raises(
