@@ -43,7 +43,8 @@ Three levels of API, cheapest first. Pick the lowest one that carries the metada
 
 >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
 >>> cx.pt_map(q, cx.cart3d, cx.sph3d)
-{'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'), 'phi': Q(1.10714872, 'rad')}
+{'r': Q(3.74165739, 'km'), 'theta': Angle(0.64052231, 'rad'),
+ 'phi': Angle(1.10714872, 'rad')}
 
 ```
 
