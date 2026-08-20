@@ -15,7 +15,10 @@ from .custom_types import CDict
 from .rotate import Rotate
 from .translate import Translate
 
-_MSG_ZERO_AXIS = "`RotationAboutAxis.axis` must be non-zero; got a zero-length axis."
+_MSG_ZERO_AXIS = (
+    "`RotationAboutAxis.axis` must be non-zero and finite; normalising anything "
+    "else gives a NaN rotation matrix."
+)
 
 
 def _as_axis(axis: Any, /) -> Shaped[Array, "3"]:
@@ -75,9 +78,14 @@ class RotationAboutAxis(eqx.Module):
         """Build the `Rotate` operator at time parameter ``tau``."""
         theta = jnp.asarray(u.ustrip("rad", self.omega * tau + self.phase))
         norm = jnp.linalg.vector_norm(self.axis)
-        # A zero-length axis defines no rotation; normalizing it would give a
-        # silently NaN `R`.  `error_if` also fires under `jit`.
-        axis = eqx.error_if(self.axis, norm == 0, _MSG_ZERO_AXIS)
+        # `axis / norm` is a unit vector only where `axis` is finite and non-zero,
+        # which is exactly a finite positive `norm`: the norm is NaN iff a component
+        # is, `inf` iff a component is, and 0 iff the axis is. Testing `norm == 0`
+        # alone caught the last of the three and let the other two normalise to the
+        # silently NaN `R` this guard exists to prevent. `error_if` fires under `jit`.
+        axis = eqx.error_if(
+            self.axis, ~((norm > 0) & jnp.isfinite(norm)), _MSG_ZERO_AXIS
+        )
         n = axis / norm
         # Rodrigues' formula: R = I cos(th) + sin(th) [n]_x + (1-cos th) n n^T
         # The `0.0 * n[0]` terms keep the zero entries as functions of `axis`

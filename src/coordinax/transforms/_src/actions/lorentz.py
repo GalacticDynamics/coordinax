@@ -31,8 +31,8 @@ _MSG_SUPERLUMINAL = (
 
 
 _MSG_ZERO_DIRECTION = (
-    "LorentzBoost.from_rapidity requires a non-zero `direction`; the zero "
-    "vector has no boost axis to normalise onto."
+    "LorentzBoost.from_rapidity requires a non-zero, finite `direction`; "
+    "anything else has no boost axis to normalise onto."
 )
 
 
@@ -244,9 +244,14 @@ class LorentzBoost(AbstractLinearTransform):
         """
         d = _float(direction)
         norm = jnp.linalg.norm(d)
-        # A zero direction has no boost axis to normalise onto; dividing would
-        # give `nan` betas that then propagate silently into every matrix entry.
-        norm = eqx.error_if(norm, norm == 0.0, _MSG_ZERO_DIRECTION)
+        # `d / norm` is a unit vector only where `norm` is finite and positive: it
+        # is NaN iff a component of `d` is, `inf` iff a component is, and 0 iff `d`
+        # is. Testing `norm == 0.0` alone caught only the last, so a NaN direction
+        # built the `nan` betas this guard exists to prevent -- reported later by
+        # `gamma`'s subluminal check, which names the wrong cause.
+        norm = eqx.error_if(
+            norm, ~((norm > 0.0) & jnp.isfinite(norm)), _MSG_ZERO_DIRECTION
+        )
         return cls(jnp.tanh(_float(rapidity)) * (d / norm))
 
     # -----------------------------------------------------

@@ -1,5 +1,6 @@
 """Tests for the built-in TimeDep builders."""
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 import pytest
@@ -83,10 +84,18 @@ def test_uniform_translation_differentiable_in_rate():
     assert jnp.allclose(jax.grad(y)(3.0), 2000.0, atol=1e-6)
 
 
-def test_rotation_about_axis_zero_axis_raises():
-    """A zero-length axis must fail loudly, not normalize to a NaN `R`."""
-    b = cxfm.builders.RotationAboutAxis(u.Q(1, "rad/s"), axis=jnp.zeros(3))
-    with pytest.raises(Exception, match="must be non-zero"):
+@pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
+def test_rotation_about_axis_unnormalisable_axis_raises(bad):
+    """An axis that cannot be normalised must fail loudly, not give a NaN `R`.
+
+    `axis / norm` is a unit vector only for a finite positive norm. A NaN or
+    `inf` axis is False for `norm == 0` and used to normalise straight through
+    to nine NaN entries in `R`.
+    """
+    b = cxfm.builders.RotationAboutAxis(
+        u.Q(1, "rad/s"), axis=jnp.array([bad, 0.0, 0.0])
+    )
+    with pytest.raises(eqx.EquinoxRuntimeError, match="must be non-zero"):
         b(u.Q(1.0, "s"))
 
 

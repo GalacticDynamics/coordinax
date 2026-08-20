@@ -173,14 +173,17 @@ class TestDerivedQuantities:
         with pytest.raises(eqx.EquinoxRuntimeError, match="subluminal"):
             _ = getattr(cxfm.LorentzBoost([beta, 0.0, 0.0]), attr)
 
-    def test_zero_direction_is_rejected(self):
-        """A zero ``direction`` has no axis to normalise onto.
+    @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
+    def test_an_unnormalisable_direction_is_rejected(self, bad):
+        """A ``direction`` that cannot be normalised has no boost axis.
 
-        Dividing by its zero norm produced ``nan`` betas that then propagated
-        silently into every entry of the matrix.
+        Dividing by its norm produced ``nan`` betas that then propagated
+        silently into every entry of the matrix. ``norm == 0.0`` caught only
+        the zero case; the other two were reported later by ``gamma``'s
+        subluminal check, which names the wrong cause.
         """
         with pytest.raises(eqx.EquinoxRuntimeError, match="non-zero"):
-            cxfm.LorentzBoost.from_rapidity(0.5, (0.0, 0.0, 0.0))
+            cxfm.LorentzBoost.from_rapidity(0.5, (bad, 0.0, 0.0))
 
 
 class TestPhysicalPredictions:
