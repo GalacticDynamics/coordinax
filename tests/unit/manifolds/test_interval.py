@@ -410,3 +410,60 @@ class TestCausalVerbsValidateTheirMetricArgument:
             cxm.MinkowskiMetric(), cxc.minkowskict, o, event(ct, x)
         )
         assert got is not None
+
+
+class TestTheCausalVerbsRefuseABatchClearly:
+    """These three branch on the interval's sign, so a batch has no one answer.
+
+    `rapidity_between` next door *is* batched, so the asymmetry is easy to walk
+    into. The refusal used to come out of `float()` as ``Only scalar arrays can
+    be converted to Python scalars``, which names nothing the caller wrote.
+    """
+
+    BATCH_A: ClassVar = {
+        "ct": u.Q(jnp.asarray([5.0, 1.0]), "m"),
+        "x": u.Q(jnp.asarray([1.0, 5.0]), "m"),
+        "y": u.Q(jnp.asarray([0.0, 0.0]), "m"),
+        "z": u.Q(jnp.asarray([0.0, 0.0]), "m"),
+    }
+    BATCH_B: ClassVar = {k: u.Q(jnp.zeros(2), "m") for k in ("ct", "x", "y", "z")}
+
+    @pytest.mark.parametrize(
+        "verb", ["causal_character", "proper_time", "proper_distance"]
+    )
+    def test_a_batch_is_refused_by_name(self, verb):
+        f = getattr(cxmapi, verb)
+        metric = cxc.minkowskict.M.metric
+        with pytest.raises(ValueError, match="the event pair is not"):
+            f(metric, cxc.minkowskict, self.BATCH_A, self.BATCH_B)
+
+    def test_a_length_one_batch_is_refused_too(self):
+        """Shape ``(1,)`` is still a batch: answering it would be a silent guess."""
+        a = {
+            k: u.Q(jnp.asarray([v]), "m")
+            for k, v in (("ct", 5.0), ("x", 1.0), ("y", 0.0), ("z", 0.0))
+        }
+        b = {k: u.Q(jnp.zeros(1), "m") for k in ("ct", "x", "y", "z")}
+        with pytest.raises(ValueError, match="the event pair is not"):
+            cxmapi.causal_character(cxc.minkowskict.M.metric, cxc.minkowskict, a, b)
+
+    def test_a_non_scalar_atol_names_atol_not_the_events(self):
+        """`atol` funnels through the same guard, so it must not blame the events."""
+        a = {
+            k: u.Q(v, "m") for k, v in (("ct", 5.0), ("x", 1.0), ("y", 0.0), ("z", 0.0))
+        }
+        b = {k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")}
+        with pytest.raises(ValueError, match="`atol` is not") as excinfo:
+            cxmapi.causal_character(
+                cxc.minkowskict.M.metric,
+                cxc.minkowskict,
+                a,
+                b,
+                atol=jnp.asarray([1e-8, 1e-8]),
+            )
+        assert "the event pair" not in str(excinfo.value)
+
+    def test_interval_itself_still_batches(self):
+        """The refusal is about the branch, not the arithmetic."""
+        ds2 = cxm.interval(cxc.minkowskict, self.BATCH_A, self.BATCH_B)
+        assert jnp.asarray(ds2.value).shape == (2,)
