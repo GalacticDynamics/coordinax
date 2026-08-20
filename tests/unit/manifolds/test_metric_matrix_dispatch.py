@@ -389,3 +389,18 @@ def test_curvilinear_metric_diagonal_is_float_for_integer_coords():
     pt = {"r": u.Q(2, "m"), "theta": u.Q(1, "rad")}  # integer magnitudes
     g = cxmapi.metric_matrix(cxm.R2, pt, cxc.polar2d).diagonal
     assert jnp.issubdtype(jnp.asarray(g.value).dtype, jnp.inexact)
+
+
+class TestChartsWithoutAnOrdinaryMetric:
+    """Two edge charts that reached a raw error instead of an answer or a reason."""
+
+    def test_zero_dimensional_chart_has_the_empty_metric(self):
+        """A point has no coordinates, so its metric is the unique 0x0 form."""
+        g = cxmapi.metric_matrix(cxm.R0, {}, cxc.cart0d)
+        assert jnp.asarray(g.matrix.value).shape == (0, 0)
+
+    def test_a_metricless_chart_says_why_rather_than_how_to_register(self):
+        """`PoincarePolar6D` is phase space: a symplectic form, not a metric."""
+        with pytest.raises(NotImplementedError, match="no manifold") as excinfo:
+            cxmapi.metric_matrix(cxc.poincarepolar6d.M, {}, cxc.poincarepolar6d)
+        assert "@plum.dispatch" not in str(excinfo.value)
