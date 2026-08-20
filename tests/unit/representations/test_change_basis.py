@@ -1,6 +1,6 @@
 """Tests for change_basis function."""
 
-from typing import Any
+from typing import Any, ClassVar
 
 import jax
 import jax.numpy as jnp
@@ -438,3 +438,65 @@ class TestTriangularSolveBatching:
         )
         np.testing.assert_allclose(out.value, expected)
         assert out.unit == ul.UnitsMatrix((u.unit("1 / s"), u.unit("1 / s")))
+
+
+class TestCoordToPhysNeedsNoExplicitManifold:
+    """The no-manifold overload exists for both directions, not just one.
+
+    `phys -> coord` has always fallen back to ``chart.M``; `coord -> phys` did
+    not, so only the charts with a bespoke rule -- the Cartesian family and
+    `Spherical3D` -- could make that change without being handed a manifold.
+    Every other orthogonal chart raised `NotFoundLookupError`, which is a crash
+    rather than a missed optimisation.
+    """
+
+    CASES: ClassVar = [
+        (cxc.polar2d, {"r": 2.0, "theta": 0.4}),
+        (cxc.cyl3d, {"rho": 2.0, "phi": 0.4, "z": 1.0}),
+        (cxc.math_sph3d, {"r": 3.0, "theta": 0.5, "phi": 0.9}),
+        (cxc.lonlat_sph3d, {"lon": 0.4, "lat": 0.3, "distance": 2.0}),
+        (cxc.radial1d, {"r": 2.0}),
+        (cxc.sph2, {"theta": 0.5, "phi": 0.9}),
+    ]
+
+    @staticmethod
+    def _vec(at):
+        return {k: jnp.asarray(float(i + 1)) for i, k in enumerate(at)}
+
+    @pytest.mark.parametrize(("chart", "at"), CASES)
+    def test_it_matches_passing_the_manifold_explicitly(self, chart, at):
+        """The fallback must be the same call, not merely a call that works."""
+        atj = {k: jnp.asarray(v) for k, v in at.items()}
+        v = self._vec(at)
+        implicit = cxr.change_basis(
+            v, chart, cxr.coord_basis, cxr.phys_basis, at=atj, usys=usys
+        )
+        explicit = cxr.change_basis(
+            v, chart, chart.M, cxr.coord_basis, cxr.phys_basis, at=atj, usys=usys
+        )
+        for k in implicit:
+            np.testing.assert_allclose(implicit[k], explicit[k], rtol=0, atol=0)
+
+    @pytest.mark.parametrize(("chart", "at"), CASES)
+    def test_it_round_trips_back_to_the_coordinate_basis(self, chart, at):
+        atj = {k: jnp.asarray(v) for k, v in at.items()}
+        v = self._vec(at)
+        phys = cxr.change_basis(
+            v, chart, cxr.coord_basis, cxr.phys_basis, at=atj, usys=usys
+        )
+        back = cxr.change_basis(
+            phys, chart, cxr.phys_basis, cxr.coord_basis, at=atj, usys=usys
+        )
+        for k in v:
+            np.testing.assert_allclose(back[k], v[k], rtol=0, atol=1e-14)
+
+    def test_the_scale_factor_is_the_one_the_chart_declares(self):
+        """Cylindrical: ``h = (1, rho, 1)``, so only the angular part rescales."""
+        at = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.4), "z": jnp.asarray(1.0)}
+        v = {"rho": jnp.asarray(1.0), "phi": jnp.asarray(2.0), "z": jnp.asarray(3.0)}
+        got = cxr.change_basis(
+            v, cxc.cyl3d, cxr.coord_basis, cxr.phys_basis, at=at, usys=usys
+        )
+        np.testing.assert_allclose(
+            [got["rho"], got["phi"], got["z"]], [1.0, 4.0, 3.0], rtol=0, atol=0
+        )
