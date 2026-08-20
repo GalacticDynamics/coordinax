@@ -253,6 +253,8 @@ Q([1.5, 0. , 0. ], 'km')
 
 `AtTime(curve, t)` binds the evaluation time of a two-argument curve, turning it into a one-argument one; it is what makes `ArcLength`'s otherwise-two-argument result callable with `s` alone above. Where `AtTime` sits relative to `ArcLength` changes what is being asked: `ArcLength(AtTime(curve, t))` binds `t` first, so `ArcLength` sees a one-argument curve and freezes arc length to that one slice permanently — there is no Eulerian/Lagrangian distinction left to make. `AtTime(ArcLength(curve), t)`, used above, keeps `ArcLength` two-argument and only fixes which slice a given call reads; a later call with a different `t` re-measures on that slice instead.
 
+Which of the two readings a frame is built on is not a setting on the chart or the builder. The velocity of the frame origin at label $s$ is $\partial\gamma/\partial t$ at fixed $s$, taken on whatever curve the builder was handed: a bare $\gamma(\sigma, t)$ gives the velocity of the material point $\sigma$; `ArcLength` adds the advection term that holds the label at fixed arc length; `LagrangianArcLength` removes it again. The parametrisation supplies the reading, and nothing downstream overrides it.
+
 ### Four Curve Shapes
 
 A curve is not always handed to `ArcLength` to be reparametrised — it can also arrive already arc-length parametrised, in one of a few shapes. This section walks through each.
