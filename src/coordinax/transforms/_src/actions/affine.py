@@ -19,6 +19,7 @@ from .base import AbstractTransform
 from .identity import identity
 from .composed import _merge, simplify
 from .linear import AbstractLinearTransform
+from .utils import is_flat_chart
 from coordinax._src.custom_types import OptUSys
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -171,18 +172,48 @@ def pushforward(
 ) -> CDict:
     r"""Push a tangent vector forward: the offset differentiates away.
 
-    $d(Ax + b) = A\,dx$, so a tangent transforms by the linear part alone and
-    needs no base point.
+    $d(Ax + b) = A\,dx$, so a tangent sees only the linear part.
+
+    That does *not* make the base point unnecessary. On a flat chart the chart
+    Jacobian is the identity and $A$ applies directly. On a non-flat one the
+    tangent must go through the chart Jacobian at ``at``, and the inverse
+    Jacobian on the way back has to be anchored at the *image* of the base
+    point -- which for an affine map is $A\,\mathrm{at} + b$, not
+    $A\,\mathrm{at}$. Mapping the tangent with `pt_map` instead would treat it
+    as a point: on `~coordinax.charts.sph3d` that tries to read ``rad/s`` as an
+    angle and raises.
     """
-    del tau, rep, at
+    del tau
 
     cart = chart.cartesian
     comps = cart.components
-    v_cart = cxc.pt_map(v, chart, cart, usys=usys)
-    v_val, v_unit = pack_uniform_unit(cast("CDict", v_cart), keys=comps)
-    out = jnp.einsum("ij,...j->...i", op.A, v_val)
-    out_cart = cxc.cdict(out, v_unit, comps)
-    return cast("CDict", cxc.pt_map(out_cart, cart, chart, usys=usys))
+
+    if is_flat_chart(chart):
+        v_cart = cxc.pt_map(v, chart, cart, usys=usys)
+        v_val, v_unit = pack_uniform_unit(cast("CDict", v_cart), keys=comps)
+        out = jnp.einsum("ij,...j->...i", op.A, v_val)
+        out_cart = cxc.cdict(out, v_unit, comps)
+        return cast("CDict", cxc.pt_map(out_cart, cart, chart, usys=usys))
+
+    if at is None:
+        msg = (
+            f"pushforward({type(op).__name__}, ..., {rep!r}) on a non-Cartesian "
+            f"chart ({chart!r}) requires 'at' (base point in chart coords) so "
+            "the Jacobian pushforward can be evaluated."
+        )
+        raise TypeError(msg)
+
+    at_cart = cxc.pt_map(at, chart, cart, usys=usys)
+    p_cart = cxr.tangent_map(v, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
+    p_val, p_unit = pack_uniform_unit(p_cart, keys=comps)
+    out_cart = cxc.cdict(jnp.einsum("ij,...j->...i", op.A, p_val), p_unit, comps)
+
+    at_val, at_unit = pack_uniform_unit(cast("CDict", at_cart), keys=comps)
+    mapped = cast(
+        "CDict", cxc.cdict(jnp.einsum("ij,...j->...i", op.A, at_val), at_unit, comps)
+    )
+    at_out = {k: mapped[k] + op.b[k] for k in comps}
+    return cxr.tangent_map(out_cart, cart, rep, chart, at=at_out, usys=usys)  # ty: ignore[missing-argument]
 
 
 # ============================================================================

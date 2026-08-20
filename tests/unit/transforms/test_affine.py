@@ -2,6 +2,8 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import ClassVar
+
 import jax.numpy as jnp
 import pytest
 
@@ -159,4 +161,65 @@ class TestAffineContracts:
         for k in "xyz":
             assert float(a[k].ustrip("km/s")) == pytest.approx(
                 float(b[k].ustrip("km/s")), abs=1e-5
+            )
+
+
+class TestAffinePushforwardOnANonFlatChart:
+    """A tangent needs its base point once the chart Jacobian is not the identity.
+
+    The offset differentiates away, which is true and was the whole reasoning
+    for dropping `at`. It does not follow that the base point is unnecessary:
+    on a non-flat chart the tangent goes through the chart Jacobian at `at`,
+    and the inverse Jacobian on the way back is anchored at the *image* of the
+    base point -- `A at + b`, not `A at`.
+    """
+
+    AT: ClassVar = {
+        "r": u.Q(2.0, "m"),
+        "theta": u.Q(0.9, "rad"),
+        "phi": u.Q(0.4, "rad"),
+    }
+    V: ClassVar = {
+        "r": u.Q(1.0, "m/s"),
+        "theta": u.Q(0.1, "rad/s"),
+        "phi": u.Q(0.2, "rad/s"),
+    }
+    UNITS: ClassVar = {"r": "m/s", "theta": "rad/s", "phi": "rad/s"}
+
+    def _chain(self):
+        return _rot_z(90) | cxfm.Translate.from_([1.0, 0.0, 0.0], "m")
+
+    def test_it_agrees_with_the_chain_it_replaced(self):
+        """The check that catches an anchor at `A at` instead of `A at + b`."""
+        chain = self._chain()
+        fused = cxfm.simplify(chain)
+        assert isinstance(fused, cxfm.Affine)
+
+        got = cxfm.pushforward(
+            fused,
+            None,
+            self.V,
+            cx.charts.sph3d,
+            cx.representations.coord_vel,
+            at=self.AT,
+        )
+        want = cxfm.pushforward(
+            chain,
+            None,
+            self.V,
+            cx.charts.sph3d,
+            cx.representations.coord_vel,
+            at=self.AT,
+        )
+        for k, unit in self.UNITS.items():
+            assert jnp.allclose(
+                u.ustrip(unit, got[k]), u.ustrip(unit, want[k]), atol=1e-6
+            )
+
+    def test_a_missing_base_point_is_refused(self):
+        """Better than mapping the tangent as a point and failing on `rad/s`."""
+        fused = cxfm.simplify(self._chain())
+        with pytest.raises(TypeError, match="requires 'at'"):
+            cxfm.pushforward(
+                fused, None, self.V, cx.charts.sph3d, cx.representations.coord_vel
             )
