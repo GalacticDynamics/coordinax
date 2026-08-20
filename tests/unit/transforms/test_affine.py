@@ -263,3 +263,57 @@ class TestAffineOffsetsInDifferentUnits:
         fused = cxfm.simplify(chain)
         assert isinstance(fused, cxfm.Affine)
         assert _agree(chain, fused)
+
+
+class TestWhatDoesNotFold:
+    """Each refusal in `_affine_parts`, exercised directly.
+
+    They are reached through `simplify` only in combination, so the astro chain
+    covers them jointly. Pinning them one at a time says *which* guard rejects
+    what -- a single joint test passes just as happily if two of the three
+    guards vanish.
+    """
+
+    def test_a_boost_is_refused(self):
+        """`Boost` acts as ``x + dv*tau``, so no constant `b` can hold it.
+
+        It declares no ``semantic_kind``, which is what the guard reads. Its
+        ``delta`` *is* a component dict like any `AbstractAdd`, so the shape of
+        the offset does not distinguish it -- a detail worth pinning, since an
+        earlier comment here claimed the opposite.
+        """
+        from coordinax.transforms._src.actions.affine import _affine_parts
+
+        boost = cxfm.Boost(
+            {k: u.Q(v, "km/s") for k, v in (("x", 1.0), ("y", 0.0), ("z", 0.0))},
+            cx.cart3d,
+        )
+        assert isinstance(boost.delta, dict)
+        assert getattr(boost, "semantic_kind", None) is None
+        assert _affine_parts(boost) is None
+
+    def test_a_fibre_only_translate_is_refused(self):
+        """Ladder order >= 1 moves velocities, not points."""
+        from coordinax.transforms._src.actions.affine import _affine_parts
+
+        vel_shift = cxfm.Translate(
+            {k: u.Q(v, "km/s") for k, v in (("x", 1.0), ("y", 0.0), ("z", 0.0))},
+            chart=cx.cart3d,
+            semantic_kind=cx.representations.vel,
+        )
+        assert _affine_parts(vel_shift) is None
+
+    def test_an_operator_of_no_known_shape_is_refused(self):
+        """The fallback: affine by group, but neither linear nor additive."""
+        from coordinax.transforms._src.actions.affine import _affine_parts
+
+        assert _affine_parts(cxfm.Identity()) is None
+
+
+def test_an_identity_affine_collapses():
+    """`A = I`, `b = 0` is the identity, and `simplify` should say so."""
+    R = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    T = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+    fused = cxfm.simplify(R | T)
+    round_trip = cxfm.simplify(cxfm.Composed((fused, fused.inverse)))
+    assert isinstance(round_trip, cxfm.Identity)

@@ -42,8 +42,8 @@ class Affine(AbstractTransform):
     element there costs its own chart round-trip and kernel launch. Composing
     them into one $(A, b)$ pair collapses that to a single einsum-plus-add:
     ICRS to Galactocentric is `Rotate | Translate | Rotate | Translate`, four
-    applications, and the `Rotate`s are not adjacent so pairwise merging cannot
-    reach them.
+    applications, and the two `Rotate` operators are not adjacent, so pairwise
+    merging cannot reach them.
 
     Like `~coordinax.transforms.Linear`, this names no structure of its own, so
     it carries the group it belongs to as a field rather than declaring one:
@@ -248,8 +248,8 @@ def _affine_parts(
         # that are not would fuse into nonsense:
         #
         # - `Boost` acts as `x + dv*tau`, so its offset is tau-dependent and
-        #   has no place in a constant `b`. Its delta is a bare velocity
-        #   `Quantity`, not a component dict, which is how it is spotted here.
+        #   has no place in a constant `b`. It declares no `semantic_kind` at
+        #   all, which is how it is spotted here.
         # - `Translate(semantic_kind=vel)` and friends are fibre-only (ladder
         #   order k >= 1): they move velocities, not points, so folding them
         #   into the point map would move the wrong thing.
@@ -258,8 +258,6 @@ def _affine_parts(
         # a `Boost` in km/s; fusing them tried to convert one into the other.
         kind = getattr(op, "semantic_kind", None)
         if kind is None or getattr(kind, "order", 1) != 0:
-            return None
-        if not isinstance(op.delta, dict):
             return None
         chart = cast("cxc.AbstractChart", op.chart)
         n = len(chart.components)
@@ -339,6 +337,12 @@ def _compose_affine(
     (AbstractAdd, AbstractLinearTransform),
     (Affine, AbstractTransform),
     (AbstractTransform, Affine),
+    # `(Affine, Affine)` explicitly: the two mixed signatures above both match
+    # it and neither is the more specific, so plum calls it ambiguous rather
+    # than picking one. It arises when a chain folds to an `Affine` on each
+    # side of an `Identity` that is then stripped -- and when one is composed
+    # with its own inverse.
+    (Affine, Affine),
 )
 def _merge(a: AbstractTransform, b: AbstractTransform, /) -> AbstractTransform | None:
     """Fold an adjacent affine pair into a single `Affine`."""
