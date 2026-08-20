@@ -27,7 +27,12 @@ import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 
-from .base import AbstractCurveFrameBuilder, AbstractParallelTransportFrame, FrameT
+from .base import (
+    AbstractCurveFrameBuilder,
+    AbstractParallelTransportFrame,
+    FrameT,
+    unit_or_none,
+)
 
 
 def _normalize(v: Any) -> Any:
@@ -92,12 +97,16 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         A function ``tau -> Quantity[float, (3,)]`` representing a smooth space
         curve.  Make it an `equinox.Module` for differentiable curve parameters;
         a bare function's captures are trace-time constants.
-    tau_unit : AbstractUnit or str
+    tau_unit : AbstractUnit or str, optional
         Unit of the curve parameter, used by {func}`unxt.experimental.jacfwd` to
-        compute unit-correct derivatives.  Required: there is no neutral
-        default, since a curve parameter may be a time, an arc length, or an
-        affine parameter, and the wrong unit is silently rescaled rather than
-        rejected when it is dimensionally compatible.
+        compute unit-correct derivatives.  `None` (the default) reads it off
+        the parameter the builder is called with.  There is no neutral unit to
+        default to -- a curve parameter may be a time, an arc length, or an
+        affine parameter -- so rather than pick one, take the one the caller
+        already stated by passing a `Quantity`.  Declare it for a curve that
+        reads its argument's ``.value`` rather than converting, or for a raw
+        (unitless) parameter or ``station``, neither of which carries a unit
+        to read.
     station : optional
         A fixed station along the curve; see `AbstractCurveFrameBuilder`.
 
@@ -122,8 +131,8 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
     curve: Callable[[Any], Any]
     """The constructing curve."""
 
-    tau_unit: u.AbstractUnit = eqx.field(  # ty: ignore[invalid-assignment]
-        static=True, converter=u.unit
+    tau_unit: u.AbstractUnit | None = eqx.field(
+        default=None, static=True, converter=unit_or_none
     )
     """The unit of the curve parameter tau."""
 
@@ -163,11 +172,18 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         # of the time slice, at the pinned station. See `_resolve`.
         b, p = self._resolve(tau)
 
-        # Unit-aware first and second derivatives via unxt
-        dcurve = u.experimental.jacfwd(b.curve, units=(b.tau_unit,))
-        d2curve = u.experimental.jacfwd(dcurve, units=(b.tau_unit,))
+        # Unit-aware first and second derivatives via unxt. `g` is built
+        # first: it is what the parameter unit is read off when undeclared.
+        # Resolve the unit *before* `.astype`: a unitless parameter has no
+        # `.astype`, so doing it the other way round reports the accident
+        # (`AttributeError`) instead of the cause (`_tau_unit_at`'s message,
+        # which names both ways to fix it).
+        g = b._param(p)
+        tau_unit = b._tau_unit_at(g)
+        g = g.astype(float)
+        dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
+        d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
 
-        g = b._param(p).astype(float)
         dp = dcurve(g)
         d2p = d2curve(g)
 
@@ -209,8 +225,10 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         """
         b, p = self._resolve(tau)
-        dcurve = u.experimental.jacfwd(b.curve, units=(b.tau_unit,))
-        return u.Q(_normalize(dcurve(b._param(p).astype(float))).value, "")
+        g = b._param(p)
+        dcurve = u.experimental.jacfwd(b.curve, units=(b._tau_unit_at(g),))
+        g = g.astype(float)
+        return u.Q(_normalize(dcurve(g)).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
         r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).
@@ -333,7 +351,7 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         base_frame: FrameT,
         curve: Callable[[Any], Any],
         /,
-        tau_unit: u.AbstractUnit | str,
+        tau_unit: u.AbstractUnit | str | None = None,
         *,
         station: Any = None,
     ) -> "FrenetSerretFrame[FrameT]":
@@ -346,11 +364,13 @@ class FrenetSerretFrame(AbstractParallelTransportFrame[FrameT]):
         curve : Callable
             A function ``tau -> Quantity[float, (3,)]`` representing
             a smooth space curve.
-        tau_unit : AbstractUnit or str
-            Unit of the curve parameter for differentiation.  Required: there
-            is no neutral default, since a curve parameter may be a time, an
-            arc length, or an affine parameter, and the wrong unit is silently
-            rescaled rather than rejected when it is dimensionally compatible.
+        tau_unit : AbstractUnit or str, optional
+            Unit of the curve parameter for differentiation.  `None` (the
+            default) reads it off the parameter the frame is evaluated at.
+            There is no neutral unit to default to -- a curve parameter may be
+            a time, an arc length, or an affine parameter -- so rather than
+            pick one, take the one the caller already stated by passing a
+            `Quantity`.
         station : optional
             A fixed station along the curve; when given the frame is a fixed
             frame *field* along the curve rather than a moving frame.

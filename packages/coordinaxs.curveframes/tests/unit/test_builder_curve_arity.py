@@ -41,6 +41,17 @@ def curve1(tau: u.AbstractQuantity) -> u.AbstractQuantity:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
+def curve_gyr(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+    """A curve genuinely parametrised in Gyr, in kpc -- the galactic case.
+
+    It *converts* its argument rather than reading the magnitude, which is how
+    every curve in this package's docs is written and what makes a dimensionally
+    compatible mismatch harmless.
+    """
+    t = tau.ustrip("Gyr")
+    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "kpc")
+
+
 def curve2(s: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
     """A time-dependent curve: it bends and stretches with ``t``."""
     sv, tv = s.ustrip("km"), t.ustrip("s")
@@ -330,17 +341,150 @@ def test_a_wrapper_forwards_the_dimension_it_wraps() -> None:
     assert cxfc.AtTime(curve2, u.Q(0.5, "s"))._param_dimension is None
 
 
-def test_tau_unit_is_required() -> None:
-    """There is no default to be wrong: omission fails before an object exists.
+def test_tau_unit_is_inferred_from_the_parameter_when_undeclared() -> None:
+    """An undeclared unit is read off the `Quantity` the builder is called with.
 
-    Seconds are not a neutral fallback -- in galactic dynamics the natural
-    parameter is Myr or Gyr, and a Gyr curve read as seconds is off by 3.15e16
-    with no error anywhere, because the units are dimensionally compatible and
-    `ustrip` simply rescales.
+    A declared unit is a second, independent statement of a fact the parameter
+    already carries, and two statements can disagree. Reading it off the
+    parameter removes the second statement, so there is nothing to disagree.
     """
-    with pytest.raises(TypeError, match="tau_unit"):
-        cxfc.BishopBuilder(curve1)
-    with pytest.raises(TypeError, match="tau_unit"):
-        cxfc.FrenetSerretBuilder(curve1)
-    cxfc.BishopBuilder(curve1, "s")  # any unit is allowed, none is assumed
+    tau = u.Q(2.0, "Gyr")
+    for cls in (cxfc.BishopBuilder, cxfc.FrenetSerretBuilder):
+        declared = cls(curve_gyr, "Gyr").rotation_matrix(tau)
+        inferred = cls(curve_gyr).rotation_matrix(tau)
+        assert jnp.allclose(declared, inferred), (cls.__name__, declared, inferred)
+
+
+def test_a_dimensionally_compatible_mismatch_is_absorbed_by_a_converting_curve() -> (
+    None
+):
+    """Declaring "s" for a Gyr curve is *not* wrong when the curve converts.
+
+    `unxt.experimental.jacfwd` strips with ``ustrip(unit, arg)`` -- a
+    conversion, not a reinterpretation -- so 2 Gyr declared as "s" reaches the
+    curve as 6.3e16 s, the curve's own ``ustrip("Gyr")`` converts it back, and
+    the derivative comes out in ``kpc/s`` instead of ``kpc/Gyr``: the same
+    physical quantity, differently labelled.
+
+    Recorded because the opposite was believed: that such a curve came back
+    "off by 3.15e16 with no error anywhere". It does not, and the distinction
+    decides what `tau_unit` is actually for -- see the next test for the case
+    where the mismatch really does corrupt the answer.
+    """
+    tau = u.Q(2.0, "Gyr")
+    right = cxfc.BishopBuilder(curve_gyr, "Gyr").rotation_matrix(tau)
+    wrong = cxfc.BishopBuilder(curve_gyr, "s").rotation_matrix(tau)
+    assert jnp.allclose(right, wrong)
+
+
+def test_a_value_reading_curve_is_the_case_that_needs_the_unit() -> None:
+    """A curve that reads ``.value`` trusts the declared unit, so a wrong one lies.
+
+    This is the one place `tau_unit` is load-bearing: the curve never converts,
+    so whatever magnitude the declaration produces is taken at face value.
+    Inference cannot be wrong here, because it hands the curve back exactly the
+    numbers the caller passed.
+    """
+
+    def by_value(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.value  # assumes it was handed its own unit
+        return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "kpc")
+
+    tau = u.Q(2.0, "Gyr")
+    truth = cxfc.BishopBuilder(by_value, "Gyr").tangent(tau)
+    assert jnp.allclose(cxfc.BishopBuilder(by_value).tangent(tau).value, truth.value)
+
+    # Silently wrong, and finite: `tangent` returns a plausible unit vector
+    # that is simply not this curve's. The parallel-transport path is louder --
+    # the ODE gives up on a curve made 3.15e16 times stiffer -- so `tangent`
+    # is what pins the *silent* failure.
+    assert not jnp.allclose(
+        cxfc.BishopBuilder(by_value, "s").tangent(tau).value, truth.value
+    )
+
+
+def test_a_unitless_parameter_has_nothing_to_infer_from() -> None:
+    """The other case that must declare: a raw parameter carries no unit.
+
+    It fails with a message naming both ways out, rather than an
+    `AttributeError` from inside the derivative.
+    """
+    for cls in (cxfc.BishopBuilder, cxfc.FrenetSerretBuilder):
+        # Both accessors, because they resolve the unit on separate paths:
+        # `FrenetSerretBuilder` reached `.astype(float)` first and reported the
+        # accident rather than the cause.
+        for meth in ("tangent", "rotation_matrix"):
+            with pytest.raises(TypeError, match="call-time parameter"):
+                getattr(cls(curve_gyr), meth)(2.0)
+
+
+def test_a_unitless_station_blames_the_station_not_the_call() -> None:
+    """A pinned `station` is what the builder evaluates at, so it is the culprit.
+
+    The call-time parameter can be a perfectly good `Quantity` and the builder
+    still has nothing to read, because it never looks at it. Advising "pass a
+    `Quantity` parameter" here sends the reader to the one place that is
+    already correct, so the message names the station and shows how to fix
+    *that*.
+    """
+    b = cxfc.BishopBuilder(curve_gyr, station=jnp.asarray(0.3))
+    with pytest.raises(TypeError, match="pinned `station`"):
+        b.tangent(u.Q(1.0, "Gyr"))  # a Quantity, and it does not help
+
+    # Declaring the unit is the other way out, and does work.
+    pinned = cxfc.BishopBuilder(curve_gyr, "Gyr", station=jnp.asarray(0.3))
+    assert jnp.allclose(
+        pinned.tangent(u.Q(1.0, "Gyr")).value,
+        cxfc.BishopBuilder(curve_gyr, station=u.Q(0.3, "Gyr"))
+        .tangent(u.Q(1.0, "Gyr"))
+        .value,
+    )
+
+
+def test_a_raw_array_parameter_works_when_the_unit_is_declared() -> None:
+    """The array fastpath: bare arrays, given meaning by the declared unit.
+
+    This is what `tau_unit` is *for* once inference covers the `Quantity`
+    case. It is wrapped at `_param`, the single funnel every accessor takes
+    its curve parameter from, so all of them accept a raw parameter and every
+    one agrees with the `Quantity` call to the bit.
+
+    Before this, a raw parameter died with `NotFoundLookupError` from inside
+    `unxt`'s `ustrip` dispatch, several frames below the call -- declaring the
+    unit did not help, so the fastpath was documented but unreachable.
+    """
+    raw, quantity = jnp.asarray(0.7), u.Q(0.7, "s")
+    for cls in (cxfc.BishopBuilder, cxfc.FrenetSerretBuilder):
+        b = cls(curve1, "s")
+        for meth in ("location", "tangent", "rotation_matrix"):
+            got, want = getattr(b, meth)(raw), getattr(b, meth)(quantity)
+            got, want = getattr(got, "value", got), getattr(want, "value", want)
+            assert jnp.allclose(jnp.asarray(got), jnp.asarray(want)), (cls, meth)
+
+    # A raw `station` takes the same funnel, so it is covered by the same wrap.
+    pinned = cxfc.BishopBuilder(curve1, "s", station=jnp.asarray(0.3))
+    assert jnp.allclose(
+        pinned.tangent(quantity).value,
+        cxfc.BishopBuilder(curve1, "s", station=u.Q(0.3, "s")).tangent(quantity).value,
+    )
+
+
+def test_the_dimension_guard_still_fires_on_an_inferred_unit() -> None:
+    """Nothing is given up by inferring: the #718 guard runs on it too.
+
+    With no declaration there is nothing to check at construction, so the check
+    moves to the first call that supplies a parameter -- still before any wrong
+    number is returned.
+    """
+    arc = cxfc.ArcLength(curve1, "s")  # exposes a *length*
+    b = cxfc.BishopBuilder(arc)
+    with pytest.raises(ValueError, match="dimension length"):
+        b.tangent(u.Q(1.0, "s"))
+    b.tangent(u.Q(1.0, "km"))  # a length is what it wants, and needs no declaring
+
+
+def test_declaring_the_unit_is_still_accepted() -> None:
+    """The explicit form is unchanged -- inference is a default, not a removal."""
+    cxfc.BishopBuilder(curve1, "s")
     cxfc.BishopBuilder(curve1, "Gyr")
+    cxfc.FrenetSerretBuilder(curve1, "s")

@@ -24,8 +24,13 @@ Typical usage::
 
     import coordinaxs.curveframes as cxfc
 
-    fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve, tau_unit)
-    b_frame  = cxfc.BishopFrame.from_curve(base_frame, curve, tau_unit)
+    # `tau_unit` is read off the parameter the frame is evaluated at:
+    fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve)
+    b_frame  = cxfc.BishopFrame.from_curve(base_frame, curve)
+
+    # ... or stated outright, which a `.value`-reading curve needs:
+    fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve, "s")
+    b_frame  = cxfc.BishopFrame.from_curve(base_frame, curve, "s")
 
 See Also
 --------
