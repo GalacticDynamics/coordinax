@@ -46,6 +46,14 @@ def _check_linear_basis(rep: Representation, label: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+_MSG_AT_REQUIRED = (
+    "tangent_map() needs the base point: pushing a tangent vector from {frm} to "
+    "{to} evaluates the Jacobian of the transition map somewhere, and the "
+    "transition is not linear. Pass `at=` with the point the vector sits at. "
+    "Only a same-chart conversion may omit it, being the identity."
+)
+
+
 def _apply_jac(
     J: Array | ul.QuantityMatrix,
     from_components: tuple[str, ...],
@@ -138,6 +146,17 @@ def tangent_map(
     # Same-chart optimization: identity transform
     if from_chart == to_chart:
         return v
+
+    # Past that point a Jacobian has to be evaluated somewhere, so `at` is not
+    # optional. Without this the base point reaches `jac_pt_map` as `None`,
+    # which resolves to the higher-order rule and returns a *function*; the
+    # failure then surfaces from `_apply_jac` as ``unsupported operand type(s)
+    # for @: 'function' and 'ArrayImpl'``, naming nothing the caller wrote.
+    if at is None:
+        msg = _MSG_AT_REQUIRED.format(
+            frm=type(from_chart).__name__, to=type(to_chart).__name__
+        )
+        raise ValueError(msg)
 
     # `_apply_jac` takes the 2-D Jacobian and the single tangent vector it
     # documents, so a batch is mapped here rather than threaded through it and
