@@ -213,6 +213,23 @@ def _affine_parts(
         return op.A, op.b, op.chart, grp
 
     if isinstance(op, AbstractAdd):
+        # Not every additive operator is a *static point* offset, and the two
+        # that are not would fuse into nonsense:
+        #
+        # - `Boost` acts as `x + dv*tau`, so its offset is tau-dependent and
+        #   has no place in a constant `b`. Its delta is a bare velocity
+        #   `Quantity`, not a component dict, which is how it is spotted here.
+        # - `Translate(semantic_kind=vel)` and friends are fibre-only (ladder
+        #   order k >= 1): they move velocities, not points, so folding them
+        #   into the point map would move the wrong thing.
+        #
+        # ICRS <-> Galactocentric carries both a spatial `Translate` in kpc and
+        # a `Boost` in km/s; fusing them tried to convert one into the other.
+        kind = getattr(op, "semantic_kind", None)
+        if kind is None or getattr(kind, "order", 1) != 0:
+            return None
+        if not isinstance(op.delta, dict):
+            return None
         chart = cast("cxc.AbstractChart", op.chart)
         n = len(chart.components)
         return jnp.eye(n), cast("CDict", op.delta), chart, grp
