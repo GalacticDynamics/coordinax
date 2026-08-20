@@ -636,15 +636,23 @@ class Acceleration(AbstractTangentSemanticKind):
     r"""Acceleration semantic kind.
 
     An acceleration semantic kind indicates that the represented tangent data
-    is an **acceleration vector** — the second time derivative of position on
-    a manifold.
+    is an **acceleration vector** — the covariant second derivative of position
+    along a curve on a manifold.
 
     Mathematical Definition:
 
     Let $\gamma: \mathbb{R} \to M$ be a smooth curve on manifold $M$. The
-    acceleration at time $t$ is the tangent vector $\ddot{\gamma}(t) \in
-    T_{\gamma(t)} M$ (or more precisely, $\nabla_{\dot{\gamma}}\dot{\gamma}$
-    in the covariant sense, but in flat space simply the second derivative).
+    acceleration at time $t$ is the tangent vector
+    $\nabla_{\dot{\gamma}}\dot{\gamma} \in T_{\gamma(t)} M$.
+
+    It coincides with the plain second derivative $\ddot{q}^i$ of the
+    coordinates only in an **affine chart** -- the condition is the chart, not
+    flatness -- so in a curvilinear chart the two differ by the Christoffel
+    term $\Gamma^i_{jk}\dot{q}^j\dot{q}^k$, nonzero even on flat
+    $\mathbb{R}^3$. This decides what conversion returns: being a tangent
+    vector, an acceleration pushes forward linearly as $J a$, so converting a
+    trajectory's Cartesian $\ddot{q}$ to a curvilinear chart yields the
+    acceleration *vector's* components there, not that chart's $\ddot{q}$.
 
     Examples
     --------
