@@ -24,6 +24,7 @@ from coordinax._src.base import (
     AbstractStaticChart,
     chart_dataclass_decorator,
 )
+from coordinax._src.charts.checks import check_manifolds_match_charts
 from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.custom_types import Ds, Ks, OptUSys
 from coordinaxs.api.custom_types import CDict
@@ -435,8 +436,7 @@ def pt_map(
     Q(1., 'm')
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     # Product charts can't safely use the cartesian intermediate because their
     # cartesian version is still a product chart, which would recurse here. Do
