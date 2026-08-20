@@ -46,6 +46,7 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 import plum
+from zeroth import zeroth
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -276,7 +277,7 @@ def jac_pt_map(
     # route; measured, the two are within noise. Scalar components take
     # the `not batch` branch, so the unbatched path is untouched -- the
     # shape is static, so this costs nothing at trace time.
-    batch = jnp.shape(next(iter(at.values())))
+    batch = jnp.shape(zeroth(at.values()))
     if batch:
 
         def one(at_i: CDict) -> Any:

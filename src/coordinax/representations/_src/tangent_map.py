@@ -8,6 +8,7 @@ from typing import Any, Final
 import jax
 import jax.numpy as jnp
 import plum
+from zeroth import zeroth
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -162,7 +163,7 @@ def tangent_map(
     # so a batch is mapped here rather than threaded through it and the
     # unit handling inside. Scalar components skip this entirely: the
     # shape is static, so the unbatched path is untouched.
-    batch = jnp.shape(next(iter(v.values())))
+    batch = jnp.shape(zeroth(v.values()))
     if batch:
 
         def one(v_i: CDict, at_i: CDict) -> CDict:

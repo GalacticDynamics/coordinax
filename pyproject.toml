@@ -39,6 +39,7 @@ dependencies = [
   "quax-blocks>=0.5.0",
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
+  "zeroth>=1.2.0",
   # 2.0.2 makes `np.asarray(Quantity)` raise rather than silently drop the
   # unit. Relied upon: dropping a unit yields a number in the wrong dimension
   # that looks entirely plausible.
