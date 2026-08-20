@@ -11,7 +11,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
-from coordinax._src.exceptions import MismatchedManifoldError
+from coordinax._src.exceptions import ManifoldMismatchError
 
 _0d = u.Angle(jnp.array(0), "rad")
 _pid = u.Angle(jnp.array(180), "deg")
@@ -165,7 +165,7 @@ def check_manifolds_match_charts(
 
     >>> try:
     ...     check_manifolds_match_charts(cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)
-    ... except cxc.MismatchedManifoldError as e:
+    ... except cxc.ManifoldMismatchError as e:
     ...     print(e)
     to_M Rn(2) is not to_chart's manifold Rn(3)
 
@@ -188,11 +188,11 @@ def check_manifold_matches_chart(M: Any, chart: Any, label: str, /) -> None:
 
     >>> try:
     ...     check_manifold_matches_chart(cxm.R2, cxc.sph3d, "to_M")
-    ... except cxc.MismatchedManifoldError as e:
+    ... except cxc.ManifoldMismatchError as e:
     ...     print(e)
     to_M Rn(2) is not to_chart's manifold Rn(3)
 
     """
     if M != chart.M:
         msg = f"{label} {M} is not {label.replace('_M', '_chart')}'s manifold {chart.M}"
-        raise MismatchedManifoldError(msg)
+        raise ManifoldMismatchError(msg)

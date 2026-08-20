@@ -25,17 +25,15 @@ class TestMismatchedManifoldIsRefused:
     """Naming a manifold that is not the chart's own is refused, not computed."""
 
     def test_wrong_target_manifold(self) -> None:
-        with pytest.raises(cxc.MismatchedManifoldError, match="to_M"):
+        with pytest.raises(cxc.ManifoldMismatchError, match="to_M"):
             cxcapi.pt_map(P3, cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)
 
     def test_wrong_source_manifold(self) -> None:
-        with pytest.raises(cxc.MismatchedManifoldError, match="from_M"):
+        with pytest.raises(cxc.ManifoldMismatchError, match="from_M"):
             cxcapi.pt_map(P3, cxm.R2, cxc.cart3d, cxm.R3, cxc.sph3d)
 
     def test_incompatible_cartesian_charts(self) -> None:
-        with pytest.raises(
-            cxc.MismatchedManifoldError, match="Cartesian charts differ"
-        ):
+        with pytest.raises(cxc.ManifoldMismatchError, match="Cartesian charts differ"):
             cxcapi.pt_map(P3, cxm.R3, cxc.cart3d, cxm.R2, cxc.cart2d)
 
     def test_cartnd_source_with_mismatched_target(self) -> None:
@@ -46,12 +44,12 @@ class TestMismatchedManifoldIsRefused:
         a shape no other rule exercises.
         """
         p = {"q": u.Q([3.0, 4.0], "m")}
-        with pytest.raises(cxc.MismatchedManifoldError, match="do not line up"):
+        with pytest.raises(cxc.ManifoldMismatchError, match="do not line up"):
             cxcapi.pt_map(p, cxm.RN, cxc.cartnd, cxm.R3, cxc.polar2d)
 
     def test_cartnd_target_with_mismatched_source(self) -> None:
         p = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m")}
-        with pytest.raises(cxc.MismatchedManifoldError, match="do not line up"):
+        with pytest.raises(cxc.ManifoldMismatchError, match="do not line up"):
             cxcapi.pt_map(p, cxm.R3, cxc.cart2d, cxm.R2, cxc.cartnd)
 
     def test_it_is_not_an_assertion(self) -> None:
@@ -60,7 +58,7 @@ class TestMismatchedManifoldIsRefused:
         Anything else in the call raising one would have been indistinguishable
         from a refusal.
         """
-        with pytest.raises(cxc.MismatchedManifoldError) as exc:
+        with pytest.raises(cxc.ManifoldMismatchError) as exc:
             cxcapi.pt_map(P3, cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)
         assert not isinstance(exc.value, AssertionError)
 
@@ -78,7 +76,7 @@ def test_refusal_survives_optimised_mode() -> None:
         "try:\n"
         "    api.pt_map(p, cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)\n"
         "    print('RETURNED')\n"
-        "except cxc.MismatchedManifoldError:\n"
+        "except cxc.ManifoldMismatchError:\n"
         "    print('REFUSED')\n"
     )
     out = subprocess.run(  # noqa: S603

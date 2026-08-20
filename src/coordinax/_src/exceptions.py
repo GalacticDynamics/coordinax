@@ -1,6 +1,6 @@
 """Exceptions for coordinax.charts module."""
 
-__all__ = ("MismatchedManifoldError", "NoGlobalCartesianChartError")
+__all__ = ("ManifoldMismatchError", "NoGlobalCartesianChartError")
 
 
 class NoGlobalCartesianChartError(Exception):
@@ -22,7 +22,7 @@ class NoGlobalCartesianChartError(Exception):
     """
 
 
-class MismatchedManifoldError(Exception):
+class ManifoldMismatchError(Exception):
     """Raised when a manifold argument disagrees with the chart it accompanies.
 
     The `pt_map` rules take the manifolds explicitly as well as the charts, so
@@ -44,7 +44,7 @@ class MismatchedManifoldError(Exception):
     >>> p = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
     >>> try:
     ...     cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)
-    ... except cxc.MismatchedManifoldError as e:
+    ... except cxc.ManifoldMismatchError as e:
     ...     print(e)
     to_M Rn(2) is not to_chart's manifold Rn(3)
 

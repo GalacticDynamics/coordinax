@@ -86,7 +86,7 @@ __all__ = (
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
-    "MismatchedManifoldError",
+    "ManifoldMismatchError",
     "NoGlobalCartesianChartError",
     # -------------------------------------------
     "cartesian_chart",
@@ -222,7 +222,7 @@ with install_import_hook("coordinax.charts"):
         time1d,
     )
     from coordinax._src.exceptions import (
-        MismatchedManifoldError,
+        ManifoldMismatchError,
         NoGlobalCartesianChartError,
     )
     from coordinax._src.minkowski import MinkowskiCT, minkowskict

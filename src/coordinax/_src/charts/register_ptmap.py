@@ -37,7 +37,7 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.base.manifold import AbstractManifold
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.euclidean import RN, EuclideanManifold, Rn
-from coordinax._src.exceptions import MismatchedManifoldError
+from coordinax._src.exceptions import ManifoldMismatchError
 from coordinax._src.null import NoManifold
 from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
@@ -259,7 +259,7 @@ def pt_map(
             f"no transition from {from_chart} to {to_chart}: their Cartesian "
             f"charts differ ({from_cart} vs {to_cart})"
         )
-        raise MismatchedManifoldError(msg)
+        raise ManifoldMismatchError(msg)
 
     p_cart = cxcapi.pt_map(p, from_M, from_chart, to_M, from_cart, usys=usys)
     p_out = cxcapi.pt_map(p_cart, from_M, from_cart, to_M, to_chart, usys=usys)
@@ -1454,7 +1454,7 @@ def pt_map(
             f"no transition from {from_chart} on {from_M} to {to_chart} on "
             f"{to_M}: the manifolds do not line up"
         )
-        raise MismatchedManifoldError(msg)
+        raise ManifoldMismatchError(msg)
 
     # If target is CartND, we can't convert (would be infinite recursion)
     if isinstance(to_chart, CartND):
@@ -1550,7 +1550,7 @@ def pt_map(
             f"no transition from {from_chart} on {from_M} to {to_chart} on "
             f"{to_M}: the manifolds do not line up"
         )
-        raise MismatchedManifoldError(msg)
+        raise ManifoldMismatchError(msg)
 
     # If source is CartND, we can't convert (would be infinite recursion)
     if isinstance(from_chart, CartND):
