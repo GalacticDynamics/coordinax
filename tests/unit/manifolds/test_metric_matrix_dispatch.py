@@ -300,9 +300,9 @@ class TestMetricMatrixJIT:
             return cxmapi.metric_matrix(manifold, pt, chart).diagonal
 
         result = compute(*(jnp.asarray(v) for v in point.values()))
-        # Parametrized across families: the flat charts' diagonal is a bare
-        # array, the curvilinear ones' a `QuantityMatrix` (dimensionless for
-        # the sphere). Normalise -- `allclose` has no QM overload.
+        # Parametrized across families, which deliberately differ in container:
+        # see `test_metric_container_convention`. Normalise here -- `allclose`
+        # has no `QuantityMatrix` overload.
         assert jnp.allclose(getattr(result, "value", result), expected, atol=1e-6)
 
 
