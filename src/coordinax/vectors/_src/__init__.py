@@ -5,6 +5,7 @@ from .bundle import *
 from .custom_types import *
 from .mixins import *
 from .point import *
+from .register_chord_distance import *
 from .register_compare import *
 from .register_cx import *
 from .register_dataclassish import *

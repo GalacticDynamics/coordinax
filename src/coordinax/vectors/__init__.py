@@ -3,6 +3,7 @@
 __all__ = (
     "cconvert",
     "equivalent",
+    "chord_distance",
     "geodesic_distance",
     "AbstractVector",
     "Point",
@@ -20,6 +21,7 @@ with install_import_hook("coordinax.vectors"):
         Point,
         Tangent,
         ToUnitsOptions,
+        chord_distance,
         equivalent,
         geodesic_distance,
     )
