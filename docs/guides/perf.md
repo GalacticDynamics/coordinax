@@ -53,16 +53,16 @@ Two things follow.
 
 **Raw arrays are ~20x cheaper than quantities, before jit is involved.** Both routes compute the identical numbers -- bit for bit -- so if a pipeline is already carrying bare arrays, handing them straight to `pt_map` with an explicit `usys=` avoids the wrapper entirely. Under jit the gap narrows but does not close: 10.4 us against 23.0 us.
 
-**Almost none of that overhead is `coordinax`.** Counting `plum` dispatch resolutions for one eager call:
+**Almost none of that overhead is `coordinax`.** Counting calls to `plum`-dispatched functions for one eager call -- calls rather than distinct resolutions, so a cache hit still counts:
 
-| route                 | dispatches | of which `pt_map` |
-| --------------------- | ---------- | ----------------- |
-| `dict[str, Quantity]` | 178        | 2                 |
-| `dict[str, Array]`    | 17         | 2                 |
+| route                        | calls | of which `pt_map` |
+| ---------------------------- | ----- | ----------------- |
+| `dict[str, Quantity]`        | 178   | 2                 |
+| `dict[str, Array]` + `usys=` | 17    | 2                 |
 
 The other 176 are `unxt` and `quax` resolving arithmetic on `Quantity` operands -- `convert`, `unit`, `ustrip`, roughly one set per primitive operation. That is inherent to eager unit-aware arithmetic rather than something `coordinax` can dispatch its way out of, which is why the remedy is to choose the route rather than to micro-optimise the call.
 
-Pre-resolving the dispatch with `plum`'s `Function.invoke` is therefore not the lever it looks like here: it removes 2 resolutions of 178, and measures 1.05x. It pays where a hot loop repeatedly re-resolves _its own_ call, which is why `norm` keeps a module-level `array_norm = norm.invoke(Array, Array)`.
+Pre-resolving the dispatch with `plum`'s `Function.invoke` is therefore not the lever it looks like here: it removes 2 dispatched calls of 178, and measures 1.05x. It pays where a hot loop repeatedly re-resolves _its own_ call, which is why `norm` keeps a module-level `array_norm = norm.invoke(Array, Array)`.
 
 **Dispatch is per call, not per element.** Batched and jitted, the routes converge -- at 10,000 points, all of them land within a few percent of each other:
 

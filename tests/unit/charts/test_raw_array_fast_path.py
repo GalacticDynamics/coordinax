@@ -39,7 +39,13 @@ _RAW_DISPATCH_CEILING = 40
 
 
 def _count_dispatches(fn):
-    """Total `plum` dispatch resolutions performed by ``fn()``."""
+    """Count calls to `plum`-dispatched functions made by ``fn()``.
+
+    Calls, not resolutions: this patches `plum.Function.__call__`, so a cache
+    hit is counted like any other call. That is the number the guard wants --
+    it does not move when `plum` changes what it caches -- but it is not a
+    count of distinct signature resolutions. See the module docstring.
+    """
     counts = collections.Counter()
     original = plum.Function.__call__
 
@@ -75,7 +81,7 @@ def test_raw_arrays_stay_off_the_unit_machinery():
 
 
 def test_raw_arrays_cost_far_fewer_dispatches_than_quantities():
-    """The gap is the point: ~10x fewer resolutions for the same arithmetic."""
+    """The gap is the point: ~10x fewer dispatched calls for the same arithmetic."""
     raw = sum(
         _count_dispatches(
             lambda: cxc.pt_map(_RAW, cxc.sph3d, cxc.cart3d, usys=_USYS)
