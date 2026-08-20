@@ -159,19 +159,26 @@ def tangent_map(
         )
         raise ValueError(msg)
 
-    # `_apply_jac` takes the 2-D Jacobian and single vector it documents,
-    # so a batch is mapped here rather than threaded through it and the
-    # unit handling inside. Scalar components skip this entirely: the
-    # shape is static, so the unbatched path is untouched.
-    batch = jnp.shape(zeroth(v.values()))
-    if batch:
+    # The *base point* decides this, not the vector: a batch of points needs
+    # one Jacobian each, whereas a batch of vectors at a single point shares
+    # one and `_apply_jac` already broadcasts it. So a scalar `at` keeps the
+    # unbatched path below, whatever shape `v` has.
+    #
+    # `_apply_jac` takes the 2-D Jacobian and single vector it documents, so
+    # the mapping happens here rather than being threaded through it and the
+    # unit handling inside.
+    at_batch = jnp.shape(zeroth(at.values()))
+    if at_batch:
+        # `v` rides along when it is batched too, pairing element with
+        # element; when it is not, every Jacobian acts on the same vector.
+        v_axis = 0 if jnp.shape(zeroth(v.values())) else None
 
         def one(v_i: CDict, at_i: CDict) -> CDict:
             J_i = cxc.jac_pt_map(at_i, from_chart, to_chart, usys=usys)
             return _apply_jac(J_i, from_chart.components, to_chart.components, v_i)
 
-        for _ in batch:
-            one = jax.vmap(one)
+        for _ in at_batch:
+            one = jax.vmap(one, in_axes=(v_axis, 0))
         return one(v, at)
 
     J = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys)
