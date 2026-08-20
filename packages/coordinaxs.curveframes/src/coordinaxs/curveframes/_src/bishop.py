@@ -203,7 +203,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         affine parameter -- so rather than pick one, take the one the caller
         already stated by passing a `Quantity`.  Declare it for a curve that
         reads its argument's ``.value`` rather than converting, or for a raw
-        (unitless) parameter, which carries no unit to read.
+        (unitless) parameter or ``station``, neither of which carries a unit
+        to read.
     station : optional
         A fixed station along the curve; see `AbstractCurveFrameBuilder`.
     tau_0 : Quantity, optional

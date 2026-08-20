@@ -56,13 +56,27 @@ _MSG_TAU_UNIT_DIMENSION = (
 )
 
 
+#: Which value carries no unit is the whole of what makes this actionable: a
+#: pinned `station` is what the builder evaluates at, so a `Quantity` at call
+#: time does not help, and advising one sends the reader to the wrong place.
 _MSG_TAU_UNIT_UNINFERABLE = (
-    "this builder has no `tau_unit` and was called with a parameter that "
-    "carries no unit, so there is nothing to read it off. Either pass a "
-    "`Quantity` parameter, e.g. `builder(u.Q(1.0, 's'))`, or declare the unit "
-    "on the builder, e.g. `BishopBuilder(curve, 's')`, which is what a raw "
-    "(unitless) parameter needs."
+    "this builder has no `tau_unit`, and the {source} it evaluates at carries "
+    "no unit, so there is nothing to read it off. Either pass {fix}, or "
+    "declare the unit on the builder, e.g. `BishopBuilder(curve, 's')`, which "
+    "is what a raw (unitless) value needs."
 )
+
+_SOURCE_STATION = (
+    "pinned `station`",
+    "a `Quantity` station, e.g. `station=u.Q(0.3, 's')`",
+)
+_SOURCE_TAU = (
+    "call-time parameter",
+    "a `Quantity` parameter, e.g. `builder(u.Q(1.0, 's'))`",
+)
+#: `_tau_unit_at`'s callers hand it a bound or a stored coordinate rather than
+#: a call argument, so it names neither and points at the value itself.
+_SOURCE_VALUE = ("value", "one as a `Quantity`")
 
 
 def unit_or_none(obj: Any, /) -> u.AbstractUnit | None:
@@ -280,7 +294,8 @@ class AbstractCurveFrameBuilder(eqx.Module):
             return self.tau_unit
         tau_unit = cast("u.AbstractUnit | None", u.unit_of(param))
         if tau_unit is None:
-            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE)
+            source, fix = _SOURCE_VALUE
+            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE.format(source=source, fix=fix))
         # Same check `__check_init__` runs on a declared unit -- for an
         # inferred one this is the first moment it can run at all.
         check_param_dimension(self.curve, tau_unit)
@@ -303,11 +318,13 @@ class AbstractCurveFrameBuilder(eqx.Module):
         A raw parameter with no declared unit is the one combination that
         cannot be served -- nothing anywhere states the unit -- and raises.
         """
-        param = tau if self.station is None else self.station
+        pinned = self.station is not None
+        param = self.station if pinned else tau
         if u.unit_of(param) is not None:
             return param
         if self.tau_unit is None:
-            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE)
+            source, fix = _SOURCE_STATION if pinned else _SOURCE_TAU
+            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE.format(source=source, fix=fix))
         return u.Q(param, self.tau_unit)
 
     @abc.abstractmethod

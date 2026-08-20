@@ -413,10 +413,32 @@ def test_a_unitless_parameter_has_nothing_to_infer_from() -> None:
         # Both accessors, because they resolve the unit on separate paths:
         # `FrenetSerretBuilder` reached `.astype(float)` first and reported the
         # accident rather than the cause.
-        with pytest.raises(TypeError, match="carries no unit"):
-            cls(curve_gyr).tangent(2.0)
-        with pytest.raises(TypeError, match="carries no unit"):
-            cls(curve_gyr).rotation_matrix(2.0)
+        for meth in ("tangent", "rotation_matrix"):
+            with pytest.raises(TypeError, match="call-time parameter"):
+                getattr(cls(curve_gyr), meth)(2.0)
+
+
+def test_a_unitless_station_blames_the_station_not_the_call() -> None:
+    """A pinned `station` is what the builder evaluates at, so it is the culprit.
+
+    The call-time parameter can be a perfectly good `Quantity` and the builder
+    still has nothing to read, because it never looks at it. Advising "pass a
+    `Quantity` parameter" here sends the reader to the one place that is
+    already correct, so the message names the station and shows how to fix
+    *that*.
+    """
+    b = cxfc.BishopBuilder(curve_gyr, station=jnp.asarray(0.3))
+    with pytest.raises(TypeError, match="pinned `station`"):
+        b.tangent(u.Q(1.0, "Gyr"))  # a Quantity, and it does not help
+
+    # Declaring the unit is the other way out, and does work.
+    pinned = cxfc.BishopBuilder(curve_gyr, "Gyr", station=jnp.asarray(0.3))
+    assert jnp.allclose(
+        pinned.tangent(u.Q(1.0, "Gyr")).value,
+        cxfc.BishopBuilder(curve_gyr, station=u.Q(0.3, "Gyr"))
+        .tangent(u.Q(1.0, "Gyr"))
+        .value,
+    )
 
 
 def test_a_raw_array_parameter_works_when_the_unit_is_declared() -> None:
