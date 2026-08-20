@@ -223,3 +223,43 @@ class TestAffinePushforwardOnANonFlatChart:
             cxfm.pushforward(
                 fused, None, self.V, cx.charts.sph3d, cx.representations.coord_vel
             )
+
+
+class TestAffineDeclinesRatherThanCrashes:
+    """A pair that cannot fold is `_merge`'s ordinary answer, not an error."""
+
+    SHIFT: ClassVar = cxfm.Translate.from_([1.0, 0.0, 0.0], "m")
+
+    @pytest.mark.parametrize("n", [4, 5])
+    def test_a_linear_map_with_no_cartesian_chart_declines(self, n):
+        """There is no n-D Cartesian chart to express the offset in.
+
+        This used to raise `KeyError: 4` out of `simplify` while looking up the
+        component names -- a crash where a refusal was meant.
+        """
+        big = cxfm.Linear(jnp.diag(jnp.arange(1.0, n + 1.0)))
+        for chain in (big | self.SHIFT, self.SHIFT | big):
+            assert isinstance(cxfm.simplify(chain), cxfm.Composed)
+
+    def test_mismatched_dimensions_decline(self):
+        """A 2-D map and a 3-D offset have no common `A x + b`."""
+        flat = cxfm.Linear(jnp.diag(jnp.asarray([2.0, 3.0])))
+        assert isinstance(cxfm.simplify(flat | self.SHIFT), cxfm.Composed)
+
+
+class TestAffineOffsetsInDifferentUnits:
+    """Two offsets need not share a unit; the second converts into the first."""
+
+    def test_km_and_m_offsets_fold_correctly(self):
+        """A real rotation between them, so the pair actually reaches `Affine`.
+
+        With an identity rotation the chain collapses to two adjacent
+        `Translate`s, which merge as a `Translate` and never exercise the
+        unit-reconciling branch.
+        """
+        in_km = cxfm.Translate.from_([1.0, 0.0, 0.0], "km")
+        in_m = cxfm.Translate.from_([500.0, 0.0, 0.0], "m")
+        chain = in_km | _rot_z(90) | in_m
+        fused = cxfm.simplify(chain)
+        assert isinstance(fused, cxfm.Affine)
+        assert _agree(chain, fused)

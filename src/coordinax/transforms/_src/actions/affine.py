@@ -268,15 +268,23 @@ def _affine_parts(
     if isinstance(op, AbstractLinearTransform):
         matrix = op.matrix
         n = matrix.shape[-1]
-        cart = cast(
-            "cxc.AbstractChart", cxc.guess_chart(frozenset(_CART_COMPONENTS[n]))
-        )
+        comps = _CART_COMPONENTS.get(n)
+        if comps is None:
+            # No Cartesian chart of this dimension to name the offset in, so
+            # there is no `A x + b` to fold into. Decline rather than raise: a
+            # pair that does not combine is `_merge`'s ordinary answer, and a
+            # `KeyError` out of `simplify` would be a crash, not a refusal.
+            return None
+        cart = cast("cxc.AbstractChart", cxc.guess_chart(frozenset(comps)))
         zero = cast("CDict", cxc.cdict(jnp.zeros(n), None, cart.components))
         return matrix, zero, cart, grp
 
     return None
 
 
+# The Cartesian charts an offset can be expressed in. A linear map of any other
+# dimension -- a 4x4 spacetime map, say -- has no entry here and simply does not
+# fold; see `_affine_parts`.
 _CART_COMPONENTS: dict[int, tuple[str, ...]] = {
     1: ("x",),
     2: ("x", "y"),
