@@ -13,6 +13,7 @@ import dataclasses
 
 import pytest
 
+import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.charts as cxc
@@ -69,10 +70,35 @@ _SLOTS = {
 
 
 def test_order_three_transforms_through_act() -> None:
-    """The ceiling is gone: no `act_jet` detour required."""
+    """The ceiling is gone: no `act_jet` detour required.
+
+    The offset is linear in tau, so its third derivative is zero and the jerk
+    comes back unchanged. That alone would also pass if the machinery quietly
+    did nothing, which is what the cubic case below is for.
+    """
     out = cxfm.act(_OP, _TAU, _DATA, cxc.cart3d, _JERK_REP, at_jet=_SLOTS)
     assert set(out) == {"x", "y", "z"}
-    assert u.unit_of(out["x"]).is_equivalent(u.unit("km/s3"))
+    for k in ("x", "y", "z"):
+        assert jnp.allclose(u.ustrip("km/s3", out[k]), 1.0, atol=1e-6)
+
+
+def test_order_three_picks_up_the_third_derivative() -> None:
+    r"""The value check: an order-3 slot gains $d^3\delta/d\tau^3$.
+
+    With $\delta_x = \tau^3\,\mathrm{km/s^3}$ the third derivative is
+    $6\,\mathrm{km/s^3}$, so `x` goes 1 -> 7 while the untouched axes stay at
+    1. A path that ran but dropped the derivative would return 1 everywhere.
+    """
+    cubic = cxfm.TimeDep.from_(
+        lambda tau: cxfm.Translate(
+            {"x": u.Q(1.0, "km/s3") * tau**3, "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
+            cxc.cart3d,
+        )
+    )
+    out = cxfm.act(cubic, _TAU, _DATA, cxc.cart3d, _JERK_REP, at_jet=_SLOTS)
+    assert jnp.allclose(u.ustrip("km/s3", out["x"]), 7.0, atol=1e-6)
+    for k in ("y", "z"):
+        assert jnp.allclose(u.ustrip("km/s3", out[k]), 1.0, atol=1e-6)
 
 
 def test_a_missing_middle_slot_says_which_one() -> None:

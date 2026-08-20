@@ -88,6 +88,20 @@ _MSG_AT_VEL_REQUIRED = (
     "transform requires the lower-order jet slots; pass 'at_vel' (the "
     "velocity at the base point) or use a coordinax.Coordinate bundle."
 )
+# Distinct from `_MSG_AT_REQUIRED` / `_MSG_AT_VEL_REQUIRED`: those are shared
+# with `pushforward` and `tangent_map`, which take no `at_jet`, so naming it
+# there would send the reader after a keyword that does not exist.
+_MSG_SLOT0_REQUIRED = (
+    "act({op}, ...) on order-{m} tangent data requires the base point: pass it "
+    "as 'at' (a CDict in the same chart) or as slot 0 of 'at_jet', or use a "
+    "coordinax.Coordinate bundle which supplies it automatically."
+)
+_MSG_SLOT1_REQUIRED = (
+    "act({op}, ...) on order-{m} tangent data with a time-dependent transform "
+    "requires the lower-order jet slots; pass the velocity at the base point "
+    "as 'at_vel' or as slot 1 of 'at_jet', or use a coordinax.Coordinate "
+    "bundle."
+)
 _MSG_AT_JET_REQUIRED = (
     "act({op}, ...) on order-{m} tangent data requires jet slots 0..{last}; "
     "slot(s) {missing} are missing. Pass them as 'at_jet' (a dict keyed by "
