@@ -61,3 +61,39 @@ def test_a_nan_arc_length_is_rejected() -> None:
     assert jnp.isfinite(fast(u.Q(2.0, "km")).ustrip("km")).all()
     with pytest.raises(Exception, match="solved domain"):
         fast(u.Q(99.0, "km"))
+
+
+# --------------------------------------------------------------------------
+# The same class in core: range guards written as a direct comparison.
+
+
+def test_a_nan_boost_velocity_is_rejected() -> None:
+    """`LorentzBoost` returned a non-finite gamma instead of raising.
+
+    The guard was `beta_sq >= 1.0`, and its own comment says it exists so that
+    no derived quantity "leaks a non-finite value" -- which a NaN did, being
+    False for that comparison.
+    """
+    import coordinax.transforms as cxfm
+
+    bad = cxfm.LorentzBoost(u.Q(jnp.array([jnp.nan, 0.0, 0.0]), ""))
+    with pytest.raises(Exception, match="subluminal"):
+        _ = bad.gamma
+
+    # subluminal is unaffected
+    ok = cxfm.LorentzBoost(u.Q(jnp.array([0.5, 0.0, 0.0]), ""))
+    assert jnp.isfinite(ok.gamma)
+
+
+def test_nan_fails_the_coordinate_bounds_checks() -> None:
+    """`leq`/`geq` admitted a NaN, so an out-of-range coordinate slipped by."""
+    from coordinax._src.charts.checks import geq, leq
+
+    with pytest.raises(Exception, match="less than or equal"):
+        leq(u.Q(jnp.nan, "m"), u.Q(2, "m"))
+    with pytest.raises(Exception, match="greater than or equal"):
+        geq(u.Q(jnp.nan, "m"), u.Q(2, "m"))
+
+    # in-range values still pass
+    leq(u.Q(1.0, "m"), u.Q(2, "m"))
+    geq(u.Q(3.0, "m"), u.Q(2, "m"))
