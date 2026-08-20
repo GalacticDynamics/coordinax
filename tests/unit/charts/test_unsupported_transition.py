@@ -38,6 +38,22 @@ class TestMismatchedManifoldIsRefused:
         ):
             cxcapi.pt_map(P3, cxm.R3, cxc.cart3d, cxm.R2, cxc.cart2d)
 
+    def test_cartnd_source_with_mismatched_target(self) -> None:
+        """The `CartND` rules guard differently and need their own cases.
+
+        Each accepts `RN` as well as the concrete manifold, so their condition
+        is a membership test rather than the equality the paired guard uses --
+        a shape no other rule exercises.
+        """
+        p = {"q": u.Q([3.0, 4.0], "m")}
+        with pytest.raises(cxc.MismatchedManifoldError, match="do not line up"):
+            cxcapi.pt_map(p, cxm.RN, cxc.cartnd, cxm.R3, cxc.polar2d)
+
+    def test_cartnd_target_with_mismatched_source(self) -> None:
+        p = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m")}
+        with pytest.raises(cxc.MismatchedManifoldError, match="do not line up"):
+            cxcapi.pt_map(p, cxm.R3, cxc.cart2d, cxm.R2, cxc.cartnd)
+
     def test_it_is_not_an_assertion(self) -> None:
         """`AssertionError` is what this used to raise, and is too broad.
 
