@@ -170,8 +170,8 @@ In the lab the puck moves straight out along $x$; in the turntable frame it veer
 
 ## Step 6: Isolating the Centrifugal Term
 
-The Coriolis force depends on the **rotating-frame** velocity $\mathbf{v}_\text{rot}$, not the lab velocity. To see pure centrifugal, we need $\mathbf{v}_\text{rot} = \mathbf{0}$: a puck momentarily _co-rotating_ with the turntable, then released. Riding at radius $r = 2\ \text{m}$, its lab velocity is $\boldsymbol{\Omega}\times\mathbf{r} = (0, 4, 0)\ \text{m}\,\text{s}^{-1}$; free after release ($\mathbf{a} = \mathbf{0}$):
-In the lab the puck moves straight out along $x$; in the turntable frame it veers steadily toward $-y$ — the Coriolis deflection, curving to the right for a counterclockwise turntable.
+The Coriolis force depends on the **rotating-frame** velocity $\mathbf{v}_\text{rot}$, not the lab velocity. To see pure centrifugal, we need $\mathbf{v}_\text{rot} = \mathbf{0}$: a puck momentarily _co-rotating_ with the turntable, then released. Riding at radius $r = 2\ \text{m}$, its lab velocity is $\boldsymbol{\Omega}\times\mathbf{r} = (0, 4, 0)\ \text{m}\,\text{s}^{-1}$; free after release ($\mathbf{a} = \mathbf{0}$): In the lab the puck moves straight out along $x$; in the turntable frame it veers steadily toward $-y$ — the Coriolis deflection, curving to the right for a counterclockwise turntable.
+
 ```pycon
 >>> released = phase_space([2.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 0.0])
 >>> seen_rel = cxfm.act(op, t0, released, usys=u.unitsystems.si)
