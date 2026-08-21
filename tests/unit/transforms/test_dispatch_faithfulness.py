@@ -63,7 +63,12 @@ def test_pushforward_dispatch_is_faithful():
     v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
     cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel)
     cxfm.pushforward(
-        op, None, jnp.array([1.0, 0.0, 0.0]), cxc.cart3d, cxr.coord_vel, usys=u.unitsystems.si
+        op,
+        None,
+        jnp.array([1.0, 0.0, 0.0]),
+        cxc.cart3d,
+        cxr.coord_vel,
+        usys=u.unitsystems.si,
     )
     assert cxfm.pushforward._resolver.is_faithful
 
@@ -72,7 +77,9 @@ def test_act_jet_dispatch_is_faithful():
     op = cxfm.Translate.from_([1, 2, 3], "km")
     jet = {0: _point()}
     cxfm.act_jet(op, None, jet, cxc.cart3d)
-    cxfm.prolong(op, None, {0: jnp.array([1.0, 0.0, 0.0])}, cxc.cart3d, usys=u.unitsystems.si)
+    cxfm.prolong(
+        op, None, {0: jnp.array([1.0, 0.0, 0.0])}, cxc.cart3d, usys=u.unitsystems.si
+    )
     assert cxfm.act_jet._resolver.is_faithful
 
 
