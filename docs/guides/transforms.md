@@ -470,7 +470,7 @@ Concretely:
 | `pushforward(op, tau, v, ..., at=q)` | Frozen-$\tau$ spatial differential $\partial_x\phi \cdot v$ | Displacements; the pure geometric map |
 | `act_jet(op, tau, jet, chart)` | Joint action on a whole jet `{0: q, 1: v, 2: a, ...}` | Phase-space states, arbitrary derivative order |
 
-Acting a time-dependent transform on a _lone_ velocity or acceleration needs the lower jet slots (the $\dot R x$ term acts on the position); pass `at=` / `at_vel=`, or — simpler — act on a `coordinax.Coordinate` bundle, which supplies the whole jet automatically:
+Acting a time-dependent transform on a _lone_ velocity or acceleration needs the lower jet slots (the $\dot R x$ term acts on the position); pass `at_jet={0: q, 1: v, ...}`, or its `at=` / `at_vel=` shorthand for slots 0 and 1, or — simpler — act on a `coordinax.Coordinate` bundle, which supplies the whole jet automatically:
 
 ```python
 import coordinax as cx

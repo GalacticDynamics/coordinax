@@ -66,6 +66,7 @@ Nearly every public function is a plum dispatch table, often with dozens of meth
 - **Check for an existing method before adding one.** `f.methods` at a REPL, or grep for `@plum.dispatch` above the name. A duplicate is an ambiguity, not an addition.
 - **Operators are `quax.register` on `lax` primitives, not dunders.** A PR adding `AbstractVector.__add__` is working against the design; the mixin from `quax-blocks` already routes to the registered handler.
 - **Does the dispatch honour everything it was given?** #707 found metric-level dispatches ignoring the metric they were handed — the signature took it, the body did not use it.
+- **A composite's `**kw`is not threading.**`Composed`folds over its sub-ops, and an anchor kwarg has to *advance* between steps, not ride along unchanged.`\*\*kw`passes the new keyword through and looks like it works — the result is silently wrong, since the last sub-op is anchored at the first one's input. #536 shipped`at_jet`this way:`at`/`at_vel`advanced,`at_jet`did not, and the two spellings of one anchor disagreed. A new kwarg on the generic funnel needs a`Composed` test that pins it against the single-op answer.
 
 ## Chart routing
 

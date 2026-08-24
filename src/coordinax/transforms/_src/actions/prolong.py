@@ -686,6 +686,10 @@ def act(
     m = rep.semantic_kind.order
 
     if m == 0 or not is_time_dependent(op):
+        # No prolongation here, just the frozen-tau pushforward -- but it still
+        # needs the base point, and `at_jet` is the general anchor form, so
+        # slot 0 must reach it as surely as `at=` does.
+        at = _merge_slot0(op, at, at_jet)
         return cast(
             "CDict", cxfmapi.pushforward(op, tau, x, chart, rep, at=at, usys=usys)
         )
@@ -693,6 +697,25 @@ def act(
     return prolong_slot(
         op, tau, x, chart, m, at=at, at_vel=at_vel, at_jet=at_jet, usys=usys
     )
+
+
+def _merge_slot0(
+    op: AbstractTransform, at: CDict | None, at_jet: JetDict | None, /
+) -> CDict | None:
+    """Resolve the base point from ``at`` or ``at_jet[0]``, refusing both at once.
+
+    For the paths that need only slot 0 (the frozen-tau pushforward, the fibre
+    ladder, a `Composed` fold's travelling anchor). Giving one slot twice
+    raises rather than silently preferring one: a wrong anchor is a wrong
+    answer, not a lesser convenience.
+    """
+    if at_jet is None or 0 not in at_jet:
+        return at
+    if at is not None:
+        raise TypeError(
+            _MSG_AT_JET_CONFLICT.format(op=type(op).__name__, k=0, alias="at")
+        )
+    return at_jet[0]
 
 
 def _slot_jet(
