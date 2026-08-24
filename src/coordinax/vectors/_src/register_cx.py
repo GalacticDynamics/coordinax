@@ -567,9 +567,14 @@ def act(
     if at_vel_data is not None:
         kw["at_vel"] = at_vel_data
     if at_jet is not None:
-        kw["at_jet"] = {
+        slots = {
             k: _unwrap_anchor(v, x.chart, f"at_jet[{k}]") for k, v in at_jet.items()
         }
+        # A `None` slot means "not given", exactly as `at=None` does. Keeping
+        # the key would sail past the engine's presence check -- which tests
+        # keys, not values -- and fail further down about a slot that looks
+        # supplied, naming neither the slot nor the caller's mistake.
+        kw["at_jet"] = {k: v for k, v in slots.items() if v is not None}
     data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
     return replace(x, data=data)
 

@@ -193,3 +193,23 @@ def test_a_mismatched_chart_in_an_at_jet_slot_says_which_slot() -> None:
     )
     with pytest.raises(ValueError, match=r"at_jet\[0\]"):
         cx.act(op, _TAU, v, at_jet={0: wrong})
+
+
+def test_a_none_slot_reads_as_not_given() -> None:
+    """`at_jet={0: None}` is "not given", exactly as `at=None` is.
+
+    The engine tests slot *presence by key*, so a kept `None` would sail past
+    the check and fail further down about a slot that looks supplied. Dropping
+    it instead yields the engine's own missing-slot message, which names the
+    slot and offers both spellings.
+    """
+    op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=_ZHAT))
+    v = cx.Tangent.from_([0.0, 0.0, 0.0], "m/s")
+
+    with pytest.raises(TypeError, match=r"'at'.*or as slot 0 of 'at_jet'"):
+        cx.act(op, _TAU, v, at_jet={0: None})
+
+    # and a `None` alongside a real slot does not shadow it
+    at = cx.Point.from_([1.0, 0.0, 0.0], "m")
+    out = cx.act(op, _TAU, v, at_jet={0: at, 1: None})
+    assert float(u.ustrip("m/s", out.data["y"])) == pytest.approx(1.0)
