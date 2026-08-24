@@ -28,6 +28,7 @@ from .custom_types import CDict
 from .identity import Identity, identity
 from .prolong import (
     _MSG_JET_SLOT0_MISSING,
+    AnchorJet,
     _merge_slot0,
     _slot_jet,
     prolong_jet,
@@ -493,7 +494,7 @@ def act(
     *,
     at: CDict | None = None,
     at_vel: CDict | None = None,
-    at_jet: dict[int, CDict] | None = None,
+    at_jet: AnchorJet | None = None,
     usys: Any = None,
     **kw: Any,
 ) -> CDict:

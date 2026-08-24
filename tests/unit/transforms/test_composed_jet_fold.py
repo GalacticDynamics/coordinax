@@ -213,3 +213,52 @@ def test_a_none_slot_reads_as_not_given() -> None:
     at = cx.Point.from_([1.0, 0.0, 0.0], "m")
     out = cx.act(op, _TAU, v, at_jet={0: at, 1: None})
     assert float(u.ustrip("m/s", out.data["y"])) == pytest.approx(1.0)
+
+
+# --- `None` anchor slots, at the engine layer -----------------------------
+#
+# `at_jet` is caller-supplied input, so a slot can come out empty. The drop
+# lives in the engine's two validators rather than in any one entrypoint, and
+# these go in below the `cx.Tangent` wrapper to pin that. The runtime
+# typechecker is not the gate: beartype samples one entry per container, so
+# `{0: q, 1: None}` is only caught on the draws that pick slot 1.
+
+
+def test_a_none_slot_reads_as_not_given_on_the_prolongation_path() -> None:
+    """`_slot_jet`: the missing-slot error names the slot that came in `None`."""
+    op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=_ZHAT))
+    with pytest.raises(TypeError, match=r"'at_vel'.*or as slot 1 of 'at_jet'"):
+        cxfm.act(op, _TAU, _ACC, cxc.cart3d, _ACC_REP, at_jet={0: _AT, 1: None})
+
+
+def test_a_none_slot_reads_as_not_given_on_the_pushforward_path() -> None:
+    """`_merge_slot0`: no prolongation, but slot 0 still has to read as absent.
+
+    A curved chart is what makes it observable -- the Jacobian pushforward
+    refuses without a base point rather than quietly using the origin.
+    """
+    op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    v = {"r": u.Q(1.0, "m/s"), "theta": u.Q(0.1, "rad/s"), "phi": u.Q(0.2, "rad/s")}
+    rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.vel)
+    with pytest.raises(TypeError, match="requires 'at'"):
+        cxfm.act(op, None, v, cxc.sph3d, rep, at_jet={0: None})
+
+
+def test_a_none_slot_reads_as_not_given_through_a_pipeline() -> None:
+    """`Composed` routes to the same validators, so it inherits this."""
+    with pytest.raises(TypeError, match=r"'at'.*or as slot 0 of 'at_jet'"):
+        cxfm.act(_pipe(), _TAU, _ACC, cxc.cart3d, _ACC_REP, at_jet={0: None, 1: _VEL})
+
+
+def test_a_none_slot_does_not_shadow_a_real_one() -> None:
+    """Dropping the empty slots must not take the supplied ones with them."""
+    op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=_ZHAT))
+    vel = {"x": u.Q(0.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.vel)
+
+    out = cxfm.act(op, _TAU, vel, cxc.cart3d, rep, at_jet={0: _AT, 1: None})
+    reference = cxfm.act(op, _TAU, vel, cxc.cart3d, rep, at=_AT)
+    for k in ("x", "y", "z"):
+        assert jnp.allclose(u.ustrip("m/s", out[k]), u.ustrip("m/s", reference[k]))
+    # and the anchor was read: the omega x r term is 1 m/s along y
+    assert float(u.ustrip("m/s", out["y"])) == pytest.approx(1.0)
