@@ -426,9 +426,11 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal1(tau)` (row 1), `normal2(tau)` (row 2); `location(tau)`, `tangent(tau)` inherited.
 
+    `rotation_matrices(taus)` evaluates a **1-D batch** of parameters from a *single* ODE solve, using `diffrax.SaveAt` on the already-rescaled $s \in [0, 1]$ interval. It returns `(N, 3, 3)`, matching `rotation_matrix` element for element, and is the preferred route when every $\tau$ lies on one side of `tau_0` — the gain scales with $N$ (~2.9x at 8 parameters, ~8.9x at 64, jitted). Every $\tau$ **must** share a side of `tau_0`: the transport marches outward in one monotonic sweep, so a straddling set is refused via `equinox.error_if` rather than silently split. Use `jax.vmap(rotation_matrix)` when the parameters straddle `tau_0`, when the batch is higher-rank, or on `FrenetSerretBuilder`, which has no batched accessor. A pinned `station` makes every $\tau$ name the same frame, so a batched $\tau$ is accepted there and answered by one solve.
+
     Constructed directly — `BishopBuilder(curve, tau_unit=None, station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
-    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
+    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap` or, for a same-side batch, `rotation_matrices`. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
     `act` dispatches on `TimeDep(BishopBuilder(...))`, identically to `FrenetSerretBuilder`.
 

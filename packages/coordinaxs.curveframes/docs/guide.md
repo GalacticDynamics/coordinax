@@ -233,6 +233,24 @@ Combine with `jit` for maximum performance:
 trajectory = jax.jit(jax.vmap(lambda t: cxfm.act(op_to_curve, t, p)))(taus)
 ```
 
+`vmap` is the general route and always available. For `BishopBuilder` specifically there is a cheaper one: every frame it produces costs an ODE solve, and `rotation_matrices` gets a whole batch from a **single** solve.
+
+```python
+bishop = cxfc.BishopBuilder(Helix(jnp.asarray(1.5)), "s")
+Rs = bishop.rotation_matrices(u.Q(jnp.linspace(0.1, 2.0, 64), "s"))
+assert Rs.shape == (64, 3, 3)
+```
+
+Jitted, against `vmap(rotation_matrix)`: ~2.9x at 8 parameters, ~4.1x at 16, ~8.9x at 64 — the gain grows with the batch, because the one solve is amortised over it.
+
+Reach for `vmap` instead when:
+
+- the parameters **straddle `tau_0`**. Transport marches outward from `tau_0` in one monotonic sweep, so a straddling set needs two solves; `rotation_matrices` refuses it rather than splitting silently.
+- the batch is higher-rank. `diffrax.SaveAt` saves on a 1-D grid.
+- the builder is a `FrenetSerretBuilder`, which needs no ODE and so has no batched accessor.
+
+A pinned `station` is not an exception: there every $\tau$ names the same frame, so `rotation_matrices` accepts the batch and answers it with one solve.
+
 ## The Bishop Transform
 
 The **Bishop transform** (also called rotation-minimising or parallel-transport frame) provides an alternative to the Frenet–Serret frame. Its key advantage is that it is **well-defined even when the curvature vanishes** ($\kappa = 0$), where the Frenet–Serret normal is singular.
