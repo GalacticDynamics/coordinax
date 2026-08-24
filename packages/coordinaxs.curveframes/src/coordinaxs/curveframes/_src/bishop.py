@@ -102,6 +102,15 @@ _MSG_BATCH_TWO_ARGUMENT = (
     "or `jax.vmap` over it."
 )
 
+_MSG_BATCH_RANK = (
+    "`rotation_matrices` takes a 1-D batch of parameters; got shape {shape}. "
+    "`diffrax.SaveAt` saves on a 1-D grid, so a higher-rank batch has no "
+    "single ordering to solve along. Flatten it, or use `rotation_matrix` for "
+    "a single parameter."
+)
+
+_MSG_BATCH_EMPTY = "`rotation_matrices` needs at least one tau; got an empty batch."
+
 _MSG_STRADDLES_TAU_0 = (
     "`rotation_matrices` needs every tau on one side of tau_0: the transport "
     "runs outward from tau_0 in a single monotonic solve, and a set that "
@@ -573,15 +582,22 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         )
         taus_val = _float(u.ustrip(tau_unit, taus))
 
+        # Validate before anything indexes `taus_val` -- including the station
+        # branch below, which used to reach for element 0 first and so met an
+        # empty batch with `IndexError` rather than the message meant for it.
+        # `SaveAt(ts=...)` is a 1-D grid, and `span`/`argsort` below assume the
+        # same, so rank is checked here rather than surfacing as a `dot_general`
+        # complaint from inside the solve.
+        if taus_val.ndim != 1:
+            raise ValueError(_MSG_BATCH_RANK.format(shape=taus_val.shape))
+        if taus_val.size == 0:
+            raise ValueError(_MSG_BATCH_EMPTY)
+
         if self.station is not None:
             # `_param` pins every tau to the station, so all frames coincide;
             # one solve answers the whole batch by construction.
-            one = self.rotation_matrix(u.Q(taus_val.reshape(-1)[0], tau_unit))
+            one = self.rotation_matrix(u.Q(taus_val[0], tau_unit))
             return jnp.broadcast_to(one, (*taus_val.shape, 3, 3))
-
-        if taus_val.size == 0:
-            msg = "`rotation_matrices` needs at least one tau; got an empty batch."
-            raise ValueError(msg)
 
         tau_0_val = _float(tau_0.ustrip(tau_unit))
 

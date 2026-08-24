@@ -132,6 +132,30 @@ class TestRoutingIsNotBypassed:
         with pytest.raises(ValueError, match="at least one tau"):
             _builder().rotation_matrices(u.Q(jnp.asarray([]), "s"))
 
+    def test_an_empty_batch_is_refused_with_a_station_too(self):
+        """The station fast path used to index element 0 before checking.
+
+        It reached for `taus[0]` first, so an empty batch met `IndexError`
+        rather than the message written for it.
+        """
+        b = cxfc.BishopBuilder(helix, "s", station=u.Q(0.7, "s"))
+        with pytest.raises(ValueError, match="at least one tau"):
+            b.rotation_matrices(u.Q(jnp.asarray([]), "s"))
+
+    @pytest.mark.parametrize(
+        "taus",
+        [jnp.asarray(0.5), jnp.asarray([[0.3, 0.6], [0.9, 1.2]])],
+        ids=["scalar", "rank-2"],
+    )
+    def test_only_a_1d_batch_is_accepted(self, taus):
+        """`SaveAt` saves on a 1-D grid, and `span`/`argsort` assume the same.
+
+        Previously a scalar raised `IndexError` and a rank-2 batch surfaced a
+        `dot_general` complaint from inside the solve.
+        """
+        with pytest.raises(ValueError, match="1-D batch"):
+            _builder().rotation_matrices(u.Q(taus, "s"))
+
 
 class TestTheSolveStaysAtTau0WhenItShould:
     """All-at-tau_0 must not march the curve away to answer about tau_0."""
