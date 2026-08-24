@@ -493,7 +493,6 @@ def act(
     /,
     *,
     at: CDict | None = None,
-    at_vel: CDict | None = None,
     at_jet: AnchorJet | None = None,
     usys: Any = None,
     **kw: Any,
@@ -536,17 +535,7 @@ def act(
         return cast(
             "CDict",
             _generic_tangent_act()(
-                op,
-                tau,
-                x,
-                chart,
-                geom,
-                rep,
-                at=at,
-                at_vel=at_vel,
-                at_jet=at_jet,
-                usys=usys,
-                **kw,
+                op, tau, x, chart, geom, rep, at=at, at_jet=at_jet, usys=usys, **kw
             ),
         )
 
@@ -562,7 +551,7 @@ def act(
         # second materialization is a whole ODE solve for a curve-frame
         # builder, so assemble the jet with the engine's own validator and
         # call the engine's jet function directly.
-        jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel, at_jet=at_jet)
+        jet = _slot_jet(op, tau, x, m, at=at, at_jet=at_jet)
         return prolong_jet(op, tau, jet, chart, usys=usys)[m]
 
     # The ladder needs only the base point, but it has to accept it in either

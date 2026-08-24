@@ -286,7 +286,7 @@ def act(
     # `act_jet` fold further down this module. Hand it the assembled anchor
     # jet and let it fold.
     #
-    # This used to be a hand-rolled shadow 2-jet instead: `at` and `at_vel`
+    # This used to be a hand-rolled shadow 2-jet instead: `at` and a velocity
     # threaded through the per-sub-op `act` fold and advanced after each step
     # (velocity first, since it needed the old base point). Two implementations
     # of one semantics, and only one of them generalised -- the shadow knew
@@ -308,7 +308,6 @@ def act(
             chart,
             m,
             at=cast("CDict | None", kw.get("at")),
-            at_vel=cast("CDict | None", kw.get("at_vel")),
             at_jet=cast("JetDict | None", kw.get("at_jet")),
             usys=cast("OptUSys", kw.get("usys")),
         )
@@ -318,7 +317,7 @@ def act(
     # travels with it: these paths all end in the frozen-tau pushforward, which
     # anchors on slot 0 alone, so there is no shadow jet left to keep in step.
     current_at = _merge_slot0(op, kw.get("at"), kw.get("at_jet"))
-    kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_vel", "at_jet")}
+    kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_jet")}
     step_kw = dict(kw_rest)
     result = x
     last = len(op.transforms) - 1

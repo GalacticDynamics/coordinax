@@ -344,7 +344,12 @@ _AT_VEL = {"x": u.Q(0.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
 
 def _acc_x(op):
     out = cxfm.act(
-        op, u.Q(2.0, "s"), _ACC, cxc.cart3d, cxr.coord_acc, at=ORIGIN_KM, at_vel=_AT_VEL
+        op,
+        u.Q(2.0, "s"),
+        _ACC,
+        cxc.cart3d,
+        cxr.coord_acc,
+        at_jet={0: ORIGIN_KM, 1: _AT_VEL},
     )
     return out["x"].ustrip("km/s2")
 
@@ -516,7 +521,7 @@ def test_lower_order_fibre_is_untouched_by_a_higher_order_offset():
         assert jnp.allclose(out[k].ustrip("km/s"), v.ustrip("km/s"), atol=1e-12)
 
     moved = cxfm.act(
-        op, _TAU, _ACC, cxc.cart3d, cxr.coord_acc, at=ORIGIN_KM, at_vel=_VEL
+        op, _TAU, _ACC, cxc.cart3d, cxr.coord_acc, at_jet={0: ORIGIN_KM, 1: _VEL}
     )
     assert jnp.allclose(moved["x"].ustrip("km/s2"), 1.0 + 6.0, atol=1e-12)
 
@@ -528,7 +533,9 @@ def test_matching_order_fibre_offset_adds_delta_at_tau():
     the already-materialized ``op0.delta``.
     """
     op = cxfm.TimeDep.from_(_acc_kick)
-    got = cxfm.act(op, _TAU, _ACC, cxc.cart3d, cxr.coord_acc, at=ORIGIN_KM, at_vel=_VEL)
+    got = cxfm.act(
+        op, _TAU, _ACC, cxc.cart3d, cxr.coord_acc, at_jet={0: ORIGIN_KM, 1: _VEL}
+    )
     # delta(2 s) = 3 km/s3 * 2 s = 6 km/s2, added to the 1 km/s2 datum; the
     # kick is x-only, so y and z keep theirs.
     assert jnp.allclose(got["x"].ustrip("km/s2"), 7.0, atol=1e-12)

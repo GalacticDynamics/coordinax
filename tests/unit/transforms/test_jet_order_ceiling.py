@@ -1,10 +1,10 @@
 """`act` on tangent data has no order ceiling any more (#536).
 
-`act` used to assemble the jet it needs from the `at`/`at_vel` keywords alone,
-which reach jet slots 0 and 1 and no further. Order-3 data needs slot 2 as well,
-so it hard-failed with "use act_jet with a full jet instead" -- the API
-admitting the ladder did not scale. `at_jet` is the general form; `at` and
-`at_vel` are now sugar for its first two slots.
+`act` used to assemble the jet it needs from an `at`/`at_vel` keyword ladder,
+which reached jet slots 0 and 1 and no further. Order-3 data needs slot 2 as
+well, so it hard-failed with "use act_jet with a full jet instead" -- the API
+admitting the ladder did not scale. `at_jet` is the general form; `at_vel` has
+since been dropped, leaving `at` as sugar for slot 0 alone.
 """
 
 __all__: tuple[str, ...] = ()
@@ -102,27 +102,19 @@ def test_order_three_picks_up_the_third_derivative() -> None:
 
 
 def test_a_missing_middle_slot_says_which_one() -> None:
-    """`at`/`at_vel` cannot reach slot 2, and the error says so."""
+    """Slots 0 and 1 alone do not reach order 3, and the error says so."""
     with pytest.raises(TypeError, match=r"slot\(s\) \[2\] are missing"):
         cxfm.act(
-            _OP, _TAU, _DATA, cxc.cart3d, _JERK_REP, at=_SLOTS[0], at_vel=_SLOTS[1]
+            _OP, _TAU, _DATA, cxc.cart3d, _JERK_REP, at_jet={0: _SLOTS[0], 1: _SLOTS[1]}
         )
 
 
-def test_the_sugar_still_reaches_slots_zero_and_one() -> None:
-    """Order-2 data through `at`/`at_vel` is unchanged by the generalisation."""
-    acc = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.acc)
-    data = {k: u.Q(1.0, "km/s2") for k in ("x", "y", "z")}
-    out = cxfm.act(_OP, _TAU, data, cxc.cart3d, acc, at=_SLOTS[0], at_vel=_SLOTS[1])
-    assert set(out) == {"x", "y", "z"}
-
-
-def test_the_sugar_and_at_jet_agree() -> None:
-    """`at=`/`at_vel=` are aliases, so both spellings give the same answer."""
+def test_the_slot_zero_sugar_and_at_jet_agree() -> None:
+    """`at=` is an alias for slot 0, so both spellings give the same answer."""
     acc = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.acc)
     data = {k: u.Q(1.0, "km/s2") for k in ("x", "y", "z")}
     via_sugar = cxfm.act(
-        _OP, _TAU, data, cxc.cart3d, acc, at=_SLOTS[0], at_vel=_SLOTS[1]
+        _OP, _TAU, data, cxc.cart3d, acc, at=_SLOTS[0], at_jet={1: _SLOTS[1]}
     )
     via_jet = cxfm.act(
         _OP, _TAU, data, cxc.cart3d, acc, at_jet={0: _SLOTS[0], 1: _SLOTS[1]}
@@ -170,18 +162,18 @@ def test_the_fibre_ladder_path_takes_at_jet_too() -> None:
 def test_the_missing_slot_errors_name_at_jet() -> None:
     """Both spellings are offered, since both now work.
 
-    The messages previously named only `at`/`at_vel`. Asserting on the text is
-    the point here: I once "fixed" this by adding the new constants and left
-    the raise sites pointing at the old ones, which a constants-only check
-    would not have caught.
+    The messages previously named only the `at`/`at_vel` ladder. Asserting on
+    the text is the point here: I once "fixed" this by adding the new
+    constants and left the raise sites pointing at the old ones, which a
+    constants-only check would not have caught.
     """
     acc = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.acc)
     data = {k: u.Q(1.0, "km/s2") for k in ("x", "y", "z")}
 
     with pytest.raises(TypeError, match=r"'at'.*or as slot 0 of 'at_jet'"):
-        cxfm.act(_OP, _TAU, data, cxc.cart3d, acc, at_vel=_SLOTS[1])
+        cxfm.act(_OP, _TAU, data, cxc.cart3d, acc, at_jet={1: _SLOTS[1]})
 
-    with pytest.raises(TypeError, match=r"'at_vel'.*or as slot 1 of 'at_jet'"):
+    with pytest.raises(TypeError, match=r"slot\(s\) \[1\] are missing"):
         cxfm.act(_OP, _TAU, data, cxc.cart3d, acc, at=_SLOTS[0])
 
 

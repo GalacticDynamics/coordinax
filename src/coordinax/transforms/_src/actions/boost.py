@@ -164,7 +164,7 @@ def act(
     def delegate() -> CDict:
         # The single delegation tail: the equivalent displacement Translate
         # (delta(tau) = dv*tau) implements the ladder rule, the flat-chart
-        # gating, and the generic fallback with anchors (at=, at_vel=).
+        # gating, and the generic fallback with anchors (at=, at_jet=).
         return cast(
             "CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw)
         )

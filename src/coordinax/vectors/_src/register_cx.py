@@ -528,20 +528,18 @@ def act(
     /,
     *,
     at: Any = None,
-    at_vel: Any = None,
     at_jet: dict[int, Any] | None = None,
     **kw: Any,
 ) -> Tangent:
     """Act a frame transform on a tangent Tangent.
 
-    ``at`` (the base point) and ``at_vel`` (the velocity at the base point)
-    anchor the transformation when it is needed — for Jacobian pushforwards in
-    non-Cartesian charts and for the kinematic prolongation under
-    time-dependent transforms. ``at_jet`` is the general form of the same
-    thing, a dict keyed by jet slot, and the only spelling that reaches slot 2
-    and above. They may be `Point`/`Tangent` instances (whose ``.data`` is
-    used, after a chart check) or raw ``CDict`` data — ``at_jet``'s values
-    included, slot by slot.
+    ``at`` (the base point) anchors the transformation where one is needed —
+    for Jacobian pushforwards in non-Cartesian charts, and as slot 0 of the
+    kinematic prolongation under time-dependent transforms. ``at_jet`` is the
+    general form, a dict keyed by jet slot, and the only spelling that reaches
+    slot 1 and above. Either may hold `Point`/`Tangent` instances (whose
+    ``.data`` is used, after a chart check) or raw ``CDict`` data —
+    ``at_jet``'s values slot by slot.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -561,11 +559,8 @@ def act(
 
     """
     at_data = _unwrap_anchor(at, x.chart, "at")
-    at_vel_data = _unwrap_anchor(at_vel, x.chart, "at_vel")
     if at_data is not None:
         kw["at"] = at_data
-    if at_vel_data is not None:
-        kw["at_vel"] = at_vel_data
     if at_jet is not None:
         # Unwrap only. Empty slots are dropped by the engine, for every
         # entrypoint at once (`prolong._live_slots`); filtering here as well
