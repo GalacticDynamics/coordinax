@@ -109,8 +109,6 @@ _MSG_BATCH_RANK = (
     "a single parameter."
 )
 
-_MSG_BATCH_EMPTY = "`rotation_matrices` needs at least one tau; got an empty batch."
-
 _MSG_STRADDLES_TAU_0 = (
     "`rotation_matrices` needs every tau on one side of tau_0: the transport "
     "runs outward from tau_0 in a single monotonic solve, and a set that "
@@ -408,29 +406,14 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         dcurve = u.experimental.jacfwd(self.curve, units=(self._tau_unit_at(g),))
         return _normalize(dcurve(g.astype(float)))
 
-    def _solve_U1(self, g: Any, /) -> Array:
-        r"""Compute $\mathbf{U}_1$ via ODE integration from $\tau_0$.
+    def _transport_start(self, tau_unit: Any, /) -> tuple[Any, Any, Any, Any]:
+        """Resolve everything the transport ODE needs before it can run.
 
-        Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1
-        \cdot \mathbf{T}')\,\mathbf{T}$ with `diffrax.diffeqsolve`, over the
-        rescaled parameter $s \in [0, 1]$ with $\tau(s) = \tau_0 + s\,\Delta$,
-        $\Delta = \tau - \tau_0$.
-
-        The rescaling is what makes the solve differentiable in $\tau$
-        everywhere.  Integrating over $[\tau_0, \tau]$ directly puts $\tau$ in
-        the integration *bound*, and at $\tau = \tau_0$ the solver loop takes
-        zero steps: the value is right but $d/d\tau$ comes back as $0$ instead
-        of the true $-(\mathbf{U}_{1,0} \cdot \mathbf{T}'_0)\,\mathbf{T}_0$,
-        silently corrupting every tangent/jet propagation at the (very common)
-        default $\tau_0 = 0$.  Over $s \in [0, 1]$ the interval is always
-        unit-length and $\tau$ enters through the vector field instead, so its
-        derivative survives.  Both signs of $\Delta$ are handled by the same
-        expression -- no forward-only workaround is needed.
+        Shared by `_solve_U1` and `rotation_matrices`, which differ only in how
+        far they sweep: one parameter or a batch of them. ``tau_0`` is restated
+        in ``tau_unit`` so the nested `_tangent_at` infers the same unit as the
+        solve rather than whichever convertible one it was given in.
         """
-        tau_unit = self._tau_unit_at(g)
-        # Resolve `tau_0` and restate it in `tau_unit`, so the nested
-        # `_tangent_at` below infers the same unit as this solve rather than
-        # whichever convertible one `tau_0` happened to be given in.
         tau_0_in = self.tau_0
         tau_0 = (
             u.Q(0.0, tau_unit)
@@ -451,20 +434,46 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # the ODE right-hand-side, which would be both slower and harder
         # for JAX to trace.
         dTangent_fn = u.experimental.jacfwd(self._tangent_at, units=(tau_unit,))
+        return tau_0, _float(tau_0.ustrip(tau_unit)), U1_0_val, dTangent_fn
 
-        tau_val = _float(g.ustrip(tau_unit))
-        tau_0_val = _float(tau_0.ustrip(tau_unit))
-
-        dtau = tau_val - tau_0_val
+    def _transport_rhs(
+        self, tau_0_val: Any, span: Any, tau_unit: Any, dTangent_fn: Any, /
+    ) -> Any:
+        """Build the parallel-transport right-hand side over rescaled ``s``."""
 
         def ode_rhs(s: Any, U1_flat: Any, args: Any) -> Any:
-            """Right-hand side in the rescaled parameter ``s``."""
             del args
-            t_q = u.Q(tau_0_val + s * dtau, tau_unit)
+            t_q = u.Q(tau_0_val + s * span, tau_unit)
             T_val = self._tangent_at(t_q).value
             dT_val = dTangent_fn(t_q).value
-            # Project U1 onto dT, negate, then scale by T -- and by dtau/ds.
-            return -dtau * jnp.dot(U1_flat, dT_val) * T_val
+            # Project U1 onto dT, negate, then scale by T -- and by span/ds.
+            return -span * jnp.dot(U1_flat, dT_val) * T_val
+
+        return ode_rhs
+
+    def _solve_U1(self, g: Any, /) -> Array:
+        r"""Compute $\mathbf{U}_1$ via ODE integration from $\tau_0$.
+
+        Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1
+        \cdot \mathbf{T}')\,\mathbf{T}$ with `diffrax.diffeqsolve`, over the
+        rescaled parameter $s \in [0, 1]$ with $\tau(s) = \tau_0 + s\,\Delta$,
+        $\Delta = \tau - \tau_0$.
+
+        The rescaling is what makes the solve differentiable in $\tau$
+        everywhere.  Integrating over $[\tau_0, \tau]$ directly puts $\tau$ in
+        the integration *bound*, and at $\tau = \tau_0$ the solver loop takes
+        zero steps: the value is right but $d/d\tau$ comes back as $0$ instead
+        of the true $-(\mathbf{U}_{1,0} \cdot \mathbf{T}'_0)\,\mathbf{T}_0$,
+        silently corrupting every tangent/jet propagation at the (very common)
+        default $\tau_0 = 0$.  Over $s \in [0, 1]$ the interval is always
+        unit-length and $\tau$ enters through the vector field instead, so its
+        derivative survives.  Both signs of $\Delta$ are handled by the same
+        expression -- no forward-only workaround is needed.
+        """
+        tau_unit = self._tau_unit_at(g)
+        _, tau_0_val, U1_0_val, dTangent_fn = self._transport_start(tau_unit)
+        dtau = _float(g.ustrip(tau_unit)) - tau_0_val
+        ode_rhs = self._transport_rhs(tau_0_val, dtau, tau_unit, dTangent_fn)
 
         sol = self.diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, U1_0_val)
         U1_val = sol.ys[-1]
@@ -519,12 +528,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         integration bounds -- so one solve with `diffrax.SaveAt` returns every
         parameter at once.
 
-        Measured on a helix at ``rtol=atol=1e-10``, 16 parameters, jitted:
-
-        =========================  ========
-        `rotation_matrix` xN        1.47 ms
-        `rotation_matrices`         0.28 ms
-        =========================  ========
+        Jitted on a helix at ``rtol=atol=1e-10``, this is ~4x faster at 16
+        parameters and ~9x at 64: the one solve is amortised over the batch.
 
         Every $\tau$ must lie on one side of ``tau_0``. The solve marches
         outward from ``tau_0`` in one monotonic sweep, so a set straddling it
@@ -574,12 +579,6 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # parameter (#771) rather than assuming `tau_unit` was declared, and
         # restate `tau_0` in it so the nested `_tangent_at` infers the same one.
         tau_unit = self._tau_unit_at(taus)
-        tau_0_in = self.tau_0
-        tau_0 = (
-            u.Q(0.0, tau_unit)
-            if tau_0_in is None
-            else u.Q(tau_0_in.ustrip(tau_unit), tau_unit)
-        )
         taus_val = _float(u.ustrip(tau_unit, taus))
 
         # Validate before anything indexes `taus_val` -- including the station
@@ -591,7 +590,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         if taus_val.ndim != 1:
             raise ValueError(_MSG_BATCH_RANK.format(shape=taus_val.shape))
         if taus_val.size == 0:
-            raise ValueError(_MSG_BATCH_EMPTY)
+            msg = "`rotation_matrices` needs at least one tau; got an empty batch."
+            raise ValueError(msg)
 
         if self.station is not None:
             # `_param` pins every tau to the station, so all frames coincide;
@@ -599,13 +599,13 @@ class BishopBuilder(AbstractCurveFrameBuilder):
             one = self.rotation_matrix(u.Q(taus_val[0], tau_unit))
             return jnp.broadcast_to(one, (*taus_val.shape, 3, 3))
 
-        tau_0_val = _float(tau_0.ustrip(tau_unit))
+        _, tau_0_val, U1_0_val, dTangent_fn = self._transport_start(tau_unit)
 
+        # A mixed sign means the sweep would have to reverse mid-solve. Guard
+        # `offs` itself, so the check is what the arithmetic below depends on.
         offs = taus_val - tau_0_val
-        # A mixed sign means the sweep would have to reverse mid-solve.
         straddles = jnp.any(offs < 0.0) & jnp.any(offs > 0.0)
-        taus_val = eqx.error_if(taus_val, straddles, _MSG_STRADDLES_TAU_0)
-        offs = taus_val - tau_0_val
+        offs = eqx.error_if(offs, straddles, _MSG_STRADDLES_TAU_0)
 
         # The furthest parameter sets the sweep; the rest are interior points of
         # the same solve. When every tau *is* tau_0 the span is zero, and that
@@ -615,23 +615,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # tau_0 to answer a question only about tau_0 -- wrong for a curve
         # defined only near it. Only the division needs guarding.
         span = offs[jnp.argmax(jnp.abs(offs))]
-        ss = jnp.where(span == 0.0, 0.0, offs / jnp.where(span == 0.0, 1.0, span))
+        # One `where`, not two: `span` is the largest-magnitude offset, so a
+        # zero span means every offset is zero and `0 / 1` is already 0.
+        ss = offs / jnp.where(span == 0.0, 1.0, span)
 
-        T0_val = self._tangent_at(tau_0).value
-        if self.initial_normal is not None:
-            U1_0_val = _orthonormalize(_float(self.initial_normal), T0_val)
-        else:
-            U1_0_val = _auto_initial_normal(T0_val)
-
-        dTangent_fn = u.experimental.jacfwd(self._tangent_at, units=(tau_unit,))
-
-        def ode_rhs(s: Any, U1_flat: Any, args: Any) -> Any:
-            """Right-hand side in the rescaled parameter ``s``."""
-            del args
-            t_q = u.Q(tau_0_val + s * span, tau_unit)
-            T_val = self._tangent_at(t_q).value
-            dT_val = dTangent_fn(t_q).value
-            return -span * jnp.dot(U1_flat, dT_val) * T_val
+        ode_rhs = self._transport_rhs(tau_0_val, span, tau_unit, dTangent_fn)
 
         # `SaveAt` requires ascending ``ts``, which the caller's order need not
         # be -- and never is when tau < tau_0, where dividing by a negative
