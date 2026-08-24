@@ -16,10 +16,11 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
-from .base import AbstractTransform
+from .base import AbstractTransform, is_time_dependent
 from .composite import AbstractCompositeTransform
-from .custom_types import CDict
+from .custom_types import CDict, OptUSys
 from .identity import Identity, identity
+from .prolong import JetDict, _merge_slot0, prolong_slot
 from coordinax.transforms._src import groups
 
 Ts = TypeVarTuple("Ts")
@@ -278,33 +279,56 @@ def act(
     {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}
 
     """
-    # 'at' / 'at_vel' track the evolving jet slots (base point and velocity)
-    # for tangent transformations: advance them after each sub-op so the next
-    # step evaluates at the correct anchor. Whether each anchor is provided is
-    # loop-invariant, so the step kwargs dict is built once and updated.
-    current_at = kw.get("at")
-    current_at_vel = kw.get("at_vel")
-    kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_vel")}
+    # Tangent data of order >= 1 under a time-dependent pipeline is a
+    # prolongation, and jets compose by the chain rule -- so the prolongation
+    # of a composition IS the composition of the prolongations, which is the
+    # `act_jet` fold further down this module. Hand it the assembled anchor
+    # jet and let it fold.
+    #
+    # This used to be a hand-rolled shadow 2-jet instead: `at` and `at_vel`
+    # threaded through the per-sub-op `act` fold and advanced after each step
+    # (velocity first, since it needed the old base point). Two implementations
+    # of one semantics, and only one of them generalised -- the shadow knew
+    # about exactly two anchors, so `at_jet` rode through *unadvanced* and came
+    # out with a different, wrong answer, silently. See gh#536.
+    #
+    # A point rep has no ladder order at all (`None`, not 0), and this is the
+    # ungated 5-argument dispatch, so the geometry check has to come first.
+    m = (
+        rep.semantic_kind.order
+        if isinstance(rep.geom_kind, cxr.TangentGeometry)
+        else None
+    )
+    if m is not None and m >= 1 and is_time_dependent(op):
+        return prolong_slot(
+            op,
+            tau,
+            x,
+            chart,
+            m,
+            at=cast("CDict | None", kw.get("at")),
+            at_vel=cast("CDict | None", kw.get("at_vel")),
+            at_jet=cast("JetDict | None", kw.get("at_jet")),
+            usys=cast("OptUSys", kw.get("usys")),
+        )
+
+    # Everything else -- points, displacements, and tangent data under a
+    # time-independent pipeline -- folds sub-op by sub-op. Only the base point
+    # travels with it: these paths all end in the frozen-tau pushforward, which
+    # anchors on slot 0 alone, so there is no shadow jet left to keep in step.
+    current_at = _merge_slot0(op, kw.get("at"), kw.get("at_jet"))
+    kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_vel", "at_jet")}
     step_kw = dict(kw_rest)
-    at_kw = {"at": current_at} if current_at is not None else {}
     result = x
     last = len(op.transforms) - 1
     for i, sub_op in enumerate(op.transforms):
         if current_at is not None:
             step_kw["at"] = current_at
-            at_kw["at"] = current_at
-        if current_at_vel is not None:
-            step_kw["at_vel"] = current_at_vel
         result = cxfmapi.act(sub_op, tau, result, chart, rep, **step_kw)
         if i == last:
-            # The advanced anchors would never be read — skip the (eager-mode)
-            # dead work of transforming them through the final sub-op.
+            # The advanced anchor would never be read — skip the (eager-mode)
+            # dead work of transforming it through the final sub-op.
             break
-        # Advance the anchor jet (velocity first: it needs the old base point).
-        if current_at_vel is not None:
-            current_at_vel = cxfmapi.act(
-                sub_op, tau, current_at_vel, chart, cxr.coord_vel, **kw_rest, **at_kw
-            )
         if current_at is not None:
             current_at = cxfmapi.act(
                 sub_op, tau, current_at, chart, cxr.point, **kw_rest

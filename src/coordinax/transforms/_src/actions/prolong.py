@@ -33,6 +33,7 @@ Two related verbs are distinguished:
 """
 
 __all__ = (
+    "AnchorJet",
     "JetDict",
     "prolong_jet",
     "prolong_slot",
@@ -72,6 +73,16 @@ All-integer keys keep the jet a valid JAX pytree (jit/vmap-safe).
 Note the distinction from the tangent semantic-kind ladder: `Displacement`
 (ladder order 0) is a same-$\tau$ point difference, *not* a curve derivative,
 so it is never a jet slot — displacement fibres transform by ``pushforward``.
+"""
+
+AnchorJet: TypeAlias = dict[int, CDict | None]
+"""Anchor slots as a *caller* supplies them, via the ``at_jet=`` keyword.
+
+Distinct from `JetDict`, which is engine data: an actual jet has a value in
+every slot it names. An anchor dict is assembled by the caller, often
+programmatically, so a slot may come out empty — and `None` there means "not
+given", exactly as ``at=None`` does. `_live_slots` drops those, and is the one
+place the caller-facing form becomes a `JetDict`.
 """
 
 _MSG_TAU_REQUIRED = (
@@ -642,7 +653,7 @@ def act(
     *,
     at: CDict | None = None,
     at_vel: CDict | None = None,
-    at_jet: JetDict | None = None,
+    at_jet: AnchorJet | None = None,
     usys: OptUSys = None,
     **kw: Any,
 ) -> CDict:
@@ -686,6 +697,10 @@ def act(
     m = rep.semantic_kind.order
 
     if m == 0 or not is_time_dependent(op):
+        # No prolongation here, just the frozen-tau pushforward -- but it still
+        # needs the base point, and `at_jet` is the general anchor form, so
+        # slot 0 must reach it as surely as `at=` does.
+        at = _merge_slot0(op, at, at_jet)
         return cast(
             "CDict", cxfmapi.pushforward(op, tau, x, chart, rep, at=at, usys=usys)
         )
@@ -693,6 +708,45 @@ def act(
     return prolong_slot(
         op, tau, x, chart, m, at=at, at_vel=at_vel, at_jet=at_jet, usys=usys
     )
+
+
+def _live_slots(at_jet: AnchorJet | None, /) -> JetDict:
+    """Keep the slots actually supplied, dropping the empty ones.
+
+    Both validators below test slot *presence by key*, so a `None` value would
+    sail past a missing-slot check and fail far downstream about a slot that
+    looks supplied. The runtime typechecker is not a gate here: beartype
+    samples one entry per container, so ``{0: q, 1: None}`` is caught only on
+    the draws that happen to pick slot 1.
+
+    Normalizing in the two functions every entrypoint routes through — rather
+    than at each entrypoint — is what makes ``at_jet={0: None}`` read as
+    ``at=None`` does: on the funnel, through `Composed`, and on ``add.py``'s
+    `TimeDep` rule alike.
+    """
+    if at_jet is None:
+        return {}
+    return {k: v for k, v in at_jet.items() if v is not None}
+
+
+def _merge_slot0(
+    op: AbstractTransform, at: CDict | None, at_jet: AnchorJet | None, /
+) -> CDict | None:
+    """Resolve the base point from ``at`` or ``at_jet[0]``, refusing both at once.
+
+    For the paths that need only slot 0 (the frozen-tau pushforward, the fibre
+    ladder, a `Composed` fold's travelling anchor). Giving one slot twice
+    raises rather than silently preferring one: a wrong anchor is a wrong
+    answer, not a lesser convenience.
+    """
+    slots = _live_slots(at_jet)
+    if 0 not in slots:
+        return at
+    if at is not None:
+        raise TypeError(
+            _MSG_AT_JET_CONFLICT.format(op=type(op).__name__, k=0, alias="at")
+        )
+    return slots[0]
 
 
 def _slot_jet(
@@ -704,7 +758,7 @@ def _slot_jet(
     *,
     at: CDict | None,
     at_vel: CDict | None,
-    at_jet: JetDict | None = None,
+    at_jet: AnchorJet | None = None,
 ) -> JetDict:
     """Validate the lower jet slots and assemble the jet for an order-``m`` slot.
 
@@ -719,7 +773,7 @@ def _slot_jet(
     # `at`/`at_vel` are sugar for slots 0 and 1; `at_jet` is the general form,
     # and the only way to reach slots >= 2. Missing-slot checks come *after*
     # the merge, so supplying slot 0 through `at_jet` alone is enough.
-    slots: JetDict = dict(at_jet or {})
+    slots: JetDict = _live_slots(at_jet)
     for k, (alias, value) in enumerate((("at", at), ("at_vel", at_vel))):
         if value is None:
             continue
@@ -758,7 +812,7 @@ def prolong_slot(
     at: CDict | None,
     at_vel: CDict | None,
     usys: OptUSys,
-    at_jet: JetDict | None = None,
+    at_jet: AnchorJet | None = None,
 ) -> CDict:
     """Apply the m-th prolongation to a single order-``m`` slot.
 
