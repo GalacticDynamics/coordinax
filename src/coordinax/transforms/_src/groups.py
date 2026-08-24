@@ -15,6 +15,7 @@ __all__ = (
     "PoincareGroup",
     "LorentzGroup",
     "ProperOrthochronousLorentzGroup",
+    "is_subgroup",
 )
 
 import abc
@@ -173,3 +174,45 @@ def least_common_supergroup(
 
     common = set.intersection(*(set(_supergroups_of(group)) for group in groups))
     return max(common, key=_specificity, default=DiffeomorphismGroup)
+
+
+def is_subgroup(
+    sub: type[AbstractTransformGroup], sup: type[AbstractTransformGroup], /
+) -> bool:
+    """Return whether *sub* is contained in *sup*, per the declared lattice.
+
+    Not `issubclass`. A group's Python bases exist for code reuse; its place in
+    the lattice is `__declared_supergroups__`, and the two disagree exactly
+    where it matters:
+
+    - `LorentzGroup` subclasses `OrthogonalGroup` but declares `PoincareGroup`,
+      so a boost is **not** in `AffineGroup`. It acts on spacetime, and fusing
+      one into a chain of spatial affine maps would be a dimension error.
+    - `IdentityGroup` subclasses nothing but is in every group, so `issubclass`
+      wrongly excludes it from `AffineGroup`.
+
+    Examples
+    --------
+    >>> from coordinax.transforms.groups import (
+    ...     AffineGroup, IdentityGroup, ProperOrthochronousLorentzGroup,
+    ...     SpecialOrthogonalGroup, is_subgroup)
+
+    >>> is_subgroup(SpecialOrthogonalGroup, AffineGroup)
+    True
+
+    A boost is not affine, though `issubclass` says otherwise:
+
+    >>> is_subgroup(ProperOrthochronousLorentzGroup, AffineGroup)
+    False
+    >>> issubclass(ProperOrthochronousLorentzGroup, AffineGroup)
+    True
+
+    The identity is in everything, though `issubclass` says otherwise:
+
+    >>> is_subgroup(IdentityGroup, AffineGroup)
+    True
+    >>> issubclass(IdentityGroup, AffineGroup)
+    False
+
+    """
+    return sup in _supergroups_of(sub)

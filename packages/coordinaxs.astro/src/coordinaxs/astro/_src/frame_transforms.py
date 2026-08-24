@@ -49,18 +49,22 @@ def frame_transition(
     >>> op = cxf.frame_transition(my_frame, gcf_frame)
     >>> op
     Composed((
-      Rotate(f64[3,3](jax)),
-      Translate(
-          {...},
-          chart=Cart3D(M=Rn(3))
+      Affine(
+        f64[3,3](jax),
+        {...},
+        Cart3D(M=Rn(3)),
+        coordinax.transforms._src.groups.EuclideanGroup
       ),
-      Rotate(f64[3,3](jax)),
       Translate(
           {...},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       )
     ))
+
+    The two rotations and the spatial translation fuse into one `Affine`
+    kernel; the velocity offset stays separate because it acts on the tangent
+    fibre rather than on the point.
 
     """  # noqa: E501
     fromframe_to_icrs = frame_transition(from_frame, icrs)
@@ -197,23 +201,23 @@ def frame_transition(
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       ),
-      Rotate(f64[3,3](jax)),
-      Translate(
-          {...},
-          chart=Cart3D(M=Rn(3))
+      Affine(
+        f64[3,3](jax),
+        {...},
+        Cart3D(M=Rn(3)),
+        coordinax.transforms._src.groups.EuclideanGroup
       ),
-      Rotate(f64[3,3](jax)),
-      Translate(
-          {...},
-          chart=Cart3D(M=Rn(3))
-      ),
-      Rotate(f64[3,3](jax)),
       Translate(
           {...},
           chart=Cart3D(M=Rn(3)),
           semantic_kind=vel
       )
     ))
+
+    Seven operators become three: the five spatial ones -- three rotations and
+    two translations, interleaved so no pairwise rule could reach them -- fuse
+    into a single `Affine`. The velocity offsets bracket it untouched, acting
+    on the tangent fibre rather than the point.
 
     """
     if from_frame == to_frame:
