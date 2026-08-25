@@ -11,6 +11,7 @@ from typing import Any
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
+import pytest
 from hypothesis import find, settings
 from hypothesis.errors import NoSuchExample
 
@@ -111,11 +112,29 @@ print("\\n".join(bad[:3]))
 _X32_TIMEOUT_S = 600
 
 
+#: Environment for the child, beyond turning x64 off.
+#:
+#: The child only *draws dtypes* -- it never computes -- so every thread and
+#: backend JAX would set up for it is waste that competes with the rest of the
+#: suite. Pinning the platform also skips accelerator discovery, which is pure
+#: cost on a CPU runner. Measured on this script: 3.1s -> 1.8s idle, and
+#: 3.6-5.1s -> 2.3-2.6s with every core saturated, the spread mattering as much
+#: as the mean.
+_X32_ENV = {
+    "JAX_ENABLE_X64": "0",
+    "JAX_PLATFORMS": "cpu",
+    "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=false",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+}
+
+
 def _run_x32() -> "subprocess.CompletedProcess[str]":
     """Draw `charts()` in a fresh x32 interpreter."""
     return subprocess.run(  # noqa: S603  # fixed literal script, this interpreter
         [sys.executable, "-c", _X32_SCRIPT],
-        env={**os.environ, "JAX_ENABLE_X64": "0"},
+        env={**os.environ, **_X32_ENV},
         capture_output=True,
         text=True,
         timeout=_X32_TIMEOUT_S,
@@ -123,6 +142,7 @@ def _run_x32() -> "subprocess.CompletedProcess[str]":
     )
 
 
+@pytest.mark.subprocess_heavy
 def test_charts_draws_without_x64() -> None:
     """``charts()`` must not raise `InvalidArgument` when x64 is off.
 

@@ -122,7 +122,15 @@ jobs:
 
       - name: Test package
         run: |
-          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow"
+          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow and not subprocess_heavy"
+
+      # Serially, and outside the xdist run: this spawns its own interpreter,
+      # which stalled for the full 600s timeout when it had to cold-import JAX
+      # alongside four workers doing the same on a 4-vCPU runner. It costs a
+      # couple of seconds with the runner to itself.
+      - name: Test package (subprocess-heavy, serial)
+        run: |
+          uv run --no-sync pytest -m subprocess_heavy -p no:xdist -p no:randomly --no-cov -q
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7.0.0
@@ -152,7 +160,15 @@ jobs:
 
       - name: Test package
         run: |
-          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow"
+          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow and not subprocess_heavy"
+
+      # Serially, and outside the xdist run: this spawns its own interpreter,
+      # which stalled for the full 600s timeout when it had to cold-import JAX
+      # alongside four workers doing the same on a 4-vCPU runner. It costs a
+      # couple of seconds with the runner to itself.
+      - name: Test package (subprocess-heavy, serial)
+        run: |
+          uv run --no-sync pytest -m subprocess_heavy -p no:xdist -p no:randomly --no-cov -q
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7.0.0
