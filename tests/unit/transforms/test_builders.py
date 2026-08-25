@@ -90,7 +90,7 @@ def test_rotation_about_axis_unnormalisable_axis_raises(bad):
     b = cxfm.builders.RotationAboutAxis(
         u.Q(1, "rad/s"), axis=jnp.array([bad, 0.0, 0.0])
     )
-    with pytest.raises(eqx.EquinoxRuntimeError, match="must be non-zero"):
+    with pytest.raises(eqx.EquinoxRuntimeError, match="finite and non-zero"):
         b(u.Q(1.0, "s"))
 
 

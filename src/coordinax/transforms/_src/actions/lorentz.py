@@ -31,10 +31,7 @@ _MSG_SUPERLUMINAL = (
 )
 
 
-_MSG_ZERO_DIRECTION = (
-    "LorentzBoost.from_rapidity requires a non-zero, finite `direction`; "
-    "anything else has no boost axis to normalise onto."
-)
+_MSG_ZERO_DIRECTION = "LorentzBoost.from_rapidity needs a finite, non-zero `direction`."
 
 
 def _float(x: Any, /) -> Array:
@@ -245,9 +242,8 @@ class LorentzBoost(AbstractLinearTransform):
         """
         d = _float(direction)
         norm = jnp.linalg.norm(d)
-        # Anything but a finite positive norm builds the `nan` betas this guard
-        # exists to prevent -- reported later by `gamma`'s subluminal check,
-        # which names the wrong cause.
+        # Anything else builds `nan` betas -- reported later by `gamma`'s
+        # subluminal check, which names the wrong cause.
         norm = eqx.error_if(norm, _unnormalisable(norm), _MSG_ZERO_DIRECTION)
         return cls(jnp.tanh(_float(rapidity)) * (d / norm))
 
@@ -279,9 +275,7 @@ class LorentzBoost(AbstractLinearTransform):
 
         """
         beta_sq = jnp.sum(self.beta**2)
-        # `~(x < 1)`, not `x >= 1`: a NaN is False for both comparisons, so the
-        # direct form admits it and leaks the non-finite value this guard exists
-        # to stop.
+        # `~(x < 1)`, not `x >= 1`, for the NaN reason given in `rapidity` below.
         beta_sq = eqx.error_if(beta_sq, ~(beta_sq < 1.0), _MSG_SUPERLUMINAL)
         return 1.0 / jnp.sqrt(1.0 - beta_sq)
 

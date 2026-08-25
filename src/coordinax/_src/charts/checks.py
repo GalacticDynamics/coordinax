@@ -115,8 +115,7 @@ def leq(
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be less than or equal to {comp_name}."
-    # `~(x <= max)` rather than `x > max`: a NaN is False for both, so the
-    # direct form admits it silently.
+    # `~(x <= max)`, not `x > max`: a NaN is False for both, admitting it.
     return eqx.error_if(x, u.ustrip("", jnp.any(~(x <= max_val))), msg)
 
 

@@ -16,10 +16,7 @@ from .rotate import Rotate
 from .translate import Translate
 from .utils import _unnormalisable
 
-_MSG_ZERO_AXIS = (
-    "`RotationAboutAxis.axis` must be non-zero and finite; normalising anything "
-    "else gives a NaN rotation matrix."
-)
+_MSG_ZERO_AXIS = "`RotationAboutAxis.axis` must be finite and non-zero."
 
 
 def _as_axis(axis: Any, /) -> Shaped[Array, "3"]:
@@ -79,8 +76,7 @@ class RotationAboutAxis(eqx.Module):
         """Build the `Rotate` operator at time parameter ``tau``."""
         theta = jnp.asarray(u.ustrip("rad", self.omega * tau + self.phase))
         norm = jnp.linalg.vector_norm(self.axis)
-        # Anything but a finite positive norm normalises to the silently NaN `R`
-        # this guard exists to prevent. `error_if` fires under `jit`.
+        # Anything else normalises to a silently NaN `R`; `error_if` fires under jit.
         axis = eqx.error_if(self.axis, _unnormalisable(norm), _MSG_ZERO_AXIS)
         n = axis / norm
         # Rodrigues' formula: R = I cos(th) + sin(th) [n]_x + (1-cos th) n n^T

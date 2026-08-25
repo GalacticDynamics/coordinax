@@ -78,7 +78,6 @@ def _unnormalisable(norm: Any, /) -> Any:
 
     True unless the norm is finite and strictly positive, which is exactly the
     precondition: a norm is NaN iff a component of ``v`` is, ``inf`` iff a
-    component is, and ``0`` iff ``v`` is. Testing ``norm == 0`` alone catches
-    the last of those three and lets the other two normalise to a silent NaN.
+    component is, and ``0`` iff ``v`` is.
     """
     return ~((norm > 0) & jnp.isfinite(norm))

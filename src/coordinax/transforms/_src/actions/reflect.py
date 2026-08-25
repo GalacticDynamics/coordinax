@@ -78,8 +78,7 @@ class Reflect(AbstractLinearTransform):
 
         norm = jnp.linalg.norm(n)
         # Deferred so it survives jit (a plain `bool` on a traced value raises
-        # TracerBoolConversionError). Anything but a finite positive norm
-        # normalises to a silently NaN `H`.
+        # TracerBoolConversionError). Anything else normalises to a NaN `H`.
         n = eqx.error_if(n, _unnormalisable(norm), _MSG_ZERO_NORMAL)
 
         n_hat = n / norm

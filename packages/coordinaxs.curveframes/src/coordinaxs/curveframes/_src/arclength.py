@@ -212,9 +212,7 @@ def _eval_tau_dense(
     s_max_val = jnp.asarray(s_max.ustrip(s_unit))
 
     margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
-    # Negated `in-domain` rather than the two out-of-domain comparisons: a NaN
-    # `s` compares False against both, so the direct form admits it and hands
-    # back a NaN position with nothing raised.
+    # A NaN `s` is False for both out-of-domain tests, so negate in-domain.
     out_of_domain = ~((s_val >= -margin) & (s_val <= s_max_val + margin))
 
     # No clip: every point of the solved range is real data, so the only

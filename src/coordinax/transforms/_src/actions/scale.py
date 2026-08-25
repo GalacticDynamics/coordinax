@@ -122,9 +122,8 @@ class Scale(AbstractLinearTransform):
         if s.ndim != 1:
             msg = f"Scale.from_factors requires a vector; got shape={s.shape!r}."
             raise ValueError(msg)
-        # Deferred so it survives jit (a plain `bool` on a traced value raises
-        # TracerBoolConversionError). An `inf` factor is the quiet one: its
-        # reciprocal is 0.0, so `inverse` came back finite, singular, and silent.
+        # Deferred so it survives jit, as in `Reflect.from_normal`. `inf` is the
+        # quiet failure: 1/inf = 0.0, so `inverse` came back finite and singular.
         bad = jnp.isclose(s, 0) | ~jnp.isfinite(s)
         s = eqx.error_if(s, jnp.any(bad), _MSG_SINGULAR)
         return cls._from_diagonal(s)
