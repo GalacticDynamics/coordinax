@@ -134,6 +134,8 @@ jobs:
   # starved the child until the 600s timeout fired, so this gets a runner to
   # itself rather than a serial step inside a matrix job. One job, not three:
   # the property under test is JAX's, not the interpreter's or the OS's.
+  # `-n0` after nox's own `-n logical` wins, so the child runs alone; going
+  # through nox rather than bare pytest keeps `--exclude-package` applied.
   tests_subprocess:
     name: Subprocess-heavy tests
     runs-on: ubuntu-latest
@@ -152,7 +154,7 @@ jobs:
 
       - name: Test package (subprocess-heavy)
         run: |
-          uv run --no-sync nox -s test -- packages/coordinaxs.hypothesis/tests/unit/utils/annotations/test_jax_dtypes.py -m"subprocess_heavy" -p no:xdist --no-cov -q
+          uv run --no-sync nox -s test -- -m"subprocess_heavy" -n0 --no-cov -q
 
   tests_nonlinux:
     name: Check Python ${{ matrix.python-version }} on ${{ matrix.runs-on }}

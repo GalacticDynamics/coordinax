@@ -6,7 +6,6 @@ import os
 import subprocess
 import sys
 import time
-from pathlib import Path
 
 from typing import Any
 
@@ -131,6 +130,13 @@ _X32_ENV = {
 }
 
 
+def _text(stream: "bytes | str | None") -> str:
+    """Decode a `TimeoutExpired` stream, which is bytes even under `text=True`."""
+    return (
+        stream.decode(errors="replace") if isinstance(stream, bytes) else stream or ""
+    )
+
+
 def _run_x32() -> "subprocess.CompletedProcess[str]":
     """Draw `charts()` in a fresh x32 interpreter."""
     return subprocess.run(  # noqa: S603  # fixed literal script, this interpreter
@@ -153,74 +159,27 @@ def test_charts_draws_without_x64() -> None:
     started = time.monotonic()
     try:
         proc = _run_x32()
-    except subprocess.TimeoutExpired:  # pragma: no cover  - CI-only flake
-        # One retry, because the observed failure is starvation rather than a
-        # hang: the child produced *no* output on either stream in 600s, having
-        # stalled before finishing imports -- work that costs ~20s cold on an
-        # idle machine. A suite that has since drained is the cheapest way to
-        # tell a starved runner from a genuinely stuck child, and it keeps the
-        # guard, which skipping or `-m slow` would not (no CI job runs slow).
-        started = time.monotonic()
-        try:
-            proc = _run_x32()
-        except subprocess.TimeoutExpired as exc:
-            # `subprocess.run` raises before the assert below, so a timeout used to
-            # surface as a bare `TimeoutExpired` carrying a 600-line repr of the
-            # script and nothing about what the child was doing. Re-raise as a
-            # failure that says how far it got.
-            out = (
-                (exc.stdout or b"").decode(errors="replace")
-                if isinstance(exc.stdout, bytes)
-                else (exc.stdout or "")
-            )
-            err = (
-                (exc.stderr or b"").decode(errors="replace")
-                if isinstance(exc.stderr, bytes)
-                else (exc.stderr or "")
-            )
-            stage = (
-                "while drawing charts()"
-                if "imported" in err
-                else "before importing jax/coordinaxs"
-            )
-            msg = (
-                f"the x32 subprocess exceeded {_X32_TIMEOUT_S}s, {stage}.\n"
-                f"It costs ~3.4s idle and ~4.4s with every core saturated, so a "
-                f"timeout here is a stall, not slow work -- see the note above "
-                f"`_X32_TIMEOUT_S` for what has already been ruled out.\n"
-                f"elapsed={time.monotonic() - started:.1f}s\n"
-                f"child stdout: {out[-1000:]!r}\n"
-                f"child stderr: {err[-2000:]!r}"
-            )
-            raise AssertionError(msg) from exc
+    except subprocess.TimeoutExpired as exc:  # pragma: no cover  - CI-only flake
+        # `subprocess.run` raises before the assert below, so a timeout used to
+        # surface as a bare `TimeoutExpired` carrying a 600-line repr of the
+        # script and nothing about what the child was doing. Re-raise as a
+        # failure that says how far it got.
+        out, err = _text(exc.stdout), _text(exc.stderr)
+        stage = (
+            "while drawing charts()"
+            if "imported" in err
+            else "before importing jax/coordinaxs"
+        )
+        msg = (
+            f"the x32 subprocess exceeded {_X32_TIMEOUT_S}s, {stage}.\n"
+            f"It costs ~3.4s idle and ~4.4s with every core saturated, so a "
+            f"timeout here is a stall, not slow work -- see the note above "
+            f"`_X32_TIMEOUT_S` for what has already been ruled out.\n"
+            f"elapsed={time.monotonic() - started:.1f}s\n"
+            f"child stdout: {out[-1000:]!r}\n"
+            f"child stderr: {err[-2000:]!r}"
+        )
+        raise AssertionError(msg) from exc
     assert proc.returncode == 0, proc.stderr[-3000:]
     n_bad, _, detail = proc.stdout.strip().partition("\n")
     assert int(n_bad) == 0, f"{n_bad} InvalidArgument draws:\n{detail}"
-
-
-def test_ci_narrowing_still_covers_every_marked_test() -> None:
-    """Every `subprocess_heavy` test must live in this file.
-
-    CI runs the serial step against this path rather than the whole tree,
-    because collecting everything to deselect it costs 22s against 6.6s. That
-    is only sound while this is the only file holding the marker -- a marker
-    the workflow does not actually reach is worse than no marker, since it
-    silently skips instead of failing.
-
-    Mark a test elsewhere and this fails, naming the file, so the step gets
-    widened rather than quietly stopping short.
-    """
-    root = Path(__file__).resolve().parents[6]
-    here = Path(__file__).resolve()
-    marked = {
-        path
-        for path in root.rglob("test_*.py")
-        if ".venv" not in path.parts
-        and ".nox" not in path.parts
-        and "pytest.mark.subprocess_heavy" in path.read_text(encoding="utf-8")
-    }
-    assert marked == {here}, (
-        "CI narrows the subprocess-heavy step to "
-        f"{here.relative_to(root)}; also marked: "
-        f"{sorted(str(p.relative_to(root)) for p in marked - {here})}"
-    )
