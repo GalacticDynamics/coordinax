@@ -301,8 +301,13 @@ class AbstractCurveFrameBuilder(eqx.Module):
         check_param_dimension(self.curve, tau_unit)
         return tau_unit
 
-    def _param(self, tau: Any, /) -> Any:
-        r"""Return the curve parameter as a `Quantity`: ``tau``, or the station.
+    def _param(self, tau: Any, /) -> tuple[Any, u.AbstractUnit]:
+        r"""Return the curve parameter as a `Quantity`, and its unit.
+
+        Both, because every caller that evaluates the curve needs both, and
+        resolving them apart is what let them disagree: `rotation_matrices`
+        used to re-derive the unit with a comment reading "same resolution
+        `_solve_U1` performs", which is a duplication documenting itself.
 
         A raw (unitless) parameter is the **array fastpath**: bare arrays
         carrying no unit, which is the cheapest way in and the reason
@@ -316,16 +321,20 @@ class AbstractCurveFrameBuilder(eqx.Module):
         from here, so none of them has to know whether it arrived wrapped.
 
         A raw parameter with no declared unit is the one combination that
-        cannot be served -- nothing anywhere states the unit -- and raises.
+        cannot be served -- nothing anywhere states the unit -- and raises,
+        naming *which* value is bare, since a pinned `station` is what the
+        builder evaluates at and a `Quantity` at call time will not rescue it.
         """
         pinned = self.station is not None
         param = self.station if pinned else tau
-        if u.unit_of(param) is not None:
-            return param
-        if self.tau_unit is None:
-            source, fix = _SOURCE_STATION if pinned else _SOURCE_TAU
-            raise TypeError(_MSG_TAU_UNIT_UNINFERABLE.format(source=source, fix=fix))
-        return u.Q(param, self.tau_unit)
+        if u.unit_of(param) is None:
+            if self.tau_unit is None:
+                source, fix = _SOURCE_STATION if pinned else _SOURCE_TAU
+                raise TypeError(
+                    _MSG_TAU_UNIT_UNINFERABLE.format(source=source, fix=fix)
+                )
+            param = u.Q(param, self.tau_unit)
+        return param, self._tau_unit_at(param)
 
     @abc.abstractmethod
     def rotation_matrix(self, tau: Any, /) -> Array:
@@ -362,7 +371,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         """
         b, p = self._resolve(tau)
         cart = cxc.cart3d
-        g = b._param(p)
+        g, _ = b._param(p)
         translate = cxfm.Translate(cxc.cdict(-b.curve(g), cart), chart=cart)
         return translate | cxfm.Rotate(b.rotation_matrix(p))
 
@@ -389,7 +398,8 @@ class AbstractCurveFrameBuilder(eqx.Module):
 
         """
         b, p = self._resolve(tau)
-        return b.curve(b._param(p))
+        g, _ = b._param(p)
+        return b.curve(g)
 
     def tangent(self, tau: Any, /) -> u.Q:
         r"""Return the unit tangent vector $\mathbf{T}$ (row 0 of R).

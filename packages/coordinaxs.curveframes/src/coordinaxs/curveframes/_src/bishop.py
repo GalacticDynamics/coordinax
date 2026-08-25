@@ -403,6 +403,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
 
     def _tangent_at(self, g: Any, /) -> u.AbstractQuantity:
         r"""Compute unit tangent $\mathbf{T} = \gamma'/\|\gamma'\|$."""
+        # Reads the unit off `g` rather than being handed it: this is passed
+        # whole to `unxt.experimental.jacfwd`, whose `units=` tuple must match
+        # the positional arity, so a second parameter cannot be added without
+        # a `functools.partial` at every call. `g` always arrives from
+        # `_param`, so the read is a `unit_of` on a `Quantity` and cannot fail.
         dcurve = u.experimental.jacfwd(self.curve, units=(self._tau_unit_at(g),))
         return _normalize(dcurve(g.astype(float)))
 
@@ -415,11 +420,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         solve rather than whichever convertible one it was given in.
         """
         tau_0_in = self.tau_0
-        tau_0 = (
-            u.Q(0.0, tau_unit)
-            if tau_0_in is None
-            else u.Q(tau_0_in.ustrip(tau_unit), tau_unit)
-        )
+        tau_0 = u.Q(0.0 if tau_0_in is None else tau_0_in.ustrip(tau_unit), tau_unit)
 
         T0_val = self._tangent_at(tau_0).value
         if self.initial_normal is not None:
@@ -451,7 +452,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
 
         return ode_rhs
 
-    def _solve_U1(self, g: Any, /) -> Array:
+    def _solve_U1(self, g: Any, tau_unit: Any, /) -> Array:
         r"""Compute $\mathbf{U}_1$ via ODE integration from $\tau_0$.
 
         Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1
@@ -470,7 +471,6 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         derivative survives.  Both signs of $\Delta$ are handled by the same
         expression -- no forward-only workaround is needed.
         """
-        tau_unit = self._tau_unit_at(g)
         _, tau_0_val, U1_0_val, dTangent_fn = self._transport_start(tau_unit)
         dtau = _float(g.ustrip(tau_unit)) - tau_0_val
         ode_rhs = self._transport_rhs(tau_0_val, dtau, tau_unit, dTangent_fn)
@@ -513,9 +513,9 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # For a two-argument curve `tau` is the time: transport runs along
         # that time slice, at the pinned station. See `_resolve`.
         b, p = self._resolve(tau)
-        g = b._param(p)
+        g, tau_unit = b._param(p)
         T_val = b._tangent_at(g).value
-        U1_val = b._solve_U1(g)
+        U1_val = b._solve_U1(g, tau_unit)
         U2_val = jnp.cross(T_val, U1_val)
         return jnp.stack([T_val, U1_val, U2_val])
 
@@ -575,9 +575,10 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         if _is_two_argument(self.curve):
             raise ValueError(_MSG_BATCH_TWO_ARGUMENT)
 
-        # Same resolution `_solve_U1` performs: infer the unit from the
-        # parameter (#771) rather than assuming `tau_unit` was declared, and
-        # restate `tau_0` in it so the nested `_tangent_at` infers the same one.
+        # Resolved here rather than taken from `_param`: this is the batched
+        # entry, and `taus` is a whole array of parameters instead of the one
+        # a station could stand in for. `_transport_start` then restates
+        # `tau_0` in the same unit, exactly as it does for `_solve_U1`.
         tau_unit = self._tau_unit_at(taus)
         taus_val = _float(u.ustrip(tau_unit, taus))
 
@@ -668,7 +669,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
 
         """
         b, p = self._resolve(tau)
-        return u.Q(b._tangent_at(b._param(p)).value, "")
+        g, _ = b._param(p)
+        return u.Q(b._tangent_at(g).value, "")
 
     def normal1(self, tau: Any, /) -> u.Q:
         r"""First parallel-transported normal $\mathbf{U}_1(\tau)$ (row 1 of R).

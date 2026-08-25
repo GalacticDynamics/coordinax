@@ -173,13 +173,11 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         b, p = self._resolve(tau)
 
         # Unit-aware first and second derivatives via unxt. `g` is built
-        # first: it is what the parameter unit is read off when undeclared.
-        # Resolve the unit *before* `.astype`: a unitless parameter has no
-        # `.astype`, so doing it the other way round reports the accident
-        # (`AttributeError`) instead of the cause (`_tau_unit_at`'s message,
-        # which names both ways to fix it).
-        g = b._param(p)
-        tau_unit = b._tau_unit_at(g)
+        # `_param` resolves the parameter and its unit together, and raises
+        # for a bare one before anything reaches `.astype` -- which a unitless
+        # parameter does not have, so the other order reported the accident
+        # rather than the cause.
+        g, tau_unit = b._param(p)
         g = g.astype(float)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
         d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
@@ -225,10 +223,9 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         """
         b, p = self._resolve(tau)
-        g = b._param(p)
-        dcurve = u.experimental.jacfwd(b.curve, units=(b._tau_unit_at(g),))
-        g = g.astype(float)
-        return u.Q(_normalize(dcurve(g)).value, "")
+        g, tau_unit = b._param(p)
+        dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
+        return u.Q(_normalize(dcurve(g.astype(float))).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
         r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).
