@@ -180,7 +180,12 @@ def test(s: nox.Session, /) -> None:
 #: project's own `.venv`, which every other session and a developer's shell
 #: share: resolving the oldest dependencies into it would silently downgrade
 #: the environment they are all using.
-_OLDEST_ENV = {"UV_PROJECT_ENVIRONMENT": str(DIR / ".nox" / "oldest")}
+_OLDEST_ENV = {
+    "UV_PROJECT_ENVIRONMENT": str(DIR / ".nox" / "oldest"),
+    # As in `test`: with the workspace extra installed, a missing interop
+    # package is a hard error rather than a silent skip.
+    "COORDINAX_REQUIRE_INTEROP_TESTS": "1",
+}
 
 
 @nox.session(venv_backend="none", default=False)
@@ -203,6 +208,11 @@ def test_oldest(s: nox.Session, /) -> None:
         "--resolution=lowest-direct",
         "pytest",
     ]
+    # As in `test`: xdist breaks --pdb/--trace, so drop it when either is asked
+    # for rather than making the caller also pass `-n0`.
+    debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in s.posargs)
+    xdist_args = [] if debugging else ["-n", "logical", "--dist=loadfile"]
+
     # Resolving downwards rewrites `uv.lock`, which matters here in a way it
     # never did in CI, where the checkout is thrown away. Do not "fix" that
     # with `--frozen`: it leaves the lock alone by declining to re-resolve at
@@ -212,24 +222,22 @@ def test_oldest(s: nox.Session, /) -> None:
     lockfile = DIR / "uv.lock"
     saved = lockfile.read_bytes()
     try:
+        # First and alone: these spawn children that cold-import the whole JAX
+        # stack, which is what starves them beside xdist workers importing the
+        # same stack. Running them before the parallel pass keeps them off a
+        # busy machine just as running them after would, and it lets the pass
+        # below append to their coverage rather than the other way round.
+        s.run(
+            *uv, "-msubprocess_heavy", "-n0", *s.posargs, env=_OLDEST_ENV, external=True
+        )
+        # `--cov-append`, so the report the caller asked for covers both runs.
         s.run(
             *uv,
-            "-n",
-            "logical",
-            "--dist=loadfile",
+            *xdist_args,
             "-mnot subprocess_heavy",
+            "--cov-append",
             *s.posargs,
             env=_OLDEST_ENV,
-            external=True,
-        )
-        # Serial, and after the parallel run, so nothing competes for cores.
-        s.run(
-            *uv,
-            "-msubprocess_heavy",
-            "-n0",
-            "--no-cov",
-            "-q",
-            env={**_OLDEST_ENV, "COORDINAX_REQUIRE_INTEROP_TESTS": "1"},
             external=True,
         )
     finally:
