@@ -21,6 +21,29 @@ import pytest
 
 import coordinax as cx
 
+# Each case below spawns a child that cold-imports astropy, coordinax and the
+# whole JAX stack. Beside xdist workers doing the same on a 4-core runner the
+# children starve, and `subprocess.run` without a timeout then blocks for as
+# long as the job lives: CI showed this file stalling silently at 99% until the
+# runner was shut down. So it runs in the dedicated serial job instead, the
+# same one the x32 dtype test uses.
+pytestmark = pytest.mark.subprocess_heavy
+
+#: Six children at ~2s each when idle; this only has to be far enough above
+#: that to distinguish a slow runner from a stalled one, while still failing
+#: long before the job is killed.
+_IMPORT_TIMEOUT_S = 300
+
+#: Trim what the child sets up: it only imports, never computes, so JAX's
+#: threads and accelerator discovery are pure contention. See `_X32_ENV` in
+#: `packages/coordinaxs.hypothesis/.../test_jax_dtypes.py` for the measurements.
+_CHILD_ENV = {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+}
+
 # This is the single most important behavioural test in the packaging overhaul,
 # and a module-level `importorskip` would let a CI job that is *supposed* to
 # verify order-independence report green with zero signal if the extra ever
@@ -79,12 +102,23 @@ print("OK")
 @pytest.mark.parametrize("first_import", _FIRST_IMPORTS)
 def test_interop_registers_regardless_of_import_order(first_import: str) -> None:
     """Astropy conversions register no matter which module is imported first."""
-    result = subprocess.run(  # noqa: S603
-        [sys.executable, "-c", f"{first_import}\n{_CHECK}"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        result = subprocess.run(  # noqa: S603
+            [sys.executable, "-c", f"{first_import}\n{_CHECK}"],
+            env={**os.environ, **_CHILD_ENV},
+            capture_output=True,
+            text=True,
+            timeout=_IMPORT_TIMEOUT_S,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        # Without this the call blocks until the job is killed, and the failure
+        # reads as a dead runner rather than as this test.
+        msg = (
+            f"`{first_import}` first: the child did not finish importing in "
+            f"{_IMPORT_TIMEOUT_S}s. It costs ~2s idle, so this is a stall."
+        )
+        raise AssertionError(msg) from exc
     assert result.returncode == 0, (
         f"`{first_import}` first left interop unregistered:\n"
         f"stdout: {result.stdout}\nstderr: {result.stderr}"
