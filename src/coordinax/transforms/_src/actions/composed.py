@@ -20,7 +20,7 @@ from .base import AbstractTransform, is_time_dependent
 from .composite import AbstractCompositeTransform
 from .custom_types import CDict, OptUSys
 from .identity import Identity, identity
-from .prolong import JetDict, _merge_slot0, prolong_slot
+from .prolong import AnchorJet, _merge_slot0, prolong_slot
 from coordinax.transforms._src import groups
 
 Ts = TypeVarTuple("Ts")
@@ -308,7 +308,7 @@ def act(
             chart,
             m,
             at=cast("CDict | None", kw.get("at")),
-            at_jet=cast("JetDict | None", kw.get("at_jet")),
+            at_jet=cast("AnchorJet | None", kw.get("at_jet")),
             usys=cast("OptUSys", kw.get("usys")),
         )
 
