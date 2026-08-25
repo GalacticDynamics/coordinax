@@ -321,6 +321,10 @@ filterwarnings = [
 log_level = "INFO"
 markers = [
   "network: marks tests that require a network connection (deselect with '-m not network')",
+  # Spawns a fresh interpreter, which must not compete with xdist workers that
+  # are each cold-importing the same JAX stack. Deselected from the parallel
+  # run and given its own serial step; see `test_jax_dtypes.py`.
+  "subprocess_heavy: marks tests that spawn their own interpreter",
 ]
 minversion = "8.3"
 norecursedirs = [
