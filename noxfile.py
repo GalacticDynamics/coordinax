@@ -161,8 +161,16 @@ def test(s: nox.Session, /) -> None:
     # `>>>` examples within a source file, which breaks if xdist scatters
     # them across workers. xdist breaks --pdb/--trace, so skip it when either
     # is requested rather than relying on the caller to also pass `-n0`.
+    #
+    # A caller can also ask for serial directly. CI does, for the tests that
+    # spawn their own interpreter: they have to cold-import the JAX stack, and
+    # doing that beside workers cold-importing the same stack starved the child
+    # for the full 600s timeout. Routing that run through this session rather
+    # than a bare pytest keeps `--exclude-package` applied, without which
+    # collection fails on whichever package the job left uninstalled.
     debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in posargs)
-    xdist_args = [] if debugging else ["-n", "logical", "--dist=loadfile"]
+    serial = "no:xdist" in posargs or "-n0" in posargs
+    xdist_args = [] if debugging or serial else ["-n", "logical", "--dist=loadfile"]
 
     # This session installs the `workspace` extra (interop included), so the
     # interop order-independence tests must run, not silently skip.
