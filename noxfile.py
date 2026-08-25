@@ -6,6 +6,7 @@
 
 import argparse
 import shutil
+import tomllib
 from enum import Enum
 from pathlib import Path
 
@@ -129,15 +130,31 @@ def test(s: nox.Session, /) -> None:
     parser.add_argument("--exclude-package", action="append", default=[])
     args, posargs = parser.parse_known_args(s.posargs)
 
-    ignore_paths: list[str] = []
+    excluded: set[str] = set()
     for raw in args.exclude_package:
         try:
             package = PackageEnum[raw]
         except KeyError:
             s.error(f"Unknown --exclude-package value: {raw!r}")
-        ignore_paths.extend(package.paths)
+        excluded.update(path.rstrip("/") for path in package.paths)
 
-    ignore_args = [f"--ignore={path}" for path in dict.fromkeys(ignore_paths)]
+    # Select by naming the paths that survive rather than by `--ignore`.
+    # `testpaths` lists these package directories explicitly, and pytest does
+    # not apply `--ignore` to an initial argument it was handed directly, so
+    # every `--ignore` here was a no-op: the jobs that asked to skip a package
+    # still ran the whole suite.
+    path_args: list[str] = []
+    if excluded:
+        cfg = tomllib.loads((DIR / "pyproject.toml").read_text(encoding="utf-8"))
+        testpaths: list[str] = cfg["tool"]["pytest"]["ini_options"]["testpaths"]
+        path_args = [p for p in testpaths if p.rstrip("/") not in excluded]
+        # Excluding nothing is never what the caller meant, and quietly running
+        # everything is how this went unnoticed. Fail instead.
+        if len(path_args) == len(testpaths):
+            s.error(
+                f"--exclude-package matched no testpaths: {sorted(excluded)} "
+                f"against {testpaths}"
+            )
 
     # -n logical: parallelize across cores. --dist=loadfile: keep each file's
     # tests on one worker -- Sybil doctests share sequential state across
@@ -152,7 +169,7 @@ def test(s: nox.Session, /) -> None:
     s.run(
         "pytest",
         *xdist_args,
-        *ignore_args,
+        *path_args,
         *posargs,
         env={"COORDINAX_REQUIRE_INTEROP_TESTS": "1"},
     )
