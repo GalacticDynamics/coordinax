@@ -798,8 +798,10 @@ def prolong_slot(
 
     Validates that the lower jet slots are available (the base point, as
     ``at`` or ``at_jet[0]``, and slots 1..m-1 via ``at_jet``), assembles the
-    jet, and returns the transformed slot. Shared by the generic tangent rule and by
-    operator fast paths that fall back to the generic prolongation.
+    jet, and returns the transformed slot.
+
+    Shared by the generic tangent rule and the operator fast paths that fall
+    back to it.
     """
     jet = _slot_jet(op, tau, x, m, at=at, at_jet=at_jet)
     out = cast("JetDict", cxfmapi.act_jet(op, tau, jet, chart, usys=usys))
