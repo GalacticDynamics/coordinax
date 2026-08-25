@@ -131,15 +131,24 @@ jobs:
 
   # These tests spawn their own interpreter, which has to cold-import the whole
   # JAX stack. Doing that beside xdist workers cold-importing the same stack
-  # starved the child until the 600s timeout fired, so this gets a runner to
-  # itself rather than a serial step inside a matrix job. One job, not three:
-  # the property under test is JAX's, not the interpreter's or the OS's.
+  # starved the child until it timed out, so they get a runner to themselves
+  # rather than a serial step inside a matrix job.
+  #
+  # Every supported Python, not just the edge one: the interop test guards
+  # registration across import orders, which is a property of the interpreter
+  # and its import machinery, so a single version would not cover it. The job
+  # runs in well under a minute and the versions run in parallel.
+  #
   # `-n0` after nox's own `-n logical` wins, so the child runs alone; going
   # through nox rather than bare pytest keeps `--exclude-package` applied.
   tests_subprocess:
-    name: Subprocess-heavy tests
+    name: Subprocess-heavy tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
     needs: [prepare_test_matrix]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(needs.prepare_test_matrix.outputs.python-all) }}
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -147,7 +156,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v6
         with:
-          python-version: ${{ fromJSON(needs.prepare_test_matrix.outputs.python-edge)[0] }}
+          python-version: ${{ matrix.python-version }}
 
       - name: Install
         run: uv sync --no-default-groups --group nox --group test --locked
