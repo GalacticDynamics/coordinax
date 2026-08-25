@@ -163,7 +163,7 @@ class TestPhysics:
         assert jnp.allclose(u.ustrip("m/s", out_v["x"]), 1.0 + 9.8 * 2.0)
         assert jnp.allclose(u.ustrip("m/s", out_v["y"]), 2.0)
 
-        out_a = cxfm.act(op, tau, a, cxc.cart3d, cxr.coord_acc, at=at, at_vel=v)
+        out_a = cxfm.act(op, tau, a, cxc.cart3d, cxr.coord_acc, at_jet={0: at, 1: v})
         assert jnp.allclose(u.ustrip("m/s2", out_a["x"]), 9.8)
 
     def test_rotating_frame_velocity(self):
@@ -182,7 +182,7 @@ class TestPhysics:
         op = rot_z_op()
         tau = u.Q(0.0, "s")
         at = q3(1.0, 0.0, 0.0, "m")
-        at_vel = q3(0.0, 1.0, 0.0, "m/s")
+        vel = q3(0.0, 1.0, 0.0, "m/s")
         a = q3(0.0, 0.0, 0.0, "m/s2")
         out = cxfm.act(
             op,
@@ -191,8 +191,7 @@ class TestPhysics:
             cxc.cart3d,
             cxr.tangent_geom,
             cxr.coord_acc,
-            at=at,
-            at_vel=at_vel,
+            at_jet={0: at, 1: vel},
         )
         # 2*Omega x v = 2 * (z-hat x y-hat) = -2 x-hat; ddR x = -x-hat
         assert jnp.allclose(u.ustrip("m/s2", out["x"]), -3.0, atol=1e-6)
@@ -256,7 +255,7 @@ class TestFastPathEqualsGeneric:
         out_gen = cxfm.act_jet(op, tq, jet, cxc.cart3d)
         out_v = cxfm.act(op, tq, jet[1], cxc.cart3d, cxr.coord_vel, at=jet[0])
         out_a = cxfm.act(
-            op, tq, jet[2], cxc.cart3d, cxr.coord_acc, at=jet[0], at_vel=jet[1]
+            op, tq, jet[2], cxc.cart3d, cxr.coord_acc, at_jet={0: jet[0], 1: jet[1]}
         )
         assert allclose_cdict(out_v, out_gen[1], "km/s", atol=1e-6)
         assert allclose_cdict(out_a, out_gen[2], "km/s2", atol=1e-6)
@@ -487,11 +486,11 @@ class TestErrors:
         with pytest.raises(TypeError, match="requires the base point"):
             cxfm.act(op, u.Q(1.0, "s"), v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel)
 
-    def test_td_rotate_acc_requires_at_vel(self):
+    def test_td_rotate_acc_requires_slot_one(self):
         op = rot_z_op()
         a = q3(1.0, 0.0, 0.0, "m/s2")
         at = q3(1.0, 0.0, 0.0, "m")
-        with pytest.raises(TypeError, match="at_vel"):
+        with pytest.raises(TypeError, match=r"slot\(s\) \[1\] are missing"):
             cxfm.act(
                 op, u.Q(1.0, "s"), a, cxc.cart3d, cxr.tangent_geom, cxr.coord_acc, at=at
             )
@@ -963,7 +962,7 @@ class TestNonCartesianOpChart:
         with pytest.raises(TypeError, match="requires the base point"):
             cxfm.act(boost, tau, a, cxc.sph3d, cxr.coord_acc, usys=usys)
         fast = cxfm.act(
-            boost, tau, a, cxc.sph3d, cxr.coord_acc, at=SPH_AT, at_vel=v, usys=usys
+            boost, tau, a, cxc.sph3d, cxr.coord_acc, at_jet={0: SPH_AT, 1: v}, usys=usys
         )
         td = cxfm.TimeDep(cxfm.builders.UniformTranslation(dv, chart=cxc.cart3d))
         gen = prolong_jet(td, tau, {0: SPH_AT, 1: v, 2: a}, cxc.sph3d, usys=usys)

@@ -94,30 +94,19 @@ _MSG_AT_REQUIRED = (
     "via the keyword argument 'at' (a CDict in the same chart), or use a "
     "coordinax.Coordinate bundle which supplies it automatically."
 )
-_MSG_AT_VEL_REQUIRED = (
-    "act({op}, ...) on order-{m} tangent data with a time-dependent "
-    "transform requires the lower-order jet slots; pass 'at_vel' (the "
-    "velocity at the base point) or use a coordinax.Coordinate bundle."
-)
-# Distinct from `_MSG_AT_REQUIRED` / `_MSG_AT_VEL_REQUIRED`: those are shared
-# with `pushforward` and `tangent_map`, which take no `at_jet`, so naming it
-# there would send the reader after a keyword that does not exist.
+# Distinct from `_MSG_AT_REQUIRED`: that one is shared with `pushforward` and
+# `tangent_map`, which take no `at_jet`, so naming it there would send the
+# reader after a keyword that does not exist.
 _MSG_SLOT0_REQUIRED = (
     "act({op}, ...) on order-{m} tangent data requires the base point: pass it "
     "as 'at' (a CDict in the same chart) or as slot 0 of 'at_jet', or use a "
     "coordinax.Coordinate bundle which supplies it automatically."
 )
-_MSG_SLOT1_REQUIRED = (
-    "act({op}, ...) on order-{m} tangent data with a time-dependent transform "
-    "requires the lower-order jet slots; pass the velocity at the base point "
-    "as 'at_vel' or as slot 1 of 'at_jet', or use a coordinax.Coordinate "
-    "bundle."
-)
 _MSG_AT_JET_REQUIRED = (
     "act({op}, ...) on order-{m} tangent data requires jet slots 0..{last}; "
     "slot(s) {missing} are missing. Pass them as 'at_jet' (a dict keyed by "
-    "slot order), or use a coordinax.Coordinate bundle. 'at' and 'at_vel' are "
-    "shorthand for slots 0 and 1 and cannot reach higher slots."
+    "slot order), or use a coordinax.Coordinate bundle. 'at' is shorthand for "
+    "slot 0 and cannot reach higher slots."
 )
 _MSG_AT_JET_CONFLICT = (
     "act({op}, ...): jet slot {k} was given twice, once as {alias!r} and once "
@@ -652,7 +641,6 @@ def act(
     /,
     *,
     at: CDict | None = None,
-    at_vel: CDict | None = None,
     at_jet: AnchorJet | None = None,
     usys: OptUSys = None,
     **kw: Any,
@@ -664,10 +652,10 @@ def act(
     - Under a time-dependent transform, order-$m$ data ($m \geq 1$) transforms
       by the $m$-th prolongation, which requires jet slots $0 \ldots m-1$.
 
-    Supply those slots with ``at_jet``, a dict keyed by slot order. ``at`` and
-    ``at_vel`` are shorthand for slots 0 and 1 and cover $m \leq 2$; beyond
-    that -- an order-3 kind needs slot 2 -- ``at_jet`` is the only spelling
-    that reaches. Giving one slot both ways raises rather than picking one.
+    Supply those slots with ``at_jet``, a dict keyed by slot order. ``at`` is
+    shorthand for slot 0, which it shares with ``pushforward``; every higher
+    slot is ``at_jet``'s alone. Giving slot 0 both ways raises rather than
+    picking one.
 
     Examples
     --------
@@ -705,9 +693,7 @@ def act(
             "CDict", cxfmapi.pushforward(op, tau, x, chart, rep, at=at, usys=usys)
         )
 
-    return prolong_slot(
-        op, tau, x, chart, m, at=at, at_vel=at_vel, at_jet=at_jet, usys=usys
-    )
+    return prolong_slot(op, tau, x, chart, m, at=at, at_jet=at_jet, usys=usys)
 
 
 def _live_slots(at_jet: AnchorJet | None, /) -> JetDict:
@@ -757,7 +743,6 @@ def _slot_jet(
     /,
     *,
     at: CDict | None,
-    at_vel: CDict | None,
     at_jet: AnchorJet | None = None,
 ) -> JetDict:
     """Validate the lower jet slots and assemble the jet for an order-``m`` slot.
@@ -770,23 +755,19 @@ def _slot_jet(
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED.format(op=type(op).__name__))
 
-    # `at`/`at_vel` are sugar for slots 0 and 1; `at_jet` is the general form,
-    # and the only way to reach slots >= 2. Missing-slot checks come *after*
-    # the merge, so supplying slot 0 through `at_jet` alone is enough.
+    # `at` is sugar for slot 0; `at_jet` is the general form, and the only way
+    # to reach slots >= 1. The missing-slot checks come *after* the merge, so
+    # supplying slot 0 through `at_jet` alone is enough.
     slots: JetDict = _live_slots(at_jet)
-    for k, (alias, value) in enumerate((("at", at), ("at_vel", at_vel))):
-        if value is None:
-            continue
-        if k in slots:
+    if at is not None:
+        if 0 in slots:
             raise TypeError(
-                _MSG_AT_JET_CONFLICT.format(op=type(op).__name__, k=k, alias=alias)
+                _MSG_AT_JET_CONFLICT.format(op=type(op).__name__, k=0, alias="at")
             )
-        slots[k] = value
+        slots[0] = at
 
     if 0 not in slots:
         raise TypeError(_MSG_SLOT0_REQUIRED.format(op=type(op).__name__, m=m))
-    if m >= 2 and 1 not in slots:
-        raise TypeError(_MSG_SLOT1_REQUIRED.format(op=type(op).__name__, m=m))
 
     missing = [k for k in range(1, m) if k not in slots]
     if missing:
@@ -810,18 +791,19 @@ def prolong_slot(
     /,
     *,
     at: CDict | None,
-    at_vel: CDict | None,
     usys: OptUSys,
     at_jet: AnchorJet | None = None,
 ) -> CDict:
     """Apply the m-th prolongation to a single order-``m`` slot.
 
-    Validates that the lower jet slots are available (the base point ``at``
-    and, for ``m == 2``, the velocity ``at_vel``), assembles the jet, and
-    returns the transformed slot. Shared by the generic tangent rule and by
-    operator fast paths that fall back to the generic prolongation.
+    Validates that the lower jet slots are available (the base point, as
+    ``at`` or ``at_jet[0]``, and slots 1..m-1 via ``at_jet``), assembles the
+    jet, and returns the transformed slot.
+
+    Shared by the generic tangent rule and the operator fast paths that fall
+    back to it.
     """
-    jet = _slot_jet(op, tau, x, m, at=at, at_vel=at_vel, at_jet=at_jet)
+    jet = _slot_jet(op, tau, x, m, at=at, at_jet=at_jet)
     out = cast("JetDict", cxfmapi.act_jet(op, tau, jet, chart, usys=usys))
     return out[m]
 

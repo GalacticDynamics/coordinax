@@ -1,6 +1,6 @@
 """`Composed`'s tangent `act` is the `act_jet` fold (#536, second half).
 
-`Composed` used to hand-roll a shadow 2-jet: it threaded `at`/`at_vel` through
+`Composed` used to hand-roll a shadow 2-jet: it threaded two named anchors through
 the per-sub-op `act` fold, advancing each anchor after every step (velocity
 first, since it needs the old base point). That duplicated the `act_jet` fold
 sitting in the same module, and only one of the two generalised -- the shadow
@@ -57,21 +57,18 @@ def _x(cdict: dict) -> float:
     return float(u.ustrip("m/s2", cdict["x"]))
 
 
-def test_at_jet_matches_the_sugar_through_a_pipeline() -> None:
-    """The regression: `at_jet` used to skip the anchor advance and give -1."""
-    pipe = _pipe()
-    via_sugar = cxfm.act(pipe, _TAU, _ACC, cxc.cart3d, _ACC_REP, at=_AT, at_vel=_VEL)
-    via_jet = cxfm.act(pipe, _TAU, _ACC, cxc.cart3d, _ACC_REP, at_jet={0: _AT, 1: _VEL})
-    assert _x(via_sugar) == pytest.approx(_x(via_jet))
+def test_the_anchors_advance_through_the_pipeline() -> None:
+    """The regression: `at_jet` used to skip the anchor advance and give -1.
 
-
-def test_both_spellings_match_the_act_jet_fold() -> None:
-    """`act_jet` on the full jet is the reference: -omega^2 * 11 m."""
+    `act_jet` on the full jet is the reference: -omega^2 * 11 m, the rotation
+    acting at the *translated* base point. Both remaining spellings of slot 0
+    -- `at=` and `at_jet[0]` -- have to land there.
+    """
     pipe = _pipe()
     reference = cxfm.act_jet(pipe, _TAU, {0: _AT, 1: _VEL, 2: _ACC}, cxc.cart3d)[2]
     assert _x(reference) == pytest.approx(-11.0)
 
-    for kw in ({"at": _AT, "at_vel": _VEL}, {"at_jet": {0: _AT, 1: _VEL}}):
+    for kw in ({"at": _AT, "at_jet": {1: _VEL}}, {"at_jet": {0: _AT, 1: _VEL}}):
         out = cxfm.act(pipe, _TAU, _ACC, cxc.cart3d, _ACC_REP, **kw)
         assert _x(out) == pytest.approx(-11.0)
 
@@ -165,7 +162,7 @@ def test_the_coordinate_bundle_route_still_agrees() -> None:
 def test_at_jet_slots_accept_point_and_tangent_bundles() -> None:
     """`at=` took a `Point`; `at_jet={0: Point}` has to as well.
 
-    The public `Tangent` wrapper unwrapped (and chart-checked) `at`/`at_vel`
+    The public `Tangent` wrapper unwrapped (and chart-checked) `at`
     only, so a `Point` in an `at_jet` slot reached the engine as a vector
     object and died on a component mismatch it could not explain.
     """
@@ -227,7 +224,7 @@ def test_a_none_slot_reads_as_not_given() -> None:
 def test_a_none_slot_reads_as_not_given_on_the_prolongation_path() -> None:
     """`_slot_jet`: the missing-slot error names the slot that came in `None`."""
     op = cxfm.TimeDep(cxfm.builders.RotationAboutAxis(u.Q(1.0, "rad/s"), axis=_ZHAT))
-    with pytest.raises(TypeError, match=r"'at_vel'.*or as slot 1 of 'at_jet'"):
+    with pytest.raises(TypeError, match=r"slot\(s\) \[1\] are missing"):
         cxfm.act(op, _TAU, _ACC, cxc.cart3d, _ACC_REP, at_jet={0: _AT, 1: None})
 
 
