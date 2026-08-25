@@ -47,6 +47,15 @@ def test_float64_offered_iff_x64() -> None:
 #: Draws `charts()` in a fresh interpreter, printing the count of hard errors.
 #: Out-of-process: the x64 setting is read once, at JAX import.
 #:
+#: The subprocess is load-bearing, not incidental -- do not replace it with
+#: `jax.config.update("jax_enable_x64", False)` in-process. That toggle does
+#: change `jnp.empty(0, dtype=float64).dtype`, so an in-process version looks
+#: like it works; but `SCALAR_DTYPES` is built from `xps.scalar_dtypes()` at
+#: import, when x64 was still on, so the float64 draws this guards never
+#: appear. Verified by deleting `honoured_dtypes` from `strategy.py` and
+#: re-running: the subprocess catches the regression, the in-process form
+#: reports 0 and passes.
+#:
 #: This is the one place `deadline=None` is still written by hand. The
 #: subprocess runs `python -c`, which never loads the root ``conftest.py``, so
 #: the profile registered there -- the reason no other test needs it -- does
@@ -102,6 +111,18 @@ print("\\n".join(bad[:3]))
 _X32_TIMEOUT_S = 600
 
 
+def _run_x32() -> "subprocess.CompletedProcess[str]":
+    """Draw `charts()` in a fresh x32 interpreter."""
+    return subprocess.run(  # noqa: S603  # fixed literal script, this interpreter
+        [sys.executable, "-c", _X32_SCRIPT],
+        env={**os.environ, "JAX_ENABLE_X64": "0"},
+        capture_output=True,
+        text=True,
+        timeout=_X32_TIMEOUT_S,
+        check=False,
+    )
+
+
 def test_charts_draws_without_x64() -> None:
     """``charts()`` must not raise `InvalidArgument` when x64 is off.
 
@@ -110,44 +131,47 @@ def test_charts_draws_without_x64() -> None:
     """
     started = time.monotonic()
     try:
-        proc = subprocess.run(  # noqa: S603  # fixed literal script, this interpreter
-            [sys.executable, "-c", _X32_SCRIPT],
-            env={**os.environ, "JAX_ENABLE_X64": "0"},
-            capture_output=True,
-            text=True,
-            timeout=_X32_TIMEOUT_S,
-            check=False,
-        )
-    except subprocess.TimeoutExpired as exc:  # pragma: no cover  - CI-only flake
-        # `subprocess.run` raises before the assert below, so a timeout used to
-        # surface as a bare `TimeoutExpired` carrying a 600-line repr of the
-        # script and nothing about what the child was doing. Re-raise as a
-        # failure that says how far it got.
-        out = (
-            (exc.stdout or b"").decode(errors="replace")
-            if isinstance(exc.stdout, bytes)
-            else (exc.stdout or "")
-        )
-        err = (
-            (exc.stderr or b"").decode(errors="replace")
-            if isinstance(exc.stderr, bytes)
-            else (exc.stderr or "")
-        )
-        stage = (
-            "while drawing charts()"
-            if "imported" in err
-            else "before importing jax/coordinaxs"
-        )
-        msg = (
-            f"the x32 subprocess exceeded {_X32_TIMEOUT_S}s, {stage}.\n"
-            f"It costs ~3.4s idle and ~4.4s with every core saturated, so a "
-            f"timeout here is a stall, not slow work -- see the note above "
-            f"`_X32_TIMEOUT_S` for what has already been ruled out.\n"
-            f"elapsed={time.monotonic() - started:.1f}s\n"
-            f"child stdout: {out[-1000:]!r}\n"
-            f"child stderr: {err[-2000:]!r}"
-        )
-        raise AssertionError(msg) from exc
+        proc = _run_x32()
+    except subprocess.TimeoutExpired:  # pragma: no cover  - CI-only flake
+        # One retry, because the observed failure is starvation rather than a
+        # hang: the child produced *no* output on either stream in 600s, having
+        # stalled before finishing imports -- work that costs ~20s cold on an
+        # idle machine. A suite that has since drained is the cheapest way to
+        # tell a starved runner from a genuinely stuck child, and it keeps the
+        # guard, which skipping or `-m slow` would not (no CI job runs slow).
+        started = time.monotonic()
+        try:
+            proc = _run_x32()
+        except subprocess.TimeoutExpired as exc:
+            # `subprocess.run` raises before the assert below, so a timeout used to
+            # surface as a bare `TimeoutExpired` carrying a 600-line repr of the
+            # script and nothing about what the child was doing. Re-raise as a
+            # failure that says how far it got.
+            out = (
+                (exc.stdout or b"").decode(errors="replace")
+                if isinstance(exc.stdout, bytes)
+                else (exc.stdout or "")
+            )
+            err = (
+                (exc.stderr or b"").decode(errors="replace")
+                if isinstance(exc.stderr, bytes)
+                else (exc.stderr or "")
+            )
+            stage = (
+                "while drawing charts()"
+                if "imported" in err
+                else "before importing jax/coordinaxs"
+            )
+            msg = (
+                f"the x32 subprocess exceeded {_X32_TIMEOUT_S}s, {stage}.\n"
+                f"It costs ~3.4s idle and ~4.4s with every core saturated, so a "
+                f"timeout here is a stall, not slow work -- see the note above "
+                f"`_X32_TIMEOUT_S` for what has already been ruled out.\n"
+                f"elapsed={time.monotonic() - started:.1f}s\n"
+                f"child stdout: {out[-1000:]!r}\n"
+                f"child stderr: {err[-2000:]!r}"
+            )
+            raise AssertionError(msg) from exc
     assert proc.returncode == 0, proc.stderr[-3000:]
     n_bad, _, detail = proc.stdout.strip().partition("\n")
     assert int(n_bad) == 0, f"{n_bad} InvalidArgument draws:\n{detail}"
