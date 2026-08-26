@@ -91,25 +91,12 @@ print("\\n".join(bad[:3]))
 
 #: Wall-clock ceiling for the subprocess below.
 #:
-#: The work costs ~3.4s on an idle machine and ~4.4s with all ten logical cores
-#: saturated, so this is a ~130x margin, not a tight bound. It has nonetheless
-#: been hit on CI -- on several PRs at once, including ones touching neither
-#: `charts()` nor anything it imports, which is what marks it as a flake rather
-#: than a regression.
-#:
-#: Ruled out, each by measurement rather than reasoning:
-#:
-#: - CPU contention from `-n logical` (#788). Saturating every core costs ~30%,
-#:   not the ~130x a timeout would need.
-#: - JAX persistent-compilation-cache locking between workers. No cache is
-#:   configured, so there is no lock to contend for.
-#: - Memory exhaustion. The child peaks at ~290MB and a pytest worker at
-#:   ~297MB, so a four-worker runner sits near 1.5GB against 7GB+ available.
-#:
-#: The cause is still unknown. Raising the ceiling further would only make the
-#: eventual failure slower to arrive, so it stays where it is and the handler
-#: below makes the next occurrence say something useful instead.
-_X32_TIMEOUT_S = 600
+#: The work costs ~3.4s idle. It used to be 600s, sized for a child starved by
+#: xdist workers cold-importing the same JAX stack; that is no longer the
+#: shape of the run, because the test has a serial job to itself and takes
+#: ~22s there end to end. A ceiling far above the real cost only makes a stall
+#: slower to report, so this is sized against the job it actually runs in.
+_X32_TIMEOUT_S = 120
 
 
 #: Environment for the child, beyond turning x64 off.
