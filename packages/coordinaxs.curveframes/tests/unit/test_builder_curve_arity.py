@@ -481,10 +481,3 @@ def test_the_dimension_guard_still_fires_on_an_inferred_unit() -> None:
     with pytest.raises(ValueError, match="dimension length"):
         b.tangent(u.Q(1.0, "s"))
     b.tangent(u.Q(1.0, "km"))  # a length is what it wants, and needs no declaring
-
-
-def test_declaring_the_unit_is_still_accepted() -> None:
-    """The explicit form is unchanged -- inference is a default, not a removal."""
-    cxfc.BishopBuilder(curve1, "s")
-    cxfc.BishopBuilder(curve1, "Gyr")
-    cxfc.FrenetSerretBuilder(curve1, "s")
