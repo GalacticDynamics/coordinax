@@ -2,12 +2,16 @@
 
 __all__ = ("polar_range", "strictly_positive", "leq", "geq")
 
+from typing import Any
+
 import equinox as eqx
 import jax
 
 import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
+
+from coordinax._src.exceptions import ManifoldMismatchError
 
 _0d = u.Angle(jnp.array(0), "rad")
 _pid = u.Angle(jnp.array(180), "deg")
@@ -141,3 +145,54 @@ def geq(
     name = f" {name}" if name else name
     msg = f"The input{name} must be greater than or equal to {comp_name}."
     return eqx.error_if(x, u.ustrip("", jnp.any(x < min_val)), msg)
+
+
+def check_manifolds_match_charts(
+    from_M: Any, from_chart: Any, to_M: Any, to_chart: Any, /
+) -> None:
+    """Refuse a `pt_map` whose manifolds are not its charts' own.
+
+    The rules take the manifolds explicitly as well as the charts. Naming one
+    that is not the chart's own -- or asking across two manifolds, which no
+    rule implements -- is refused here rather than by a bare ``assert``, which
+    disappears under ``python -O``.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinax._src.charts.checks import check_manifolds_match_charts
+
+    >>> check_manifolds_match_charts(cxm.R3, cxc.cart3d, cxm.R3, cxc.sph3d)
+
+    >>> try:
+    ...     check_manifolds_match_charts(cxm.R3, cxc.cart3d, cxm.R2, cxc.sph3d)
+    ... except cxc.ManifoldMismatchError as e:
+    ...     print(e)
+    to_M Rn(2) is not to_chart's manifold Rn(3)
+
+    """
+    check_manifold_matches_chart(from_M, from_chart, "from_M")
+    check_manifold_matches_chart(to_M, to_chart, "to_M")
+
+
+def check_manifold_matches_chart(M: Any, chart: Any, label: str, /) -> None:
+    """Refuse one manifold argument that is not its chart's own.
+
+    The single-sided form, for the rules that take both manifolds but only use
+    one -- `coordinaxs.curveframes` has two, each `del`-ing the other.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinax._src.charts.checks import check_manifold_matches_chart
+
+    >>> check_manifold_matches_chart(cxm.R3, cxc.sph3d, "to_M")
+
+    >>> try:
+    ...     check_manifold_matches_chart(cxm.R2, cxc.sph3d, "to_M")
+    ... except cxc.ManifoldMismatchError as e:
+    ...     print(e)
+    to_M Rn(2) is not to_chart's manifold Rn(3)
+
+    """
+    if M != chart.M:
+        msg = f"{label} {M} is not {label.replace('_M', '_chart')}'s manifold {chart.M}"
+        raise ManifoldMismatchError(msg)

@@ -21,6 +21,7 @@ from .chart import (
 )
 from .manifold import Sn
 from coordinax._src.base import AbstractChart
+from coordinax._src.charts.checks import check_manifolds_match_charts
 from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.custom_types import OptUSys
 from coordinax._src.utils import uconvert_to_rad
@@ -75,8 +76,7 @@ def pt_map(
 
     """
     del usys  # unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     return canonical_containers(p, to_chart)
 
@@ -113,8 +113,7 @@ def pt_map(
     ['phi', 'theta']
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     canon = SphericalTwoSphere(M=to_M)
     p_canon = cxcapi.pt_map(p, from_M, from_chart, to_M, canon, usys=usys)
@@ -155,8 +154,7 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = p["theta"]
     lat = u.Q(90, "deg") - lat if is_any_quantity(lat) else jnp.pi / 2 - lat
@@ -188,8 +186,7 @@ def pt_map(
 
     """
     del usys
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     theta = p["lat"]
     theta = u.Q(90, "deg") - theta if is_any_quantity(theta) else jnp.pi / 2 - theta
@@ -230,8 +227,7 @@ def pt_map(
     True
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = (
         u.Q(90, "deg") if is_any_quantity(p["theta"]) else jnp.pi / 2
@@ -264,8 +260,7 @@ def pt_map(
     {'theta': Angle(90., 'deg'), 'phi': Angle(45., 'deg')}
 
     """
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = uconvert_to_rad(p["lat"], usys)
     theta = (u.Q(90, "deg") if is_any_quantity(p["lat"]) else jnp.pi / 2) - lat
@@ -302,8 +297,7 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     return canonical_containers({"theta": p["phi"], "phi": p["theta"]}, to_chart)
 
 
@@ -332,7 +326,6 @@ def pt_map(
 
     """
     del usys  # Unused
-    assert from_M == from_chart.M  # noqa: S101
-    assert to_M == to_chart.M  # noqa: S101
+    check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     return canonical_containers({"theta": p["phi"], "phi": p["theta"]}, to_chart)
