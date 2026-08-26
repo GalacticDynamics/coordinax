@@ -176,6 +176,74 @@ def test(s: nox.Session, /) -> None:
     # s.notify("pytest_benchmark", posargs=s.posargs)
 
 
+#: Where `test_oldest` builds its downgraded environment. Kept out of the
+#: project's own `.venv`, which every other session and a developer's shell
+#: share: resolving the oldest dependencies into it would silently downgrade
+#: the environment they are all using.
+_OLDEST_ENV = {
+    "UV_PROJECT_ENVIRONMENT": str(DIR / ".nox" / "oldest"),
+    # As in `test`: with the workspace extra installed, a missing interop
+    # package is a hard error rather than a silent skip.
+    "COORDINAX_REQUIRE_INTEROP_TESTS": "1",
+}
+
+
+@nox.session(venv_backend="none", default=False)
+def test_oldest(s: nox.Session, /) -> None:
+    """Run the tests against the oldest supported direct dependencies.
+
+    `uv run --resolution lowest-direct` resolves as it runs, so unlike `test`
+    there is no environment for nox to build up front -- hence no venv backend.
+
+    Selection mirrors the `test` session because it has to: these tests spawn
+    children that cold-import the whole JAX stack, and beside xdist workers
+    importing the same stack the children starve. CI used to call pytest
+    directly here and so inherited none of that.
+    """
+    uv = [
+        "uv",
+        "run",
+        "--group=test-all",
+        "--extra=workspace",
+        "--resolution=lowest-direct",
+        "pytest",
+    ]
+    # As in `test`: xdist breaks --pdb/--trace, so drop it when either is asked
+    # for rather than making the caller also pass `-n0`.
+    debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in s.posargs)
+    xdist_args = [] if debugging else ["-n", "logical", "--dist=loadfile"]
+
+    # Resolving downwards rewrites `uv.lock`, which matters here in a way it
+    # never did in CI, where the checkout is thrown away. Do not "fix" that
+    # with `--frozen`: it leaves the lock alone by declining to re-resolve at
+    # all, so the session installs the current pins and passes while testing
+    # nothing. Measured: with `--frozen`, unxt 2.0.3 and jax 0.10.0; without
+    # it, unxt 2.0.2 and jax 0.7.2, which is the floor this session guards.
+    lockfile = DIR / "uv.lock"
+    saved = lockfile.read_bytes()
+    try:
+        # First and alone: these spawn children that cold-import the whole JAX
+        # stack, which is what starves them beside xdist workers importing the
+        # same stack. Running them before the parallel pass keeps them off a
+        # busy machine just as running them after would, and it lets the pass
+        # below append to their coverage rather than the other way round.
+        s.run(
+            *uv, "-msubprocess_heavy", "-n0", *s.posargs, env=_OLDEST_ENV, external=True
+        )
+        # `--cov-append`, so the report the caller asked for covers both runs.
+        s.run(
+            *uv,
+            *xdist_args,
+            "-mnot subprocess_heavy",
+            "--cov-append",
+            *s.posargs,
+            env=_OLDEST_ENV,
+            external=True,
+        )
+    finally:
+        lockfile.write_bytes(saved)
+
+
 @session(uv_groups=["test"], uv_extras=["workspace"], reuse_venv=True)
 @nox.parametrize("package", list(PackageEnum))
 def pytest(s: nox.Session, /, package: PackageEnum) -> None:
