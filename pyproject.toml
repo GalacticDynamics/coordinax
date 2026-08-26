@@ -318,6 +318,13 @@ filterwarnings = [
   # subclasses) so the filter loads even where pyparsing is not installed.
   "ignore:'\\w+' deprecated - use '\\w+':DeprecationWarning:matplotlib\\..*",
 ]
+# Dump every thread's traceback for any test still running after 5 minutes,
+# naming the file, line and test, then let the run continue. CI has repeatedly
+# lost ubuntu runners to a stall that goes silent at 99% and produces no
+# output at all, so there has been nothing to act on; the slowest legitimate
+# test is ~80s, so this can only fire on a genuine stall. Works under xdist:
+# the stuck worker dumps, the others carry on.
+faulthandler_timeout = 300
 log_level = "INFO"
 markers = [
   "network: marks tests that require a network connection (deselect with '-m not network')",
