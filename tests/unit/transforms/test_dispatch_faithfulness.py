@@ -38,6 +38,21 @@ def _point():
     return {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
 
 
+def _assert_faithful(fn):
+    """Assert `fn`'s resolver is faithful, and that it is not vacuously so.
+
+    Resolvers populate on first call: before one, `methods` is empty and
+    `is_faithful` is trivially `True`. Each test below therefore exercises its
+    function once, and the emptiness check is what makes that call load-bearing
+    -- rename the function or drop the call and the test starts passing while
+    verifying nothing. One call is enough: it registers every method, so extra
+    calls widen nothing.
+    """
+    resolver = fn._resolver
+    assert resolver.methods, "resolver is empty: the call above no longer populates it"
+    assert resolver.is_faithful
+
+
 def test_jax_array_and_arraylike_are_faithful():
     # `ArrayLike` here is `jaxtyping.ArrayLike` — the exact type the hot-path
     # dispatch signatures annotate with (e.g. register_apply / translate) — so
@@ -55,24 +70,24 @@ def test_act_dispatch_is_faithful():
     cxfm.act(op, None, _point())
     cxfm.act(op, None, u.Q([1.0, 0.0, 0.0], "km"))
     cxfm.act(op, None, jnp.array([1.0, 0.0, 0.0]), usys=u.unitsystems.si)
-    assert cxfm.act._resolver.is_faithful
+    _assert_faithful(cxfm.act)
 
 
 def test_pushforward_dispatch_is_faithful():
     op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
     v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
     cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel)
-    assert cxfm.pushforward._resolver.is_faithful
+    _assert_faithful(cxfm.pushforward)
 
 
 def test_act_jet_dispatch_is_faithful():
     op = cxfm.Translate.from_([1, 2, 3], "km")
     jet = {0: _point()}
     cxfm.act_jet(op, None, jet, cxc.cart3d)
-    assert cxfm.act_jet._resolver.is_faithful
+    _assert_faithful(cxfm.act_jet)
 
 
 def test_pt_map_dispatch_is_faithful():
     cxc.pt_map(_point(), cxc.cart3d, cxc.sph3d)
     cxc.pt_map(jnp.array([1.0, 0.0, 0.0]), cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
-    assert cxc.pt_map._resolver.is_faithful
+    _assert_faithful(cxc.pt_map)
