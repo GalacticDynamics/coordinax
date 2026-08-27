@@ -24,10 +24,16 @@ SMatrix: TypeAlias = Shaped[Array, " N N"]
 SFactors: TypeAlias = Shaped[Array, " N"]
 
 _MSG_SINGULAR: Final = "Scale matrix must be invertible: factors finite, non-zero."
+
 _MSG_NOT_DIAGONAL: Final = (
     "Scale requires a diagonal matrix -- it scales the axes, and nothing else. "
     "For a general linear map use `Linear`."
 )
+
+
+def _singular(s: Any, /) -> Any:
+    """Whether any factor makes the diagonal non-invertible."""
+    return jnp.any(jnp.isclose(s, 0) | ~jnp.isfinite(s))
 
 
 @final
@@ -103,6 +109,21 @@ class Scale(AbstractLinearTransform):
         S = self._validate_diagonal(self._validate_square(jnp.asarray(S)))
         object.__setattr__(self, "s", jnp.diagonal(S) if S.ndim == 2 else jnp.ravel(S))
 
+    def __check_init__(self) -> None:
+        """Refuse a singular diagonal, whichever constructor built it.
+
+        `_from_diagonal` goes around `__init__` and so around this, which is
+        the point: `inverse` and `_merge` produce factors that are valid by
+        construction, and re-checking them would cost a conditional and two
+        custom-calls apiece for nothing.
+
+        Store the checked value back so the guard survives jit (an unused
+        `error_if` result is dead-code-eliminated under trace).
+        """
+        object.__setattr__(
+            self, "s", eqx.error_if(self.s, _singular(self.s), _MSG_SINGULAR)
+        )
+
     @classmethod
     def _from_diagonal(cls, s: Any, /) -> "Scale":
         """Build directly from factors, skipping the matrix round-trip.
@@ -122,10 +143,10 @@ class Scale(AbstractLinearTransform):
         if s.ndim != 1:
             msg = f"Scale.from_factors requires a vector; got shape={s.shape!r}."
             raise ValueError(msg)
-        # Deferred so it survives jit, as in `Reflect.from_normal`. `inf` is the
-        # quiet failure: 1/inf = 0.0, so `inverse` came back finite and singular.
-        bad = jnp.isclose(s, 0) | ~jnp.isfinite(s)
-        s = eqx.error_if(s, jnp.any(bad), _MSG_SINGULAR)
+        # Checked here rather than by `__check_init__`, which `_from_diagonal`
+        # goes around. `inf` is the quiet failure: 1/inf = 0.0, so `inverse`
+        # came back finite and singular.
+        s = eqx.error_if(s, _singular(s), _MSG_SINGULAR)
         return cls._from_diagonal(s)
 
     @property
@@ -171,7 +192,12 @@ class Scale(AbstractLinearTransform):
         # matrix". Both shapes are the base's to report.
         if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
             return matrix
-        off = matrix - jnp.diag(jnp.diagonal(matrix))
+        # Selected, not subtracted: `matrix - jnp.diag(jnp.diagonal(matrix))`
+        # leaves `nan` where the diagonal holds `inf` or `nan`, and a `nan`
+        # residual is non-zero -- so a genuinely diagonal matrix with a
+        # non-finite factor was refused as non-diagonal, naming the wrong
+        # fault. `where` reads the entries instead of doing arithmetic on them.
+        off = jnp.where(jnp.eye(matrix.shape[0], dtype=bool), 0, matrix)
         return eqx.error_if(matrix, jnp.any(off != 0), _MSG_NOT_DIAGONAL)
 
 
