@@ -1,9 +1,9 @@
 # Codecov scores a commit as soon as it has *some* reports, not all of them.
-# Six uploads reach it per run:
+# Six uploads reach it per run, all from .github/workflows/ci.yml:
 #
-#   tests_linux     one per entry in ci.yml's PYTHON_VERSIONS  (currently 3)
-#   tests_nonlinux  macOS and Windows, on the edge version     (2)
-#   check_oldest    the resolved-oldest-dependency job         (1)
+#   tests_linux     one per entry in that file's PYTHON_VERSIONS  (currently 3)
+#   tests_nonlinux  macOS and Windows, on the edge version         (2)
+#   check_oldest    the resolved-oldest-dependency job             (1)
 #
 # tests_subprocess runs without `--cov` and uploads nothing.
 #
@@ -13,10 +13,10 @@
 # ones, and `codecov/project` failed on a PR whose coverage was fine. Waiting
 # for all six removes the race rather than papering over it with a threshold.
 #
-# ponytail: hardcoded count, coupled to PYTHON_VERSIONS in ci.yml. Adding a
-# version without bumping this brings the early verdict back; removing one
-# leaves Codecov waiting for an upload that never comes. Wire it to the matrix
-# only if that drift actually bites.
+# NOTE: the count below is hardcoded, and coupled to PYTHON_VERSIONS in
+# .github/workflows/ci.yml. Adding a version there without bumping it here
+# brings the early verdict back; removing one leaves Codecov waiting for an
+# upload that never comes. Wire it to the matrix only if that drift bites.
 codecov:
   notify:
     after_n_builds: 6
