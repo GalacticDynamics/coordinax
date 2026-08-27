@@ -677,9 +677,6 @@ class ArcLength(eqx.Module):
         Array([1., 0., 0.], dtype=float64)
 
         """
-        tau_unit = self.tau_unit
-        tau_0 = self.tau_0
-
         # Bind `t` into a one-argument curve for a time-dependent wrapped
         # curve; otherwise use it as-is. See `_two_argument`'s docstring for
         # why this is a static-field branch rather than a per-call one.
@@ -687,15 +684,15 @@ class ArcLength(eqx.Module):
             # Without this the omission surfaces as an `AttributeError` on
             # `None` from inside the ODE, nowhere near the call that caused it.
             raise TypeError(_MSG_MISSING_TIME)
-        curve = self.curve if not self._two_argument else AtTime(self.curve, t)
+        curve = AtTime(self.curve, t) if self._two_argument else self.curve
 
         tau = _tau_of_s(
             curve,
-            tau_0,
+            self.tau_0,
             s,
             self._interp,
             self.s_max,
-            tau_unit=tau_unit,
+            tau_unit=self.tau_unit,
             diffeqsolver=self.diffeqsolver,
         )
         return curve(tau)
@@ -865,19 +862,16 @@ class LagrangianArcLength(eqx.Module):
         Q([1., 0., 0.], 'km')
 
         """
-        tau_unit = self.tau_unit
-        tau_0 = self.tau_0
-
         # Speed is always measured on the fixed slice t0 -- never on the
         # supplied t -- which is what makes this reading Lagrangian.
         curve_t0 = AtTime(self.curve, self.t0)
         tau = _tau_of_s(
             curve_t0,
-            tau_0,
+            self.tau_0,
             s,
             self._interp,
             self.s_max,
-            tau_unit=tau_unit,
+            tau_unit=self.tau_unit,
             diffeqsolver=self.diffeqsolver,
         )
 
