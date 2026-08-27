@@ -212,7 +212,8 @@ def _eval_tau_dense(
     s_max_val = jnp.asarray(s_max.ustrip(s_unit))
 
     margin = _S_MAX_MARGIN * jnp.abs(s_max_val)
-    out_of_domain = (s_val < -margin) | (s_val > s_max_val + margin)
+    # A NaN `s` is False for both out-of-domain tests, so negate in-domain.
+    out_of_domain = ~((s_val >= -margin) & (s_val <= s_max_val + margin))
 
     # No clip: every point of the solved range is real data, so the only
     # thing to do with a genuine overshoot is refuse it.

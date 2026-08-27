@@ -17,6 +17,7 @@ import unxt as u
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import _unnormalisable
 from coordinax.transforms._src import groups
 
 #: Speed of light, used only to convert a velocity into a dimensionless beta.
@@ -30,10 +31,7 @@ _MSG_SUPERLUMINAL = (
 )
 
 
-_MSG_ZERO_DIRECTION = (
-    "LorentzBoost.from_rapidity requires a non-zero `direction`; the zero "
-    "vector has no boost axis to normalise onto."
-)
+_MSG_ZERO_DIRECTION = "LorentzBoost.from_rapidity needs a finite, non-zero `direction`."
 
 
 def _float(x: Any, /) -> Array:
@@ -244,9 +242,9 @@ class LorentzBoost(AbstractLinearTransform):
         """
         d = _float(direction)
         norm = jnp.linalg.norm(d)
-        # A zero direction has no boost axis to normalise onto; dividing would
-        # give `nan` betas that then propagate silently into every matrix entry.
-        norm = eqx.error_if(norm, norm == 0.0, _MSG_ZERO_DIRECTION)
+        # Anything else builds `nan` betas -- reported later by `gamma`'s
+        # subluminal check, which names the wrong cause.
+        norm = eqx.error_if(norm, _unnormalisable(norm), _MSG_ZERO_DIRECTION)
         return cls(jnp.tanh(_float(rapidity)) * (d / norm))
 
     # -----------------------------------------------------
@@ -277,7 +275,8 @@ class LorentzBoost(AbstractLinearTransform):
 
         """
         beta_sq = jnp.sum(self.beta**2)
-        beta_sq = eqx.error_if(beta_sq, beta_sq >= 1.0, _MSG_SUPERLUMINAL)
+        # `~(x < 1)`, not `x >= 1`, for the NaN reason given in `rapidity` below.
+        beta_sq = eqx.error_if(beta_sq, ~(beta_sq < 1.0), _MSG_SUPERLUMINAL)
         return 1.0 / jnp.sqrt(1.0 - beta_sq)
 
     @property
@@ -297,7 +296,7 @@ class LorentzBoost(AbstractLinearTransform):
         # same condition as `gamma`, so every derived quantity reports the same
         # superluminal error rather than one of them leaking a non-finite value.
         speed = self.speed
-        speed = eqx.error_if(speed, speed >= 1.0, _MSG_SUPERLUMINAL)
+        speed = eqx.error_if(speed, ~(speed < 1.0), _MSG_SUPERLUMINAL)
         return jnp.arctanh(speed)
 
     # -----------------------------------------------------

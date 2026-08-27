@@ -159,8 +159,9 @@ def _orthonormalize(v: Any, T0_val: Any) -> Any:
     """
     w = v - jnp.dot(v, T0_val) * T0_val
     norm = jnp.linalg.norm(w)
-    # `<=`, not `<`, so that an all-zero `v` (threshold 0) still raises.
-    w = eqx.error_if(w, norm <= 1e-12 * jnp.linalg.norm(v), _MSG_PARALLEL_NORMAL)
+    # `~(norm > tol)`, not `norm <= tol`: a NaN is False for both, so the `<=`
+    # form returns a NaN triad. Negating `>` keeps an all-zero `v` raising.
+    w = eqx.error_if(w, ~(norm > 1e-12 * jnp.linalg.norm(v)), _MSG_PARALLEL_NORMAL)
     return w / norm
 
 

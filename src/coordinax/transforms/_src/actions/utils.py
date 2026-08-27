@@ -12,6 +12,8 @@ __all__: tuple[str, ...] = (
 from collections.abc import Iterable
 from typing import Any
 
+import jax.numpy as jnp
+
 import coordinax.representations as cxr
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
@@ -69,3 +71,13 @@ def require_matching_keys(
             + (f"; unexpected {extra}" if extra else "")
             + "."
         )
+
+
+def _unnormalisable(norm: Any, /) -> Any:
+    """Whether ``v / norm`` fails to be a unit vector, for ``norm = |v|``.
+
+    True unless the norm is finite and strictly positive, which is exactly the
+    precondition: a norm is NaN iff a component of ``v`` is, ``inf`` iff a
+    component is, and ``0`` iff ``v`` is.
+    """
+    return ~((norm > 0) & jnp.isfinite(norm))

@@ -22,11 +22,12 @@ def _to_np(x: object, unit: str) -> np.ndarray:
     return np.asarray(u.ustrip(unit, x), dtype=float)
 
 
-def test_scale_from_factors_singular_raises_under_jit() -> None:
-    """A zero scale factor is rejected even under jit (no tracer bool)."""
+@pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
+def test_scale_from_factors_singular_raises_under_jit(bad: float) -> None:
+    """A non-invertible scale factor is rejected, even under jit."""
     build = eqx.filter_jit(cxfm.Scale.from_factors)
     with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
-        jax.block_until_ready(build(jnp.asarray([2.0, 0.0, 4.0])).s)
+        jax.block_until_ready(build(jnp.asarray([2.0, bad, 4.0])).s)
 
 
 def test_scale_from_factors_nonsingular_jits() -> None:

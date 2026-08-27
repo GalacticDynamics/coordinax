@@ -164,6 +164,13 @@ class TestLeq:
         ):
             checks.leq(x, max_q)
 
+    def test_nan_raises(self) -> None:
+        """A NaN is False for ``x <= max``, so the direct form admitted it."""
+        with pytest.raises(
+            (eqx.EquinoxRuntimeError, ValueError), match="must be less than or equal to"
+        ):
+            checks.leq(u.Q(jnp.nan, "m"), u.Q(5, "m"))
+
 
 class TestGeq:
     """Tests for geq (greater than or equal) check."""
@@ -206,3 +213,11 @@ class TestGeq:
             match="must be greater than or equal to",
         ):
             checks.geq(x, min_q)
+
+    def test_nan_raises(self) -> None:
+        """A NaN is False for ``x >= min``, so the direct form admitted it."""
+        with pytest.raises(
+            (eqx.EquinoxRuntimeError, ValueError),
+            match="must be greater than or equal to",
+        ):
+            checks.geq(u.Q(jnp.nan, "m"), u.Q(5, "m"))

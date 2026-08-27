@@ -17,11 +17,12 @@ from unxt import AbstractQuantity as AbcQ
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import _unnormalisable
 from coordinax.transforms._src import groups
 
 HMatrix: TypeAlias = Shaped[Array, " N N"]
 
-_MSG_ZERO_NORMAL: Final = "Reflect.from_normal requires a nonzero normal vector."
+_MSG_ZERO_NORMAL: Final = "Reflect.from_normal needs a finite, nonzero normal."
 
 
 @final
@@ -76,9 +77,9 @@ class Reflect(AbstractLinearTransform):
             raise ValueError(msg)
 
         norm = jnp.linalg.norm(n)
-        # Defer the zero-normal check so it survives jit (a plain `bool` on a
-        # traced value raises TracerBoolConversionError).
-        n = eqx.error_if(n, jnp.allclose(norm, 0), _MSG_ZERO_NORMAL)
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # TracerBoolConversionError). Anything else normalises to a NaN `H`.
+        n = eqx.error_if(n, _unnormalisable(norm), _MSG_ZERO_NORMAL)
 
         n_hat = n / norm
         H = jnp.eye(n.shape[0], dtype=n_hat.dtype) - 2 * jnp.outer(n_hat, n_hat)
