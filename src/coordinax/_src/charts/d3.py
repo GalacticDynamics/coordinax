@@ -37,7 +37,7 @@ from coordinax._src.base import (
     chart_dataclass_decorator,
 )
 from coordinax._src.charts import checks
-from coordinax._src.constants import Deg0, Deg90, Deg180
+from coordinax._src.charts.domains import LATITUDE_ENDPOINTS, POLAR_ENDPOINTS
 from coordinax._src.custom_types import Ang, CDictT, Ds, Ks, Len
 from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
@@ -311,7 +311,7 @@ class LonLatSpherical3D(
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
         if values:
-            checks.polar_range(data["lat"], -Deg90, Deg90)
+            checks.polar_range(data["lat"], *LATITUDE_ENDPOINTS)
 
         return data
 
@@ -363,7 +363,7 @@ class LonCosLatSpherical3D(
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
         if values:
-            checks.polar_range(data["lat"], -Deg90, Deg90)
+            checks.polar_range(data["lat"], *LATITUDE_ENDPOINTS)
 
         return data
 
@@ -417,7 +417,7 @@ class MathSpherical3D(AbstractSpherical3D[MT, MathSphericalKeys, Spherical3DDims
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
         if values:
-            checks.polar_range(data["phi"], Deg0, Deg180)
+            checks.polar_range(data["phi"], *POLAR_ENDPOINTS)
         return data
 
 

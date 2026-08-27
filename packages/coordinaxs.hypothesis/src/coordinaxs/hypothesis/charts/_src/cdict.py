@@ -9,7 +9,7 @@ chart component schemas.
 __all__ = ("cdicts",)
 
 from collections.abc import Mapping
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, cast
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
@@ -342,7 +342,7 @@ def cdicts(
     # Draw shape if it's a strategy
     shape: Shape = draw_if_strategy(draw, shape)
 
-    domains = component_domains(chart)
+    domains = cast("dict[str, Interval]", component_domains(chart))
     data: CDict = {}
 
     for cname, cdim in zip(chart.components, chart.coord_dimensions, strict=True):
