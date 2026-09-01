@@ -163,3 +163,9 @@ Thumbs.db
 *~
 *.swp
 _version.py
+
+# Coverage reports
+coverage.xml
+.coverage
+.coverage.*
+htmlcov/
