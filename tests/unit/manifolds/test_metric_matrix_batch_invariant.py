@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis.extra.numpy import array_shapes
+from zeroth import zeroth
 
 import unxt as u
 
@@ -144,12 +145,12 @@ def test_pullback_metric_batches_like_the_points(manifold, chart, at):
     Bit-exact: batched and unbatched run the same arithmetic per point, so a
     tolerance here would hide exactly the mispairing this guards against.
     """
-    n = 3
+    n_points = len(zeroth(at.values()))
     got = _dense(cxmapi.metric_matrix(manifold, at, chart))
     want = np.stack(
         [
             _dense(cxmapi.metric_matrix(manifold, {k: at[k][i] for k in at}, chart))
-            for i in range(n)
+            for i in range(n_points)
         ]
     )
     assert got.shape == want.shape
