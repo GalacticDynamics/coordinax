@@ -260,9 +260,6 @@ def jac_pt_map(
     (3, 3)
 
     """
-    # Determine whether the input is array-valued or quantity-valued.  If it's
-    # array-valued, we can skip the packing and unit handling and directly
-    # compute the Jacobian as an array.
     at = from_chart.check_data(at, keys=True)
 
     # A chart map is pointwise, so a batch of points is a batch of
@@ -272,11 +269,9 @@ def jac_pt_map(
     # with every off-diagonal block identically zero, and O(N^2) to hold.
     # Map over the leading axes instead.
     #
-    # `jnp.vectorize` would express the same mapping in one call, but it
-    # coerces its inputs with `asarray` and so cannot carry the Quantity
-    # route; measured, the two are within noise. Scalar components take
-    # the `not batch` branch, so the unbatched path is untouched -- the
-    # shape is static, so this costs nothing at trace time.
+    # `jnp.vectorize` maps this in one call but coerces inputs with
+    # `asarray`, so it cannot carry the Quantity route; timings were within
+    # noise. The shape is static, so the scalar path costs nothing here.
     batch = jnp.shape(zeroth(at.values()))
     if batch:
 
@@ -287,6 +282,9 @@ def jac_pt_map(
             one = jax.vmap(one)
         return one(at)
 
+    # Determine whether the input is array-valued or quantity-valued.  If it's
+    # array-valued, we can skip the packing and unit handling and directly
+    # compute the Jacobian as an array.
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)

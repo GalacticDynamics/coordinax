@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis.extra.numpy import array_shapes
+from zeroth import zeroth
 
 import unxt as u
 
@@ -86,3 +87,71 @@ def test_sphere_diagonal_preserves_input_dtype(dtype):
         "phi": u.Q(np.asarray(0.3, dtype=dtype), "rad"),
     }
     assert cxmapi.metric_matrix(cxm.S2, at2, cxc.sph2).diagonal.dtype == dtype
+
+
+# ---------------------------------------------------------------------------
+# The Jacobian-pullback family
+#
+# #591 pinned the analytic diagonal rules above. The other branch -- "all other
+# charts", g = J^T J -- consumes `jac_pt_map`, which #782 changed from
+# differentiating the batch as one function to mapping over its leading axes.
+# Nothing pinned that branch batched, so this does.
+# ---------------------------------------------------------------------------
+
+_PULLBACK_CASES = [
+    pytest.param(
+        cxm.R3,
+        cxc.loncoslat_sph3d,
+        {
+            "lon_coslat": u.Angle([0.4, 1.1, 0.2], "rad"),
+            "lat": u.Angle([0.3, 0.5, 1.0], "rad"),
+            "distance": u.Q([2.0, 3.0, 1.5], "m"),
+        },
+        id="loncoslat_sph3d",
+    ),
+    pytest.param(
+        cxm.Sn(2),
+        cxc.loncoslat_sph2,
+        {
+            "lon_coslat": u.Angle([0.4, 1.1, 0.2], "rad"),
+            "lat": u.Angle([0.3, 0.5, 1.0], "rad"),
+        },
+        id="loncoslat_sph2",
+    ),
+    pytest.param(
+        cxm.R3,
+        cxc.ProlateSpheroidal3D(Delta=u.Q(1.0, "m")),
+        {
+            "mu": u.Q([2.0, 3.0, 1.5], "m2"),
+            "nu": u.Q([0.5, 0.7, 0.2], "m2"),
+            "phi": u.Angle([0.3, 1.0, 2.0], "rad"),
+        },
+        id="prolate_spheroidal",
+    ),
+]
+
+
+def _dense(g):
+    """Return the metric as a plain ``(..., n, n)`` array, whatever its type."""
+    d = g.to_dense() if hasattr(g, "to_dense") else g
+    m = d.matrix if hasattr(d, "matrix") else d
+    return np.asarray(m.value if hasattr(m, "value") else m)
+
+
+@pytest.mark.parametrize(("manifold", "chart", "at"), _PULLBACK_CASES)
+def test_pullback_metric_batches_like_the_points(manifold, chart, at):
+    """A batch of points gives a batch of metrics, element for element.
+
+    Bit-exact: batched and unbatched run the same arithmetic per point, so a
+    tolerance here would hide exactly the mispairing this guards against.
+    """
+    n_points = len(zeroth(at.values()))
+    got = _dense(cxmapi.metric_matrix(manifold, at, chart))
+    want = np.stack(
+        [
+            _dense(cxmapi.metric_matrix(manifold, {k: at[k][i] for k in at}, chart))
+            for i in range(n_points)
+        ]
+    )
+    assert got.shape == want.shape
+    np.testing.assert_allclose(got, want, rtol=0, atol=0)

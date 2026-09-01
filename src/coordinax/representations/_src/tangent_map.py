@@ -148,11 +148,8 @@ def tangent_map(
     if from_chart == to_chart:
         return v
 
-    # Past that point a Jacobian must be evaluated somewhere, so `at` is
-    # not optional. Without this it reaches `jac_pt_map` as `None`, which
-    # resolves to the higher-order rule and returns a *function*; the
-    # failure then surfaces from `_apply_jac` as an unsupported `@`
-    # between a function and an array, naming nothing the caller wrote.
+    # `at=None` here reaches `jac_pt_map`, resolves to the higher-order rule
+    # and comes back a *function* -- hence the unsupported `@` callers saw.
     if at is None:
         msg = _MSG_AT_REQUIRED.format(
             frm=type(from_chart).__name__, to=type(to_chart).__name__
