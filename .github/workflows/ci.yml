@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: matrix.python-version == '3.12' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.1.3
         with:
           name: coverage-report-python
           path: coverage.xml
@@ -269,7 +269,7 @@ jobs:
 
     steps:
       - name: Download coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.1.3
         with:
           name: coverage-report-python
 
