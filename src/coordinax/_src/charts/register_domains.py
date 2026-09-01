@@ -12,7 +12,12 @@ their registrations cannot live here without inverting the dependency.
 
 __all__: tuple[str, ...] = ()
 
+import math
+
+import numpy as np
 import plum
+
+import unxt as u
 
 from .d2 import Polar2D
 from .d3 import (
@@ -20,6 +25,7 @@ from .d3 import (
     LonCosLatSpherical3D,
     LonLatSpherical3D,
     MathSpherical3D,
+    ProlateSpheroidal3D,
     Spherical3D,
 )
 from .domains import AZIMUTH, FREE, LATITUDE, POLAR, RADIAL, Interval
@@ -84,6 +90,50 @@ def component_domains(chart: LonCosLatSpherical3D, /) -> dict[str, Interval]:
     interval cannot express; `lat` is bounded, and core enforces exactly that.
     """
     return {"lon_coslat": FREE, "lat": LATITUDE, "distance": RADIAL}
+
+
+# ---------------------------------------------------------------------------
+# Parameterized
+
+
+@plum.dispatch
+def component_domains(chart: ProlateSpheroidal3D, /) -> dict[str, Interval]:
+    """Bounds set by the focal length: ``mu >= Delta^2``, ``|nu| <= Delta^2``.
+
+    The only chart whose domain depends on its own parameters rather than on
+    its type alone. Dispatch passes the instance, so reading `Delta` here is
+    what makes that expressible -- and it is the same `Delta` that
+    `ProlateSpheroidal3D.check_data` compares against, so there is no second
+    copy of the bound to drift.
+
+    Both bounds are closed, matching what `check_data` enforces; no margin,
+    because none has been measured for the focal ring at ``mu == Delta^2``.
+
+    Unlike every other chart's domain, this one needs a concrete `Delta` and
+    so cannot be read under `jax.jit`. Nothing on the construction path calls
+    it -- `check_data` compares quantities directly, and stays traceable.
+    """
+    # `Delta` is constrained to be positive and scalar, but not to be a length
+    # and not to be of any particular size, so `Delta**2` is not always a
+    # usable bound: seconds give a bound in ``s2`` that no `mu` in ``m2`` can
+    # be compared against, and a `Delta` near the float ceiling squares to
+    # infinity. Neither is declarable, so such a chart declares nothing for
+    # `mu` and `nu` -- the same answer as any other chart with no bound to
+    # state, rather than an unconvertible or infinite one.
+    with np.errstate(over="ignore"):
+        delta_sq = chart.Delta**2
+    unit = str(delta_sq.unit)
+    bound = float(u.ustrip(delta_sq.unit, delta_sq))
+    if not u.is_unit_convertible(delta_sq.unit, u.unit("m2")) or not math.isfinite(
+        bound
+    ):
+        return {"mu": FREE, "nu": FREE, "phi": AZIMUTH}
+
+    return {
+        "mu": Interval(unit, min=bound),
+        "nu": Interval(unit, min=-bound, max=bound),
+        "phi": AZIMUTH,
+    }
 
 
 # ---------------------------------------------------------------------------

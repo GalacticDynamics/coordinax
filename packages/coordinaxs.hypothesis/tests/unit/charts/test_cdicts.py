@@ -2,6 +2,7 @@
 
 import math
 
+import jax.numpy as jnp
 import pytest
 import unxt as u
 from hypothesis import given, settings, strategies as st
@@ -171,3 +172,35 @@ class TestMagnitudeLeavesBoundedComponentsAlone:
         """Theta stays a colatitude even when the length scale is 1e-12 m."""
         theta = float(u.ustrip("rad", p["theta"]))
         assert 0.0 < theta < math.pi
+
+
+class TestDomainsAtAstronomicalScale:
+    """A domain whose unit is far from the drawn one, which f32 cannot span."""
+
+    CHART = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "kpc"))
+
+    @given(p=cxst.cdicts(CHART, dtype=jnp.float32))
+    @settings(max_examples=20)
+    def test_draws_in_a_unit_that_can_hold_the_bound(self, p) -> None:
+        """``mu >= 1 kpc2`` is ``9.5e38 m2``, over float32's ``3.4e38`` ceiling.
+
+        Every area unit this package draws is metre-scale, so the bound
+        survives only in the domain's own unit. Drawing in a unit that cannot
+        represent it would round the bound to infinity and draw nothing.
+        """
+        assert float(u.ustrip("kpc2", p["mu"])) >= 1.0
+
+    @given(p=cxst.cdicts(CHART, dtype=jnp.float32))
+    @settings(max_examples=20)
+    def test_the_drawn_point_is_one_the_chart_accepts(self, p) -> None:
+        """The point of generating from the domain at all."""
+        self.CHART.check_data(p, keys=False, values=True)
+
+    @given(p=cxst.cdicts(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(32.0, "m"))))
+    @settings(max_examples=20)
+    def test_a_floor_above_the_default_cap_is_not_inverted(self, p) -> None:
+        """``Delta = 32 m`` floors `mu` at 1024 m2, over the default cap 1000.
+
+        The domain wins: capping there would ask for ``1024 <= mu <= 1000``.
+        """
+        assert float(u.ustrip("m2", p["mu"])) >= 1024.0

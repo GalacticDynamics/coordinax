@@ -91,3 +91,80 @@ def test_strategies_read_the_core_declaration() -> None:
     from coordinaxs.hypothesis.charts import component_domains as hyp_domains
 
     assert hyp_domains is component_domains
+
+
+def test_prolate_spheroidal_declares_its_focal_bounds() -> None:
+    """The one chart whose domain follows from a parameter, not just a type.
+
+    `check_data` enforces ``mu >= Delta^2`` and ``|nu| <= Delta^2``. A lookup
+    keyed on the class alone cannot say that, so the declaration has to read
+    `Delta` off the instance -- and must track it, not a fixed number.
+    """
+    for delta, bound in ((2.0, 4.0), (3.0, 9.0)):
+        chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(delta, "kpc"))
+        domains = component_domains(chart)
+        assert domains["mu"].bounds_in(u.unit("kpc2")) == (bound, None)
+        assert domains["nu"].bounds_in(u.unit("kpc2")) == (-bound, bound)
+
+
+@pytest.mark.parametrize(("component", "value"), [("mu", 1.0), ("nu", 9.0)])
+def test_prolate_spheroidal_rejects_outside_its_focal_bounds(component, value) -> None:
+    """A value the declaration excludes is refused, as for the fixed domains.
+
+    ``Delta = 2 kpc`` puts both bounds at ``4 kpc2``, so ``mu = 1`` is under
+    its floor and ``nu = 9`` over its ceiling.
+    """
+    chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "kpc"))
+    point = {"mu": u.Q(5.0, "kpc2"), "nu": u.Q(0.1, "kpc2"), "phi": u.Angle(0.1, "rad")}
+    point[component] = u.Q(value, "kpc2")
+    with pytest.raises((eqx.EquinoxRuntimeError, ValueError)):
+        chart.check_data(point, keys=False, values=True)
+
+
+def test_every_enforced_bound_is_declared() -> None:
+    """No chart may enforce a bound its domain does not mention.
+
+    The invariant the module docstring states, checked rather than asserted:
+    enforcement is a *subset* of the declaration. `ProlateSpheroidal3D` broke
+    it -- `check_data` refused values its all-`FREE` domain called legal --
+    and only a per-chart audit like this one catches the next such chart.
+
+    Approximated by construction: a chart that enforces a bound rejects
+    *something*, so a chart whose every component is declared `FREE` must
+    accept every dimensionally-valid point.
+    """
+    unconstrained = [
+        chart
+        for chart in (cxc.cart3d, cxc.cart2d, cxc.cart1d, cxc.cyl3d, cxc.polar2d)
+        if all(iv.unit is None for iv in component_domains(chart).values())
+    ]
+    for chart in unconstrained:
+        point = {
+            k: u.Angle(4.0, "rad") if d == "angle" else u.Q(-7.0, "m")
+            for k, d in zip(chart.components, chart.coord_dimensions, strict=True)
+        }
+        # Values well outside every interval this module declares; a chart
+        # declaring nothing must take them.
+        chart.check_data(point, keys=False, values=True)
+
+
+@pytest.mark.parametrize(
+    ("delta", "reason"),
+    [
+        (u.StaticQuantity(2.0, "s"), "not convertible to the components' area"),
+        (u.StaticQuantity(1e200, "m"), "squares past the float ceiling"),
+    ],
+)
+def test_prolate_spheroidal_declares_nothing_for_an_unusable_delta(
+    delta, reason
+) -> None:
+    """`Delta` is only constrained positive and scalar, so it can be unusable.
+
+    A non-length `Delta` gives a bound in a unit `mu` cannot be compared
+    against, and an enormous one squares to infinity. Neither is a bound, so
+    neither is declared -- the alternative is a domain a caller cannot convert
+    or a generator cannot draw from.
+    """
+    domains = component_domains(cxc.ProlateSpheroidal3D(Delta=delta))
+    assert domains["mu"].unit is None, reason
+    assert domains["nu"].unit is None, reason

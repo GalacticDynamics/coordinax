@@ -23,11 +23,18 @@ no chart, so `.checks` can read its bounds from here without a cycle. It is
 their one declaration: `.checks` enforces them at construction and
 ``coordinaxs.hypothesis`` generates within them, both reading from here.
 
-What core enforces is a subset of what is declared. `POLAR` and `LATITUDE` are
-checked at construction; `AZIMUTH` and `RADIAL` are not -- an azimuth outside
-``[-pi, pi]`` is a legal coordinate on a different sheet, not an error.
-Declaring them anyway is what lets a generator produce points in the chart's
-fundamental domain.
+What core enforces is a subset of what is declared. `POLAR`, `LATITUDE` and
+`ProlateSpheroidal3D`'s focal bounds are checked at construction; `AZIMUTH`
+and `RADIAL` are not -- an azimuth outside ``[-pi, pi]`` is a legal coordinate
+on a different sheet, not an error. Declaring them anyway is what lets a
+generator produce points in the chart's fundamental domain.
+
+Most domains are fixed by the chart's type. `ProlateSpheroidal3D`'s are not:
+they follow from its `Delta`, which is why the lookup takes the chart instance
+and not its class. That is also the one domain that cannot be read under
+`jax.jit`, since a bound here is a `float` and a dynamic `Delta` is a tracer.
+Nothing on the construction path reads a domain -- `.checks` compares
+quantities -- so tracing is unaffected.
 """
 
 __all__ = ("Interval", "component_domains")
@@ -65,6 +72,13 @@ class Interval:
         ``theta > 0`` and is still numerically *at* the pole: the Jacobian
         there is singular to working precision. The margin is the difference
         between mathematically legal and numerically usable.
+
+        It is a conditioning bound, not an epsilon, so it does not vary with
+        dtype: 0.05 rad holds ``1/sin(theta)`` under 20 whatever the
+        precision, and clears the f32 round-off scale near the bound
+        (~2.4e-7 rad) by five orders of magnitude. Sizing it to the dtype
+        would make the *domain* depend on x32 vs x64, which is a property of
+        the chart, not of the run.
 
         It is advisory. Core's construction-time checks admit the closed
         interval -- see `endpoints`, which ignores the margin; the margin is
