@@ -24,7 +24,6 @@ SMatrix: TypeAlias = Shaped[Array, " N N"]
 SFactors: TypeAlias = Shaped[Array, " N"]
 
 _MSG_SINGULAR: Final = "Scale matrix must be invertible: factors finite, non-zero."
-
 _MSG_NOT_DIAGONAL: Final = (
     "Scale requires a diagonal matrix -- it scales the axes, and nothing else. "
     "For a general linear map use `Linear`."
@@ -106,23 +105,13 @@ class Scale(AbstractLinearTransform):
         # The `ndim` branch reads a static shape, so it survives tracing; a
         # non-2D input has no diagonal to take and carries the square error
         # forward in its place.
+        #
+        # The singular check guards the stored value rather than the matrix, so
+        # it survives jit: an `error_if` whose result goes unused is
+        # dead-code-eliminated under trace.
         S = self._validate_diagonal(self._validate_square(jnp.asarray(S)))
-        object.__setattr__(self, "s", jnp.diagonal(S) if S.ndim == 2 else jnp.ravel(S))
-
-    def __check_init__(self) -> None:
-        """Refuse a singular diagonal, whichever constructor built it.
-
-        `_from_diagonal` goes around `__init__` and so around this, which is
-        the point: `inverse` and `_merge` produce factors that are valid by
-        construction, and re-checking them would cost a conditional and two
-        custom-calls apiece for nothing.
-
-        Store the checked value back so the guard survives jit (an unused
-        `error_if` result is dead-code-eliminated under trace).
-        """
-        object.__setattr__(
-            self, "s", eqx.error_if(self.s, _singular(self.s), _MSG_SINGULAR)
-        )
+        s = jnp.diagonal(S) if S.ndim == 2 else jnp.ravel(S)
+        object.__setattr__(self, "s", eqx.error_if(s, _singular(s), _MSG_SINGULAR))
 
     @classmethod
     def _from_diagonal(cls, s: Any, /) -> "Scale":
@@ -131,6 +120,11 @@ class Scale(AbstractLinearTransform):
         The diagonal is what the type stores, so every internal producer of one
         (`from_factors`, `inverse`, `_merge`) would otherwise inflate it to a
         matrix purely for `__init__` to take it apart again.
+
+        Going around `__init__` also goes around its singular check, which is
+        the point: `inverse` and `_merge` produce factors valid by
+        construction, and re-checking costs a conditional and two custom-calls
+        apiece.
         """
         obj = object.__new__(cls)
         object.__setattr__(obj, "s", jnp.asarray(s))
@@ -143,9 +137,8 @@ class Scale(AbstractLinearTransform):
         if s.ndim != 1:
             msg = f"Scale.from_factors requires a vector; got shape={s.shape!r}."
             raise ValueError(msg)
-        # Checked here rather than by `__check_init__`, which `_from_diagonal`
-        # goes around. `inf` is the quiet failure: 1/inf = 0.0, so `inverse`
-        # came back finite and singular.
+        # Its own check: this reaches `_from_diagonal`, not `__init__`. `inf`
+        # is the quiet one -- 1/inf = 0.0, so `inverse` came back singular.
         s = eqx.error_if(s, _singular(s), _MSG_SINGULAR)
         return cls._from_diagonal(s)
 
@@ -192,11 +185,9 @@ class Scale(AbstractLinearTransform):
         # matrix". Both shapes are the base's to report.
         if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
             return matrix
-        # Selected, not subtracted: `matrix - jnp.diag(jnp.diagonal(matrix))`
-        # leaves `nan` where the diagonal holds `inf` or `nan`, and a `nan`
-        # residual is non-zero -- so a genuinely diagonal matrix with a
-        # non-finite factor was refused as non-diagonal, naming the wrong
-        # fault. `where` reads the entries instead of doing arithmetic on them.
+        # Selected, not subtracted: `inf - inf` is `nan` and `nan != 0`, so
+        # subtracting the diagonal refused a genuinely diagonal matrix holding
+        # a non-finite factor, naming the wrong fault.
         off = jnp.where(jnp.eye(matrix.shape[0], dtype=bool), 0, matrix)
         return eqx.error_if(matrix, jnp.any(off != 0), _MSG_NOT_DIAGONAL)
 

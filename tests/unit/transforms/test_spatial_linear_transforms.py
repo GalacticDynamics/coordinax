@@ -42,11 +42,9 @@ def test_scale_matrix_constructor_rejects_a_singular_diagonal(bad: float) -> Non
 
 
 def test_the_singular_check_survives_jit() -> None:
-    """`__check_init__` stores the checked value back, so the guard is not DCE'd.
+    """`error_if`'s result is what gets stored, so the guard is not DCE'd.
 
-    An `error_if` whose result is discarded is dead-code-eliminated under
-    trace: it raises eagerly and vanishes under `jit`. Fails if the
-    `object.__setattr__` goes away.
+    A discarded one raises eagerly and vanishes under `jit`.
     """
     build = eqx.filter_jit(lambda m: cxfm.Scale(m).s)
     with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
@@ -54,7 +52,7 @@ def test_the_singular_check_survives_jit() -> None:
 
 
 def test_the_algebra_paths_are_not_re_checked() -> None:
-    """`inverse` and `_merge` go around `__check_init__`, deliberately.
+    """`inverse` and `_merge` go around `__init__`, deliberately.
 
     A factor `from_factors` would refuse as singular can still be *produced*
     by inverting a large one. Re-checking there would cost a conditional per
