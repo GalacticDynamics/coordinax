@@ -1,17 +1,15 @@
 """What a chart *declares* and what it *enforces* must be the same interval.
 
 `coordinax.charts.component_domains` declares each component's legal interval;
-`check_data` refuses values outside it at construction. Those were separate
-statements of one fact -- core's bounds were written inline at the
-`checks.polar_range` calls, and ``coordinaxs.hypothesis`` declared its own copy
-so its strategies could generate valid points. #772 pinned the two equal with a
-test; the declaration has since moved into core and both sides read it, so what
-is left to check is that the enforcement really uses it.
+`check_data` refuses values outside it at construction. Both must be the same
+numbers, so what is checked here is that the declared bounds are the enforced
+ones -- and, separately, that they are the intervals the geometry calls for.
 
-Drift here is silent in the direction that matters: widen a bound and the
-strategies keep generating the narrower range, so the new values are never
-exercised; narrow one and they generate points core rejects, surfacing as
-unrelated-looking failures in whatever test drew them.
+Drift is silent in the direction that matters, because the declaration also
+drives the ``coordinaxs.hypothesis`` strategies: widen a bound and they keep
+generating the narrower range, so the new values are never exercised; narrow
+one and they generate points core rejects, surfacing as unrelated-looking
+failures in whatever test drew them.
 """
 
 import math
@@ -87,8 +85,8 @@ def test_core_rejects_outside_the_declared_domain(
 def test_strategies_read_the_core_declaration() -> None:
     """``coordinaxs.hypothesis`` re-exports core's table rather than its own.
 
-    The merge is only real while this holds -- a second table in the strategy
-    package would put the drift straight back.
+    One declaration only holds while this does -- a second table in the
+    strategy package would reintroduce the drift.
     """
     from coordinaxs.hypothesis.charts import component_domains as hyp_domains
 

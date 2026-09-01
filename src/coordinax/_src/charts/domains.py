@@ -1,8 +1,11 @@
 """Per-component coordinate domains.
 
-A chart's `coord_dimensions` says what *dimension* each component carries. It
-does not say what values are legal: nothing in ``('length', 'angle', 'angle')``
-records that a spherical radius is positive or that a colatitude stops at pi.
+A chart describes its components in two parts: **dimension belongs in the
+container, topology belongs in the domain.** `coord_dimensions` is the first
+half and says what *dimension* each component carries. It does not say what
+values are legal: nothing in ``('length', 'angle', 'angle')`` records that a
+spherical radius is positive or that a colatitude stops at pi. That is the
+second half, and it is what the intervals here state.
 
 Nor can the gap be closed by looking at component *names*:
 
@@ -16,23 +19,15 @@ dimension cannot distinguish charts that need opposite bounds, so the domains
 are dispatched on the chart *type* -- see `.register_domains`.
 
 This module holds the `Interval` type and the intervals themselves; it imports
-no chart, so `.checks` can read its bounds from here without a cycle.
+no chart, so `.checks` can read its bounds from here without a cycle. It is
+their one declaration: `.checks` enforces them at construction and
+``coordinaxs.hypothesis`` generates within them, both reading from here.
 
-Why this lives in core
-----------------------
-This completes the split argued in #740: **dimension belongs in the container,
-topology belongs in the domain.** #752 made the container side authoritative --
-a chart's declared dimensions decide its components' types. The topology side
-was declared twice, once by `coordinax._src.charts.checks` on the construction
-path and once by ``coordinaxs.hypothesis`` for its strategies, with nothing
-linking them; #772 pinned the two equal with a test rather than merging them.
-They are now one declaration, and both sides read it.
-
-What core enforces is still a subset of what is declared here. `POLAR` and
-`LATITUDE` are checked at construction; `AZIMUTH` and `RADIAL` are not -- an
-azimuth outside ``[-pi, pi]`` is a legal coordinate on a different sheet, not
-an error. Declaring them anyway is what lets a generator produce points in the
-chart's fundamental domain.
+What core enforces is a subset of what is declared. `POLAR` and `LATITUDE` are
+checked at construction; `AZIMUTH` and `RADIAL` are not -- an azimuth outside
+``[-pi, pi]`` is a legal coordinate on a different sheet, not an error.
+Declaring them anyway is what lets a generator produce points in the chart's
+fundamental domain.
 """
 
 __all__ = ("Interval", "component_domains")
@@ -103,12 +98,16 @@ class Interval:
 
         return to_unit(self.min, self.margin), to_unit(self.max, -self.margin)
 
-    def endpoints(self) -> tuple[Any, Any]:
-        """Return the bounds as quantities, **without** the margin.
+    def endpoints(self) -> tuple[u.Angle, u.Angle]:
+        """Return the bounds as angles, **without** the margin.
 
         The construction-path checks in `coordinax._src.charts.checks` compare
         against these, so the closed interval is what a chart admits and the
         margin stays advisory.
+
+        Only the two angular intervals core enforces are built this way, so it
+        assumes both bounds are set and angular rather than carrying branches
+        for cases no caller reaches.
 
         >>> import math
         >>> from coordinax.charts import Interval
@@ -117,15 +116,8 @@ class Interval:
         Angle(3.14159265, 'rad')
 
         """
-        if self.unit is None:
-            return None, None
-        mk = u.Angle if u.dimension_of(u.unit(self.unit)) == _ANGLE else u.Q
-        lo = None if self.min is None else mk(self.min, self.unit)
-        hi = None if self.max is None else mk(self.max, self.unit)
-        return lo, hi
+        return u.Angle(self.min, self.unit), u.Angle(self.max, self.unit)
 
-
-_ANGLE: Final = u.dimension("angle")
 
 #: Strictly positive radius. Unbounded above; `magnitude` caps it in practice.
 RADIAL: Final = Interval("m", min=0.0, margin=1e-3)

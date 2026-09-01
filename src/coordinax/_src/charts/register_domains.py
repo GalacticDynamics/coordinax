@@ -6,7 +6,8 @@ interval table. It is one table rather than a method per chart because the
 lookup is dispatched, and that is legible only when the two sit side by side.
 
 The two-sphere charts are registered next to their definitions, in
-`coordinax._src.spherical.register_domains`.
+`coordinax._src.spherical.register_domains`: that package imports this one, so
+their registrations cannot live here without inverting the dependency.
 """
 
 __all__: tuple[str, ...] = ()
