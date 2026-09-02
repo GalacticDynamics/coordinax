@@ -42,6 +42,7 @@ cart_of_sph = cxc.cartesian_chart(sph)
 - `cdict`: normalize inputs to component dictionaries
 - `pt_map`: transform points between charts on the same or different manifolds
 - `jac_pt_map`: compute the Jacobian of a point map between charts on the same or different manifolds
+- `component_domains`: return each component's legal `Interval` — bounds and branch cut, dispatched on the chart type
 
 ## Available Objects
 

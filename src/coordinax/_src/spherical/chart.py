@@ -39,7 +39,7 @@ from coordinax._src.base import (
 from coordinax._src.charts import checks
 from coordinax._src.charts.d1 import Abstract1D
 from coordinax._src.charts.d2 import Abstract2D
-from coordinax._src.constants import Deg0, Deg90, Deg180
+from coordinax._src.charts.domains import LATITUDE_ENDPOINTS, POLAR_ENDPOINTS
 from coordinax._src.custom_types import Ang, CDictT, Ds, Ks
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
@@ -239,7 +239,7 @@ class SphericalTwoSphere(
         # call base check
         super().check_data(data, **kw)
         if values:
-            checks.polar_range(u.Q.from_(data["theta"], "deg"), Deg0, Deg180)
+            checks.polar_range(u.Q.from_(data["theta"], "deg"), *POLAR_ENDPOINTS)
         return data
 
 
@@ -290,7 +290,7 @@ class LonLatSphericalTwoSphere(
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
         if values:
-            checks.polar_range(data["lat"], -Deg90, Deg90)
+            checks.polar_range(data["lat"], *LATITUDE_ENDPOINTS)
         return data
 
 
@@ -336,7 +336,7 @@ class LonCosLatSphericalTwoSphere(
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
         if values:
-            checks.polar_range(data["lat"], -Deg90, Deg90)
+            checks.polar_range(data["lat"], *LATITUDE_ENDPOINTS)
         return data
 
 
@@ -381,7 +381,7 @@ class MathSphericalTwoSphere(
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
         if values:
-            checks.polar_range(data["phi"], Deg0, Deg180)
+            checks.polar_range(data["phi"], *POLAR_ENDPOINTS)
         return data
 
 

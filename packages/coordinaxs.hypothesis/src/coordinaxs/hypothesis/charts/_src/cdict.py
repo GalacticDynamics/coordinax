@@ -9,7 +9,7 @@ chart component schemas.
 __all__ = ("cdicts",)
 
 from collections.abc import Mapping
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, cast
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
@@ -84,6 +84,33 @@ def _snap_inward(value: float | None, width: int, /, *, up: bool) -> float | Non
     return snapped
 
 
+def _representable_unit(interval: Interval, unit: Any, dtype: Any, /) -> Any:
+    """Fall back to the domain's own unit when *unit* cannot hold its bounds.
+
+    A bound is stated in the domain's unit and drawn in another, and the two
+    can be forty orders of magnitude apart: `ProlateSpheroidal3D` with
+    ``Delta = 1 kpc`` bounds ``mu >= 1 kpc2``, which is ``9.5e38 m2`` -- past
+    float32's ``3.4e38`` ceiling. Every area unit this package draws is
+    metre-scale, so there is no drawn unit that works, and no amount of
+    rounding rescues a bound no float32 can satisfy.
+
+    Drawing in the domain's own unit always can, because that is the unit the
+    bound was written in. The cost is unit diversity for that one component,
+    which is the right thing to lose: the alternative is generating points the
+    chart rejects, or generating nothing at all.
+
+    Bounded angular domains never reach this -- radians, degrees and cycles
+    sit within one order of each other.
+    """
+    if interval.unit is None:
+        return unit
+    ceiling = float(np.finfo(np.float32 if dtype is jnp.float32 else np.float64).max)
+    bounds = interval.bounds_in(unit)
+    if all(b is None or abs(b) <= ceiling for b in bounds):
+        return unit
+    return u.unit(interval.unit)
+
+
 @st.composite
 def _component_quantities(
     draw: st.DrawFn,
@@ -102,6 +129,7 @@ def _component_quantities(
             ust.quantities(unit=dim, dtype=dtype, shape=shape, elements=elements)
         )
 
+    unit = _representable_unit(interval, unit, dtype)
     lo, hi = interval.bounds_in(unit)
 
     if magnitude is not None:
@@ -112,19 +140,27 @@ def _component_quantities(
         if canon is not None:
             floor = float(u.ustrip(unit, u.Q(floor, canon)))
             cap = float(u.ustrip(unit, u.Q(cap, canon)))
-        # Only where the domain is open: a bounded coordinate has no use for a
-        # magnitude, and a cap under its lower bound empties it outright --
-        # `magnitude=(1e-3, 1e-2)` left POLAR needing `0.05 <= theta <= 0.01`.
+        # The magnitude only fills in sides the domain leaves open: a bounded
+        # coordinate has no use for it, and a cap under the domain's own floor
+        # empties the interval outright -- `magnitude=(1e-3, 1e-2)` left POLAR
+        # needing `0.05 <= theta <= 0.01`.
         if lo is None:
             lo = -cap
-        if hi is None:
-            hi = cap
 
         # `min == 0 and max is None` is a radial half-line, where `lo` is only
         # RADIAL's absolute 1e-3 m margin. An explicit floor states the scale
         # of the problem, so it replaces that default; clamping barred sub-mm.
+        # Before the cap below, which reads the `lo` this may have lowered.
         if floor > 0 and interval.min == 0.0 and interval.max is None:
             lo = floor
+
+        # Same collision as POLAR's, reached through a floor the chart
+        # computes rather than a fixed one: `ProlateSpheroidal3D(Delta=32 m)`
+        # puts `mu`'s floor at 1024 m2, over the default cap of 1000. The
+        # domain is a constraint and the cap is only ergonomics, so the domain
+        # wins and the cap is dropped rather than inverting the interval.
+        if hi is None and cap > lo:
+            hi = cap
 
     width = 32 if dtype is jnp.float32 else 64
     lo = _snap_inward(lo, width, up=True)
@@ -342,7 +378,7 @@ def cdicts(
     # Draw shape if it's a strategy
     shape: Shape = draw_if_strategy(draw, shape)
 
-    domains = component_domains(chart)
+    domains = cast("dict[str, Interval]", component_domains(chart))
     data: CDict = {}
 
     for cname, cdim in zip(chart.components, chart.coord_dimensions, strict=True):

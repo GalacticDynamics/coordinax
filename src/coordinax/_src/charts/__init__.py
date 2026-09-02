@@ -14,8 +14,10 @@ from .d3 import *
 from .d4 import *
 from .d6 import *
 from .dn import *
+from .domains import *
 from .jacobian import *
 from .register_carray import *
 from .register_cdict import *
+from .register_domains import *
 from .register_guess import *
 from .register_ptmap import *

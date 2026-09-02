@@ -11,10 +11,12 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
+from .domains import POLAR_ENDPOINTS
 from coordinax._src.exceptions import ManifoldMismatchError
 
-_0d = u.Angle(jnp.array(0), "rad")
-_pid = u.Angle(jnp.array(180), "deg")
+#: The polar interval, from the one place it is declared -- `.domains.POLAR`.
+#: Built once at import: this runs on the construction path of every chart.
+_0d, _pid = POLAR_ENDPOINTS
 
 
 def polar_range(polar: AbcQ, _l: AbcQ = _0d, _u: AbcQ = _pid, /) -> AbcQ:

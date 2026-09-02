@@ -1110,6 +1110,13 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - ``cartesian``: the corresponding global Cartesian  chart. This can raise an error if there isn't a global Cartesian chart. Calls `coordinax.charts.cartesian_chart`.
     - ``check_data()``: check that the data is compatible with the chart. Keyword arguments are ``keys`` (default ``True``) to validate key schema, and ``values`` (default ``False``) to validate value dimensions/ranges.
 
+    Component domains:
+
+    - ``coordinax.charts.component_domains(chart)`` returns a ``dict[str, Interval]`` giving the legal values of each component, dispatched on the chart *type*. Name and dimension cannot determine it: `Spherical3D` and `MathSpherical3D` share ``('r', 'theta', 'phi')`` and ``('length', 'angle', 'angle')`` while reading _theta_ as the colatitude and the azimuth respectively.
+    - This is the topology half of a two-part split: **dimension belongs in the container, topology belongs in the domain.** ``coord_dimensions`` decides a component's container type (see `pt_project`, where the container is the chart's and not the route's); ``component_domains`` states its branch cut and bounds.
+    - What core *enforces* is a subset of what it *declares*. ``check_data(..., values=True)`` enforces the polar and latitude intervals, and reads its bounds from the same declaration. An azimuth outside ``[-pi, pi]`` and a negative radius are declared out-of-domain but not rejected: they are legal coordinates on another sheet, and the declaration exists so that a generator can produce points in the chart's fundamental domain.
+    - ``Interval`` carries an optional ``margin`` -- how far to stay clear of a finite bound. It is advisory and ``check_data`` ignores it: ``theta = 1e-30 rad`` is mathematically legal and numerically *at* the pole, where the Jacobian is singular to working precision.
+
     Notes:
 
     - ``AbstractChart`` itself is not registered static; staticness comes from the branch a chart is on (see below).
