@@ -30,6 +30,40 @@ def test_scale_from_factors_singular_raises_under_jit(bad: float) -> None:
         jax.block_until_ready(build(jnp.asarray([2.0, bad, 4.0])).s)
 
 
+@pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
+def test_scale_matrix_constructor_rejects_a_singular_diagonal(bad: float) -> None:
+    """`Scale(matrix)` went around `from_factors`' check and built a singular map.
+
+    Its `inverse` then came back `[0.5, inf]`, composing to `diag(1, nan)`
+    rather than the identity.
+    """
+    with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
+        cxfm.Scale(jnp.diag(jnp.asarray([2.0, bad])))
+
+
+def test_the_singular_check_survives_jit() -> None:
+    """`error_if`'s result is what gets stored, so the guard is not DCE'd.
+
+    A discarded one raises eagerly and vanishes under `jit`.
+    """
+    build = eqx.filter_jit(lambda m: cxfm.Scale(m).s)
+    with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
+        jax.block_until_ready(build(jnp.diag(jnp.asarray([2.0, 0.0]))))
+
+
+def test_the_algebra_paths_are_not_re_checked() -> None:
+    """`inverse` and `_merge` go around `__init__`, deliberately.
+
+    A factor `from_factors` would refuse as singular can still be *produced*
+    by inverting a large one. Re-checking there would cost a conditional per
+    operation to catch a case the caller asked for.
+    """
+    big = cxfm.Scale.from_factors(jnp.asarray([2.0, 1e9]))
+    assert float(big.inverse.s[1]) == pytest.approx(1e-9)
+    with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
+        cxfm.Scale.from_factors(jnp.asarray([2.0, 1e-9]))
+
+
 def test_scale_from_factors_nonsingular_jits() -> None:
     """A valid Scale builds cleanly under jit."""
     op = eqx.filter_jit(cxfm.Scale.from_factors)(jnp.asarray([2.0, 3.0, 4.0]))
