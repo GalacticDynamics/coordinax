@@ -67,6 +67,16 @@ class AtTime(eqx.Module):
         self.t = t
 
     @property
+    def _two_argument(self) -> bool:
+        """Always one-argument: binding the time is what this wrapper does.
+
+        Structural, so it is stated rather than read off the signature --
+        which would agree, at the cost of an `inspect.signature` call per
+        evaluation.
+        """
+        return False
+
+    @property
     def _param_dimension(self) -> str | None:
         """Forward what the wrapped curve exposes, if it says.
 
