@@ -32,6 +32,13 @@ from coordinax._src.base import AbstractParameterizedChart
 from .arclength import _is_two_argument
 from .base import AbstractCurveFrameBuilder
 
+_MSG_BARE_TIME_BOUNDS = (
+    "`TubularChart.tau_bounds` must carry a unit when the builder pins a "
+    "station: `tau` is then the evaluation time, and the builder's `tau_unit` "
+    "describes the station instead, so nothing else states this coordinate's "
+    "dimension."
+)
+
 
 @final
 class TubularChart(AbstractParameterizedChart):
@@ -112,7 +119,18 @@ class TubularChart(AbstractParameterizedChart):
         # field holding the tau range as a `Quantity`, so it carries the unit
         # structurally -- which is what this property needs and an inferring
         # builder, having no call parameter here, cannot supply.
-        tau_unit = self.builder._tau_unit_at(self.tau_bounds[0])
+        #
+        # On a worldtube it is the *only* source. `_tau_unit_at` resolves the
+        # curve *parameter*, and prefers a declared `tau_unit` over the value
+        # handed to it -- but a pinned station makes `tau` the time, and
+        # `tau_unit` describes the station, so asking the builder labels a time
+        # coordinate `length`.
+        if self.is_time_dependent:
+            tau_unit = u.unit_of(self.tau_bounds[0])
+            if tau_unit is None:
+                raise TypeError(_MSG_BARE_TIME_BOUNDS)
+        else:
+            tau_unit = self.builder._tau_unit_at(self.tau_bounds[0])
         return (str(u.dimension_of(tau_unit)), "length", "length")
 
     @property

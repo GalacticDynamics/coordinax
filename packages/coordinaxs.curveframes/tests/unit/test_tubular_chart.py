@@ -52,6 +52,48 @@ def test_dimension_follows_the_curve_parameter() -> None:
     assert ch.coord_dimensions == ("length", "length", "length")
 
 
+def test_a_worldtube_reports_its_tau_as_a_time() -> None:
+    """A pinned station makes `tau` the *time*, so it is not a length.
+
+    `_resolve` reads the builder's argument as a time and takes the station
+    from `builder.station`, so `tau_unit` describes the station rather than
+    this coordinate. Asking the builder therefore labels a time coordinate
+    with the station's dimension.
+    """
+
+    def moving(sigma: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+        sv, tv = sigma.ustrip("km"), t.ustrip("s")
+        z = jnp.zeros_like(sv)
+        return u.Q(jnp.stack([sv * (1.0 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
+
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(moving, "km", station=u.Q(1.3, "km")),
+        tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
+    )
+    assert ch.is_time_dependent
+    assert ch.coord_dimensions == ("time", "length", "length")
+
+
+def test_a_worldtube_needs_its_time_bounds_to_carry_a_unit() -> None:
+    """Nothing else states the time coordinate's dimension.
+
+    On the static branch a bare `tau_bounds` falls back to the builder's
+    declared `tau_unit`. A worldtube has no such fallback: `tau_unit` is the
+    station's.
+    """
+
+    def moving(sigma: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+        sv, tv = sigma.ustrip("km"), t.ustrip("s")
+        z = jnp.zeros_like(sv)
+        return u.Q(jnp.stack([sv * (1.0 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
+
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(moving, "km", station=u.Q(1.3, "km")), tau_bounds=(0.0, 2.0)
+    )
+    with pytest.raises(TypeError, match="must carry a unit"):
+        _ = ch.coord_dimensions
+
+
 def test_cartesian_is_cart3d() -> None:
     assert isinstance(_chart().cartesian, cxc.Cart3D)
 
