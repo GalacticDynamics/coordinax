@@ -57,8 +57,16 @@ class Distance(AbstractDistance):
             raise ValueError(msg)
 
         if self.check_negative:
-            # Store the checked value back so the guard survives jit (an
-            # unused `error_if` result is dead-code-eliminated under trace).
+            # `object.__setattr__` because equinox forbids assigning here --
+            # and this guard must assign: an unused `error_if` result is
+            # dead-code-eliminated under trace, so the checked array has to be
+            # the one the field holds. Neither alternative works.
+            # `__post_init__` runs before equinox applies the converters, so
+            # it sees the raw constructor argument: `error_if` then has no
+            # array to thread the error onto unless the caller happened to pass
+            # one, which would make the guard work or not by input type. And a
+            # `converter=` guard, the idiomatic home, cannot read
+            # `check_negative` -- a converter is passed only its own value.
             checked = eqx.error_if(
                 self.value,
                 jnp.any(jnp.less(self.value, 0)),
