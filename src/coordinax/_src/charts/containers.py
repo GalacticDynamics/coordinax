@@ -108,18 +108,23 @@ def canonical_containers(p: CDict, chart: Any, /) -> CDict:
         #
         # unxt#904 memoised that check, so it is no longer what `_mk` is
         # avoiding -- the `plum`-dispatched field converters are, and #904 did
-        # not touch those. It is also not in a release yet: unxt 2.0.3, the
-        # version pinned here, still pays the full check. Measured on both:
+        # not touch those. Both costs are live here: #904 landed in unxt 2.0.4,
+        # which the lock resolves, while the declared floor is 2.0.2 and
+        # `test_oldest` builds against it. Measured on either side of #904:
         #
-        #                                  2.0.3      main
-        #   u.Angle(value, unit)          170.9us -> 29.3us
-        #   u.Angle._mk(...)                0.8us ->  0.7us
-        #   canonical_containers, checked 351.8us -> 68.0us
-        #   canonical_containers, `_mk`     8.7us ->  8.7us
+        #                                 pre-#904     2.0.4
+        #   u.Angle(value, unit)          170.9us -> 28.9us
+        #   u.Angle._mk(...)                0.8us ->  0.8us
+        #   canonical_containers, checked 351.8us -> 66.8us
+        #   canonical_containers, `_mk`     8.7us ->  8.5us
         #
-        # A 40x gap remains even on main, so this stays. What it buys is ~2%
-        # of an eager `pt_map`, near the noise -- if the converters ever get
-        # the same treatment, drop `_mk` and this paragraph with it.
+        # Canonicalising a spherical point still costs ~8x more through the
+        # checked constructor even on 2.0.4 (66.8us against 8.5us), so this
+        # stays. That is the ratio the choice turns on: the constructors
+        # themselves differ by ~36x, but only the angular components of one
+        # point go through them. In an eager `pt_map` the whole saving is ~2%
+        # of the call, near the noise -- if the converters ever get the same
+        # treatment, drop `_mk` and this paragraph with it.
         promoted[k] = u.Angle._mk(value=v.value, unit=unit)
 
     # Nothing to do is the common case -- every Cartesian chart, and any point
