@@ -300,3 +300,10 @@ jobs:
         uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           jobs: ${{ toJSON(needs) }}
+          # `upload-coverage-python` does not run for a pull request from a
+          # fork -- it needs `code-quality: write`, which a fork's token does
+          # not carry. Without this it is a required job that is skipped, and
+          # a skipped required job fails the gate, so every fork PR went red
+          # with all seven real jobs green. `allowed-skips` excuses the skip
+          # only: if the job runs and fails, this still fails.
+          allowed-skips: upload-coverage-python
