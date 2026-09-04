@@ -23,6 +23,7 @@ is a *length*, because what the wrapper exposes is arc length.
 
 __all__ = ("ArcLength", "LagrangianArcLength")
 
+import functools as ft
 import inspect
 
 from collections.abc import Callable
@@ -462,6 +463,27 @@ def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     if isinstance(declared, bool):
         return declared
 
+    # Arity is a property of the callable and cannot change, but `_resolve`
+    # asks on every evaluation -- and `inspect.signature` costs ~4us, 16% of
+    # `_resolve`. Memoise it. A curve that declares `_two_argument` never gets
+    # here; the ones that do are overwhelmingly plain functions, which hash in
+    # 0.04us. `equinox.Module` curves holding arrays are unhashable, so probe
+    # first and fall through uncached rather than raising on the key.
+    try:
+        hash(curve)
+    except TypeError:
+        return _arity_from_signature(curve)
+    return _arity_from_signature_cached(curve)
+
+
+@ft.lru_cache(maxsize=256)
+def _arity_from_signature_cached(curve: Callable[..., Any], /) -> bool:
+    """`_arity_from_signature`, memoised on a hashable curve."""
+    return _arity_from_signature(curve)
+
+
+def _arity_from_signature(curve: Callable[..., Any], /) -> bool:
+    """Read the arity off the signature. See `_is_two_argument` for the rules."""
     try:
         params = list(inspect.signature(curve).parameters.values())
     except (TypeError, ValueError) as e:
