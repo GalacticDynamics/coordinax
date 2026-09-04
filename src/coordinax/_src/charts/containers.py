@@ -105,6 +105,21 @@ def canonical_containers(p: CDict, chart: Any, /) -> CDict:
         # `v`, an `AbstractQuantity` that normalised them on its own
         # construction, and `_angular` above has just established the angular
         # dimension that `AbstractAngle.__check_init__` would re-derive.
+        #
+        # unxt#904 memoised that check, so it is no longer what `_mk` is
+        # avoiding -- the `plum`-dispatched field converters are, and #904 did
+        # not touch those. It is also not in a release yet: unxt 2.0.3, the
+        # version pinned here, still pays the full check. Measured on both:
+        #
+        #                                  2.0.3      main
+        #   u.Angle(value, unit)          170.9us -> 29.3us
+        #   u.Angle._mk(...)                0.8us ->  0.7us
+        #   canonical_containers, checked 351.8us -> 68.0us
+        #   canonical_containers, `_mk`     8.7us ->  8.7us
+        #
+        # A 40x gap remains even on main, so this stays. What it buys is ~2%
+        # of an eager `pt_map`, near the noise -- if the converters ever get
+        # the same treatment, drop `_mk` and this paragraph with it.
         promoted[k] = u.Angle._mk(value=v.value, unit=unit)
 
     # Nothing to do is the common case -- every Cartesian chart, and any point
