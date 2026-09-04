@@ -133,6 +133,13 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Upload coverage artifact
+        if: matrix.python-version == '3.12' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-python-${{ github.run_id }}
+          path: coverage.xml
+
   # These tests spawn their own interpreter, which has to cold-import the whole
   # JAX stack. Doing that beside xdist workers cold-importing the same stack
   # starved the child until it timed out, so they get a runner to themselves
@@ -250,6 +257,28 @@ jobs:
       - name: Build docs (warnings as errors)
         run: uv run --frozen nox -s docs
 
+  upload-coverage-python:
+    name: Upload Python coverage to GitHub
+    needs: [tests_linux]
+    if: ${{ !cancelled() && needs.tests_linux.result == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      code-quality: write
+
+    steps:
+      - name: Download coverage artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: coverage-python-${{ github.run_id }}
+
+      - name: Upload coverage to GitHub
+        uses: actions/upload-code-coverage@v1
+        with:
+          file: coverage.xml
+          language: Python
+          label: code-coverage-agent
+
   status:
     name: CI Pass
     runs-on: ubuntu-latest
@@ -263,6 +292,7 @@ jobs:
         tests_subprocess,
         check_oldest,
         docs,
+        upload-coverage-python,
       ]
     steps:
       - name: All required jobs passed
