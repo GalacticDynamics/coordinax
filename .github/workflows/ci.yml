@@ -139,6 +139,7 @@ jobs:
         with:
           name: coverage-python-${{ github.run_id }}
           path: coverage.xml
+          overwrite: true
 
   # These tests spawn their own interpreter, which has to cold-import the whole
   # JAX stack. Doing that beside xdist workers cold-importing the same stack
