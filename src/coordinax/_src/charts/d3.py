@@ -19,6 +19,7 @@ __all__ = (
 )
 
 import dataclasses
+import functools as ft
 
 from jaxtyping import Real
 from typing import Annotated, Any, Final, Literal as L, Self, override  # noqa: N817
@@ -437,6 +438,22 @@ ProlateSpheroidalKeys = tuple[L["mu"], L["nu"], L["phi"]]
 ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 
 
+@ft.lru_cache(maxsize=128)
+def _is_length(unit: Any, /) -> bool:
+    """Whether *unit* is a length, answered once per unit.
+
+    `unxt.is_unit_convertible` costs ~21us, against ~10us for building the
+    whole chart -- it walks astropy's unit graph on every call. Memoising it
+    per unit brings that to ~0.1us, because the answer depends only on the
+    unit and a program uses very few of them.
+
+    Comparing dimensions instead is not the cheaper route it looks like:
+    ``dimension_of(unit) == dimension("length")`` measured ~69us, and
+    ``dimension_of(quantity)`` ~134us.
+    """
+    return bool(u.is_unit_convertible("m", unit))
+
+
 @EuclideanAtlas.register
 class ProlateSpheroidal3D(
     Abstract3D,
@@ -491,9 +508,32 @@ class ProlateSpheroidal3D(
         Real[u.quantity.AbstractQuantity, ""],  # Quantity (dynamic) or StaticQuantity
         Is[lambda x: x.value > 0],
     ]
-    """Focal length of the coordinate system."""
+    """Focal length of the coordinate system. Must have dimensions of length."""
 
     M: MT = R3  # ty: ignore[invalid-assignment]
+
+    def __post_init__(self) -> None:
+        """Reject a `Delta` that is not a length.
+
+        The components are declared ``('area', 'area', 'angle')`` and the
+        bounds `check_data` enforces are ``Delta**2``, so only a length closes
+        the loop: a `Delta` in seconds gives a bound in ``s2`` that no `mu` in
+        ``m2`` can be compared against, and `check_data` would then validate
+        ``s2`` data against an ``area`` chart without complaint.
+
+        The jaxtyping annotation cannot carry this. It pins the container and
+        the shape, but nothing enforces it at construction, and the dimension
+        is not expressible there without narrowing `Delta` to one quantity
+        type -- which would cost the `Quantity`/`StaticQuantity` choice that
+        makes differentiability opt-in.
+        """
+        if not _is_length(self.Delta.unit):
+            msg = (
+                "ProlateSpheroidal3D.Delta is the focal length and must have "
+                f"dimensions of length, got {self.Delta.unit!s} "
+                f"({u.dimension_of(self.Delta)})."
+            )
+            raise ValueError(msg)
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check

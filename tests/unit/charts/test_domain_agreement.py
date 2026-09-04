@@ -148,23 +148,15 @@ def test_every_enforced_bound_is_declared() -> None:
         chart.check_data(point, keys=False, values=True)
 
 
-@pytest.mark.parametrize(
-    ("delta", "reason"),
-    [
-        (u.StaticQuantity(2.0, "s"), "not convertible to the components' area"),
-        (u.StaticQuantity(1e200, "m"), "squares past the float ceiling"),
-    ],
-)
-def test_prolate_spheroidal_declares_nothing_for_an_unusable_delta(
-    delta, reason
-) -> None:
-    """`Delta` is only constrained positive and scalar, so it can be unusable.
+def test_prolate_spheroidal_declares_nothing_for_an_infinite_bound() -> None:
+    """`Delta` is a length, but not necessarily one that survives squaring.
 
-    A non-length `Delta` gives a bound in a unit `mu` cannot be compared
-    against, and an enormous one squares to infinity. Neither is a bound, so
-    neither is declared -- the alternative is a domain a caller cannot convert
-    or a generator cannot draw from.
+    ``1e200 m`` squares past the float ceiling, and infinity is not a bound,
+    so nothing is declared -- a domain no generator could draw from. The other
+    way a bound could be unusable, a `Delta` in the wrong dimension, is now
+    refused by the chart itself (`test_prolate_delta_dimension.py`).
     """
-    domains = component_domains(cxc.ProlateSpheroidal3D(Delta=delta))
-    assert domains["mu"].unit is None, reason
-    assert domains["nu"].unit is None, reason
+    chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1e200, "m"))
+    domains = component_domains(chart)
+    assert domains["mu"].unit is None
+    assert domains["nu"].unit is None
