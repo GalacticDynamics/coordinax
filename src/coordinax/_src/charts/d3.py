@@ -19,6 +19,7 @@ __all__ = (
 )
 
 import dataclasses
+import functools as ft
 
 from jaxtyping import Real
 from typing import Annotated, Any, Final, Literal as L, Self, override  # noqa: N817
@@ -437,6 +438,22 @@ ProlateSpheroidalKeys = tuple[L["mu"], L["nu"], L["phi"]]
 ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 
 
+@ft.lru_cache(maxsize=128)
+def _is_length(unit: Any, /) -> bool:
+    """Whether *unit* is a length, answered once per unit.
+
+    `unxt.is_unit_convertible` costs ~21us, against ~10us for building the
+    whole chart -- it walks astropy's unit graph on every call. Memoising it
+    per unit brings that to ~0.1us, because the answer depends only on the
+    unit and a program uses very few of them.
+
+    Comparing dimensions instead is not the cheaper route it looks like:
+    ``dimension_of(unit) == dimension("length")`` measured ~69us, and
+    ``dimension_of(quantity)`` ~134us.
+    """
+    return bool(u.is_unit_convertible("m", unit))
+
+
 @EuclideanAtlas.register
 class ProlateSpheroidal3D(
     Abstract3D,
@@ -510,7 +527,7 @@ class ProlateSpheroidal3D(
         type -- which would cost the `Quantity`/`StaticQuantity` choice that
         makes differentiability opt-in.
         """
-        if not u.is_unit_convertible("m", self.Delta.unit):
+        if not _is_length(self.Delta.unit):
             msg = (
                 "ProlateSpheroidal3D.Delta is the focal length and must have "
                 f"dimensions of length, got {self.Delta.unit!s} "

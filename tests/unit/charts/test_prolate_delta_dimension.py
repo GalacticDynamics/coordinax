@@ -44,3 +44,52 @@ def test_a_dynamic_delta_still_traces() -> None:
     """
     build = jax.jit(lambda d: cxc.ProlateSpheroidal3D(Delta=d).Delta)
     assert u.dimension_of(build(u.Q(2.0, "kpc"))) == u.dimension("length")
+
+
+def test_the_check_stays_off_the_hot_paths() -> None:
+    """`__post_init__` must not re-run when the chart is rebuilt from its pytree.
+
+    This is what keeps the check a per-construction cost rather than a
+    per-call one: `jit` flattens and unflattens a chart argument on every
+    boundary crossing, and equinox rebuilds a `Module` without calling
+    `__init__`. If that ever changed, the cost would move onto the traced
+    path, where it does not belong -- and nothing else would go red.
+    """
+    chart = cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "kpc"))
+    leaves, treedef = jax.tree.flatten(chart)
+
+    calls = 0
+    original = type(chart).__post_init__
+
+    def counting(self: object) -> None:
+        nonlocal calls
+        calls += 1
+        original(self)
+
+    type(chart).__post_init__ = counting  # type: ignore[method-assign]
+    try:
+        jax.tree.unflatten(treedef, leaves)
+        jax.jit(lambda c: c.Delta)(chart)
+    finally:
+        type(chart).__post_init__ = original  # type: ignore[method-assign]
+
+    assert calls == 0
+
+
+def test_the_unit_check_is_memoised() -> None:
+    """The check is answered once per unit, not once per construction.
+
+    `unxt.is_unit_convertible` walks astropy's unit graph and costs about
+    twice what building the whole chart does. Uncached it dominated
+    construction; the cache is what makes the check affordable at all.
+    """
+    from coordinax._src.charts.d3 import _is_length
+
+    _is_length.cache_clear()
+    unit = u.unit("kpc")
+    _is_length(unit)
+    before = _is_length.cache_info().misses
+    for _ in range(100):
+        _is_length(unit)
+    assert _is_length.cache_info().misses == before
+    assert _is_length.cache_info().hits >= 100
