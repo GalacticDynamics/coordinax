@@ -113,20 +113,15 @@ def component_domains(chart: ProlateSpheroidal3D, /) -> dict[str, Interval]:
     so cannot be read under `jax.jit`. Nothing on the construction path calls
     it -- `check_data` compares quantities directly, and stays traceable.
     """
-    # `Delta` is constrained to be positive and scalar, but not to be a length
-    # and not to be of any particular size, so `Delta**2` is not always a
-    # usable bound: seconds give a bound in ``s2`` that no `mu` in ``m2`` can
-    # be compared against, and a `Delta` near the float ceiling squares to
-    # infinity. Neither is declarable, so such a chart declares nothing for
-    # `mu` and `nu` -- the same answer as any other chart with no bound to
-    # state, rather than an unconvertible or infinite one.
+    # `Delta` is a length and positive, so `Delta**2` is always an area -- but
+    # not always a finite one: a `Delta` near the float ceiling squares to
+    # infinity, which is not a bound. Such a chart declares nothing for `mu`
+    # and `nu`, the same answer as any other chart with no bound to state.
     with np.errstate(over="ignore"):
         delta_sq = chart.Delta**2
     unit = str(delta_sq.unit)
     bound = float(u.ustrip(delta_sq.unit, delta_sq))
-    if not u.is_unit_convertible(delta_sq.unit, u.unit("m2")) or not math.isfinite(
-        bound
-    ):
+    if not math.isfinite(bound):
         return {"mu": FREE, "nu": FREE, "phi": AZIMUTH}
 
     return {
