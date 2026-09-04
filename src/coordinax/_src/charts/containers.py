@@ -118,9 +118,13 @@ def canonical_containers(p: CDict, chart: Any, /) -> CDict:
         #   canonical_containers, checked 351.8us -> 66.8us
         #   canonical_containers, `_mk`     8.7us ->  8.5us
         #
-        # A 38x gap remains on the newer one, so this stays. What it buys is
-        # ~2% of an eager `pt_map`, near the noise -- if the converters ever
-        # get the same treatment, drop `_mk` and this paragraph with it.
+        # Canonicalising a spherical point still costs ~8x more through the
+        # checked constructor even on 2.0.4 (66.8us against 8.5us), so this
+        # stays. That is the ratio the choice turns on: the constructors
+        # themselves differ by ~36x, but only the angular components of one
+        # point go through them. In an eager `pt_map` the whole saving is ~2%
+        # of the call, near the noise -- if the converters ever get the same
+        # treatment, drop `_mk` and this paragraph with it.
         promoted[k] = u.Angle._mk(value=v.value, unit=unit)
 
     # Nothing to do is the common case -- every Cartesian chart, and any point
