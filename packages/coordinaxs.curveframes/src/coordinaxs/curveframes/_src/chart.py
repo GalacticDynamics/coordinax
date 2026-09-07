@@ -39,6 +39,29 @@ _MSG_BARE_TIME_BOUNDS = (
     "dimension."
 )
 
+#: Both messages name `tau_bounds`, which is the whole point of raising here:
+#: left to `nearest_tau`, the same mistakes surface as a bare
+#: `UnitConversionError` or `AttributeError` from inside the scan setup, with
+#: nothing to say which field was wrong (measured, both cases).
+_MSG_BOUNDS_DISAGREE = (
+    "`TubularChart.tau_bounds` must state one dimension, but the lower bound "
+    "is {lo} and the upper is {hi}. The scan strips both ends to the lower "
+    "bound's unit, which a different dimension cannot convert to."
+)
+
+_MSG_BOUNDS_HALF_BARE = (
+    "`TubularChart.tau_bounds` must be both `Quantity` or both bare, but got "
+    "{lo} and {hi}. A bare bound takes its unit from the builder's declared "
+    "`tau_unit` and a `Quantity` one carries its own, so a mixed pair has no "
+    "single answer to what the bounds mean."
+)
+
+
+def _bounds_dimension(bound: Any, /) -> str | None:
+    """Return the dimension ``bound`` states, or `None` if it is bare."""
+    unit = u.unit_of(bound)
+    return None if unit is None else str(u.dimension_of(unit))
+
 
 @final
 class TubularChart(AbstractParameterizedChart):
@@ -106,6 +129,42 @@ class TubularChart(AbstractParameterizedChart):
         """The ambient manifold, always flat 3-space regardless of the curve."""
         return cxm.R3
 
+    def __check_init__(self) -> None:
+        """Require `tau_bounds` to state one dimension, and to state it at all.
+
+        `tau_bounds[0]` alone is what the unit is read from -- it labels the
+        coordinate, and `nearest_tau` strips both ends to it -- so a
+        disagreeing `tau_bounds[1]` is not caught until the inverse solve
+        runs, and not named when it is. Measured on an unguarded chart:
+        ``(Q(0, "s"), Q(2, "km"))`` builds, reports `('time', ...)`, and dies
+        in the scan with `UnitConversionError`; a mixed bare/`Quantity` pair
+        dies with ``'float' object has no attribute 'ustrip'``. Neither
+        mentions `tau_bounds`, and neither fires until someone maps a point.
+
+        A *converting* pair is fine and stays fine -- ``(Q(0, "s"), Q(2000,
+        "ms"))`` strips to 2 s -- so this checks the dimension, not the unit.
+
+        Bare bounds are the array fastpath and stay legal on the static
+        branch, where the builder's declared `tau_unit` says what the numbers
+        mean. On a **worldtube** they never are: `tau_unit` describes the
+        pinned station, so nothing states this coordinate's dimension (see
+        `_tau_unit`). That was `coord_dimensions`' own check until it moved
+        here -- it is a pure function of the builder's curve, knowable the
+        moment the chart is built, and leaving it downstream is the shape
+        this method exists to remove. Reading the arity again costs nothing:
+        `AbstractCurveFrameBuilder.__check_init__` already inspected the same
+        curve, and the result is cached.
+        """
+        lo, hi = (_bounds_dimension(b) for b in self.tau_bounds)
+        if lo != hi:
+            msg = _MSG_BOUNDS_HALF_BARE if None in (lo, hi) else _MSG_BOUNDS_DISAGREE
+            raise ValueError(msg.format(lo=lo or "bare", hi=hi or "bare"))
+        # `TypeError`, matching the sibling in `base.py`: a missing unit is
+        # the wrong *kind* of value, where two disagreeing ones above are the
+        # wrong value. `_tau_unit` raised this same message from the property.
+        if lo is None and self.is_time_dependent:
+            raise TypeError(_MSG_BARE_TIME_BOUNDS)
+
     @property
     def components(self) -> tuple[str, str, str]:
         return ("tau", "n1", "n2")
@@ -130,12 +189,12 @@ class TubularChart(AbstractParameterizedChart):
         handed to it -- but a pinned station makes `tau` the time, and
         `tau_unit` describes the station. Asking the builder therefore labels
         a time coordinate `length`, and strips a time in kilometres.
+
+        Bare bounds cannot reach the worldtube branch: `__check_init__`
+        rejects that pair, so the `unit_of` below is never `None` there.
         """
         if self.is_time_dependent:
-            tau_unit = u.unit_of(self.tau_bounds[0])
-            if tau_unit is None:
-                raise TypeError(_MSG_BARE_TIME_BOUNDS)
-            return cast("u.AbstractUnit", tau_unit)
+            return cast("u.AbstractUnit", u.unit_of(self.tau_bounds[0]))
         return self.builder._tau_unit_at(self.tau_bounds[0])
 
     @property
