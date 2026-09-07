@@ -156,13 +156,22 @@ def test(s: nox.Session, /) -> None:
                 f"against {testpaths}"
             )
 
-    # -n logical: parallelize across cores. --dist=loadfile: keep each file's
-    # tests on one worker -- Sybil doctests share sequential state across
-    # `>>>` examples within a source file, which breaks if xdist scatters
-    # them across workers. xdist breaks --pdb/--trace, so skip it when either
-    # is requested rather than relying on the caller to also pass `-n0`.
+    # -n auto: one worker per *physical* core. `logical` counted hyperthreads,
+    # which on a 2-physical/4-logical GitHub runner started four workers to
+    # share two cores -- each cold-importing JAX and running XLA compilation.
+    # That is the oversubscription behind #817: tests that take 22s locally
+    # tripped `faulthandler_timeout = 300`, and 3.14, the slowest matrix
+    # entry, tipped first. `auto` is xdist's physical-count option; there is
+    # no `physical` token, and `auto` falls back to `os.cpu_count()` when
+    # psutil cannot determine the physical count.
+    #
+    # --dist=loadfile: keep each file's tests on one worker -- Sybil doctests
+    # share sequential state across `>>>` examples within a source file, which
+    # breaks if xdist scatters them across workers. xdist breaks --pdb/--trace,
+    # so skip it when either is requested rather than relying on the caller to
+    # also pass `-n0`.
     debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in posargs)
-    xdist_args = [] if debugging else ["-n", "logical", "--dist=loadfile"]
+    xdist_args = [] if debugging else ["-n", "auto", "--dist=loadfile"]
 
     # This session installs the `workspace` extra (interop included), so the
     # interop order-independence tests must run, not silently skip.
@@ -208,10 +217,11 @@ def test_oldest(s: nox.Session, /) -> None:
         "--resolution=lowest-direct",
         "pytest",
     ]
-    # As in `test`: xdist breaks --pdb/--trace, so drop it when either is asked
-    # for rather than making the caller also pass `-n0`.
+    # As in `test`: `-n auto` for physical cores (see #817), and xdist breaks
+    # --pdb/--trace, so drop it when either is asked for rather than making the
+    # caller also pass `-n0`.
     debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in s.posargs)
-    xdist_args = [] if debugging else ["-n", "logical", "--dist=loadfile"]
+    xdist_args = [] if debugging else ["-n", "auto", "--dist=loadfile"]
 
     # Resolving downwards rewrites `uv.lock`, which matters here in a way it
     # never did in CI, where the checkout is thrown away. Do not "fix" that

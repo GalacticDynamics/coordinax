@@ -125,6 +125,13 @@ test = [
   "pytest-cov>=6.2.1",
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
+  # `-n auto` asks xdist for the *physical* core count, and xdist can only
+  # answer that with psutil -- without it both `auto` and `logical` fall back
+  # to the OS affinity count, i.e. hyperthreads, which is the
+  # oversubscription in #817. Declared here so CI, which syncs only
+  # `nox`+`test`, actually gets it; it arrived transitively via the `ide`
+  # group before, which CI never installs.
+  "psutil>=5.9",
   "pytest-xdist>=3.6.1",
   "sybil[pytest]>=8.0.0",
   # the hypothesis annotation-strategy tests use ParametricQuantity["length"].

@@ -151,7 +151,7 @@ jobs:
   # and its import machinery, so a single version would not cover it. The job
   # runs in well under a minute and the versions run in parallel.
   #
-  # `-n0` after nox's own `-n logical` wins, so the child runs alone; going
+  # `-n0` after nox's own `-n auto` wins, so the child runs alone; going
   # through nox rather than bare pytest keeps `--exclude-package` applied.
   tests_subprocess:
     name: Subprocess-heavy tests (${{ matrix.python-version }})
