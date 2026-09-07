@@ -422,13 +422,20 @@ def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     """Report whether ``curve`` takes ``(tau, t)`` rather than just ``(tau)``.
 
     A wrapper that *knows* its own arity is asked first, via a
-    ``_two_argument`` attribute. `ArcLength` defaults ``t`` in its
-    ``__call__`` so that a wrapped one-argument curve can still be called
-    ``arc(s)`` -- convenient, but it makes the signature describe the
-    wrapper rather than what it wraps, and a builder consulting that
-    signature concludes "one-argument" for a wrapper that genuinely needs a
-    time. `AtTime` needs no such attribute: it binds the time, so being
-    one-argument is the truth about it (see #748).
+    ``_two_argument`` attribute, and both wrappers declare one -- for
+    different reasons.
+
+    `ArcLength` declares it because the signature would otherwise *lie*: it
+    defaults ``t`` in its ``__call__`` so that a wrapped one-argument curve
+    can still be called ``arc(s)`` -- convenient, but it makes the signature
+    describe the wrapper rather than what it wraps, and a builder consulting
+    it concludes "one-argument" for a wrapper that genuinely needs a time
+    (#748).
+
+    `AtTime` declares it because the signature is merely *expensive*: binding
+    the time is what the wrapper does, so one-argument is structural and
+    agreeing with `inspect.signature` costs a read per evaluation to learn
+    something that cannot change.
 
     Otherwise the signature is read. The question is then what the *call*
     accepts, so the second parameter must be both **positional** and
@@ -469,6 +476,16 @@ def _is_two_argument(curve: Callable[..., Any], /) -> bool:
     # here; the ones that do are overwhelmingly plain functions, which hash in
     # 0.04us. `equinox.Module` curves holding arrays are unhashable, so probe
     # first and fall through uncached rather than raising on the key.
+    #
+    # Sized rather than unbounded because the cache is module-global and keyed
+    # on *user* objects: curves are normally module-level functions, of which
+    # there are a handful, but one built per iteration would otherwise
+    # accumulate here forever. 256 bounds that to churn instead of growth.
+    #
+    # The win is small end to end -- `_resolve` is ~6% of an eager `location`
+    # and under 1% of a `tangent`, and it runs at trace time so a jitted call
+    # never pays it at all. The reason to do it is that re-deriving something
+    # immutable per evaluation is indefensible, not the throughput.
     try:
         hash(curve)
     except TypeError:
