@@ -97,8 +97,14 @@ def nearest_tau(
 
     """
     # The bounds are the tau range, so they carry tau's unit themselves -- no
-    # need to consult the builder, which may not have one declared.
-    unit = builder._tau_unit_at(bounds[0])
+    # need to consult the builder, which may not have one declared. Reading
+    # them is not merely a shortcut: `_tau_unit_at` prefers a *declared*
+    # `tau_unit`, and on a pinned-station builder that describes the station
+    # while these bounds are times, so consulting it scans seconds in
+    # kilometres. The builder is the fallback for bare (unitless) bounds only.
+    unit = u.unit_of(bounds[0])
+    if unit is None:
+        unit = builder._tau_unit_at(bounds[0])
     # `jnp.asarray` narrows only here: `ustrip` is typed as a broad union, and
     # `ty` rejects `hi - lo` between two of them. Everywhere else the bare
     # `ustrip` is enough.

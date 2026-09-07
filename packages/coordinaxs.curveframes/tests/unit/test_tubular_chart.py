@@ -29,6 +29,28 @@ def _chart(**kw):
     return cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS, **kw)
 
 
+def stretching(s: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+    """The two-argument curve of the guide's "A Station on a Curve That Moves"."""
+    sv, tv = s.ustrip("km"), t.ustrip("s")
+    z = jnp.zeros_like(sv)
+    return u.Q(jnp.stack([sv * (1.0 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
+
+
+#: The station the worldtube is pinned at, and the time the spatial slice is
+#: taken at -- the two sections meet at this pair, which is what
+#: `test_the_two_sections_meet` checks.
+STATION = u.Q(1.3, "km")
+AT_TIME = u.Q(1.0, "s")
+TIME_BOUNDS = (u.Q(0.0, "s"), u.Q(2.0, "s"))
+
+
+def _worldtube(tau_bounds=TIME_BOUNDS):
+    """The tube at a fixed station, swept through time: coordinates (t, n1, n2)."""
+    return cxfc.TubularChart(
+        cxfc.BishopBuilder(stretching, "km", station=STATION), tau_bounds=tau_bounds
+    )
+
+
 def test_is_on_the_parameterized_branch() -> None:
     assert issubclass(cxfc.TubularChart, AbstractParameterizedChart)
 
@@ -60,16 +82,7 @@ def test_a_worldtube_reports_its_tau_as_a_time() -> None:
     this coordinate. Asking the builder therefore labels a time coordinate
     with the station's dimension.
     """
-
-    def moving(sigma: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
-        sv, tv = sigma.ustrip("km"), t.ustrip("s")
-        z = jnp.zeros_like(sv)
-        return u.Q(jnp.stack([sv * (1.0 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
-
-    ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(moving, "km", station=u.Q(1.3, "km")),
-        tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
-    )
+    ch = _worldtube()
     assert ch.is_time_dependent
     assert ch.coord_dimensions == ("time", "length", "length")
 
@@ -81,17 +94,69 @@ def test_a_worldtube_needs_its_time_bounds_to_carry_a_unit() -> None:
     declared `tau_unit`. A worldtube has no such fallback: `tau_unit` is the
     station's.
     """
-
-    def moving(sigma: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
-        sv, tv = sigma.ustrip("km"), t.ustrip("s")
-        z = jnp.zeros_like(sv)
-        return u.Q(jnp.stack([sv * (1.0 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
-
-    ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(moving, "km", station=u.Q(1.3, "km")), tau_bounds=(0.0, 2.0)
-    )
+    ch = _worldtube(tau_bounds=(0.0, 2.0))
     with pytest.raises(TypeError, match="must carry a unit"):
         _ = ch.coord_dimensions
+
+
+def test_the_two_sections_meet() -> None:
+    r"""The worldtube and the spatial slice are two cuts of one 4-D object.
+
+    $(t, \sigma, n_1, n_2)$ is a tube swept through time. Pinning the station
+    gives one material point's history -- a *time* and two lengths -- and
+    binding the time with `AtTime` gives the tube at one instant, three
+    lengths. They are the same object iff they agree where they cross, which
+    is what makes the differing `coord_dimensions` two readings rather than a
+    contradiction.
+    """
+    slice_ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(cxfc.AtTime(stretching, AT_TIME), "km"),
+        tau_bounds=(u.Q(0.0, "km"), u.Q(2.0, "km")),
+    )
+    assert slice_ch.coord_dimensions == ("length", "length", "length")
+    assert _worldtube().coord_dimensions == ("time", "length", "length")
+
+    zero = {"n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+    on_slice = cxc.pt_map(
+        {"tau": STATION, **zero}, slice_ch.M, slice_ch, slice_ch.M, cxc.cart3d
+    )
+    tube = _worldtube()
+    on_tube = cxc.pt_map({"tau": AT_TIME, **zero}, tube.M, tube, tube.M, cxc.cart3d)
+    for k in ("x", "y", "z"):
+        assert jnp.allclose(
+            on_tube[k].ustrip("km"), on_slice[k].ustrip("km"), atol=1e-6
+        )
+
+
+def test_a_worldtube_round_trips_through_cartesian() -> None:
+    """The inverse solve scans in the bounds' unit, so it scans a *time*.
+
+    Resolving `tau`'s unit through the builder hands `nearest_tau` the pinned
+    station's `km`, and the scan raises rather than converging. Both
+    directions have to agree on which coordinate `tau` is.
+    """
+    ch = _worldtube()
+    p = {"tau": AT_TIME, "n1": u.Q(0.02, "km"), "n2": u.Q(0.0, "km")}
+    xyz = cxc.pt_map(p, ch.M, ch, ch.M, cxc.cart3d)
+    back = cxc.pt_map(xyz, ch.M, cxc.cart3d, ch.M, ch)
+
+    assert jnp.allclose(back["tau"].ustrip("s"), AT_TIME.ustrip("s"), atol=1e-3)
+    assert jnp.allclose(back["n1"].ustrip("km"), 0.02, atol=1e-5)
+    assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
+
+
+def test_a_worldtubes_reach_check_runs() -> None:
+    """`check_data(values=True)` strips `tau` to evaluate the Jacobian factor.
+
+    Stripping through the builder's `tau_unit` asks a time for kilometres, so
+    the check could not run at all on a worldtube -- the point on the curve,
+    which is unambiguously inside the reach, raised `UnitConversionError`
+    instead of passing.
+    """
+    ch = _worldtube()
+    p = {"tau": AT_TIME, "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+    assert ch.check_data(dict(p), values=True) is not None
+    assert float(ch.jacobian_factor(p)) > 0.0
 
 
 def test_cartesian_is_cart3d() -> None:

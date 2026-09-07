@@ -18,7 +18,7 @@ __all__ = ("TubularChart",)
 
 import dataclasses
 
-from typing import Any, ClassVar, final, override
+from typing import Any, ClassVar, cast, final, override
 
 import equinox as eqx
 import jax
@@ -111,27 +111,38 @@ class TubularChart(AbstractParameterizedChart):
         return ("tau", "n1", "n2")
 
     @property
-    def coord_dimensions(self) -> tuple[str, str, str]:
-        # The first coordinate inherits whatever the curve is parameterised by,
-        # so this cannot be a class-level tuple the way most charts declare it.
-        #
-        # `tau_bounds` is the source rather than the builder: it is a required
-        # field holding the tau range as a `Quantity`, so it carries the unit
-        # structurally -- which is what this property needs and an inferring
-        # builder, having no call parameter here, cannot supply.
-        #
-        # On a worldtube it is the *only* source. `_tau_unit_at` resolves the
-        # curve *parameter*, and prefers a declared `tau_unit` over the value
-        # handed to it -- but a pinned station makes `tau` the time, and
-        # `tau_unit` describes the station, so asking the builder labels a time
-        # coordinate `length`.
+    def _tau_unit(self) -> u.AbstractUnit:
+        """The unit of *this chart's* ``tau``, which is not the builder's.
+
+        The two coincide on the static branch and part on a worldtube, which
+        is the whole of what this property exists to say. Everything the chart
+        does with ``tau`` -- label it, strip it, seed a scan over it -- routes
+        through here rather than the builder, or it gets the curve
+        *parameter's* unit where this *coordinate's* was wanted.
+
+        `tau_bounds` is the source rather than the builder: it is a required
+        field holding the tau range as a `Quantity`, so it carries the unit
+        structurally -- which is what this needs, and an inferring builder,
+        having no call parameter here, cannot supply.
+
+        On a worldtube it is the *only* source. `_tau_unit_at` resolves the
+        curve *parameter*, and prefers a declared `tau_unit` over the value
+        handed to it -- but a pinned station makes `tau` the time, and
+        `tau_unit` describes the station. Asking the builder therefore labels
+        a time coordinate `length`, and strips a time in kilometres.
+        """
         if self.is_time_dependent:
             tau_unit = u.unit_of(self.tau_bounds[0])
             if tau_unit is None:
                 raise TypeError(_MSG_BARE_TIME_BOUNDS)
-        else:
-            tau_unit = self.builder._tau_unit_at(self.tau_bounds[0])
-        return (str(u.dimension_of(tau_unit)), "length", "length")
+            return cast("u.AbstractUnit", tau_unit)
+        return self.builder._tau_unit_at(self.tau_bounds[0])
+
+    @property
+    def coord_dimensions(self) -> tuple[str, str, str]:
+        # The first coordinate inherits whatever the curve is parameterised by,
+        # so this cannot be a class-level tuple the way most charts declare it.
+        return (str(u.dimension_of(self._tau_unit)), "length", "length")
 
     @property
     def cartesian(self) -> cxc.Cart3D:
@@ -198,7 +209,10 @@ class TubularChart(AbstractParameterizedChart):
         matters.
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
-        unit = self.builder._tau_unit_at(tau)
+        # The chart's `tau`, not the builder's curve parameter: on a worldtube
+        # those are a time and a station respectively, and asking the builder
+        # strips seconds in kilometres. See `_tau_unit`.
+        unit = self._tau_unit
         # Derive the unit from the curve (as ``nearest.py`` and
         # ``register_ptmap.py`` do), not hardcode `"km"`: the scale cancels in
         # `dot(dx,T)/speed`, but a hardcoded unit raises `UnitConversionError`

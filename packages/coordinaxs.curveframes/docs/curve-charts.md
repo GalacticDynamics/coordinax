@@ -81,6 +81,25 @@ That is a categorical difference, not a stylistic one. A frame transform has no 
 
 ```
 
+The exception is a builder over a **two-argument** curve with a pinned `station`. There the builder's call-time parameter is the time, so the chart's $\tau$ is a time as well and `tau_bounds` are times — a _worldtube_, one material point's history, rather than a slice of space:
+
+```{code-block} python
+>>> def stretching(s, t):
+...     sv, tv = s.ustrip("km"), t.ustrip("s")
+...     z = jnp.zeros_like(sv)
+...     return u.Q(jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
+
+>>> ch_tube = cxfc.TubularChart(
+...     cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km")),
+...     tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
+... )
+>>> ch_tube.coord_dimensions
+('time', 'length', 'length')
+
+```
+
+`tau_bounds` is the only statement of that unit — the builder's `tau_unit` describes the _station_ here — so bare (unitless) bounds raise on this branch rather than falling back to it.
+
 `tau_bounds` sets the scan range the inverse solve seeds from (below); it must cover the $\tau$ values you intend to query. For a curve that closes on itself, it must also cover **no more than one period** — see [Limitations](#limitations).
 
 ## Both Directions
