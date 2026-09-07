@@ -93,10 +93,12 @@ def test_a_worldtube_needs_its_time_bounds_to_carry_a_unit() -> None:
     On the static branch a bare `tau_bounds` falls back to the builder's
     declared `tau_unit`. A worldtube has no such fallback: `tau_unit` is the
     station's.
+
+    Raised at construction rather than from `coord_dimensions`: the builder's
+    curve arity settles it, so the chart never needs to exist in this state.
     """
-    ch = _worldtube(tau_bounds=(0.0, 2.0))
     with pytest.raises(TypeError, match="must carry a unit"):
-        _ = ch.coord_dimensions
+        _worldtube(tau_bounds=(0.0, 2.0))
 
 
 def test_the_two_sections_meet() -> None:
@@ -183,6 +185,55 @@ def test_static_bounds_drop_their_leaves() -> None:
         tau_bounds=(u.StaticQuantity(-1.0, "s"), u.StaticQuantity(7.0, "s")),
     )
     assert len(jax.tree.leaves(ch)) == 2  # builder only
+
+
+def test_bounds_of_two_dimensions_are_rejected() -> None:
+    """Caught at construction, where the field can still be named.
+
+    Unguarded, this chart builds and reports `('time', ...)`; the mistake
+    only surfaces when someone maps a point, as a `UnitConversionError`
+    raised inside `nearest_tau`'s scan setup that says nothing about
+    `tau_bounds`.
+    """
+    with pytest.raises(ValueError, match="must state one dimension"):
+        cxfc.TubularChart(
+            cxfc.BishopBuilder(circle, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "km"))
+        )
+
+
+def test_bounds_may_not_be_half_bare() -> None:
+    """A bare bound and a `Quantity` one take their unit from different places.
+
+    Bare bounds are legal -- they fall back to the builder's declared
+    `tau_unit` -- and so are `Quantity` ones, which carry their own. A mixed
+    pair has no single answer, and unguarded it reaches `nearest_tau` to fail
+    as ``'float' object has no attribute 'ustrip'``.
+    """
+    with pytest.raises(ValueError, match="both `Quantity` or both bare"):
+        cxfc.TubularChart(
+            cxfc.BishopBuilder(circle, "s"), tau_bounds=(0.0, u.Q(2.0, "s"))
+        )
+
+
+def test_bare_bounds_are_still_allowed() -> None:
+    """The guard is about disagreement, not about requiring units.
+
+    Both-bare is the array fastpath: the builder's declared `tau_unit` states
+    what the numbers mean, so there is nothing for the two ends to disagree
+    about.
+    """
+    ch = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=(0.0, 2.0))
+    assert ch.coord_dimensions == ("time", "length", "length")
+
+
+def test_bounds_in_different_units_of_one_dimension_still_work() -> None:
+    """The check is on the dimension, not the unit: `ms` converts to `s`."""
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(circle, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(2000.0, "ms"))
+    )
+    p = {"x": u.Q(0.5, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+    got = cxc.pt_map(p, ch.M, cxc.cart3d, ch.M, ch)
+    assert 0.0 <= float(got["tau"].ustrip("s")) <= 2.0
 
 
 def test_inside_the_reach_the_jacobian_factor_is_positive() -> None:
