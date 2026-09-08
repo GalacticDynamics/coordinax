@@ -274,6 +274,57 @@ Q([1.5, 0. , 0. ], 'km')
 
 Which of the two readings a frame is built on is not a setting on the chart or the builder. The velocity of the frame origin at label $s$ is $\partial\gamma/\partial t$ at fixed $s$, taken on whatever curve the builder was handed: a bare $\gamma(\sigma, t)$ gives the velocity of the material point $\sigma$; `ArcLength` adds the advection term that holds the label at fixed arc length; `LagrangianArcLength` removes it again. The parametrisation supplies the reading, and nothing downstream overrides it.
 
+### The Frame Velocity
+
+`velocity` returns that $\partial\gamma/\partial t$ — the ADM shift $\boldsymbol\beta$, the rate at which the frame origin moves. It reports what the curve says and never chooses a reading:
+
+```{code-block} python
+>>> def stretching(sigma, t):
+...     sv, tv = sigma.ustrip("km"), t.ustrip("s")
+...     z = jnp.zeros_like(sv)
+...     return u.Q(jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
+
+>>> worldtube = cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km"))
+>>> worldtube.velocity(u.Q(1.0, "s")).round(3)
+Q([0.65 , 0.169, 0.   ], 'km / s')
+
+```
+
+Its argument means what `location`'s does on the same builder: the evaluation time when a station is pinned, the station otherwise. The two sections agree where they cross, so binding the slice with `AtTime` gives the same answer at the same event:
+
+```{code-block} python
+>>> slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretching, u.Q(1.0, "s")), "km")
+>>> slice_.velocity(u.Q(1.3, "km")).round(3)
+Q([0.65 , 0.169, 0.   ], 'km / s')
+
+```
+
+A curve with no time in it has a frame that does not move, so `velocity` is zero. It is reported per second; the choice is immaterial rather than arbitrary, because zero converts to zero in any time unit.
+
+Only `AtTime` is seen. A curve that binds its own time — `lambda tau: gamma(tau, my_t)` — is indistinguishable from a static one and reports zero.
+
+#### Transporting A Velocity
+
+Do not build a velocity transform out of $\boldsymbol\beta$ by hand. `coordinax.transforms.TimeDep` takes a curve-frame builder directly, and its prolongation differentiates the whole map:
+
+```{code-block} python
+>>> import coordinax.transforms as cxfm
+>>> op = cxfm.TimeDep(worldtube)
+>>> op.is_time_dependent
+True
+
+```
+
+The closed form $R(v - \boldsymbol\beta)$ is exact only _on_ the curve axis. Off it, the neglected $\dot R\,\mathbf{n}$ term — the triad rotating an off-axis point out from under itself — grows with the offset:
+
+| point | truth | $R(v-\boldsymbol\beta)$ | error |
+| --- | --- | --- | --- |
+| on the curve | `[0.316, -0.226, 0]` | `[0.316, -0.226, 0]` | 0 |
+| $n = 0.5\,\mathrm{km}$ | `[0.371, -0.236, 0]` | `[0.316, -0.226, 0]` | 0.056 |
+| $n = 2\,\mathrm{km}$ | `[0.537, -0.265, 0]` | `[0.316, -0.226, 0]` | 0.224 |
+
+A tubular chart exists to describe points off the axis, so the closed form is wrong exactly where the chart is used. `TimeDep` is right everywhere, and the Coriolis and centrifugal terms fall out of the same prolongation — see the {doc}`co-rotating frames tutorial <coordinax:tutorials/corotating_frames>`.
+
 ### Four Curve Shapes
 
 A curve is not always handed to `ArcLength` to be reparametrised — it can also arrive already arc-length parametrised, in one of a few shapes. This section walks through each.

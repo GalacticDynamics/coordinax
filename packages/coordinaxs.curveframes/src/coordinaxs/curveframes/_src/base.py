@@ -22,6 +22,7 @@ from typing import Any, cast
 from typing_extensions import TypeVar
 
 import equinox as eqx
+import jax.numpy as jnp
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
@@ -424,3 +425,93 @@ class AbstractCurveFrameBuilder(eqx.Module):
         b, p = self._resolve(tau)
         R = b.rotation_matrix(p.astype(float))
         return u.Q(R[0], "")
+
+    def velocity(self, tau: Any, /) -> u.Q:
+        r"""Return the frame origin's velocity, $\partial\gamma/\partial t$.
+
+        The ADM shift $\boldsymbol\beta$: how fast the curve point this frame
+        rides on is moving, holding the curve's *first* argument fixed. It is
+        read off the curve rather than chosen -- which of the Eulerian and
+        Lagrangian readings you get is whatever the parametrisation you handed
+        in already says, and this never overrides it.
+
+        ``tau`` means what it means for `location` on the same builder: the
+        evaluation time when a station is pinned, the station otherwise. The
+        two branches therefore take arguments of different *dimension*.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        >>> def stretching(sigma: u.Q, t: u.Q) -> u.Q:
+        ...     sv, tv = sigma.ustrip("km"), t.ustrip("s")
+        ...     z = jnp.zeros_like(sv)
+        ...     return u.Q(jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
+
+        A pinned station is one material point's history, so ``tau`` is the
+        time:
+
+        >>> worldtube = cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km"))
+        >>> worldtube.velocity(u.Q(1.0, "s")).round(3)
+        Q([0.65 , 0.169, 0.   ], 'km / s')
+
+        `AtTime` fixes the slice instead, so ``tau`` is the station -- and the
+        answer is the same, because it is the same event either way:
+
+        >>> slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretching, u.Q(1.0, "s")), "km")
+        >>> slice_.velocity(u.Q(1.3, "km")).round(3)
+        Q([0.65 , 0.169, 0.   ], 'km / s')
+
+        A curve with no time in it has a frame that does not move:
+
+        >>> def circle(tau: u.Q) -> u.Q:
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+        >>> cxfc.BishopBuilder(circle, "s").velocity(u.Q(0.0, "s"))
+        Q([0., 0., 0.], 'km / s')
+
+        Notes
+        -----
+        Do **not** build a velocity transform out of this by hand.
+        $R(v-\boldsymbol\beta)$ is exact only *on* the curve axis; off it the
+        neglected $\dot R\,\mathbf{n}$ term grows with the offset, and a
+        tubular chart exists to describe points off the axis.
+        `coordinax.transforms.TimeDep` wraps a builder directly and gets this
+        right everywhere, by differentiating the whole map.
+
+        A static curve's zero is reported per **second**. The choice is
+        immaterial rather than arbitrary: zero converts to zero in any time
+        unit.
+
+        A curve that binds its own time -- ``lambda tau: gamma(tau, my_t)``
+        rather than `AtTime` -- is indistinguishable from a static one and so
+        reports zero. Wrap the time with `AtTime` for it to be seen.
+
+        """
+        curve = self.curve
+        if _is_two_argument(curve):
+            # Station pinned: `tau` is the time, and the station is the field.
+            station, t, inner = self.station, tau, curve
+        elif isinstance(curve, AtTime) and _is_two_argument(curve.curve):
+            # A bound slice: `tau` is the station, and the time is the wrapper's.
+            station, t, inner = tau, curve.t, curve.curve
+        else:
+            # Nothing to differentiate. Taking the shape and unit from the
+            # curve keeps this the same kind of thing as the other branches.
+            loc = self.location(tau)
+            per_time = cast("u.AbstractUnit", u.unit_of(loc)) / u.unit("s")
+            return u.Q(jnp.zeros_like(loc.value), per_time)
+
+        # `cast`: on the branches that reach here `inner` is the *two*-argument
+        # curve, which the `curve` field's one-argument annotation does not
+        # describe -- `_is_two_argument` is the check, and it is not one a type
+        # checker can follow.
+        two_arg = cast("Callable[[Any, Any], Any]", inner)
+
+        def at(t_: Any) -> Any:
+            return two_arg(station, t_)
+
+        return u.experimental.jacfwd(at, units=(u.unit_of(t),))(t)
