@@ -43,7 +43,7 @@ def pt_map(
     >>> q = cxc.pt_map(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
     >>> q
     {'r': Array(3.74165739, dtype=float64, ...),
-     'theta': Array(0.64052231, dtype=float64),
+     'theta': Array(0.64052231, dtype=float64, ...),
      'phi': Array(1.10714872, dtype=float64, ...)}
 
     The output `q` represents the same geometric point but expressed in the
@@ -52,8 +52,8 @@ def pt_map(
     The representation remains unchanged; only the chart changes:
 
     >>> cxc.pt_map(q, cxc.sph3d, cxr.point, cxc.cart3d, cxr.point)
-    {'x': Array(1., dtype=float64), 'y': Array(2., dtype=float64),
-     'z': Array(3., dtype=float64)}
+    {'x': Array(1., dtype=float64, ...), 'y': Array(2., dtype=float64, ...),
+     'z': Array(3., dtype=float64, ...)}
 
     Let's work through more examples.
 
@@ -131,7 +131,7 @@ def pt_map(
     >>> q = cxc.pt_map(p, cxc.cart3d, cxr.point, cxc.sph3d)
     >>> q
     {'r': Array(3.74165739, dtype=float64, ...),
-     'theta': Array(0.64052231, dtype=float64),
+     'theta': Array(0.64052231, dtype=float64, ...),
      'phi': Array(1.10714872, dtype=float64, ...)}
 
     The output `q` represents the same geometric point but expressed in the
@@ -140,8 +140,8 @@ def pt_map(
     The representation remains unchanged; only the chart changes:
 
     >>> cxc.pt_map(q, cxc.sph3d, cxr.point, cxc.cart3d)
-    {'x': Array(1., dtype=float64), 'y': Array(2., dtype=float64),
-     'z': Array(3., dtype=float64)}
+    {'x': Array(1., dtype=float64, ...), 'y': Array(2., dtype=float64, ...),
+     'z': Array(3., dtype=float64, ...)}
 
     """
     # redispatch on the combination of GeometryKind
@@ -203,7 +203,7 @@ def pt_map(
     >>> cxc.pt_map(p, cxc.cart3d, cxr.point_geom, cxr.point,
     ...                             cxc.sph3d, cxr.point_geom, cxr.point)
     {'r': Array(3.74165739, dtype=float64, ...),
-     'theta': Array(0.64052231, dtype=float64),
+     'theta': Array(0.64052231, dtype=float64, ...),
      'phi': Array(1.10714872, dtype=float64, ...)}
 
     """

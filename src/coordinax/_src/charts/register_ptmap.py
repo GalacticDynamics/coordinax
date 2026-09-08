@@ -104,7 +104,7 @@ def pt_map(q: None, /, *fixed_args: Any, **fixed_kw: Any) -> Callable[..., Any]:
     >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> map(q)
     {'r': Array(1., dtype=float64, ...),
-     'theta': Array(1.57079633, dtype=float64),
+     'theta': Array(1.57079633, dtype=float64, ...),
      'phi': Array(0., dtype=float64, ...)}
 
     `unxt.Quantity` inputs are also accepted, and are interpreted as being in
@@ -153,7 +153,7 @@ def pt_map(
     >>> map = cxc.pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> map(p)
     {'r': Array(1., dtype=float64, ...),
-     'theta': Array(1.57079633, dtype=float64),
+     'theta': Array(1.57079633, dtype=float64, ...),
      'phi': Array(0., dtype=float64, ...)}
 
     `unxt.Quantity` inputs are also accepted, and are interpreted as being in
@@ -840,8 +840,8 @@ def pt_map(
     >>> p = {"rho": 0, "phi": 180, "z": 1}
     >>> usys = u.unitsystem("m", "deg")
     >>> cxc.pt_map(p, cxm.R3, cxc.cyl3d, cxm.R3, cxc.loncoslat_sph3d, usys=usys)
-    {'lon_coslat': Array(1.10218212e-14, dtype=float64),
-     'lat': Array(1.57079633, dtype=float64),
+    {'lon_coslat': Array(1.10218212e-14, dtype=float64, ...),
+     'lat': Array(1.57079633, dtype=float64, ...),
      'distance': Array(1., dtype=float64, weak_type=True)}
 
     """
@@ -880,17 +880,24 @@ def pt_map(
     >>> p = {"x": 2.0, "y": 0.0, "z": 0.0}  # No units
     >>> cxc.pt_map(p, cxm.R3, cxc.cart3d, cxm.R3, cxc.sph3d)
     {'r': Array(2., dtype=float64, ...),
-     'theta': Array(1.57079633, dtype=float64),
+     'theta': Array(1.57079633, dtype=float64, ...),
      'phi': Array(0., dtype=float64, ...)}
 
     """
     del usys
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     x, y, z = p["x"], p["y"], p["z"]
-    r = jnp.sqrt(x**2 + y**2 + z**2)
-    # Avoid division by zero: when r == 0, set theta = 0 by convention
-    theta = jnp.acos(jnp.where(r == 0, jnp.ones(r.shape), z / r))
-    # atan2 handles the case when x = y = 0, returning phi = 0
+    # `hypot`/`atan2` rather than `sqrt(x**2 + y**2 + z**2)` and `acos(z / r)`:
+    # squaring over/underflows a decade and a half short of the float range
+    # (`r` of a 10 kpc position in metres is `inf` in float32), and `acos`
+    # saturates as `z / r -> 1`, losing every digit of `theta` near the poles.
+    # Both `atan2` calls handle their own singular point, so no `where` guard
+    # is needed: `atan2(0, 0) == 0` keeps the r == 0 convention theta == 0, and
+    # phi == 0 on the z axis. This matches `Cart2D -> Polar2D`, which is
+    # already written this way.
+    rho = jnp.hypot(x, y)
+    r = jnp.hypot(rho, z)
+    theta = jnp.atan2(rho, z)
     phi = jnp.atan2(y, x)
     return canonical_containers({"r": r, "theta": theta, "phi": phi}, to_chart)
 
@@ -922,15 +929,25 @@ def pt_map(
 
     >>> p = {"rho": 3.0, "phi": 0, "z": 0.0}  # No units
     >>> cxc.pt_map(p, cxm.R3, cxc.cyl3d, cxm.R3, cxc.sph3d)
-    {'r': Array(3., dtype=float64, ...), 'theta': Array(1.57079633, dtype=float64),
+    {'r': Array(3., dtype=float64, ...), 'theta': Array(1.57079633, dtype=float64, ...),
      'phi': 0}
 
     """
     del usys  # unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
+    # `atan2(rho, z)` rather than `acos(z / r)`, which saturates as `z / r -> 1`
+    # and loses every digit of `theta` near the poles. `atan2(0, 0) == 0` keeps
+    # the r == 0 convention theta == 0, so the `where` guard is not needed.
+    #
+    # `abs(rho)` because `atan2` is sign-sensitive in its first argument where
+    # `acos(z / hypot(rho, z))` was not: `hypot` squares `rho` away, so a
+    # negative `rho` used to give the same `theta` as its positive twin.
+    # `Cylindrical3D` does not value-validate `rho`, so a hand-built negative
+    # one is reachable, and without this it would produce a negative `theta`
+    # outside the `[0, pi]` that `Spherical3D.check_data` enforces.
+    # `Cart3D -> Spherical3D` needs no such guard: its `rho` is a `hypot`.
     r_ = jnp.hypot(p["rho"], p["z"])
-    # Avoid division by zero: when r == 0, set theta = 0 by convention
-    theta = jnp.acos(jnp.where(r_ == 0, jnp.ones(r_.shape), p["z"] / r_))
+    theta = jnp.atan2(jnp.abs(p["rho"]), p["z"])
     return canonical_containers({"r": r_, "theta": theta, "phi": p["phi"]}, to_chart)
 
 

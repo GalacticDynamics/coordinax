@@ -80,7 +80,7 @@ def jac_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     >>> map(at)
     QM(
         [[ 1.,  0.,  0.],
-         [-0., -0., -1.],
+         [ 0.,  0., -1.],
          [ 0.,  1.,  0.]],
         '((, , ), (rad / m, rad / m, rad / m), (rad / m, rad / m, rad / m))'
     )
@@ -110,7 +110,7 @@ def jac_pt_map(
     >>> map(at)
     QM(
         [[ 1.,  0.,  0.],
-         [-0., -0., -1.],
+         [ 0.,  0., -1.],
          [ 0.,  1.,  0.]],
         '((, , ), (rad / m, rad / m, rad / m), (rad / m, rad / m, rad / m))'
     )
@@ -152,7 +152,7 @@ def jac_pt_map(
     >>> at = jnp.array([1, 0, 0])
     >>> jac_fn(at)
     Array([[ 1.,  0.,  0.],
-           [-0., -0., -1.],
+           [ 0.,  0., -1.],
            [ 0.,  1.,  0.]], dtype=float64)
 
     >>> import jax
