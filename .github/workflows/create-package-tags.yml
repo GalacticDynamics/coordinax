@@ -38,10 +38,15 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Validate that this is a .0 release
+        # Through `env`, not `${{ }}` inside `run`: the tag name is
+        # attacker-supplied (anyone who can push `v*`), and interpolation
+        # happens before bash parses the line, so a crafted tag would break
+        # out of the quotes -- *before* the format check below could reject
+        # it. As an environment variable its content is never re-parsed.
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          VERSION="${{ steps.version.outputs.version }}"
-
           # Validate coordinator tag format: must be exactly vX.Y.0 (no suffixes like -rc1)
           if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.0$ ]]; then
             echo "ERROR: Coordinator tag must match pattern ^v[0-9]+\.[0-9]+\.0$ (e.g., v1.2.0)"
@@ -64,10 +69,10 @@ jobs:
 
       - name: Create and push package-specific tags
         id: create_tags
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          TAG="${{ steps.version.outputs.tag }}"
-
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

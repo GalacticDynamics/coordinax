@@ -125,8 +125,16 @@ jobs:
         run: uv sync --no-default-groups --group nox --group test --locked
 
       - name: Test package
+        # `$EXCLUDE_ARGS` unquoted, from `env`: word splitting is wanted here
+        # (it carries zero or more `--exclude-package` flags), but expansion
+        # of a variable's *value* stops there -- bash does not re-parse it for
+        # quotes or metacharacters the way it would re-parse an interpolated
+        # `${{ }}`. The args derive from changed file paths, which a fork PR
+        # controls.
+        env:
+          EXCLUDE_ARGS: ${{ needs.prepare_test_matrix.outputs.exclude-args }}
         run: |
-          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow and not subprocess_heavy"
+          uv run --no-sync nox -s test -- $EXCLUDE_ARGS --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow and not subprocess_heavy"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7.0.0
@@ -203,8 +211,16 @@ jobs:
         run: uv sync --no-default-groups --group nox --group test --locked
 
       - name: Test package
+        # `$EXCLUDE_ARGS` unquoted, from `env`: word splitting is wanted here
+        # (it carries zero or more `--exclude-package` flags), but expansion
+        # of a variable's *value* stops there -- bash does not re-parse it for
+        # quotes or metacharacters the way it would re-parse an interpolated
+        # `${{ }}`. The args derive from changed file paths, which a fork PR
+        # controls.
+        env:
+          EXCLUDE_ARGS: ${{ needs.prepare_test_matrix.outputs.exclude-args }}
         run: |
-          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow and not subprocess_heavy"
+          uv run --no-sync nox -s test -- $EXCLUDE_ARGS --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow and not subprocess_heavy"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7.0.0
