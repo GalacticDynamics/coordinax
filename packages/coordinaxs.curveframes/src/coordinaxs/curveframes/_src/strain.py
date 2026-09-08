@@ -16,10 +16,18 @@ from collections.abc import Callable
 from typing import Any, cast
 
 import jax
+import jax.numpy as jnp
 import unxts.linalg as ul
 
 import unxt as u
 from coordinaxs.api.manifolds import metric_matrix
+
+_MSG_BATCHED_TIME = (
+    "`rate_of_strain` differentiates at one time, so `t` must be a scalar; got "
+    "shape {shape}. `K_ij` is a 2-tensor, and a batched `t` would make the "
+    "Jacobian one rank higher -- `TubularChart` is single-point for the same "
+    "reason. Use `jax.vmap` over scalar calls."
+)
 
 _MSG_BARE_TIME = (
     "`rate_of_strain` differentiates with respect to `t`, so `t` must carry a "
@@ -55,10 +63,18 @@ def rate_of_strain(
     Takes the family rather than one chart because $\partial_t$ needs
     neighbouring slices, and a `TubularChart` is a single one.
 
+    ``t`` must be a scalar. A batched one would raise the Jacobian's rank
+    above 2, and `TubularChart` is single-point for the same reason; use
+    `jax.vmap` over scalar calls. Left unguarded it failed inside the chart
+    with ``All input arrays must have the same shape``, naming nothing.
+
     """
     t_unit = u.unit_of(t)
     if t_unit is None:
         raise TypeError(_MSG_BARE_TIME)
+    shape = jnp.shape(t.value if t_unit is not None else t)
+    if shape != ():
+        raise ValueError(_MSG_BATCHED_TIME.format(shape=shape))
 
     def gamma(t_val: Any) -> Any:
         chart = chart_at_time(u.Q(t_val, t_unit))

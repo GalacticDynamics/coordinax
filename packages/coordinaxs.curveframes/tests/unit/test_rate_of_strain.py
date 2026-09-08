@@ -93,6 +93,19 @@ def test_the_rate_is_per_the_unit_of_the_time_it_was_given() -> None:
     )
 
 
+def test_a_batched_time_is_refused() -> None:
+    """`K_ij` is a 2-tensor, so the time it is taken at must be a scalar.
+
+    A batched `t` raises the Jacobian's rank above 2; `TubularChart` is
+    single-point for the same reason. Unguarded it failed inside the chart
+    with `All input arrays must have the same shape`, naming nothing.
+    """
+    with pytest.raises(ValueError, match="must be a scalar"):
+        cxfc.rate_of_strain(
+            _family(stretch_and_bend), POINT, u.Q(jnp.asarray([0.5, T0]), "s")
+        )
+
+
 def test_a_bare_time_is_refused() -> None:
     """Nothing else states what the rate is *per*."""
     with pytest.raises(TypeError, match="must carry a unit"):
