@@ -90,7 +90,7 @@ class AbstractSemanticKind(CanonicalStaticReprMixin, metaclass=abc.ABCMeta):
     >>> p = {"x": 1.0, "y": 2.0, "z": 3.0}
     >>> cx.cconvert(p, cx.cart3d, rep, cx.sph3d, rep)
     {'r': Array(3.74165739, dtype=float64, ...),
-     'theta': Array(0.64052231, dtype=float64),
+     'theta': Array(0.64052231, dtype=float64, ...),
      'phi': Array(1.10714872, dtype=float64, ...)}
 
     The output is still point data representing the same location, but
@@ -181,7 +181,7 @@ class Location(AbstractSemanticKind):
     >>> p = {"x": 1.0, "y": 2.0, "z": 3.0}
     >>> cxr.cconvert(p, cxc.cart3d, rep, cxc.sph3d, rep)
     {'r': Array(3.74165739, dtype=float64, ...),
-     'theta': Array(0.64052231, dtype=float64),
+     'theta': Array(0.64052231, dtype=float64, ...),
      'phi': Array(1.10714872, dtype=float64, ...)}
 
     The output is still point data representing the same location, but

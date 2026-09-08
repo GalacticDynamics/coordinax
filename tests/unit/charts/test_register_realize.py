@@ -3,6 +3,8 @@
 cartesian_chart, pt_map.
 """
 
+import math
+
 import hypothesis.strategies as st
 import jax
 import jax.numpy as jnp
@@ -218,3 +220,84 @@ class TestAxisSingularityGradSafe:
         back = cxc.pt_map(pp, cxc.poincarepolar6d.M, cxc.poincarepolar6d, ps.M, ps)
         assert all(bool(jnp.isfinite(v.value)) for v in pp.values())
         assert all(bool(jnp.isfinite(v.value)) for v in back.values())
+
+
+# =============================================================================
+
+
+class TestSphericalConditioning:
+    """The transition into ``Spherical3D`` is conditioned at the range edges and poles.
+
+    It used to compute ``r = sqrt(x**2 + y**2 + z**2)`` and ``theta = acos(z / r)``.
+    Squaring costs half the exponent range, and ``acos`` saturates as ``z / r -> 1``;
+    ``hypot`` chains and ``atan2`` have neither problem. The conventions the old
+    ``where(r == 0, ...)`` guard produced are unchanged, and ``atan2``'s sensitivity
+    to the sign of its first argument -- which ``acos`` did not have -- is guarded.
+    """
+
+    @pytest.mark.parametrize("mag", [3e20, 1e-25])
+    def test_r_survives_the_float32_range_edges(self, mag):
+        """``mag ** 2`` is out of float32 range either way; ``mag`` itself is not.
+
+        3e20 m is about 10 kpc, and squaring it overflowed to ``inf``; 1e-25 m
+        underflowed to 0. ``abs=0`` because `approx`'s default absolute
+        tolerance is far larger than the small magnitude being checked.
+        """
+        f32 = jnp.float32
+        p = {k: u.Q(f32(v), "m") for k, v in (("x", mag), ("y", 0.0), ("z", 0.0))}
+        r = cxc.pt_map(p, cxc.cart3d, cxc.sph3d)["r"]
+        assert float(r.ustrip("m")) == pytest.approx(mag, rel=1e-5, abs=0)
+
+    @pytest.mark.parametrize(
+        ("from_chart", "build"),
+        [
+            (
+                cxc.cart3d,
+                lambda rho: {
+                    "x": u.Q(rho, "m"),
+                    "y": u.Q(0.0, "m"),
+                    "z": u.Q(1.0, "m"),
+                },
+            ),
+            (
+                cxc.cyl3d,
+                lambda rho: {
+                    "rho": u.Q(rho, "m"),
+                    "phi": u.Angle(0.0, "rad"),
+                    "z": u.Q(1.0, "m"),
+                },
+            ),
+        ],
+        ids=["cart3d", "cyl3d"],
+    )
+    def test_theta_resolves_near_the_pole(self, from_chart, build):
+        """``acos(z / r)`` returned exactly 0 here; both sources share the fix."""
+        rho = 1e-10
+        theta = cxc.pt_map(build(rho), from_chart, cxc.sph3d)["theta"]
+        assert float(theta.ustrip("rad")) == pytest.approx(math.atan2(rho, 1.0))
+
+    def test_theta_is_sign_invariant_in_rho(self):
+        """A negative ``rho`` gives its positive twin's ``theta``, and stays in domain.
+
+        ``acos(z / hypot(rho, z))`` squared the sign away; ``atan2`` would not.
+        ``Cylindrical3D`` does not value-validate ``rho``, so a hand-built negative
+        one is reachable, and a negative ``theta`` is outside the ``[0, pi]`` that
+        ``Spherical3D.check_data`` enforces.
+        """
+
+        def to_sph(rho):
+            p = {"rho": u.Q(rho, "m"), "phi": u.Angle(0.0, "rad"), "z": u.Q(4.0, "m")}
+            return cxc.pt_map(p, cxc.cyl3d, cxc.sph3d)
+
+        out = to_sph(-3.0)
+        assert float(out["theta"].ustrip("rad")) == pytest.approx(
+            float(to_sph(3.0)["theta"].ustrip("rad"))
+        )
+        cxc.sph3d.check_data(out, values=True)  # in domain
+
+    def test_origin_keeps_the_zero_theta_convention(self):
+        """What the removed ``where(r == 0, ...)`` guard used to supply."""
+        p = {k: u.Q(0.0, "m") for k in ("x", "y", "z")}
+        out = cxc.pt_map(p, cxc.cart3d, cxc.sph3d)
+        assert float(out["r"].ustrip("m")) == 0.0
+        assert float(out["theta"].ustrip("rad")) == 0.0

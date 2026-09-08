@@ -71,7 +71,7 @@ def cconvert(*args: Any, **kwargs: Any) -> Any:
 
     >>> cxr.cconvert(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
     {'r': Array(3.74165739, dtype=float64, ...),
-     'theta': Array(0.64052231, dtype=float64),
+     'theta': Array(0.64052231, dtype=float64, ...),
      'phi': Array(1.10714872, dtype=float64, ...)}
 
     """

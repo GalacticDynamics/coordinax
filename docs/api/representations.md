@@ -31,14 +31,14 @@ This is separate from charts and manifolds:
 >>> q_sph = cxr.cconvert(q_cart, cxc.cart3d, rep, cxc.sph3d, rep)
 >>> q_sph
 {'r': Array(3.74165739, dtype=float64, ...),
- 'theta': Array(0.64052231, dtype=float64),
+ 'theta': Array(0.64052231, dtype=float64, ...),
  'phi': Array(1.10714872, dtype=float64, ...)}
 
 >>> # Build a reusable conversion map.
 >>> to_sph = cxr.cmap(cxc.cart3d, cxr.point, cxc.sph3d)
 >>> to_sph(q_cart)
 {'r': Array(3.74165739, dtype=float64, ...),
- 'theta': Array(0.64052231, dtype=float64),
+ 'theta': Array(0.64052231, dtype=float64, ...),
  'phi': Array(1.10714872, dtype=float64, ...)}
 
 # Change tangent components between basis conventions in the same chart.

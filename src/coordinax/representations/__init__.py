@@ -68,7 +68,7 @@ preserving its interpretation:
 >>> q = cxr.cconvert(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
 >>> q
 {'r': Array(3.74165739, dtype=float64, ...),
- 'theta': Array(0.64052231, dtype=float64),
+ 'theta': Array(0.64052231, dtype=float64, ...),
  'phi': Array(1.10714872, dtype=float64, ...)}
 
 Here `p` is interpreted as point data in Cartesian 3D coordinates, and `q` is

@@ -211,7 +211,7 @@ def tangent_map(
     >>> v = {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")}
     >>> at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
     >>> cxr.tangent_map(v, cxc.cart3d, cxr.phys_basis, cxc.sph3d, at=at)
-    {'r': Q(1., 'm / s'), 'theta': Q(-0., 'm / s'), 'phi': Q(0., 'm / s')}
+    {'r': Q(1., 'm / s'), 'theta': Q(0., 'm / s'), 'phi': Q(0., 'm / s')}
 
     The same call can be made using a physical representation:
 

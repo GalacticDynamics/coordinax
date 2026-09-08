@@ -151,7 +151,7 @@ Converting a `Tangent` to a new chart requires knowing the **base point** at whi
 >>> vel_sph = vel_cart.cconvert(cxc.sph3d, at=point)
 >>> print(vel_sph)
 <Tangent: chart=Spherical3D (r[m / s], theta[rad / s], phi[rad / s])
-    [ 1. -0.  0.]>
+    [1. 0. 0.]>
 ```
 
 **Key point**: the `at=` base point must be in the **same chart** as the tangent vector. To convert a point and its tangent field together in one call, bundle them into a `Coordinate` — see the [Coordinate tutorial](../tutorials/coordinate_objects.md).
@@ -238,7 +238,7 @@ Use scalar-first design and batch with `vmap`:
 >>> vec_fn = jax.vmap(lambda v, p: cx.cconvert(v, cxc.sph3d, at=p))
 >>> vels_sph = vec_fn(batch_vel, batch_point)
 >>> print(vels_sph.data)  # Spherical3D(M=Rn(3))
-{'phi': Q([0., 0., 0.], 'rad / s'), 'r': Q([1., 2., 3.], 'm / s'), 'theta': Q([-0., -0., -0.], 'rad / s')}
+{'phi': Q([0., 0., 0.], 'rad / s'), 'r': Q([1., 2., 3.], 'm / s'), 'theta': Q([0., 0., 0.], 'rad / s')}
 ```
 
 ## When To Use Tangent

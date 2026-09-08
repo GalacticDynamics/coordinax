@@ -118,7 +118,7 @@ A tangent vector lives in the tangent space _at a point_. The library enforces t
 ... )
 >>> print(v.cconvert(cx.sph3d, at=base))
 <Tangent: chart=Spherical3D (r[m / s], theta[rad / s], phi[rad / s])
-    [ 1. -0.  0.]>
+    [1. 0. 0.]>
 
 ```
 

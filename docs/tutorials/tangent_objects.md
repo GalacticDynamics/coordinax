@@ -83,7 +83,7 @@ Converting a tangent vector to a new chart requires the **base point** at which 
 >>> vel_sph = vel_cart.cconvert(cxc.sph3d, at=point)
 >>> print(vel_sph)
 <Tangent: chart=Spherical3D (r[m / s], theta[rad / s], phi[rad / s])
-    [ 1. -0.  0.]>
+    [1. 0. 0.]>
 ```
 
 The basis (`coord_basis`) and semantic (`vel`) are preserved across the conversion; only the chart and component values change.
