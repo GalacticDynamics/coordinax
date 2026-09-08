@@ -133,14 +133,21 @@ def test_the_array_fastpath_reaches_velocity(bare: bool) -> None:
     )
 
 
-def test_a_static_curve_has_a_frame_that_does_not_move() -> None:
-    """No time in the curve, so no frame velocity -- zero, per second."""
+def test_a_one_argument_curve_has_a_frame_that_does_not_move() -> None:
+    r"""No *second* argument, so there is no time to differentiate against.
 
-    def circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
-        t = tau.ustrip("s")
-        return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+    Parametrised by arc length rather than by anything time-like, because the
+    distinction being tested is easy to blur: this curve has a perfectly good
+    `d(gamma)/d(arc)`, and it is the **tangent**. The frame velocity is
+    $\partial\gamma/\partial t$ at fixed label, and with no `t` in the
+    signature there is nothing for it to be but zero.
+    """
 
-    got = cxfc.BishopBuilder(circle, "s").velocity(u.Q(0.3, "s"))
+    def circle(arc: u.AbstractQuantity) -> u.AbstractQuantity:
+        a = arc.ustrip("km")
+        return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
+
+    got = cxfc.BishopBuilder(circle, "km").velocity(u.Q(0.3, "km"))
     assert str(u.unit_of(got)) == "km / s"
     assert jnp.allclose(got.ustrip("km/s"), jnp.zeros(3))
 

@@ -464,13 +464,16 @@ class AbstractCurveFrameBuilder(eqx.Module):
         >>> slice_.velocity(u.Q(1.3, "km")).round(3)
         Q([0.65 , 0.169, 0.   ], 'km / s')
 
-        A curve with no time in it has a frame that does not move:
+        A curve taking no *second* argument has nothing to differentiate
+        against, so its frame does not move. Note this is not the same as the
+        curve having no derivative: it has a fine one, and that is the
+        `tangent`.
 
-        >>> def circle(tau: u.Q) -> u.Q:
-        ...     t = tau.ustrip("s")
-        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+        >>> def circle(arc: u.Q) -> u.Q:
+        ...     a = arc.ustrip("km")
+        ...     return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
 
-        >>> cxfc.BishopBuilder(circle, "s").velocity(u.Q(0.0, "s"))
+        >>> cxfc.BishopBuilder(circle, "km").velocity(u.Q(0.0, "km"))
         Q([0., 0., 0.], 'km / s')
 
         Notes
