@@ -5866,35 +5866,38 @@ A **reference frame** is an abstract label used to identify a coordinate descrip
 
 !!! info `Bob` and `bob`
 
-    An example inertial reference frame in uniform motion relative to `Alice`.
-
-    `Bob` is a **non-rotating** observer moving at constant velocity with respect to Alice. His frame is characterised by two parameters:
+    A **relativistic** example frame: an inertial observer moving at 0.9 c
+    relative to `Alice`.
 
     - **Spatial offset** from Alice's origin: $[\,100\,000\ \text{km},\; 10\,000\ \text{km},\; 0\,]$.
-    - **Velocity** relative to Alice: $\approx 269\,813\ \text{km\,s}^{-1}$ ($\approx 0.9\,c$) along Alice's $x$-axis.
+    - **Velocity** relative to Alice: $0.9\,c$ along Alice's $x$-axis.
 
-    Because Bob is non-rotating, the Alice → Bob transformation requires only a spatial `Translate` followed by a velocity kick (`Translate(semantic_kind=vel)` — a fibre-only offset; contrast with `Boost`, the Galilean boost, whose point action moves positions by $\Delta v\,\tau$ and therefore requires a time). No rotation is needed.
+    At that speed the transformation must be a **Lorentz boost**, so Bob acts
+    on spacetime — `minkowskict`, components $(ct, x, y, z)$ — not on a 3-D
+    spatial chart. A Galilean velocity kick would simply add velocities: a
+    particle already moving at $0.3\,c$ in Alice's frame comes out at
+    $1.2\,c$, which is not merely imprecise but impossible. Composing the two
+    relativistically gives $0.9449\,c$. `Carol` is the slow frame where the
+    kick *is* the right physics.
 
     **Frame transition table:**
 
     | From → To     | Transform                          |
     |---------------|------------------------------------|
     | `Bob → Bob`   | `Identity()`                       |
-    | `Alice → Bob` | `Translate([100 000, 10 000, 0] km) \| Translate([269 813 212.2, 0, 0] m/s, semantic_kind=vel)` |
-    | `Bob → Alice` | inverse of Alice → Bob: `Translate([−269 813 212.2, 0, 0] m/s, semantic_kind=vel) \| Translate([−100 000, −10 000, 0] km)` |
+    | `Alice → Bob` | `Translate([0, 1e8, 1e7, 0] m, chart=minkowskict) \| LorentzBoost([0.9, 0, 0])` |
+    | `Bob → Alice` | inverse of Alice → Bob             |
 
-    **Semantic behaviour** (per representation):
+    **Semantic behaviour.** A boost mixes $ct$ into the spatial components, so
+    unlike a velocity kick it moves *events*, not only rates. Purely spatial
+    input is refused — a 3-D point has no time component to boost — rather
+    than being silently treated as though it had one.
 
-    | Representation semantic | Effect of Alice → Bob transform |
-    |-------------------------|---------------------------------|
-    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` (unitful Quantities act as positions; bare unitless arrays are rejected — the velocity kick cannot tell a position array from a velocity array) |
-    | `Displacement`          | unchanged (both offsets are identity on displacements) |
-    | `Velocity`              | velocity shifted by `[269 813 212.2, 0, 0] m/s` |
-    | `Acceleration`          | unchanged (a constant velocity kick is identity on accelerations) |
+    **Invariant.** The boost preserves the Minkowski interval, and a null
+    separation stays null. That is the property being bought at $0.9\,c$, and
+    exactly what the Galilean kick fails to provide.
 
-    **Pre-defined instance:**
-
-    - `bob` is the canonical `Bob()` singleton.
+    **Pre-defined instance:** `bob` is the canonical `Bob()` singleton.
 
     **Examples:**
 
@@ -5905,9 +5908,58 @@ A **reference frame** is an abstract label used to identify a coordinate descrip
     Identity()
 
     >>> op = cxf.frame_transition(cxf.alice, cxf.bob)
-    >>> type(op).__name__
-    'Composed'
+    >>> [type(t).__name__ for t in op.transforms]
+    ['Translate', 'LorentzBoost']
+    ```
 
+(software-spec-carol)=
+
+!!! info `Carol` and `carol`
+
+    An example inertial frame in *slow* uniform motion relative to `Alice` —
+    the Galilean counterpart to `Bob`, and the frame that carries the
+    translate-plus-velocity-kick example.
+
+    - **Spatial offset** from Alice's origin: $[\,100\,000\ \text{km},\; 10\,000\ \text{km},\; 0\,]$.
+    - **Velocity** relative to Alice: $30\ \text{km\,s}^{-1}$ (Earth's orbital
+      speed, $10^{-4}\,c$) along Alice's $x$-axis.
+
+    Because Carol is non-rotating and slow, the Alice → Carol transformation
+    needs only a spatial `Translate` followed by a velocity kick
+    (`Translate(semantic_kind=vel)` — a fibre-only offset; contrast with
+    `Boost`, the Galilean boost, whose point action moves positions by
+    $\Delta v\,\tau$ and therefore requires a time). At $10^{-4}\,c$ the
+    relativistic correction is one part in $10^{8}$, so adding velocities is
+    correct and ordinary 3-D charts suffice.
+
+    **Frame transition table:**
+
+    | From → To       | Transform                          |
+    |-----------------|------------------------------------|
+    | `Carol → Carol` | `Identity()`                       |
+    | `Alice → Carol` | `Translate([100 000, 10 000, 0] km) \| Translate([30, 0, 0] km/s, semantic_kind=vel)` |
+    | `Carol → Alice` | inverse of Alice → Carol           |
+
+    **Semantic behaviour** (per representation):
+
+    | Representation semantic | Effect of Alice → Carol transform |
+    |-------------------------|-----------------------------------|
+    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` (unitful Quantities act as positions; bare unitless arrays are rejected — the velocity kick cannot tell a position array from a velocity array) |
+    | `Displacement`          | unchanged (both offsets are identity on displacements) |
+    | `Velocity`              | velocity shifted by `[30, 0, 0] km/s` |
+    | `Acceleration`          | unchanged (a constant velocity kick is identity on accelerations) |
+
+    **Pre-defined instance:** `carol` is the canonical `Carol()` singleton.
+
+    **Examples:**
+
+    ```pycon
+    >>> import coordinax.frames as cxf
+
+    >>> cxf.frame_transition(cxf.carol, cxf.carol)
+    Identity()
+
+    >>> op = cxf.frame_transition(cxf.alice, cxf.carol)
     >>> import coordinax as cx
     >>> import unxt as u
     >>> d = cx.cdict(u.Q([0.0, 0.0, 0.0], "km"))
