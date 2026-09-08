@@ -125,6 +125,9 @@ jobs:
         run: uv sync --no-default-groups --group nox --group test --locked
 
       - name: Test package
+        # Ubuntu-only job, so bash is already the default shell; the
+        # `tests_nonlinux` copy pins it explicitly because Windows is not.
+        #
         # `$EXCLUDE_ARGS` unquoted, from `env`: word splitting is wanted here
         # (it carries zero or more `--exclude-package` flags), but expansion
         # of a variable's *value* stops there -- bash does not re-parse it for
@@ -211,12 +214,20 @@ jobs:
         run: uv sync --no-default-groups --group nox --group test --locked
 
       - name: Test package
+        # `shell: bash` is load-bearing, not tidiness: this job also runs on
+        # `windows-latest`, whose default shell is PowerShell, where
+        # `$EXCLUDE_ARGS` names a *PowerShell* variable rather than the
+        # environment one. It would expand to nothing and the exclusions would
+        # vanish silently -- tests passing by running more than intended. The
+        # Linux job needs no pin because bash is already its default.
+        #
         # `$EXCLUDE_ARGS` unquoted, from `env`: word splitting is wanted here
         # (it carries zero or more `--exclude-package` flags), but expansion
         # of a variable's *value* stops there -- bash does not re-parse it for
         # quotes or metacharacters the way it would re-parse an interpolated
         # `${{ }}`. The args derive from changed file paths, which a fork PR
         # controls.
+        shell: bash
         env:
           EXCLUDE_ARGS: ${{ needs.prepare_test_matrix.outputs.exclude-args }}
         run: |
