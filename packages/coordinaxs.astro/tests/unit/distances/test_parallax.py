@@ -108,3 +108,39 @@ class TestFromUnsupportedDimension:
     def test_raises_valueerror(self) -> None:
         with pytest.raises(ValueError, match="cannot build a Parallax"):
             cxastro.Parallax.from_(u.Q(1.0, "s"))
+
+
+class TestNaNIsNotANonNegativeParallax:
+    """`NaN` must not slip past the non-negativity guard.
+
+    Every direct comparison is false for `NaN`, so a guard written as
+    ``value < 0`` admits one and the constraint the type exists to enforce is
+    silently absent. #773 fixed ten guards of this shape; this one and
+    `coordinax`'s `Distance` were missed.
+    """
+
+    def test_a_bare_nan_is_refused(self):
+        with pytest.raises(Exception, match="non-negative"):
+            cxastro.Parallax(jnp.asarray(float("nan")), "mas")
+
+    def test_a_nan_hidden_in_a_batch_is_refused(self):
+        """The batch is the case a scalar-only guard would miss."""
+        with pytest.raises(Exception, match="non-negative"):
+            cxastro.Parallax(jnp.asarray([1.0, float("nan"), 3.0]), "mas")
+
+    def test_negatives_are_still_refused(self):
+        with pytest.raises(Exception, match="non-negative"):
+            cxastro.Parallax(jnp.asarray([1.0, -2.0]), "mas")
+
+    def test_zero_and_infinity_are_still_admitted(self):
+        """Zero is a distance; so is an infinitely distant source.
+
+        `inf` is deliberately still allowed -- it is a meaningful limit,
+        unlike a `NaN`, which is the absence of a value.
+        """
+        assert cxastro.Parallax(jnp.asarray([0.0, 1.0]), "mas") is not None
+        assert cxastro.Parallax(jnp.asarray([1.0, float("inf")]), "mas") is not None
+
+    def test_opting_out_still_opts_out(self):
+        """`check_negative=False` is unaffected by the tightened guard."""
+        assert cxastro.Parallax(float("nan"), "mas", check_negative=False) is not None
