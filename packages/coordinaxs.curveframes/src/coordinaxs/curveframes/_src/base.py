@@ -260,6 +260,19 @@ class AbstractCurveFrameBuilder(eqx.Module):
         Returning the builder rather than mutating keeps this usable from
         `__call__`, `location` and `tangent` alike, and keeps the two-argument
         path a routing decision made in exactly one place.
+
+        Whether that time carries a unit is the *curve's* business, and
+        nothing here settles it: `tau_unit` describes the pinned station, not
+        this parameter. A curve reading the time with `ustrip` wants a
+        `Quantity`; one reading it as a plain number wants a bare value, which
+        is the time-side counterpart of the array fastpath. Both work, and the
+        mismatched pairing fails from inside the curve -- an `AttributeError`
+        on `ustrip` one way, a `UnitConversionError` the other.
+
+        So a bare time is not rejected here. It looks rejectable from the
+        `ustrip` side, and rejecting it would break the raw-reading curve.
+        Note the consequence for `velocity`, which is a rate per the unit it
+        was given: a bare time makes it `km` rather than `km / s`.
         """
         if _is_two_argument(self.curve):
             return dataclasses.replace(

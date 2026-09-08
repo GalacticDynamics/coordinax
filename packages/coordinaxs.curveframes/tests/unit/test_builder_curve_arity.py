@@ -481,3 +481,75 @@ def test_the_dimension_guard_still_fires_on_an_inferred_unit() -> None:
     with pytest.raises(ValueError, match="dimension length"):
         b.tangent(u.Q(1.0, "s"))
     b.tangent(u.Q(1.0, "km"))  # a length is what it wants, and needs no declaring
+
+
+# --------------------------------------------------------------------------
+# What unit the *time* carries is the curve's business, not the builder's.
+
+
+def _ustrips_the_time(sigma, t):
+    """Reads the time by converting: needs a `Quantity`."""
+    sv, tv = sigma.ustrip("km"), t.ustrip("s")
+    return u.Q(
+        jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, jnp.zeros_like(sv)]), "km"
+    )
+
+
+def _reads_the_time_raw(sigma, t):
+    """Reads the time as a plain number: needs a bare one."""
+    sv = sigma.ustrip("km")
+    return u.Q(
+        jnp.stack([sv * (1 + 0.5 * t), 0.1 * t * sv**2, jnp.zeros_like(sv)]), "km"
+    )
+
+
+@pytest.mark.parametrize(
+    ("curve", "time", "rate_unit"),
+    [(_ustrips_the_time, u.Q(1.0, "s"), "km / s"), (_reads_the_time_raw, 1.0, "km")],
+    ids=["converting-curve-takes-a-quantity", "raw-curve-takes-a-bare-number"],
+)
+def test_the_curve_decides_whether_the_time_carries_a_unit(
+    curve, time, rate_unit
+) -> None:
+    """Both forms work, and `tau_unit` settles neither.
+
+    On a pinned-station builder the call-time parameter is the *time*, and
+    `tau_unit` describes the station -- so nothing on the builder states the
+    time's unit, and nothing needs to: a curve that converts wants a
+    `Quantity`, one that reads the number wants a bare value.
+
+    Pinned because the asymmetry looks like a bug from either side. Passing a
+    bare time to a converting curve raises `AttributeError: 'float' object has
+    no attribute 'ustrip'` from inside the curve, which invites "reject bare
+    times" -- and that would break the raw-reading curve, which is the
+    time-side analogue of the array fastpath.
+    """
+    b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"))
+
+    assert jnp.allclose(
+        b.location(time).ustrip("km"), jnp.array([1.95, 0.169, 0.0]), atol=1e-5
+    )
+
+    # `velocity` is a rate *per the unit of the parameter it was given*, so a
+    # bare time makes it `km` rather than `km / s`. Dimensionally different,
+    # and self-consistent: the curve took its time as a plain number, so the
+    # derivative is per plain number. Asserted rather than normalised away --
+    # it is the visible consequence of the choice this test exists to pin.
+    vel = b.velocity(time)
+    assert str(u.unit_of(vel)) == rate_unit
+    assert jnp.allclose(vel.ustrip(rate_unit), jnp.array([0.65, 0.169, 0.0]), atol=1e-5)
+
+
+@pytest.mark.parametrize(
+    ("curve", "time", "err"),
+    [
+        (_ustrips_the_time, 1.0, AttributeError),
+        (_reads_the_time_raw, u.Q(1.0, "s"), Exception),
+    ],
+    ids=["converting-curve-given-bare", "raw-curve-given-quantity"],
+)
+def test_the_mismatched_form_fails(curve, time, err) -> None:
+    """The other pairing is the curve's own error, surfacing from the curve."""
+    b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"))
+    with pytest.raises(err):
+        b.location(time)
