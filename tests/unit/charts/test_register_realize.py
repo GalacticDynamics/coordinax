@@ -14,6 +14,7 @@ from hypothesis import assume, given
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 import coordinaxs.hypothesis.main as cxst
@@ -301,3 +302,54 @@ class TestSphericalConditioning:
         out = cxc.pt_map(p, cxc.cart3d, cxc.sph3d)
         assert float(out["r"].ustrip("m")) == 0.0
         assert float(out["theta"].ustrip("rad")) == 0.0
+
+
+# =============================================================================
+
+
+class TestPtMapUnitContract:
+    """Which unit a transition's output carries, and which components keep their own.
+
+    The bodies used to do their arithmetic on `Quantity` operands, so these rules
+    were a *consequence* of `unxt` promotion. `strip`/`wrap` reproduce them
+    deliberately, so they are pinned here. All three pass against the
+    pre-`strip` bodies too -- that is what makes them a contract.
+
+    Not repeated here: unitless-in/unitless-out and angular canonicalisation,
+    which the `pt_map` doctests and `test_container_canonicalisation` already
+    cover for every chart pair.
+    """
+
+    @pytest.mark.parametrize(("x_unit", "y_unit"), [("km", "m"), ("m", "km")])
+    def test_result_takes_the_first_components_unit(self, x_unit, y_unit):
+        """Mixed units resolve to the unit of the chart's *first* component, `x`.
+
+        Not the largest, not the smallest, and not the input dict's ordering --
+        which is what `Quantity` arithmetic happened to produce.
+        """
+        p = {"x": u.Q(1.0, x_unit), "y": u.Q(2.0, y_unit), "z": u.Q(3.0, "cm")}
+        assert cxc.pt_map(p, cxc.cart3d, cxc.sph3d)["r"].unit == u.unit(x_unit)
+
+    def test_untouched_component_keeps_its_unit_and_container(self):
+        """`z` is not consumed by the cylindrical arithmetic, so it is not converted.
+
+        Round-tripping it through the group unit would turn `Q(3, "km")` into
+        `Q(3000, "m")` and degrade a `Distance` to a `Quantity`.
+        """
+        base = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        z = cxc.pt_map({**base, "z": u.Q(3.0, "km")}, cxc.cart3d, cxc.cyl3d)["z"]
+        assert z.unit == u.unit("km")
+        assert z.value == pytest.approx(3.0)
+
+        z = cxc.pt_map({**base, "z": cx.Distance(3.0, "m")}, cxc.cart3d, cxc.cyl3d)["z"]
+        assert isinstance(z, cx.Distance)
+
+    def test_untouched_angle_passes_through(self):
+        """`phi` sits outside `cyl3d -> sph3d`'s length group.
+
+        A separate body from the one above, so it needs its own case.
+        """
+        p = {"rho": u.Q(3.0, "m"), "phi": u.Angle(30.0, "deg"), "z": u.Q(4.0, "m")}
+        phi = cxc.pt_map(p, cxc.cyl3d, cxc.sph3d)["phi"]
+        assert phi.unit == u.unit("deg")
+        assert phi.value == pytest.approx(30.0)

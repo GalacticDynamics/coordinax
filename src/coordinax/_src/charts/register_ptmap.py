@@ -41,7 +41,7 @@ from coordinax._src.exceptions import ManifoldMismatchError
 from coordinax._src.null import NoManifold
 from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
-from coordinax._src.utils import uconvert_to_rad
+from coordinax._src.utils import strip, uconvert_to_rad, wrap, wrap_angle
 from coordinaxs.api.custom_types import CDict
 
 
@@ -809,9 +809,18 @@ def pt_map(
     """
     del usys  # Unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
-    rho = jnp.hypot(p["x"], p["y"])
-    phi = jnp.atan2(p["y"], p["x"])
-    return canonical_containers({"rho": rho, "phi": phi, "z": p["z"]}, to_chart)
+    # Only the components the arithmetic consumes are stripped; `z` is carried
+    # through untouched so it keeps its own unit and container, exactly as the
+    # `Quantity`-operand form did.
+    (x, y), unit = strip(p, ("x", "y"))
+    return canonical_containers(
+        {
+            "rho": wrap(jnp.hypot(x, y), unit),
+            "phi": wrap_angle(jnp.atan2(y, x), unit),
+            "z": p["z"],
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch.multi(
@@ -886,7 +895,9 @@ def pt_map(
     """
     del usys
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
-    x, y, z = p["x"], p["y"], p["z"]
+    # `strip`/`wrap` keep the arithmetic off `Quantity` operands, where every
+    # primitive costs a `quax` trace; see the note in `coordinax._src.utils`.
+    (x, y, z), unit = strip(p, ("x", "y", "z"))
     # `hypot`/`atan2` rather than `sqrt(x**2 + y**2 + z**2)` and `acos(z / r)`:
     # squaring over/underflows a decade and a half short of the float range
     # (`r` of a 10 kpc position in metres is `inf` in float32), and `acos`
@@ -896,10 +907,14 @@ def pt_map(
     # phi == 0 on the z axis. This matches `Cart2D -> Polar2D`, which is
     # already written this way.
     rho = jnp.hypot(x, y)
-    r = jnp.hypot(rho, z)
-    theta = jnp.atan2(rho, z)
-    phi = jnp.atan2(y, x)
-    return canonical_containers({"r": r, "theta": theta, "phi": phi}, to_chart)
+    return canonical_containers(
+        {
+            "r": wrap(jnp.hypot(rho, z), unit),
+            "theta": wrap_angle(jnp.atan2(rho, z), unit),
+            "phi": wrap_angle(jnp.atan2(y, x), unit),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -935,6 +950,9 @@ def pt_map(
     """
     del usys  # unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
+    # `phi` carries an angle, so it is not part of this length-dimensioned
+    # group and passes through untouched.
+    (rho, z), unit = strip(p, ("rho", "z"))
     # `atan2(rho, z)` rather than `acos(z / r)`, which saturates as `z / r -> 1`
     # and loses every digit of `theta` near the poles. `atan2(0, 0) == 0` keeps
     # the r == 0 convention theta == 0, so the `where` guard is not needed.
@@ -946,9 +964,14 @@ def pt_map(
     # one is reachable, and without this it would produce a negative `theta`
     # outside the `[0, pi]` that `Spherical3D.check_data` enforces.
     # `Cart3D -> Spherical3D` needs no such guard: its `rho` is a `hypot`.
-    r_ = jnp.hypot(p["rho"], p["z"])
-    theta = jnp.atan2(jnp.abs(p["rho"]), p["z"])
-    return canonical_containers({"r": r_, "theta": theta, "phi": p["phi"]}, to_chart)
+    return canonical_containers(
+        {
+            "r": wrap(jnp.hypot(rho, z), unit),
+            "theta": wrap_angle(jnp.atan2(jnp.abs(rho), z), unit),
+            "phi": p["phi"],
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
