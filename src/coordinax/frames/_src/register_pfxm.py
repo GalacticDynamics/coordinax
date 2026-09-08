@@ -49,11 +49,19 @@ def frame_transition(
     raise FrameTransformError(msg)
 
 
-@plum.dispatch
+@plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
 def frame_transition(
     from_frame: AbstractReferenceFrame, to_frame: NoFrame, /
 ) -> NoReturn:
     """Cannot transform to the null frame.
+
+    Carries the same precedence as its "from the null frame" sibling above,
+    and for the same reason: without it a rule keyed on the *source* type --
+    `frame_transition(TransformedReferenceFrame, AbstractReferenceFrame)` --
+    matches equally well, and plum has no ground to choose. Any transformed
+    frame going to `noframe` then raised `AmbiguousLookupError` instead of
+    saying what was wrong, while the mirror direction, already at precedence
+    1, answered properly.
 
     >>> import coordinax.frames as cxf
     >>> try:
