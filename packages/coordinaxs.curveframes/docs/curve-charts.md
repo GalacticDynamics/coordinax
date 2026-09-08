@@ -303,6 +303,38 @@ A curve with no time in it has a frame that does not move, so `velocity` is zero
 
 Only `AtTime` is seen. A curve that binds its own time — `lambda tau: gamma(tau, my_t)` — is indistinguishable from a static one and reports zero.
 
+#### The Metric Already Carries It
+
+On a worldtube the chart's coordinates are $(t, n_1, n_2)$ — one time and two lengths — and the generic Jacobian pullback of [The Metric](#the-metric) produces the ADM block structure on its own. Nothing was written to make it do so; it follows from what the coordinates are. The units say it before the numbers do:
+
+```{code-block} python
+>>> from coordinaxs.api.manifolds import metric_matrix
+
+>>> tube = cxfc.TubularChart(
+...     worldtube, tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s"))
+... )
+>>> at = {"tau": u.Q(1.0, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
+>>> print(metric_matrix(tube.M, at, tube).matrix.unit.to_string())
+((km2 / s2, km / s, km / s), (km / s, , ), (km / s, , ))
+
+```
+
+A speed squared, a speed, and a dimensionless spatial block:
+
+$$
+g_{00} = \lvert \boldsymbol\beta + \dot R\,\mathbf{n} \rvert^2, \qquad
+   g_{0i} = (R\boldsymbol\beta)_i, \qquad
+   g_{ij} = \delta_{ij}.
+$$
+
+$g_{0i}$ **is** the shift, in the triad's normal directions — the pullback and `velocity` reach it by different routes and agree exactly. $g_{ij}$ is the identity because $\mathbf{U}_1$ and $\mathbf{U}_2$ are orthonormal.
+
+$g_{00}$ is the squared speed of the point _at that offset_, not of the frame origin: it equals $\lvert\boldsymbol\beta\rvert^2$ on the axis and departs from it off-axis, because $\partial\mathbf{x}/\partial t$ at fixed $\mathbf{n}$ is $\boldsymbol\beta + \dot R\,\mathbf{n}$. That is the same $\dot R\,\mathbf{n}$ term that makes a hand-written $R(v-\boldsymbol\beta)$ wrong off the axis; here the pullback carries it correctly.
+
+The spatial slice has no time coordinate, so it has no shift block: three length coordinates in one unit give a wholly dimensionless metric.
+
+This is a 3-metric on one section, not a 4-metric. Galilean spacetime has a temporal 1-form and a spatial 3-metric rather than a single non-degenerate $g_{\mu\nu}$, so $(\gamma_{ij}, \beta^i)$ is the container — there is no 4×4 to assemble. What is _not_ provided is the extrinsic curvature $K_{ij}$, which an evolution would need: $\partial_t\gamma_{ij}$ is differentiable straight through the chart, but $D_i\beta_j$ is not supplied.
+
 #### Transporting A Velocity
 
 Do not build a velocity transform out of $\boldsymbol\beta$ by hand. `coordinax.transforms.TimeDep` takes a curve-frame builder directly, and its prolongation differentiates the whole map:
