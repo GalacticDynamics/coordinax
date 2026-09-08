@@ -118,7 +118,9 @@ def test_the_spatial_slice_is_three_lengths(n1: float) -> None:
 
     pt = {"tau": u.Q(S0, "km"), "n1": u.Q(n1, "km"), "n2": u.Q(0.0, "km")}
     g = metric_matrix(ch.M, pt, ch)
-    # three length coordinates in one unit, so every entry is dimensionless
-    assert g.matrix.unit.is_uniform
-    assert g.matrix.unit.to_tuple()[0][0] == u.unit("")
+    # three length coordinates in one unit, so every entry is dimensionless.
+    # Spelt as a whole-matrix comparison rather than with `is_uniform`, which
+    # postdates the oldest supported `unxts-linalg`.
+    none = u.unit("")
+    assert g.matrix.unit == ul.UnitsMatrix(((none,) * 3,) * 3)
     assert np.allclose(np.asarray(g.matrix.value)[1:, 1:], np.eye(2), atol=1e-5)

@@ -305,7 +305,7 @@ Only `AtTime` is seen. A curve that binds its own time — `lambda tau: gamma(ta
 
 #### The Metric Already Carries It
 
-On a worldtube the chart's coordinates are $(t, n_1, n_2)$ — one time and two lengths — and the generic Jacobian pullback of {ref}`The Metric <the-metric>` produces the ADM block structure on its own. Nothing was written to make it do so; it follows from what the coordinates are. The units say it before the numbers do:
+On a worldtube the chart's coordinates are $(t, n_1, n_2)$ — one time and two lengths — and the generic Jacobian pullback of [The Metric](#the-metric) produces the ADM block structure on its own. Nothing was written to make it do so; it follows from what the coordinates are. The units say it before the numbers do:
 
 ```{code-block} python
 >>> from coordinaxs.api.manifolds import metric_matrix
