@@ -22,6 +22,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+import unxts.linalg as ul
 from coordinaxs.api.manifolds import metric_matrix
 
 import unxt as u
@@ -57,10 +58,11 @@ def test_the_blocks_carry_the_adm_units() -> None:
     """A speed squared, a speed, and a dimensionless spatial block."""
     _, ch = _worldtube()
     pt = {"tau": u.Q(T0, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
-    unit_str = str(metric_matrix(ch.M, pt, ch).matrix.unit)
 
-    assert "km2 / s2" in unit_str  # g_00, a speed squared
-    assert "km / s" in unit_str  # g_0i, a speed
+    speed_sq, speed, none = u.unit("km2 / s2"), u.unit("km / s"), u.unit("")
+    assert metric_matrix(ch.M, pt, ch).matrix.unit == ul.UnitsMatrix(
+        ((speed_sq, speed, speed), (speed, none, none), (speed, none, none))
+    )
 
 
 def test_the_off_diagonal_block_is_the_shift() -> None:
@@ -117,5 +119,6 @@ def test_the_spatial_slice_is_three_lengths(n1: float) -> None:
     pt = {"tau": u.Q(S0, "km"), "n1": u.Q(n1, "km"), "n2": u.Q(0.0, "km")}
     g = metric_matrix(ch.M, pt, ch)
     # three length coordinates in one unit, so every entry is dimensionless
-    assert "km" not in str(g.matrix.unit)
+    assert g.matrix.unit.is_uniform
+    assert g.matrix.unit.to_tuple()[0][0] == u.unit("")
     assert np.allclose(np.asarray(g.matrix.value)[1:, 1:], np.eye(2), atol=1e-5)

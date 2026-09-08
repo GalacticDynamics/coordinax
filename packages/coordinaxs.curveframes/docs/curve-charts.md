@@ -314,8 +314,8 @@ On a worldtube the chart's coordinates are $(t, n_1, n_2)$ — one time and two 
 ...     worldtube, tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s"))
 ... )
 >>> at = {"tau": u.Q(1.0, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
->>> print(metric_matrix(tube.M, at, tube).matrix.unit)
-UnitsMatrix("((km2 / s2, km / s, km / s), (km / s, , ), (km / s, , ))")
+>>> print(metric_matrix(tube.M, at, tube).matrix.unit.to_string())
+((km2 / s2, km / s, km / s), (km / s, , ), (km / s, , ))
 
 ```
 
