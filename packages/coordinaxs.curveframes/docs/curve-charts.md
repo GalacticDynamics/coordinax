@@ -323,7 +323,7 @@ The closed form $R(v - \boldsymbol\beta)$ is exact only _on_ the curve axis. Off
 | $n = 0.5\,\mathrm{km}$ | `[0.371, -0.236, 0]` | `[0.316, -0.226, 0]` | 0.056 |
 | $n = 2\,\mathrm{km}$ | `[0.537, -0.265, 0]` | `[0.316, -0.226, 0]` | 0.224 |
 
-A tubular chart exists to describe points off the axis, so the closed form is wrong exactly where the chart is used. `TimeDep` is right everywhere, and the Coriolis and centrifugal terms fall out of the same prolongation — see the {doc}`co-rotating frames tutorial <coordinax:tutorials/corotating_frames>`.
+A tubular chart exists to describe points off the axis, so the closed form is wrong exactly where the chart is used. `TimeDep` is right everywhere, and the Coriolis and centrifugal terms fall out of the same prolongation — see the [co-rotating frames tutorial](../../../docs/tutorials/corotating_frames.md).
 
 ### Four Curve Shapes
 
