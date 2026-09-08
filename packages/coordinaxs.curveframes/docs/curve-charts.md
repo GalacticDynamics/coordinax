@@ -333,7 +333,27 @@ $g_{00}$ is the squared speed of the point _at that offset_, not of the frame or
 
 The spatial slice has no time coordinate, so it has no shift block: three length coordinates in one unit give a wholly dimensionless metric.
 
-This is a 3-metric on one section, not a 4-metric. Galilean spacetime has a temporal 1-form and a spatial 3-metric rather than a single non-degenerate $g_{\mu\nu}$, so $(\gamma_{ij}, \beta^i)$ is the container — there is no 4×4 to assemble. What is _not_ provided is the extrinsic curvature $K_{ij}$, which an evolution would need: $\partial_t\gamma_{ij}$ is differentiable straight through the chart, but $D_i\beta_j$ is not supplied.
+This is a 3-metric on one section, not a 4-metric. Galilean spacetime has a temporal 1-form and a spatial 3-metric rather than a single non-degenerate $g_{\mu\nu}$, so $(\gamma_{ij}, \beta^i, K_{ij})$ is the container — there is no 4×4 to assemble.
+
+The third piece is `rate_of_strain`:
+
+$$ K*{ij} = \tfrac{1}{2\alpha}\left(\partial_t\gamma*{ij} - (\mathcal{L}_\beta\gamma)_{ij}\right) \;=\; \tfrac12\,\partial*t\gamma*{ij}. $$
+
+The lapse is identically 1 under absolute time, and the Lie-drag term vanishes because a chart coordinate is what $\partial_t$ holds fixed — so the _coordinate_ shift is zero, whatever the ambient $\boldsymbol\beta$ is doing. It takes the family of slices rather than one chart, since $\partial_t$ needs neighbours:
+
+```{code-block} python
+>>> family = lambda t: cxfc.TubularChart(
+...     cxfc.BishopBuilder(cxfc.AtTime(stretching, t), "km"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(3.0, "km")),
+... )
+>>> at_point = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
+>>> K = cxfc.rate_of_strain(family, at_point, u.Q(1.0, "s"))
+>>> float(K.value[0, 0].round(3))
+0.779
+
+```
+
+Like the shift, it follows the labelling: wrapping the same curve in `ArcLength` holds the parametrisation near unit-speed, so its $K_{\tau\tau}$ is near zero instead. `t` must be a scalar — $K_{ij}$ is a 2-tensor, and `TubularChart` is single-point for the same reason.
 
 #### Transporting A Velocity
 

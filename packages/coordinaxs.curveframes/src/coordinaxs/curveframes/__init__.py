@@ -19,6 +19,7 @@ Public API
     BishopFrame
     TubularChart
     nearest_tau
+    rate_of_strain
 
 Typical usage::
 
@@ -51,6 +52,7 @@ __all__ = (
     "LagrangianArcLength",
     "TubularChart",
     "nearest_tau",
+    "rate_of_strain",
 )
 
 from ._setup_package import install_import_hook
@@ -68,6 +70,7 @@ with install_import_hook("coordinaxs.curveframes"):
         LagrangianArcLength,
         TubularChart,
         nearest_tau,
+        rate_of_strain,
     )
 
 del install_import_hook
