@@ -10,6 +10,7 @@ implementation modules:
 - {mod}`.frenetserret` — Frenet--Serret transform and frame.
 - {mod}`.bishop` — Bishop (rotation-minimising) transform and frame.
 - {mod}`.chart` — `TubularChart`, on the parameterized branch.
+- {mod}`.strain` — `rate_of_strain`, the ADM `K_ij` of a slice family.
 - {mod}`.nearest` — `nearest_tau`, the seeded Newton solve `TubularChart`'s
   inverse `pt_map` uses.
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
@@ -29,3 +30,4 @@ from .frenetserret import *
 from .nearest import *
 from .register_frames import *
 from .register_ptmap import *
+from .strain import *
