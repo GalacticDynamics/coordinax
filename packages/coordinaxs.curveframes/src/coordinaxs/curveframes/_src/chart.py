@@ -49,6 +49,14 @@ _MSG_BOUNDS_DISAGREE = (
     "bound's unit, which a different dimension cannot convert to."
 )
 
+_MSG_WORLDTUBE_BOUNDS_NOT_TIME = (
+    "`TubularChart.tau_bounds` must be times when the builder pins a station, "
+    "but they are {lo}. `tau` is the evaluation time on this branch, so "
+    "bounds of another dimension label the coordinate one way while the "
+    "builder evaluates it the other -- leaving no value the chart both "
+    "declares and accepts."
+)
+
 _MSG_BOUNDS_HALF_BARE = (
     "`TubularChart.tau_bounds` must be both `Quantity` or both bare, but got "
     "{lo} and {hi}. A bare bound takes its unit from the builder's declared "
@@ -130,7 +138,7 @@ class TubularChart(AbstractParameterizedChart):
         return cxm.R3
 
     def __check_init__(self) -> None:
-        """Require `tau_bounds` to state one dimension, and to state it at all.
+        """Require `tau_bounds` to state one dimension, state it, and mean it.
 
         `tau_bounds[0]` alone is what the unit is read from -- it labels the
         coordinate, and `nearest_tau` strips both ends to it -- so a
@@ -154,6 +162,18 @@ class TubularChart(AbstractParameterizedChart):
         this method exists to remove. Reading the arity again costs nothing:
         `AbstractCurveFrameBuilder.__check_init__` already inspected the same
         curve, and the result is cached.
+
+        Carrying a unit is still not enough on that branch: it has to be a
+        *time*. Length bounds on a worldtube built a chart that declared
+        `('length', 'length', 'length')` and accepted only `time` -- its own
+        `check_data` refused a `tau` in `s`, and a `tau` in `km` died in the
+        scan with `UnitConversionError`. No value satisfied both (#820).
+
+        Rejecting the bounds rather than reconciling the label with the
+        runtime, because the library reserves a two-argument curve's second
+        argument for the time: `AtTime` binds it, `GalileanCT` refuses a chart
+        that has one, and `TimeDep` sends every other parameter to a builder
+        field rather than a call-time argument.
         """
         lo, hi = (_bounds_dimension(b) for b in self.tau_bounds)
         if lo != hi:
@@ -164,6 +184,12 @@ class TubularChart(AbstractParameterizedChart):
         # wrong value. `_tau_unit` raised this same message from the property.
         if lo is None and self.is_time_dependent:
             raise TypeError(_MSG_BARE_TIME_BOUNDS)
+        # And having a unit is not enough: it has to be a *time*. `_tau_unit`
+        # labels this coordinate from the bounds while `_resolve` evaluates it
+        # as the time regardless, so any other dimension leaves the two
+        # disagreeing with no value satisfying both (see #820).
+        if self.is_time_dependent and lo != "time":
+            raise ValueError(_MSG_WORLDTUBE_BOUNDS_NOT_TIME.format(lo=lo))
 
     @property
     def components(self) -> tuple[str, str, str]:
