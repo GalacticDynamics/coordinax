@@ -541,15 +541,26 @@ def test_the_curve_decides_whether_the_time_carries_a_unit(
 
 
 @pytest.mark.parametrize(
-    ("curve", "time", "err"),
+    ("curve", "time", "err", "match"),
     [
-        (_ustrips_the_time, 1.0, AttributeError),
-        (_reads_the_time_raw, u.Q(1.0, "s"), Exception),
+        (_ustrips_the_time, 1.0, AttributeError, "has no attribute 'ustrip'"),
+        (
+            _reads_the_time_raw,
+            u.Q(1.0, "s"),
+            apyu.UnitConversionError,
+            "not convertible",
+        ),
     ],
     ids=["converting-curve-given-bare", "raw-curve-given-quantity"],
 )
-def test_the_mismatched_form_fails(curve, time, err) -> None:
-    """The other pairing is the curve's own error, surfacing from the curve."""
+def test_the_mismatched_form_fails(curve, time, err, match) -> None:
+    """The other pairing is the curve's own error, surfacing from the curve.
+
+    Named exactly, not as a bare `Exception`: each mismatch has one failure
+    that belongs to it -- the converting curve cannot `ustrip` a float, and
+    the raw-reading curve cannot mix a time into a dimensionless expression.
+    A broad catch would pass on an unrelated error and hide the regression.
+    """
     b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"))
-    with pytest.raises(err):
+    with pytest.raises(err, match=match):
         b.location(time)
