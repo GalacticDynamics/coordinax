@@ -168,21 +168,19 @@ class TestCarolVelocityTransform:
       Velocity: shifted by [30, 0, 0] km/s (kick component only).
     """
 
-    _BOOST_X = 30_000.0  # m/s
+    _KICK_X = 30_000.0  # m/s
 
-    def test_alice_to_carol_boosts_velocity(self):
-        """Velocity x-component is shifted by the boost value."""
+    def test_alice_to_carol_kicks_velocity(self):
+        """Velocity x-component is shifted by the kick value."""
         alice_to_carol = cxf.frame_transition(cxf.alice, cxf.carol)
         v = {"x": u.Q(5.0, "m/s"), "y": u.Q(3.0, "m/s"), "z": u.Q(1.0, "m/s")}
         result = cxfm.act(alice_to_carol, None, v, cxc.cart3d, cxr.coord_vel)
-        assert jnp.allclose(
-            u.ustrip("m/s", result["x"]), 5.0 + self._BOOST_X, rtol=1e-6
-        )
+        assert jnp.allclose(u.ustrip("m/s", result["x"]), 5.0 + self._KICK_X, rtol=1e-6)
         assert jnp.allclose(u.ustrip("m/s", result["y"]), 3.0, atol=1e-6)
         assert jnp.allclose(u.ustrip("m/s", result["z"]), 1.0, atol=1e-6)
 
     def test_alice_to_carol_velocity_unchanged_by_translate(self):
-        """Translate is identity for velocity; only the Boost component acts."""
+        """Translate is identity for velocity; only the kick acts."""
         # Apply only the Translate step and verify velocity is unchanged.
         shift = cxfm.Translate.from_([100_000, 10_000, 0], "km")
         v = {"x": u.Q(5.0, "m/s"), "y": u.Q(3.0, "m/s"), "z": u.Q(1.0, "m/s")}
@@ -194,15 +192,19 @@ class TestCarolInvariance:
     """Displacements and accelerations are unchanged by the Alice <-> Carol maps.
 
     Per spec (software-spec-carol):
-      Displacement: unchanged (both Translate and Boost are identity on
-      displacements).
-      Acceleration: unchanged (Boost is identity on accelerations).
+      Displacement: unchanged (both offsets are identity on displacements).
+      Acceleration: unchanged (a constant velocity kick is identity on
+      accelerations).
 
     The two spec lines are one contract -- ``act`` is the identity on these
-    representations -- so they are one table. Written out per-transform, the
-    acceleration half had covered only the two composite transitions; the
-    cross product adds ``Translate`` and ``Boost`` alone, which is where the
-    spec's claim about `Boost` actually bites.
+    representations -- so they are one table.
+
+    Note what the parametrization covers. Alice <-> Carol is
+    ``Translate | Translate(semantic_kind=vel)``: a spatial offset and a
+    *velocity kick*, not a `~coordinax.transforms.Boost`. The standalone
+    `Boost` case is here as well because the same invariance is claimed of it,
+    and testing it alone is the only place that claim actually bites -- but it
+    is an addition to the transition's own components, not one of them.
     """
 
     @pytest.mark.parametrize(

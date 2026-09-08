@@ -138,8 +138,13 @@ class TestBobRefusesPurelySpatialInput:
     """A boost needs a time component; a 3-D point has none."""
 
     def test_a_3d_point_has_no_time_to_boost(self):
+        """Named, not a broad catch: the refusal *is* the contract here.
+
+        Anything narrower than the point's manifold failing to match the
+        transition's would mean something else went wrong.
+        """
         op = cxf.frame_transition(cxf.alice, cxf.bob)
-        with pytest.raises(Exception, match=r"transition|Cart3D|manifold"):
+        with pytest.raises(cxc.ManifoldMismatchError, match="no transition"):
             op(cx.Point.from_([0.0, 0.0, 0.0], "m"))
 
 
