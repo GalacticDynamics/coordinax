@@ -19,11 +19,14 @@ runs:
   steps:
     - id: find_tag
       shell: bash
+      # Through `env`, not `${{ }}` inside `run`: a caller-supplied input
+      # containing a quote would otherwise close the literal and have the
+      # remainder run as shell.
+      env:
+        TAG_GLOB: ${{ inputs.tag_glob }}
+        COMMIT_SHA: ${{ inputs.commit_sha }}
       run: |
         set -euo pipefail
-
-        TAG_GLOB='${{ inputs.tag_glob }}'
-        COMMIT_SHA='${{ inputs.commit_sha }}'
 
         # Fetch tags to locate package-specific tags created by upstream workflow.
         git fetch --tags
