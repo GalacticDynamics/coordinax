@@ -101,6 +101,25 @@ def test_a_worldtube_needs_its_time_bounds_to_carry_a_unit() -> None:
         _worldtube(tau_bounds=(0.0, 2.0))
 
 
+def test_a_worldtubes_bounds_must_be_times() -> None:
+    """Bounds of the wrong dimension made the chart contradict itself.
+
+    `_tau_unit` labels the coordinate from `tau_bounds`, while `_resolve`
+    reads the builder's argument as the time regardless -- so length bounds
+    on a worldtube declared `length` and accepted only `time`. Measured
+    before this guard: `coord_dimensions` gave three lengths, a `tau` in `s`
+    was refused by the chart's own `check_data`, and a `tau` in `km` died in
+    the scan with `UnitConversionError`. No input satisfied both.
+
+    Rejecting the input rather than reconciling the two: the library reserves
+    a two-argument curve's second argument for the time -- `AtTime` binds it,
+    `GalileanCT` refuses a chart that has one, and `TimeDep` directs every
+    other parameter to a builder field rather than a call-time argument.
+    """
+    with pytest.raises(ValueError, match="must be times"):
+        _worldtube(tau_bounds=(u.Q(0.0, "km"), u.Q(2.0, "km")))
+
+
 def test_the_two_sections_meet() -> None:
     r"""The worldtube and the spatial slice are two cuts of one 4-D object.
 
