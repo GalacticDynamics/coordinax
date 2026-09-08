@@ -67,9 +67,15 @@ class Distance(AbstractDistance):
             # one, which would make the guard work or not by input type. And a
             # `converter=` guard, the idiomatic home, cannot read
             # `check_negative` -- a converter is passed only its own value.
+            # Negate the *good* condition rather than testing `value < 0`:
+            # every direct comparison is false for `NaN`, so `less(nan, 0)`
+            # admitted it and the constraint this type exists to enforce was
+            # silently absent (#773 fixed ten guards of this shape; these two
+            # were missed). `inf` is left admissible on purpose -- an
+            # infinitely distant source is a meaningful limit, unlike a `NaN`.
             checked = eqx.error_if(
                 self.value,
-                jnp.any(jnp.less(self.value, 0)),
+                jnp.any(~jnp.greater_equal(self.value, 0)),
                 "Distance must be non-negative.",
             )
             object.__setattr__(self, "value", checked)
