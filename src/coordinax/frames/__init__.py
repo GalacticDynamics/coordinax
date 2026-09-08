@@ -71,7 +71,9 @@ __all__: tuple[str, ...] = (
     "Alex",
     "alex",
     "Bob",
+    "Carol",
     "bob",
+    "carol",
 )
 
 with install_import_hook("coordinax.frames"):
@@ -81,12 +83,14 @@ with install_import_hook("coordinax.frames"):
         Alex,
         Alice,
         Bob,
+        Carol,
         FrameTransformError,
         NoFrame,
         TransformedReferenceFrame,
         alex,
         alice,
         bob,
+        carol,
         noframe,
     )
     from coordinaxs.api.frames import frame_transition
