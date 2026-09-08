@@ -111,6 +111,28 @@ def test_the_attime_slice_is_not_the_tangent() -> None:
     assert not jnp.allclose(got, tangent, atol=1e-3)
 
 
+@pytest.mark.parametrize("bare", [True, False], ids=["bare", "quantity"])
+def test_the_array_fastpath_reaches_velocity(bare: bool) -> None:
+    """A bare station is wrapped by `_param`, exactly as `location` wraps it.
+
+    Bare parameters plus a declared `tau_unit` are the array fastpath. Reading
+    the `station` field directly instead of going through the funnel handed
+    the curve a raw float, which died inside the curve's own `ustrip` with
+    nothing to say why.
+    """
+    station = S0 if bare else u.Q(S0, "km")
+    worldtube = cxfc.BishopBuilder(stretch_and_bend, "km", station=station)
+    assert jnp.allclose(
+        worldtube.velocity(u.Q(T0, "s")).ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5
+    )
+
+    tau = S0 if bare else u.Q(S0, "km")
+    slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km")
+    assert jnp.allclose(
+        slice_.velocity(tau).ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5
+    )
+
+
 def test_a_static_curve_has_a_frame_that_does_not_move() -> None:
     """No time in the curve, so no frame velocity -- zero, per second."""
 

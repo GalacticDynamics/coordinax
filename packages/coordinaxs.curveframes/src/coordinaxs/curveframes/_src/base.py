@@ -492,12 +492,20 @@ class AbstractCurveFrameBuilder(eqx.Module):
 
         """
         curve = self.curve
+        # `_param` for the station on both branches, not the raw field: it is
+        # what wraps a bare one with the declared `tau_unit`, so the array
+        # fastpath reaches the curve as a `Quantity` here exactly as it does
+        # through `location`. Skipping it handed a curve a bare float, which
+        # died in the curve's own `ustrip` with nothing to say why.
         if _is_two_argument(curve):
-            # Station pinned: `tau` is the time, and the station is the field.
-            station, t, inner = self.station, tau, curve
+            # Station pinned: `tau` is the time, and `_param` returns the field.
+            station, _ = self._param(tau)
+            t, inner = tau, curve
         elif isinstance(curve, AtTime) and _is_two_argument(curve.curve):
-            # A bound slice: `tau` is the station, and the time is the wrapper's.
-            station, t, inner = tau, curve.t, curve.curve
+            # A bound slice: `_param` returns `tau` itself, the station, and
+            # the time is the wrapper's.
+            station, _ = self._param(tau)
+            t, inner = curve.t, curve.curve
         else:
             # Nothing to differentiate. Taking the shape and unit from the
             # curve keeps this the same kind of thing as the other branches.
