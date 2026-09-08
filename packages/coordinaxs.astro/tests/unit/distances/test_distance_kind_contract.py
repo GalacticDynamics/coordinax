@@ -5,15 +5,18 @@ subclasses with three strategies of the same shape. Shape handling, `elements`
 forwarding, `st.from_type` registration and JAX/PyTree behaviour are identical
 across all three, so they are asserted once here.
 
-What genuinely differs -- Parallax's non-negativity check, DistanceModulus's
-fixed 'mag' unit, and the conversions between them -- stays in
-``test_parallax.py`` / ``test_distance_modulus.py``.
+What genuinely differs -- DistanceModulus's fixed 'mag' unit, and the
+conversions between them -- stays in ``test_parallax.py`` /
+``test_distance_modulus.py``. The non-negativity guard used to be listed here
+as per-type; `Distance` and `Parallax` turned out to carry character-identical
+guards, so what it admits is asserted once, below.
 """
 
 __all__: tuple[str, ...] = ()
 
 from types import SimpleNamespace
 
+import equinox as eqx
 import hypothesis.strategies as st
 import jax
 import jax.numpy as jnp
@@ -333,3 +336,47 @@ class TestArithmeticClosure:
         """`1 / x` inverts the unit, so it is never the same kind."""
         result = 1 / kind.cls(2, _a_valid_unit(kind))
         assert type(result) is u.quantity.Quantity
+
+
+#: The kinds whose domain excludes negatives, and so carry the guard below.
+SIGN_CONSTRAINED = [name for name, k in sorted(KINDS.items()) if k.sign_constrained]
+
+
+class TestWhatTheNonNegativityGuardAdmits:
+    """A `value < 0` test is false for `NaN`, so such a guard admits one.
+
+    #773 fixed ten guards of that shape; `Distance` and `Parallax` were missed
+    and carried identical ones, which is why this is asserted once here rather
+    than duplicated per type.
+    """
+
+    @pytest.mark.parametrize("name", SIGN_CONSTRAINED)
+    @pytest.mark.parametrize(
+        "value",
+        [float("nan"), [1.0, float("nan"), 3.0], [1.0, -2.0]],
+        ids=["nan", "nan-in-a-batch", "negative"],
+    )
+    def test_it_is_refused(self, name: str, value: object) -> None:
+        """The batch cases are the ones a scalar-only guard would miss."""
+        kind = KINDS[name]
+        with pytest.raises((eqx.EquinoxRuntimeError, ValueError), match="non-negative"):
+            kind.cls(jnp.asarray(value), _a_valid_unit(kind))
+
+    @pytest.mark.parametrize("name", SIGN_CONSTRAINED)
+    @pytest.mark.parametrize(
+        "value", [[0.0, 1.0], [1.0, float("inf")]], ids=["zero", "infinity"]
+    )
+    def test_zero_and_infinity_are_admitted(self, name: str, value: object) -> None:
+        """Both stay admissible, `inf` deliberately so.
+
+        An infinite limit is meaningful -- an infinitely distant source, a
+        zero parallax -- where a `NaN` is the absence of a value.
+        """
+        kind = KINDS[name]
+        kind.cls(jnp.asarray(value), _a_valid_unit(kind))
+
+    @pytest.mark.parametrize("name", SIGN_CONSTRAINED)
+    def test_opting_out_still_opts_out(self, name: str) -> None:
+        """`check_negative=False` is unaffected by the tightened guard."""
+        kind = KINDS[name]
+        kind.cls(float("nan"), _a_valid_unit(kind), check_negative=False)
