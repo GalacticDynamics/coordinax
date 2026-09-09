@@ -15,7 +15,7 @@ from unxt.quantity import AllowValue
 
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
-from .quadratic_form import gram, quadratic_form
+from .quadratic_form import _contract, _prepare
 from coordinax._src.base import (
     AbstractChart,
     AbstractMetricField,
@@ -134,9 +134,21 @@ def angle_between(
     # system" contract that `norm` and `interval` impose -- where the result's
     # unit *is* derived from the inputs -- would be ceremony here, and would
     # break callers that have always passed bare arrays.
-    inner, uu, vv = gram(
-        uvec, vvec, chart, at=at, usys=usys, fname="angle_between", require_usys=False
+    # `_prepare` + `_contract` rather than `gram`, so the metric matrix is built
+    # and the components packed exactly *once* for all four contractions below.
+    # `gram` gives three of them from one build; the rejection needs a fourth,
+    # `g(w,w)`, and calling `quadratic_form` for it would rebuild the matrix --
+    # free under `jit`, ~1.6x eagerly, which is the cost `gram` exists to avoid.
+    mm, (u_, v_) = _prepare(
+        chart,
+        (uvec, vvec),
+        at=at,
+        usys=usys,
+        fname="angle_between",
+        keys=chart.components,
+        require_usys=False,
     )
+    inner, uu, vv = _contract(mm, u_, v_), _contract(mm, u_, u_), _contract(mm, v_, v_)
 
     cos = u.ustrip(AllowValue, "", inner / qnp.sqrt(uu * vv))
 
@@ -176,11 +188,13 @@ def angle_between(
     # so it carries no unit and `coef * vvec[k]` keeps component `k`'s own
     # unit. That matters for heterogeneous charts (lon/lat/distance), where a
     # scalar with any length dimension would not subtract componentwise.
+    # Formed in the *packed* representation, so it reuses `mm` above. `coef` is
+    # dimensionless -- `inner` and `vv` are both metric contractions -- so
+    # `coef * v_` keeps each component's own unit and the subtraction is well
+    # posed on heterogeneous charts (lon/lat/distance).
     coef = inner / vv
-    wvec = {k: uvec[k] - coef * vvec[k] for k in uvec}
-    ww = quadratic_form(
-        wvec, chart, at=at, usys=usys, fname="angle_between", require_usys=False
-    )
+    w_ = u_ - coef * v_
+    ww = _contract(mm, w_, w_)
 
     # sin = sqrt(g(w,w) / g(u,u)), which is exactly sqrt(1 - cos^2) and, like
     # `cos`, dimensionless. Clipped below at zero for the indefinite metrics
