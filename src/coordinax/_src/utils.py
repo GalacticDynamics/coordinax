@@ -6,6 +6,7 @@ __all__ = ()
 from jaxtyping import ArrayLike
 from typing import Any, Final, overload
 
+import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue, Quantity
 
@@ -201,8 +202,58 @@ def wrap(value: Any, unit: Any, /) -> Any:
     return value if unit is None else Quantity(value, unit=unit)
 
 
-def wrap_angle(value: Any, unit: Any, /) -> Any:
-    """Wrap a radian-valued raw array, or pass it through when *unit* is `None`.
+#: The pole-to-equator offset for colatitude <-> latitude, built once. `u.Q`
+#: is ~49us, which would otherwise be paid per call on a `pt_map` path.
+RIGHT_ANGLE: Final = u.Quantity(90, "deg")
+
+
+def complement_angle(value: Any, usys: OptUSys, /) -> Any:
+    """Return ``90 degrees - value``: colatitude <-> latitude, either way.
+
+    Six transitions need this -- `LonLat` and `LonCosLat`, in both directions,
+    on the 2-sphere and in 3-D -- and it is its own involution, so one helper
+    serves all of them.
+
+    A `Quantity` keeps its own unit and the subtraction converts. A *bare*
+    value means whatever ``usys["angle"]`` says, and is written back the same
+    way: reading in one unit and writing in another is what stopped these
+    charts round-tripping, since `lat` is itself an angle and feeds straight
+    back into the inverse map.
+
+    >>> import unxt as u
+    >>> from coordinax._src.utils import complement_angle
+
+    >>> complement_angle(u.Angle(40.0, "deg"), None)
+    Q(50., 'deg')
+
+    A bare value is radians by default, and its own unit under a unit system:
+
+    >>> usys = u.unitsystem("m", "deg")
+    >>> round(float(complement_angle(40.0, usys)), 6)
+    50.0
+    >>> round(float(complement_angle(0.0, None)), 6)
+    1.570796
+
+    Applying it twice returns the input, which is the property the round trip
+    through `lonlat_sph2` and friends depends on:
+
+    >>> round(float(complement_angle(complement_angle(40.0, usys), usys)), 6)
+    40.0
+
+    """
+    if isinstance(value, u.AbstractQuantity):
+        # An angular `Quantity` needs no conversion first -- the subtraction
+        # does it -- and converting would promote an integer `Angle(90, "deg")`
+        # to `Angle(90., "deg")`. A dimensionless one still needs `usys` to say
+        # what it means.
+        if u.dimension_of(value) == ANGLE:
+            return RIGHT_ANGLE - value
+        return RIGHT_ANGLE - uconvert_to_rad(value, usys)
+    return wrap_angle(jnp.pi / 2 - rad_value(value, usys), None, usys)
+
+
+def wrap_angle(value: Any, unit: Any, usys: OptUSys = None, /) -> Any:
+    """Wrap a radian-valued raw array, or express it in *usys* when unitless.
 
     *value* is already in radians -- every inverse-trigonometric function
     returns radians -- so *unit* is read only as the "was there a unit at all"
@@ -212,14 +263,33 @@ def wrap_angle(value: Any, unit: Any, /) -> Any:
     `canonical_containers` promotes it, which is where that decision already
     lives and is ~30x cheaper than the checked `Angle` constructor.
 
+    When there is no unit, *usys* decides the number's meaning, and it has to
+    decide it the same way on the way out as `rad_value` does on the way in.
+    Reading a bare angle in ``usys["angle"]`` while writing one in radians is
+    what stopped `sph3d <-> lonlat_sph3d` round-tripping: the forward map
+    emitted a latitude in radians and the inverse read that same number as
+    degrees.
+
     >>> import unxt as u
     >>> from coordinax._src.utils import wrap_angle
 
     >>> wrap_angle(1.5, u.unit("m"))
     Q(1.5, 'rad')
 
+    A bare value with no unit system is radians, and stays as it is:
+
     >>> wrap_angle(1.5, None)
     1.5
 
+    With one, it is expressed in that system's angle unit:
+
+    >>> usys = u.unitsystem("m", "deg")
+    >>> round(float(wrap_angle(jnp.pi / 2, None, usys)), 6)
+    90.0
+
     """
-    return value if unit is None else Quantity(value, unit=RAD)
+    if unit is not None:
+        return Quantity(value, unit=RAD)
+    if usys is None:
+        return value
+    return u.uconvert_value(usys["angle"], RAD, value)

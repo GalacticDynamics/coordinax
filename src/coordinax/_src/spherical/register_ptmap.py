@@ -8,8 +8,6 @@ from typing import Any, Final, cast
 import plum
 
 import quaxed.numpy as jnp
-import unxt as u
-from unxt.quantity import is_any_quantity
 
 import coordinaxs.api.charts as cxcapi
 from .chart import (
@@ -24,12 +22,8 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.charts.checks import check_manifolds_match_charts
 from coordinax._src.charts.containers import canonical_containers
 from coordinax._src.custom_types import OptUSys
-from coordinax._src.utils import uconvert_to_rad
+from coordinax._src.utils import complement_angle, rad_value, uconvert_to_rad
 from coordinaxs.api.custom_types import CDict
-
-#: The pole-to-equator offset for colatitude <-> latitude, built once. `u.Q` is
-#: ~49us, which is otherwise paid per call on a `pt_map` path.
-_RIGHT_ANGLE: Final = u.Q(90, "deg")
 
 IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any, Any]], ...]] = (
     SphericalTwoSphere,
@@ -159,17 +153,7 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    # A `Quantity` carries its own unit and the subtraction converts; a *bare*
-    # value means whatever `usys` says it means, and reading it raw made a
-    # `usys` of degrees come out as `pi / 2 - 40` for a 40 degree colatitude.
-    # The `LonCosLat` pair below and the 3-D twin both already convert, so the
-    # same point reached `lat` through two charts and got two answers.
-    theta = p["theta"]
-    lat = (
-        _RIGHT_ANGLE - theta
-        if is_any_quantity(theta)
-        else jnp.pi / 2 - uconvert_to_rad(theta, usys)
-    )
+    lat = complement_angle(p["theta"], usys)
     return canonical_containers({"lon": p["phi"], "lat": lat}, to_chart)
 
 
@@ -199,14 +183,7 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    # See the note on the forward map: a bare `lat` is in `usys` units, not
-    # radians, and reading it raw made a degrees `usys` come out ~39 off.
-    lat = p["lat"]
-    theta = (
-        _RIGHT_ANGLE - lat
-        if is_any_quantity(lat)
-        else jnp.pi / 2 - uconvert_to_rad(lat, usys)
-    )
+    theta = complement_angle(p["lat"], usys)
     return canonical_containers({"theta": theta, "phi": p["lon"]}, to_chart)
 
 
@@ -236,7 +213,7 @@ def pt_map(
 
     >>> p = {"theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}  # equator
     >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.loncoslat_sph2)
-    {'lon_coslat': Angle(45., 'deg'), 'lat': Angle(0., 'deg')}
+    {'lon_coslat': Angle(45., 'deg'), 'lat': Angle(0, 'deg')}
 
     >>> p = {"theta": u.Q(0, "deg"), "phi": u.Q(45, "deg")}  # north pole
     >>> result = cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.loncoslat_sph2)
@@ -246,10 +223,11 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    lat = (
-        _RIGHT_ANGLE if is_any_quantity(p["theta"]) else jnp.pi / 2
-    ) - uconvert_to_rad(p["theta"], usys)
-    lon_coslat = p["phi"] * jnp.cos(lat)
+    lat = complement_angle(p["theta"], usys)
+    # `cos` needs radians, and `lat` is in whatever unit the output carries --
+    # `usys["angle"]` on the bare path, which need not be radians.
+    lat_rad = jnp.pi / 2 - rad_value(p["theta"], usys)
+    lon_coslat = p["phi"] * jnp.cos(lat_rad)
     return canonical_containers({"lon_coslat": lon_coslat, "lat": lat}, to_chart)
 
 
@@ -274,13 +252,13 @@ def pt_map(
 
     >>> p = {"lon_coslat": u.Q(45, "deg"), "lat": u.Q(0, "deg")}
     >>> cxc.pt_map(p, cxm.S2, cxc.loncoslat_sph2, cxm.S2, cxc.sph2)
-    {'theta': Angle(90., 'deg'), 'phi': Angle(45., 'deg')}
+    {'theta': Angle(90, 'deg'), 'phi': Angle(45., 'deg')}
 
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = uconvert_to_rad(p["lat"], usys)
-    theta = (_RIGHT_ANGLE if is_any_quantity(p["lat"]) else jnp.pi / 2) - lat
+    theta = complement_angle(p["lat"], usys)
     phi = p["lon_coslat"] / jnp.cos(lat)
     return canonical_containers({"theta": theta, "phi": phi}, to_chart)
 
