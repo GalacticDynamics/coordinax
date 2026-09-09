@@ -124,6 +124,14 @@ class TubularChart(AbstractParameterizedChart):
     raise: the fallback solve can converge to a finite, low-residual `tau`
     outside `tau_bounds` instead. See the curve-charts guide's Limitations
     section for worked examples of both warnings above.
+
+    That degradation needs the curve to be *evaluable* past `tau_bounds`, which
+    an `ArcLength` carrying a finite `s_max` is not: its interpolation covers
+    only ``[-m, s_max + m]``, so a query whose answer lies beyond that raises
+    rather than degrading. Setting `s_max` to `tau_bounds[1]`, which is all
+    `ArcLength.s_max` asks for in-bounds queries, is *not* enough for
+    out-of-bounds ones -- size it against the answers the solve may return, not
+    against the scan range.
     """
 
     n_seed: int = eqx.field(static=True, default=64)

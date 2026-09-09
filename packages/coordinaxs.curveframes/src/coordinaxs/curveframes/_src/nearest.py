@@ -129,6 +129,27 @@ def nearest_tau(
     i_best = jnp.argmin(scan)
     tau0, d_seed = seeds[i_best], scan[i_best]
     spacing = (hi - lo) / (n_seed - 1)
+
+    # A zero-width `bounds` makes `spacing` zero, and `Bisection`'s
+    # `expand_if_necessary` below grows a bracket by *doubling its width* --
+    # doubling zero never grows it, and that expansion is not bounded by
+    # `max_steps`, so the solve loops with no exit instead of failing
+    # (measured: still running at 45 s, where a proper interval returns in
+    # seconds). Guard here, where every caller routes through: `TubularChart`
+    # validates the *dimensions* of `tau_bounds` but not that they differ, so a
+    # degenerate chart reaches this on every inverse `pt_map`. Threaded through
+    # `spacing` so the check cannot be eliminated ahead of the bracket that
+    # depends on it.
+    degenerate = spacing == 0
+    msg_bounds = (
+        "`bounds` has zero width, so there is no curve to search: the "
+        "nearest-point scan needs `bounds[0] != bounds[1]`."
+    )
+    if isinstance(degenerate, jax.core.Tracer):
+        spacing = eqx.error_if(spacing, degenerate, msg_bounds)
+    elif bool(degenerate):
+        raise ValueError(msg_bounds)
+
     bracket_lo, bracket_hi = tau0 - spacing, tau0 + spacing
 
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
