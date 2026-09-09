@@ -44,8 +44,10 @@ def nearest_tau(
     Newton polish 3.2 seed spacings from a correctly-chosen start onto a
     maximum 2.4x farther away, reporting success). So scan ``n_seed`` points
     across ``bounds`` first, take the global argmin, and root-find *within
-    one seed spacing either side of it*: the argmin is guaranteed within one
-    spacing of the true minimiser, and the residual
+    one seed spacing either side of it*: the argmin is within one spacing of
+    the true minimiser **provided ``n_seed`` resolves the curve** -- it is an
+    assumption on the scan, not a guarantee, and a curve that wiggles faster
+    than the spacing breaks it. The residual
     $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})$ equals
     $-\|\gamma'\|^{-1}\,d/d\tau(\tfrac12\mathrm{dist}^2)$, which crosses from
     positive to negative across a genuine minimum, so that bracket is
@@ -123,7 +125,9 @@ def nearest_tau(
 
     # 1. Coarse global scan -- this is what makes the answer the *nearest*.
     seeds = jnp.linspace(lo, hi, n_seed)
-    tau0 = seeds[jnp.argmin(jax.vmap(dist2)(seeds))]
+    scan = jax.vmap(dist2)(seeds)
+    i_best = jnp.argmin(scan)
+    tau0, d_seed = seeds[i_best], scan[i_best]
     spacing = (hi - lo) / (n_seed - 1)
     bracket_lo, bracket_hi = tau0 - spacing, tau0 + spacing
 
@@ -167,21 +171,41 @@ def nearest_tau(
     # centre) both endpoints are ~1e-16 noise that can land on either side of
     # zero, especially under `jit` where XLA's eval order differs from eager.
     r_lo, r_hi = residual(bracket_lo, None), residual(bracket_hi, None)
-    bracket_has_root = (jnp.sign(r_lo) != jnp.sign(r_hi)) & (
-        jnp.abs(r_hi - r_lo) > atol
-    )
-    value = jnp.where(bracket_has_root, bsol.value, nsol.value)
+    # A sign change alone is not enough. The residual crosses positive-to-
+    # negative across a minimum and negative-to-positive across a maximum, so
+    # `jnp.sign(r_lo) != jnp.sign(r_hi)` -- which this used to test -- accepts
+    # the maximum next door, and bisection then finds it and reports success.
+    # Measured on a curve wiggling faster than the seed spacing: a returned
+    # point 15.6x farther away than the true nearest, with the forward map
+    # round-tripping to 3e-15 from the wrong labels so nothing downstream
+    # noticed. Requiring the minimum's orientation is what the docstring above
+    # has always claimed this test does.
+    bracket_has_minimum = (r_lo > 0) & (r_hi < 0) & (jnp.abs(r_hi - r_lo) > atol)
+    value = jnp.where(bracket_has_minimum, bsol.value, nsol.value)
     not_converged = jnp.where(
-        bracket_has_root,
+        bracket_has_minimum,
         bsol.result != optx.RESULTS.successful,
         nsol.result != optx.RESULTS.successful,
     )
+
+    # The coarse argmin is already paid for, so a solve that lands farther away
+    # than its own seed has failed whatever status it reports. This is the last
+    # line of defence for the unconstrained fallback, which is free to wander
+    # onto a maximum; the bracketed branch cannot trip it, since a bracket that
+    # straddles a minimum has that minimum no worse than `tau0` inside it.
+    not_converged = not_converged | (dist2(value) > d_seed * (1.0 + rtol) + atol**2)
 
     # Must surface non-convergence, not return silently (hybrid form,
     # matching ``_src/charts/checks.py``). The return value MUST be threaded
     # through -- an unused `eqx.error_if` result is dead-code-eliminated and
     # the guard vanishes under `jit`.
-    msg = "nearest-point solve did not converge"
+    msg = (
+        "nearest-point solve did not converge. If the curve varies faster than "
+        "`n_seed` samples resolve, the scan's argmin is not within one spacing of "
+        "the true minimiser and the bracket can straddle a maximum instead; raise "
+        "`n_seed`. (Measured: a curve with 32 wiggles across `bounds` refuses at "
+        "the default `n_seed=64` and resolves correctly at 128.)"
+    )
     if isinstance(not_converged, jax.core.Tracer):
         value = eqx.error_if(value, not_converged, msg)
     elif bool(not_converged):
