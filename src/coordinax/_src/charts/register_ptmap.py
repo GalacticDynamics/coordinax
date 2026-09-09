@@ -41,7 +41,14 @@ from coordinax._src.exceptions import ManifoldMismatchError
 from coordinax._src.null import NoManifold
 from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
-from coordinax._src.utils import strip, uconvert_to_rad, wrap, wrap_angle
+from coordinax._src.utils import (
+    promoted_unit,
+    rad_value,
+    strip,
+    uconvert_to_rad,
+    wrap,
+    wrap_angle,
+)
 from coordinaxs.api.custom_types import CDict
 
 
@@ -450,10 +457,15 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    theta = uconvert_to_rad(p["theta"], usys)
-    x = p["r"] * jnp.cos(theta)
-    y = p["r"] * jnp.sin(theta)
-    return canonical_containers({"x": x, "y": y}, to_chart)
+    # `strip`/`rad_value`/`wrap` keep the arithmetic off `Quantity` operands,
+    # where every primitive costs a `quax` trace; see `coordinax._src.utils`.
+    (r_,), unit = strip(p, ("r",))
+    unit = promoted_unit(unit, p["theta"])
+    theta = rad_value(p["theta"], usys)
+    return canonical_containers(
+        {"x": wrap(r_ * jnp.cos(theta), unit), "y": wrap(r_ * jnp.sin(theta), unit)},
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -488,9 +500,14 @@ def pt_map(
     del usys  # unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    r_ = jnp.hypot(p["x"], p["y"])
-    theta = jnp.arctan2(p["y"], p["x"])
-    return canonical_containers({"r": r_, "theta": theta}, to_chart)
+    (x, y), unit = strip(p, ("x", "y"))
+    return canonical_containers(
+        {
+            "r": wrap(jnp.hypot(x, y), unit),
+            "theta": wrap_angle(jnp.arctan2(y, x), unit),
+        },
+        to_chart,
+    )
 
 
 # -----------------------------------------------
@@ -526,10 +543,19 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    phi = uconvert_to_rad(p["phi"], usys)
-    x = p["rho"] * jnp.cos(phi)
-    y = p["rho"] * jnp.sin(phi)
-    return canonical_containers({"x": x, "y": y, "z": p["z"]}, to_chart)
+    # `z` is not consumed by the arithmetic, so it is carried through untouched
+    # and keeps its own unit and container.
+    (rho,), unit = strip(p, ("rho",))
+    unit = promoted_unit(unit, p["phi"])
+    phi = rad_value(p["phi"], usys)
+    return canonical_containers(
+        {
+            "x": wrap(rho * jnp.cos(phi), unit),
+            "y": wrap(rho * jnp.sin(phi), unit),
+            "z": p["z"],
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -567,13 +593,22 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    r_ = p["r"]
-    theta = uconvert_to_rad(p["theta"], usys)
-    phi = uconvert_to_rad(p["phi"], usys)
-    x = r_ * jnp.sin(theta) * jnp.cos(phi)
-    y = r_ * jnp.sin(theta) * jnp.sin(phi)
-    z = r_ * jnp.cos(theta)
-    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
+    (r_,), unit = strip(p, ("r",))
+    # `z` reads only `r` and `theta`; `x` and `y` read `phi` as well.
+    unit_z = promoted_unit(unit, p["theta"])
+    unit_xy = promoted_unit(unit_z, p["phi"])
+    theta = rad_value(p["theta"], usys)
+    phi = rad_value(p["phi"], usys)
+    # `sin(theta)` once rather than once per component.
+    rho = r_ * jnp.sin(theta)
+    return canonical_containers(
+        {
+            "x": wrap(rho * jnp.cos(phi), unit_xy),
+            "y": wrap(rho * jnp.sin(phi), unit_xy),
+            "z": wrap(r_ * jnp.cos(theta), unit_z),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -609,13 +644,22 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    r_ = p["distance"]
-    lon = uconvert_to_rad(p["lon"], usys)
-    lat = uconvert_to_rad(p["lat"], usys)
-    x = r_ * jnp.cos(lat) * jnp.cos(lon)
-    y = r_ * jnp.cos(lat) * jnp.sin(lon)
-    z = r_ * jnp.sin(lat)
-    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
+    (r_,), unit = strip(p, ("distance",))
+    # `z` reads only `distance` and `lat`; `x` and `y` read `lon` as well.
+    unit_z = promoted_unit(unit, p["lat"])
+    unit_xy = promoted_unit(unit_z, p["lon"])
+    lon = rad_value(p["lon"], usys)
+    lat = rad_value(p["lat"], usys)
+    # `cos(lat)` once rather than once per component.
+    rho = r_ * jnp.cos(lat)
+    return canonical_containers(
+        {
+            "x": wrap(rho * jnp.cos(lon), unit_xy),
+            "y": wrap(rho * jnp.sin(lon), unit_xy),
+            "z": wrap(r_ * jnp.sin(lat), unit_z),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -655,20 +699,31 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    lon_coslat, r_ = p["lon_coslat"], p["distance"]
-    lat = uconvert_to_rad(p["lat"], usys)
+    (r_,), unit = strip(p, ("distance",))
+    # `z` reads only `distance` and `lat`; `x` and `y` read `lon_coslat` too.
+    unit_z = promoted_unit(unit, p["lat"])
+    unit_xy = promoted_unit(unit_z, p["lon_coslat"])
+    lat = rad_value(p["lat"], usys)
+    # To radians *before* the division rather than after: `coslat` is
+    # dimensionless, so the two commute, and dividing raw values keeps the
+    # arithmetic off `Quantity` operands.
+    lon_coslat = rad_value(p["lon_coslat"], usys)
     # Longitude is undefined at the poles. The guard fires only when cos(lat) is
     # *exactly* 0 (giving lon = 0); a floating-point near-pole value (e.g.
     # cos(pi/2) ~= 6e-17) still divides, but the cos(lat) factor below multiplies
     # the result back so x, y stay finite.
     coslat = jnp.cos(lat)
     lon = _ratio_zero_on_axis(lon_coslat, coslat)
-    lon = uconvert_to_rad(lon, usys)
-    # Convert to Cartesian
-    x = r_ * jnp.cos(lat) * jnp.cos(lon)
-    y = r_ * jnp.cos(lat) * jnp.sin(lon)
-    z = r_ * jnp.sin(lat)
-    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
+    # Convert to Cartesian. `cos(lat)` is already in hand as `coslat`.
+    rho = r_ * coslat
+    return canonical_containers(
+        {
+            "x": wrap(rho * jnp.cos(lon), unit_xy),
+            "y": wrap(rho * jnp.sin(lon), unit_xy),
+            "z": wrap(r_ * jnp.sin(lat), unit_z),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -705,13 +760,22 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    r_ = p["r"]
-    theta = uconvert_to_rad(p["theta"], usys)
-    phi = uconvert_to_rad(p["phi"], usys)
-    x = r_ * jnp.sin(phi) * jnp.cos(theta)
-    y = r_ * jnp.sin(phi) * jnp.sin(theta)
-    z = r_ * jnp.cos(phi)
-    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
+    (r_,), unit = strip(p, ("r",))
+    # `z` reads only `r` and `phi`; `x` and `y` read `theta` as well.
+    unit_z = promoted_unit(unit, p["phi"])
+    unit_xy = promoted_unit(unit_z, p["theta"])
+    theta = rad_value(p["theta"], usys)
+    phi = rad_value(p["phi"], usys)
+    # `sin(phi)` once rather than once per component.
+    rho = r_ * jnp.sin(phi)
+    return canonical_containers(
+        {
+            "x": wrap(rho * jnp.cos(theta), unit_xy),
+            "y": wrap(rho * jnp.sin(theta), unit_xy),
+            "z": wrap(r_ * jnp.cos(phi), unit_z),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -1007,10 +1071,18 @@ def pt_map(
 
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
-    theta = uconvert_to_rad(p["theta"], usys)
-    rho = p["r"] * jnp.sin(theta)
-    z = p["r"] * jnp.cos(theta)
-    return canonical_containers({"rho": rho, "phi": p["phi"], "z": z}, to_chart)
+    # `phi` is an angle, outside this length group, and passes through untouched.
+    (r_,), unit = strip(p, ("r",))
+    unit = promoted_unit(unit, p["theta"])
+    theta = rad_value(p["theta"], usys)
+    return canonical_containers(
+        {
+            "rho": wrap(r_ * jnp.sin(theta), unit),
+            "phi": p["phi"],
+            "z": wrap(r_ * jnp.cos(theta), unit),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
