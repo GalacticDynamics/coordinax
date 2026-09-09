@@ -23,7 +23,6 @@ import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .composed import Composed
-from .composite import AbstractCompositeTransform
 from .custom_types import CDict
 from .identity import Identity, identity
 from .prolong import (
@@ -391,7 +390,7 @@ def _ladder_order(op0: Any, /) -> int | None:
     A composite hiding a fibre offset is REJECTED rather than silently routed
     to the funnel; see `_reject_composed_fibre_offset`.
     """
-    if isinstance(op0, AbstractCompositeTransform):
+    if isinstance(op0, Composed):
         _reject_composed_fibre_offset(op0)
         return None
     if not isinstance(op0, AbstractAdd):
@@ -403,7 +402,7 @@ def _ladder_order(op0: Any, /) -> int | None:
     return k if k >= 1 else None
 
 
-def _reject_composed_fibre_offset(op0: AbstractCompositeTransform, /) -> None:
+def _reject_composed_fibre_offset(op0: Composed, /) -> None:
     """Raise if a materialized composite contains a fibre offset.
 
     The fibre-offset carve-out below can only recognise a fibre offset as the

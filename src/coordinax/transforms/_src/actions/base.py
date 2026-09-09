@@ -407,13 +407,13 @@ def evaluate_at(op: OpT, tau: Any, /) -> OpT:  # noqa: UP047
 
     """
     # Local imports to avoid a cycle (timedep.py imports base.py).
-    from .composite import AbstractCompositeTransform  # noqa: PLC0415
+    from .composed import Composed  # noqa: PLC0415
     from .timedep import TimeDep  # noqa: PLC0415
 
     if isinstance(op, TimeDep):
         inner = op.evaluate_at(tau)  # raises TypeError on tau=None
         return cast("OpT", evaluate_at(inner, tau))
-    if isinstance(op, AbstractCompositeTransform):
+    if isinstance(op, Composed):
         new = tuple(evaluate_at(t, tau) for t in op.transforms)
         # Honour the same-object contract above: a composite whose children are
         # all constant has nothing to evaluate, so rebuilding it would allocate

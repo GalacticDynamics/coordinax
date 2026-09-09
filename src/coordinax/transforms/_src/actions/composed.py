@@ -4,8 +4,9 @@ __all__ = ("Composed",)
 
 from dataclasses import replace
 
+from collections.abc import Iterator
 from jaxtyping import Array, ArrayLike
-from typing import Any, Generic, TypeVarTuple, cast, final
+from typing import Any, Generic, TypeVarTuple, cast, final, overload
 
 import equinox as eqx
 import plum
@@ -17,7 +18,6 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform, is_time_dependent
-from .composite import AbstractCompositeTransform
 from .custom_types import CDict, OptUSys
 from .identity import Identity, identity
 from .prolong import AnchorJet, _merge_slot0, prolong_slot
@@ -62,7 +62,7 @@ def convert_to_transforms_tuple(inp: Any, /) -> tuple[AbstractTransform, ...]:
 
 
 @final
-class Composed(AbstractCompositeTransform, Generic[*Ts]):
+class Composed(AbstractTransform, Generic[*Ts]):
     r"""Composition of Transforms.
 
     Piping refers to a process in which the output of one operation is directly
@@ -117,6 +117,80 @@ class Composed(AbstractCompositeTransform, Generic[*Ts]):
     """
 
     transforms: tuple[*Ts] = eqx.field(converter=convert_to_transforms_tuple)
+
+    # ---------------------------------------------------------------
+    # Operator API
+
+    @property
+    def inverse(self) -> "Composed":
+        """The inverse of the operator.
+
+        This is the sequence of the inverse of each operator in reverse order.
+
+        Examples
+        --------
+        >>> import coordinax.transforms as cxfm
+        >>> import unxt as u
+
+        >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
+        >>> rotate = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+        >>> pipe = cxfm.Composed((shift, rotate))
+        >>> pipe.inverse
+        Composed((...))
+
+        """
+        return Composed(tuple(op.inverse for op in reversed(self.transforms)))
+
+    @property
+    def is_time_dependent(self) -> bool:
+        """Whether any component transform is time-dependent.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
+        >>> pipe = cxfm.Composed((shift, cxfm.Identity()))
+        >>> pipe.is_time_dependent
+        False
+
+        A `TimeDep` component makes the whole composite time-dependent:
+
+        >>> moving = cxfm.TimeDep.from_(
+        ...     lambda t: cxfm.Translate.from_(jnp.asarray([1.0, 0.0, 0.0]) * t, "km")
+        ... )
+        >>> cxfm.Composed((shift, moving)).is_time_dependent
+        True
+
+        """
+        return any(op.is_time_dependent for op in self.transforms)
+
+    # ---------------------------------------------------------------
+    # Python API
+
+    @overload
+    def __getitem__(self, key: int) -> AbstractTransform: ...
+
+    @overload
+    def __getitem__(self, key: slice) -> "Composed": ...
+
+    def __getitem__(self, key: int | slice) -> "AbstractTransform | Composed":
+        """Get one or more transform from the composite operator.
+
+        This returns either a single operator or a new composite operator,
+        depending if the result of the getitem on the `transforms` attribute is
+        a single operator or a tuple of transform.
+
+        """
+        transforms = self.transforms[key]
+        if isinstance(transforms, AbstractTransform):
+            return transforms
+        return replace(self, transforms=transforms)
+
+    def __iter__(self) -> Iterator[AbstractTransform]:
+        """Iterate over the transforms in the composite operator."""
+        return iter(self.transforms)
 
     def groups(self) -> frozenset[type]:
         """Return the least common supergroup of the component transforms."""

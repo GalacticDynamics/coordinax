@@ -34,11 +34,6 @@ class MinkowskiAtlas(AbstractAtlas):
     - {class}`~coordinax.charts.MinkowskiCT` — canonical $(ct, x, y, z)$
       chart.
 
-    Parameters
-    ----------
-    ndim : int
-        Intrinsic dimension of the manifold. Always 4 for Minkowski spacetime.
-
     Examples
     --------
     >>> import coordinax.manifolds as cxm
@@ -55,14 +50,17 @@ class MinkowskiAtlas(AbstractAtlas):
     False
 
     >>> atlas.default_chart()
-    MinkowskiCT(M=MinkowskiManifold(ndim=4))
+    MinkowskiCT(M=MinkowskiManifold())
 
     """
 
-    ndim: int = 4
+    ndim: int = dataclasses.field(default=4, repr=False)
     """Dimension of Minkowski spacetime (always 4)."""
 
     _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any, Any]]]] = set()
+
+    def __init__(self) -> None:
+        object.__setattr__(self, "ndim", 4)
 
     def default_chart(self) -> cxc.AbstractChart[Any, Any, Any]:
         """Return the default chart (canonical ``MinkowskiCT``).
@@ -71,7 +69,7 @@ class MinkowskiAtlas(AbstractAtlas):
         --------
         >>> import coordinax.manifolds as cxm
         >>> cxm.MinkowskiAtlas().default_chart()
-        MinkowskiCT(M=MinkowskiManifold(ndim=4))
+        MinkowskiCT(M=MinkowskiManifold())
 
         """
         return cxc.minkowskict

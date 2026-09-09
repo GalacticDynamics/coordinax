@@ -36,7 +36,7 @@ Minkowski spacetime is `minkowski4d`, and its canonical chart is `minkowskict`, 
 ```pycon
 >>> M = cxm.minkowski4d
 >>> M
-MinkowskiManifold(ndim=4)
+MinkowskiManifold()
 
 >>> cxc.minkowskict.components
 ('ct', 'x', 'y', 'z')

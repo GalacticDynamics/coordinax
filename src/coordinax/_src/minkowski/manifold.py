@@ -35,11 +35,6 @@ class MinkowskiManifold(AbstractManifold):
     **Pre-built instance.** The module exports ``minkowski4d`` as a
     ready-to-use instance.
 
-    Parameters
-    ----------
-    ndim : int
-        Intrinsic dimension. Always 4 for Minkowski spacetime.
-
     Examples
     --------
     >>> import coordinax.manifolds as cxm
@@ -47,16 +42,16 @@ class MinkowskiManifold(AbstractManifold):
 
     >>> M = cxm.MinkowskiManifold()
     >>> M
-    MinkowskiManifold(ndim=4)
+    MinkowskiManifold()
 
     >>> M.ndim
     4
 
     >>> M.atlas
-    MinkowskiAtlas(ndim=4)
+    MinkowskiAtlas()
 
     >>> M.default_chart()
-    MinkowskiCT(M=MinkowskiManifold(ndim=4))
+    MinkowskiCT(M=MinkowskiManifold())
 
     >>> M.has_chart(cxc.minkowskict)
     True
@@ -66,12 +61,8 @@ class MinkowskiManifold(AbstractManifold):
 
     """
 
-    ndim: int = 4
-    """Intrinsic dimension of Minkowski spacetime (always 4)."""
-
-    def __init__(self, ndim: int = 4, /) -> None:
-        object.__setattr__(self, "ndim", ndim)
-        object.__setattr__(self, "atlas", MinkowskiAtlas(ndim))
+    def __init__(self) -> None:
+        object.__setattr__(self, "atlas", MinkowskiAtlas())
         object.__setattr__(self, "metric", MinkowskiMetric())
 
 
