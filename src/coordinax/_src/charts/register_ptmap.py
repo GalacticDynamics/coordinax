@@ -62,6 +62,29 @@ def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
     return jnp.where(denom == 0, jnp.zeros_like(ratio), ratio)
 
 
+_PROLATE_NEEDS_USYS: Final = (
+    "For non-Quantity 'mu' or 'nu', usys must be a UnitSystem, not None."
+)
+
+
+def _delta_squared(chart: Any, unit_area: Any, usys: OptUSys, /) -> Any:
+    """``Delta**2`` as a raw value in *unit_area*, or in ``usys`` when bare.
+
+    A bare ``mu``/``nu`` carries no unit to measure ``Delta`` against, so the
+    unit system is required there -- which is also what narrows `usys` to
+    non-`None` before it is subscripted.
+    """
+    if unit_area is not None:
+        # Strip `Delta` into the implied *length* unit and square the raw
+        # array, rather than squaring the `Quantity` and stripping the area:
+        # `Quantity ** 2` is one of the per-primitive `quax` traces this is
+        # here to avoid, and both orders give the same number.
+        return cast("Array", u.ustrip(unit_area**0.5, chart.Delta)) ** 2
+    if usys is None:
+        raise ValueError(_PROLATE_NEEDS_USYS)
+    return cast("Array", u.ustrip(usys["length"], chart.Delta)) ** 2
+
+
 def _require_cart3d_phase_space(chart: Any, /, *, direction: str) -> None:
     """Validate a two-factor ``Cart3D`` Cartesian phase-space product chart.
 
@@ -805,26 +828,24 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     # Calculate cylindrical distance
-    nu, mu = p["nu"], p["mu"]
-    if not isinstance(nu, ABCQ) or not isinstance(mu, ABCQ):
-        if usys is None:
-            msg = "For non-Quantity 'mu' or 'nu', usys must be a UnitSystem, not None."
-            raise ValueError(msg)
+    (mu, nu), unit_area = strip(p, ("mu", "nu"))
+    delta2 = _delta_squared(from_chart, unit_area, usys)
 
-        Delta2 = cast("Array", u.ustrip(usys["length"], from_chart.Delta)) ** 2
-    else:
-        Delta2 = from_chart.Delta**2
+    nu_d2 = jnp.abs(nu) / delta2
+    rho = jnp.sqrt((mu - delta2) * (1 - nu_d2))
 
-    nu_D2 = jnp.abs(nu) / Delta2
-    rho = jnp.sqrt((mu - Delta2) * (1 - nu_D2))
-
-    # Convert to Cartesian
-    phi = uconvert_to_rad(p["phi"], usys)
-    x = rho * jnp.cos(phi)
-    y = rho * jnp.sin(phi)
-    z = jnp.sqrt(mu * nu_D2) * jnp.sign(nu)
-
-    return canonical_containers({"x": x, "y": y, "z": z}, to_chart)
+    # Convert to Cartesian. `mu` and `nu` are *areas*, so a length output
+    # carries the square root of their unit.
+    unit_len = None if unit_area is None else unit_area**0.5
+    phi = rad_value(p["phi"], usys)
+    return canonical_containers(
+        {
+            "x": wrap(rho * jnp.cos(phi), unit_len),
+            "y": wrap(rho * jnp.sin(phi), unit_len),
+            "z": wrap(jnp.sqrt(mu * nu_d2) * jnp.sign(nu), unit_len),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
@@ -1268,19 +1289,21 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    nu, mu = p["nu"], p["mu"]
-    if not isinstance(nu, ABCQ) or not isinstance(mu, ABCQ):
-        if usys is None:
-            msg = "For non-Quantity 'mu' or 'nu', usys must be a UnitSystem, not None."
-            raise ValueError(msg)
+    (mu, nu), unit_area = strip(p, ("mu", "nu"))
+    delta2 = _delta_squared(from_chart, unit_area, usys)
 
-        Delta2 = u.ustrip(usys["area"], from_chart.Delta**2)
-    else:
-        Delta2 = from_chart.Delta**2
-    nu_D2 = jnp.abs(nu) / Delta2
-    rho = jnp.sqrt((mu - Delta2) * (1 - nu_D2))
-    z = jnp.sqrt(mu * nu_D2) * jnp.sign(nu)
-    return canonical_containers({"rho": rho, "phi": p["phi"], "z": z}, to_chart)
+    nu_d2 = jnp.abs(nu) / delta2
+    # `mu` and `nu` are *areas*, so a length output carries the square root of
+    # their unit. `phi` is an angle, outside the group, and passes through.
+    unit_len = None if unit_area is None else unit_area**0.5
+    return canonical_containers(
+        {
+            "rho": wrap(jnp.sqrt((mu - delta2) * (1 - nu_d2)), unit_len),
+            "phi": p["phi"],
+            "z": wrap(jnp.sqrt(mu * nu_d2) * jnp.sign(nu), unit_len),
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
