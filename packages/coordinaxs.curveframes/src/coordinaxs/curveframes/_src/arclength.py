@@ -190,7 +190,10 @@ _MSG_S_OUT_OF_DOMAIN = (
     "_solve_tau_dense integrates past each end. The interpolation has no "
     "coefficients there, and extrapolating off the end of it would return a "
     "plausible-looking wrong answer. Increase s_max, or leave it `None` to "
-    "fall back to solving the ODE fresh on every call."
+    "fall back to solving the ODE fresh on every call. If this came from a "
+    "chart's inverse `pt_map`, note that s_max must cover the `tau` the solve "
+    "*returns*, which for a point nearest the curve outside `tau_bounds` lies "
+    "outside `tau_bounds` too."
 )
 
 
@@ -586,6 +589,15 @@ class ArcLength(eqx.Module):
         update each other. Set `s_max` to at least `tau_bounds[1]` in the
         same unit, or in-bounds chart queries will land outside the
         interpolation and raise.
+
+        `tau_bounds[1]` bounds the *scan*, not the *answer*. `nearest_tau`'s
+        fallback deliberately returns a `tau` outside `tau_bounds` when the
+        true nearest point lies there, and that answer needs interpolation
+        coefficients too -- so a query of that kind raises unless `s_max`
+        also covers it. Measured on a unit circle with
+        ``tau_bounds=(0, 1) km``: a query nearest `tau = 0.5` is unaffected by
+        `s_max`, while one nearest `tau = 1.2` raises at ``s_max = 1 km`` and
+        succeeds with `s_max` unset.
 
     See Also
     --------

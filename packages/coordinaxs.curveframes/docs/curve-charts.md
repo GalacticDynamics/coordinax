@@ -606,6 +606,8 @@ The factor is a _local_ test only: it says nothing about a point mirrored across
 
 `HELIX_BOUNDS` is `(-1, 6)` s, so `333.33` is nowhere near it. Callers who cannot rule out querying past the fitted range should check the returned `tau` against `tau_bounds` themselves -- that converged-but-out-of-bounds case is not an error.
 
+That degradation needs the curve to be _evaluable_ past `tau_bounds`, which an `ArcLength` carrying a finite `s_max` is not: its interpolation covers only `[-m, s_max + m]`, so a query whose answer lies beyond that raises instead of degrading. Refusing is right there -- extrapolating off the end of the interpolation would return a plausible-looking wrong answer -- but it means `s_max` has to cover the `tau` the solve _returns_, not merely `tau_bounds[1]`. Measured on a unit circle with `tau_bounds = (0, 1)` km: a query nearest `tau = 0.5` is unaffected by `s_max`, while one nearest `tau = 1.2` raises at `s_max = 1` km and succeeds with `s_max` unset.
+
 A genuinely degenerate query is different, and _is_ caught: a point equidistant from the whole closed circle -- its centre -- leaves the stationarity condition satisfied everywhere, not by any particular $\tau$, so that same fallback root-find does not converge (its step divides by a derivative that vanishes identically). `nearest_tau` checks the solver's own result and raises rather than return an arbitrary, meaningless $\tau$:
 
 ```{code-block} python
