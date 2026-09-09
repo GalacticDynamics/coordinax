@@ -130,6 +130,24 @@ class TestPointTransformProlate:
         out = cxc.pt_map(p, cxc.sph3d, prolate)
         assert set(out) == {"mu", "nu", "phi"}
 
+    @pytest.mark.parametrize(
+        "to_chart", [cxc.cart3d, cxc.cyl3d], ids=["cart3d", "cyl3d"]
+    )
+    def test_bare_mu_nu_without_a_unit_system_is_refused(self, to_chart) -> None:
+        """`Delta` is a length; a bare `mu`/`nu` gives nothing to measure it against.
+
+        Rejecting beats guessing: silently reading them as `Delta`'s own unit
+        would make the answer depend on how the chart happened to be built.
+        """
+        prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+        p = {"mu": 12.0, "nu": 0.5, "phi": 0.3}
+        with pytest.raises(ValueError, match="usys must be a UnitSystem"):
+            cxc.pt_map(p, prolate, to_chart)
+
+        # With one, it goes through.
+        out = cxc.pt_map(p, prolate, to_chart, usys=u.unitsystems.si)
+        assert all(v is not None for v in out.values())
+
 
 class TestPointTransformCartND:
     """``pt_map`` from CartND reads components on the last axis (batch-safe)."""
