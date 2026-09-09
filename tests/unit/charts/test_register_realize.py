@@ -365,22 +365,26 @@ class TestPtMapUnitContract:
         assert phi.unit == u.unit("deg")
         assert phi.value == pytest.approx(30.0)
 
-    def test_a_unitful_angle_promotes_a_unitless_length(self):
-        """A bare radius with an `Angle` gives a *dimensionless* `Quantity` length.
+    def test_the_output_container_follows_the_length_not_the_angle(self):
+        """A unitless radius stays unitless however the angle is wrapped.
 
-        `Quantity` arithmetic promoted whenever any operand was one, and callers
-        depend on it -- `chord_distance` on `sph2`, whose radius is a bare 1 and
-        whose angles are `Angle`s, returns a dimensionless `Quantity`. Promotion
-        follows the operands that feed each output, so a unitful component the
-        arithmetic never reads promotes nothing.
+        `Quantity` arithmetic used to promote whenever *any* operand was one,
+        so `sph3d -> cart3d` returned a *dimensionless* `Quantity` for a length
+        when the angle happened to be an `Angle` and a bare array when it did
+        not -- and, in the same point, left an untouched `z` bare either way.
+        The output pytree structure therefore depended on how the angles were
+        wrapped, which is the route-dependence `canonical_containers` exists to
+        remove. Only the operands carrying length information decide.
         """
         ang = {"theta": u.Angle(0.7, "rad"), "phi": u.Angle(1.2, "rad")}
-        out = cxc.pt_map({"r": 2.0, **ang}, cxc.sph3d, cxc.cart3d)
-        assert all(u.unit_of(v) == u.unit("") for v in out.values())
+        wrapped = cxc.pt_map({"r": 2.0, **ang}, cxc.sph3d, cxc.cart3d)
+        bare = cxc.pt_map({"r": 2.0, "theta": 0.7, "phi": 1.2}, cxc.sph3d, cxc.cart3d)
 
-        # `z` is not read by `cyl3d -> cart3d`'s arithmetic, so it promotes nothing.
-        out = cxc.pt_map(
-            {"rho": 2.0, "phi": 0.7, "z": u.Q(3.0, "m")}, cxc.cyl3d, cxc.cart3d
-        )
-        assert u.unit_of(out["x"]) is None
-        assert u.unit_of(out["z"]) == u.unit("m")
+        assert all(u.unit_of(v) is None for v in wrapped.values())
+        assert jax.tree.structure(wrapped) == jax.tree.structure(bare)
+
+    def test_a_length_component_still_decides_its_own_output(self):
+        """The rule is about *which* operands decide, not about dropping units."""
+        p = {"r": u.Q(2.0, "km"), "theta": 0.7, "phi": 1.2}
+        out = cxc.pt_map(p, cxc.sph3d, cxc.cart3d)
+        assert all(u.unit_of(v) == u.unit("km") for v in out.values())
