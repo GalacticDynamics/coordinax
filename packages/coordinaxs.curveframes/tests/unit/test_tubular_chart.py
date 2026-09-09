@@ -184,6 +184,10 @@ def test_a_worldtube_round_trips_at_every_offset(n1: float) -> None:
 
     assert jnp.allclose(back["tau"].ustrip("s"), AT_TIME.ustrip("s"), atol=1e-3)
     assert jnp.allclose(back["n1"].ustrip("km"), n1, atol=1e-5)
+    # `n2` too: the inverse could scramble the second normal component while
+    # still returning the right `tau` and `n1`, and the assertions above would
+    # not notice.
+    assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
 
 
 def test_a_worldtubes_reach_check_runs() -> None:
