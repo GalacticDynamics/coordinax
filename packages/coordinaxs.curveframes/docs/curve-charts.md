@@ -613,7 +613,7 @@ A genuinely degenerate query is different, and _is_ caught: a point equidistant 
 >>> cxc.pt_map(centre, ch_frenet.M, cxc.cart3d, ch_frenet.M, ch_frenet)
 Traceback (most recent call last):
     ...
-RuntimeError: nearest-point solve did not converge
+RuntimeError: nearest-point solve did not converge. The documented causes are: ...
 
 ```
 
