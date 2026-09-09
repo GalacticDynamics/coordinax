@@ -51,6 +51,10 @@ from coordinax._src.utils import (
 )
 from coordinaxs.api.custom_types import CDict
 
+#: The pole-to-equator offset for colatitude <-> latitude, built once. `u.Q` is
+#: ~49us, which is otherwise paid per call on a `pt_map` path.
+_RIGHT_ANGLE: Final = u.Q(90, "deg")
+
 
 def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
     """``num / denom``, defined as 0 where ``denom == 0`` (coordinate singularity).
@@ -1117,7 +1121,7 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     lat = (
-        u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
+        _RIGHT_ANGLE if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
     return canonical_containers(
         {"lon": p["phi"], "lat": lat, "distance": p["r"]}, to_chart
@@ -1158,7 +1162,7 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     lat = (
-        u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
+        _RIGHT_ANGLE if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
     lon_coslat = p["phi"] * jnp.cos(lat)
     return canonical_containers(
@@ -1492,23 +1496,31 @@ def pt_map(
     # traced `Delta` alike. Cost: a `Delta` of the wrong dimension now raises
     # `UnitConversionError` here, instead of taking the conversion branch.
     unit = from_chart.Delta.unit
+    same_delta = u.ustrip(unit, to_chart.Delta) == u.ustrip(unit, from_chart.Delta)
+
     # Both branches must agree on pytree *structure*, and `Angle` and `Quantity`
     # are different nodes, so the pass-through branch canonicalises too. Without
     # it the converting branch returns `Angle` while this one hands back
     # whatever the caller built, and `lax.cond` rejects the mismatched pair.
-    return jax.lax.cond(
-        u.ustrip(unit, to_chart.Delta) == u.ustrip(unit, from_chart.Delta),
-        lambda p: canonical_containers(p, to_chart),
-        lambda p: cxcapi.pt_map(
-            cxcapi.pt_map(p, from_M, from_chart, to_M, cyl3d, usys=usys),
-            from_M,
-            cyl3d,
-            to_M,
-            to_chart,
-            usys=usys,
-        ),
-        p,
-    )
+    def keep(p: CDict) -> CDict:
+        return canonical_containers(p, to_chart)
+
+    def convert(p: CDict) -> CDict:
+        out = cxcapi.pt_map(p, from_M, from_chart, to_M, cyl3d, usys=usys)
+        return cast(
+            "CDict", cxcapi.pt_map(out, from_M, cyl3d, to_M, to_chart, usys=usys)
+        )
+
+    # `lax.cond` traces *both* branches, so routing a same-`Delta` identity
+    # through it costs a full round-trip to cylindrical and back -- ~65ms
+    # eagerly, the same as actually converting. A `Delta` that is concrete
+    # (the `StaticQuantity` every ordinary call site passes, or a dynamic one
+    # outside `jit`) can decide in Python and skip the dead branch entirely.
+    # A traced `Delta` cannot, and still needs `lax.cond`; that path is what
+    # `test_prolate_differentiable` covers.
+    if isinstance(same_delta, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
+        return jax.lax.cond(same_delta, keep, convert, p)
+    return keep(p) if bool(same_delta) else convert(p)  # concrete 0-d array
 
 
 # -----------------------------------------------
