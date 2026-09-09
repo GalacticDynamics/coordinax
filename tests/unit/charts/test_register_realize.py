@@ -131,6 +131,32 @@ class TestPointTransformProlate:
         assert set(out) == {"mu", "nu", "phi"}
 
     @pytest.mark.parametrize(
+        ("rho_unit", "z_unit"),
+        [("m", "m"), ("m", "cm"), ("km", "m"), ("cm", "m")],
+        ids=["m/m", "m/cm", "km/m", "cm/m"],
+    )
+    def test_mu_and_nu_share_one_area_unit(self, rho_unit, z_unit) -> None:
+        """Both are areas on the same chart, so both must be in the same one.
+
+        Computing on `Quantity` operands let each take whichever unit was
+        leftmost in its own expression -- `mu` from ``Delta**2``, `nu` from
+        ``Delta**2 / rho**2 * z**2``. With `rho` in km and `z` in m that made
+        `nu` come back as ``m4 / km2``: dimensionally an area, which is why
+        `check_data` accepted it, but not a unit anyone would write. The
+        chart's invariants compare both against ``Delta**2``, so they have to
+        be commensurable on sight, not merely convertible.
+        """
+        prolate = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+        p = {
+            "rho": u.Q(2.0, rho_unit),
+            "phi": u.Angle(0.7, "rad"),
+            "z": u.Q(3.0, z_unit),
+        }
+        out = cxc.pt_map(p, cxc.cyl3d, prolate)
+        assert out["mu"].unit == out["nu"].unit
+        assert out["mu"].unit == u.unit(rho_unit) ** 2
+
+    @pytest.mark.parametrize(
         "to_chart", [cxc.cart3d, cxc.cyl3d], ids=["cart3d", "cyl3d"]
     )
     def test_bare_mu_nu_without_a_unit_system_is_refused(self, to_chart) -> None:
