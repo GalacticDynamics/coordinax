@@ -29,6 +29,16 @@ CHART = cxc.ProlateSpheroidal3D(Delta=u.Q(2.0, "kpc"))
 ON_PLANE = {"x": u.Q(3.0, "kpc"), "y": u.Q(4.0, "kpc"), "z": u.Q(0.0, "kpc")}
 
 
+def _diag_of(mu_value: float, nu_value: float) -> np.ndarray:
+    """Metric diagonal at an explicit (mu, nu)."""
+    p = {
+        "mu": u.Q(mu_value, "kpc2"),
+        "nu": u.Q(nu_value, "kpc2"),
+        "phi": u.Angle(0.3, "rad"),
+    }
+    return np.asarray(cxm.metric_matrix(cxm.R3, p, CHART).diagonal.value)
+
+
 def _diag_at(nu_value: float) -> np.ndarray:
     """Metric diagonal at the in-plane point, with ``nu`` overridden."""
     p = dict(cxc.pt_map(ON_PLANE, cxc.cart3d, CHART))
@@ -109,3 +119,46 @@ def test_the_angular_unit_follows_the_plain_array_convention() -> None:
     assert np.allclose(
         np.asarray(with_qty.diagonal.value), np.asarray(with_bare.diagonal.value)
     )
+
+
+FOCUS = {"mu": u.Q(4.0, "kpc2"), "nu": u.Q(4.0, "kpc2"), "phi": u.Angle(0.3, "rad")}
+
+
+def test_the_focus_collapses_phi_and_says_so() -> None:
+    """Every `phi` maps to the same point there, and `g_phi_phi` records it."""
+    assert float(cxc.pt_map(FOCUS, CHART, cxc.cart3d)["z"].ustrip("kpc")) == (
+        pytest.approx(2.0)
+    )
+    other = {**FOCUS, "phi": u.Angle(2.9, "rad")}
+    assert float(cxc.pt_map(other, CHART, cxc.cart3d)["z"].ustrip("kpc")) == (
+        pytest.approx(2.0)
+    )
+    assert float(cxm.metric_matrix(cxm.R3, FOCUS, CHART).diagonal.value[2]) == 0.0
+
+
+def test_the_focus_has_no_metric_limit_to_report() -> None:
+    """NaN at the corner is deliberate, not the `nu = 0` bug returning.
+
+    The focus is the intersection of two degenerate surfaces, so the limit
+    depends on the path in -- `g_mu_mu` tends to 0.0625 along one, `inf` along
+    the other, 0.125 diagonally. Pinned so nobody "fixes" it by silently
+    choosing a direction of approach.
+    """
+    got = np.asarray(cxm.metric_matrix(cxm.R3, FOCUS, CHART).diagonal.value)
+    assert np.isnan(got[0]), got
+    assert np.isnan(got[1]), got
+
+    d2 = 4.0
+    along_nu = _diag_of(d2 + 1e-6, d2)
+    along_mu = _diag_of(d2, d2 - 1e-6)
+    assert along_nu[0] == pytest.approx(0.0625, rel=1e-4)
+    assert np.isinf(along_nu[1])
+    assert np.isinf(along_mu[0])
+    assert along_mu[1] == pytest.approx(0.0625, rel=1e-4)
+
+
+def test_the_degenerate_surface_itself_is_not_nan() -> None:
+    """`|nu| = Delta^2` with `mu > Delta^2` is a surface, not the corner."""
+    got = _diag_of(5.0, 4.0)
+    assert np.isfinite(got[0]), got
+    assert np.isinf(got[1]), got

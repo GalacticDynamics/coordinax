@@ -544,6 +544,22 @@ def metric_matrix(
     nu = point["nu"]
     d2 = chart.Delta**2
 
+    # At the foci -- `mu == Delta**2` *and* `|nu| == Delta**2`, the single point
+    # `(0, 0, +/-Delta)` -- `g_mu_mu` and `g_nu_nu` come out NaN, and that is
+    # deliberate: the corner is the intersection of two degenerate surfaces and
+    # the limit genuinely depends on the path in. Measured at `Delta = 2`:
+    #
+    #     along |nu| = Delta**2 :  g_mu -> 0.0625,  g_nu -> inf
+    #     along  mu  = Delta**2 :  g_mu -> inf,     g_nu -> 0.0625
+    #     diagonally            :  both -> 0.125
+    #
+    # So there is no value to return, and picking one would be choosing a
+    # direction of approach on the caller's behalf. `g_phi_phi` is 0 there and
+    # that *is* meaningful: every `phi` maps to the same Cartesian point, so the
+    # angular coordinate has collapsed. Away from the exact corner nothing is
+    # NaN -- `|nu| = Delta**2` with `mu > Delta**2` gives a finite `g_mu_mu` and
+    # an infinite `g_nu_nu`, which is the honest description of that surface.
+    #
     # `t = |nu| / Delta^2`, dimensionless, exactly as the point map defines it.
     t = qnp.abs(nu) / d2
     sign_nu = jnp.sign(u.ustrip(AllowValue, "", nu / d2))
