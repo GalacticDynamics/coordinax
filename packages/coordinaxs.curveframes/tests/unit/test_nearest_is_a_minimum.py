@@ -37,11 +37,18 @@ PROBE = np.array([7.192838530482548, -0.21267041401162823, 0.0])
 
 
 def _nearest_or_refusal(builder: object, x: u.AbstractQuantity) -> float | None:
-    """The reported tau, or `None` when the solve refused for a stated reason.
+    """The reported tau, or `None` when `nearest_tau` itself declined to answer.
 
     A bare ``except RuntimeError`` would let an unrelated regression -- a
-    failure inside the builder, say -- pass as an acceptable refusal, so
-    require the message to name a cause this test is willing to allow.
+    failure inside the builder, say -- pass as an acceptable refusal, so match
+    the stable opening of `nearest_tau`'s own non-convergence message.
+
+    Matching on ``"n_seed"`` would not do: that message names all three
+    documented causes and offers `n_seed` as the remedy for one of them, so the
+    substring is present whichever cause fired. The prefix identifies the
+    *source* of the refusal, which is what this needs to establish; which of the
+    three causes fired is pinned separately by
+    `test_the_remedy_the_refusal_advertises_actually_works`.
     """
     try:
         tau = cxfc.nearest_tau(builder, x, bounds=BOUNDS)
@@ -49,7 +56,9 @@ def _nearest_or_refusal(builder: object, x: u.AbstractQuantity) -> float | None:
         refusal = str(exc)
     else:
         return float(tau.ustrip("s"))
-    assert "n_seed" in refusal, f"refused, but not for a reason we allow: {refusal}"
+    assert refusal.startswith("nearest-point solve did not converge"), (
+        f"refused, but not by `nearest_tau`'s documented path: {refusal}"
+    )
     return None
 
 
