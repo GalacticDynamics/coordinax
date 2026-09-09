@@ -189,10 +189,13 @@ def nearest_tau(
     )
 
     # The coarse argmin is already paid for, so a solve that lands farther away
-    # than its own seed has failed whatever status it reports. This is the last
-    # line of defence for the unconstrained fallback, which is free to wander
-    # onto a maximum; the bracketed branch cannot trip it, since a bracket that
-    # straddles a minimum has that minimum no worse than `tau0` inside it.
+    # than its own seed has failed whatever status it reports. This catches the
+    # unconstrained fallback wandering onto a maximum -- and also the bracketed
+    # branch when the scan is under-resolved: the endpoint orientation says only
+    # that the residual falls across the bracket, not that the bracket holds a
+    # single stationary point, so on a curve that wiggles *within* one spacing
+    # bisection can still settle on an interior maximum. Either way the answer
+    # is refused rather than returned.
     not_converged = not_converged | (dist2(value) > d_seed * (1.0 + rtol) + atol**2)
 
     # Must surface non-convergence, not return silently (hybrid form,
@@ -200,11 +203,15 @@ def nearest_tau(
     # through -- an unused `eqx.error_if` result is dead-code-eliminated and
     # the guard vanishes under `jit`.
     msg = (
-        "nearest-point solve did not converge. If the curve varies faster than "
-        "`n_seed` samples resolve, the scan's argmin is not within one spacing of "
-        "the true minimiser and the bracket can straddle a maximum instead; raise "
-        "`n_seed`. (Measured: a curve with 32 wiggles across `bounds` refuses at "
-        "the default `n_seed=64` and resolves correctly at 128.)"
+        "nearest-point solve did not converge. The documented causes are: the "
+        "query is degenerate, equidistant from the whole curve (e.g. a circular "
+        "curve's centre), so no nearest point exists; the true nearest point "
+        "lies outside `bounds`, which the scan cannot see past; or the curve "
+        "varies faster than `n_seed` samples resolve, so the scan's argmin is "
+        "not within one spacing of the true minimiser and the bracket can hold "
+        "a maximum as well as a minimum. Only the last has a remedy here -- "
+        "raise `n_seed` (measured: a curve with 32 wiggles across `bounds` "
+        "refuses at the default 64 and resolves correctly at 128)."
     )
     if isinstance(not_converged, jax.core.Tracer):
         value = eqx.error_if(value, not_converged, msg)

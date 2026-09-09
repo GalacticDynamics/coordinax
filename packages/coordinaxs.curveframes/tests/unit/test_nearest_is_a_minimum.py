@@ -35,14 +35,30 @@ def _dist(tau_v: float) -> float:
 PROBE = np.array([7.192838530482548, -0.21267041401162823, 0.0])
 
 
+def _nearest_or_refusal(builder: object, x: u.AbstractQuantity) -> float | None:
+    """The reported tau, or `None` when the solve refused for a stated reason.
+
+    A bare ``except RuntimeError`` would let an unrelated regression -- a
+    failure inside the builder, say -- pass as an acceptable refusal, so
+    require the message to name a cause this test is willing to allow.
+    """
+    try:
+        tau = cxfc.nearest_tau(builder, x, bounds=BOUNDS)
+    except RuntimeError as exc:
+        refusal = str(exc)
+    else:
+        return float(tau.ustrip("s"))
+    assert "n_seed" in refusal, f"refused, but not for a reason we allow: {refusal}"
+    return None
+
+
 def test_it_does_not_return_a_local_maximum() -> None:
     """The reported point must be a minimum, not the maximum next door."""
     builder = cxfc.FrenetSerretBuilder(wiggly, "s")
     x = u.Q(jnp.asarray(PROBE), "km")
 
-    try:
-        tau = float(cxfc.nearest_tau(builder, x, bounds=BOUNDS).ustrip("s"))
-    except RuntimeError:
+    tau = _nearest_or_refusal(builder, x)
+    if tau is None:
         return  # refusing is a correct outcome; lying is not
 
     # Second derivative of dist^2 must be positive: a minimum, not a maximum.
@@ -64,9 +80,8 @@ def test_it_is_never_worse_than_the_coarse_scan_it_started_from() -> None:
     seeds = np.linspace(*(float(b.ustrip("s")) for b in BOUNDS), 64)
     best_seed = min(_dist(s) for s in seeds)
 
-    try:
-        tau = float(cxfc.nearest_tau(builder, x, bounds=BOUNDS).ustrip("s"))
-    except RuntimeError:
+    tau = _nearest_or_refusal(builder, x)
+    if tau is None:
         return
 
     assert _dist(tau) <= best_seed + 1e-9, (
