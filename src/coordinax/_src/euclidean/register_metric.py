@@ -502,8 +502,20 @@ def metric_matrix(
     zero up to round-off -- measured at $8\times 10^{-17}$ relative, over a
     grid of $(\Delta, \mu, \nu, \phi)$.
 
-    No closed form here, so the pullback is evaluated and only its diagonal
-    kept -- but the result is *declared* diagonal, which is what tells
+    Given in closed form, by differentiating this chart's own `pt_map` --
+    $\rho = \sqrt{\mu - \Delta^2}\sqrt{1 - t}$ and
+    $z = \mathrm{sign}(\nu)\sqrt{\mu}\sqrt{t}$ with $t = |\nu|/\Delta^2$ --
+    rather than by evaluating the Jacobian pullback and keeping its diagonal.
+    The pullback is NaN across the whole $\nu = 0$ plane, which the domain
+    admits and `pt_map` round-trips exactly: forward-mode AD evaluates
+    $\mathrm{d}\sqrt{t}$ as $\tfrac{1}{2\sqrt{t}}\,\dot t$, so at $t = 0$
+    *every* column picks up $\infty \times 0$, and the whole $\mathrm{d}z$
+    row came back NaN -- including $\partial z/\partial\phi$, which is
+    identically zero. Only $g_{\nu\nu}$ is genuinely singular there;
+    $g_{\mu\mu}$ and $g_{\phi\phi}$ have finite limits and were being lost
+    with it.
+
+    The result is *declared* diagonal, which is what tells
     `coordinax.manifolds.scale_factors` this chart is orthogonal.
 
     """
@@ -536,7 +548,11 @@ def metric_matrix(
     t = qnp.abs(nu) / d2
     sign_nu = jnp.sign(u.ustrip(AllowValue, "", nu / d2))
     root_mu = qnp.sqrt(mu - d2)
-    rad2 = cast("Any", u.unit("rad")) ** 2
+    # Not a hard-coded `rad`: `_angle_basis_unit` is what keeps a plain-array
+    # angle dimensionless while a `Quantity` angle is expressed per `rad**2`
+    # (#835). Hard-coding it would make `g_phi_phi` report `/ rad2` for a
+    # caller who passed bare arrays, which no other rule in this module does.
+    phi2 = cast("Any", _angle_basis_unit(point["phi"])) ** 2
 
     # rho = sqrt(mu - Delta^2) sqrt(1 - t),  z = sign(nu) sqrt(mu) sqrt(t)
     drho_dmu = qnp.sqrt(1 - t) / (2 * root_mu)
@@ -550,7 +566,7 @@ def metric_matrix(
     g_phi = rho**2
 
     diag = jnp.stack([g_mu.value, g_nu.value, g_phi.value], axis=-1)
-    units = ul.UnitsMatrix((g_mu.unit, g_nu.unit, g_phi.unit / rad2))
+    units = ul.UnitsMatrix((g_mu.unit, g_nu.unit, g_phi.unit / phi2))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
 
 

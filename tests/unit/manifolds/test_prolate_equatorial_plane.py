@@ -7,10 +7,16 @@ exactly, but the metric came back all-NaN.
 
 Only ``g_nu_nu`` is genuinely singular there: ``nu`` is a degenerate coordinate
 on the disc. ``g_mu_mu`` and ``g_phi_phi`` are finite and well defined, and were
-being lost to a ``0/0`` in ``d(z)/d(mu)`` -- an artefact of writing
-``sqrt(mu * nu_D2)`` as one root rather than a product of two.
+being lost with it.
+
+The cause is not the shape of the expression -- factoring ``sqrt(mu * nu_D2)``
+into a product of roots does not help, and was tried. Forward-mode AD evaluates
+``d(sqrt(t))`` as ``0.5/sqrt(t) * tangent``, so at ``t = 0`` *every* column of
+the pullback picks up ``inf * 0``: the whole ``dz`` row came back NaN,
+``dz/dphi`` included, which is identically zero.
 """
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -83,4 +89,23 @@ def test_it_agrees_with_the_jacobian_pullback_off_the_plane(
     pullback = np.asarray((jac.T @ jac).value).diagonal()
     assert np.allclose(closed, pullback, rtol=1e-12, atol=0.0), (
         f"closed {closed} vs pullback {pullback}"
+    )
+
+
+def test_the_angular_unit_follows_the_plain_array_convention() -> None:
+    """A `Quantity` angle gives ``/ rad2``; a plain array stays dimensionless.
+
+    This is the convention `_angle_basis_unit` carries for every other rule in
+    the module (#835). Hard-coding ``rad`` here would have reported ``/ rad2``
+    to a caller who passed bare arrays.
+    """
+    base = {"mu": u.Q(29.0, "kpc2"), "nu": u.Q(1.0, "kpc2")}
+    with_qty = cxm.metric_matrix(cxm.R3, {**base, "phi": u.Angle(0.7, "rad")}, CHART)
+    with_bare = cxm.metric_matrix(cxm.R3, {**base, "phi": jnp.asarray(0.7)}, CHART)
+
+    assert "rad2" in str(with_qty.diagonal.unit)
+    assert "rad" not in str(with_bare.diagonal.unit)
+    # The values are the same either way -- only the label differs.
+    assert np.allclose(
+        np.asarray(with_qty.diagonal.value), np.asarray(with_bare.diagonal.value)
     )
