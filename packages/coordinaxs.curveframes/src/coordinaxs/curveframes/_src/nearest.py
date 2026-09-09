@@ -53,6 +53,12 @@ def nearest_tau(
     positive to negative across a genuine minimum, so that bracket is
     well-posed for bisection and cannot land on the maximum next door.
 
+    ``bounds`` must have non-zero width. A zero-width one makes the seed
+    spacing zero, and the bracketed solve's ``expand_if_necessary`` grows a
+    bracket by doubling its width, which never grows a zero -- so it is
+    refused with a `ValueError` rather than left to loop forever. That is a
+    precondition, not a degradation: there is no curve to search.
+
     That bracket does not always contain a sign change, though -- the
     residual can be one-signed across it in two situations: the true nearest
     point lies outside `tau_bounds` altogether (the scan is confined to

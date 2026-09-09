@@ -51,7 +51,10 @@ def test_zero_width_bounds_is_refused_under_jit() -> None:
     def solve(lo: u.AbstractQuantity, hi: u.AbstractQuantity) -> u.AbstractQuantity:
         return cxfc.nearest_tau(builder, PROBE, bounds=(lo, hi))
 
-    with pytest.raises(Exception, match="zero width"):
+    # `RuntimeError`, not `Exception`: `eqx.error_if` surfaces as
+    # `JaxRuntimeError`, which subclasses it. Catching `Exception` would let an
+    # unrelated tracing failure pass as the refusal under test.
+    with pytest.raises(RuntimeError, match="zero width"):
         solve(u.Q(3.0, "s"), u.Q(3.0, "s"))
 
 
@@ -96,5 +99,7 @@ def test_s_max_must_cover_the_answer_not_just_the_scan() -> None:
     )
 
     pinned = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s", s_max=u.Q(1.0, "km")), "km")
-    with pytest.raises(Exception, match="outside the solved domain"):
+    # `EquinoxRuntimeError` subclasses `RuntimeError`; this matches how
+    # `test_arclength_smax.py` already pins the same guard.
+    with pytest.raises(RuntimeError, match="outside the solved domain"):
         cxfc.nearest_tau(pinned, x, bounds=ARC_BOUNDS)
