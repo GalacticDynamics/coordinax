@@ -163,12 +163,51 @@ def nearest_tau(
     elif bool(degenerate):
         raise ValueError(msg_bounds)
 
-    bracket_lo, bracket_hi = tau0 - spacing, tau0 + spacing
-
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
-        T = builder.rotation_matrix(u.Q(tau_v, unit))[0]
+        # `tangent()`, not `rotation_matrix()[0]`: both builders override it to
+        # skip the parallel-transport solve only rows 1-2 need, and document the
+        # value as identical. Measured bit-identical and ~110x faster eagerly,
+        # which is what makes the fine residual grid below affordable.
+        T = builder.tangent(u.Q(tau_v, unit)).ustrip("")
         return jnp.dot(T, offset(tau_v))
+
+    # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
+    # so once the curve varies on that scale it can hold a whole period -- two
+    # minima and two maxima. Bisection then returns *a* root with the right
+    # endpoint orientation, which may be the worse one: measured on a curve
+    # with 32 wiggles across `bounds`, a bracket of width 0.31746 against a
+    # period of 0.31416 held minima at 8.34701 (distance 0.107) and 8.46367
+    # (distance 0.011), and the solve returned the first.
+    #
+    # Refined on the **residual**, not on `dist2`. Those coincide only when the
+    # tangent is the unit tangent of the parametrisation; on a station-pinned
+    # worldtube it is the curve's *spatial* tangent while `tau` is a time, so
+    # `dist2`'s minimum sits away from the root. Narrowing around the `dist2`
+    # argmin there excluded the true root and turned a passing round trip into
+    # a refusal. Every crossing with the minimum's orientation is a candidate;
+    # the closest one wins, which is what makes the multi-minimum bracket
+    # resolve to the *nearest* rather than to whichever bisection reaches.
+    fine = jnp.linspace(tau0 - spacing, tau0 + spacing, n_seed)
+    r_fine = jax.vmap(lambda t: residual(t, None))(fine)
+    d_fine = jax.vmap(dist2)(fine)
+    crossing = (r_fine[:-1] > 0) & (r_fine[1:] < 0)
+    # Rank candidates by the distance across the crossing, not by residual.
+    score = jnp.where(crossing, 0.5 * (d_fine[:-1] + d_fine[1:]), jnp.inf)
+    k = jnp.argmin(score)
+    found = jnp.any(crossing)
+    # No crossing on the fine grid keeps the original coarse bracket, so the
+    # documented degradations -- nearest point outside `bounds`, and a
+    # genuinely degenerate query -- reach the unconstrained fallback as before.
+    bracket_lo = jnp.where(found, fine[k], tau0 - spacing)
+    bracket_hi = jnp.where(found, fine[k + 1], tau0 + spacing)
+    # `d_seed` deliberately stays the *coarse* minimum. Tightening it with the
+    # fine grid rejected correct answers: the post-check below assumes the
+    # answer is no worse than the best sampled point, which holds only when
+    # the objective is `dist2`. On a station-pinned worldtube the chart
+    # inverse is the perpendicular foot, whose distance can exceed the
+    # sampled minimum -- measured 0.000400 against a fine-grid minimum of
+    # 0.000397, which refused a round trip that had always worked.
 
     # Scale by the dtype's epsilon, not a fixed `1e-10`: float32 (JAX's
     # default outside this repo's x64 pytest config) can never satisfy
