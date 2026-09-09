@@ -990,7 +990,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
-| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `evaluate_at`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `AbstractCompositeTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Linear`, `Boost`, `LorentzBoost`, `TimeDep`, `identity`, </br> `builders`, `groups` |
+| `coordinax.transforms` | `act`, `pushforward`, `act_jet`, `simplify`, `compose`, `evaluate_at`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Linear`, `Boost`, `LorentzBoost`, `TimeDep`, `identity`, </br> `builders`, `groups` |
 | `coordinax.transforms.builders` | `RotationAboutAxis`, `UniformTranslation`, </br> `FnBuilder`, `ConstBuilder`, `ComposedBuilder`, `InverseBuilder` |
 | `coordinax.transforms.groups` | `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
@@ -3598,8 +3598,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Immutability and JAX-static requirements:**
 
-    - Most metric classes are immutable frozen dataclasses registered with `@jax.tree_util.register_static` and therefore flatten as static PyTree nodes (no dynamic leaves).
-    - Exception: `RoundMetric` from `coordinax._src.metric.field` is an `equinox.Module` with a dynamic `radius` leaf, allowing JIT-compilation and differentiation through the radius parameter.
+    - Metric classes are immutable frozen dataclasses registered with `@jax.tree_util.register_static` and therefore flatten as static PyTree nodes (no dynamic leaves).
 
     **Core API contract:**
 
@@ -4379,15 +4378,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     Structure:
 
-    - `ndim = 4`
-    - `atlas = MinkowskiAtlas(4)`
+    - `ndim = 4` (fixed; not a constructor parameter)
+    - `atlas = MinkowskiAtlas()`
     - `metric = MinkowskiMetric()`
     - `default_chart = atlas.default_chart()`
 
     Construction:
 
     ```text
-    MinkowskiManifold(ndim: int = 4)
+    MinkowskiManifold()
     ```
 
     The metric object is attached at construction time and is available as `M.metric`.

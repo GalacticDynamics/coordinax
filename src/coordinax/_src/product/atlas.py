@@ -6,7 +6,7 @@ __all__ = ("CartesianProductAtlas",)
 import dataclasses
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, cast, final, override
+from typing import TYPE_CHECKING, Any, cast, final, override
 
 import jax
 
@@ -14,6 +14,26 @@ from coordinax._src.base import AbstractAtlas, AbstractChart
 
 if TYPE_CHECKING:
     import coordinax.charts  # noqa: ICN001
+
+
+def check_factors_and_names(
+    factors: tuple[Any, ...], factor_names: tuple[str, ...], /
+) -> None:
+    """Validate that ``factors`` and ``factor_names`` align and names are unique.
+
+    Shared by the product atlas and product chart classes, whose ``factors`` /
+    ``factor_names`` pairs must satisfy the same two invariants.
+    """
+    if len(factors) != len(factor_names):
+        msg = (
+            f"factors and factor_names must have the same length, "
+            f"got {len(factors)} factors and {len(factor_names)} names"
+        )
+        raise ValueError(msg)
+
+    if len(set(factor_names)) != len(factor_names):
+        msg = f"factor_names must be unique, got {factor_names}"
+        raise ValueError(msg)
 
 
 @jax.tree_util.register_static
@@ -65,18 +85,7 @@ class CartesianProductAtlas(AbstractAtlas):
     """Names of the factor atlases, used for indexing and validation."""
 
     def __post_init__(self) -> None:
-        # Validate lengths match
-        if len(self.factors) != len(self.factor_names):
-            msg = (
-                f"factors and factor_names must have the same length, "
-                f"got {len(self.factors)} factors and {len(self.factor_names)} names"
-            )
-            raise ValueError(msg)
-
-        # Validate unique names
-        if len(set(self.factor_names)) != len(self.factor_names):
-            msg = f"factor_names must be unique, got {self.factor_names}"
-            raise ValueError(msg)
+        check_factors_and_names(self.factors, self.factor_names)
 
     def __iter__(self) -> Iterator[AbstractChart]:
         """Iterate over charts in the product atlas.

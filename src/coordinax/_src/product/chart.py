@@ -7,7 +7,6 @@ __all__: tuple[str, ...] = (
 )
 
 import abc
-from itertools import chain
 
 from collections.abc import Mapping
 from typing import Any, ClassVar, TypeVar, cast, final, override
@@ -16,6 +15,7 @@ import plum
 import wadler_lindig as wl
 
 import coordinaxs.api.charts as cxcapi
+from .atlas import check_factors_and_names
 from .manifold import CartesianProductManifold
 from coordinax._src.base import (
     MISSING,
@@ -179,13 +179,6 @@ class AbstractCartesianProductChart(
         return super().__pdoc__(include_params=include_params, **kw)
 
 
-MSG_COMPONENT_KEY_COLLISION = (
-    "Component key collision in flat-key product chart "
-    "{chart.__class__.__name__}. Factors have overlapping component "
-    "names: {comps} + {c}. Use factor_names for namespacing."
-)
-
-
 class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     """Abstract base class for flat-key Cartesian product charts.
 
@@ -194,8 +187,11 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     guaranteed to be collision-free across factors, allowing the use of
     flat string keys instead of dot-delimited string keys.
 
-    Subclasses must provide factor_names and ensure that factor components do not
-    collide.
+    Subclasses must provide `factor_names` and override `components`,
+    `split_components`, and `merge_components` with flat-key (collision-free)
+    implementations -- the base class only marks the specialization; it does
+    not itself supply flat-key defaults, since the sole existing subclass
+    (`GalileanCT`) needs its own re-keying logic for all three.
 
     Normative requirements:
 
@@ -216,72 +212,6 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         Subclasses must provide factor names even though components are flat.
         """
         raise NotImplementedError  # pragma: no cover
-
-    def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
-        """Partition a CDict by factor components.
-
-        For flat-key products: partition by ``factor.components`` directly.
-
-        Parameters
-        ----------
-        p :
-            Point dictionary with keys matching this chart's components.
-
-        Returns
-        -------
-        tuple[CDict, ...]
-            Tuple of dictionaries, one per factor, with factor-native keys.
-
-        """
-        # partition by factor.components with cached lookup
-        p_get = p.get
-        return tuple(
-            {c: v for c in factor.components if (v := p_get(c, MISSING)) is not MISSING}
-            for factor in self.factors
-        )
-
-    def merge_components(self, parts: tuple[Mapping[str, V], ...]) -> dict[str, V]:
-        """Merge factor CDicts into a single CDict.
-
-        For flat-key products: merge as-is (keys already match components).
-
-        Parameters
-        ----------
-        parts : tuple[Mapping[str, V], ...]
-            Tuple of dictionaries, one per factor, with factor-native keys.
-
-        Returns
-        -------
-        dict[str, V]
-            Merged dictionary in this chart's component order.
-
-        """
-        return {k: v for part in parts for k, v in part.items()}
-
-    # ===============================================================
-    # Chart API
-
-    @property
-    def components(self) -> Ks:
-        """Component keys are flat strings (collision-free concatenation of factors).
-
-        Components are the direct concatenation of factor component strings
-        (must be collision-free).
-        """
-        # Flat keys (AbstractFlatCartesianProductChart subclasses)
-        seen: set[str] = set()
-        flat_components: list[str] = []
-        seen_add = seen.add
-        fc_append = flat_components.append
-        for c in chain.from_iterable(f.components for f in self.factors):
-            if c in seen:
-                msg = MSG_COMPONENT_KEY_COLLISION.format(
-                    chart=self, comps=flat_components, c=c
-                )
-                raise ValueError(msg)
-            seen_add(c)
-            fc_append(c)
-        return tuple(flat_components)  # ty: ignore[invalid-return-type]
 
 
 # =========================================================
@@ -334,19 +264,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         # leaves, not on the branch: a parameterized factor built with static
         # parameters holds none, and is accepted.
         super().__post_init__()
-
-        # Validate lengths match
-        if len(self.factors) != len(self.factor_names):
-            msg = (
-                f"factors and factor_names must have the same length, "
-                f"got {len(self.factors)} factors and {len(self.factor_names)} names"
-            )
-            raise ValueError(msg)
-
-        # Validate unique names
-        if len(set(self.factor_names)) != len(self.factor_names):
-            msg = f"factor_names must be unique, got {self.factor_names}"
-            raise ValueError(msg)
+        check_factors_and_names(self.factors, self.factor_names)
 
     @override
     @property

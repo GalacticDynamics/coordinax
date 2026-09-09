@@ -2,8 +2,39 @@
 
 __all__: tuple[str, ...] = ()
 
+import warnings
+from importlib.metadata import entry_points
+
 from collections.abc import Mapping
 from typing import Any
+
+
+def resolve_entrypoints_with_legacy(
+    group: str, legacy_group: str, /, *, warn_what: str
+) -> list[Any]:
+    """Resolve entry points from ``group``, honouring a pre-rename ``legacy_group``.
+
+    The group is a cross-distribution contract, so third-party registrants
+    published against ``legacy_group`` are still honoured -- with a
+    `DeprecationWarning` naming ``warn_what`` (e.g. ``"frame exports"``) -- rather
+    than silently dropped. An entry point present under both groups is taken
+    from ``group`` only (no duplicate load). Returns the combined entry points,
+    sorted by name.
+    """
+    current = list(entry_points(group=group))
+    seen = {ep.name for ep in current}
+    legacy = [ep for ep in entry_points(group=legacy_group) if ep.name not in seen]
+    if legacy:
+        names = ", ".join(sorted(ep.name for ep in legacy))
+        warnings.warn(
+            f"Entry point(s) {names} register {warn_what} under the legacy "
+            f"'{legacy_group}' group. That group is deprecated; publish under "
+            f"'{group}' instead. Support for the legacy group will be removed "
+            "in a future release.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+    return sorted(current + legacy, key=lambda ep: ep.name)
 
 
 def load_exports(

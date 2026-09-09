@@ -6,7 +6,6 @@ from .base import *
 from .boost import *
 from .builders import *
 from .composed import *
-from .composite import *
 from .constants import *
 from .custom_types import *
 from .general_linear import *
