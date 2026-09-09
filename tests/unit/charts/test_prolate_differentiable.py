@@ -2,6 +2,7 @@
 
 import jax
 import jax.numpy as jnp
+import plum
 
 import unxt as u
 
@@ -93,3 +94,50 @@ def test_jit_retraces_once_across_delta_values():
     g(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m")))
     g(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m")))
     assert len(static_traces) == 1
+
+
+def _routes_through_cylindrical(p, frm, to):
+    """Whether the transition hands `Cylindrical3D` to a nested `pt_map`.
+
+    The converting branch is *defined* by that hop, so this asks the question
+    the guard cares about directly rather than inferring it from a call count.
+    """
+    seen = False
+    original = plum.Function.__call__
+
+    def watching(self, *args, **kwargs):
+        nonlocal seen
+        if self.__name__ == "pt_map" and any(
+            isinstance(a, cxc.Cylindrical3D) for a in args
+        ):
+            seen = True
+        return original(self, *args, **kwargs)
+
+    plum.Function.__call__ = watching
+    try:
+        cxc.pt_map(p, frm, to)
+    finally:
+        plum.Function.__call__ = original
+    return seen
+
+
+def test_same_delta_skips_the_conversion_branch():
+    """An identity transition does not pay for the branch it does not take.
+
+    `jax.lax.cond` traces *both* branches, so routing a same-`Delta` pair
+    through it cost a full round-trip to cylindrical and back -- as expensive
+    as actually converting. A concrete `Delta` decides in Python instead.
+
+    The conversion branch is exactly the hop through `Cylindrical3D`, so that
+    is what is asserted on. A call *count* would be the weaker question: an
+    identity that still traced the dead branch would make more calls than it
+    should and fewer than a real conversion, and any `n_same < n_conv` test
+    would pass regardless.
+    """
+    same = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+    twin = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(2.0, "m"))
+    other = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(3.0, "m"))
+
+    assert not _routes_through_cylindrical(Q_IN, same, twin)
+    # The converting case is the control: it must still take that route.
+    assert _routes_through_cylindrical(Q_IN, same, other)

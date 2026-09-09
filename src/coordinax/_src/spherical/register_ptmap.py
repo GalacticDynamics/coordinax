@@ -27,6 +27,10 @@ from coordinax._src.custom_types import OptUSys
 from coordinax._src.utils import uconvert_to_rad
 from coordinaxs.api.custom_types import CDict
 
+#: The pole-to-equator offset for colatitude <-> latitude, built once. `u.Q` is
+#: ~49us, which is otherwise paid per call on a `pt_map` path.
+_RIGHT_ANGLE: Final = u.Q(90, "deg")
+
 IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any, Any]], ...]] = (
     SphericalTwoSphere,
     LonLatSphericalTwoSphere,
@@ -157,7 +161,7 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = p["theta"]
-    lat = u.Q(90, "deg") - lat if is_any_quantity(lat) else jnp.pi / 2 - lat
+    lat = _RIGHT_ANGLE - lat if is_any_quantity(lat) else jnp.pi / 2 - lat
     return canonical_containers({"lon": p["phi"], "lat": lat}, to_chart)
 
 
@@ -189,7 +193,7 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     theta = p["lat"]
-    theta = u.Q(90, "deg") - theta if is_any_quantity(theta) else jnp.pi / 2 - theta
+    theta = _RIGHT_ANGLE - theta if is_any_quantity(theta) else jnp.pi / 2 - theta
     return canonical_containers({"theta": theta, "phi": p["lon"]}, to_chart)
 
 
@@ -230,7 +234,7 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = (
-        u.Q(90, "deg") if is_any_quantity(p["theta"]) else jnp.pi / 2
+        _RIGHT_ANGLE if is_any_quantity(p["theta"]) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
     lon_coslat = p["phi"] * jnp.cos(lat)
     return canonical_containers({"lon_coslat": lon_coslat, "lat": lat}, to_chart)
@@ -263,7 +267,7 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     lat = uconvert_to_rad(p["lat"], usys)
-    theta = (u.Q(90, "deg") if is_any_quantity(p["lat"]) else jnp.pi / 2) - lat
+    theta = (_RIGHT_ANGLE if is_any_quantity(p["lat"]) else jnp.pi / 2) - lat
     phi = p["lon_coslat"] / jnp.cos(lat)
     return canonical_containers({"theta": theta, "phi": phi}, to_chart)
 
