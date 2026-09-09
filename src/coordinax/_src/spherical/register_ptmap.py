@@ -157,11 +157,19 @@ def pt_map(
     {'lon': Angle(45, 'deg'), 'lat': Angle(0, 'deg')}
 
     """
-    del usys  # Unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    lat = p["theta"]
-    lat = _RIGHT_ANGLE - lat if is_any_quantity(lat) else jnp.pi / 2 - lat
+    # A `Quantity` carries its own unit and the subtraction converts; a *bare*
+    # value means whatever `usys` says it means, and reading it raw made a
+    # `usys` of degrees come out as `pi / 2 - 40` for a 40 degree colatitude.
+    # The `LonCosLat` pair below and the 3-D twin both already convert, so the
+    # same point reached `lat` through two charts and got two answers.
+    theta = p["theta"]
+    lat = (
+        _RIGHT_ANGLE - theta
+        if is_any_quantity(theta)
+        else jnp.pi / 2 - uconvert_to_rad(theta, usys)
+    )
     return canonical_containers({"lon": p["phi"], "lat": lat}, to_chart)
 
 
@@ -189,11 +197,16 @@ def pt_map(
     {'theta': Angle(90, 'deg'), 'phi': Angle(45, 'deg')}
 
     """
-    del usys
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
-    theta = p["lat"]
-    theta = _RIGHT_ANGLE - theta if is_any_quantity(theta) else jnp.pi / 2 - theta
+    # See the note on the forward map: a bare `lat` is in `usys` units, not
+    # radians, and reading it raw made a degrees `usys` come out ~39 off.
+    lat = p["lat"]
+    theta = (
+        _RIGHT_ANGLE - lat
+        if is_any_quantity(lat)
+        else jnp.pi / 2 - uconvert_to_rad(lat, usys)
+    )
     return canonical_containers({"theta": theta, "phi": p["lon"]}, to_chart)
 
 

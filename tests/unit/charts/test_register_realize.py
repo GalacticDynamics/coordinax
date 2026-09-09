@@ -388,3 +388,53 @@ class TestPtMapUnitContract:
         p = {"r": u.Q(2.0, "km"), "theta": 0.7, "phi": 1.2}
         out = cxc.pt_map(p, cxc.sph3d, cxc.cart3d)
         assert all(u.unit_of(v) == u.unit("km") for v in out.values())
+
+
+# =============================================================================
+
+
+class TestBareAnglesHonourTheUnitSystem:
+    """A bare angle means whatever `usys` says, in every chart that reads one.
+
+    `sph2 -> lonlat_sph2` and its inverse discarded `usys` and read a bare
+    colatitude as radians, so a `usys` of degrees put `lat` ~39 off. The same
+    point routed through `loncoslat_sph2`, or through the 3-D `lonlat_sph3d`,
+    gave the right answer -- three charts, one point, two answers for the same
+    component. A round trip hid it, because both directions were wrong the same
+    way and `pi / 2 - (pi / 2 - x)` is `x` whatever the units.
+    """
+
+    @pytest.mark.parametrize(
+        ("frm", "to", "point"),
+        [
+            (cxc.sph2, cxc.lonlat_sph2, {"theta": 40.0, "phi": 70.0}),
+            (cxc.sph2, cxc.loncoslat_sph2, {"theta": 40.0, "phi": 70.0}),
+            (cxc.sph3d, cxc.lonlat_sph3d, {"r": 1.0, "theta": 40.0, "phi": 70.0}),
+        ],
+        ids=["sph2->lonlat", "sph2->loncoslat", "sph3d->lonlat"],
+    )
+    def test_every_chart_agrees_on_lat(self, frm, to, point):
+        """A 40 degree colatitude is a 50 degree latitude, however it is reached."""
+        usys = u.unitsystem("m", "deg")
+        lat = cxc.pt_map(point, frm, to, usys=usys)["lat"]
+        assert float(lat) == pytest.approx(math.radians(50.0))
+
+    @pytest.mark.parametrize(
+        ("frm", "to", "point"),
+        [
+            (cxc.lonlat_sph2, cxc.sph2, {"lon": 70.0, "lat": 50.0}),
+            (cxc.loncoslat_sph2, cxc.sph2, {"lon_coslat": 70.0, "lat": 50.0}),
+            (cxc.lonlat_sph3d, cxc.sph3d, {"lon": 70.0, "lat": 50.0, "distance": 1.0}),
+        ],
+        ids=["lonlat->sph2", "loncoslat->sph2", "lonlat->sph3d"],
+    )
+    def test_every_chart_agrees_on_theta(self, frm, to, point):
+        """And back: the inverse map discarded `usys` in the same way.
+
+        `lonlat_sph2 -> sph2` gave `theta = -48.43` for a 50 degree latitude
+        where its two siblings gave `+0.69813`. Both directions were changed,
+        so both are pinned.
+        """
+        usys = u.unitsystem("m", "deg")
+        theta = cxc.pt_map(point, frm, to, usys=usys)["theta"]
+        assert float(theta) == pytest.approx(math.radians(40.0))
