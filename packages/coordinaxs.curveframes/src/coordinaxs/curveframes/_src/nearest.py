@@ -144,7 +144,7 @@ def nearest_tau(
     seeds = jnp.linspace(lo, hi, n_seed)
     scan = jax.vmap(dist2)(seeds)
     i_best = jnp.argmin(scan)
-    tau0, d_seed = seeds[i_best], scan[i_best]
+    tau0 = seeds[i_best]
     spacing = (hi - lo) / (n_seed - 1)
 
     # A zero-width `bounds` makes `spacing` zero, and `Bisection`'s
@@ -218,13 +218,6 @@ def nearest_tau(
     # genuinely degenerate query -- reach the unconstrained fallback as before.
     bracket_lo = jnp.where(found, fine[k], tau0 - spacing)
     bracket_hi = jnp.where(found, fine[k + 1], tau0 + spacing)
-    # `d_seed` deliberately stays the *coarse* minimum. Tightening it with the
-    # fine grid rejected correct answers: the post-check below assumes the
-    # answer is no worse than the best sampled point, which holds only when
-    # the objective is `dist2`. On a station-pinned worldtube the chart
-    # inverse is the perpendicular foot, whose distance can exceed the
-    # sampled minimum -- measured 0.000400 against a fine-grid minimum of
-    # 0.000397, which refused a round trip that had always worked.
 
     # Scale by the dtype's epsilon, not a fixed `1e-10`: float32 (JAX's
     # default outside this repo's x64 pytest config) can never satisfy
@@ -278,15 +271,18 @@ def nearest_tau(
         nsol.result != optx.RESULTS.successful,
     )
 
-    # The coarse argmin is already paid for, so a solve that lands farther away
-    # than its own seed has failed whatever status it reports. This catches the
-    # unconstrained fallback wandering onto a maximum -- and also the bracketed
-    # branch when the scan is under-resolved: the endpoint orientation says only
-    # that the residual falls across the bracket, not that the bracket holds a
-    # single stationary point, so on a curve that wiggles *within* one spacing
-    # bisection can still settle on an interior maximum. Either way the answer
-    # is refused rather than returned.
-    not_converged = not_converged | (dist2(value) > d_seed * (1.0 + rtol) + atol**2)
+    # NOTE: #841 added a post-check here -- refuse when the answer is farther
+    # away than the scan's own argmin. It is removed, because its premise is
+    # false for a worldtube: the chart inverse there is the perpendicular foot,
+    # not the nearest point, and the two differ once the station moves. It
+    # refused correct round trips at n1 >= 0.08 km on the repo's own
+    # `stretching` worldtube (dist2 0.006400 against a coarse seed of
+    # 0.006373), and shipped only because the existing test used n1 = 0.02 km,
+    # which is the last offset that passes.
+    #
+    # It also had no demonstrated true positive: on the wiggly curve it was
+    # meant to catch, it passed on a 9.6x-wrong answer. The bracket refinement
+    # above is what actually fixes that case.
 
     # Must surface non-convergence, not return silently (hybrid form,
     # matching ``_src/charts/checks.py``). The return value MUST be threaded
