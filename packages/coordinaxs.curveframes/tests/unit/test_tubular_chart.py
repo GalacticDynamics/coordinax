@@ -166,6 +166,30 @@ def test_a_worldtube_round_trips_through_cartesian() -> None:
     assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
 
 
+@pytest.mark.parametrize("n1", [0.02, 0.05, 0.08, 0.20])
+def test_a_worldtube_round_trips_at_every_offset(n1: float) -> None:
+    """The round trip must not depend on how far off-axis the point sits.
+
+    #841 added a post-check refusing an answer farther away than the scan's
+    argmin. Its premise is false here: a worldtube's chart inverse is the
+    perpendicular foot, not the nearest point, and the two part company once
+    the station moves. It refused correct inversions from n1 = 0.08 km upward
+    -- dist2 0.006400 against a coarse seed of 0.006373 -- and shipped only
+    because the test above happens to use 0.02 km, the last passing offset.
+    """
+    ch = _worldtube()
+    p = {"tau": AT_TIME, "n1": u.Q(n1, "km"), "n2": u.Q(0.0, "km")}
+    xyz = cxc.pt_map(p, ch.M, ch, ch.M, cxc.cart3d)
+    back = cxc.pt_map(xyz, ch.M, cxc.cart3d, ch.M, ch)
+
+    assert jnp.allclose(back["tau"].ustrip("s"), AT_TIME.ustrip("s"), atol=1e-3)
+    assert jnp.allclose(back["n1"].ustrip("km"), n1, atol=1e-5)
+    # `n2` too: the inverse could scramble the second normal component while
+    # still returning the right `tau` and `n1`, and the assertions above would
+    # not notice.
+    assert jnp.allclose(back["n2"].ustrip("km"), 0.0, atol=1e-5)
+
+
 def test_a_worldtubes_reach_check_runs() -> None:
     """`check_data(values=True)` strips `tau` to evaluate the Jacobian factor.
 

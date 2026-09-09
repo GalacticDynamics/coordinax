@@ -112,6 +112,15 @@ def nearest_tau(
     # `tau_unit`, and on a pinned-station builder that describes the station
     # while these bounds are times, so consulting it scans seconds in
     # kilometres. The builder is the fallback for bare (unitless) bounds only.
+    if n_seed < 2:
+        msg_seed = (
+            f"`n_seed` must be at least 2, got {n_seed}: the scan needs a spacing "
+            "to bracket around, and one point has none. Below that the failure is "
+            "a divide-by-zero in the spacing and an empty grid, which surfaces as "
+            "an unrelated shape error."
+        )
+        raise ValueError(msg_seed)
+
     unit = u.unit_of(bounds[0])
     if unit is None:
         unit = builder._tau_unit_at(bounds[0])
@@ -135,7 +144,7 @@ def nearest_tau(
     seeds = jnp.linspace(lo, hi, n_seed)
     scan = jax.vmap(dist2)(seeds)
     i_best = jnp.argmin(scan)
-    tau0, d_seed = seeds[i_best], scan[i_best]
+    tau0 = seeds[i_best]
     spacing = (hi - lo) / (n_seed - 1)
 
     # A zero-width `bounds` makes `spacing` zero, and `Bisection`'s
@@ -163,12 +172,52 @@ def nearest_tau(
     elif bool(degenerate):
         raise ValueError(msg_bounds)
 
-    bracket_lo, bracket_hi = tau0 - spacing, tau0 + spacing
-
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
-        T = builder.rotation_matrix(u.Q(tau_v, unit))[0]
+        # `tangent()`, not `rotation_matrix()[0]`: both builders override it to
+        # skip the parallel-transport solve only rows 1-2 need, and document the
+        # value as identical. Measured bit-identical and ~110x faster eagerly,
+        # which is what makes the fine residual grid below affordable.
+        T = builder.tangent(u.Q(tau_v, unit)).ustrip("")
         return jnp.dot(T, offset(tau_v))
+
+    # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
+    # so once the curve varies on that scale it can hold a whole period -- two
+    # minima and two maxima. Bisection then returns *a* root with the right
+    # endpoint orientation, which may be the worse one: measured on a curve
+    # with 32 wiggles across `bounds`, a bracket of width 0.31746 against a
+    # period of 0.31416 held minima at 8.34701 (distance 0.107) and 8.46367
+    # (distance 0.011), and the solve returned the first.
+    #
+    # Refined on the **residual**, not on `dist2`. Those coincide only when the
+    # tangent is the unit tangent of the parametrisation; on a station-pinned
+    # worldtube it is the curve's *spatial* tangent while `tau` is a time, so
+    # `dist2`'s minimum sits away from the root. Narrowing around the `dist2`
+    # argmin there excluded the true root and turned a passing round trip into
+    # a refusal. Every crossing with the minimum's orientation is a candidate;
+    # the closest one wins, which is what makes the multi-minimum bracket
+    # resolve to the *nearest* rather than to whichever bisection reaches.
+    fine = jnp.linspace(tau0 - spacing, tau0 + spacing, n_seed)
+
+    # `residual` and `dist2` each call `offset`, so this looks like it evaluates
+    # the curve twice per grid point. It does not once compiled: XLA eliminates
+    # the duplicate as a common subexpression. Hand-fusing them into one
+    # tuple-returning `vmap` measured *slower* in both regimes -- eager 0.619s
+    # against 0.373s, jit compile 0.99s against 0.73s, warm call 0.046ms
+    # against 0.042ms -- so the obvious optimisation is a pessimisation here.
+    r_fine = jax.vmap(lambda t: residual(t, None))(fine)
+    d_fine = jax.vmap(dist2)(fine)
+
+    crossing = (r_fine[:-1] > 0) & (r_fine[1:] < 0)
+    # Rank candidates by the distance across the crossing, not by residual.
+    score = jnp.where(crossing, 0.5 * (d_fine[:-1] + d_fine[1:]), jnp.inf)
+    k = jnp.argmin(score)
+    found = jnp.any(crossing)
+    # No crossing on the fine grid keeps the original coarse bracket, so the
+    # documented degradations -- nearest point outside `bounds`, and a
+    # genuinely degenerate query -- reach the unconstrained fallback as before.
+    bracket_lo = jnp.where(found, fine[k], tau0 - spacing)
+    bracket_hi = jnp.where(found, fine[k + 1], tau0 + spacing)
 
     # Scale by the dtype's epsilon, not a fixed `1e-10`: float32 (JAX's
     # default outside this repo's x64 pytest config) can never satisfy
@@ -222,15 +271,18 @@ def nearest_tau(
         nsol.result != optx.RESULTS.successful,
     )
 
-    # The coarse argmin is already paid for, so a solve that lands farther away
-    # than its own seed has failed whatever status it reports. This catches the
-    # unconstrained fallback wandering onto a maximum -- and also the bracketed
-    # branch when the scan is under-resolved: the endpoint orientation says only
-    # that the residual falls across the bracket, not that the bracket holds a
-    # single stationary point, so on a curve that wiggles *within* one spacing
-    # bisection can still settle on an interior maximum. Either way the answer
-    # is refused rather than returned.
-    not_converged = not_converged | (dist2(value) > d_seed * (1.0 + rtol) + atol**2)
+    # NOTE: #841 added a post-check here -- refuse when the answer is farther
+    # away than the scan's own argmin. It is removed, because its premise is
+    # false for a worldtube: the chart inverse there is the perpendicular foot,
+    # not the nearest point, and the two differ once the station moves. It
+    # refused correct round trips at n1 >= 0.08 km on the repo's own
+    # `stretching` worldtube (dist2 0.006400 against a coarse seed of
+    # 0.006373), and shipped only because the existing test used n1 = 0.02 km,
+    # which is the last offset that passes.
+    #
+    # It also had no demonstrated true positive: on the wiggly curve it was
+    # meant to catch, it passed on a 9.6x-wrong answer. The bracket refinement
+    # above is what actually fixes that case.
 
     # Must surface non-convergence, not return silently (hybrid form,
     # matching ``_src/charts/checks.py``). The return value MUST be threaded
@@ -242,8 +294,8 @@ def nearest_tau(
         "curve's centre), so no nearest point exists; the true nearest point "
         "lies outside `bounds`, which the scan cannot see past; or the curve "
         "varies faster than `n_seed` samples resolve, so the scan's argmin is "
-        "not within one spacing of the true minimiser and the bracket can hold "
-        "a maximum as well as a minimum. Only the last has a remedy here -- "
+        "not within one spacing of the true minimiser, and the bracket can hold "
+        "more than one minimum. Only the last has a remedy here -- "
         "raise `n_seed` (measured: a curve with 32 wiggles across `bounds` "
         "refuses at the default 64 and resolves correctly at 128)."
     )

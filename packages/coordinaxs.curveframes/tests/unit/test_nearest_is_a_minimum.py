@@ -126,3 +126,58 @@ def test_the_remedy_the_refusal_advertises_actually_works() -> None:
     assert tau == pytest.approx(truth, abs=1e-3)
     # And it is genuinely the global minimum, not merely near a stationary point.
     assert _dist(tau) <= float(_distances(grid).min()) + 1e-6
+
+
+# The probe from #847: the coarse bracket is 2 x spacing = 0.31746 wide against
+# a wiggle period of 0.31416, so it held two minima -- 8.34701 at distance 0.107
+# and 8.46367 at distance 0.011 -- and bisection returned the first. Both guards
+# above pass on that answer: it is a genuine minimum, and it is closer than any
+# seed. Only the bracket's *width* was wrong.
+WRONG_MINIMUM_PROBE = np.array([8.45268, -0.10722, 0.0])
+
+
+def test_it_picks_the_best_minimum_in_the_bracket_not_merely_one() -> None:
+    """A bracket holding two minima must not yield the worse one."""
+    builder = cxfc.FrenetSerretBuilder(wiggly, "s")
+    x = u.Q(jnp.asarray(WRONG_MINIMUM_PROBE), "km")
+
+    tau = float(cxfc.nearest_tau(builder, x, bounds=BOUNDS).ustrip("s"))
+
+    lo, hi = (float(b.ustrip("s")) for b in BOUNDS)
+    grid = np.linspace(lo, hi, 200_001)
+    g = np.stack([grid, 0.3 * np.sin(20 * grid), np.zeros_like(grid)])
+    best = float(np.min(np.linalg.norm(WRONG_MINIMUM_PROBE[:, None] - g, axis=0)))
+
+    here = float(
+        np.linalg.norm(
+            WRONG_MINIMUM_PROBE - np.array([tau, 0.3 * np.sin(20 * tau), 0.0])
+        )
+    )
+    # The other minimum in that bracket is 9.6x farther away; the solver's own
+    # tolerance is what sets the slack here, not the choice of minimum.
+    assert here <= best * 1.05, f"tau={tau} at {here:.6f}, best is {best:.6f}"
+
+
+def test_an_ordinary_curve_is_not_refused_by_the_resolution_check() -> None:
+    """The under-resolution guard must not fire on a well-resolved curve."""
+
+    def circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.ustrip("s")
+        return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+    builder = cxfc.BishopBuilder(circle, "s")
+    x = u.Q(jnp.asarray([2.0 * np.cos(1.0), 2.0 * np.sin(1.0), 0.0]), "km")
+    tau = cxfc.nearest_tau(builder, x, bounds=(u.Q(0.0, "s"), u.Q(2 * np.pi, "s")))
+    assert float(tau.ustrip("s")) == pytest.approx(1.0, abs=1e-3)
+
+
+def test_a_degenerate_n_seed_is_refused_clearly() -> None:
+    """`n_seed < 2` has no spacing to bracket around.
+
+    Left unguarded it divides by zero and builds an empty grid, surfacing as a
+    shape error from `argmin` that names nothing the caller did.
+    """
+    builder = cxfc.FrenetSerretBuilder(wiggly, "s")
+    x = u.Q(jnp.asarray(PROBE), "km")
+    with pytest.raises(ValueError, match="at least 2"):
+        cxfc.nearest_tau(builder, x, bounds=BOUNDS, n_seed=1)
