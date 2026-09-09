@@ -31,6 +31,8 @@ from typing import Any
 
 import plum
 
+import unxt as u
+
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.base import AbstractChart, AbstractManifold
@@ -141,7 +143,12 @@ def chord_distance(
             f"{M.ndim}-dimensional."
         )
         raise NotImplementedError(msg)
-    unit_sphere = EmbeddedChart(TwoSphereIn3D(radius=1.0))
+    # `u.Q(1.0, "")` rather than a bare `1.0`: the unit sphere's radius is
+    # dimensionless, and saying so is what makes the chord come back as a
+    # dimensionless `Quantity`. It used to arrive there by accident, because
+    # `Quantity` arithmetic promoted a bare radius as soon as it met an `Angle`
+    # -- so the return type tracked how the *angles* were wrapped.
+    unit_sphere = EmbeddedChart(TwoSphereIn3D(radius=u.Q(1.0, "")))
     return _ambient_distance(unit_sphere, chart, sph2, a, b, usys)
 
 
