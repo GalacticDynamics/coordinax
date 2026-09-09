@@ -432,10 +432,14 @@ class TestBareAnglesHonourTheUnitSystem:
         ids=["sph2->lonlat", "sph2->loncoslat", "sph3d->lonlat"],
     )
     def test_every_chart_agrees_on_lat(self, frm, to, point):
-        """A 40 degree colatitude is a 50 degree latitude, however it is reached."""
+        """A 40 degree colatitude is a 50 degree latitude, however it is reached.
+
+        Expressed in the unit system's own angle unit, since that is how the
+        bare input was read -- see `TestBareAngleRoundTrips`.
+        """
         usys = u.unitsystem("m", "deg")
         lat = cxc.pt_map(point, frm, to, usys=usys)["lat"]
-        assert float(lat) == pytest.approx(math.radians(50.0))
+        assert float(lat) == pytest.approx(50.0)
 
     @pytest.mark.parametrize(
         ("frm", "to", "point"),
@@ -455,7 +459,7 @@ class TestBareAnglesHonourTheUnitSystem:
         """
         usys = u.unitsystem("m", "deg")
         theta = cxc.pt_map(point, frm, to, usys=usys)["theta"]
-        assert float(theta) == pytest.approx(math.radians(40.0))
+        assert float(theta) == pytest.approx(40.0)
 
 
 # =============================================================================
@@ -528,3 +532,78 @@ class TestPoincarePolarUnits:
         )
         for k, v in p.items():
             assert u.ustrip(v.unit, back[k]) == pytest.approx(float(v.value), rel=1e-9)
+
+
+# ===========================================================================
+
+
+class TestBareAngleRoundTrips:
+    """A bare angle is read *and written* in ``usys["angle"]``.
+
+    `rad_value` reads a bare angle in the unit system's angle unit, but the
+    inverse-trigonometric functions that produce one return radians. Writing
+    those out raw made the two disagree, and for charts whose own components
+    are angles the disagreement compounded: `sph3d -> lonlat_sph3d` emitted a
+    latitude in radians and the inverse read that number as degrees, so a 40
+    degree colatitude came back as 89.13 degrees.
+
+    Round trips are the sharpest statement of the property, since they fail
+    only when reading and writing disagree.
+    """
+
+    _USYS = u.unitsystem("m", "deg")
+
+    @pytest.mark.parametrize(
+        ("mid", "point"),
+        [
+            (cxc.lonlat_sph3d, {"r": 1.0, "theta": 40.0, "phi": 70.0}),
+            (cxc.loncoslat_sph3d, {"r": 1.0, "theta": 40.0, "phi": 70.0}),
+            (cxc.cart3d, {"r": 1.0, "theta": 40.0, "phi": 70.0}),
+            (cxc.cyl3d, {"r": 1.0, "theta": 40.0, "phi": 70.0}),
+        ],
+        ids=["lonlat", "loncoslat", "cart3d", "cyl3d"],
+    )
+    def test_sph3d_round_trips_through(self, mid, point):
+        """Out and back returns the angle it started with, in the same unit."""
+        kw = {"usys": self._USYS}
+        back = cxc.pt_map(cxc.pt_map(point, cxc.sph3d, mid, **kw), mid, cxc.sph3d, **kw)
+        assert float(back["theta"]) == pytest.approx(point["theta"], rel=1e-6)
+
+    @pytest.mark.parametrize(
+        "mid", [cxc.lonlat_sph2, cxc.loncoslat_sph2], ids=["lonlat", "loncoslat"]
+    )
+    def test_sph2_round_trips_through(self, mid):
+        kw = {"usys": self._USYS}
+        p = {"theta": 40.0, "phi": 70.0}
+        back = cxc.pt_map(cxc.pt_map(p, cxc.sph2, mid, **kw), mid, cxc.sph2, **kw)
+        assert float(back["theta"]) == pytest.approx(40.0, rel=1e-6)
+
+    def test_a_bare_angle_comes_out_in_the_systems_unit(self):
+        """The direct statement: 40 degrees of colatitude is 50 of latitude."""
+        out = cxc.pt_map(
+            {"r": 1.0, "theta": 40.0, "phi": 70.0},
+            cxc.sph3d,
+            cxc.lonlat_sph3d,
+            usys=self._USYS,
+        )
+        assert float(out["lat"]) == pytest.approx(50.0)
+
+    @pytest.mark.parametrize(
+        ("usys", "expected"),
+        [
+            (None, math.pi / 4),
+            (u.unitsystems.si, math.pi / 4),
+            (u.unitsystem("m", "rad"), math.pi / 4),
+            (u.unitsystem("m", "deg"), 45.0),
+        ],
+        ids=["no-usys", "si", "rad", "deg"],
+    )
+    def test_a_bare_angle_leaves_in_the_unit_it_would_be_read_in(self, usys, expected):
+        """No unit system, or one whose angle is radians, means radians.
+
+        The degrees case is the one this PR changes; the other three are the
+        controls that say it did not disturb them.
+        """
+        kw = {} if usys is None else {"usys": usys}
+        out = cxc.pt_map({"x": 1.0, "y": 1.0, "z": 0.0}, cxc.cart3d, cxc.sph3d, **kw)
+        assert float(out["phi"]) == pytest.approx(expected, rel=1e-6)
