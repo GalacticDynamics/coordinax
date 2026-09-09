@@ -1954,23 +1954,31 @@ def pt_map(
     _require_cart3d_phase_space(from_chart, direction="to")
 
     pos, vel = from_chart.split_components(p)
-    x, y, z = pos["x"], pos["y"], pos["z"]
-    vx, vy, vz = vel["x"], vel["y"], vel["z"]
+    # Two dimensional groups: the positions are lengths, the velocities are
+    # velocities. `z` and `vz` are carried through untouched -- the arithmetic
+    # never reads them -- so they keep their own units.
+    (x, y), unit_len = strip(pos, ("x", "y"))
+    (vx, vy), unit_vel = strip(vel, ("x", "y"))
 
     rho = jnp.hypot(x, y)
-    phi = jnp.atan2(x, y)  # gala convention: azimuth from +y
+    phi = jnp.arctan2(x, y)  # gala convention: azimuth from +y
     lz = x * vy - y * vx
     s = jnp.sqrt(2 * jnp.abs(lz))
     # On the axis (rho == 0) the numerator x*vx + y*vy is also 0; define
     # dt_rho == 0 there by convention instead of 0/0 -> NaN.
     dt_rho = _ratio_zero_on_axis(x * vx + y * vy, rho)
+    # `lz` is a length times a velocity, so `s = sqrt(2|lz|)` carries the
+    # square root of that product -- `kpc / Myr(1/2)` for kpc and kpc/Myr.
+    unit_s = (
+        None if unit_len is None or unit_vel is None else (unit_len * unit_vel) ** 0.5
+    )
     return {
-        "rho": rho,
-        "pp_phi": s * jnp.cos(phi),
-        "z": z,
-        "dt_rho": dt_rho,
-        "pp_phidot": s * jnp.sin(phi),
-        "dt_z": vz,
+        "rho": wrap(rho, unit_len),
+        "pp_phi": wrap(s * jnp.cos(phi), unit_s),
+        "z": pos["z"],
+        "dt_rho": wrap(dt_rho, unit_vel),
+        "pp_phidot": wrap(s * jnp.sin(phi), unit_s),
+        "dt_z": vel["z"],
     }
 
 
@@ -2018,19 +2026,35 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     _require_cart3d_phase_space(to_chart, direction="from")
 
-    rho, z, dt_rho, dt_z = p["rho"], p["z"], p["dt_rho"], p["dt_z"]
-    phi = jnp.atan2(p["pp_phidot"], p["pp_phi"])
+    # `z` and `dt_z` are carried through untouched; the arithmetic never reads
+    # them, so they keep their own units.
+    (rho,), unit_rho = strip(p, ("rho",))
+    (dt_rho,), unit_vel = strip(p, ("dt_rho",))
+    (pp_phi, pp_phidot), unit_s = strip(p, ("pp_phi", "pp_phidot"))
+
+    phi = jnp.arctan2(pp_phidot, pp_phi)
     # Lz = s²/2 with s = hypot(pp_phi, pp_phidot); compute directly to skip the
     # sqrt (sign(Lz) is not recoverable from the forward map, so take Lz >= 0).
-    lz = (p["pp_phi"] ** 2 + p["pp_phidot"] ** 2) / 2
+    lz = (pp_phi**2 + pp_phidot**2) / 2
     sinp, cosp = jnp.sin(phi), jnp.cos(phi)
 
-    pos = {"x": rho * sinp, "y": rho * cosp, "z": z}
     # On the axis (rho == 0, where lz == 0 too) define lz/rho == 0 by convention.
     lz_over_rho = _ratio_zero_on_axis(lz, rho)
+    # `lz` carries a length times a velocity and `rho` a length, so the ratio is
+    # a velocity -- but in `unit_s**2 / unit_rho`, which need not be the unit
+    # `dt_rho` came in. The `Quantity` form converted it on the subtraction
+    # below; do the same explicitly so both terms are in `dt_rho`'s unit.
+    if unit_s is not None and unit_rho is not None and unit_vel is not None:
+        lz_over_rho = u.uconvert_value(unit_vel, unit_s**2 / unit_rho, lz_over_rho)
+
+    pos = {
+        "x": wrap(rho * sinp, unit_rho),
+        "y": wrap(rho * cosp, unit_rho),
+        "z": p["z"],
+    }
     vel = {
-        "x": sinp * dt_rho - cosp * lz_over_rho,
-        "y": cosp * dt_rho + sinp * lz_over_rho,
-        "z": dt_z,
+        "x": wrap(sinp * dt_rho - cosp * lz_over_rho, unit_vel),
+        "y": wrap(cosp * dt_rho + sinp * lz_over_rho, unit_vel),
+        "z": p["dt_z"],
     }
     return canonical_containers(to_chart.merge_components((pos, vel)), to_chart)

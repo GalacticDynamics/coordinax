@@ -438,3 +438,75 @@ class TestBareAnglesHonourTheUnitSystem:
         usys = u.unitsystem("m", "deg")
         theta = cxc.pt_map(point, frm, to, usys=usys)["theta"]
         assert float(theta) == pytest.approx(math.radians(40.0))
+
+
+# =============================================================================
+
+
+class TestPoincarePolarUnits:
+    """`PoincarePolar6D` mixes two dimensional groups, so its units are derived.
+
+    `lz = x*vy - y*vx` is a length times a velocity, so `pp_phi = sqrt(2|lz|)`
+    carries the square root of that product. Its unit therefore has to be
+    *computed* from the group units rather than passed through, which is what
+    distinguishes this chart from the rest of the rollout.
+    """
+
+    _PS = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+
+    def _phase(self, **over):
+        p = {
+            "q.x": u.Q(3.0, "kpc"),
+            "q.y": u.Q(4.0, "kpc"),
+            "q.z": u.Q(5.0, "kpc"),
+            "p.x": u.Q(1.0, "kpc/Myr"),
+            "p.y": u.Q(2.0, "kpc/Myr"),
+            "p.z": u.Q(0.5, "kpc/Myr"),
+        }
+        return {**p, **over}
+
+    def test_pp_components_carry_sqrt_of_length_times_velocity(self):
+        out = cxc.pt_map(self._phase(), self._PS, cxc.poincarepolar6d)
+        assert out["rho"].unit == u.unit("kpc")
+        assert out["dt_rho"].unit == u.unit("kpc/Myr")
+        for k in ("pp_phi", "pp_phidot"):
+            assert (
+                out[k].unit
+                == u.unit("kpc") * u.unit("kpc/Myr") ** 0.5 / u.unit("kpc") ** 0.5
+            )
+
+    def test_untouched_components_keep_their_own_units(self):
+        """`z` and `dt_z` are never read by the arithmetic."""
+        out = cxc.pt_map(
+            self._phase(**{"q.z": u.Q(5000.0, "pc"), "p.z": u.Q(0.489, "km/s")}),
+            self._PS,
+            cxc.poincarepolar6d,
+        )
+        assert out["z"].unit == u.unit("pc")
+        assert out["dt_z"].unit == u.unit("km/s")
+        assert out["rho"].unit == u.unit("kpc")
+
+    def test_the_derived_unit_does_not_depend_on_operand_order(self):
+        """A velocity given in other units names the same quantity, not another.
+
+        `lz` used to take its unit from `x * vy` alone, so one component in
+        `km/s` relabelled `pp_phi` as `km(1/2) kpc(1/2) / s(1/2)`.
+        """
+        # The *same* velocity, written in km/s rather than kpc/Myr.
+        same_vy = u.uconvert(u.unit("km/s"), u.Q(2.0, "kpc/Myr"))
+        mixed = cxc.pt_map(
+            self._phase(**{"p.y": same_vy}), self._PS, cxc.poincarepolar6d
+        )
+        plain = cxc.pt_map(self._phase(), self._PS, cxc.poincarepolar6d)
+        assert mixed["pp_phi"].unit == plain["pp_phi"].unit
+        assert float(u.ustrip(plain["pp_phi"].unit, mixed["pp_phi"])) == pytest.approx(
+            float(plain["pp_phi"].value), rel=1e-6
+        )
+
+    def test_round_trip_is_exact(self):
+        p = self._phase()
+        back = cxc.pt_map(
+            cxc.pt_map(p, self._PS, cxc.poincarepolar6d), cxc.poincarepolar6d, self._PS
+        )
+        for k, v in p.items():
+            assert u.ustrip(v.unit, back[k]) == pytest.approx(float(v.value), rel=1e-9)
