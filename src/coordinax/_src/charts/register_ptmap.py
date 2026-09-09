@@ -13,7 +13,6 @@ import plum
 import quaxed.numpy as jnp
 import unxt as u
 import unxts.linalg as ul
-from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
 import coordinaxs.api.charts as cxcapi
 from .checks import check_manifolds_match_charts
@@ -58,17 +57,23 @@ def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
     return jnp.where(denom == 0, jnp.zeros_like(ratio), ratio)
 
 
+#: Which components were bare is the useful half of the message, and it differs
+#: by direction -- `mu`/`nu` going out of the chart, `rho`/`z` coming in -- so
+#: the caller names them rather than the helper guessing.
 _PROLATE_NEEDS_USYS: Final = (
-    "For non-Quantity 'mu' or 'nu', usys must be a UnitSystem, not None."
+    "For non-Quantity {0!r} or {1!r}, usys must be a UnitSystem, not None."
 )
 
 
-def _delta_squared(chart: Any, unit_area: Any, usys: OptUSys, /) -> Any:
+def _delta_squared(
+    chart: Any, unit_area: Any, usys: OptUSys, components: tuple[str, str], /
+) -> Any:
     """``Delta**2`` as a raw value in *unit_area*, or in ``usys`` when bare.
 
-    A bare ``mu``/``nu`` carries no unit to measure ``Delta`` against, so the
-    unit system is required there -- which is also what narrows `usys` to
-    non-`None` before it is subscripted.
+    A bare point carries no unit to measure ``Delta`` against, so the unit
+    system is required there -- which is also what narrows `usys` to non-`None`
+    before it is subscripted. *components* names the two that were bare, for
+    the error.
     """
     if unit_area is not None:
         # Strip `Delta` into the implied *length* unit and square the raw
@@ -77,7 +82,7 @@ def _delta_squared(chart: Any, unit_area: Any, usys: OptUSys, /) -> Any:
         # here to avoid, and both orders give the same number.
         return cast("Array", u.ustrip(unit_area**0.5, chart.Delta)) ** 2
     if usys is None:
-        raise ValueError(_PROLATE_NEEDS_USYS)
+        raise ValueError(_PROLATE_NEEDS_USYS.format(*components))
     return cast("Array", u.ustrip(usys["length"], chart.Delta)) ** 2
 
 
@@ -824,7 +829,7 @@ def pt_map(
 
     # Calculate cylindrical distance
     (mu, nu), unit_area = strip(p, ("mu", "nu"))
-    delta2 = _delta_squared(from_chart, unit_area, usys)
+    delta2 = _delta_squared(from_chart, unit_area, usys, ("mu", "nu"))
 
     nu_d2 = jnp.abs(nu) / delta2
     rho = jnp.sqrt((mu - delta2) * (1 - nu_d2))
@@ -1281,7 +1286,7 @@ def pt_map(
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     (mu, nu), unit_area = strip(p, ("mu", "nu"))
-    delta2 = _delta_squared(from_chart, unit_area, usys)
+    delta2 = _delta_squared(from_chart, unit_area, usys, ("mu", "nu"))
 
     nu_d2 = jnp.abs(nu) / delta2
     # `mu` and `nu` are *areas*, so a length output carries the square root of
@@ -1354,49 +1359,53 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
+    # One length group, so `mu` and `nu` come back in one area unit. Computing
+    # on `Quantity` operands let each output take whichever unit happened to be
+    # leftmost in its own expression -- `mu` from `Delta**2`, `nu` from
+    # `Delta**2 / rho**2 * z**2` -- so `rho` in km with `z` in m returned `nu`
+    # as `m4 / km2`. Dimensionally an area, and `check_data` accepts it for
+    # exactly that reason, but not a unit anyone would write.
+    (rho, z), unit_len = strip(p, ("rho", "z"))
+    unit_area = None if unit_len is None else unit_len**2
+    delta2 = _delta_squared(to_chart, unit_area, usys, ("rho", "z"))
+
     # Pre-compute common terms
-    R2 = p["rho"] ** 2
-    z2 = p["z"] ** 2
-    if not isinstance(R2, ABCQ) or not isinstance(z2, ABCQ):
-        if usys is None:
-            msg = "For non-Quantity 'rho' or 'z', usys must be a UnitSystem, not None."
-            raise ValueError(msg)
-
-        Delta2 = cast("Array", u.ustrip(usys["length"], to_chart.Delta)) ** 2
-    else:
-        Delta2 = plum.convert(to_chart.Delta**2, u.Q)
-
-    sum_ = R2 + z2 + Delta2
-    diff_ = R2 + z2 - Delta2
+    R2 = rho**2
+    z2 = z**2
+    sum_ = R2 + z2 + delta2
+    diff_ = R2 + z2 - delta2
 
     # D = sqrt((R^2 + z^2 - Delta^2)^2 + 4 R^2 Delta^2)
-    D = jnp.sqrt(diff_**2 + 4 * R2 * Delta2)
+    D = jnp.sqrt(diff_**2 + 4 * R2 * delta2)
 
     # Handle special cases for z=0 or rho=0
-    D = jnp.where(p["z"] == 0, sum_, D)
-    D = jnp.where(p["rho"] == 0, jnp.abs(diff_), D)
+    D = jnp.where(z == 0, sum_, D)
+    D = jnp.where(rho == 0, jnp.abs(diff_), D)
 
     # Numerically stable branches (avoid dividing by small numbers)
     pos_mu_minus_delta = 0.5 * (D + diff_)
-    pos_delta_minus_nu = Delta2 * R2 / pos_mu_minus_delta
+    pos_delta_minus_nu = delta2 * R2 / pos_mu_minus_delta
 
     neg_delta_minus_nu = 0.5 * (D - diff_)
-    neg_mu_minus_delta = Delta2 * R2 / neg_delta_minus_nu
+    neg_mu_minus_delta = delta2 * R2 / neg_delta_minus_nu
 
     mu_minus_delta = jnp.where(diff_ >= 0, pos_mu_minus_delta, neg_mu_minus_delta)
     delta_minus_nu = jnp.where(diff_ >= 0, pos_delta_minus_nu, neg_delta_minus_nu)
 
-    mu = Delta2 + mu_minus_delta
-
     # |nu| = 2 Delta^2 / (sum_ + D) * z^2
-    abs_nu = 2 * Delta2 / (sum_ + D) * z2
+    abs_nu = 2 * delta2 / (sum_ + D) * z2
 
     # Stability fix when Delta^2 - |nu| is small
-    abs_nu = jnp.where(abs_nu * 2 > Delta2, Delta2 - delta_minus_nu, abs_nu)
+    abs_nu = jnp.where(abs_nu * 2 > delta2, delta2 - delta_minus_nu, abs_nu)
 
-    nu = abs_nu * jnp.sign(p["z"])
-
-    return canonical_containers({"mu": mu, "nu": nu, "phi": p["phi"]}, to_chart)
+    return canonical_containers(
+        {
+            "mu": wrap(delta2 + mu_minus_delta, unit_area),
+            "nu": wrap(abs_nu * jnp.sign(z), unit_area),
+            "phi": p["phi"],
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
