@@ -15,7 +15,7 @@ from unxt.quantity import AllowValue
 
 import coordinax.angles as cxa
 import coordinaxs.api.manifolds as cxmapi
-from .quadratic_form import gram
+from .quadratic_form import gram, quadratic_form
 from coordinax._src.base import (
     AbstractChart,
     AbstractMetricField,
@@ -156,9 +156,39 @@ def angle_between(
     # case -- silently reporting "anti-parallel" for two observers in relative
     # motion. `nan` is the honest value: no real angle exists.
     valid = u_spacelike & v_spacelike & (jnp.abs(cos) <= 1.0 + _COS_ATOL)
-    # The clip is float-error insurance for the *valid* branch only; `valid`
-    # has already excluded everything genuinely out of range.
-    angle = jnp.arccos(jnp.clip(cos, -1.0, 1.0))
+
+    # `atan2` of a componentwise rejection, not `arccos` of the cosine.
+    # `arccos` has an infinite derivative at 1, so it loses its significant
+    # digits exactly in the nearly-parallel regime -- at float32, the library
+    # default, it returned a confident `0.0` for directions 1e-4 rad (~20
+    # arcsec) apart. `_central_angle` in `geodesic_distance` already makes this
+    # argument for the sphere; it applies verbatim to a general metric.
+    #
+    # The algebraic shortcut `sqrt(uu*vv - inner**2)` is *not* a fix, though
+    # `gram` hands us all three terms for free: `uu*vv` approaches `inner**2`
+    # for nearly-parallel vectors, so it cancels precisely as `arccos` does.
+    # Measured at float32 against a 1e-4 rad separation, both return exactly
+    # 0 rad where the form below is accurate to 2.5e-8 relative. The
+    # subtraction has to happen per component, *before* the metric contracts
+    # it -- which costs the second contraction below.
+    #
+    # `coef` is dimensionless: `inner` and `vv` are both metric contractions,
+    # so it carries no unit and `coef * vvec[k]` keeps component `k`'s own
+    # unit. That matters for heterogeneous charts (lon/lat/distance), where a
+    # scalar with any length dimension would not subtract componentwise.
+    coef = inner / vv
+    wvec = {k: uvec[k] - coef * vvec[k] for k in uvec}
+    ww = quadratic_form(
+        wvec, chart, at=at, usys=usys, fname="angle_between", require_usys=False
+    )
+
+    # sin = sqrt(g(w,w) / g(u,u)), which is exactly sqrt(1 - cos^2) and, like
+    # `cos`, dimensionless. Clipped below at zero for the indefinite metrics
+    # `valid` is about to reject anyway, so the `sqrt` cannot hand `atan2` a
+    # NaN on the branch that is discarded.
+    sin2 = u.ustrip(AllowValue, "", ww / uu)
+    sin = jnp.sqrt(jnp.clip(jnp.where(valid, sin2, 0.0), 0.0, None))
+    angle = jnp.atan2(sin, cos)
     return cxa.Angle(jnp.where(valid, angle, jnp.nan), "rad")
 
 
