@@ -12,6 +12,7 @@ here 32 wiggles across the bounds against `n_seed=64`.
 
 import jax.numpy as jnp
 import numpy as np
+import pytest
 
 import unxt as u
 
@@ -88,3 +89,31 @@ def test_it_is_never_worse_than_the_coarse_scan_it_started_from() -> None:
         f"returned tau={tau} at distance {_dist(tau):.6f}, "
         f"worse than the coarse scan's own {best_seed:.6f}"
     )
+
+
+def _distances(taus: np.ndarray) -> np.ndarray:
+    """Distance from the probe to the curve, vectorised over ``taus``."""
+    g = np.stack([taus, 0.3 * np.sin(20 * taus), np.zeros_like(taus)])
+    return np.linalg.norm(PROBE[:, None] - g, axis=0)
+
+
+def test_the_remedy_the_refusal_advertises_actually_works() -> None:
+    """A scan that *does* resolve the curve must succeed, and be right.
+
+    The refusal tells the caller to raise `n_seed`. Both tests above accept a
+    refusal as a valid outcome, so on their own they would still pass if
+    `nearest_tau` began refusing every query -- including ones where the scan
+    resolves the curve perfectly well. This pins the advertised remedy.
+    """
+    builder = cxfc.FrenetSerretBuilder(wiggly, "s")
+    x = u.Q(jnp.asarray(PROBE), "km")
+
+    tau = float(cxfc.nearest_tau(builder, x, bounds=BOUNDS, n_seed=128).ustrip("s"))
+
+    lo, hi = (float(b.ustrip("s")) for b in BOUNDS)
+    grid = np.linspace(lo, hi, 200_001)
+    truth = float(grid[int(np.argmin(_distances(grid)))])
+
+    assert tau == pytest.approx(truth, abs=1e-3)
+    # And it is genuinely the global minimum, not merely near a stationary point.
+    assert _dist(tau) <= float(_distances(grid).min()) + 1e-6
