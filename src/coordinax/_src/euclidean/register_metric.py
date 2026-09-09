@@ -24,7 +24,7 @@ missing from the diagonal list is declared non-orthogonal by omission.
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any, cast
+from typing import Any
 
 import jax.numpy as jnp
 import plum
@@ -68,10 +68,24 @@ def _angle_rad(q: Any, /) -> Any:
     return q
 
 
-def _angle_unit(q: Any, /) -> u.AbstractUnit:
-    """Return the unit of an angular coordinate, or dimensionless if plain array."""
+def _angle_basis_unit(q: Any, /) -> u.AbstractUnit:
+    """Return the angle unit the metric *value* below is expressed per.
+
+    The analytic rules compute the radian-convention component -- ``g_theta_theta
+    = r**2``, not ``r**2 (pi/180)**2`` -- so the result must be labelled per
+    ``rad**2`` however the caller spelled the angle.  ``r**2`` per ``rad**2`` and
+    ``r**2 (pi/180)**2`` per ``deg**2`` are the *same tensor*, and `unxt`
+    reconciles them when the metric is contracted.
+
+    Stamping the radian value with the input's own unit -- which this did until
+    #835 -- made every metric quantity wrong by ``(180/pi)**n`` for degree input,
+    with ``LonLatSpherical3D`` in degrees the worst case.  `jac_pt_map` was
+    unaffected and is the reference the tests compare against.
+
+    A plain array carries no unit and stays dimensionless, as before.
+    """
     if isinstance(q, u.AbstractQuantity):
-        return cast("u.AbstractUnit", q.unit)
+        return u.unit("rad")  # ty: ignore[invalid-return-type]
     return u.unit("")  # ty: ignore[invalid-return-type]
 
 
@@ -293,7 +307,7 @@ def metric_matrix(
     """
     del M, chart
     r_val, r_unit = _val_unit(point["r"])
-    theta_unit = _angle_unit(point["theta"])
+    theta_unit = _angle_basis_unit(point["theta"])
     diag = jnp.stack([jnp.ones_like(r_val, dtype=float), r_val**2], axis=-1)
     units = ul.UnitsMatrix((u.unit(""), r_unit**2 / theta_unit**2))
     return DiagonalMetric(ul.QuantityMatrix(diag, unit=units))
@@ -323,7 +337,7 @@ def metric_matrix(
     """
     del M, chart
     rho_val, rho_unit = _val_unit(point["rho"])
-    phi_unit = _angle_unit(point["phi"])
+    phi_unit = _angle_basis_unit(point["phi"])
     dmls = u.unit("")
     diag = jnp.stack(
         [
@@ -370,8 +384,8 @@ def metric_matrix(
     del M, chart
     r_val, r_unit = _val_unit(point["r"])
     theta_val = _angle_rad(point["theta"])
-    theta_unit = _angle_unit(point["theta"])
-    phi_unit = _angle_unit(point["phi"])
+    theta_unit = _angle_basis_unit(point["theta"])
+    phi_unit = _angle_basis_unit(point["phi"])
     r2 = r_val**2
     r2_unit = r_unit**2
     diag = jnp.stack(
@@ -414,8 +428,8 @@ def metric_matrix(
     del M, chart
     r_val, r_unit = _val_unit(point["r"])
     phi_val = _angle_rad(point["phi"])  # polar / colatitude angle
-    theta_unit = _angle_unit(point["theta"])
-    phi_unit = _angle_unit(point["phi"])
+    theta_unit = _angle_basis_unit(point["theta"])
+    phi_unit = _angle_basis_unit(point["phi"])
     r2 = r_val**2
     r2_unit = r_unit**2
     diag = jnp.stack(
@@ -457,8 +471,8 @@ def metric_matrix(
     del M, chart
     d_val, d_unit = _val_unit(point["distance"])
     lat_val = _angle_rad(point["lat"])
-    lon_unit = _angle_unit(point["lon"])
-    lat_unit = _angle_unit(point["lat"])
+    lon_unit = _angle_basis_unit(point["lon"])
+    lat_unit = _angle_basis_unit(point["lat"])
     d2 = d_val**2
     d2_unit = d_unit**2
     diag = jnp.stack(
