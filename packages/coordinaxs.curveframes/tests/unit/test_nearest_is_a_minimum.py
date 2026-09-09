@@ -169,3 +169,15 @@ def test_an_ordinary_curve_is_not_refused_by_the_resolution_check() -> None:
     x = u.Q(jnp.asarray([2.0 * np.cos(1.0), 2.0 * np.sin(1.0), 0.0]), "km")
     tau = cxfc.nearest_tau(builder, x, bounds=(u.Q(0.0, "s"), u.Q(2 * np.pi, "s")))
     assert float(tau.ustrip("s")) == pytest.approx(1.0, abs=1e-3)
+
+
+def test_a_degenerate_n_seed_is_refused_clearly() -> None:
+    """`n_seed < 2` has no spacing to bracket around.
+
+    Left unguarded it divides by zero and builds an empty grid, surfacing as a
+    shape error from `argmin` that names nothing the caller did.
+    """
+    builder = cxfc.FrenetSerretBuilder(wiggly, "s")
+    x = u.Q(jnp.asarray(PROBE), "km")
+    with pytest.raises(ValueError, match="at least 2"):
+        cxfc.nearest_tau(builder, x, bounds=BOUNDS, n_seed=1)

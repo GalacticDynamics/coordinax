@@ -112,6 +112,15 @@ def nearest_tau(
     # `tau_unit`, and on a pinned-station builder that describes the station
     # while these bounds are times, so consulting it scans seconds in
     # kilometres. The builder is the fallback for bare (unitless) bounds only.
+    if n_seed < 2:
+        msg_seed = (
+            f"`n_seed` must be at least 2, got {n_seed}: the scan needs a spacing "
+            "to bracket around, and one point has none. Below that the failure is "
+            "a divide-by-zero in the spacing and an empty grid, which surfaces as "
+            "an unrelated shape error."
+        )
+        raise ValueError(msg_seed)
+
     unit = u.unit_of(bounds[0])
     if unit is None:
         unit = builder._tau_unit_at(bounds[0])
@@ -189,8 +198,16 @@ def nearest_tau(
     # the closest one wins, which is what makes the multi-minimum bracket
     # resolve to the *nearest* rather than to whichever bisection reaches.
     fine = jnp.linspace(tau0 - spacing, tau0 + spacing, n_seed)
+
+    # `residual` and `dist2` each call `offset`, so this looks like it evaluates
+    # the curve twice per grid point. It does not once compiled: XLA eliminates
+    # the duplicate as a common subexpression. Hand-fusing them into one
+    # tuple-returning `vmap` measured *slower* in both regimes -- eager 0.619s
+    # against 0.373s, jit compile 0.99s against 0.73s, warm call 0.046ms
+    # against 0.042ms -- so the obvious optimisation is a pessimisation here.
     r_fine = jax.vmap(lambda t: residual(t, None))(fine)
     d_fine = jax.vmap(dist2)(fine)
+
     crossing = (r_fine[:-1] > 0) & (r_fine[1:] < 0)
     # Rank candidates by the distance across the crossing, not by residual.
     score = jnp.where(crossing, 0.5 * (d_fine[:-1] + d_fine[1:]), jnp.inf)
@@ -281,8 +298,8 @@ def nearest_tau(
         "curve's centre), so no nearest point exists; the true nearest point "
         "lies outside `bounds`, which the scan cannot see past; or the curve "
         "varies faster than `n_seed` samples resolve, so the scan's argmin is "
-        "not within one spacing of the true minimiser and the bracket can hold "
-        "a maximum as well as a minimum. Only the last has a remedy here -- "
+        "not within one spacing of the true minimiser, and the bracket can hold "
+        "more than one minimum. Only the last has a remedy here -- "
         "raise `n_seed` (measured: a curve with 32 wiggles across `bounds` "
         "refuses at the default 64 and resolves correctly at 128)."
     )
