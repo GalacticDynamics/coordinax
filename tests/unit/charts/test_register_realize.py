@@ -312,7 +312,7 @@ class TestPtMapUnitContract:
 
     The bodies used to do their arithmetic on `Quantity` operands, so these rules
     were a *consequence* of `unxt` promotion. `strip`/`wrap` reproduce them
-    deliberately, so they are pinned here. All three pass against the
+    deliberately, so they are pinned here. Every case passes against the
     pre-`strip` bodies too -- that is what makes them a contract.
 
     Not repeated here: unitless-in/unitless-out and angular canonicalisation,
@@ -330,26 +330,57 @@ class TestPtMapUnitContract:
         p = {"x": u.Q(1.0, x_unit), "y": u.Q(2.0, y_unit), "z": u.Q(3.0, "cm")}
         assert cxc.pt_map(p, cxc.cart3d, cxc.sph3d)["r"].unit == u.unit(x_unit)
 
-    def test_untouched_component_keeps_its_unit_and_container(self):
-        """`z` is not consumed by the cylindrical arithmetic, so it is not converted.
+    @pytest.mark.parametrize(
+        ("frm", "to", "rest"),
+        [
+            (cxc.cart3d, cxc.cyl3d, {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}),
+            (cxc.cyl3d, cxc.cart3d, {"rho": u.Q(1.0, "m"), "phi": u.Angle(0.5, "rad")}),
+        ],
+        ids=["cart3d->cyl3d", "cyl3d->cart3d"],
+    )
+    def test_untouched_length_keeps_its_unit_and_container(self, frm, to, rest):
+        """`z` is not consumed by either body's arithmetic, so it is not converted.
 
         Round-tripping it through the group unit would turn `Q(3, "km")` into
         `Q(3000, "m")` and degrade a `Distance` to a `Quantity`.
         """
-        base = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
-        z = cxc.pt_map({**base, "z": u.Q(3.0, "km")}, cxc.cart3d, cxc.cyl3d)["z"]
+        z = cxc.pt_map({**rest, "z": u.Q(3.0, "km")}, frm, to)["z"]
         assert z.unit == u.unit("km")
         assert z.value == pytest.approx(3.0)
 
-        z = cxc.pt_map({**base, "z": cx.Distance(3.0, "m")}, cxc.cart3d, cxc.cyl3d)["z"]
+        z = cxc.pt_map({**rest, "z": cx.Distance(3.0, "m")}, frm, to)["z"]
         assert isinstance(z, cx.Distance)
 
-    def test_untouched_angle_passes_through(self):
-        """`phi` sits outside `cyl3d -> sph3d`'s length group.
-
-        A separate body from the one above, so it needs its own case.
-        """
-        p = {"rho": u.Q(3.0, "m"), "phi": u.Angle(30.0, "deg"), "z": u.Q(4.0, "m")}
-        phi = cxc.pt_map(p, cxc.cyl3d, cxc.sph3d)["phi"]
+    @pytest.mark.parametrize(
+        ("frm", "to", "rest"),
+        [
+            (cxc.cyl3d, cxc.sph3d, {"rho": u.Q(3.0, "m"), "z": u.Q(4.0, "m")}),
+            (cxc.sph3d, cxc.cyl3d, {"r": u.Q(5.0, "m"), "theta": u.Angle(0.9, "rad")}),
+        ],
+        ids=["cyl3d->sph3d", "sph3d->cyl3d"],
+    )
+    def test_untouched_angle_passes_through(self, frm, to, rest):
+        """`phi` sits outside each body's length group, and keeps degrees."""
+        phi = cxc.pt_map({**rest, "phi": u.Angle(30.0, "deg")}, frm, to)["phi"]
         assert phi.unit == u.unit("deg")
         assert phi.value == pytest.approx(30.0)
+
+    def test_a_unitful_angle_promotes_a_unitless_length(self):
+        """A bare radius with an `Angle` gives a *dimensionless* `Quantity` length.
+
+        `Quantity` arithmetic promoted whenever any operand was one, and callers
+        depend on it -- `chord_distance` on `sph2`, whose radius is a bare 1 and
+        whose angles are `Angle`s, returns a dimensionless `Quantity`. Promotion
+        follows the operands that feed each output, so a unitful component the
+        arithmetic never reads promotes nothing.
+        """
+        ang = {"theta": u.Angle(0.7, "rad"), "phi": u.Angle(1.2, "rad")}
+        out = cxc.pt_map({"r": 2.0, **ang}, cxc.sph3d, cxc.cart3d)
+        assert all(u.unit_of(v) == u.unit("") for v in out.values())
+
+        # `z` is not read by `cyl3d -> cart3d`'s arithmetic, so it promotes nothing.
+        out = cxc.pt_map(
+            {"rho": 2.0, "phi": 0.7, "z": u.Q(3.0, "m")}, cxc.cyl3d, cxc.cart3d
+        )
+        assert u.unit_of(out["x"]) is None
+        assert u.unit_of(out["z"]) == u.unit("m")

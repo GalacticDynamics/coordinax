@@ -18,6 +18,51 @@ UNTLS: Final = u.unit("")
 DMLS: Final = u.dimension_of(UNTLS)
 
 
+def rad_value(value: Any, usys: OptUSys, /) -> Any:
+    """Return the raw radian magnitude of an angle value, without a unit wrapper.
+
+    The core of `uconvert_to_rad`, exposed for transition bodies that go on to
+    do their arithmetic on raw arrays: re-wrapping the angle only for a `sin`
+    or `cos` to strip it again costs a `quax` trace per call for nothing.
+
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> from coordinax._src.utils import rad_value
+
+    >>> bool(jnp.allclose(rad_value(u.Q(90, "deg"), None), jnp.pi / 2))
+    True
+
+    A bare value is already radians unless a unit system says otherwise:
+
+    >>> bool(jnp.allclose(rad_value(jnp.pi / 2, None), jnp.pi / 2))
+    True
+    >>> usys = u.unitsystem("m", "deg")
+    >>> bool(jnp.allclose(rad_value(90.0, usys), jnp.pi / 2))
+    True
+
+    """
+    return _rad_value(value, usys, u.unit_of(value))
+
+
+def _rad_value(value: Any, usys: OptUSys, unit: Any, /) -> Any:
+    """Raw radian magnitude, given *value*'s already-resolved *unit*.
+
+    Split out so `rad_value` and `uconvert_to_rad` each resolve the unit once:
+    `u.unit_of` is a `plum` dispatch on a path that runs per component.
+    """
+    source_unit = RAD if usys is None else usys["angle"]
+
+    if unit is not None:
+        dim = u.dimension_of(unit)
+        if dim == ANGLE:
+            source_unit = unit
+        elif dim != DMLS:
+            msg = f"Unsupported quantity dimension for angle conversion: {dim}"
+            raise ValueError(msg)
+
+    return u.uconvert_value(RAD, source_unit, u.ustrip(AllowValue, value))
+
+
 @overload
 def uconvert_to_rad(value: ArrayLike, usys: OptUSys, /) -> ArrayLike: ...
 @overload
@@ -58,20 +103,9 @@ def uconvert_to_rad(value: Any, usys: OptUSys, /) -> Any:
     ValueError: Unsupported quantity dimension for angle conversion: length
 
     """
-    from_unit = RAD if usys is None else usys["angle"]
     unit = u.unit_of(value)
-    source_unit = from_unit
-
-    if unit is not None:
-        dim = u.dimension_of(unit)
-        if dim == ANGLE:
-            source_unit = unit
-        elif dim != DMLS:
-            msg = f"Unsupported quantity dimension for angle conversion: {dim}"
-            raise ValueError(msg)
-
-    raw_rad = u.uconvert_value(RAD, source_unit, u.ustrip(AllowValue, value))
-    return Quantity(raw_rad, unit=RAD) if unit is not None else raw_rad
+    raw_rad = _rad_value(value, usys, unit)
+    return raw_rad if unit is None else Quantity(raw_rad, unit=RAD)
 
 
 # ===================================================================
@@ -146,6 +180,41 @@ def strip(p: CDict, keys: CKeys, /) -> tuple[tuple[Any, ...], Any]:
     if unit is None:
         return tuple(p[k] for k in keys), None
     return tuple(u.ustrip(unit, p[k]) for k in keys), unit
+
+
+def promoted_unit(unit: Any, /, *operands: Any) -> Any:
+    """Return the unit `wrap` should re-attach, reproducing `Quantity` promotion.
+
+    `strip` reports the unit of the *length* group. When that group is unitless
+    but an operand feeding the same expression carries a unit -- a bare radius
+    with an `Angle` azimuth, which is exactly how the unit-sphere charts are
+    written -- `Quantity` arithmetic promoted the result to a *dimensionless*
+    `Quantity`. Callers rely on it: `chord_distance` on `sph2` returns one.
+
+    Promotion follows the operands that actually feed the expression, not the
+    point as a whole -- a unitful component the arithmetic never reads promotes
+    nothing, so a body with differently-sourced outputs needs one call each.
+
+    >>> import unxt as u
+    >>> from coordinax._src.utils import promoted_unit
+
+    A group that has its own unit keeps it:
+
+    >>> promoted_unit(u.unit("m"), u.Angle(1.0, "rad"))
+    Unit("m")
+
+    A unitless group promoted by a unitful operand becomes dimensionless, and
+    stays unitless when nothing feeding it carries a unit:
+
+    >>> promoted_unit(None, u.Angle(1.0, "rad"))
+    Unit(dimensionless)
+    >>> promoted_unit(None, 1.0) is None
+    True
+
+    """
+    if unit is not None:
+        return unit
+    return UNTLS if any(u.unit_of(o) is not None for o in operands) else None
 
 
 def wrap(value: Any, unit: Any, /) -> Any:

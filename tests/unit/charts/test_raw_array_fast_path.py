@@ -1,21 +1,30 @@
-"""The raw-array path through `pt_map` stays cheap (#719).
+"""Neither route through `pt_map` is dispatch-heavy (#719).
 
-`pt_map` on a `dict[str, Quantity]` costs ~20x more *per eager call* than the
-same map on bare arrays. Almost none of that is coordinax: of the 178 `plum`
-dispatches one such call makes, **two** are `pt_map` itself. The rest are
-`unxt`/`quax` resolving arithmetic on `Quantity` operands -- `convert`, `unit`,
-`ustrip` -- one per primitive op.
+`pt_map` on a `dict[str, Quantity]` used to cost ~20x more *per eager call*
+than the same map on bare arrays, and this file was written on the reading
+that coordinax could not dispatch its way out of it: of the 178 `plum`
+dispatches one such call made, only **two** were `pt_map` itself, the rest
+being `unxt`/`quax` resolving arithmetic on `Quantity` operands.
 
-So the cost is not something coordinax can dispatch its way out of; what it can
-do is keep the raw-array route open, which is what these tests guard. Counting
-dispatches rather than timing keeps the guard deterministic: the numbers below
-are exact and repeatable, where wall-clock would flake in CI.
+That reading was wrong about the cause. The dispatches were per *primitive
+operation*, and a body only performs them because it does its arithmetic on
+`Quantity` operands -- which is the body's choice, not a property of units.
+Bodies that resolve their units once through `strip`/`wrap` and compute on raw
+arrays make far fewer: `sph3d -> cart3d` went from 178 dispatches to 45, and
+from ~2890us to ~700us, for identical output.
 
-Counting also survives a change in how `plum` caches. `plum#290` would let the
-unfaithful signatures on this path be cached, cutting the *cost* of a dispatch
-without changing how many happen -- `unit` already caches and is still counted
-27 times per call, which is what shows this counter tallies calls rather than
-resolutions.
+So the guard has changed shape. It used to assert a *gap* between the two
+routes; closing that gap is now the goal, and what is worth pinning is that
+neither route is expensive. The raw route must stay open and cheap (it moved
+17 -> 23 dispatches, the `unit_of` probes `strip` makes even on bare values,
+which cost nothing measurable), and the quantity route must not drift back
+toward per-primitive dispatch.
+
+Counting dispatches rather than timing keeps the guard deterministic: the
+numbers are exact and repeatable, where wall-clock would flake in CI. Counting
+also survives a change in how `plum` caches -- `plum#290` would let the
+unfaithful signatures here be cached, cutting the *cost* of a dispatch without
+changing how many happen.
 """
 
 __all__: tuple[str, ...] = ()
@@ -32,10 +41,16 @@ import coordinax.charts as cxc
 
 _USYS = u.unitsystems.si
 
-#: Ceiling, not a target: raw arrays measured 17 dispatches when written. The
-#: assertion is that the fast path has not collapsed into the slow one, so this
-#: leaves room to move without becoming a change-detector test.
+#: Ceiling, not a target: raw arrays measured 17 dispatches when written and 23
+#: once `strip` began probing `unit_of` on them. The assertion is that the fast
+#: path has not collapsed into the slow one, so this leaves room to move without
+#: becoming a change-detector test.
 _RAW_DISPATCH_CEILING = 40
+
+#: Likewise for quantities: 178 before the body stopped computing on `Quantity`
+#: operands, 45 after. A body reverted to per-primitive `Quantity` arithmetic
+#: lands back near 178, which this catches well before then.
+_QTY_DISPATCH_CEILING = 90
 
 
 def _count_dispatches(fn):
@@ -80,17 +95,15 @@ def test_raw_arrays_stay_off_the_unit_machinery():
     assert sum(counts.values()) <= _RAW_DISPATCH_CEILING
 
 
-def test_raw_arrays_cost_far_fewer_dispatches_than_quantities():
-    """The gap is the point: ~10x fewer dispatched calls for the same arithmetic."""
-    raw = sum(
-        _count_dispatches(
-            lambda: cxc.pt_map(_RAW, cxc.sph3d, cxc.cart3d, usys=_USYS)
-        ).values()
-    )
-    qty = sum(
-        _count_dispatches(lambda: cxc.pt_map(_QTY, cxc.sph3d, cxc.cart3d)).values()
-    )
-    assert raw * 4 < qty
+def test_quantities_stay_off_the_per_primitive_dispatch_path():
+    """The body resolves its units once, not once per arithmetic primitive.
+
+    This is the guard that replaced an assertion that the two routes differ by
+    ~10x. They no longer do, and that is the improvement rather than a
+    regression -- see the module docstring.
+    """
+    counts = _count_dispatches(lambda: cxc.pt_map(_QTY, cxc.sph3d, cxc.cart3d))
+    assert sum(counts.values()) <= _QTY_DISPATCH_CEILING
 
 
 @pytest.mark.parametrize(
