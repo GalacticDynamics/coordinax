@@ -1363,49 +1363,53 @@ def pt_map(
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
+    # One length group, so `mu` and `nu` come back in one area unit. Computing
+    # on `Quantity` operands let each output take whichever unit happened to be
+    # leftmost in its own expression -- `mu` from `Delta**2`, `nu` from
+    # `Delta**2 / rho**2 * z**2` -- so `rho` in km with `z` in m returned `nu`
+    # as `m4 / km2`. Dimensionally an area, and `check_data` accepts it for
+    # exactly that reason, but not a unit anyone would write.
+    (rho, z), unit_len = strip(p, ("rho", "z"))
+    unit_area = None if unit_len is None else unit_len**2
+    delta2 = _delta_squared(to_chart, unit_area, usys)
+
     # Pre-compute common terms
-    R2 = p["rho"] ** 2
-    z2 = p["z"] ** 2
-    if not isinstance(R2, ABCQ) or not isinstance(z2, ABCQ):
-        if usys is None:
-            msg = "For non-Quantity 'rho' or 'z', usys must be a UnitSystem, not None."
-            raise ValueError(msg)
-
-        Delta2 = cast("Array", u.ustrip(usys["length"], to_chart.Delta)) ** 2
-    else:
-        Delta2 = plum.convert(to_chart.Delta**2, u.Q)
-
-    sum_ = R2 + z2 + Delta2
-    diff_ = R2 + z2 - Delta2
+    R2 = rho**2
+    z2 = z**2
+    sum_ = R2 + z2 + delta2
+    diff_ = R2 + z2 - delta2
 
     # D = sqrt((R^2 + z^2 - Delta^2)^2 + 4 R^2 Delta^2)
-    D = jnp.sqrt(diff_**2 + 4 * R2 * Delta2)
+    D = jnp.sqrt(diff_**2 + 4 * R2 * delta2)
 
     # Handle special cases for z=0 or rho=0
-    D = jnp.where(p["z"] == 0, sum_, D)
-    D = jnp.where(p["rho"] == 0, jnp.abs(diff_), D)
+    D = jnp.where(z == 0, sum_, D)
+    D = jnp.where(rho == 0, jnp.abs(diff_), D)
 
     # Numerically stable branches (avoid dividing by small numbers)
     pos_mu_minus_delta = 0.5 * (D + diff_)
-    pos_delta_minus_nu = Delta2 * R2 / pos_mu_minus_delta
+    pos_delta_minus_nu = delta2 * R2 / pos_mu_minus_delta
 
     neg_delta_minus_nu = 0.5 * (D - diff_)
-    neg_mu_minus_delta = Delta2 * R2 / neg_delta_minus_nu
+    neg_mu_minus_delta = delta2 * R2 / neg_delta_minus_nu
 
     mu_minus_delta = jnp.where(diff_ >= 0, pos_mu_minus_delta, neg_mu_minus_delta)
     delta_minus_nu = jnp.where(diff_ >= 0, pos_delta_minus_nu, neg_delta_minus_nu)
 
-    mu = Delta2 + mu_minus_delta
-
     # |nu| = 2 Delta^2 / (sum_ + D) * z^2
-    abs_nu = 2 * Delta2 / (sum_ + D) * z2
+    abs_nu = 2 * delta2 / (sum_ + D) * z2
 
     # Stability fix when Delta^2 - |nu| is small
-    abs_nu = jnp.where(abs_nu * 2 > Delta2, Delta2 - delta_minus_nu, abs_nu)
+    abs_nu = jnp.where(abs_nu * 2 > delta2, delta2 - delta_minus_nu, abs_nu)
 
-    nu = abs_nu * jnp.sign(p["z"])
-
-    return canonical_containers({"mu": mu, "nu": nu, "phi": p["phi"]}, to_chart)
+    return canonical_containers(
+        {
+            "mu": wrap(delta2 + mu_minus_delta, unit_area),
+            "nu": wrap(abs_nu * jnp.sign(z), unit_area),
+            "phi": p["phi"],
+        },
+        to_chart,
+    )
 
 
 @plum.dispatch
