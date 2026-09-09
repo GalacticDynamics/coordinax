@@ -81,7 +81,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(45, "deg"), "phi": u.Q(0, "deg")}
     >>> cxc.pt_map(p, cxc.sph3d, cxr.point, cxc.lonlat_sph3d, cxr.point)
-    {'lon': Angle(0, 'deg'), 'lat': Angle(45., 'deg'), 'distance': Q(1., 'm')}
+    {'lon': Angle(0, 'deg'), 'lat': Angle(45, 'deg'), 'distance': Q(1., 'm')}
 
     **Identity conversion (same chart):**
 
