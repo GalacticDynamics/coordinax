@@ -44,20 +44,31 @@ def _strain(wrap=lambda v: v, director=_spun) -> float:
     return float(np.asarray(cxfc.rate_of_strain(fam, POINT, u.Q(0.0, "s")).value)[0, 0])
 
 
-def test_a_traced_quantity_director_matches_the_bare_array() -> None:
+@pytest.fixture(scope="module")
+def bare() -> float:
+    """`_strain()` for a bare-array director -- the reference every test wants.
+
+    It is a `jacfwd` through a diffrax solve, ~2.8s once the trace is
+    compiled, and it is the same number every time. Module-scoped so a worker
+    computes it once instead of six times.
+    """
+    return _strain()
+
+
+def test_a_traced_quantity_director_matches_the_bare_array(bare: float) -> None:
     """The failing case: a `Quantity` director that depends on ``t``."""
-    assert _strain(lambda v: u.Q(v, "")) == pytest.approx(_strain(), rel=1e-9)
+    assert _strain(lambda v: u.Q(v, "")) == pytest.approx(bare, rel=1e-9)
 
 
 @pytest.mark.parametrize("unit", ["", "km", "m", "pc"])
-def test_the_director_s_unit_does_not_matter(unit: str) -> None:
+def test_the_director_s_unit_does_not_matter(unit: str, bare: float) -> None:
     """It is a direction: `_orthonormalize` discards the scale either way."""
     got = _strain(lambda v, _u=unit: u.Q(v, _u))
-    assert got == pytest.approx(_strain(), rel=1e-9)
+    assert got == pytest.approx(bare, rel=1e-9)
 
 
-def test_the_value_is_the_one_only_a_director_can_produce() -> None:
+def test_the_value_is_the_one_only_a_director_can_produce(bare: float) -> None:
     """The curve has no ``t`` dependence, so only the director can move `K`."""
     fixed = lambda _t: jnp.asarray([1.0, 0.0, 0.0])
     assert _strain(director=fixed) == pytest.approx(0.0, abs=1e-12)
-    assert _strain() == pytest.approx(-0.067526, abs=1e-5)
+    assert bare == pytest.approx(-0.067526, abs=1e-5)
