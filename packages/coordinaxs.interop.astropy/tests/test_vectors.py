@@ -7,6 +7,8 @@ CDict-level agreement is covered separately in ``test_ptmap_cdict.py``.
 
 __all__: tuple[str, ...] = ()
 
+from typing import ClassVar
+
 import astropy.coordinates as apyc
 import astropy.units as apyu
 import numpy as np
@@ -196,3 +198,135 @@ def test_point_without_frame_to_astropy_frame_raises() -> None:
     point = cx.Point.from_([1, 2, 3], "kpc")  # noframe
     with pytest.raises(ValueError, match="no reference frame"):
         plum.convert(point, apyc.BaseCoordinateFrame)
+
+
+class TestVelocityConversion:
+    """`Tangent` <-> astropy differentials.
+
+    The Cartesian pair has existed untested; the spherical pair is new. Both
+    are asserted against astropy rather than against themselves, since astropy
+    is the independent implementation here.
+    """
+
+    CART: ClassVar = {
+        "x": u.Q(12.9, "km/s"),
+        "y": u.Q(245.6, "km/s"),
+        "z": u.Q(7.78, "km/s"),
+    }
+    LONLAT: ClassVar = {
+        "lon": u.Q(1.5, "mas/yr"),
+        "lat": u.Q(-2.5, "mas/yr"),
+        "distance": u.Q(30.0, "km/s"),
+    }
+
+    def test_cartesian_round_trips_exactly(self):
+        vel = cx.Tangent.from_(self.CART, cxc.cart3d)
+        back = plum.convert(plum.convert(vel, apyc.CartesianDifferential), cx.Tangent)
+        for k, want in self.CART.items():
+            assert np.asarray(back[k].value) == np.asarray(want.value)
+
+    def test_cartesian_values_reach_astropy(self):
+        """Not just round-tripping: the numbers land in the right attributes."""
+        got = plum.convert(
+            cx.Tangent.from_(self.CART, cxc.cart3d), apyc.CartesianDifferential
+        )
+        assert got.d_x.to_value(apyu.km / apyu.s) == 12.9
+        assert got.d_y.to_value(apyu.km / apyu.s) == 245.6
+        assert got.d_z.to_value(apyu.km / apyu.s) == 7.78
+
+    @pytest.mark.parametrize("unit", ["m/s", "km/s", "pc/Myr"])
+    def test_the_unit_is_carried_not_assumed(self, unit):
+        vel = cx.Tangent.from_({k: u.Q(1.0, unit) for k in "xyz"}, cxc.cart3d)
+        got = plum.convert(vel, apyc.CartesianDifferential)
+        assert got.d_x.to_value(apyu.Unit(unit)) == 1.0
+
+    def test_a_non_cartesian_chart_is_refused_with_advice(self):
+        """A tangent cannot change chart without its base point, so it says so."""
+        vel = cx.Tangent.from_(self.LONLAT, cxc.lonlat_sph3d)
+        with pytest.raises(ValueError, match="cconvert"):
+            plum.convert(vel, apyc.CartesianDifferential)
+
+    def test_an_acceleration_is_refused(self):
+        acc = cx.Tangent.from_({k: u.Q(1.0, "km/s2") for k in "xyz"}, cxc.cart3d)
+        with pytest.raises(TypeError, match="Velocity"):
+            plum.convert(acc, apyc.CartesianDifferential)
+
+    def test_lonlat_round_trips_and_keeps_its_chart(self):
+        vel = cx.Tangent.from_(self.LONLAT, cxc.lonlat_sph3d)
+        back = plum.convert(plum.convert(vel, apyc.SphericalDifferential), cx.Tangent)
+        assert back.chart == cxc.lonlat_sph3d
+        for k, want in self.LONLAT.items():
+            assert np.asarray(back[k].value) == np.asarray(want.value)
+
+    def test_lonlat_needs_no_convention_change(self):
+        """`d_lon` is the same quantity on both sides -- no cos(lat) anywhere."""
+        got = plum.convert(
+            cx.Tangent.from_(self.LONLAT, cxc.lonlat_sph3d), apyc.SphericalDifferential
+        )
+        assert got.d_lon.to_value(apyu.mas / apyu.yr) == 1.5
+        assert got.d_lat.to_value(apyu.mas / apyu.yr) == -2.5
+        assert got.d_distance.to_value(apyu.km / apyu.s) == 30.0
+
+
+class TestTheCosLatConventionIsNotTheCosLatChart:
+    """astropy's cos(lat) *rate* is not coordinax's lon*cos(lat) *coordinate*.
+
+    `SphericalCosLatDifferential` carries `cos(lat) d_lon` on an ordinary
+    (lon, lat, distance) base. `loncoslat_sph3d` is a chart whose coordinate
+    is `lon cos(lat)`, so a tangent in it carries
+    `cos(lat) d_lon - lon sin(lat) d_lat`. Matching them by component name
+    would look right and be wrong by a term that grows toward the poles.
+    """
+
+    @pytest.mark.parametrize("lat_deg", [30.0, 60.0, 85.0])
+    def test_the_two_genuinely_differ_away_from_the_equator(self, lat_deg):
+        """The reason the conversion is refused rather than written."""
+        lon, lat = np.radians(10.0), np.radians(lat_deg)
+        d_lon, d_lat = 1.0, 2.0
+        astropy_rate = np.cos(lat) * d_lon
+        coordinax_rate = np.cos(lat) * d_lon - lon * np.sin(lat) * d_lat
+        assert abs(astropy_rate - coordinax_rate) > 1e-3
+
+    def test_they_agree_on_the_equator_where_the_extra_term_vanishes(self):
+        lon, lat = np.radians(10.0), 0.0
+        assert np.cos(lat) * 1.0 == np.cos(lat) * 1.0 - lon * np.sin(lat) * 2.0
+
+    def test_converting_to_the_astropy_type_is_refused_by_name(self):
+        vel = cx.Tangent.from_(
+            {
+                "lon_coslat": u.Q(1.0, "mas/yr"),
+                "lat": u.Q(2.0, "mas/yr"),
+                "distance": u.Q(3.0, "km/s"),
+            },
+            cxc.loncoslat_sph3d,
+        )
+        with pytest.raises(ValueError, match="rate convention"):
+            plum.convert(vel, apyc.SphericalCosLatDifferential)
+
+    def test_converting_from_the_astropy_type_is_refused_by_name(self):
+        dif = apyc.SphericalCosLatDifferential(
+            d_lon_coslat=1.0 * apyu.mas / apyu.yr,
+            d_lat=2.0 * apyu.mas / apyu.yr,
+            d_distance=3.0 * apyu.km / apyu.s,
+        )
+        with pytest.raises(ValueError, match="base point"):
+            plum.convert(dif, cx.Tangent)
+
+    def test_the_supported_route_works(self):
+        """What the message tells you to do: give astropy the base, then convert."""
+        dif = apyc.SphericalCosLatDifferential(
+            d_lon_coslat=1.0 * apyu.mas / apyu.yr,
+            d_lat=2.0 * apyu.mas / apyu.yr,
+            d_distance=3.0 * apyu.km / apyu.s,
+        )
+        base = apyc.SphericalRepresentation(
+            lon=10.0 * apyu.deg, lat=60.0 * apyu.deg, distance=1.0 * apyu.kpc
+        )
+        plain = dif.represent_as(apyc.SphericalDifferential, base=base)
+        got = plum.convert(plain, cx.Tangent)
+        assert got.chart == cxc.lonlat_sph3d
+        # d_lon = d_lon_coslat / cos(lat); astropy did that, we just carried it.
+        assert np.isclose(
+            float(np.asarray(got["lon"].ustrip("mas/yr"))),
+            1.0 / np.cos(np.radians(60.0)),
+        )
