@@ -41,12 +41,8 @@ from coordinax._src.exceptions import ManifoldMismatchError
 from coordinax._src.null import NoManifold
 from coordinax._src.product.chart import CartesianProductChart
 from coordinax._src.product.manifold import CartesianProductManifold
-from coordinax._src.utils import rad_value, strip, uconvert_to_rad, wrap, wrap_angle
+from coordinax._src.utils import complement_angle, rad_value, strip, wrap, wrap_angle
 from coordinaxs.api.custom_types import CDict
-
-#: The pole-to-equator offset for colatitude <-> latitude, built once. `u.Q` is
-#: ~49us, which is otherwise paid per call on a `pt_map` path.
-_RIGHT_ANGLE: Final = u.Q(90, "deg")
 
 
 def _ratio_zero_on_axis(num: Array, denom: Array, /) -> Array:
@@ -516,14 +512,13 @@ def pt_map(
      'theta': Array(0.92729522, dtype=float64, ...)}
 
     """
-    del usys  # unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
 
     (x, y), unit = strip(p, ("x", "y"))
     return canonical_containers(
         {
             "r": wrap(jnp.hypot(x, y), unit),
-            "theta": wrap_angle(jnp.arctan2(y, x), unit),
+            "theta": wrap_angle(jnp.arctan2(y, x), unit, usys),
         },
         to_chart,
     )
@@ -875,7 +870,6 @@ def pt_map(
      'z': 5.0}
 
     """
-    del usys  # Unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     # Only the components the arithmetic consumes are stripped; `z` is carried
     # through untouched so it keeps its own unit and container, exactly as the
@@ -884,7 +878,7 @@ def pt_map(
     return canonical_containers(
         {
             "rho": wrap(jnp.hypot(x, y), unit),
-            "phi": wrap_angle(jnp.atan2(y, x), unit),
+            "phi": wrap_angle(jnp.atan2(y, x), unit, usys),
             "z": p["z"],
         },
         to_chart,
@@ -918,7 +912,7 @@ def pt_map(
     >>> usys = u.unitsystem("m", "deg")
     >>> cxc.pt_map(p, cxm.R3, cxc.cyl3d, cxm.R3, cxc.loncoslat_sph3d, usys=usys)
     {'lon_coslat': Array(1.10218212e-14, dtype=float64, ...),
-     'lat': Array(1.57079633, dtype=float64, ...),
+     'lat': Array(90., dtype=float64, ...),
      'distance': Array(1., dtype=float64, weak_type=True)}
 
     """
@@ -961,7 +955,6 @@ def pt_map(
      'phi': Array(0., dtype=float64, ...)}
 
     """
-    del usys
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     # `strip`/`wrap` keep the arithmetic off `Quantity` operands, where every
     # primitive costs a `quax` trace; see the note in `coordinax._src.utils`.
@@ -978,8 +971,8 @@ def pt_map(
     return canonical_containers(
         {
             "r": wrap(jnp.hypot(rho, z), unit),
-            "theta": wrap_angle(jnp.atan2(rho, z), unit),
-            "phi": wrap_angle(jnp.atan2(y, x), unit),
+            "theta": wrap_angle(jnp.atan2(rho, z), unit, usys),
+            "phi": wrap_angle(jnp.atan2(y, x), unit, usys),
         },
         to_chart,
     )
@@ -1016,7 +1009,6 @@ def pt_map(
      'phi': 0}
 
     """
-    del usys  # unused
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
     # `phi` carries an angle, so it is not part of this length-dimensioned
     # group and passes through untouched.
@@ -1035,7 +1027,7 @@ def pt_map(
     return canonical_containers(
         {
             "r": wrap(jnp.hypot(rho, z), unit),
-            "theta": wrap_angle(jnp.atan2(jnp.abs(rho), z), unit),
+            "theta": wrap_angle(jnp.atan2(jnp.abs(rho), z), unit, usys),
             "phi": p["phi"],
         },
         to_chart,
@@ -1119,9 +1111,7 @@ def pt_map(
 
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
-    lat = (
-        _RIGHT_ANGLE if isinstance(p["theta"], ABCQ) else jnp.pi / 2
-    ) - uconvert_to_rad(p["theta"], usys)
+    lat = complement_angle(p["theta"], usys)
     return canonical_containers(
         {"lon": p["phi"], "lat": lat, "distance": p["r"]}, to_chart
     )
@@ -1148,7 +1138,7 @@ def pt_map(
 
     >>> p = {"r": u.Q(1.0, "m"), "theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}
     >>> cxc.pt_map(p, cxm.R3, cxc.sph3d, cxm.R3, cxc.loncoslat_sph3d)
-    {'lon_coslat': Angle(45., 'deg'), 'lat': Angle(0., 'deg'), 'distance': Q(1., 'm')}
+    {'lon_coslat': Angle(45., 'deg'), 'lat': Angle(0, 'deg'), 'distance': Q(1., 'm')}
 
     At the north pole (theta=0), lon_coslat = 0 regardless of phi:
 
@@ -1156,14 +1146,15 @@ def pt_map(
     >>> usys = u.unitsystem("m", "deg")
     >>> cxc.pt_map(p, cxm.R3, cxc.sph3d, cxm.R3, cxc.loncoslat_sph3d, usys=usys)
     {'lon_coslat': Array(2.7554553e-15, dtype=float64, ...),
-     'lat': 1.5707963267948966, 'distance': 1.0}
+     'lat': 90.0, 'distance': 1.0}
 
     """
     check_manifolds_match_charts(from_M, from_chart, to_M, to_chart)
-    lat = (
-        _RIGHT_ANGLE if isinstance(p["theta"], ABCQ) else jnp.pi / 2
-    ) - uconvert_to_rad(p["theta"], usys)
-    lon_coslat = p["phi"] * jnp.cos(lat)
+    lat = complement_angle(p["theta"], usys)
+    # `cos` needs radians, and `lat` is in whatever unit the output carries --
+    # `usys["angle"]` on the bare path, which need not be radians.
+    lat_rad = jnp.pi / 2 - rad_value(p["theta"], usys)
+    lon_coslat = p["phi"] * jnp.cos(lat_rad)
     return canonical_containers(
         {"lon_coslat": lon_coslat, "lat": lat, "distance": p["r"]}, to_chart
     )
