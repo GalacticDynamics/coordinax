@@ -11,7 +11,6 @@ from types import ModuleType
 
 import _pytest.pathlib as pytest_pathlib
 import pytest
-import sybil.document as sybil_document
 import sybil.python as sybil_python
 from hypothesis import HealthCheck, Phase, settings
 from sybil import Document, Lexeme, Region, Sybil, document as sybil_document
@@ -332,12 +331,13 @@ def pytest_collection_modifyitems(
     later examples raise `NameError` for names its earlier ones defined -- but
     it reads as a test bug rather than a scheduling one, so: keep ``tryfirst``.
 
-    The group key is the document's path relative to the rootdir: stable across
-    machines, and readable in the nodeid it gets appended to.
+    The group key is the document's path relative to the rootdir, in POSIX form
+    so that it is identical on Windows, where `str` on a `Path` would otherwise
+    yield backslashes. It is readable in the nodeid it gets appended to.
     """
     root = config.rootpath
     for item in items:
         if isinstance(item, SybilItem):
             path = item.path
             key = path.relative_to(root) if path.is_relative_to(root) else path
-            item.add_marker(pytest.mark.xdist_group(str(key)))
+            item.add_marker(pytest.mark.xdist_group(key.as_posix()))
