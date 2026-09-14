@@ -115,6 +115,10 @@ def convert_vector_to_astropy(obj: cxv.Point, /) -> apyc.BaseRepresentation:
         return sph_to_apysph(obj)
     if obj.chart == cxc.lonlat_sph3d:
         return lonlatsph_to_apysph(obj)
+    if obj.chart == cxc.lonlat_sph2:
+        return lonlatsph2_to_apyunitsph(obj)
+    if obj.chart == cxc.radial1d:
+        return radial_to_apyradial(obj)
 
     msg = f"Cannot convert vector with chart {obj.chart} to an Astropy representation."
     raise ValueError(msg)
@@ -323,6 +327,122 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cxv.Point:
     >>> print(convert(sph, cxv.Point))
     <Point: chart=LonLatSpherical3D (lon[deg], lat[deg], distance[km])
         [2. 3. 1.]>
+
+    """
+    return cxv.Point.from_(obj)  # ty: ignore[invalid-return-type]
+
+
+# =====================================
+# LonLatSphericalTwoSphere
+
+
+@plum.conversion_method(cxv.Point, apyc.UnitSphericalRepresentation)
+def lonlatsph2_to_apyunitsph(
+    obj: cxv.Point[cxc.LonLatSphericalTwoSphere, Any], /
+) -> apyc.UnitSphericalRepresentation:
+    """`coordinax.LonLatSphericalTwoSphere` -> `astropy.UnitSphericalRepresentation`.
+
+    >>> import unxt as u
+    >>> import coordinax.vectors as cxv
+
+    >>> vec = cxv.Point.from_({"lon": u.Q(1, "deg"), "lat": u.Q(2, "deg")},
+    ...                       cxc.lonlat_sph2)
+    >>> convert(vec, apyc.UnitSphericalRepresentation)
+    <UnitSphericalRepresentation (lon, lat) in deg
+        (1., 2.)>
+
+    Unlike the 3D charts this does not convert a point in some other chart:
+    every other chart holds a coordinate the two-sphere has no room for, and
+    dropping one is a projection off the manifold rather than a change of
+    coordinates.
+
+    >>> vec = cxv.Point.from_({"lon": u.Q(1, "deg"), "lat": u.Q(2, "deg"),
+    ...                        "distance": u.Q(3, "km")}, cxc.lonlat_sph3d)
+    >>> try:
+    ...     convert(vec, apyc.UnitSphericalRepresentation)
+    ... except ValueError as e:
+    ...     print(str(e).split(";")[0])
+    Point -> UnitSphericalRepresentation conversion requires the two-sphere chart
+
+    """
+    obj = check_semantics(obj, need=cxr.Location)
+    if obj.chart != cxc.lonlat_sph2:
+        msg = (
+            "Point -> UnitSphericalRepresentation conversion requires the "
+            f"two-sphere chart; got {obj.chart!r}. Every other chart holds "
+            "something this representation has no room for, so reaching it "
+            "means discarding a coordinate rather than renaming one. A "
+            "`lonlat_sph3d` point converts to "
+            "`astropy.coordinates.SphericalRepresentation` instead."
+        )
+        raise ValueError(msg)
+
+    return apyc.UnitSphericalRepresentation(
+        lon=plum.convert(obj["lon"], apyu.Quantity),
+        lat=plum.convert(obj["lat"], apyu.Quantity),
+    )
+
+
+@plum.conversion_method(apyc.UnitSphericalRepresentation, cxv.Point)
+def apyunitsph_to_lonlatsph2(obj: apyc.UnitSphericalRepresentation, /) -> cxv.Point:
+    """`astropy.UnitSphericalRepresentation` -> `coordinax.LonLatSphericalTwoSphere`.
+
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vectors as cxv
+
+    >>> sph = apyc.UnitSphericalRepresentation(lon=2 * apyu.deg, lat=3 * apyu.deg)
+    >>> print(convert(sph, cxv.Point))
+    <Point: chart=LonLatSphericalTwoSphere (lon, lat) [deg]
+        [2. 3.]>
+
+    """
+    return cxv.Point.from_(obj)  # ty: ignore[invalid-return-type]
+
+
+# =====================================
+# Radial1D
+
+
+@plum.conversion_method(cxv.Point, apyc.RadialRepresentation)
+def radial_to_apyradial(
+    obj: cxv.Point[cxc.Radial1D, Any], /
+) -> apyc.RadialRepresentation:
+    """`coordinax.Radial1D` -> `astropy.RadialRepresentation`.
+
+    >>> import unxt as u
+    >>> import coordinax.vectors as cxv
+
+    >>> vec = cxv.Point.from_({"r": u.Q(3, "km")}, cxc.radial1d)
+    >>> convert(vec, apyc.RadialRepresentation)
+    <RadialRepresentation (distance) in km
+        (3.,)>
+
+    """
+    obj = check_semantics(obj, need=cxr.Location)
+    if obj.chart != cxc.radial1d:
+        msg = (
+            "Point -> RadialRepresentation conversion requires the radial "
+            f"chart; got {obj.chart!r}. Every other chart carries a direction "
+            "this representation has no room for, so reaching it means "
+            "discarding that direction rather than renaming a coordinate."
+        )
+        raise ValueError(msg)
+
+    return apyc.RadialRepresentation(distance=plum.convert(obj["r"], apyu.Quantity))
+
+
+@plum.conversion_method(apyc.RadialRepresentation, cxv.Point)
+def apyradial_to_radial(obj: apyc.RadialRepresentation, /) -> cxv.Point:
+    """`astropy.RadialRepresentation` -> `coordinax.Radial1D`.
+
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vectors as cxv
+
+    >>> print(convert(apyc.RadialRepresentation(distance=1 * apyu.km), cxv.Point))
+    <Point: chart=Radial1D (r) [km]
+        [1.]>
 
     """
     return cxv.Point.from_(obj)  # ty: ignore[invalid-return-type]

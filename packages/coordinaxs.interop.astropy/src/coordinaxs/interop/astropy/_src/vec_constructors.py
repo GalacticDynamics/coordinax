@@ -104,6 +104,49 @@ def from_astropy_spherical_representation(
     return cls(data, cxc.lonlat_sph3d, frame=cxf.noframe)
 
 
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_astropy_unit_spherical_representation(
+    cls: type[cxv.Point], obj: apyc.UnitSphericalRepresentation, /
+) -> cxv.Point:
+    """Construct Point from Astropy UnitSphericalRepresentation.
+
+    A direction with no distance, so the point lives on the two-sphere rather
+    than in R^3.
+
+    >>> import coordinax.vectors as cxv
+    >>> from astropy.coordinates import UnitSphericalRepresentation
+    >>> import astropy.units as apyu
+
+    >>> vec = UnitSphericalRepresentation(lon=90 * apyu.deg, lat=45 * apyu.deg)
+    >>> cxv.Point.from_(vec)
+    Point(
+      {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg')},
+      chart=LonLatSphericalTwoSphere(M=Sn(2))
+    )
+
+    """
+    data = cxc.cdict(obj)
+    return cls(data, cxc.lonlat_sph2, frame=cxf.noframe)
+
+
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_astropy_radial_representation(
+    cls: type[cxv.Point], obj: apyc.RadialRepresentation, /
+) -> cxv.Point:
+    """Construct Point from Astropy RadialRepresentation.
+
+    >>> import coordinax.vectors as cxv
+    >>> from astropy.coordinates import RadialRepresentation
+    >>> import astropy.units as apyu
+
+    >>> cxv.Point.from_(RadialRepresentation(distance=1 * apyu.kpc))
+    Point({'r': Q(1., 'kpc')}, chart=Radial1D(M=Rn(1)))
+
+    """
+    data = cxc.cdict(obj)
+    return cls(data, cxc.radial1d, frame=cxf.noframe)
+
+
 ##############################################################################
 # Astropy Data-ful Frames -> Coordinax Point
 
