@@ -32,7 +32,7 @@ def resolve_entrypoints_with_legacy(
             f"'{group}' instead. Support for the legacy group will be removed "
             "in a future release.",
             DeprecationWarning,
-            stacklevel=3,
+            stacklevel=4,
         )
     return sorted(current + legacy, key=lambda ep: ep.name)
 
