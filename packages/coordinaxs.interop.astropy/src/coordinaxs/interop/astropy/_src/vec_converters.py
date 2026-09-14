@@ -6,7 +6,7 @@ __all__: tuple[str, ...] = ()
 
 
 from jaxtyping import Shaped
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
@@ -360,6 +360,165 @@ def tangent_to_apycartdiff(obj: cxv.Tangent, /) -> apyc.CartesianDifferential:
         d_y=plum.convert(obj["y"], apyu.Quantity),
         d_z=plum.convert(obj["z"], apyu.Quantity),
     )
+
+
+def _require_chart(obj: cxv.Tangent, chart: object, target: str, /) -> cxv.Tangent:
+    """Refuse a tangent that is not already in the chart the target implies.
+
+    The positional converters `cconvert` a mismatched chart themselves. A
+    tangent cannot: pushing one between charts needs the base point it sits
+    at, and a conversion method is handed only the vector. So this reports
+    what to do rather than guessing a point.
+    """
+    obj = check_semantics(obj, need=cxr.Velocity)
+    if obj.chart != chart:
+        msg = (
+            f"Tangent -> {target} conversion requires the {chart!r} chart; "
+            f"got {obj.chart!r}. Convert with `cconvert` (supplying `at=`) "
+            "first -- a tangent needs its base point to change chart."
+        )
+        raise ValueError(msg)
+    return obj
+
+
+# =====================================
+# Spherical velocity (Tangent <-> SphericalDifferential)
+#
+# The lon/lon_coslat convention lives in the *chart*, so each converter is a
+# relabeling: `lonlat_sph3d` carries d_lon, `loncoslat_sph3d` carries
+# d_lon_coslat, and the cos(lat) factor between them is `cconvert`'s business,
+# not this module's.
+
+
+@plum.conversion_method(cxv.Tangent, apyc.SphericalDifferential)
+def tangent_to_apysphdiff(obj: cxv.Tangent, /) -> apyc.SphericalDifferential:
+    """`coordinax.Tangent` (lon/lat velocity) -> `astropy.SphericalDifferential`.
+
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.vectors as cxv
+
+    >>> vel = cxv.Tangent.from_(
+    ...     {"lon": u.Q(1.0, "mas/yr"), "lat": u.Q(2.0, "mas/yr"),
+    ...      "distance": u.Q(3.0, "km/s")}, cxc.lonlat_sph3d)
+    >>> convert(vel, apyc.SphericalDifferential)
+    <SphericalDifferential (d_lon, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
+        (1., 2., 3.)>
+
+    """
+    obj = _require_chart(obj, cxc.lonlat_sph3d, "SphericalDifferential")
+    return apyc.SphericalDifferential(
+        d_lon=plum.convert(obj["lon"], apyu.Quantity),
+        d_lat=plum.convert(obj["lat"], apyu.Quantity),
+        d_distance=plum.convert(obj["distance"], apyu.Quantity),
+    )
+
+
+@plum.conversion_method(apyc.SphericalDifferential, cxv.Tangent)
+def apysphdiff_to_tangent(obj: apyc.SphericalDifferential, /) -> cxv.Tangent:
+    """`astropy.SphericalDifferential` -> `coordinax.Tangent` (lon/lat velocity).
+
+    >>> from plum import convert
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vectors as cxv
+
+    >>> dif = apyc.SphericalDifferential(
+    ...     d_lon=1.0 * apyu.mas / apyu.yr,
+    ...     d_lat=2.0 * apyu.mas / apyu.yr,
+    ...     d_distance=3.0 * apyu.km / apyu.s,
+    ... )
+    >>> convert(dif, cxv.Tangent).chart.components
+    ('lon', 'lat', 'distance')
+
+    """
+    data = {
+        "lon": plum.convert(obj.d_lon, u.Q),  # ty: ignore[unresolved-attribute]
+        "lat": plum.convert(obj.d_lat, u.Q),  # ty: ignore[unresolved-attribute]
+        "distance": plum.convert(obj.d_distance, u.Q),  # ty: ignore[unresolved-attribute]
+    }
+    return cxv.Tangent(data, cxc.lonlat_sph3d, basis=cxr.coord_basis, semantic=cxr.vel)
+
+
+# =====================================
+# Spherical velocity, cos(lat)-carrying
+#
+# Deliberately refused rather than converted. `SphericalCosLatDifferential` is
+# a *rate* convention -- d_lon_coslat = cos(lat) * d_lon -- sitting on an
+# ordinary (lon, lat, distance) base. `~coordinax.charts.loncoslat_sph3d` is
+# something else: a chart whose first *coordinate* is lon * cos(lat), so a
+# tangent in it carries
+#
+#     d/dt(lon cos lat) = cos(lat) d_lon - lon sin(lat) d_lat
+#
+# The two agree only where `lon sin(lat) d_lat` vanishes, e.g. on the equator.
+# Matching them by component name would look right and be wrong by a term that
+# grows toward the poles -- at lat = 85 deg, lon = 10 deg it flips the sign.
+#
+# Converting between them needs the base point's latitude, which a conversion
+# method is not given; astropy requires a `base=` for the same reason. So each
+# direction says that instead of guessing.
+
+_COSLAT_MSG = (
+    "astropy's {apy} is a rate convention (d_lon_coslat = cos(lat) * d_lon) on "
+    "an ordinary (lon, lat, distance) base, whereas coordinax's "
+    "`loncoslat_sph3d` is a chart whose coordinate is lon * cos(lat); a tangent "
+    "in it carries the extra `- lon sin(lat) d_lat`. Converting between them "
+    "needs the base point's latitude, which a conversion method is not given -- "
+    "astropy asks for a `base=` for the same reason. Call "
+    "`.represent_as(SphericalDifferential, base=...)` on the differential and "
+    "convert the result, or convert the coordinax tangent with "
+    "`cconvert(..., at=)`."
+)
+
+
+@plum.conversion_method(cxv.Tangent, apyc.SphericalCosLatDifferential)
+def tangent_to_apysphcoslatdiff(obj: cxv.Tangent, /) -> NoReturn:
+    """Refuse: the cos(lat) convention is base-dependent.
+
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.vectors as cxv
+
+    >>> vel = cxv.Tangent.from_(
+    ...     {"lon_coslat": u.Q(1.0, "mas/yr"), "lat": u.Q(2.0, "mas/yr"),
+    ...      "distance": u.Q(3.0, "km/s")}, cxc.loncoslat_sph3d)
+    >>> try:
+    ...     convert(vel, apyc.SphericalCosLatDifferential)
+    ... except ValueError as e:
+    ...     print("rate convention" in str(e))
+    True
+
+    """
+    del obj
+    raise ValueError(_COSLAT_MSG.format(apy="SphericalCosLatDifferential"))
+
+
+@plum.conversion_method(apyc.SphericalCosLatDifferential, cxv.Tangent)
+def apysphcoslatdiff_to_tangent(obj: apyc.SphericalCosLatDifferential, /) -> NoReturn:
+    """Refuse: the cos(lat) convention is base-dependent.
+
+    >>> from plum import convert
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vectors as cxv
+
+    >>> dif = apyc.SphericalCosLatDifferential(
+    ...     d_lon_coslat=1.0 * apyu.mas / apyu.yr,
+    ...     d_lat=2.0 * apyu.mas / apyu.yr,
+    ...     d_distance=3.0 * apyu.km / apyu.s,
+    ... )
+    >>> try:
+    ...     convert(dif, cxv.Tangent)
+    ... except ValueError as e:
+    ...     print("needs the base point" in str(e))
+    True
+
+    """
+    del obj
+    raise ValueError(_COSLAT_MSG.format(apy="SphericalCosLatDifferential"))
 
 
 @plum.conversion_method(apyc.CartesianDifferential, cxv.Tangent)
