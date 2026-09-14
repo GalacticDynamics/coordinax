@@ -47,11 +47,17 @@ def nearest_tau(
     one seed spacing either side of it*: the argmin is within one spacing of
     the true minimiser **provided ``n_seed`` resolves the curve** -- it is an
     assumption on the scan, not a guarantee, and a curve that wiggles faster
-    than the spacing breaks it. The residual
-    $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})$ equals
-    $-\|\gamma'\|^{-1}\,d/d\tau(\tfrac12\mathrm{dist}^2)$, which crosses from
+    than the spacing breaks it. The residual handed to the
+    solvers is $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})\,/\,\|\gamma'\|$,
+    which for a regular curve equals
+    $-\|\gamma'\|^{-2}\,d/d\tau(\tfrac12\mathrm{dist}^2)$. It crosses from
     positive to negative across a genuine minimum, so that bracket is
     well-posed for bisection and cannot land on the maximum next door.
+
+    The division by the speed leaves the root and its sign untouched -- it is
+    there so the residual is measured in $\tau$ rather than in whatever length
+    the ambient point carries, since ``atol`` is compared against both. Without
+    it the same geometry converged differently in km and in m.
 
     ``bounds`` must have non-zero width. A zero-width one makes the seed
     spacing zero, and the bracketed solve's ``expand_if_necessary`` grows a
