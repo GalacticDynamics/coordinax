@@ -35,6 +35,16 @@ class TestSkyPositionWithoutDistance:
         assert point.chart == cxc.lonlat_sph2
         assert plum.convert(point.frame, apyc.BaseCoordinateFrame).name == "icrs"
 
+    def test_a_cdict_converts_straight_to_the_representation(self):
+        """`test_ptmap_cdict.py` is a 3D cross-chart table; these two are not."""
+        rep = plum.convert(
+            {"lon": u.Q(45.0, "deg"), "lat": u.Q(30.0, "deg")},
+            apyc.UnitSphericalRepresentation,
+        )
+        assert rep.lon.to_value("deg") == pytest.approx(45.0)
+        assert rep.lat.to_value("deg") == pytest.approx(30.0)
+        assert cxc.cdict(rep).keys() == {"lon", "lat"}
+
     def test_the_representation_round_trips(self):
         rep = apyc.UnitSphericalRepresentation(lon=2.0 * apyu.deg, lat=3.0 * apyu.deg)
         back = plum.convert(plum.convert(rep, cx.Point), apyc.BaseRepresentation)
@@ -64,6 +74,11 @@ class TestDistanceWithoutDirection:
         data = cxc.cdict(apyc.RadialRepresentation(distance=1.0 * apyu.kpc))
         assert list(data) == ["r"]
         assert np.allclose(data["r"].ustrip("kpc"), 1.0)
+
+    def test_a_cdict_converts_straight_to_the_representation(self):
+        rep = plum.convert({"r": u.Q(2.0, "kpc")}, apyc.RadialRepresentation)
+        assert rep.distance.to_value("kpc") == pytest.approx(2.0)
+        assert np.allclose(cxc.cdict(rep)["r"].ustrip("kpc"), 2.0)
 
     def test_a_representation_round_trips(self):
         rep = apyc.RadialRepresentation(distance=1.0 * apyu.kpc)

@@ -351,9 +351,10 @@ def lonlatsph2_to_apyunitsph(
     <UnitSphericalRepresentation (lon, lat) in deg
         (1., 2.)>
 
-    Unlike the 3D charts this does not convert a point that is somewhere else:
-    dropping the distance is a projection off the manifold, not a change of
-    coordinates, so it has to be asked for explicitly.
+    Unlike the 3D charts this does not convert a point in some other chart:
+    every other chart holds a coordinate the two-sphere has no room for, and
+    dropping one is a projection off the manifold rather than a change of
+    coordinates.
 
     >>> vec = cxv.Point.from_({"lon": u.Q(1, "deg"), "lat": u.Q(2, "deg"),
     ...                        "distance": u.Q(3, "km")}, cxc.lonlat_sph3d)
@@ -368,8 +369,11 @@ def lonlatsph2_to_apyunitsph(
     if obj.chart != cxc.lonlat_sph2:
         msg = (
             "Point -> UnitSphericalRepresentation conversion requires the "
-            f"two-sphere chart; got {obj.chart!r}. A distance-carrying point "
-            "converts to `astropy.coordinates.SphericalRepresentation` instead."
+            f"two-sphere chart; got {obj.chart!r}. Every other chart holds "
+            "something this representation has no room for, so reaching it "
+            "means discarding a coordinate rather than renaming one. A "
+            "`lonlat_sph3d` point converts to "
+            "`astropy.coordinates.SphericalRepresentation` instead."
         )
         raise ValueError(msg)
 
@@ -419,8 +423,9 @@ def radial_to_apyradial(
     if obj.chart != cxc.radial1d:
         msg = (
             "Point -> RadialRepresentation conversion requires the radial "
-            f"chart; got {obj.chart!r}. Keeping only the radius of a 3D point "
-            "discards the direction, so it has to be asked for explicitly."
+            f"chart; got {obj.chart!r}. Every other chart carries a direction "
+            "this representation has no room for, so reaching it means "
+            "discarding that direction rather than renaming a coordinate."
         )
         raise ValueError(msg)
 
