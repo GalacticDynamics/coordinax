@@ -38,10 +38,23 @@ def _family(curve):
     )
 
 
-def test_a_material_labelling_shows_the_tube_stretching() -> None:
+@pytest.fixture(scope="module")
+def k_deforming() -> np.ndarray:
+    """`K_ij` for the deforming curve -- asserted about from two directions.
+
+    A `jacfwd` through a diffrax solve, and the same tensor both times, so a
+    worker computes it once rather than per test.
+    """
+    return np.asarray(
+        cxfc.rate_of_strain(_family(stretch_and_bend), POINT, u.Q(T0, "s")).value
+    )
+
+
+def test_a_material_labelling_shows_the_tube_stretching(
+    k_deforming: np.ndarray,
+) -> None:
     """The curve genuinely deforms, so the rate of strain is non-zero."""
-    k = cxfc.rate_of_strain(_family(stretch_and_bend), POINT, u.Q(T0, "s"))
-    assert np.asarray(k.value)[0, 0] == pytest.approx(0.77937, abs=1e-4)
+    assert k_deforming[0, 0] == pytest.approx(0.77937, abs=1e-4)
 
 
 def test_arc_length_holds_the_metric_so_its_strain_is_near_zero() -> None:
@@ -58,12 +71,9 @@ def test_arc_length_holds_the_metric_so_its_strain_is_near_zero() -> None:
     assert np.asarray(k.value)[0, 0] == pytest.approx(-0.00548, abs=1e-4)
 
 
-def test_it_is_symmetric() -> None:
+def test_it_is_symmetric(k_deforming: np.ndarray) -> None:
     """`K_ij` is a symmetric 2-tensor, being a derivative of one."""
-    k = np.asarray(
-        cxfc.rate_of_strain(_family(stretch_and_bend), POINT, u.Q(T0, "s")).value
-    )
-    assert np.allclose(k, k.T, atol=1e-6)
+    assert np.allclose(k_deforming, k_deforming.T, atol=1e-6)
 
 
 def test_a_static_curve_does_not_deform() -> None:
