@@ -330,3 +330,81 @@ class TestTheCosLatConventionIsNotTheCosLatChart:
             float(np.asarray(got["lon"].ustrip("mas/yr"))),
             1.0 / np.cos(np.radians(60.0)),
         )
+
+
+class TestVelocityOnAstropyFramesAndSkyCoords:
+    """`Point.from_` takes the position; `Tangent.from_` takes the velocity.
+
+    An astropy frame holds both in one object. Converting one to a `Point`
+    therefore leaves the velocity behind, and `Tangent.from_` is how it is
+    picked up.
+    """
+
+    @staticmethod
+    def galactocentric_with_velocity() -> apyc.Galactocentric:
+        return apyc.Galactocentric(
+            x=1.0 * apyu.kpc,
+            y=2.0 * apyu.kpc,
+            z=3.0 * apyu.kpc,
+            v_x=4.0 * apyu.km / apyu.s,
+            v_y=5.0 * apyu.km / apyu.s,
+            v_z=6.0 * apyu.km / apyu.s,
+        )
+
+    def test_point_takes_the_position(self):
+        point = cx.Point.from_(self.galactocentric_with_velocity())
+        assert sorted(point.data) == ["x", "y", "z"]
+        assert np.allclose(point["x"].ustrip("kpc"), 1.0)
+
+    def test_tangent_takes_the_velocity(self):
+        vel = cx.Tangent.from_(self.galactocentric_with_velocity())
+        assert vel.chart == cxc.cart3d
+        assert np.allclose(
+            [float(np.asarray(vel[k].ustrip("km/s"))) for k in ("x", "y", "z")],
+            [4.0, 5.0, 6.0],
+        )
+
+    def test_angular_rates_come_across(self):
+        frame = apyc.ICRS(
+            ra=90.0 * apyu.deg,
+            dec=45.0 * apyu.deg,
+            distance=1.0 * apyu.kpc,
+            pm_ra=3.0 * apyu.mas / apyu.yr,
+            pm_dec=2.0 * apyu.mas / apyu.yr,
+            radial_velocity=10.0 * apyu.km / apyu.s,
+            differential_type=apyc.SphericalDifferential,
+        )
+        vel = cx.Tangent.from_(frame)
+        assert vel.chart == cxc.lonlat_sph3d
+        assert np.allclose(vel["lon"].ustrip("mas/yr"), 3.0)
+
+    def test_a_frame_without_velocity_says_so(self):
+        frame = apyc.ICRS(ra=1.0 * apyu.deg, dec=2.0 * apyu.deg)
+        with pytest.raises(ValueError, match="carries no velocity"):
+            cx.Tangent.from_(frame)
+
+    def test_a_skycoord_velocity_comes_across(self):
+        sc = apyc.SkyCoord(
+            x=1.0 * apyu.kpc,
+            y=2.0 * apyu.kpc,
+            z=3.0 * apyu.kpc,
+            v_x=4.0 * apyu.km / apyu.s,
+            v_y=5.0 * apyu.km / apyu.s,
+            v_z=6.0 * apyu.km / apyu.s,
+            representation_type="cartesian",
+            differential_type="cartesian",
+        )
+        assert np.allclose(cx.Tangent.from_(sc)["x"].ustrip("km/s"), 4.0)
+
+    def test_the_skycoord_default_proper_motion_convention_is_refused(self):
+        """A `SkyCoord`'s default is the cos(lat)-scaled form, which has no chart."""
+        sc = apyc.SkyCoord(
+            ra=90.0 * apyu.deg,
+            dec=45.0 * apyu.deg,
+            distance=1.0 * apyu.kpc,
+            pm_ra_cosdec=3.0 * apyu.mas / apyu.yr,
+            pm_dec=2.0 * apyu.mas / apyu.yr,
+            radial_velocity=10.0 * apyu.km / apyu.s,
+        )
+        with pytest.raises(ValueError, match="rate convention"):
+            cx.Tangent.from_(sc)
