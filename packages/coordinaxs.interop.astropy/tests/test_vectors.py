@@ -246,6 +246,12 @@ class TestVelocityConversion:
         with pytest.raises(ValueError, match="cconvert"):
             plum.convert(vel, apyc.CartesianDifferential)
 
+    def test_a_non_lonlat_chart_is_refused_with_advice(self):
+        """The spherical converter refuses the same way the Cartesian one does."""
+        vel = cx.Tangent.from_(self.CART, cxc.cart3d)
+        with pytest.raises(ValueError, match="cconvert"):
+            plum.convert(vel, apyc.SphericalDifferential)
+
     def test_an_acceleration_is_refused(self):
         acc = cx.Tangent.from_({k: u.Q(1.0, "km/s2") for k in "xyz"}, cxc.cart3d)
         with pytest.raises(TypeError, match="Velocity"):
@@ -330,6 +336,12 @@ class TestTheCosLatConventionIsNotTheCosLatChart:
             float(np.asarray(got["lon"].ustrip("mas/yr"))),
             1.0 / np.cos(np.radians(60.0)),
         )
+
+
+def test_point_from_a_frame_without_data_names_that_frame() -> None:
+    """Not "ICRS" whatever it was handed."""
+    with pytest.raises(ValueError, match="Galactic frame has no data"):
+        cx.Point.from_(apyc.Galactic())
 
 
 class TestVelocityOnAstropyFramesAndSkyCoords:
