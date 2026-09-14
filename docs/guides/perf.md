@@ -40,44 +40,44 @@ def optimized_function(*arrays: Array):
 
 ## What Eager Costs, and Why
 
-The guide above teaches jitting. It is worth saying plainly what you pay if you do not, because the number is larger than most people expect.
+The guide above teaches jitting. It is worth saying plainly what you pay if you do not.
 
-One `pt_map` from `sph3d` to `cart3d`, at a single point. The quantity column has moved twice since it was first measured -- once when the numerics were conditioned, once when the body stopped computing on `Quantity` operands:
+One `pt_map` from `sph3d` to `cart3d`, at a single point:
 
-| call | eager, first measured | eager, now | jitted, reused |
-| --- | --- | --- | --- |
-| `dict[str, Quantity]` | 3650 us | ~700 us | 23.0 us |
-| `dict[str, Array]` + `usys=` | 179 us | ~166 us | 10.4 us |
+| call                         | eager  | jitted, reused |
+| ---------------------------- | ------ | -------------- |
+| `dict[str, Quantity]`        | 686 us | 21.2 us        |
+| `dict[str, Array]` + `usys=` | 170 us | 13.8 us        |
+
+That quantity column used to read 3650 us. The difference is not a faster `unxt`: it is that the transition bodies no longer do their arithmetic **on** `Quantity` operands.
+
+**Why that mattered so much.** `quax` builds and evaluates a separate jaxpr for every primitive whose operand is a `Quantity`. Eagerly, one primitive costs ~4 us on a raw array against 120-820 us on a `Quantity`, so a transition's cost was simply the sum of its operations -- `Quantity ** 2` 120 us, `+` 198 us, `/` 229 us, `== 0` 444 us, `atan2` 617 us. Taking the reverse map as a worked example, since it was the most expensive: `Cart3D -> Spherical3D` spent ~2900 us of its ~3500 us there.
+
+The bodies now resolve their units once on the way in, compute on raw arrays, and re-attach once on the way out. Same numbers -- the conversions are checked point-by-point against the previous implementation -- and, on the `Quantity` route, a fraction of the dispatches. The raw-array route rises slightly instead: `strip` probes `unit_of` even on values that turn out to have none. Counting calls to `plum`-dispatched functions for one eager call, before and after:
+
+| route                        | calls, before | now | of which `pt_map` |
+| ---------------------------- | ------------- | --- | ----------------- |
+| `dict[str, Quantity]`        | 178           | 45  | 2                 |
+| `dict[str, Array]` + `usys=` | 17            | 19  | 2                 |
 
 Two things follow.
 
-**Raw arrays are still cheaper than quantities, before jit is involved, though much less dramatically than they were.** Both routes compute the identical numbers -- bit for bit -- so if a pipeline is already carrying bare arrays, handing them straight to `pt_map` with an explicit `usys=` avoids the wrapper entirely. Under jit the gap narrows but does not close: 10.4 us against 23.0 us.
+**Raw arrays are still cheaper eagerly, but by ~4x rather than the 20x this guide once reported.** Both routes compute identical numbers, bit for bit, so a pipeline already carrying bare arrays should still hand them straight to `pt_map` with an explicit `usys=`. It is no longer worth restructuring a pipeline around.
 
-**Most of that overhead was `coordinax`'s to remove, and much of it is now gone.** Counting calls to `plum`-dispatched functions for one eager `sph3d -> cart3d`, before and after the transition bodies stopped computing on `Quantity` operands -- calls rather than distinct resolutions, so a cache hit still counts:
+**What remains is mostly not `coordinax`'s to remove.** Of the 45 dispatches left, 2 are `pt_map`; the rest are `unxt` resolving `convert`, `ustrip` and `unit_of` at the boundary -- resolving the units, not computing with them. Pre-resolving with `plum`'s `Function.invoke` is therefore not the lever it looks like: it removes 2 of 45 and measures 1.01x. It pays where a hot loop repeatedly re-resolves _its own_ call, which is why `norm` keeps a module-level `array_norm = norm.invoke(Array, Array)`.
 
-| route                        | calls, before | after | of which `pt_map` |
-| ---------------------------- | ------------- | ----- | ----------------- |
-| `dict[str, Quantity]`        | 178           | 45    | 2                 |
-| `dict[str, Array]` + `usys=` | 17            | 23    | 2                 |
-
-The 176 non-`pt_map` calls were `unxt` and `quax` resolving arithmetic on `Quantity` operands -- `convert`, `unit`, `ustrip`, roughly one set per primitive operation. That looked inherent to eager unit-aware arithmetic, but it was not: it followed from each transition body doing its arithmetic _on_ `Quantity` operands. Bodies that instead resolve their units once, compute on raw arrays, and re-attach at the end produce identical output for a fraction of the dispatches, and the same `sph3d -> cart3d` call went from ~2890 us to ~700 us.
-
-The gap between the two routes therefore no longer looks the way the table below records it, and it is still closing as the remaining bodies are converted. The advice that follows -- batch, jit, build closures once, keep pytree conversions off the boundary -- is unaffected: it is about crossing the jit boundary, not about units.
-
-Pre-resolving the dispatch with `plum`'s `Function.invoke` is therefore not the lever it looks like here: it removes 2 dispatched calls of 178, and measures 1.05x. It pays where a hot loop repeatedly re-resolves _its own_ call, which is why `norm` keeps a module-level `array_norm = norm.invoke(Array, Array)`.
-
-**Dispatch is per call, not per element.** Batched and jitted, the routes converge -- at 10,000 points, all of them land within a few percent of each other:
+**Dispatch is per call, not per element.** Batched and jitted, the routes converge -- at 10,000 points they land within a few percent of each other:
 
 | route, N = 10,000, jitted            | per point |
 | ------------------------------------ | --------- |
-| `dict[str, Array]`, broadcast        | 24.3 ns   |
-| `dict[str, Quantity]`, broadcast     | 23.5 ns   |
-| `dict[str, Array]`, `jit(vmap(...))` | 22.0 ns   |
+| `dict[str, Array]`, broadcast        | 22.3 ns   |
+| `dict[str, Quantity]`, broadcast     | 23.7 ns   |
+| `dict[str, Array]`, `jit(vmap(...))` | 22.1 ns   |
 
-So the figure is a statement about _many small eager calls_, not about throughput. Batch, and it disappears; stay eager and per-point, and the route still matters -- by a few-fold now rather than the 20x it once was.
+So the eager figure is a statement about _many small calls_, not about throughput. Batch, and it disappears; stay eager and per-point, and the route is worth a few-fold.
 
 ```{note}
-The eager timings above were measured against `plum` as it stands today, where several functions on this path -- `ustrip`, `uconvert`, `dimension_of` -- carry signatures that are not _faithful_ (`Literal`, `Mapping[...]`, `type[...]`) and so run with their method cache disabled. [plum#290](https://github.com/beartype/plum/issues/290) proposes separating `is_cacheable` from `is_faithful`, which would let exactly those signatures be cached. Expect the `Quantity` column to improve when that lands; the shape of the advice -- batch, jit, and prefer raw arrays at the boundary -- does not depend on it.
+The remaining eager cost is dominated by `plum` resolutions on `unxt`'s boundary functions -- `ustrip`, `uconvert`, `dimension_of` -- which carry signatures that are not _faithful_ (`Literal`, `Mapping[...]`, `type[...]`) and so run with their method cache disabled. [plum#290](https://github.com/beartype/plum/issues/290) proposes separating `is_cacheable` from `is_faithful`, which would let exactly those signatures be cached. `coordinax` calls those functions rather than reaching past them for this reason: the improvement arrives without any change here. Expect the `Quantity` column to narrow further when it lands; none of the advice above depends on it.
 ```
 
 ## Coordinate Changes
