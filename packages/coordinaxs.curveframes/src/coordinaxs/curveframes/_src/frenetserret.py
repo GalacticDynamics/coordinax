@@ -39,7 +39,8 @@ _MSG_ZERO_CURVATURE = (
     "the Frenet--Serret frame is undefined where the curvature vanishes: the "
     "normal direction is not determined, and the triad would be all-NaN. That "
     "is every straight segment and every inflection, not an edge case. Use "
-    "`BishopBuilder`, which is defined there."
+    "`BishopBuilder` instead: its rotation-minimising frame stays defined "
+    "where the curvature vanishes."
 )
 
 
