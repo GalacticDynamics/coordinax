@@ -177,6 +177,13 @@ def nearest_tau(
     # the norm below removes the sign.
     d_offset = jax.jacfwd(offset)
 
+    # A characteristic length-per-tau for the problem, used only where the local
+    # speed vanishes. The scan's spread of distances is a length and `hi - lo` a
+    # tau, so the ratio has the units the residual needs. Floored so a query
+    # sitting exactly on the curve cannot make it zero in turn.
+    _extent = jnp.sqrt(jnp.max(scan)) - jnp.sqrt(jnp.min(scan))
+    _fallback_speed = jnp.where(_extent > 0, _extent, 1.0) / jnp.abs(hi - lo)
+
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
         # `tangent()`, not `rotation_matrix()[0]`: both builders override it to
@@ -200,15 +207,19 @@ def nearest_tau(
         # redefines the root and broke every worldtube round trip. The existing
         # suite caught it; the unit test added here did not.
         speed = jnp.linalg.norm(d_offset(tau_v))
-        # `speed` is zero at a stationary point of the parametrisation -- a
-        # cusp, or a worldtube station momentarily at rest. Scaling does not
-        # move the root, so falling back to the unscaled residual there is
-        # exactly the behaviour this function had before the division, rather
-        # than a new inf/NaN of its own. `T` is independently NaN at such a
-        # point (`builder.tangent` normalises a vanishing derivative), so this
-        # guard does not claim to rescue the singularity -- only to avoid
-        # adding a second one.
-        safe_speed = jnp.where(speed > 0, speed, 1.0)
+        # `speed` can be exactly zero while `T` is perfectly well defined. On a
+        # station-pinned worldtube they are different objects: `speed` is the
+        # station's velocity and `T` the slice's spatial tangent, so a station
+        # momentarily at rest zeroes the first and not the second. (A cusp
+        # zeroes both, but that case is already NaN via `builder.tangent`.)
+        #
+        # So the fallback must still be a length-per-tau, not the bare `1.0` an
+        # earlier revision used: reverting to an unscaled residual would make it
+        # a length again, reintroducing precisely the tolerance-kind ambiguity
+        # this division exists to remove, and only for the worldtube queries
+        # that need it most. `_scan_extent / (hi - lo)` is the scan's own
+        # characteristic speed, which is unit-correct by construction.
+        safe_speed = jnp.where(speed > 0, speed, _fallback_speed)
         return jnp.dot(T, offset(tau_v)) / safe_speed
 
     # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
