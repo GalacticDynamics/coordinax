@@ -54,7 +54,7 @@ class MinkowskiAtlas(AbstractAtlas):
 
     """
 
-    ndim: int = dataclasses.field(default=4, repr=False)
+    ndim: int = dataclasses.field(default=4, repr=False, init=False)
     """Dimension of Minkowski spacetime (always 4)."""
 
     _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any, Any]]]] = set()
