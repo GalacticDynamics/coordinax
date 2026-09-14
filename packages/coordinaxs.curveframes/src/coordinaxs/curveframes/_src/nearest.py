@@ -172,6 +172,11 @@ def nearest_tau(
     elif bool(degenerate):
         raise ValueError(msg_bounds)
 
+    # Hoisted: building the transform per residual evaluation costs Python and
+    # JAX overhead in a loop that runs it ~130 times. `offset`, not `-offset` --
+    # the norm below removes the sign.
+    d_offset = jax.jacfwd(offset)
+
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
         # `tangent()`, not `rotation_matrix()[0]`: both builders override it to
@@ -190,10 +195,11 @@ def nearest_tau(
         # `T` still comes from `builder.tangent`, NOT from this derivative.
         # They differ on a station-pinned worldtube, where `tau` is a time: the
         # tangent is the curve's spatial direction while the derivative is the
-        # station's velocity. Using the latter as the direction redefines the
-        # root and broke every worldtube round trip -- caught by the existing
-        # suite, not by the unit test added here.
-        speed = jnp.linalg.norm(jax.jacfwd(lambda t: -offset(t))(tau_v))
+        # station's velocity. Reusing the derivative for both -- which looks
+        # like a free saving, since it makes the `tangent` call redundant --
+        # redefines the root and broke every worldtube round trip. The existing
+        # suite caught it; the unit test added here did not.
+        speed = jnp.linalg.norm(d_offset(tau_v))
         return jnp.dot(T, offset(tau_v)) / speed
 
     # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,

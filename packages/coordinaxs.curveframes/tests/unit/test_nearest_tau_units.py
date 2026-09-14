@@ -40,8 +40,14 @@ def _solve(unit: str, scale: float) -> float:
     return float(cxfc.nearest_tau(builder, x, bounds=BOUNDS).ustrip("s"))
 
 
+#: One circle of radius 1 km, written four ways. The scales are the actual
+#: conversions, so each case really is the same geometry -- ``pc`` at 1.0 was a
+#: *different* circle and exercised no conversion factor at all.
+_KM_IN_PC = 1.0 / 3.0856775814913673e13
+
+
 @pytest.mark.parametrize(
-    ("unit", "scale"), [("km", 1.0), ("m", 1000.0), ("pc", 1.0), ("Mm", 0.001)]
+    ("unit", "scale"), [("km", 1.0), ("m", 1000.0), ("Mm", 0.001), ("pc", _KM_IN_PC)]
 )
 def test_the_answer_does_not_depend_on_the_ambient_unit(
     unit: str, scale: float
