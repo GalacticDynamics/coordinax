@@ -152,3 +152,77 @@ class TestPlanarityGuard:
         """Tolerance is sqrt(eps) ~ 1.5e-8 in f64, so a 1e-9 drift passes."""
         N = cxfc.SignedPlanarBuilder(wobble, "s").normal(u.Q(0.0, "s"))
         np.testing.assert_allclose(N.value, [-1.0, 0.0, 0.0], atol=1e-6)
+
+
+def circle_r2(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+    """Circle of radius 2 km: signed curvature 0.5 per km."""
+    t = tau.ustrip("s")
+    return u.Q(2.0 * jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+
+class TestSignedCurvature:
+    """`kappa_s` is finite at inflections and changes sign through them."""
+
+    def test_unit_circle(self) -> None:
+        """Radius 1 km, traversed CCW: kappa_s = +1 per km."""
+        k = cxfc.SignedPlanarBuilder(circle, "s").signed_curvature(u.Q(0.4, "s"))
+        np.testing.assert_allclose(k.ustrip("1/km"), 1.0, atol=1e-8)
+
+    def test_radius_scales_inversely(self) -> None:
+        """Radius 2 km: kappa_s = 0.5 per km."""
+        k = cxfc.SignedPlanarBuilder(circle_r2, "s").signed_curvature(u.Q(0.4, "s"))
+        np.testing.assert_allclose(k.ustrip("1/km"), 0.5, atol=1e-8)
+
+    def test_dimension_is_inverse_length(self) -> None:
+        k = cxfc.SignedPlanarBuilder(circle, "s").signed_curvature(u.Q(0.0, "s"))
+        assert u.dimension_of(k) == u.dimension("1/length")
+
+    def test_zero_on_a_straight_line(self) -> None:
+        k = cxfc.SignedPlanarBuilder(straight_line, "s").signed_curvature(u.Q(3.0, "s"))
+        np.testing.assert_allclose(k.ustrip("1/km"), 0.0, atol=1e-12)
+
+    @pytest.mark.parametrize(
+        ("t", "expected"), [(-1e-3, -6e-3), (0.0, 0.0), (1e-3, 6e-3)]
+    )
+    def test_passes_smoothly_through_an_inflection(
+        self, t: float, expected: float
+    ) -> None:
+        """On ``(t, t^3, 0)``: finite at the inflection, and sign-changing.
+
+        These are the values the issue's own worked table reports, which is
+        what pins the sign convention against the (negated) formula its prose
+        gives.
+        """
+        k = cxfc.SignedPlanarBuilder(cubic, "s").signed_curvature(u.Q(t, "s"))
+        assert jnp.isfinite(k.ustrip("1/km"))
+        np.testing.assert_allclose(k.ustrip("1/km"), expected, atol=1e-9)
+
+    def test_flipping_the_plane_normal_flips_the_sign(self) -> None:
+        up = cxfc.SignedPlanarBuilder(circle, "s").signed_curvature(u.Q(0.4, "s"))
+        down = cxfc.SignedPlanarBuilder(circle, "s", plane_normal=-Z).signed_curvature(
+            u.Q(0.4, "s")
+        )
+        np.testing.assert_allclose(down.ustrip("1/km"), -up.ustrip("1/km"), atol=1e-10)
+
+    def test_helix_raises(self) -> None:
+        """The planarity guard covers this accessor too, not just the triad."""
+        with pytest.raises(Exception, match="BishopBuilder"):
+            cxfc.SignedPlanarBuilder(helix, "s").signed_curvature(u.Q(0.0, "s"))
+
+    def test_dt_ds_equals_kappa_s_times_normal(self) -> None:
+        """`dT/ds = kappa_s N`: the relation that fixes the sign convention.
+
+        If this passes with the issue's stated formula it would fail; it only
+        holds for `kappa_s = (gamma' x gamma'') . n_hat / |gamma'|^3`.
+        """
+        b = cxfc.SignedPlanarBuilder(cubic, "s")
+        tau = u.Q(0.8, "s")
+
+        dT_dtau = u.experimental.jacfwd(b.tangent, units=("s",))(tau)
+        speed = jnp.linalg.norm(
+            u.experimental.jacfwd(b.curve, units=("s",))(tau).ustrip("km/s")
+        )
+        lhs = dT_dtau.ustrip("1/s") / speed  # dT/ds, per km
+
+        rhs = b.signed_curvature(tau).ustrip("1/km") * b.normal(tau).value
+        np.testing.assert_allclose(lhs, rhs, atol=1e-8)

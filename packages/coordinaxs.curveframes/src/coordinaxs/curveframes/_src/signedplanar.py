@@ -307,3 +307,57 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
 
         """
         return u.Q(self.rotation_matrix(tau)[2], "")
+
+    def signed_curvature(self, tau: Any, /) -> u.Q:
+        r"""Return the signed curvature $\kappa_s(\tau)$.
+
+        $$ \kappa_s = \frac{(\boldsymbol{\gamma}' \times
+           \boldsymbol{\gamma}'') \cdot \hat{n}}
+           {\|\boldsymbol{\gamma}'\|^3} $$
+
+        Unlike the Frenet--Serret $\kappa \ge 0$, this is signed: positive
+        where the curve turns towards $\mathbf{N}$ (left, seen from
+        $+\hat{n}$), negative where it turns away, and zero at an inflection
+        — through which it passes smoothly rather than being undefined.
+
+        The sign is fixed by $d\mathbf{T}/ds = \kappa_s \mathbf{N}$, and on a
+        counter-clockwise circle it agrees with Frenet's $\kappa$.
+
+        Returns a `Quantity` of dimension 1/length.  This is the only
+        curvature accessor in the package; `FrenetSerretBuilder` has none.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        A cubic, at and around its inflection:
+
+        >>> def cubic(tau: u.Q) -> u.Q:
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([t, t**3, jnp.zeros_like(t)]), "km")
+
+        >>> sp = cxfc.SignedPlanarBuilder(cubic, "s")
+        >>> [float(sp.signed_curvature(u.Q(t, "s")).ustrip("1/km").round(6))
+        ...  for t in (-1e-3, 0.0, 1e-3)]
+        [-0.006, 0.0, 0.006]
+
+        """
+        b, p = self._resolve(tau)
+
+        g, tau_unit = b._param(p)
+        g = g.astype(float)
+        dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
+        d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
+        dp = dcurve(g)
+        d2p = d2curve(g)
+
+        n_hat = b._plane_normal(jnp.result_type(dp.value, float))
+        # Threading the checked tangent through the numerator is what keeps
+        # the guard alive: an `error_if` whose result is dropped is dead code.
+        # It also cancels one power of |gamma'|, since
+        # (T x gamma'') . n / |gamma'|^2 == (gamma' x gamma'') . n / |gamma'|^3.
+        t_vec = _check_planar(_normalize(dp), n_hat)
+
+        return qnp.sum(qnp.cross(t_vec, d2p) * n_hat) / qnp.sum(dp**2)
