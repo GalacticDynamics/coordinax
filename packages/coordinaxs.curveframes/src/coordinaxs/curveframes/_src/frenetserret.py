@@ -19,19 +19,28 @@ __all__ = ("FrenetSerretBuilder", "FrenetSerretFrame")
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, final
+from typing import Any, cast, final
 
 import equinox as eqx
 
 import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
+from unxt.quantity import AllowValue
 
 from .base import (
     AbstractCurveFrameBuilder,
     AbstractParallelTransportFrame,
     FrameT,
     unit_or_none,
+)
+
+_MSG_ZERO_CURVATURE = (
+    "the Frenet--Serret frame is undefined where the curvature vanishes: the "
+    "normal direction is not determined, and the triad would be all-NaN. That "
+    "is every straight segment and every inflection, not an edge case. Use "
+    "`BishopBuilder` instead: its rotation-minimising frame stays defined "
+    "where the curvature vanishes."
 )
 
 
@@ -192,6 +201,17 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         # then normalise the remainder.
         proj = qnp.sum(d2p * t_vec) * t_vec
         n_unnorm = d2p - proj
+        # Relative to |gamma''|, as `bishop._orthonormalize` guards its own
+        # rejection: a vanishing rejection only means something against the size
+        # of what was rejected. As a ratio it is dimensionless, which `error_if`
+        # needs. `~(x > tol)`, not `x <= tol`: NaN is False for both, and a
+        # straight segment gives `0/0 = nan`.
+        ratio = qnp.sqrt(qnp.sum(n_unnorm**2)) / qnp.sqrt(qnp.sum(d2p**2))
+        n_unnorm = eqx.error_if(
+            n_unnorm,
+            ~(cast("Array", u.ustrip(AllowValue, "", ratio)) > 1e-12),
+            _MSG_ZERO_CURVATURE,
+        )
         n_vec = _normalize(n_unnorm)
 
         # Binormal: right-handed completion
