@@ -394,6 +394,7 @@ def _require_chart(obj: cxv.Tangent, chart: object, target: str, /) -> cxv.Tange
 def tangent_to_apysphdiff(obj: cxv.Tangent, /) -> apyc.SphericalDifferential:
     """`coordinax.Tangent` (lon/lat velocity) -> `astropy.SphericalDifferential`.
 
+    >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.vectors as cxv
@@ -418,6 +419,7 @@ def tangent_to_apysphdiff(obj: cxv.Tangent, /) -> apyc.SphericalDifferential:
 def apysphdiff_to_tangent(obj: apyc.SphericalDifferential, /) -> cxv.Tangent:
     """`astropy.SphericalDifferential` -> `coordinax.Tangent` (lon/lat velocity).
 
+    >>> from plum import convert
     >>> import astropy.units as apyu
     >>> import astropy.coordinates as apyc
     >>> import coordinax.vectors as cxv
@@ -475,6 +477,7 @@ _COSLAT_MSG = (
 def tangent_to_apysphcoslatdiff(obj: cxv.Tangent, /) -> NoReturn:
     """Refuse: the cos(lat) convention is base-dependent.
 
+    >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.vectors as cxv
@@ -497,6 +500,7 @@ def tangent_to_apysphcoslatdiff(obj: cxv.Tangent, /) -> NoReturn:
 def apysphcoslatdiff_to_tangent(obj: apyc.SphericalCosLatDifferential, /) -> NoReturn:
     """Refuse: the cos(lat) convention is base-dependent.
 
+    >>> from plum import convert
     >>> import astropy.units as apyu
     >>> import astropy.coordinates as apyc
     >>> import coordinax.vectors as cxv
