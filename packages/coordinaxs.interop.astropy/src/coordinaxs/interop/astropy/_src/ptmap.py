@@ -4,7 +4,9 @@ __all__: tuple[str, ...] = (
     "convert_cx_cdict_to_astropy_cartrep",
     "convert_cx_cdict_to_astropy_cylrep",
     "convert_cx_cdict_to_astropy_physsphrep",
+    "convert_cx_cdict_to_astropy_radialrep",
     "convert_cx_cdict_to_astropy_sphrep",
+    "convert_cx_cdict_to_astropy_unitsphrep",
 )
 
 
@@ -204,3 +206,83 @@ def cdict(r: apyc.SphericalRepresentation) -> CDict:
 
 
 # ===================================================================
+
+
+@plum.conversion_method(type_from=dict, type_to=apyc.UnitSphericalRepresentation)
+def convert_cx_cdict_to_astropy_unitsphrep(
+    p: CDict, /
+) -> apyc.UnitSphericalRepresentation:
+    """Convert a CDict to an astropy UnitSphericalRepresentation.
+
+    >>> import astropy.coordinates as apyc
+    >>> import unxt as u
+    >>> import plum
+
+    >>> p = {"lon": u.Q(45, "deg"), "lat": u.Q(30, "deg")}
+    >>> plum.convert(p, apyc.UnitSphericalRepresentation)
+    <UnitSphericalRepresentation (lon, lat) in deg
+        (45., 30.)>
+
+    """
+    cxc.lonlat_sph2.check_data(p, keys=True)
+    return apyc.UnitSphericalRepresentation(
+        lon=plum.convert(p["lon"], apyu.Quantity),
+        lat=plum.convert(p["lat"], apyu.Quantity),
+    )
+
+
+@plum.dispatch
+def cdict(r: apyc.UnitSphericalRepresentation) -> CDict:
+    """Convert an astropy UnitSphericalRepresentation to a CDict.
+
+    A sky position without a distance -- what a catalogue gives you, and what
+    `astropy.coordinates.SkyCoord` builds when no distance is supplied.
+
+    >>> import astropy.coordinates as apyc
+    >>> import astropy.units as apyu
+    >>> import coordinax.charts as cxc
+
+    >>> vec = apyc.UnitSphericalRepresentation(lon=90 * apyu.deg, lat=45 * apyu.deg)
+    >>> cxc.cdict(vec)
+    {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg')}
+
+    """
+    return {"lon": plum.convert(r.lon, u.Q), "lat": plum.convert(r.lat, u.Q)}
+
+
+# ===================================================================
+
+
+@plum.conversion_method(type_from=dict, type_to=apyc.RadialRepresentation)
+def convert_cx_cdict_to_astropy_radialrep(p: CDict, /) -> apyc.RadialRepresentation:
+    """Convert a CDict to an astropy RadialRepresentation.
+
+    >>> import astropy.coordinates as apyc
+    >>> import unxt as u
+    >>> import plum
+
+    >>> plum.convert({"r": u.Q(1, "kpc")}, apyc.RadialRepresentation)
+    <RadialRepresentation (distance) in kpc
+        (1.,)>
+
+    """
+    cxc.radial1d.check_data(p, keys=True)
+    return apyc.RadialRepresentation(distance=plum.convert(p["r"], apyu.Quantity))
+
+
+@plum.dispatch
+def cdict(r: apyc.RadialRepresentation) -> CDict:
+    """Convert an astropy RadialRepresentation to a CDict.
+
+    Astropy calls the component ``distance``; `coordinax.charts.radial1d` calls
+    it ``r``.
+
+    >>> import astropy.coordinates as apyc
+    >>> import astropy.units as apyu
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(apyc.RadialRepresentation(distance=1 * apyu.kpc))
+    {'r': Q(1., 'kpc')}
+
+    """
+    return {"r": plum.convert(r.distance, u.Q)}
