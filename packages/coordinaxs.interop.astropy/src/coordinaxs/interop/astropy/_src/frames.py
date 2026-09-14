@@ -17,7 +17,7 @@ Examples
 --------
 Basic ICRS conversion:
 
->>> import coordinaxs.astro as cxa
+>>> import coordinaxs.astro as cxastro
 >>> import astropy.coordinates as apyc
 >>> import plum
 
@@ -31,12 +31,11 @@ Galactocentric conversion with custom parameters:
 >>> import unxt as u
 >>> import coordinax as cx
 >>> import coordinax.charts as cxc
->>> import coordinax.representations as cxr
 
 >>> galcen = cx.Point.from_(
 ...     {"lon": u.Q(0, "deg"), "lat": u.Q(0, "deg"),
 ...      "distance": u.Q(8.122, "kpc")},
-...     cx.lonlat_sph3d,
+...     cxc.lonlat_sph3d,
 ... )
 >>> cx_galcen = cxastro.Galactocentric(
 ...     galcen=galcen,
@@ -47,11 +46,6 @@ Galactocentric conversion with custom parameters:
 >>> isinstance(apy_galcen, apyc.Galactocentric)
 True
 
-# # Round-trip conversions preserve frame parameters:
-
-# >>> cx_result = plum.convert(apy_galcen, cx.Point)
-# >>> cx_result
-
 """
 
 __all__: tuple[str, ...] = ()
@@ -59,7 +53,6 @@ __all__: tuple[str, ...] = ()
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
-import equinox as eqx
 import plum
 
 import unxt as u
@@ -84,7 +77,7 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     coordinax and Astropy implementations have no frame-specific parameters, so
     the conversion is straightforward.
 
-    >>> import coordinaxs.astro as cxa
+    >>> import coordinaxs.astro as cxastro
     >>> import astropy.coordinates as apyc
     >>> import plum
 
@@ -240,7 +233,8 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     --------
     >>> import astropy.coordinates as apyc
     >>> import coordinax as cx
-    >>> import coordinaxs.astro as cxa
+    >>> import coordinax.charts as cxc
+    >>> import coordinaxs.astro as cxastro
     >>> import plum
     >>> import unxt as u
 
@@ -295,14 +289,14 @@ def from_(
     """Construct from a `astropy.coordinates.Galactocentric`.
 
     >>> import astropy.coordinates as apyc
-    >>> import coordinax.frames as cxf
+    >>> import coordinaxs.astro as cxastro
 
     >>> apy_gcf = apyc.Galactocentric()
     >>> apy_gcf
     <Galactocentric Frame (galcen_coord=<ICRS Coordinate: (ra, dec) in deg
     (266.4051, -28.936175)>, galcen_distance=8.122 kpc, galcen_v_sun=(12.9, 245.6, 7.78) km / s, z_sun=20.8 pc, roll=0.0 deg)>
 
-    >>> gcf = cxf.Galactocentric.from_(apy_gcf)
+    >>> gcf = cxastro.Galactocentric.from_(apy_gcf)
     >>> gcf
     Galactocentric(
       galcen=Point(
@@ -332,7 +326,8 @@ def from_(
     Array(True, dtype=bool)
 
     """  # noqa: E501
-    frame = eqx.error_if(frame, frame.has_data, "Astropy frame must not have data.")
+    if frame.has_data:
+        raise ValueError("Astropy frame must not have data.")
 
     # Convert galcen_coord to Vector with lonlat_sph3d chart and point role
     # galcen_coord is an ICRS coordinate, so access ra/dec from representation
@@ -378,7 +373,7 @@ def astropy_galactocentric_to_coordinax_galactocentric(
 
     Examples
     --------
-    >>> import coordinaxs.astro as cxa
+    >>> import coordinaxs.astro as cxastro
     >>> from plum import convert
     >>> import astropy.coordinates as apyc
 
