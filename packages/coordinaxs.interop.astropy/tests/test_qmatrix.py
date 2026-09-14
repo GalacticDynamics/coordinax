@@ -77,3 +77,33 @@ class TestQuantityMatrixToAstropyQuantity:
 
         assert float(arr["f0"]) == pytest.approx(3)
         assert float(arr["f1"]) == pytest.approx(4)
+
+
+class TestQuantityMatrixLayouts:
+    """The unit layout claims the trailing axes; one axis in front is batch."""
+
+    def test_a_nested_layout_nests_the_record(self) -> None:
+        qmat = ul.QuantityMatrix(
+            jnp.array([[1.0, 2.0], [3.0, 4.0]]), unit=(("m", "s"), ("kg", "rad"))
+        )
+        result = plum.convert(qmat, apyu.Quantity)
+
+        assert result.unit == apyu.StructuredUnit((("m", "s"), ("kg", "rad")))
+        assert result.shape == ()
+        assert float(np.array(result)["f0"]["f1"]) == pytest.approx(2.0)
+
+    def test_a_flat_layout_reads_the_leading_axis_as_batch(self) -> None:
+        qmat = ul.QuantityMatrix(jnp.arange(6.0).reshape(2, 3), unit=("m", "s", "kg"))
+        result = plum.convert(qmat, apyu.Quantity)
+
+        assert result.shape == (2,)
+        assert float(np.array(result)[1]["f2"]) == pytest.approx(5.0)
+
+    def test_the_leaf_dtype_is_kept(self) -> None:
+        qmat = ul.QuantityMatrix(jnp.array([1.0, 2.0], dtype=jnp.float32), ("km", "s"))
+        assert plum.convert(qmat, apyu.Quantity).dtype["f0"] == np.float32
+
+    def test_more_batch_axes_than_astropy_allows_are_refused(self) -> None:
+        qmat = ul.QuantityMatrix(jnp.ones((2, 2, 3)), unit=("m", "s", "kg"))
+        with pytest.raises(ValueError, match="one batch axis"):
+            plum.convert(qmat, apyu.Quantity)
