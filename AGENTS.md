@@ -29,7 +29,7 @@ uv run nox -s "pytest(package='coordinax')" -- tests/unit/charts -q
 uv run nox -s "ty(package='hypothesis')"
 ```
 
-`uv run nox -s test` runs under `pytest-xdist` (`-n auto --dist=loadfile`) by default — `auto` is one worker per _physical_ core, which needs `psutil` (a `test` dependency; without it xdist counts hyperthreads and oversubscribes, see #817). It auto-disables itself for `--pdb`/`--trace`; for any other reason to force serial, pass `-n0`.
+`uv run nox -s test` runs under `pytest-xdist` (`-n auto --dist=loadgroup`) by default — `auto` is one worker per _physical_ core, which needs `psutil` (a `test` dependency; without it xdist counts hyperthreads and oversubscribes, see #817). It auto-disables itself for `--pdb`/`--trace`; for any other reason to force serial, pass `-n0`. `loadgroup` distributes tests individually except those in an `xdist_group`, which the root [`conftest.py`](conftest.py) applies to each document's Sybil examples — they share state in sequence, so they must stay on one worker. Running `pytest` directly with `-n` therefore needs an explicit `--dist=loadgroup`, or the examples scatter and fail.
 
 Always `uv run` — never bare `python` or `pytest`.
 

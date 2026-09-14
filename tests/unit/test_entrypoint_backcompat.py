@@ -16,6 +16,7 @@ import pytest
 
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
+from coordinax._src import optional_exports
 
 _UNSET = object()
 
@@ -89,7 +90,7 @@ def test_frames_legacy_group_warns_and_is_included(monkeypatch: Any) -> None:
     def fake_entry_points(*, group: str) -> list[_FakeEntryPoint]:
         return [legacy] if group == cxf._LEGACY_FRAME_EXPORTS_ENTRYPOINT_GROUP else []
 
-    monkeypatch.setattr(cxf, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
 
     with pytest.warns(DeprecationWarning, match="legacy"):
         eps = cxf._frame_export_entrypoints()
@@ -104,7 +105,7 @@ def test_frames_current_group_does_not_warn(monkeypatch: Any) -> None:
     def fake_entry_points(*, group: str) -> list[_FakeEntryPoint]:
         return [current] if group == cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP else []
 
-    monkeypatch.setattr(cxf, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
 
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)
@@ -123,7 +124,7 @@ def test_frames_duplicate_prefers_current_group(monkeypatch: Any) -> None:
             return [current]
         return [legacy]
 
-    monkeypatch.setattr(cxf, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
 
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)
@@ -145,7 +146,7 @@ def test_transforms_legacy_group_warns_and_loads(monkeypatch: Any) -> None:
             return [legacy]
         return []
 
-    monkeypatch.setattr(cxfm, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
 
     with pytest.warns(DeprecationWarning, match="legacy"):
         cxfm._load_optional_transform_exports()
@@ -160,7 +161,7 @@ def test_transforms_current_group_does_not_warn(monkeypatch: Any) -> None:
     def fake_entry_points(*, group: str) -> list[_FakeEntryPoint]:
         return [current] if group == cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP else []
 
-    monkeypatch.setattr(cxfm, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
 
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)
@@ -178,7 +179,9 @@ def test_frames_provider_not_callable_raises(monkeypatch: Any) -> None:
     """An entry point that loads to a non-callable is rejected."""
     ep = _FakeEntryPoint("bad", provider=42)  # load() returns a non-callable
     monkeypatch.setattr(
-        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
+        optional_exports,
+        "entry_points",
+        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
     with pytest.raises(TypeError, match="is not callable"):
         cxf._load_optional_frame_exports()
@@ -189,7 +192,9 @@ def test_frames_exports_not_mapping_raises(monkeypatch: Any) -> None:
     """A provider that returns a non-mapping is rejected."""
     ep = _FakeEntryPoint("bad", provider=lambda: [1, 2, 3])
     monkeypatch.setattr(
-        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
+        optional_exports,
+        "entry_points",
+        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
     with pytest.raises(TypeError, match="must return a mapping"):
         cxf._load_optional_frame_exports()
@@ -200,7 +205,9 @@ def test_frames_non_string_export_name_raises(monkeypatch: Any) -> None:
     """A non-string export name is rejected."""
     ep = _FakeEntryPoint("bad", exports={123: object()})
     monkeypatch.setattr(
-        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
+        optional_exports,
+        "entry_points",
+        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
     with pytest.raises(TypeError, match="non-string export name"):
         cxf._load_optional_frame_exports()
@@ -212,7 +219,7 @@ def test_frames_conflicting_exports_raise(monkeypatch: Any) -> None:
     ep_a = _FakeEntryPoint("aaa", exports={"Dup": object()})
     ep_b = _FakeEntryPoint("bbb", exports={"Dup": object()})
     monkeypatch.setattr(
-        cxf,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep_a, ep_b]}),
     )
@@ -227,7 +234,7 @@ def test_frames_same_value_from_two_groups_is_not_a_conflict(monkeypatch: Any) -
     current = _FakeEntryPoint("dup", exports={"Shared": shared})
     legacy = _FakeEntryPoint("dup", exports={"Shared": shared})
     monkeypatch.setattr(
-        cxf,
+        optional_exports,
         "entry_points",
         _fake_groups(
             **{
@@ -250,7 +257,9 @@ def test_frames_exports_land_in_module_globals(monkeypatch: Any) -> None:
     sentinel = object()
     ep = _FakeEntryPoint("plugin", exports={"_InjectedFrame": sentinel})
     monkeypatch.setattr(
-        cxf, "entry_points", _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]})
+        optional_exports,
+        "entry_points",
+        _fake_groups(**{cxf._FRAME_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
     cxf._load_optional_frame_exports()
     assert cxf._InjectedFrame is sentinel  # cleaned up by the fixture
@@ -265,7 +274,7 @@ def test_transforms_provider_not_callable_raises(monkeypatch: Any) -> None:
     """An entry point that loads to a non-callable is rejected."""
     ep = _FakeEntryPoint("bad", provider=42)
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
@@ -278,7 +287,7 @@ def test_transforms_exports_not_mapping_raises(monkeypatch: Any) -> None:
     """A provider that returns a non-mapping is rejected."""
     ep = _FakeEntryPoint("bad", provider=lambda: [1, 2, 3])
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
@@ -291,7 +300,7 @@ def test_transforms_non_string_export_name_raises(monkeypatch: Any) -> None:
     """A non-string export name is rejected."""
     ep = _FakeEntryPoint("bad", exports={123: object()})
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
@@ -305,7 +314,7 @@ def test_transforms_conflicting_exports_raise(monkeypatch: Any) -> None:
     ep_a = _FakeEntryPoint("aaa", exports={"Dup": object()})
     ep_b = _FakeEntryPoint("bbb", exports={"Dup": object()})
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: [ep_a, ep_b]}),
     )
@@ -319,7 +328,7 @@ def test_transforms_duplicate_prefers_current_group(monkeypatch: Any) -> None:
     current = _FakeEntryPoint("dup", exports={})
     legacy = _FakeEntryPoint("dup", exports={})
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(
             **{
@@ -341,7 +350,7 @@ def test_transforms_exports_land_in_module_globals(monkeypatch: Any) -> None:
     sentinel = object()
     ep = _FakeEntryPoint("plugin", exports={"_InjectedTransform": sentinel})
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )
@@ -354,7 +363,7 @@ def test_transforms_reentrant_call_is_a_noop(monkeypatch: Any) -> None:
     """A re-entrant transforms load returns immediately without loading."""
     ep = _FakeEntryPoint("xfm", exports={})
     monkeypatch.setattr(
-        cxfm,
+        optional_exports,
         "entry_points",
         _fake_groups(**{cxfm._TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: [ep]}),
     )

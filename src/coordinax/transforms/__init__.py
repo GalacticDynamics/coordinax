@@ -11,12 +11,12 @@ Rotate(f64[3,3](jax))
 
 """
 
-import warnings
-from importlib.metadata import entry_points
-
 from typing import Final
 
-from coordinax._src.optional_exports import load_exports
+from coordinax._src.optional_exports import (
+    load_exports,
+    resolve_entrypoints_with_legacy,
+)
 from coordinax._src.setup_package import install_import_hook
 
 __all__: tuple[str, ...] = (
@@ -31,7 +31,6 @@ __all__: tuple[str, ...] = (
     "tau_derivative",
     # Transformations
     "AbstractTransform",
-    "AbstractCompositeTransform",
     "Boost",
     "Identity",
     "Composed",
@@ -53,7 +52,6 @@ __all__: tuple[str, ...] = (
 with install_import_hook("coordinax.transforms"):
     from . import builders, groups
     from ._src.actions import (
-        AbstractCompositeTransform,
         AbstractTransform,
         Affine,
         Boost,
@@ -95,25 +93,11 @@ def _load_optional_transform_exports() -> None:
 
     _OPTIONAL_TRANSFORM_EXPORTS_STATE["loading"] = True
     try:
-        current = list(entry_points(group=_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP))
-        seen = {ep.name for ep in current}
-        legacy = [
-            ep
-            for ep in entry_points(group=_LEGACY_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP)
-            if ep.name not in seen
-        ]
-        if legacy:
-            names = ", ".join(sorted(ep.name for ep in legacy))
-            warnings.warn(
-                f"Entry point(s) {names} register transform symbols under the "
-                f"legacy '{_LEGACY_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP}' group. "
-                f"That group is deprecated; publish under "
-                f"'{_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP}' instead. Support for "
-                "the legacy group will be removed in a future release.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-        eps = sorted(current + legacy, key=lambda ep: ep.name)
+        eps = resolve_entrypoints_with_legacy(
+            _TRANSFORM_EXPORTS_ENTRYPOINT_GROUP,
+            _LEGACY_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP,
+            warn_what="transform symbols",
+        )
         exported = load_exports(
             eps, group=_TRANSFORM_EXPORTS_ENTRYPOINT_GROUP, noun="transform export"
         )

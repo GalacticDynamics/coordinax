@@ -93,11 +93,9 @@ __all__ = (  # distances
     "geodesic_distance",
 )
 
-import warnings
-from importlib.metadata import entry_points
-
 from typing import Any, Final
 
+from coordinax._src.optional_exports import resolve_entrypoints_with_legacy
 from coordinax.angles import Angle
 from coordinax.charts import (
     CartesianProductChart,
@@ -272,25 +270,11 @@ def _load_optional_interop() -> None:
 
     state["loading"] = True
     try:
-        current = list(entry_points(group=_INTEROP_ENTRYPOINT_GROUP))
-        seen = {ep.name for ep in current}
-        legacy = [
-            ep
-            for ep in entry_points(group=_LEGACY_INTEROP_ENTRYPOINT_GROUP)
-            if ep.name not in seen
-        ]
-        if legacy:
-            names = ", ".join(sorted(ep.name for ep in legacy))
-            warnings.warn(
-                f"Entry point(s) {names} register interop under the legacy "
-                f"'{_LEGACY_INTEROP_ENTRYPOINT_GROUP}' group. That group is "
-                f"deprecated; publish under '{_INTEROP_ENTRYPOINT_GROUP}' "
-                "instead. Support for the legacy group will be removed in a "
-                "future release.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-        eps = sorted(current + legacy, key=lambda e: e.name)
+        eps = resolve_entrypoints_with_legacy(
+            _INTEROP_ENTRYPOINT_GROUP,
+            _LEGACY_INTEROP_ENTRYPOINT_GROUP,
+            warn_what="interop",
+        )
         for ep in eps:
             if ep.name in state["loaded"]:
                 continue

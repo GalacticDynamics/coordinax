@@ -7,7 +7,7 @@ from typing import Any
 import quaxed.numpy as jnp
 import unxt as u
 
-from .distance_modulus import DistanceModulus
+from .distance_modulus import DistanceModulus, _distance_modulus_from_pc
 from .parallax import Parallax, parallax_base_length
 
 
@@ -22,7 +22,7 @@ def from_(cls: type[DistanceModulus], p: Parallax, /, **kw: Any) -> DistanceModu
 
     """
     d = parallax_base_length / jnp.tan(p)  # [AU]
-    dm = 5 * jnp.log10(d.ustrip("pc")) - 5
+    dm = _distance_modulus_from_pc(d.ustrip("pc"))
     return cls(jnp.asarray(dm, **kw), "mag")
 
 

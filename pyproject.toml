@@ -340,6 +340,10 @@ markers = [
   # are each cold-importing the same JAX stack. Deselected from the parallel
   # run and given its own serial step; see `test_jax_dtypes.py`.
   "subprocess_heavy: marks tests that spawn their own interpreter",
+  # Applied in the root `conftest.py` to Sybil examples, so `--dist=loadgroup`
+  # keeps each document on one worker. Declared here as well as by xdist so
+  # that `-p no:xdist` does not trip `--strict-markers`.
+  "xdist_group: pins a test to a named xdist worker group",
 ]
 minversion = "8.3"
 norecursedirs = [

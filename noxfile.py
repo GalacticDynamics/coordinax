@@ -170,13 +170,15 @@ def test(s: nox.Session, /) -> None:
     # become identical. That is why `psutil` is a `test` dependency; see the
     # note beside it in `pyproject.toml`.
     #
-    # --dist=loadfile: keep each file's tests on one worker -- Sybil doctests
-    # share sequential state across `>>>` examples within a source file, which
-    # breaks if xdist scatters them across workers. xdist breaks --pdb/--trace,
-    # so skip it when either is requested rather than relying on the caller to
-    # also pass `-n0`.
+    # --dist=loadgroup: distribute tests individually, except those the root
+    # `conftest.py` puts in an `xdist_group` -- the Sybil examples, which share
+    # sequential state within a document and so must stay on one worker. This
+    # was `loadfile`, which bought the same guarantee by pinning *every* file:
+    # the heaviest one then ran alone at the end while the other workers idled.
+    # xdist breaks --pdb/--trace, so skip it when either is requested rather
+    # than relying on the caller to also pass `-n0`.
     debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in posargs)
-    xdist_args = [] if debugging else ["-n", "auto", "--dist=loadfile"]
+    xdist_args = [] if debugging else ["-n", "auto", "--dist=loadgroup"]
 
     # This session installs the `workspace` extra (interop included), so the
     # interop order-independence tests must run, not silently skip.
@@ -226,7 +228,7 @@ def test_oldest(s: nox.Session, /) -> None:
     # --pdb/--trace, so drop it when either is asked for rather than making the
     # caller also pass `-n0`.
     debugging = any(arg == "--trace" or arg.startswith("--pdb") for arg in s.posargs)
-    xdist_args = [] if debugging else ["-n", "auto", "--dist=loadfile"]
+    xdist_args = [] if debugging else ["-n", "auto", "--dist=loadgroup"]
 
     # Resolving downwards rewrites `uv.lock`, which matters here in a way it
     # never did in CI, where the checkout is thrown away. Do not "fix" that

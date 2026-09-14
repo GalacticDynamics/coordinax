@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 import coordinax as cx
+from coordinax._src import optional_exports
 
 
 @pytest.fixture
@@ -68,7 +69,7 @@ def _only_interop(ep: Any) -> Any:
 def test_loads_entry_point_once(monkeypatch: Any) -> None:
     """An entry point is loaded once and then recorded as loaded."""
     ep = _FakeEntryPoint("fake")
-    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    monkeypatch.setattr(optional_exports, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -86,7 +87,7 @@ def test_loads_entry_point_once(monkeypatch: Any) -> None:
 def test_reentrant_call_is_a_noop(monkeypatch: Any) -> None:
     """A re-entrant call returns immediately instead of double-loading."""
     ep = _FakeEntryPoint("fake")
-    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    monkeypatch.setattr(optional_exports, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
     cx._OPTIONAL_INTEROP_STATE["loading"] = True
@@ -113,7 +114,7 @@ def test_failure_is_recorded_not_raised(monkeypatch: Any) -> None:
     """A load failure is recorded rather than raised, and is not marked loaded."""
     exc = RuntimeError("interop is broken")
     ep = _FakeEntryPoint("fake", exc=exc)
-    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    monkeypatch.setattr(optional_exports, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -131,7 +132,7 @@ def test_failure_is_recorded_not_raised(monkeypatch: Any) -> None:
 def test_import_error_is_also_recorded_not_raised(monkeypatch: Any) -> None:
     """An ImportError (absent transitive dep) is recorded, not raised."""
     ep = _FakeEntryPoint("fake", exc=ImportError("no module named 'astropy'"))
-    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    monkeypatch.setattr(optional_exports, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -165,7 +166,7 @@ def test_retry_recovers_after_transient_failure(monkeypatch: Any) -> None:
             return object()
 
     ep = _FlakyEntryPoint()
-    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    monkeypatch.setattr(optional_exports, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -197,7 +198,7 @@ def test_success_clears_prior_failure(monkeypatch: Any) -> None:
             return object()
 
     ep = _FlakyEntryPoint()
-    monkeypatch.setattr(cx, "entry_points", _only_interop(ep))
+    monkeypatch.setattr(optional_exports, "entry_points", _only_interop(ep))
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -218,7 +219,7 @@ def test_one_failure_does_not_block_other_entry_points(monkeypatch: Any) -> None
     def entry_points(*, group: str) -> list[_FakeEntryPoint]:
         return [bad, good] if group == cx._INTEROP_ENTRYPOINT_GROUP else []
 
-    monkeypatch.setattr(cx, "entry_points", entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", entry_points)
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -241,7 +242,7 @@ def test_legacy_group_is_honoured_with_deprecation_warning(monkeypatch: Any) -> 
     def fake_entry_points(*, group: str) -> list[_FakeEntryPoint]:
         return [legacy_ep] if group == cx._LEGACY_INTEROP_ENTRYPOINT_GROUP else []
 
-    monkeypatch.setattr(cx, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
@@ -262,7 +263,7 @@ def test_current_group_wins_over_legacy_duplicate(monkeypatch: Any) -> None:
             return [current_ep]
         return [legacy_ep]
 
-    monkeypatch.setattr(cx, "entry_points", fake_entry_points)
+    monkeypatch.setattr(optional_exports, "entry_points", fake_entry_points)
     cx._OPTIONAL_INTEROP_STATE["loaded"] = set()
     cx._OPTIONAL_INTEROP_STATE["failed"] = {}
 
