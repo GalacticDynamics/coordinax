@@ -129,10 +129,10 @@ def _float(x: Any, /) -> Array:
     input to f64 under ``jax_enable_x64`` and discarding a deliberate choice of
     single precision. `jnp.result_type` promotes only what needs promoting.
 
-    A `unxt.Quantity` is stripped in its own unit first: `jnp.asarray` reaches
-    for ``__array__``, which a *traced* one cannot answer. A constant
-    `Quantity` is therefore fine -- only one depending on the differentiated
-    argument fails, which is why the obvious reproducer passes.
+    A `unxt.Quantity` is stripped in its own unit first, because `jnp.asarray`
+    reaches for ``__array__`` and a *traced* `Quantity` cannot answer that.
+    Before the strip, only a traced one broke -- a constant `Quantity` worked
+    -- which is why the obvious reproducer never showed the bug.
     """
     unit = u.unit_of(x)
     arr = jnp.asarray(x if unit is None else u.ustrip(unit, x))
