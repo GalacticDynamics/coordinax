@@ -188,7 +188,20 @@ def nearest_tau(
     # tau, so the ratio has the units the residual needs. Floored so a query
     # sitting exactly on the curve cannot make it zero in turn.
     _extent = jnp.sqrt(jnp.max(scan)) - jnp.sqrt(jnp.min(scan))
-    _fallback_speed = jnp.where(_extent > 0, _extent, 1.0) / jnp.abs(hi - lo)
+    # `ones_like`, not a bare `1.0`: a Python float promotes an f32 expression
+    # to f64 under `jnp.where`, which would widen everything downstream of the
+    # residual and discard a deliberate choice of single precision -- the same
+    # reason `bishop._float` avoids `dtype=float`.
+    _fallback_speed = jnp.where(_extent > 0, _extent, jnp.ones_like(_extent)) / jnp.abs(
+        hi - lo
+    )
+    # Floored relatively, not only at exactly zero. A station slowing to rest
+    # passes through arbitrarily small speeds, and dividing by one of those
+    # amplifies the residual without bound. Any positive scaling leaves the root
+    # and its sign untouched, so a floor can only improve conditioning -- it
+    # cannot move the answer. `sqrt(eps)` matches the tolerance convention used
+    # below.
+    _speed_floor = float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5 * _fallback_speed
 
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
@@ -219,13 +232,13 @@ def nearest_tau(
         # momentarily at rest zeroes the first and not the second. (A cusp
         # zeroes both, but that case is already NaN via `builder.tangent`.)
         #
-        # So the fallback must still be a length-per-tau, not the bare `1.0` an
+        # So the floor must still be a length-per-tau, not the bare `1.0` an
         # earlier revision used: reverting to an unscaled residual would make it
         # a length again, reintroducing precisely the tolerance-kind ambiguity
         # this division exists to remove, and only for the worldtube queries
-        # that need it most. `_scan_extent / (hi - lo)` is the scan's own
-        # characteristic speed, which is unit-correct by construction.
-        safe_speed = jnp.where(speed > 0, speed, _fallback_speed)
+        # that need it most. The scan's extent over the bounds span is the
+        # problem's own characteristic speed, unit-correct by construction.
+        safe_speed = jnp.maximum(speed, _speed_floor)
         return jnp.dot(T, offset(tau_v)) / safe_speed
 
     # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
