@@ -51,9 +51,9 @@ One `pt_map` from `sph3d` to `cart3d`, at a single point:
 
 That quantity column used to read 3650 us. The difference is not a faster `unxt`: it is that the transition bodies no longer do their arithmetic **on** `Quantity` operands.
 
-**Why that mattered so much.** `quax` builds and evaluates a separate jaxpr for every primitive whose operand is a `Quantity`. Eagerly, one primitive costs ~4 us on a raw array against 120-820 us on a `Quantity`, so a transition's cost was simply the sum of its operations -- `Quantity ** 2` 120 us, `+` 198 us, `/` 229 us, `== 0` 444 us, `atan2` 617 us. `Cart3D -> Spherical3D` spent ~2900 us of its ~3500 us there.
+**Why that mattered so much.** `quax` builds and evaluates a separate jaxpr for every primitive whose operand is a `Quantity`. Eagerly, one primitive costs ~4 us on a raw array against 120-820 us on a `Quantity`, so a transition's cost was simply the sum of its operations -- `Quantity ** 2` 120 us, `+` 198 us, `/` 229 us, `== 0` 444 us, `atan2` 617 us. Taking the reverse map as a worked example, since it was the most expensive: `Cart3D -> Spherical3D` spent ~2900 us of its ~3500 us there.
 
-The bodies now resolve their units once on the way in, compute on raw arrays, and re-attach once on the way out. Same numbers -- the conversions are checked point-by-point against the previous implementation -- for a fraction of the dispatches. Counting calls to `plum`-dispatched functions for one eager call, before and after:
+The bodies now resolve their units once on the way in, compute on raw arrays, and re-attach once on the way out. Same numbers -- the conversions are checked point-by-point against the previous implementation -- and, on the `Quantity` route, a fraction of the dispatches. The raw-array route rises slightly instead: `strip` probes `unit_of` even on values that turn out to have none. Counting calls to `plum`-dispatched functions for one eager call, before and after:
 
 | route                        | calls, before | now | of which `pt_map` |
 | ---------------------------- | ------------- | --- | ----------------- |
