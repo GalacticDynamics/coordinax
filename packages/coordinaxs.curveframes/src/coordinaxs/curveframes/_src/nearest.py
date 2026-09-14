@@ -200,7 +200,16 @@ def nearest_tau(
         # redefines the root and broke every worldtube round trip. The existing
         # suite caught it; the unit test added here did not.
         speed = jnp.linalg.norm(d_offset(tau_v))
-        return jnp.dot(T, offset(tau_v)) / speed
+        # `speed` is zero at a stationary point of the parametrisation -- a
+        # cusp, or a worldtube station momentarily at rest. Scaling does not
+        # move the root, so falling back to the unscaled residual there is
+        # exactly the behaviour this function had before the division, rather
+        # than a new inf/NaN of its own. `T` is independently NaN at such a
+        # point (`builder.tangent` normalises a vanishing derivative), so this
+        # guard does not claim to rescue the singularity -- only to avoid
+        # adding a second one.
+        safe_speed = jnp.where(speed > 0, speed, 1.0)
+        return jnp.dot(T, offset(tau_v)) / safe_speed
 
     # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
     # so once the curve varies on that scale it can hold a whole period -- two

@@ -43,7 +43,7 @@ def _solve(unit: str, scale: float) -> float:
 #: One circle of radius 1 km, written four ways. The scales are the actual
 #: conversions, so each case really is the same geometry -- ``pc`` at 1.0 was a
 #: *different* circle and exercised no conversion factor at all.
-_KM_IN_PC = 1.0 / 3.0856775814913673e13
+_KM_IN_PC = float(u.Q(1.0, "km").ustrip("pc"))  # from unxt, not hard-coded
 
 
 @pytest.mark.parametrize(
