@@ -183,9 +183,15 @@ def get_all_subclasses(
             if any(issubclass(canonical, ex) for ex in canonical_exclude):
                 continue
 
-            # Check if subclass matches ALL filters (not just ANY)
-            if all(issubclass(canonical, f) for f in canonical_filter) and not (
-                exclude_abstract and is_abstract_class(canonical)
+            # Check if subclass matches ALL filters (not just ANY).
+            # A class defined inside a function is never a library class:
+            # either its `__init_subclass__` raised and it survives only
+            # because a traceback holds it, or a test built a throwaway that
+            # would otherwise leak into every later draw. See #866.
+            if (
+                all(issubclass(canonical, f) for f in canonical_filter)
+                and "<locals>" not in canonical.__qualname__
+                and not (exclude_abstract and is_abstract_class(canonical))
             ):
                 # Deduplicate by (module, qualname) - only keep first seen
                 key = (canonical.__module__, canonical.__qualname__)
