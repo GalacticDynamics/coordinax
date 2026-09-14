@@ -1,9 +1,6 @@
-"""Metrics — intrinsic metric fields, matrix representations, and dispatch API."""
+"""Metrics — matrix representations and dispatch API."""
 
 __all__ = (
-    "AbstractMetricField",
-    "AbstractDiagonalMetricField",
-    "RoundMetric",
     "AbstractMetricMatrix",
     "DiagonalMetric",
     "DenseMetric",
@@ -12,5 +9,4 @@ __all__ = (
 )
 
 from .api import metric_matrix, metric_representation
-from .field import AbstractDiagonalMetricField, AbstractMetricField, RoundMetric
 from .matrix import AbstractMetricMatrix, DenseMetric, DiagonalMetric

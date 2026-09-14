@@ -6,18 +6,12 @@ Verifies:
 - Static subtypes are JAX-static pytree leaves (no dynamic leaves)
 - No ``metric_matrix``, ``scale_factors``, or ``cholesky`` methods exist
   (these were removed in Phase 3b)
-- ``RoundMetric`` from ``metric/field.py`` is an eqx.Module with a dynamic
-  ``radius`` leaf, static ``_ndim``, and supports JIT / grad through ``radius``
 """
 
 import jax
-import jax.numpy as jnp
 import pytest
 
-import unxt as u
-
 import coordinax.manifolds as cxm
-from coordinax._src.metric.field import RoundMetric as DynamicRoundMetric
 
 # ---------------------------------------------------------------------------
 # Fixtures: every concrete AbstractMetricField subtype from the public API
@@ -125,56 +119,3 @@ class TestStaticMetricFieldPytree:
             return mf.ndim
 
         assert get_ndim(m) == 2
-
-
-# ---------------------------------------------------------------------------
-# RoundMetric from metric/field.py — dynamic radius, static ndim
-# ---------------------------------------------------------------------------
-
-
-class TestRoundMetricFieldDynamic:
-    """RoundMetric (metric/field.py) is an eqx.Module with dynamic radius."""
-
-    def test_radius_is_only_dynamic_leaf(self):
-        m = DynamicRoundMetric(ndim=2, radius=u.Q(1, "m"))
-        leaves, _ = jax.tree.flatten(m)
-        assert len(leaves) == 1, f"Expected 1 dynamic leaf (radius), got {leaves}"
-
-    def test_ndim_is_static(self):
-        m2 = DynamicRoundMetric(ndim=2, radius=u.Q(1, "m"))
-        m3 = DynamicRoundMetric(ndim=3, radius=u.Q(1, "m"))
-        _, treedef2 = jax.tree.flatten(m2)
-        _, treedef3 = jax.tree.flatten(m3)
-        assert treedef2 != treedef3, (
-            "ndim should be static (changing it should change the treedef)"
-        )
-
-    def test_signature_length_matches_ndim(self):
-        for ndim in [1, 2, 3, 4]:
-            m = DynamicRoundMetric(ndim=ndim, radius=u.Q(1, "m"))
-            assert len(m.signature) == ndim
-            assert all(s == 1 for s in m.signature)
-
-    def test_jit_through_radius(self):
-        m = DynamicRoundMetric(ndim=2, radius=u.Q(1, "m"))
-
-        @jax.jit
-        def get_radius_value(mf):
-            return mf.radius.value
-
-        result = get_radius_value(m)
-        assert jnp.allclose(result, jnp.array(1))
-
-    def test_grad_through_radius(self):
-        def f(r_val):
-            m = DynamicRoundMetric(ndim=2, radius=u.Q(r_val, "m"))
-            return m.radius.value
-
-        grad_f = jax.grad(f)
-        result = grad_f(jnp.array(3.0))
-        assert jnp.allclose(result, jnp.array(1))
-
-    def test_radius_unit_preserved(self):
-        m = DynamicRoundMetric(ndim=2, radius=u.Q(5, "km"))
-        assert str(m.radius.unit) == "km"
-        assert jnp.allclose(m.radius.value, jnp.array(5))

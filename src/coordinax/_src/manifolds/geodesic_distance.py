@@ -377,7 +377,7 @@ def geodesic_distance(
     >>> try: cxm.geodesic_distance(cxc.minkowskict, origin, event)
     ... except NotImplementedError as e: print(e)
     geodesic_distance() requires a Riemannian (positive-definite) metric;
-    MinkowskiManifold(ndim=4) is pseudo-Riemannian, whose indefinite metric
+    MinkowskiManifold() is pseudo-Riemannian, whose indefinite metric
     admits no distance. Use `interval` for the signed square, `proper_time`
     for a timelike pair, or `proper_distance` for a spacelike one.
 

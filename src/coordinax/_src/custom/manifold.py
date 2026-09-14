@@ -46,15 +46,3 @@ class CustomManifold(AbstractManifold):
 
     metric: AbstractMetricField
     """Riemannian metric for this manifold, used for norm and distance computations."""
-
-    def __post_init__(self) -> None:
-        if self.atlas.ndim != self.metric.ndim:
-            raise ValueError(
-                f"CustomManifold atlas has ndim={self.atlas.ndim} "
-                f"but metric has ndim={self.metric.ndim}."
-            )
-
-    @property
-    def ndim(self) -> int:
-        """Intrinsic dimension of the manifold."""
-        return self.atlas.ndim

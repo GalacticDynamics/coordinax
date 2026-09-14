@@ -52,7 +52,7 @@ class MinkowskiCT(
     >>> import coordinax.charts as cxc
 
     >>> cxc.MinkowskiCT()
-    MinkowskiCT(M=MinkowskiManifold(ndim=4))
+    MinkowskiCT(M=MinkowskiManifold())
 
     >>> cxc.minkowskict.components
     ('ct', 'x', 'y', 'z')
@@ -113,7 +113,7 @@ def guess_manifold(_: type[MinkowskiCT], /) -> MinkowskiManifold:
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> cxm.guess_manifold(cxc.MinkowskiCT)
-    MinkowskiManifold(ndim=4)
+    MinkowskiManifold()
 
     """
     return MinkowskiManifold()
