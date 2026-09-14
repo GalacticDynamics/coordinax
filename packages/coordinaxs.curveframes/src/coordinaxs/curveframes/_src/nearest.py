@@ -179,7 +179,22 @@ def nearest_tau(
         # value as identical. Measured bit-identical and ~110x faster eagerly,
         # which is what makes the fine residual grid below affordable.
         T = builder.tangent(u.Q(tau_v, unit)).ustrip("")
-        return jnp.dot(T, offset(tau_v))
+        # Divided by |d(offset)/dtau|, which puts the residual in `tau` rather
+        # than in whatever length the ambient point carries. Undivided, one
+        # `atol` served as a tolerance on a length *and* on a tau at once, so
+        # the identical geometry converged differently by unit -- measured
+        # -4.195e-09 in km, pc and Mm against +2.424e-11 in m. Scaling only the
+        # tolerances does not fix it: the sensitivity lives inside the solvers'
+        # own convergence tests on the residual value.
+        #
+        # `T` still comes from `builder.tangent`, NOT from this derivative.
+        # They differ on a station-pinned worldtube, where `tau` is a time: the
+        # tangent is the curve's spatial direction while the derivative is the
+        # station's velocity. Using the latter as the direction redefines the
+        # root and broke every worldtube round trip -- caught by the existing
+        # suite, not by the unit test added here.
+        speed = jnp.linalg.norm(jax.jacfwd(lambda t: -offset(t))(tau_v))
+        return jnp.dot(T, offset(tau_v)) / speed
 
     # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
     # so once the curve varies on that scale it can hold a whole period -- two
