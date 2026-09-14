@@ -188,10 +188,8 @@ def nearest_tau(
     # tau, so the ratio has the units the residual needs. Floored so a query
     # sitting exactly on the curve cannot make it zero in turn.
     _extent = jnp.sqrt(jnp.max(scan)) - jnp.sqrt(jnp.min(scan))
-    # `ones_like`, not a bare `1.0`: a Python float promotes an f32 expression
-    # to f64 under `jnp.where`, which would widen everything downstream of the
-    # residual and discard a deliberate choice of single precision -- the same
-    # reason `bishop._float` avoids `dtype=float`.
+    # `ones_like` keeps the fallback in the scan's own dtype instead of leaning
+    # on JAX's weak-typing rules to do it.
     _fallback_speed = jnp.where(_extent > 0, _extent, jnp.ones_like(_extent)) / jnp.abs(
         hi - lo
     )
@@ -200,8 +198,10 @@ def nearest_tau(
     # amplifies the residual without bound. Any positive scaling leaves the root
     # and its sign untouched, so a floor can only improve conditioning -- it
     # cannot move the answer. `sqrt(eps)` matches the tolerance convention used
-    # below.
-    _speed_floor = float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5 * _fallback_speed
+    # below, and the eps is the fallback's own, not the default dtype's: with x64
+    # enabled but f32 curve data the default eps floors ~2e4x too low to clamp
+    # f32 rounding noise.
+    _speed_floor = jnp.sqrt(jnp.finfo(_fallback_speed.dtype).eps) * _fallback_speed
 
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args

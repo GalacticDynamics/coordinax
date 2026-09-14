@@ -45,6 +45,9 @@ def _solve(unit: str, scale: float) -> float:
 #: *different* circle and exercised no conversion factor at all.
 _KM_IN_PC = float(u.Q(1.0, "km").ustrip("pc"))  # from unxt, not hard-coded
 
+#: Solved once, not once per case: it is the same baseline every time.
+_km_answer = _solve("km", 1.0)
+
 
 @pytest.mark.parametrize(
     ("unit", "scale"), [("km", 1.0), ("m", 1000.0), ("Mm", 0.001), ("pc", _KM_IN_PC)]
@@ -53,9 +56,9 @@ def test_the_answer_does_not_depend_on_the_ambient_unit(
     unit: str, scale: float
 ) -> None:
     """Every spelling of one circle must give one answer."""
-    assert _solve(unit, scale) == pytest.approx(_solve("km", 1.0), rel=1e-12)
+    assert _solve(unit, scale) == pytest.approx(_km_answer, rel=1e-12)
 
 
 def test_and_that_answer_is_right() -> None:
     """Unit-invariance would also be satisfied by being uniformly wrong."""
-    assert _solve("km", 1.0) == pytest.approx(TRUTH, abs=1e-7)
+    assert _km_answer == pytest.approx(TRUTH, abs=1e-7)
