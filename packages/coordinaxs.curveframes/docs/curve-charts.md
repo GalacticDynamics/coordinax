@@ -346,14 +346,33 @@ The lapse is identically 1 under absolute time, and the Lie-drag term vanishes b
 ...     cxfc.BishopBuilder(cxfc.AtTime(stretching, t), "km"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(3.0, "km")),
 ... )
->>> at_point = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
->>> K = cxfc.rate_of_strain(family, at_point, u.Q(1.0, "s"))
->>> float(K.value[0, 0].round(3))
-0.779
+>>> on_axis = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+>>> K = cxfc.rate_of_strain(family, on_axis, u.Q(1.0, "s"))
+>>> print(f"{float(K.value[0, 0]):.3f}")
+0.818
 
 ```
 
 Like the shift, it follows the labelling: wrapping the same curve in `ArcLength` holds the parametrisation near unit-speed, so its $K_{\tau\tau}$ is near zero instead. `t` must be a scalar — $K_{ij}$ is a 2-tensor, and `TubularChart` is single-point for the same reason.
+
+```{warning}
+**Off the curve axis this is gauge-dependent, and refused.** Each slice's
+$(n_1, n_2)$ labels are fixed by that slice's parallel-transport seed, which
+`BishopBuilder` takes from the *world* frame unless handed an
+`initial_normal`. When the tangent rotates with time the labels name a
+different physical point on each slice, and differentiating reports the
+frame's drift as strain. On a static helix $\gamma_{\tau\tau}$ spans
+`1.040535` to `1.629908` across four seeds at $n = (0.2, 0.1)$, and is
+`1.16` for every seed on the axis. A rigid rotation — an isometry, so
+$K = 0$ exactly — instead gives $\lvert K\rvert_{\max} = 0.017405$ about
+$\hat z$.
+
+On the axis the answer is gauge-free. Off it, `assume_gauge_carried=True`
+opts in, and asserts that *you* carry one director across the family. See
+[#870](https://github.com/GalacticDynamics/coordinax/issues/870).
+```
+
+One more boundary: $\gamma_{n_in_j} = \delta_{ij}$ for every builder, so $K_{n_in_j} \equiv 0$ always. The formalism represents longitudinal stretch — not radial inflation, and not cross-sectional shear of the tube.
 
 #### Transporting A Velocity
 

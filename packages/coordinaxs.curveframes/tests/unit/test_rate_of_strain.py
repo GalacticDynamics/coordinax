@@ -18,7 +18,12 @@ import coordinaxs.curveframes as cxfc
 
 S0, T0 = 1.3, 1.0
 BOUNDS = (u.Q(0.0, "km"), u.Q(3.0, "km"))
+#: Off the axis, where `gamma` -- and so `K` -- depends on each slice's
+#: transport seed. Valid only relative to a carried gauge; see #870.
 POINT = {"tau": u.Q(S0, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
+
+#: On the axis, where the answer is gauge-free for any seed.
+ON_AXIS = {"tau": u.Q(S0, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
 
 
 def stretch_and_bend(
@@ -46,7 +51,9 @@ def k_deforming() -> np.ndarray:
     worker computes it once rather than per test.
     """
     return np.asarray(
-        cxfc.rate_of_strain(_family(stretch_and_bend), POINT, u.Q(T0, "s")).value
+        cxfc.rate_of_strain(
+            _family(stretch_and_bend), POINT, u.Q(T0, "s"), assume_gauge_carried=True
+        ).value
     )
 
 
@@ -66,14 +73,82 @@ def test_arc_length_holds_the_metric_so_its_strain_is_near_zero() -> None:
     reports, and this never overrides it.
     """
     k = cxfc.rate_of_strain(
-        _family(cxfc.ArcLength(stretch_and_bend, "km")), POINT, u.Q(T0, "s")
+        _family(cxfc.ArcLength(stretch_and_bend, "km")),
+        POINT,
+        u.Q(T0, "s"),
+        assume_gauge_carried=True,
     )
     assert np.asarray(k.value)[0, 0] == pytest.approx(-0.00548, abs=1e-4)
 
 
-def test_it_is_symmetric(k_deforming: np.ndarray) -> None:
-    """`K_ij` is a symmetric 2-tensor, being a derivative of one."""
-    assert np.allclose(k_deforming, k_deforming.T, atol=1e-6)
+# `test_it_is_symmetric` stood here and was vacuous: `K = 1/2 d_t(J^T J)` is
+# symmetric by construction for every builder, so the assertion could not fail
+# however wrong `K` was. What it should have been checking is below -- a rigid
+# motion is an isometry, so `K` must vanish. That is the property the n-plane
+# gauge defect actually breaks, and the one a regression test needs (#870).
+
+
+def _rotation(axis: list[float], theta):
+    """Rodrigues, so the motion below is exactly rigid."""
+    a = jnp.asarray(axis) / jnp.linalg.norm(jnp.asarray(axis))
+    k = jnp.array([[0, -a[2], a[1]], [a[2], 0, -a[0]], [-a[1], a[0], 0]])
+    return jnp.eye(3) + jnp.sin(theta) * k + (1 - jnp.cos(theta)) * (k @ k)
+
+
+def _helix_family(axis: list[float]):
+    """A helix carried rigidly about ``axis``, sliced at each time."""
+
+    def curve(tau: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+        arc = tau.ustrip("km")
+        base = jnp.stack([jnp.cos(arc), jnp.sin(arc), 0.4 * arc])
+        return u.Q(_rotation(axis, t.ustrip("s")) @ base, "km")
+
+    return lambda t: cxfc.TubularChart(
+        cxfc.BishopBuilder(cxfc.AtTime(curve, t), "km"),
+        tau_bounds=(u.Q(-1.0, "km"), u.Q(2.0, "km")),
+    )
+
+
+HELIX_OFF = {"tau": u.Q(0.5, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
+HELIX_ON = {"tau": u.Q(0.5, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
+
+
+@pytest.mark.parametrize("axis", [[0.0, 0.0, 1.0], [0.0, 1.0, 0.0]], ids=["z", "y"])
+def test_a_rigid_rotation_gives_no_strain_on_axis(axis: list[float]) -> None:
+    """A rigid motion is an isometry, so nothing deforms.
+
+    Two traps this avoids. A rigid *translation* proves nothing: `T0` does not
+    move, so the world-anchored transport seed does not either. And the axis
+    matters -- only rotations fixing `argmin |T0|` are equivariant, so `x-hat`
+    passes even when the gauge is broken. Both axes here are generic.
+    """
+    k = cxfc.rate_of_strain(_helix_family(axis), HELIX_ON, u.Q(0.3, "s"))
+    assert np.abs(np.asarray(k.value)).max() < 1e-5
+
+
+def test_an_off_axis_rate_is_refused_as_gauge_dependent() -> None:
+    """Off the axis the answer turns on a seed the caller never chose."""
+    with pytest.raises(ValueError, match="gauge-dependent"):
+        cxfc.rate_of_strain(_helix_family([0.0, 0.0, 1.0]), HELIX_OFF, u.Q(0.3, "s"))
+
+
+@pytest.mark.xfail(
+    strict=True, reason="#870: the n-plane gauge drifts and is reported as strain"
+)
+def test_a_rigid_rotation_gives_no_strain_off_axis() -> None:
+    """The requirement the guard defers rather than meets.
+
+    Opting in returns `|K|max = 0.017405` about `z-hat`, where an isometry
+    demands zero. Strict, so that fixing #870 -- by carrying one director
+    across the family -- turns this green and says so.
+    """
+    k = cxfc.rate_of_strain(
+        _helix_family([0.0, 0.0, 1.0]),
+        HELIX_OFF,
+        u.Q(0.3, "s"),
+        assume_gauge_carried=True,
+    )
+    assert np.abs(np.asarray(k.value)).max() < 1e-5
 
 
 def test_a_static_curve_does_not_deform() -> None:
@@ -86,15 +161,15 @@ def test_a_static_curve_does_not_deform() -> None:
     family = lambda t: cxfc.TubularChart(
         cxfc.BishopBuilder(circle, "km"), tau_bounds=BOUNDS
     )
-    k = cxfc.rate_of_strain(family, POINT, u.Q(T0, "s"))
+    k = cxfc.rate_of_strain(family, ON_AXIS, u.Q(T0, "s"))
     assert np.allclose(np.asarray(k.value), np.zeros((3, 3)), atol=1e-6)
 
 
 def test_the_rate_is_per_the_unit_of_the_time_it_was_given() -> None:
     """Seconds give `1 / s`; milliseconds give `1 / ms`, a thousand times smaller."""
     fam = _family(stretch_and_bend)
-    in_s = cxfc.rate_of_strain(fam, POINT, u.Q(T0, "s"))
-    in_ms = cxfc.rate_of_strain(fam, POINT, u.Q(T0 * 1000, "ms"))
+    in_s = cxfc.rate_of_strain(fam, ON_AXIS, u.Q(T0, "s"))
+    in_ms = cxfc.rate_of_strain(fam, ON_AXIS, u.Q(T0 * 1000, "ms"))
 
     assert "1 / s" in in_s.unit.to_string()
     assert "1 / ms" in in_ms.unit.to_string()
@@ -112,11 +187,11 @@ def test_a_batched_time_is_refused() -> None:
     """
     with pytest.raises(ValueError, match="must be a scalar"):
         cxfc.rate_of_strain(
-            _family(stretch_and_bend), POINT, u.Q(jnp.asarray([0.5, T0]), "s")
+            _family(stretch_and_bend), ON_AXIS, u.Q(jnp.asarray([0.5, T0]), "s")
         )
 
 
 def test_a_bare_time_is_refused() -> None:
     """Nothing else states what the rate is *per*."""
     with pytest.raises(TypeError, match="must carry a unit"):
-        cxfc.rate_of_strain(_family(stretch_and_bend), POINT, T0)
+        cxfc.rate_of_strain(_family(stretch_and_bend), ON_AXIS, T0)

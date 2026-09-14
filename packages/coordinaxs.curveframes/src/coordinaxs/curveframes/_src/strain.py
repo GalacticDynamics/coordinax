@@ -22,6 +22,21 @@ import unxts.linalg as ul
 import unxt as u
 from coordinaxs.api.manifolds import metric_matrix
 
+_MSG_GAUGE = (
+    "`rate_of_strain` is gauge-dependent off the curve axis, and this point has "
+    "n = {n}. Each slice's `(n1, n2)` labels are fixed by that slice's transport "
+    "seed, which `BishopBuilder` picks from the *world* frame unless given an "
+    "`initial_normal` -- so when the tangent rotates with time the labels name a "
+    "different physical point on each slice, and differentiating reports the "
+    "frame's drift as strain. Measured on a static helix, gamma_tau_tau spans "
+    "1.040535 to 1.629908 across four seeds at n = (0.2, 0.1); on the axis it is "
+    "1.16 for every seed. A rigid rotation, which is an isometry and must give "
+    "K = 0, instead gives |K|max = 0.017405 about z-hat.\n\n"
+    "On the axis (n = 0) the result is gauge-free and always valid. Off it, pass "
+    "`assume_gauge_carried=True` only if your family carries one director through "
+    "`initial_normal` rather than letting each slice choose. See #870."
+)
+
 _MSG_BATCHED_TIME = (
     "`rate_of_strain` differentiates at one time, so `t` must be a scalar; got "
     "shape {shape}. `K_ij` is a 2-tensor, and a batched `t` would make the "
@@ -37,7 +52,12 @@ _MSG_BARE_TIME = (
 
 
 def rate_of_strain(
-    chart_at_time: Callable[[Any], Any], point: dict, t: Any, /
+    chart_at_time: Callable[[Any], Any],
+    point: dict,
+    t: Any,
+    /,
+    *,
+    assume_gauge_carried: bool = False,
 ) -> ul.QuantityMatrix:
     r"""Return $K_{ij} = \tfrac12\,\partial_t\gamma_{ij}$ at ``point``.
 
@@ -51,6 +71,11 @@ def rate_of_strain(
         ``{"tau": ..., "n1": ..., "n2": ...}``.
     t
         The time to differentiate at. Must carry a unit.
+    assume_gauge_carried
+        Opt out of the off-axis refusal. Set this only when the family carries
+        one director across every slice -- by passing `initial_normal` rather
+        than letting each `BishopBuilder` pick its own. It is an assertion by
+        the caller, not something this can verify (#870).
 
     Notes
     -----
@@ -62,6 +87,12 @@ def rate_of_strain(
 
     Takes the family rather than one chart because $\partial_t$ needs
     neighbouring slices, and a `TubularChart` is a single one.
+
+    Off the curve axis the result depends on each slice's transport seed, so
+    it is refused unless ``assume_gauge_carried`` says the caller has handled
+    that. On the axis it is gauge-free and always valid. Measured: on a static
+    helix ``gamma_tau_tau`` spans 1.040535 to 1.629908 across four seeds at
+    ``n = (0.2, 0.1)`` and is 1.16 for every seed at ``n = 0``.
 
     ``t`` must be a scalar. A batched one would raise the Jacobian's rank
     above 2, and `TubularChart` is single-point for the same reason; use
@@ -75,6 +106,10 @@ def rate_of_strain(
     shape = jnp.shape(t.value if t_unit is not None else t)
     if shape != ():
         raise ValueError(_MSG_BATCHED_TIME.format(shape=shape))
+
+    offset = tuple(float(u.ustrip(u.unit_of(point[k]), point[k])) for k in ("n1", "n2"))
+    if not assume_gauge_carried and any(o != 0.0 for o in offset):
+        raise ValueError(_MSG_GAUGE.format(n=offset))
 
     def gamma(t_val: Any) -> Any:
         chart = chart_at_time(u.Q(t_val, t_unit))
