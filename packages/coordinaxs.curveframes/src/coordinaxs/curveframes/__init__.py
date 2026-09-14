@@ -1,8 +1,8 @@
 r"""Curve-attached reference frames for $\tau$-parameterised curves.
 
-This package provides **Frenet--Serret** and **Bishop** (rotation-minimising)
-curve-attached reference frames that integrate with the ``coordinax.frames``
-frame-transition system.
+This package provides **Frenet--Serret**, **Bishop** (rotation-minimising) and
+**signed planar** curve-attached reference frames that integrate with the
+``coordinax.frames`` frame-transition system.
 
 Public API
 ----------
@@ -17,6 +17,7 @@ Public API
     FrenetSerretFrame
     BishopBuilder
     BishopFrame
+    SignedPlanarBuilder
     TubularChart
     nearest_tau
     rate_of_strain
@@ -50,6 +51,7 @@ __all__ = (
     "FrenetSerretBuilder",
     "FrenetSerretFrame",
     "LagrangianArcLength",
+    "SignedPlanarBuilder",
     "TubularChart",
     "nearest_tau",
     "rate_of_strain",
@@ -68,6 +70,7 @@ with install_import_hook("coordinaxs.curveframes"):
         FrenetSerretBuilder,
         FrenetSerretFrame,
         LagrangianArcLength,
+        SignedPlanarBuilder,
         TubularChart,
         nearest_tau,
         rate_of_strain,
