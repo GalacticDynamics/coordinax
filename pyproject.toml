@@ -44,7 +44,7 @@ dependencies = [
   # unit. Relied upon: dropping a unit yields a number in the wrong dimension
   # that looks entirely plausible.
   "unxt>=2.0.2",
-  "unxts.linalg>=2.0.3",
+  "unxts.linalg>=2.0.6",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
