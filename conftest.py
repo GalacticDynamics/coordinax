@@ -10,12 +10,13 @@ from collections.abc import Callable, Iterable, Sequence
 from types import ModuleType
 
 import _pytest.pathlib as pytest_pathlib
-import sybil.document as sybil_document
+import pytest
 import sybil.python as sybil_python
 from hypothesis import HealthCheck, Phase, settings
 from sybil import Document, Lexeme, Region, Sybil, document as sybil_document
 from sybil.evaluators.doctest import DocTestEvaluator
 from sybil.evaluators.python import PythonEvaluator
+from sybil.integration.pytest import SybilItem
 from sybil.parsers import myst, rest
 from sybil.parsers.abstract.doctest import DocTestStringParser
 from sybil.python import import_path as sybil_import_path
@@ -307,3 +308,36 @@ python = Sybil(
 
 
 pytest_collect_file = (docs + python).pytest()
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Pin each document's Sybil examples to one xdist worker.
+
+    Sybil evaluates a document's ``>>>`` examples in sequence against shared
+    state, so they have to land on the same worker. That -- and only that -- is
+    what `--dist=loadfile` was bought for, but it pins *every* file, leaving the
+    heaviest one to run alone at the end while the other workers idle. Grouping
+    the Sybil items instead lets `--dist=loadgroup` keep the guarantee where it
+    is needed and distribute ordinary tests one by one.
+
+    ``tryfirst`` is load-bearing. `xdist` reads this marker in its own
+    ``pytest_collection_modifyitems`` and rewrites the nodeid to carry an
+    ``@group`` suffix, which is what the scheduler actually groups on; its hook
+    runs before an undecorated one here, so the marker would arrive too late to
+    be seen and the examples would scatter. That failure is loud -- a document's
+    later examples raise `NameError` for names its earlier ones defined -- but
+    it reads as a test bug rather than a scheduling one, so: keep ``tryfirst``.
+
+    The group key is the document's path relative to the rootdir, in POSIX form
+    so that it is identical on Windows, where `str` on a `Path` would otherwise
+    yield backslashes. It is readable in the nodeid it gets appended to.
+    """
+    root = config.rootpath
+    for item in items:
+        if isinstance(item, SybilItem):
+            path = item.path
+            key = path.relative_to(root) if path.is_relative_to(root) else path
+            item.add_marker(pytest.mark.xdist_group(key.as_posix()))
