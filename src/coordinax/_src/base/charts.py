@@ -272,7 +272,13 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
             cls_name = wl.TextDoc(f"{self.__class__.__name__}(")
 
         defaults = getattr(self, "__dataclass_fields__", {})
-        field_items = cast("list[tuple[str, Any]]", dataclassish.field_items(self))
+        try:
+            field_items = cast("list[tuple[str, Any]]", dataclassish.field_items(self))
+        except plum.NotFoundLookupError:
+            # Propagating re-enters this method: `plum` renders a failed
+            # lookup by `repr`-ing the argument it failed on, so the error
+            # cannot format itself and `str(e)` raises too. See #866.
+            return wl.TextDoc(f"<{type(self).__name__} (unregistered)>")
         docs = [
             wl.TextDoc(k)
             + wl.TextDoc("=")
