@@ -129,16 +129,10 @@ def _float(x: Any, /) -> Array:
     input to f64 under ``jax_enable_x64`` and discarding a deliberate choice of
     single precision. `jnp.result_type` promotes only what needs promoting.
 
-    A `unxt.Quantity` is stripped in its own unit first. `jnp.asarray` on one
-    reaches for ``__array__``, which a *traced* `Quantity` cannot answer -- so
-    a `Quantity` ``initial_normal`` that depends on the differentiated argument
-    raised `TracerArrayConversionError` from inside `jax.jacfwd`, while the
-    same direction as a bare array worked. That is the natural typing for this
-    argument and the one the rest of the library uses.
-
-    Stripping in the vector's *own* unit rather than converting to a fixed one
-    is what makes any unit acceptable: this is a direction, `_orthonormalize`
-    normalises it, and the scale is discarded either way.
+    A `unxt.Quantity` is stripped in its own unit first: `jnp.asarray` reaches
+    for ``__array__``, which a *traced* one cannot answer. A constant
+    `Quantity` is therefore fine -- only one depending on the differentiated
+    argument fails, which is why the obvious reproducer passes.
     """
     unit = u.unit_of(x)
     arr = jnp.asarray(x if unit is None else u.ustrip(unit, x))
