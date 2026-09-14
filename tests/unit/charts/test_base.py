@@ -60,6 +60,24 @@ class TestChartProperties:
         # str
         assert isinstance(str(chart), str)
 
+    def test_pdoc_of_an_unregistered_chart_does_not_raise(self) -> None:
+        """Printing must never raise, whatever state the class is in (#866).
+
+        ``__pdoc__`` is exercised directly rather than through a throwaway
+        subclass: ``__init_subclass__`` registers every concrete chart, and the
+        hypothesis ``charts()`` strategy draws from that registry, so defining
+        one here would leak into other tests.
+        """
+        import wadler_lindig as wl
+
+        from coordinax._src.base.charts import AbstractChart
+
+        class Unregistered:
+            """Stands in for a chart whose dataclass decorator raised."""
+
+        doc = AbstractChart.__pdoc__(Unregistered(), include_params=False)
+        assert wl.pformat(doc) == "<Unregistered (unregistered)>"
+
 
 class TestAbstractChartCheckData:
     """Unit tests for AbstractChart.check_data method."""
