@@ -59,7 +59,4 @@ def chart_classes(
         exclude_abstract=draw_if_strategy(draw, exclude_abstract),
         exclude=exclude,
     )
-    # `__subclasses__` includes classes whose `__init_subclass__` raised;
-    # `CHART_CLASSES` holds only the ones that finished registering.
-    classes = [c for c in classes if c in cxc.CHART_CLASSES]
     return draw(st.sampled_from(classes))  # ty: ignore[invalid-return-type]

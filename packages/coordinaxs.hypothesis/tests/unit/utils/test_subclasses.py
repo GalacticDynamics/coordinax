@@ -6,7 +6,10 @@ import types
 
 import coordinax.charts as cxc
 
-from coordinaxs.hypothesis.utils._src.subclasses import canonicalize_coordinax_class
+from coordinaxs.hypothesis.utils._src.subclasses import (
+    canonicalize_coordinax_class,
+    get_all_subclasses,
+)
 
 
 def test_canonicalize_non_coordinax_class_is_identity() -> None:
@@ -41,3 +44,20 @@ def test_canonicalize_real_chart_class_returns_public_class() -> None:
     canonicalize_coordinax_class.cache_clear()
 
     assert canonicalize_coordinax_class(cxc.Cart3D) is cxc.Cart3D
+
+
+def test_classes_defined_inside_a_function_are_not_drawn() -> None:
+    """A class defined in a function body is never a library class (#866).
+
+    ``__subclasses__`` keeps reporting a class whose ``__init_subclass__``
+    raised, for as long as a traceback holds it alive, and a throwaway defined
+    in a test would otherwise leak into every later draw.
+    """
+    get_all_subclasses.cache_clear()
+
+    class _Throwaway(cxc.Cart3D):  # type: ignore[misc]
+        pass
+
+    get_all_subclasses.cache_clear()
+    assert _Throwaway not in get_all_subclasses(cxc.AbstractChart)
+    assert cxc.Cart3D in get_all_subclasses(cxc.AbstractChart)
