@@ -171,7 +171,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
 
     >>> sp = cxfc.SignedPlanarBuilder(cubic, "s")
     >>> sp.location(u.Q(0.0, "s"))
-    Quantity(Array([0., 0., 0.], dtype=float64, weak_type=True), unit='m')
+    Q([0., 0., 0.], 'm')
 
     """
 
@@ -280,7 +280,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
         ...                           jnp.zeros_like(t)]), "m")
 
         >>> cxfc.SignedPlanarBuilder(line, "s").normal(u.Q(5.0, "s"))
-        Quantity(Array([0., 1., 0.], dtype=float64), unit='')
+        Q([0., 1., 0.], '')
 
         """
         return u.Q(self.rotation_matrix(tau)[1], "")
@@ -303,7 +303,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
         ...                           jnp.zeros_like(t)]), "m")
 
         >>> cxfc.SignedPlanarBuilder(circle, "s").binormal(u.Q(1.3, "s"))
-        Quantity(Array([0., 0., 1.], dtype=float64), unit='')
+        Q([0., 0., 1.], '')
 
         """
         return u.Q(self.rotation_matrix(tau)[2], "")

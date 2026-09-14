@@ -131,7 +131,22 @@ class TestPlanarityGuard:
             circle, "s", plane_normal=jnp.array([1.0, 0.0, 0.0])
         )
         with pytest.raises(Exception, match="plane"):
-            b.normal(u.Q(0.0, "s"))
+            b.normal(u.Q(0.3, "s"))
+
+    def test_the_guard_is_pointwise(self) -> None:
+        """A wrong plane can pass at isolated parameters, by construction.
+
+        At ``tau=0`` the circle's tangent is ``(-0, 1, 0)``, which lies in the
+        yz-plane exactly, so a builder given ``plane_normal=x-hat`` is asked
+        nothing false at that one point and answers. The guard checks the
+        parameter it is evaluated at -- there is no curve-wide check a
+        pointwise API could run.
+        """
+        b = cxfc.SignedPlanarBuilder(
+            circle, "s", plane_normal=jnp.array([1.0, 0.0, 0.0])
+        )
+        N = b.normal(u.Q(0.0, "s"))  # does not raise
+        np.testing.assert_allclose(N.value, [0.0, 0.0, 1.0], atol=1e-10)
 
     def test_near_planar_curve_is_accepted(self) -> None:
         """Tolerance is sqrt(eps) ~ 1.5e-8 in f64, so a 1e-9 drift passes."""
