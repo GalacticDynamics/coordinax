@@ -464,9 +464,10 @@ _COSLAT_MSG = (
     "`loncoslat_sph3d` is a chart whose coordinate is lon * cos(lat); a tangent "
     "in it carries the extra `- lon sin(lat) d_lat`. Converting between them "
     "needs the base point's latitude, which a conversion method is not given -- "
-    "astropy asks for a `base=` for the same reason. Use "
-    "`{apy}.represent_as(SphericalDifferential, base=...)` and convert that, or "
-    "convert the coordinax tangent with `cconvert(..., at=)`."
+    "astropy asks for a `base=` for the same reason. Call "
+    "`.represent_as(SphericalDifferential, base=...)` on the differential and "
+    "convert the result, or convert the coordinax tangent with "
+    "`cconvert(..., at=)`."
 )
 
 
