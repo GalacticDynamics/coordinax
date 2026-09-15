@@ -116,7 +116,7 @@ Passing a component dictionary with `unxt.Quantity` values returns a `QuantityMa
 QM(
     [[ 1.,  0.,  0.],
      [ 0.,  0., -1.],
-     [ 0.,  1.,  0.]],
+     [-0.,  1.,  0.]],
     '((, , ), (rad / m, rad / m, rad / m), (rad / m, rad / m, rad / m))'
 )
 >>> J.shape
