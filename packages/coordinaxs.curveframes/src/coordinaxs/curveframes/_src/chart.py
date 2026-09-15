@@ -150,6 +150,16 @@ class TubularChart(AbstractParameterizedChart):
     more than one period: a wider range ties the nearest-point solve between
     `gamma(tau)` and `gamma(tau + period)`, the same ambient point.
 
+    Exactly one period is not safe either, for a different reason. A
+    rotation-minimising frame is not periodic: carried once around a closed
+    *space* curve it returns rotated about the tangent, so the chart is torn
+    at the seam -- `tau` just inside either end names the same station and the
+    same ``(n1, n2)``, but a different ambient point. Measured on a trefoil
+    over ``(0, 2*pi)``: the normal comes back ``-2.225041 rad`` (``-127.485
+    deg``) round, putting the two sides of the seam ``0.358726 km`` apart at
+    ``n1 = 0.2 km``. A **planar** closed curve has no such tear, which is why
+    the obvious probe misses this. `TubularChart.holonomy` measures it.
+
     A point whose true nearest curve point lies outside `tau_bounds` does not
     raise: the fallback solve can converge to a finite, low-residual `tau`
     outside `tau_bounds` instead. See the curve-charts guide's Limitations
@@ -294,6 +304,109 @@ class TubularChart(AbstractParameterizedChart):
         `coordinax.charts.GalileanCT`).
         """
         return _is_two_argument(self.builder.curve)
+
+    def holonomy(self, *, n_scale: int = 16) -> u.AbstractQuantity:
+        r"""Angle by which the frame fails to close around a closed curve.
+
+        A rotation-minimising (Bishop) frame is not periodic: carried once
+        around a closed space curve it comes back rotated about the tangent by
+        an angle that is a property of the curve, not of the solver. The chart
+        is then **torn at the seam** -- ``tau`` just above ``tau_bounds[0]``
+        and just below ``tau_bounds[1]`` name the same station and the same
+        ``(n1, n2)`` offset but different ambient points.
+
+        Returns the size of that tear. Zero when the frame closes, and zero
+        when the curve does not: holonomy belongs to a loop. Closure is judged
+        relative to the curve's own size, at the working dtype's ``sqrt(eps)``.
+
+        An open curve never evaluates the frame, so one whose frame is
+        undefined answers 0 rather than raising -- a straight line under
+        `FrenetSerretBuilder` has no normal, but no seam either.
+
+        Examples
+        --------
+        A trefoil over exactly one period closes, but its frame does not::
+
+            >>> import jax.numpy as jnp, numpy as np, unxt as u
+            >>> import coordinaxs.curveframes as cxfc
+            >>> def trefoil(tau):
+            ...     t = tau.ustrip("s")
+            ...     return u.Q(jnp.stack([jnp.sin(t) + 2 * jnp.sin(2 * t),
+            ...                           jnp.cos(t) - 2 * jnp.cos(2 * t),
+            ...                           -jnp.sin(3 * t)]), "km")
+            >>> bounds = (u.Q(0.0, "s"), u.Q(float(2 * np.pi), "s"))
+            >>> ch = cxfc.TubularChart(cxfc.BishopBuilder(trefoil, "s"),
+            ...                        tau_bounds=bounds)
+            >>> bool(abs(ch.holonomy().ustrip("rad")) > 2.2)
+            True
+
+        A *planar* closed curve has none, which is why the obvious probe
+        misses this::
+
+            >>> def circle(tau):
+            ...     t = tau.ustrip("s")
+            ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
+            ...                           jnp.zeros_like(t)]), "km")
+            >>> ch = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"),
+            ...                        tau_bounds=bounds)
+            >>> bool(abs(ch.holonomy().ustrip("rad")) < 1e-8)
+            True
+
+        """
+        # Refused, not clamped: both smaller values are silently wrong, in
+        # opposite directions.
+        if n_scale < 3:
+            msg = (
+                f"`n_scale` must be at least 3, got {n_scale}: it sizes the "
+                "curve so closure can be judged relative to it, and a closed "
+                "curve's two endpoints coincide -- so 2 samples span nothing "
+                "and report no seam where there is one, while 1 compares a "
+                "point with itself and reports a seam on any curve at all."
+            )
+            raise ValueError(msg)
+
+        unit = self._tau_unit
+        lo = jnp.asarray(self.tau_bounds[0].ustrip(unit))
+        hi = jnp.asarray(self.tau_bounds[1].ustrip(unit))
+
+        # Spread about the mean, not a radius from the origin, which fails for
+        # a curve passing through it. `location`, not `curve`: it routes
+        # through `_resolve`, so a two-argument worldtube gets `(station,
+        # time)` rather than a time where a station belongs.
+        seeds = jnp.linspace(lo, hi, n_scale)
+        len_unit = u.unit_of(self.builder.location(u.Q(lo, unit)))
+        pts = jax.vmap(lambda t: self.builder.location(u.Q(t, unit)).ustrip(len_unit))(
+            seeds
+        )
+        scale = jnp.max(jnp.linalg.norm(pts - jnp.mean(pts, axis=0), axis=-1))
+
+        g_lo, g_hi = pts[0], pts[-1]
+        gap = jnp.linalg.norm(g_hi - g_lo)
+        eps = jnp.sqrt(jnp.finfo(gap.dtype).eps)
+        closed = gap <= eps * scale
+
+        def _angle(_: Any = None) -> jax.Array:
+            """Measure the normal's rotation in the start frame's `(N, B)`.
+
+            `atan2`, not `arccos`: the sign says which way it twists.
+            """
+            r_lo = self.builder.rotation_matrix(u.Q(lo, unit))
+            r_hi = self.builder.rotation_matrix(u.Q(hi, unit))
+            n_lo, b_lo = r_lo[1], r_lo[2]
+            n_hi = r_hi[1]
+            return jnp.arctan2(jnp.dot(n_hi, b_lo), jnp.dot(n_hi, n_lo))
+
+        # Branched, not `jnp.where`: those two calls are a parallel-transport
+        # ODE solve and the whole cost (6.9 s against 5.3 ms for the scan), and
+        # an open curve discards them. Hybrid because a Python branch cannot
+        # test a tracer, and `lax.cond` eagerly would trace the solve it skips.
+        zero = jnp.zeros((), dtype=gap.dtype)
+        if isinstance(closed, jax.core.Tracer):
+            angle = jax.lax.cond(closed, _angle, lambda _: zero, None)
+        else:
+            angle = _angle() if bool(closed) else zero
+
+        return u.Q(angle, "rad")
 
     def check_data(self, data: dict, /, *, values: bool = False, **kw: Any) -> dict:
         # Forward `values`: the base class gates its coordinate-dimension check
