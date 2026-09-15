@@ -613,6 +613,42 @@ ValueError: point lies outside the reach of the curve: the tubular coordinates a
 
 The factor is a _local_ test only: it says nothing about a point mirrored across the curve at the same offset (same factor, same ambient point, different $\tau$), and nothing about the curve's global self-approach distance either — a passing factor does not rule either out.
 
+**A worldtube can be singular at the axis itself, which is not a reach failure at all.** Past the focal distance the axis is healthy and pulling `n1`, `n2` inward fixes things. But if the station moves with no component along its own spatial tangent, $\partial\mathbf{x}/\partial\tau$ lies inside the normal plane $\mathrm{span}(\mathbf{U}_1, \mathbf{U}_2)$ and the Jacobian is singular _on the axis_, where no offset can help. A rigid rod spun about its end is the model case — it is singular on the whole $n_2 = 0$ plane, and fine off it:
+
+```{code-block} python
+>>> def spun_rod(s, t):
+...     sv, tv = s.ustrip("km"), t.ustrip("s")
+...     return u.Q(jnp.stack([sv * jnp.cos(tv), sv * jnp.sin(tv),
+...                           jnp.zeros_like(sv * tv)]), "km")
+
+>>> rod = cxfc.TubularChart(
+...     cxfc.BishopBuilder(spun_rod, "km", station=u.Q(1.3, "km")),
+...     tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
+... )
+>>> on_plane = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
+>>> bool(abs(float(rod.jacobian_factor(on_plane))) < 1e-12)
+True
+
+>>> rod.check_data(on_plane, values=True)
+Traceback (most recent call last):
+    ...
+ValueError: the frame is degenerate at the tube axis, so no offset gives a chart here: ...
+
+```
+
+It is _not_ degenerate everywhere, though. Off that plane the factor is $n_2/s_0$ and the chart is usable:
+
+```{code-block} python
+>>> off_plane = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
+>>> f'{float(rod.jacobian_factor(off_plane)):.8f}'
+'0.07692308'
+
+>>> _ = rod.check_data(off_plane, values=True)
+
+```
+
+Both guards compare the factor against $\sqrt{\varepsilon}$ rather than zero. An exactly degenerate chart does not come back exactly zero — the rod above reads `0.0` eagerly and `1.9469e-17` under `jit`, where XLA's evaluation order differs — so a bare `> 0` test held and said nothing once compiled.
+
 **The inverse does not detect a point whose nearest curve point lies outside `tau_bounds`.** The coarse scan is confined to `tau_bounds`; if the bracketed polish above finds no root there (because the true nearest point is further out), `nearest_tau` falls back to an unconstrained root-find from the scan's edge, which can walk the solution arbitrarily far outside `tau_bounds`. The result is a finite $\tau$ outside `tau_bounds`, with residual near zero and no error or `NaN` -- clipping `tau` to the bounds is not a fix, since it would break the stationarity condition the inverse solves. A helix queried well past the end of its intended range shows this:
 
 ```{code-block} python
