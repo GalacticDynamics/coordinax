@@ -923,19 +923,43 @@ class TestJacobianPtMapAtExtremeScales:
 
         assert_allclose(qnp.matmul(j_inv, j_fwd).value, jnp.eye(curv.ndim), atol=1e-4)
 
-    #: Pairs with a hand-written Jacobian, and a generic direction for each.
-    #: Angles avoid multiples of pi/2 so no entry is exactly zero and a purely
-    #: relative comparison of the whole matrix stays well defined.
+    #: Every chart pair with a hand-written Jacobian, and how to build a
+    #: generic point in its *input* chart. Cartesian inputs scale wholesale;
+    #: a curvilinear input scales only its length components, since an angle
+    #: has no magnitude to sweep. Angles avoid multiples of pi/2 so no entry
+    #: is exactly zero and a purely relative comparison stays well defined.
+    #:
+    #: Keep this in step with the closed forms in `jacobian.py`. It was left
+    #: listing only `cart2d -> polar2d` when four more were added, which is
+    #: how the overflow this class now pins reached `main`.
     CLOSED_FORM_PAIRS: ClassVar = [
-        ("cart2d->polar2d", "cart2d", "polar2d", (0.7,)),
-        ("cart3d->cyl3d", "cart3d", "cyl3d", (0.7, 0.9)),
-        ("cart3d->sph3d", "cart3d", "sph3d", (0.7, 0.9)),
+        pytest.param("cart2d", "polar2d", "cart2", id="cart2d->polar2d"),
+        pytest.param("cart3d", "cyl3d", "cart3", id="cart3d->cyl3d"),
+        pytest.param("cart3d", "sph3d", "cart3", id="cart3d->sph3d"),
+        pytest.param("cyl3d", "cart3d", "cyl3", id="cyl3d->cart3d"),
+        pytest.param("sph3d", "cart3d", "sph3", id="sph3d->cart3d"),
     ]
 
+    @staticmethod
+    def _point(kind: str, magnitude: float) -> list[float]:
+        """A generic point of the given magnitude, in *kind*'s coordinates."""
+        theta, phi = 0.7, 0.9
+        if kind == "cart2":
+            return [magnitude * math.cos(theta), magnitude * math.sin(theta)]
+        if kind == "cart3":
+            return [
+                magnitude * math.sin(theta) * math.cos(phi),
+                magnitude * math.sin(theta) * math.sin(phi),
+                magnitude * math.cos(theta),
+            ]
+        if kind == "cyl3":  # (rho, phi, z): two lengths and an angle
+            return [magnitude, phi, magnitude * 0.5]
+        return [magnitude, theta, phi]  # sph3: (r, theta, phi)
+
     @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
-    @pytest.mark.parametrize(("name", "frm", "to", "angles"), CLOSED_FORM_PAIRS)
+    @pytest.mark.parametrize(("frm", "to", "kind"), CLOSED_FORM_PAIRS)
     def test_analytic_dispatch_agrees_with_jacfwd(
-        self, name: str, frm: str, to: str, angles: tuple[float, ...], magnitude: float
+        self, frm: str, to: str, kind: str, magnitude: float
     ) -> None:
         """Every closed-form Jacobian matches autodiff, at any magnitude.
 
@@ -952,17 +976,7 @@ class TestJacobianPtMapAtExtremeScales:
         any absolute floor is vacuous at 1e18 and unmeetable at 1e-18.
         """
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        theta = angles[0]
-        if len(angles) == 1:
-            direction = [math.cos(theta), math.sin(theta)]
-        else:
-            phi = angles[1]
-            direction = [
-                math.sin(theta) * math.cos(phi),
-                math.sin(theta) * math.sin(phi),
-                math.cos(theta),
-            ]
-        at = jnp.asarray([magnitude * d for d in direction], dtype=jnp.float32)
+        at = jnp.asarray(self._point(kind, magnitude), dtype=jnp.float32)
 
         got = np.asarray(cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si))
         expected = np.asarray(
