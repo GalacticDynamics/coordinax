@@ -1,4 +1,4 @@
-"""Hypothesis strategies for Coordinax vectors."""
+"""Hypothesis strategies for coordinax semantic kinds."""
 
 __all__ = ("semantic_classes", "semantics")
 
