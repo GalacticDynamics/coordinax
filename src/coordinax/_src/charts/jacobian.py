@@ -377,10 +377,13 @@ def _jac_from_dict_via_closed_form(
 ) -> Any:
     """Send a coordinate dict to the closed form registered for its chart pair.
 
-    The generic `CDict` dispatch differentiates; this takes the closed form.
+    Three routes. Bare arrays stack and re-dispatch, as they already did.
+    Components that agree on a unit pack into one `Quantity` and take the
+    closed form. A mixed-unit point falls back to autodiff, which labels each
+    entry per column instead of relabelling them to a shared unit.
 
-    Only where `from_chart`'s components share a dimension: packing them into
-    one `Quantity` is what makes the analytic body's `at[..., i]` work.
+    Packing is why `from_chart`'s components must share a dimension: it is
+    what makes the analytic body's ``at[..., i]`` work.
     """
     at = from_chart.check_data(at, keys=True)
 
