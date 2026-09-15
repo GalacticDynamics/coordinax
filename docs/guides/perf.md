@@ -444,6 +444,43 @@ jac_jit(at)
 
 Same runtime as the baseline. The idiomatic form also accepts quantity-valued dicts directly, without any manual unit management.
 
+### Eager Jacobians
+
+Everything above is jitted. Eager is a different story, and worth knowing before you loop over a few thousand points.
+
+`jax.jacfwd` builds and evaluates a jaxpr on _every_ call. Jitting hoists that into a one-time compilation; eagerly you pay it per call, and it dominates everything else:
+
+```{code-cell} ipython3
+at_cyl = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.7), "z": jnp.asarray(3.0)}
+
+jitted = jax.jit(lambda a: cxc.jac_pt_map(a, cxc.cyl3d, cxc.sph3d, usys=usys))
+jax.block_until_ready(jitted(at_cyl))  # compile
+jax.block_until_ready(cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys))  # warm up
+
+print("eager: ", end="")
+%timeit jax.block_until_ready(cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys))
+print("jitted:", end="")
+%timeit jax.block_until_ready(jitted(at_cyl))
+```
+
+`jax.block_until_ready` on both: JAX dispatches asynchronously, so timing without it measures how fast Python can queue the work rather than how long it takes.
+
+#### The cost is per call, not per point
+
+A chart map is pointwise, so a batch of points is a batch of independent Jacobians — but the trace happens once for the whole batch. Going from one point to ten thousand costs well under twice the time:
+
+```{code-cell} ipython3
+for n in (1, 100, 10_000):
+    batch = {k: jnp.full((n,), v) for k, v in (("rho", 2.0), ("phi", 0.7), ("z", 3.0))}
+    jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cyl3d, cxc.sph3d, usys=usys))  # warm up
+    print(f"N = {n:<6d}", end=" ")
+    %timeit -r 3 jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cyl3d, cxc.sph3d, usys=usys))
+```
+
+(A batch of one is not the same as a scalar point: any leading axis takes the `vmap` route, so `N = 1` need not match the scalar call timed above.)
+
+So batch your points rather than looping: N points cost one trace, not N.
+
 </br>
 
 ---
