@@ -1,4 +1,4 @@
-"""Hypothesis strategies for coordinax representations."""
+"""Hypothesis strategies for coordinax charts."""
 
 from importlib.metadata import entry_points
 

@@ -156,8 +156,9 @@ def charts(
 
     # Draw the chart class from the provided strategy
     chart_cls = draw(chart_cls)
-    # Redispatch to the specific chart class strategy
-    return draw(charts(chart_cls, ndim=ndim))
+    # Redispatch to the specific chart class strategy. No `ndim`: the guard
+    # above has already established it is None.
+    return draw(charts(chart_cls))
 
 
 @plum.dispatch

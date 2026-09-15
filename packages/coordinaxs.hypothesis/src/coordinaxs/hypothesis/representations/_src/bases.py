@@ -1,4 +1,4 @@
-"""Hypothesis strategies for Coordinax vectors."""
+"""Hypothesis strategies for coordinax bases."""
 
 __all__ = ("basis_classes", "bases")
 
@@ -79,15 +79,15 @@ def bases(
     --------
     >>> from hypothesis import given
     >>> import coordinax.representations as cxr
-    >>> import coordinaxs.hypothesis.representations as cxst
+    >>> import coordinaxs.hypothesis.main as cxst
 
-    >>> @given(role=cxst.bases())
-    ... def test_any_basis(role):
-    ...     assert isinstance(role, cxr.AbstractBasis)
+    >>> @given(basis=cxst.bases())
+    ... def test_any_basis(basis):
+    ...     assert isinstance(basis, cxr.AbstractBasis)
 
-    >>> @given(role=cxst.bases(include=(cxr.NoBasis,)))
-    ... def test_position_like_bases(role):
-    ...     assert isinstance(role, cxr.NoBasis)
+    >>> @given(basis=cxst.bases(include=(cxr.NoBasis,)))
+    ... def test_subset(basis):
+    ...     assert isinstance(basis, cxr.NoBasis)
 
     """
     basis_cls = draw(basis_classes(include=include, exclude=exclude))

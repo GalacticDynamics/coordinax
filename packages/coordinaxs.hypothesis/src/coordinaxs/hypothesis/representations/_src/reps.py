@@ -1,4 +1,4 @@
-"""Hypothesis strategies for Coordinax vectors."""
+"""Hypothesis strategies for coordinax representations."""
 
 __all__ = (
     "valid_basis_classes_for_geometry",
@@ -134,9 +134,9 @@ def representations(
     >>> import coordinax.representations as cxr
     >>> import coordinaxs.hypothesis.main as cxst
 
-    >>> @given(role=cxst.representations())
-    ... def test_any_representation(role):
-    ...     assert isinstance(role, cxr.Representation)
+    >>> @given(rep=cxst.representations())
+    ... def test_any_representation(rep):
+    ...     assert isinstance(rep, cxr.Representation)
 
     >>> @given(rep=cxst.representations(geom_kind=cxr.PointGeometry()))
     ... def test_point_representations(rep):

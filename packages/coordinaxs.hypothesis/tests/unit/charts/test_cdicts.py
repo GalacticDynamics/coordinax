@@ -204,3 +204,24 @@ class TestDomainsAtAstronomicalScale:
         The domain wins: capping there would ask for ``1024 <= mu <= 1000``.
         """
         assert float(u.ustrip("m2", p["mu"])) >= 1024.0
+
+
+class TestTheDomainsContract:
+    """The promise `charts/_src/domains.py` makes, asserted.
+
+    That module says the bounds are declared once in core and read from both
+    sides: "`check_data` enforces the bounds at construction and the strategies
+    here generate within them". Nothing checked the second half, so a domain
+    widened in core (strategies keep to the old, narrower range) or narrowed
+    (strategies emit points core rejects) would surface only as an
+    unrelated-looking failure in whatever test happened to draw one.
+    """
+
+    @settings(max_examples=200, deadline=None)
+    @given(data=st.data())
+    def test_a_drawn_cdict_is_one_its_chart_accepts(self, data):
+        chart = data.draw(
+            cxst.charts(filter=cxc.AbstractFixedComponentsChart), label="chart"
+        )
+        p = data.draw(cxst.cdicts(chart), label="cdict")
+        chart.check_data(p, keys=True)  # raises if the two have drifted

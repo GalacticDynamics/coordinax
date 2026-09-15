@@ -1,4 +1,4 @@
-"""Hypothesis strategies for Coordinax vectors."""
+"""Hypothesis strategies for coordinax geometries."""
 
 __all__ = ("geometry_classes", "geometries")
 
@@ -83,13 +83,13 @@ def geometries(
     >>> import coordinax.representations as cxr
     >>> import coordinaxs.hypothesis.main as cxst
 
-    >>> @given(role=cxst.geometries())
-    ... def test_any_geometry(role):
-    ...     assert isinstance(role, cxr.AbstractGeometry)
+    >>> @given(geom=cxst.geometries())
+    ... def test_any_geometry(geom):
+    ...     assert isinstance(geom, cxr.AbstractGeometry)
 
-    >>> @given(role=cxst.geometries(include=(cxr.PointGeometry,)))
-    ... def test_position_like_geometries(role):
-    ...     assert isinstance(role, cxr.PointGeometry)
+    >>> @given(geom=cxst.geometries(include=(cxr.PointGeometry,)))
+    ... def test_subset(geom):
+    ...     assert isinstance(geom, cxr.PointGeometry)
 
     """
     geom_cls = draw(geometry_classes(include=include, exclude=exclude))

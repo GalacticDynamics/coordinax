@@ -1,4 +1,4 @@
-"""Hypothesis strategies for coordinax representations."""
+"""Helpers shared by the chart strategies."""
 
 __all__ = ("can_pt_map", "get_init_params")
 
