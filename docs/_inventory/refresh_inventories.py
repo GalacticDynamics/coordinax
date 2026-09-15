@@ -18,6 +18,8 @@ INVENTORIES = {
     "equinox": "https://docs.kidger.site/equinox/objects.inv",
     "quax": "https://nstarman.github.io/quax/objects.inv",
     "jaxtyping": "https://docs.kidger.site/jaxtyping/objects.inv",
+    "plum": "https://beartype.github.io/plum/objects.inv",
+    "unxt": "https://unxt.readthedocs.io/en/latest/objects.inv",
 }
 
 _MAGIC = b"# Sphinx inventory version"

@@ -89,9 +89,9 @@ intersphinx_mapping = {
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "equinox": ("https://docs.kidger.site/equinox/", (None, "_inventory/equinox.inv")),
-    "plum": ("https://beartype.github.io/plum/", None),
+    "plum": ("https://beartype.github.io/plum/", (None, "_inventory/plum.inv")),
     "quax": ("https://nstarman.github.io/quax/", (None, "_inventory/quax.inv")),
-    "unxt": ("https://unxt.readthedocs.io/en/latest/", None),
+    "unxt": ("https://unxt.readthedocs.io/en/latest/", (None, "_inventory/unxt.inv")),
 }
 
 # -- Autodoc settings ---------------------------------------------------
