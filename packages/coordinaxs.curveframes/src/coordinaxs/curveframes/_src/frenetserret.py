@@ -187,7 +187,6 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         # parameter does not have, so the other order reported the accident
         # rather than the cause.
         g, tau_unit = b._param(p)
-        g = g.astype(float)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
         d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
 
@@ -245,7 +244,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         b, p = self._resolve(tau)
         g, tau_unit = b._param(p)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
-        return u.Q(_normalize(dcurve(g.astype(float))).value, "")
+        return u.Q(_normalize(dcurve(g)).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
         r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).

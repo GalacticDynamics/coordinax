@@ -89,6 +89,28 @@ def unit_or_none(obj: Any, /) -> u.AbstractUnit | None:
     return None if obj is None else cast("u.AbstractUnit", u.unit(obj))
 
 
+def float_param(g: Any, /) -> Any:
+    """Promote a curve parameter to float, *preserving* f32.
+
+    ``Quantity.astype(float)`` names the **default** float, so under
+    ``jax_enable_x64`` it silently widens an f32 ``tau`` or ``station`` to f64
+    and discards a deliberate choice of single precision. `jnp.result_type`
+    promotes only what needs promoting -- ints become floats, f32 stays f32.
+
+    `bishop._float` fixes the same trap for plain arrays, but strips the unit
+    to do it, which a curve parameter cannot afford:
+    `unxt.experimental.jacfwd` differentiates *in* that unit. So the dtype
+    logic is shared and the unit is kept.
+
+    Called from `AbstractCurveFrameBuilder._param`, the one funnel every
+    accessor takes its parameter from, and from `BishopBuilder._tangent_at`,
+    which is the one place a parameter is built directly rather than resolved
+    -- its ODE seed, integration variable and vmap all construct their own
+    `Quantity`. See #886.
+    """
+    return g.astype(jnp.result_type(g.value, float))
+
+
 def check_param_dimension(curve: Any, tau_unit: u.AbstractUnit, /) -> None:
     """Raise if ``tau_unit`` contradicts the dimension ``curve`` declares.
 
@@ -351,6 +373,10 @@ class AbstractCurveFrameBuilder(eqx.Module):
                     _MSG_TAU_UNIT_UNINFERABLE.format(source=source, fix=fix)
                 )
             param = u.Q(param, self.tau_unit)
+        # Promote here rather than in each accessor: four of them used to call
+        # `astype(float)` independently, which names the *default* float and so
+        # widened an f32 parameter to f64 under `jax_enable_x64` (#886).
+        param = float_param(param)
         return param, self._tau_unit_at(param)
 
     @abc.abstractmethod
@@ -439,7 +465,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
 
         """
         b, p = self._resolve(tau)
-        R = b.rotation_matrix(p.astype(float))
+        R = b.rotation_matrix(p)
         return u.Q(R[0], "")
 
     def velocity(self, tau: Any, /) -> u.Q:
