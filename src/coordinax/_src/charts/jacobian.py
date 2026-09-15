@@ -329,14 +329,18 @@ def jac_pt_map(
 RAD: Final = u.unit("rad")
 
 
-def _rad_per_usys_angle(usys: OptUSys, /) -> Any:
-    """How many of *usys*' angle units make a radian.
+def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
+    """How many of *usys*' angle units make one radian: 1 for rad, 180/pi for deg.
 
     A bare-array Jacobian carries no units, so an angular row has to be
     expressed in whatever angle unit the caller's values are in. The transition
     map writes its angles through ``usys["angle"]``, so the derivative of one
-    is scaled the same way -- 1 for radians, 180/pi for degrees. Getting this
-    wrong is silent: the numbers stay plausible and are only off by a constant.
+    is scaled the same way. Getting this wrong is silent: the numbers stay
+    plausible and are only off by a constant.
+
+    An angular *output* row is multiplied by this; an angular *input* column is
+    divided by it. The name says which way round it goes, because the two are
+    indistinguishable at a glance and reciprocal.
     """
     return 1.0 if usys is None else u.uconvert_value(usys["angle"], RAD, 1.0)
 
@@ -435,7 +439,7 @@ def jac_pt_map(
     r = jnp.sqrt(r2)
     # The angular row is an angle per length, so it is expressed in the unit
     # system's angle unit -- the same one `pt_map` writes ``theta`` in.
-    ang = _rad_per_usys_angle(usys)
+    ang = _usys_angle_per_rad(usys)
     return jnp.array([[x, y], [-y * ang, x * ang]]) / jnp.array([[r], [r2]])
 
 
