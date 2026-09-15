@@ -232,3 +232,30 @@ def test_trap_remedy_restores_g_ss_through_a_chart() -> None:
     at = {"tau": u.Q(_S, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
     g = metric_matrix(ch.M, at, ch).matrix
     assert jnp.allclose(g[0, 0].ustrip(""), 1.0, atol=1e-6), g[0, 0]
+
+
+class TestOneArcLengthPerCall:
+    """A batched `s` used to fail from inside the ODE, naming no mistake.
+
+    `__call__` already refuses a missing `t` for the same reason -- the
+    omission surfaced as an `AttributeError` on `None` from somewhere in the
+    solve. A batched `s` surfaced as `Cannot broadcast to shape with fewer
+    dimensions: arr_shape=(3,) shape=()`, equally far from the call.
+    """
+
+    def test_a_batched_s_is_refused_by_name(self) -> None:
+        arc = cxfc.ArcLength(circle, tau_unit="km")
+        with pytest.raises(ValueError, match="single arc length"):
+            arc(u.Q(jnp.asarray([0.5, 1.5]), "km"))
+
+    def test_vmap_is_a_working_remedy(self) -> None:
+        """`jax.vmap` is what the message points at, so it has to work."""
+        arc = cxfc.ArcLength(circle, tau_unit="km")
+        s_vals = jnp.asarray([0.5, 1.5, 2.5])
+
+        got = jax.vmap(lambda s: arc(u.Q(s, "km")))(s_vals)
+
+        one_at_a_time = jnp.stack(
+            [arc(u.Q(float(s), "km")).ustrip("km") for s in s_vals]
+        )
+        assert jnp.allclose(got.ustrip("km"), one_at_a_time)

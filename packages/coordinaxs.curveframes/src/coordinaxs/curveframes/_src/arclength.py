@@ -735,6 +735,20 @@ class ArcLength(eqx.Module):
             # Without this the omission surfaces as an `AttributeError` on
             # `None` from inside the ODE, nowhere near the call that caused it.
             raise TypeError(_MSG_MISSING_TIME)
+
+        # One `s` per call: the solve integrates to a single arc length, and a
+        # batched one surfaces from inside the ODE as a bare broadcasting
+        # error, the same way the missing `t` above surfaced as an
+        # `AttributeError`. Shapes are static, so this holds under `jit` and
+        # sees the per-element shape under `vmap` -- which is how a batch of
+        # arc lengths is meant to be mapped.
+        if jnp.ndim(s) != 0:
+            msg = (
+                f"`s` must be a single arc length, got shape {jnp.shape(s)}. "
+                "Map a batch with `jax.vmap` rather than passing them together."
+            )
+            raise ValueError(msg)
+
         curve = AtTime(self.curve, t) if self._two_argument else self.curve
 
         tau = _tau_of_s(

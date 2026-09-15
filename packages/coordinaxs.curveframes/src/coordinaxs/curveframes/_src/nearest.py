@@ -23,6 +23,33 @@ import optimistix as optx
 import unxt as u
 
 
+def _check_query(x: u.AbstractQuantity, n_seed: int, /) -> None:
+    """Refuse a query the scan cannot answer, naming the mistake.
+
+    Both failures would otherwise surface from inside the scan as shape errors
+    about `n_seed`-sized internals, nowhere near the call that caused them.
+    Shapes are static, so this holds under `jit`, and under `vmap` it sees the
+    per-element shape -- which is how a batch of query points is meant to be
+    mapped.
+    """
+    if n_seed < 2:
+        msg = (
+            f"`n_seed` must be at least 2, got {n_seed}: the scan needs a spacing "
+            "to bracket around, and one point has none. Below that the failure is "
+            "a divide-by-zero in the spacing and an empty grid, which surfaces as "
+            "an unrelated shape error."
+        )
+        raise ValueError(msg)
+
+    if jnp.ndim(x) != 1:
+        msg = (
+            f"`x` must be a single ambient point, got shape {jnp.shape(x)}. "
+            "Map a batch of query points with `jax.vmap(lambda p: nearest_tau("
+            "builder, p, bounds=bounds))` rather than passing them together."
+        )
+        raise ValueError(msg)
+
+
 def nearest_tau(
     builder: Any,
     x: u.AbstractQuantity,
@@ -118,14 +145,7 @@ def nearest_tau(
     # `tau_unit`, and on a pinned-station builder that describes the station
     # while these bounds are times, so consulting it scans seconds in
     # kilometres. The builder is the fallback for bare (unitless) bounds only.
-    if n_seed < 2:
-        msg_seed = (
-            f"`n_seed` must be at least 2, got {n_seed}: the scan needs a spacing "
-            "to bracket around, and one point has none. Below that the failure is "
-            "a divide-by-zero in the spacing and an empty grid, which surfaces as "
-            "an unrelated shape error."
-        )
-        raise ValueError(msg_seed)
+    _check_query(x, n_seed)
 
     unit = u.unit_of(bounds[0])
     if unit is None:
