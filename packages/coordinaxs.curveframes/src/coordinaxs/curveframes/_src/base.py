@@ -125,13 +125,16 @@ class AbstractParallelTransportFrame(cxf.AbstractTransformedReferenceFrame[Frame
     r"""Abstract base class for curve-attached orthonormal frames in 3-D.
 
     A parallel-transport frame attaches an orthonormal triad to each point of a
-    smooth space curve $\boldsymbol{\gamma}(\tau)$.  Two concrete flavours are
-    provided:
+    smooth space curve $\boldsymbol{\gamma}(\tau)$.  Three concrete flavours
+    are provided:
 
     * `FrenetSerretFrame` — axes are (T, N, B) from the Frenet--Serret
       apparatus; singular when curvature vanishes.
     * `BishopFrame` — axes are (T, U1, U2) obtained by parallel transport;
       well-defined for all regular curves.
+    * `SignedPlanarFrame` — axes are (T, N, B) with N a quarter turn to the
+      left of T within a fixed plane; defined where the curvature vanishes,
+      but planar curves only.
 
     Inherits from `coordinax.frames.AbstractTransformedReferenceFrame` and
     therefore carries three fields:

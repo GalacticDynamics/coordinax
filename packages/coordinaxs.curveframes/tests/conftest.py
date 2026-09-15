@@ -1,11 +1,11 @@
 """Shared curves and fixtures for the `coordinaxs.curveframes` tests.
 
-The Frenet-Serret and Bishop frames are two implementations of
-`AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.TimeDep`, so
+The Frenet-Serret, Bishop, and signed planar frames are three implementations
+of `AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.TimeDep`, so
 most of what the suite checks is the *contract* they share rather than anything
-specific to either. The curves and the per-type spec live here so that contract
-can be written once (``test_parallel_transport_contract.py``) and each type's
-closed-form values stay in its own module.
+specific to any one of them. The curves and the per-type spec live here so
+that contract can be written once (``test_parallel_transport_contract.py``)
+and each type's closed-form values stay in its own module.
 """
 
 __all__: tuple[str, ...] = ()
@@ -100,6 +100,7 @@ def inverse_rotation(builder: object, tau: u.AbstractQuantity) -> object:
 # `loose`: a multi-step chain, where the per-step error compounds.
 TOLERANCES = {
     "frenet-serret": {"tight": 1e-10, "plumbing": 1e-10, "field": 1e-6, "loose": 1e-5},
+    "signed-planar": {"tight": 1e-10, "plumbing": 1e-10, "field": 1e-6, "loose": 1e-5},
     "bishop": {"tight": 1e-6, "plumbing": 1e-5, "field": 1e-5, "loose": 1e-3},
 }
 
@@ -107,6 +108,11 @@ PARALLEL_TRANSPORT_TYPES = {
     "frenet-serret": SimpleNamespace(
         builder_cls=cxfc.FrenetSerretBuilder,
         frame_cls=cxfc.FrenetSerretFrame,
+        triad=("tangent", "normal", "binormal"),
+    ),
+    "signed-planar": SimpleNamespace(
+        builder_cls=cxfc.SignedPlanarBuilder,
+        frame_cls=cxfc.SignedPlanarFrame,
         triad=("tangent", "normal", "binormal"),
     ),
     "bishop": SimpleNamespace(

@@ -437,10 +437,85 @@ p_bishop = cxfm.act(op_to_bishop, tau, p)
 p_back = cxfm.act(op_from_bishop, tau, p_bishop)
 ```
 
-### When to Use Bishop vs Frenet–Serret
+## The Signed Planar Transform
 
-- Use **Bishop** when your curve may have zero-curvature segments (e.g. straight-line portions, inflection points) or when you need a twist-free frame.
-- Use **Frenet–Serret** when you want the classical differential-geometry frame that tracks curvature and torsion directly.
+For a **planar** curve there is a third frame, cheaper than both: take the normal to be the tangent rotated a quarter turn within the plane, and let the curvature carry the sign.
+
+```python
+import jax.numpy as jnp
+import unxt as u
+import coordinaxs.curveframes as cxfc
+
+
+def cubic(tau):
+    t = tau.ustrip("s")
+    return u.Q(jnp.stack([t, t**3, jnp.zeros_like(t)]), "km")
+
+
+sp = cxfc.SignedPlanarBuilder(cubic, "s")
+```
+
+This curve has an inflection at `t = 0`. `FrenetSerretBuilder` raises there — the normal is the Gram–Schmidt rejection of $\gamma''$, which vanishes — and `SignedPlanarBuilder` does not:
+
+```python
+N = sp.normal(u.Q(0.0, "s"))
+kappa_s = sp.signed_curvature(u.Q(0.0, "s"))
+```
+
+`N` is continuous through the inflection and `kappa_s` passes smoothly through zero, changing sign. Both are defined on a straight line too, where Frenet–Serret has no frame anywhere.
+
+### The Curvature Vector
+
+`curvature_vector` is `kappa_s * N` — the object that behaves the way a reader expects the Frenet–Serret normal to behave. It points at the centre of curvature, and it passes smoothly _through zero_ at an inflection instead of flipping by 180°.
+
+```python
+kv = sp.curvature_vector(u.Q(0.0, "s"))
+```
+
+The unit normal cannot do both. At an inflection the centre of curvature runs off to infinity and swaps sides, so "unit", "points at the centre of curvature" and "continuous" are mutually incompatible there — any two, never all three. `FrenetSerretBuilder` keeps the first two and is undefined at the inflection; `normal` keeps the first and third and points left of travel instead. Dropping the _unit_ requirement buys the other two at once.
+
+That is also why this is an accessor rather than a frame axis: a vanishing row cannot go into a rotation matrix.
+
+### How the Signed Planar Frame Differs from Frenet–Serret
+
+It is a _different frame_, not a repaired one, and the two are not interchangeable:
+
+|  | Frenet–Serret | Signed planar |
+| --- | --- | --- |
+| $\mathbf{N}$ points | toward the centre of curvature | to the left of travel |
+| curvature | $\kappa \ge 0$ | $\kappa_s$ changes sign at inflections |
+| defined where $\kappa = 0$ | no | yes |
+| dimension | any | planar only |
+| derivatives evaluated | $\gamma'$ and $\gamma''$ | $\gamma'$ alone |
+
+Where both are defined they agree up to a sign, and that sign flips at every inflection. On a counter-clockwise circle they coincide exactly.
+
+### The Plane Is an Input
+
+`plane_normal` is the gauge: it is what makes the frame defined at an inflection, so it cannot be derived from the curve — anything built from $\gamma''$ vanishes exactly where this frame is wanted. It defaults to the z-axis and need not be normalised.
+
+```python
+side = cxfc.SignedPlanarBuilder(cubic, "s", plane_normal=jnp.array([0.0, 0.0, -1.0]))
+```
+
+Flipping it flips both `normal` and `signed_curvature`: "left" is left as seen from $+\hat{n}$.
+
+A curve that leaves the named plane is refused rather than silently projected, at a tolerance scaled to the working precision. A helix raises, and the message points at `BishopBuilder`.
+
+### Building a Signed Planar Frame
+
+```python
+import coordinax.frames as cxf
+
+frame = cxfc.SignedPlanarFrame.from_curve(cxf.Alice(), cubic, "s")
+op = cxf.frame_transition(cxf.Alice(), frame)
+```
+
+### When to Use Which Frame
+
+- Use **signed planar** when the curve is planar and you want a frame that survives inflections and straight segments without an ODE solve — and when a normal consistently to the left of travel, with a signed curvature, is what you mean.
+- Use **Bishop** when the curve may have zero-curvature segments but is _not_ planar, or when you need a twist-free frame.
+- Use **Frenet–Serret** when you want the classical differential-geometry frame that tracks curvature and torsion directly, and the curve's curvature never vanishes.
 
 ## Arc-Length Curves
 

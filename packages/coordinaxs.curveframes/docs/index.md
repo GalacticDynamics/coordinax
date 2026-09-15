@@ -16,7 +16,7 @@ spec.md
 
 Curve-attached reference frames for [coordinax](https://github.com/GalacticDynamics/coordinax).
 
-This package implements Frenet–Serret and Bishop frames for τ-parameterized smooth curves in 3D Euclidean space, letting you transform coordinate data into and out of the moving frame that travels along a space curve.
+This package implements Frenet–Serret, Bishop and signed planar frames for τ-parameterized smooth curves in 3D Euclidean space, letting you transform coordinate data into and out of the moving frame that travels along a space curve.
 
 ## Installation
 
