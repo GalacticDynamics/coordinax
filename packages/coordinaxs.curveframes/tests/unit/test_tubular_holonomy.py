@@ -126,3 +126,33 @@ def test_the_answer_does_not_depend_on_the_scale_sampling(n_scale: int) -> None:
 
 def _rad_at(ch, n_scale: int) -> float:
     return float(ch.holonomy(n_scale=n_scale).ustrip("rad"))
+
+
+def test_an_open_curve_never_evaluates_the_frame() -> None:
+    """So a curve whose frame is undefined still answers 0 instead of raising.
+
+    A straight line has no curvature, so `FrenetSerretBuilder` refuses to build
+    a normal for it -- but it has no seam either, and the question asked was
+    whether the chart tears. Before the open case was branched away from the
+    transport solve, this raised out of `rotation_matrix`.
+    """
+
+    def line(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.ustrip("s")
+        return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
+
+    ch = cxfc.TubularChart(
+        cxfc.FrenetSerretBuilder(line, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(1.0, "s"))
+    )
+    assert float(ch.holonomy().ustrip("rad")) == pytest.approx(0.0, abs=1e-12)
+
+
+@pytest.mark.parametrize("bounds", [CLOSED, OPEN])
+def test_jit_agrees_with_eager(bounds) -> None:
+    """The branch is a `lax.cond` once traced and a Python `if` when not."""
+    ch = _chart(trefoil, bounds)
+    import jax
+
+    assert float(jax.jit(ch.holonomy)().ustrip("rad")) == pytest.approx(
+        float(ch.holonomy().ustrip("rad")), abs=1e-9
+    )

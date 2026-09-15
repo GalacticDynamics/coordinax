@@ -293,6 +293,13 @@ class TubularChart(AbstractParameterizedChart):
         least 3 -- fewer cannot measure it, and gets closure wrong silently in
         both directions. See the refusal below.
 
+        An open curve is answered **without evaluating the frame at all**, so
+        one whose frame is undefined still answers 0 rather than raising: a
+        straight line under `FrenetSerretBuilder` has no curvature and no
+        normal, but it also has no seam, and "no tear" is the honest answer to
+        the question asked. Use the builder directly if what you wanted was
+        whether its frame exists.
+
         Examples
         --------
         A trefoil over exactly one period closes, but its frame does not::
@@ -367,17 +374,36 @@ class TubularChart(AbstractParameterizedChart):
         eps = jnp.sqrt(jnp.finfo(gap.dtype).eps)
         closed = gap <= eps * scale
 
-        # The rotation the normal picks up about the tangent, read in the
-        # start frame's own (N, B) basis: `atan2` rather than `arccos` so the
-        # sign survives -- which way it twists is the difference between two
-        # curves, not a detail.
-        r_lo = self.builder.rotation_matrix(u.Q(lo, unit))
-        r_hi = self.builder.rotation_matrix(u.Q(hi, unit))
-        n_lo, b_lo = r_lo[1], r_lo[2]
-        n_hi = r_hi[1]
-        angle = jnp.arctan2(jnp.dot(n_hi, b_lo), jnp.dot(n_hi, n_lo))
+        def _angle(_: Any = None) -> jax.Array:
+            """Measure the rotation the normal picks up about the tangent.
 
-        return u.Q(jnp.where(closed, angle, jnp.zeros_like(angle)), "rad")
+            Read in the start frame's own `(N, B)` basis, and with `atan2`
+            rather than `arccos` so the sign survives -- which way it twists
+            is the difference between two curves, not a detail.
+            """
+            r_lo = self.builder.rotation_matrix(u.Q(lo, unit))
+            r_hi = self.builder.rotation_matrix(u.Q(hi, unit))
+            n_lo, b_lo = r_lo[1], r_lo[2]
+            n_hi = r_hi[1]
+            return jnp.arctan2(jnp.dot(n_hi, b_lo), jnp.dot(n_hi, n_lo))
+
+        # Branched, not computed-then-discarded with `jnp.where`. Those two
+        # `rotation_matrix` calls are a parallel-transport ODE solve across the
+        # whole of `tau_bounds` for `BishopBuilder`, and on an open curve the
+        # answer is 0 whatever they return. Measured on an open trefoil, they
+        # are effectively the entire cost: a median 6.9 s against 5.3 ms for
+        # the closure scan that decides the branch.
+        #
+        # The same eager/traced hybrid `check_data` and `nearest_tau` use: a
+        # Python branch cannot test a tracer, and `lax.cond` eagerly would
+        # still trace the solve it is trying to skip.
+        zero = jnp.zeros((), dtype=gap.dtype)
+        if isinstance(closed, jax.core.Tracer):
+            angle = jax.lax.cond(closed, _angle, lambda _: zero, None)
+        else:
+            angle = _angle() if bool(closed) else zero
+
+        return u.Q(angle, "rad")
 
     def check_data(self, data: dict, /, *, values: bool = False, **kw: Any) -> dict:
         # Forward `values`: the base class gates its coordinate-dimension check
