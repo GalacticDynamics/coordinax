@@ -923,28 +923,50 @@ class TestJacobianPtMapAtExtremeScales:
 
         assert_allclose(qnp.matmul(j_inv, j_fwd).value, jnp.eye(curv.ndim), atol=1e-4)
 
-    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
-    def test_analytic_dispatch_agrees_with_jacfwd(self, magnitude: float) -> None:
-        """The closed-form `Cart2D -> Polar2D` Jacobian matches autodiff.
+    #: Pairs with a hand-written Jacobian, and a generic direction for each.
+    #: Angles avoid multiples of pi/2 so no entry is exactly zero and a purely
+    #: relative comparison of the whole matrix stays well defined.
+    CLOSED_FORM_PAIRS: ClassVar = [
+        ("cart2d->polar2d", "cart2d", "polar2d", (0.7,)),
+        ("cart3d->cyl3d", "cart3d", "cyl3d", (0.7, 0.9)),
+        ("cart3d->sph3d", "cart3d", "sph3d", (0.7, 0.9)),
+    ]
 
-        Packed input on purpose: a cdict resolves to the generic branch, which
-        *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with it. Only
-        array/Quantity reaches the hand-written Jacobian.
+    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
+    @pytest.mark.parametrize(("name", "frm", "to", "angles"), CLOSED_FORM_PAIRS)
+    def test_analytic_dispatch_agrees_with_jacfwd(
+        self, name: str, frm: str, to: str, angles: tuple[float, ...], magnitude: float
+    ) -> None:
+        """Every closed-form Jacobian matches autodiff, at any magnitude.
+
+        Packed input on purpose: a cdict of bare arrays resolves through to the
+        same closed form, but a *unitful* cdict may not, and the generic branch
+        *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with itself.
+
+        This is where a closed form written in squares gets caught. `r**2` at
+        1e17 is 1e34, and a further multiplication by `rho` overflows float32
+        to `inf`, which turns the affected entry into a silent zero rather than
+        a `nan` -- hence the explicit `isfinite` check *and* the comparison.
 
         Compared relatively, with no ``atol`` -- entries scale like ``1/r``, so
-        any absolute floor is vacuous at 1e18 and unmeetable at 1e-18. At
-        ``theta = 0.7`` no entry is ever exactly zero, so a relative
-        comparison of the full matrix is well defined.
+        any absolute floor is vacuous at 1e18 and unmeetable at 1e-18.
         """
-        theta = 0.7
-        at = jnp.asarray(
-            [magnitude * math.cos(theta), magnitude * math.sin(theta)],
-            dtype=jnp.float32,
-        )
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        theta = angles[0]
+        if len(angles) == 1:
+            direction = [math.cos(theta), math.sin(theta)]
+        else:
+            phi = angles[1]
+            direction = [
+                math.sin(theta) * math.cos(phi),
+                math.sin(theta) * math.sin(phi),
+                math.cos(theta),
+            ]
+        at = jnp.asarray([magnitude * d for d in direction], dtype=jnp.float32)
 
-        got = np.asarray(cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys_si))
+        got = np.asarray(cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si))
         expected = np.asarray(
-            jax.jacfwd(cxc.pt_map(None, cxc.cart2d, cxc.polar2d, usys=usys_si))(at)
+            jax.jacfwd(cxc.pt_map(None, from_chart, to_chart, usys=usys_si))(at)
         )
 
         assert np.all(np.isfinite(got))

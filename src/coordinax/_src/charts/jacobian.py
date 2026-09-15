@@ -459,12 +459,14 @@ def jac_pt_map(
     """
     at = _real_float_point(at)
     x, y = at[..., 0], at[..., 1]
-    r2 = x**2 + y**2
-    r = jnp.sqrt(r2)
+    # `hypot`, and two divisions by `r` rather than one by `r**2`: both squares
+    # overflow float32 well inside the coordinate range the charts handle.
+    r = jnp.hypot(x, y)
+    xr, yr = x / r, y / r
     # The angular row is an angle per length, so it is expressed in the unit
     # system's angle unit -- the same one `pt_map` writes ``theta`` in.
     ang = _usys_angle_per_rad(usys)
-    return jnp.array([[x, y], [-y * ang, x * ang]]) / jnp.array([[r], [r2]])
+    return jnp.array([[xr, yr], [-yr * ang / r, xr * ang / r]])
 
 
 @plum.dispatch
@@ -499,15 +501,15 @@ def jac_pt_map(
     unit: Any = u.unit_of(at)
     v = cast("Array", u.ustrip(unit, at))
     x, y = v[..., 0], v[..., 1]
-    r2 = x**2 + y**2
-    r = jnp.sqrt(r2)
+    r = jnp.hypot(x, y)
+    xr, yr = x / r, y / r
     # The rows carry different units: the radial row is a ratio of lengths,
     # the angular row an angle per length. Astropy treats rad as
     # dimensionless, so `rad / m` has to be spelled out rather than derived.
     dimensionless = unit / unit
     rad_per_len = u.unit("rad") / unit
     return ul.QuantityMatrix(
-        jnp.array([[x / r, y / r], [-y / r2, x / r2]]),
+        jnp.array([[xr, yr], [-yr / r, xr / r]]),
         unit=((dimensionless, dimensionless), (rad_per_len, rad_per_len)),
     )
 
@@ -549,16 +551,12 @@ def jac_pt_map(
     """
     at = _real_float_point(at)
     x, y = at[..., 0], at[..., 1]
-    rho2 = x**2 + y**2
-    rho = jnp.sqrt(rho2)
+    rho = jnp.hypot(x, y)
+    xr, yr = x / rho, y / rho
     ang = _usys_angle_per_rad(usys)
     zero, one = jnp.zeros_like(x), jnp.ones_like(x)
     return jnp.array(
-        [
-            [x / rho, y / rho, zero],
-            [-y * ang / rho2, x * ang / rho2, zero],
-            [zero, zero, one],
-        ]
+        [[xr, yr, zero], [-yr * ang / rho, xr * ang / rho, zero], [zero, zero, one]]
     )
 
 
@@ -584,14 +582,12 @@ def jac_pt_map(
     unit: Any = u.unit_of(at)
     v = cast("Array", u.ustrip(unit, at))
     x, y = v[..., 0], v[..., 1]
-    rho2 = x**2 + y**2
-    rho = jnp.sqrt(rho2)
+    rho = jnp.hypot(x, y)
+    xr, yr = x / rho, y / rho
     zero, one = jnp.zeros_like(x), jnp.ones_like(x)
     dmls, rad_per_len = unit / unit, RAD / unit
     return ul.QuantityMatrix(
-        jnp.array(
-            [[x / rho, y / rho, zero], [-y / rho2, x / rho2, zero], [zero, zero, one]]
-        ),
+        jnp.array([[xr, yr, zero], [-yr / rho, xr / rho, zero], [zero, zero, one]]),
         unit=(
             (dmls, dmls, dmls),
             (rad_per_len, rad_per_len, rad_per_len),
@@ -674,17 +670,20 @@ def jac_pt_map(
     """
     at = _real_float_point(at)
     x, y, z = at[..., 0], at[..., 1], at[..., 2]
-    rho2 = x**2 + y**2
-    rho = jnp.sqrt(rho2)
-    r2 = rho2 + z**2
-    r = jnp.sqrt(r2)
+    # Every entry is an O(1) direction cosine over a length, so `r**2` is never
+    # formed: `r2 * rho` overflows float32 at coordinates the charts otherwise
+    # handle, and the affected entry silently becomes zero.
+    rho = jnp.hypot(x, y)
+    r = jnp.hypot(rho, z)
+    xr, yr, zr = x / r, y / r, z / r
+    xrho, yrho = x / rho, y / rho
     ang = _usys_angle_per_rad(usys)
     zero = jnp.zeros_like(x)
     return jnp.array(
         [
-            [x / r, y / r, z / r],
-            [x * z * ang / (r2 * rho), y * z * ang / (r2 * rho), -rho * ang / r2],
-            [-y * ang / rho2, x * ang / rho2, zero],
+            [xr, yr, zr],
+            [xrho * zr * ang / r, yrho * zr * ang / r, -(rho / r) * ang / r],
+            [-yrho * ang / rho, xrho * ang / rho, zero],
         ]
     )
 
@@ -713,18 +712,18 @@ def jac_pt_map(
     unit: Any = u.unit_of(at)
     v = cast("Array", u.ustrip(unit, at))
     x, y, z = v[..., 0], v[..., 1], v[..., 2]
-    rho2 = x**2 + y**2
-    rho = jnp.sqrt(rho2)
-    r2 = rho2 + z**2
-    r = jnp.sqrt(r2)
+    rho = jnp.hypot(x, y)
+    r = jnp.hypot(rho, z)
+    xr, yr, zr = x / r, y / r, z / r
+    xrho, yrho = x / rho, y / rho
     zero = jnp.zeros_like(x)
     dmls, rad_per_len = unit / unit, RAD / unit
     return ul.QuantityMatrix(
         jnp.array(
             [
-                [x / r, y / r, z / r],
-                [x * z / (r2 * rho), y * z / (r2 * rho), -rho / r2],
-                [-y / rho2, x / rho2, zero],
+                [xr, yr, zr],
+                [xrho * zr / r, yrho * zr / r, -(rho / r) / r],
+                [-yrho / rho, xrho / rho, zero],
             ]
         ),
         unit=(
