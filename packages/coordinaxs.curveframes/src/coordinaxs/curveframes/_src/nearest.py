@@ -188,15 +188,31 @@ def nearest_tau(
     # tracer: `ValueError` eagerly, `RuntimeError` (equinox's `error_if`) under
     # `jit` or `vmap`. The docstring says so, and the tests pin `RuntimeError`,
     # which both satisfy.
-    degenerate = spacing == 0
-    msg_bounds = (
+    # Reversed bounds are refused in the same breath, and for a softer reason:
+    # they *work*. Measured on a circle, `bounds=(2*pi, 0)` agreed with the
+    # ascending pair on all 15 queries tried -- `spacing` merely goes negative
+    # and the fine grid runs backwards. But nothing downstream promises that.
+    # `bracket_has_minimum` tests `(r_lo > 0) & (r_hi < 0)`, an orientation
+    # that only means "minimum" while `lo < hi`, and `_S_MAX_MARGIN` is sized
+    # to "one seed spacing outside `tau_bounds`" -- a phrase with a direction
+    # in it, saved here only because that margin happens to be symmetric.
+    # Accidentally correct is not a contract, so say so at the boundary rather
+    # than let a later change to either quietly turn it wrong.
+    msg_zero = (
         "`bounds` has zero width, so there is no curve to search: the "
         "nearest-point scan needs `bounds[0] != bounds[1]`."
     )
-    if isinstance(degenerate, jax.core.Tracer):
-        spacing = eqx.error_if(spacing, degenerate, msg_bounds)
-    elif bool(degenerate):
-        raise ValueError(msg_bounds)
+    msg_reversed = (
+        "`bounds` runs backwards: `bounds[0]` must be below `bounds[1]`. "
+        "Swap them. The scan, the bracket's minimum test and the arc-length "
+        "margin all read the pair as ascending, so a descending one is "
+        "outside what they promise even where it happens to answer correctly."
+    )
+    for bad, msg in ((spacing == 0, msg_zero), (spacing < 0, msg_reversed)):
+        if isinstance(bad, jax.core.Tracer):
+            spacing = eqx.error_if(spacing, bad, msg)
+        elif bool(bad):
+            raise ValueError(msg)
 
     # Hoisted: building the transform per residual evaluation costs Python and
     # JAX overhead in a loop that runs it ~130 times. `offset`, not `-offset` --

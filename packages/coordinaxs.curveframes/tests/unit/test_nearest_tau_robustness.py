@@ -58,6 +58,42 @@ def test_zero_width_bounds_is_refused_under_jit() -> None:
         solve(u.Q(3.0, "s"), u.Q(3.0, "s"))
 
 
+def test_reversed_bounds_are_refused() -> None:
+    """They used to pass, which is the whole reason to say something.
+
+    Measured before the guard: `bounds=(2*pi, 0)` agreed with the ascending
+    pair on all 15 probes tried. Accidentally correct, though -- nothing
+    downstream promises it, and `bracket_has_minimum` reads an orientation
+    that only means "minimum" while `lo < hi`.
+    """
+    builder = cxfc.BishopBuilder(circle, "s")
+    with pytest.raises(ValueError, match="runs backwards"):
+        cxfc.nearest_tau(
+            builder, PROBE, bounds=(u.Q(float(2 * jnp.pi), "s"), u.Q(0.0, "s"))
+        )
+
+
+def test_reversed_bounds_are_refused_under_jit() -> None:
+    """Same hybrid as the zero-width guard: `error_if` once traced."""
+    builder = cxfc.BishopBuilder(circle, "s")
+
+    @jax.jit
+    def solve(lo: u.AbstractQuantity, hi: u.AbstractQuantity) -> u.AbstractQuantity:
+        return cxfc.nearest_tau(builder, PROBE, bounds=(lo, hi))
+
+    with pytest.raises(RuntimeError, match="runs backwards"):
+        solve(u.Q(float(2 * jnp.pi), "s"), u.Q(0.0, "s"))
+
+
+def test_the_two_bounds_complaints_stay_distinct() -> None:
+    """Zero width and backwards are different mistakes and get different words."""
+    builder = cxfc.BishopBuilder(circle, "s")
+    with pytest.raises(ValueError, match="zero width"):
+        cxfc.nearest_tau(builder, PROBE, bounds=(u.Q(1.0, "s"), u.Q(1.0, "s")))
+    with pytest.raises(ValueError, match="runs backwards"):
+        cxfc.nearest_tau(builder, PROBE, bounds=(u.Q(1.0, "s"), u.Q(0.0, "s")))
+
+
 def test_a_proper_interval_still_works() -> None:
     """The guard must not disturb the ordinary case."""
     builder = cxfc.BishopBuilder(circle, "s")
