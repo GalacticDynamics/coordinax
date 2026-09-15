@@ -1,4 +1,4 @@
-"""Internal custom types for coordinax."""
+"""Dimensions the distance kinds check against. Internal use only."""
 
 __all__ = ("ANGLE", "LENGTH", "MAGNITUDE")
 

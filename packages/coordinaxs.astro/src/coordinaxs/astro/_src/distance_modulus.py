@@ -1,4 +1,4 @@
-"""Distance quantities."""
+"""Distance modulus quantity."""
 
 __all__ = ("DistanceModulus",)
 
