@@ -12,6 +12,8 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import coordinax.frames as cxf
+import coordinax.transforms as cxfm
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
@@ -226,3 +228,33 @@ class TestSignedCurvature:
 
         rhs = b.signed_curvature(tau).ustrip("1/km") * b.normal(tau).value
         np.testing.assert_allclose(lhs, rhs, atol=1e-8)
+
+
+class TestFrame:
+    """The frame class, and the dispatches it inherits from the ABC."""
+
+    def test_from_curve_builds_the_right_builder(self) -> None:
+        frame = cxfc.SignedPlanarFrame.from_curve(cxf.Alice(), circle, "s")
+        assert frame.base_frame == cxf.Alice()
+        assert isinstance(frame.xop.builder, cxfc.SignedPlanarBuilder)
+
+    def test_plane_normal_reaches_the_builder(self) -> None:
+        frame = cxfc.SignedPlanarFrame.from_curve(
+            cxf.Alice(), circle, "s", plane_normal=-Z
+        )
+        np.testing.assert_allclose(frame.xop.builder.plane_normal, -Z, atol=0)
+
+    def test_frame_transition_round_trip(self) -> None:
+        """`frame_transition` is inherited, not registered. Pin that."""
+        frame = cxfc.SignedPlanarFrame.from_curve(cxf.Alice(), circle, "s")
+        tau = u.Q(0.0, "s")
+        p = u.Q(jnp.array([1.0, 0.0, 0.0]), "km")
+
+        to_curve = cxf.frame_transition(cxf.Alice(), frame)
+        # gamma(0) = (1, 0, 0) km, so the curve-frame origin sits on p.
+        out = cxfm.act(to_curve, tau, p)
+        np.testing.assert_allclose(out.ustrip("km"), [0.0, 0.0, 0.0], atol=1e-10)
+
+        from_curve = cxf.frame_transition(frame, cxf.Alice())
+        back = cxfm.act(from_curve, tau, out)
+        np.testing.assert_allclose(back.ustrip("km"), p.ustrip("km"), atol=1e-10)

@@ -18,6 +18,7 @@ Public API
     BishopBuilder
     BishopFrame
     SignedPlanarBuilder
+    SignedPlanarFrame
     TubularChart
     nearest_tau
     rate_of_strain
@@ -52,6 +53,7 @@ __all__ = (
     "FrenetSerretFrame",
     "LagrangianArcLength",
     "SignedPlanarBuilder",
+    "SignedPlanarFrame",
     "TubularChart",
     "nearest_tau",
     "rate_of_strain",
@@ -71,6 +73,7 @@ with install_import_hook("coordinaxs.curveframes"):
         FrenetSerretFrame,
         LagrangianArcLength,
         SignedPlanarBuilder,
+        SignedPlanarFrame,
         TubularChart,
         nearest_tau,
         rate_of_strain,

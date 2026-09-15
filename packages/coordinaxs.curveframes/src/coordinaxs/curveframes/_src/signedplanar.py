@@ -39,7 +39,7 @@ coordinaxs.curveframes._src.base : Abstract base classes.
 
 """
 
-__all__ = ("SignedPlanarBuilder",)  # Task 3 appends "SignedPlanarFrame"
+__all__ = ("SignedPlanarBuilder", "SignedPlanarFrame")
 
 from collections.abc import Callable
 from jaxtyping import Array
@@ -48,11 +48,17 @@ from typing import Any, cast, final
 import equinox as eqx
 import jax.numpy as jnp
 
+import coordinax.transforms as cxfm
 import quaxed.numpy as qnp
 import unxt as u
 from unxt.quantity import AllowValue
 
-from .base import AbstractCurveFrameBuilder, unit_or_none
+from .base import (
+    AbstractCurveFrameBuilder,
+    AbstractParallelTransportFrame,
+    FrameT,
+    unit_or_none,
+)
 from .frenetserret import _normalize
 
 _MSG_NOT_PLANAR = (
@@ -361,3 +367,115 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
         t_vec = _check_planar(_normalize(dp), n_hat)
 
         return qnp.sum(qnp.cross(t_vec, d2p) * n_hat) / qnp.sum(dp**2)
+
+
+#####################################################################
+# Frame
+
+
+@final
+class SignedPlanarFrame(AbstractParallelTransportFrame[FrameT]):
+    """Signed planar curve-attached reference frame.
+
+    A reference frame defined relative to a base frame by a
+    `coordinax.transforms.TimeDep` wrapping a `SignedPlanarBuilder`.  At each
+    parameter value ``tau``, the frame is centred at the curve position with
+    axes ``(T, N, B)``, where ``N`` is a quarter turn to the left of travel
+    within the curve's plane.
+
+    The evolution parameter ``tau`` is **not** stored on the frame; it is
+    supplied at evaluation time via ``act(op, tau, x)``.
+
+    Parameters
+    ----------
+    base_frame : AbstractReferenceFrame
+        The ambient reference frame.
+    xop : TimeDep
+        The tau-dependent rigid-body transform from ``base_frame`` to this
+        frame.
+    xop_inv : TimeDep
+        Its inverse.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.frames as cxf
+    >>> import coordinaxs.curveframes as cxfc
+
+    A cubic, whose inflection at the origin no frame here has trouble with:
+
+    >>> def cubic(tau):
+    ...     t = tau.ustrip("s")
+    ...     return u.Q(jnp.stack([t, t**3, jnp.zeros_like(t)]), "km")
+
+    >>> frame = cxfc.SignedPlanarFrame.from_curve(cxf.Alice(), cubic, "s")
+    >>> frame.base_frame
+    Alice()
+
+    >>> isinstance(frame.xop.builder, cxfc.SignedPlanarBuilder)
+    True
+
+    """
+
+    base_frame: FrameT
+    xop: cxfm.TimeDep
+    xop_inv: cxfm.TimeDep
+
+    @classmethod
+    def from_curve(
+        cls,
+        base_frame: FrameT,
+        curve: Callable[[Any], Any],
+        /,
+        tau_unit: u.AbstractUnit | str | None = None,
+        *,
+        station: Any = None,
+        plane_normal: Any = None,
+    ) -> "SignedPlanarFrame[FrameT]":
+        """Construct a SignedPlanarFrame from a base frame and curve.
+
+        Parameters
+        ----------
+        base_frame : AbstractReferenceFrame
+            The ambient reference frame.
+        curve : Callable
+            A function ``tau -> Quantity[float, (3,)]`` representing a smooth
+            planar curve.
+        tau_unit : AbstractUnit or str, optional
+            Unit of the curve parameter for differentiation.  `None` (the
+            default) reads it off the parameter the frame is evaluated at.
+        station : optional
+            A fixed station along the curve; when given the frame is a fixed
+            frame *field* along the curve rather than a moving frame.
+        plane_normal : array-like, optional
+            Normal of the plane the curve lies in; `None` takes the z-axis.
+            See `SignedPlanarBuilder`.
+
+        Returns
+        -------
+        SignedPlanarFrame
+            A frame attached to the curve, relative to ``base_frame``.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+        >>> import coordinaxs.curveframes as cxfc
+
+        >>> def line(tau):
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([t, jnp.zeros_like(t),
+        ...                           jnp.zeros_like(t)]), "km")
+
+        A straight line, where Frenet--Serret has no frame at all:
+
+        >>> frame = cxfc.SignedPlanarFrame.from_curve(cxf.Alice(), line, "s")
+        >>> frame.base_frame
+        Alice()
+
+        """
+        builder = SignedPlanarBuilder(curve, tau_unit, station, plane_normal)
+        xop = cxfm.TimeDep(builder)
+        return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)
