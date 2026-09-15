@@ -1,6 +1,9 @@
 """The transform groups a transform can belong to.
 
-This is the private implementation of the frames sub-package.
+The private implementation behind `coordinax.transforms.groups`, which says
+what these markers are for. What is specific to here is `is_subgroup`:
+membership is the lattice these classes declare, not their Python hierarchy,
+and the two disagree on purpose.
 
 """
 

@@ -12,6 +12,13 @@ is not itself a fault -- parallel registration modules legitimately share one,
 and `SHARED_BY_DESIGN` lists the cases that do -- so this pins the set instead
 of forbidding it. A *new* shared line fails, and the fix is either to write a
 docstring that describes the file or to add the line here with a reason.
+
+It reads the first line only, which is a real gap: #903 corrected
+`transforms/_src/groups.py`'s summary and left its body still claiming to be
+"the private implementation of the frames sub-package", and this would not
+have noticed. Widening it to the body wants a rule for prose that merely
+mentions another sub-package ("reference frames"), which the first line
+rarely does.
 """
 
 __all__: tuple[str, ...] = ()
