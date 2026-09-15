@@ -115,6 +115,11 @@ def nearest_tau(
     check cannot be a Python branch. That is a precondition, not a degradation:
     there is no curve to search.
 
+    ``bounds`` must also ascend: ``bounds[0] < bounds[1]``, refused the same
+    two ways. A descending pair happens to answer correctly, but the bracket's
+    minimum test and `ArcLength`'s `s_max` margin both read the pair as
+    ascending, so nothing promises it will keep doing so.
+
     That bracket does not always contain a sign change, though -- the
     residual can be one-signed across it in two situations: the true nearest
     point lies outside `tau_bounds` altogether (the scan is confined to
@@ -214,15 +219,24 @@ def nearest_tau(
     # tracer: `ValueError` eagerly, `RuntimeError` (equinox's `error_if`) under
     # `jit` or `vmap`. The docstring says so, and the tests pin `RuntimeError`,
     # which both satisfy.
-    degenerate = spacing == 0
-    msg_bounds = (
+    # Reversed bounds work today -- `spacing` goes negative and the grid runs
+    # backwards -- but `bracket_has_minimum` and `_S_MAX_MARGIN` both assume
+    # ascending. Accidentally correct is not a contract.
+    msg_zero = (
         "`bounds` has zero width, so there is no curve to search: the "
         "nearest-point scan needs `bounds[0] != bounds[1]`."
     )
-    if isinstance(degenerate, jax.core.Tracer):
-        spacing = eqx.error_if(spacing, degenerate, msg_bounds)
-    elif bool(degenerate):
-        raise ValueError(msg_bounds)
+    msg_reversed = (
+        "`bounds` runs backwards: `bounds[0]` must be below `bounds[1]`. "
+        "Swap them. The scan, the bracket's minimum test and the arc-length "
+        "margin all read the pair as ascending, so a descending one is "
+        "outside what they promise even where it happens to answer correctly."
+    )
+    for bad, msg in ((spacing == 0, msg_zero), (spacing < 0, msg_reversed)):
+        if isinstance(bad, jax.core.Tracer):
+            spacing = eqx.error_if(spacing, bad, msg)
+        elif bool(bad):
+            raise ValueError(msg)
 
     # Hoisted: building the transform per residual evaluation costs Python and
     # JAX overhead in a loop that runs it ~130 times. `offset`, not `-offset` --
