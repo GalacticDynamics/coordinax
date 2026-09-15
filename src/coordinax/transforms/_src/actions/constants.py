@@ -1,4 +1,4 @@
-"""Internal custom types for coordinax."""
+"""Dimensions the transform actions check against. Internal use only."""
 
 __all__ = ("LENGTH", "SPEED")
 

@@ -1,4 +1,4 @@
-"""Frames sub-package."""
+"""Errors raised by frame transformations."""
 
 __all__ = ("FrameTransformError",)
 

@@ -1,4 +1,4 @@
-"""Manifold definitions and manifold inference helpers."""
+"""Abstract metric fields."""
 
 __all__ = (
     "AbstractMetricField",

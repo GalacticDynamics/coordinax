@@ -1,4 +1,4 @@
-"""Manifold definitions and manifold inference helpers."""
+"""Register `pt_map` and `pt_project` for the spherical charts."""
 
 __all__: tuple[str, ...] = ()
 

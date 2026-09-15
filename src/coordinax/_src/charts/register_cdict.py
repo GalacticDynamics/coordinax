@@ -1,4 +1,4 @@
-"""Utility functions for charts."""
+"""Register `cdict` for the chart data types."""
 
 __all__ = ()
 

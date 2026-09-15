@@ -1,4 +1,4 @@
-"""Internal custom types for coordinax."""
+"""Dimensions the representation machinery checks against. Internal use only."""
 
 __all__ = (
     "ANGLE",
