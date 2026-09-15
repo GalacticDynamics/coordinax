@@ -317,11 +317,24 @@ def nearest_tau(
     bracket_lo = jnp.where(found, fine[k], tau0 - spacing)
     bracket_hi = jnp.where(found, fine[k + 1], tau0 + spacing)
 
-    # Scale by the dtype's epsilon, not a fixed `1e-10`: float32 (JAX's
-    # default outside this repo's x64 pytest config) can never satisfy
-    # `1e-10` below its own epsilon, and reports `max_steps_reached` on
-    # every call despite an already-correct answer.
-    tol = float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5
+    # Scale by the epsilon of the dtype the *solve* runs in, not a fixed
+    # `1e-10` and not the global default float. A tolerance below the working
+    # dtype's own resolution can never be met, and the solve reports
+    # `max_steps_reached` on every call despite an already-correct answer.
+    #
+    # Not `jnp.zeros(()).dtype`: that reads the global default, which under
+    # `jax_enable_x64` -- this repo's pytest config -- is f64 even when the
+    # curve data is f32. Measured on f32 data with x64 on, that refused 15 of
+    # 19 circle queries. Same defect as `_relative_speed_floor` guards against,
+    # but this one is not latent: it turns answers into refusals.
+    #
+    # `tau0`, so the tolerance tracks `bounds`. Mixed precision is not covered
+    # and is not worth chasing here: f64 `bounds` over an f32 curve still
+    # refuses 8 of 19, because the f64 `hi - lo` reaches the residual through
+    # `_fallback_speed`, leaving it f64-typed while carrying only f32
+    # information -- a gap no dtype can see. Pass `bounds` in the curve's own
+    # precision, or an explicit `atol`.
+    tol = float(jnp.finfo(tau0.dtype).eps) ** 0.5
     rtol = tol if rtol is None else rtol
     atol = tol if atol is None else atol
 
