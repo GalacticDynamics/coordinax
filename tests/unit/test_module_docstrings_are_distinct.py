@@ -73,8 +73,14 @@ def _first_lines() -> dict[str, list[str]]:
             if "/tests/" in posix:  # test modules are not an API surface
                 continue
             try:
-                doc = ast.get_docstring(ast.parse(path.read_text()))
-            except (SyntaxError, UnicodeDecodeError):  # pragma: no cover
+                # Bytes, not text: `read_text()` decodes with the locale
+                # encoding, and CI runs Windows. Under cp1252 the em-dash in
+                # the astro entry below comes back as "â€”", so the scan and
+                # this file's own UTF-8 source would disagree about the same
+                # docstring. `ast.parse` on bytes decodes the way the
+                # interpreter does, PEP 263 cookie included.
+                doc = ast.get_docstring(ast.parse(path.read_bytes()))
+            except SyntaxError:  # pragma: no cover - not importable anyway
                 continue
             if doc:
                 out[doc.splitlines()[0].strip()].append(
