@@ -1,42 +1,28 @@
 r"""Bishop (rotation-minimising) curve-frame data types.
 
-This module provides the concrete implementations of the Bishop
-(parallel-transport, rotation-minimising) curve-frame apparatus:
+* `BishopBuilder` -- an `equinox.Module` mapping $\tau$ to a rigid-body
+  transform.
+* `BishopFrame` -- the curve-attached reference frame built from it.
 
-* `BishopBuilder` — an `equinox.Module` mapping $\tau$ to the rigid-body
-  transform ``Translate(-\gamma) | Rotate([T; U1; U2])``.
-* `BishopFrame` — a curve-attached reference frame whose axes are $(\mathbf{T},
-  \mathbf{U}_1, \mathbf{U}_2)$ obtained by parallel transport along the curve.
-
-Unlike the Frenet--Serret frame, the Bishop frame is **well-defined even when
-the curvature vanishes** ($\kappa = 0$), because it does not depend on
-$\boldsymbol{\gamma}''$.  The normal-plane vectors are obtained by solving the
-parallel-transport ODE:
+Both are documented on the classes themselves; what belongs here is the shape
+of the computation they share. The normal-plane vectors solve the
+parallel-transport ODE
 
 $$ \frac{d\mathbf{U}_i}{d\tau}
   = -\bigl(\mathbf{U}_i \cdot \mathbf{T}'\bigr)\,\mathbf{T}, \qquad i \in \{1,
   2\},
 $$
 
-starting from an initial orthonormal pair at a reference parameter $\tau_0$.
-The ODE is integrated numerically with `diffrax`, by default using a
-`diffrax.DirectAdjoint` so the solve is differentiable in **both** modes:
-reverse-mode for gradients w.r.t. curve parameters, and forward-mode for the
-tangent/jet propagation that `coordinax.transforms.act` and
-`coordinax.transforms.act_jet` need.  Solver, adjoint, step-size controller and
-step budget travel together in `BishopBuilder`'s single `diffraxtra.DiffEqSolver`
-field, so a caller can trade accuracy for speed; see that class's *Choosing an
-adjoint* section for the one trade-off that changes what the frame can *do*
-rather than how fast it does it.
+from an initial orthonormal pair at $\tau_0$, integrated with `diffrax`. Two
+consequences are not visible from either class's signature:
 
-Both classes are ``@final`` (no further subclassing).
-
-Key design choices
-------------------
-* **Lazy evaluation** — the ODE is solved only when a concrete $\tau$ is
-  requested, i.e. when the `TimeDep` family is evaluated.
-* **Auto initial normal** — when no ``initial_normal`` is supplied, one is
-  chosen automatically via Gram--Schmidt against the tangent at $\tau_0$.
+* **The solve is lazy** -- it runs when a concrete $\tau$ is requested, i.e.
+  when the `TimeDep` family is evaluated, not at construction.
+* **The adjoint is a capability choice, not a speed one.** See
+  `BishopBuilder`'s *Choosing an adjoint*: the default `diffrax.DirectAdjoint`
+  is what keeps the solve differentiable in forward mode, which
+  `coordinax.transforms.act` on tangent data and
+  `coordinax.transforms.act_jet` require.
 
 See Also
 --------
