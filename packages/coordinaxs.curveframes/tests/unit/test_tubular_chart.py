@@ -342,7 +342,12 @@ def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_station() -> None:
     )
     at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
     assert jnp.isnan(ch.jacobian_factor(at))
-    with pytest.raises(ValueError, match="outside the reach"):
+    # A NaN factor is `0 / 0` -- the axis is singular, not a focal distance
+    # reached by going too far out -- so it is the degenerate-frame message
+    # that fires, not the reach one. The branch under test is unchanged: what
+    # this pins is that `~(f > tol)` refuses a NaN at all, where `f <= tol`
+    # would not (every comparison against NaN is False).
+    with pytest.raises(ValueError, match="degenerate at the tube axis"):
         ch.check_data(at, values=True)
 
 
