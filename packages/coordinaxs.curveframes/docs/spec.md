@@ -59,6 +59,24 @@ $$
 
 (curveframes-math-frenet-transform)=
 
+### Curvature and torsion
+
+The two invariants of the apparatus are
+
+$$
+\kappa = \frac{\lVert\boldsymbol{\gamma}' \times \boldsymbol{\gamma}''\rVert}
+                 {\lVert\boldsymbol{\gamma}'\rVert^3}, \qquad
+   \tau_g = \frac{(\boldsymbol{\gamma}' \times \boldsymbol{\gamma}'') \cdot
+                   \boldsymbol{\gamma}'''}
+                 {\lVert\boldsymbol{\gamma}' \times \boldsymbol{\gamma}''\rVert^2}.
+$$
+
+They differ in where they are defined, and the difference is not cosmetic. $\kappa \ge 0$ is defined **wherever the curve is regular**, including at an inflection and along a straight segment — it simply reads zero. The _frame_ is undefined at exactly those points, because $\mathbf{N}$ has no direction there, so `curvature` answers where `rotation_matrix` refuses.
+
+$\tau_g$ is not so forgiving: its denominator is $(\kappa\lVert\boldsymbol{\gamma}'\rVert^3)^2$, so it degenerates precisely where $\kappa = 0$ and is refused there.
+
+On a planar curve $\tau_g = 0$ wherever it is defined, and $\kappa = \lvert\kappa_s\rvert$ for the signed curvature of {ref}`the signed planar frame <curveframes-math-signed-planar>`.
+
 ## Frenet–Serret Transform
 
 The Frenet–Serret frame defines a $\tau$-dependent **rigid-body transform** (translation + rotation) between the ambient Cartesian frame and the curve-attached frame.
@@ -209,6 +227,8 @@ $$
 $$
 
 The Bishop frame is the unique frame in this family for which $d\theta/d\tau = 0$ (no torsion-induced twist).
+
+(curveframes-math-signed-planar)=
 
 ## Signed Planar Frame
 
@@ -369,6 +389,8 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     Convenience accessors: `normal(tau)` (row 1), `binormal(tau)` (row 2); `location(tau)`, `tangent(tau)` are inherited from `AbstractCurveFrameBuilder`.
 
+    Invariants: `curvature(tau) -> Quantity[1/length]` and `torsion(tau) -> Quantity[1/length]`. Both are separate accessors so `rotation_matrix` never pays for them; `curvature` costs the same two `jacfwd` passes as `rotation_matrix`, `torsion` a third. `curvature` is **unguarded** — it is defined wherever the curve is regular, including where the frame is not — while `torsion` is guarded at $\kappa = 0$, where its denominator vanishes.
+
     Constructed directly — `FrenetSerretBuilder(curve, tau_unit=None, station=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `FrenetSerretFrame`.
 
     JAX compatibility: `FrenetSerretBuilder` is an `equinox.Module`, so it is a valid pytree. `curve`, `station` are dynamic leaves (differentiable, `vmap`-able); `tau_unit` is static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap`. A plain `jax.jit` cannot hash a builder holding array leaves (e.g. an `equinox.Module` curve with array fields, or a `station`); use `eqx.filter_jit` in that case.
@@ -503,7 +525,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     `plane_normal` is a pytree leaf, so it is differentiable and vmappable; `None` means the z-axis, and the vector need not be normalised.
 
-    Beyond the shared accessors it provides `signed_curvature(tau) -> Quantity[1/length]`. This is the only curvature accessor in the package.
+    Beyond the shared accessors it provides `signed_curvature(tau) -> Quantity[1/length]` and `curvature_vector(tau) -> Quantity[1/length]`. Unlike `FrenetSerretBuilder.curvature`, `signed_curvature` carries a sign and so passes smoothly through an inflection rather than only reaching zero there; on a planar curve the two agree in magnitude.
 
     `act` dispatches on `TimeDep(SignedPlanarBuilder(...))`, identically to `FrenetSerretBuilder`.
 
