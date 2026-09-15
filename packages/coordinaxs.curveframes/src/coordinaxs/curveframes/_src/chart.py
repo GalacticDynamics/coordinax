@@ -77,17 +77,13 @@ _MSG_DEGENERATE_FRAME = (
 )
 
 _MSG_PINNED_STATION_ON_ONE_ARGUMENT = (
-    "the builder pins `station=`, and its curve takes one argument, so this "
-    "chart's `tau` has nothing left to vary: the builder evaluates at the "
-    "station whatever it is handed, and every `tau` maps to the same ambient "
-    "point (measured: `tau=1.0` and `tau=2.5` both give `gamma(station)`, "
-    "`jacobian_factor` is `nan`, and the inverse solve is degenerate). "
-    "A station-pinned one-argument builder is a frame *field* along the "
-    "curve, which is a fine thing to hold and vmap over `station` -- it is "
-    "only a tubular *chart* it cannot supply the parameter for. Drop "
-    "`station=` to get a chart whose `tau` moves along the curve, or use the "
-    "builder on its own for the fixed-station frame. A station belongs with a "
-    "two-argument `gamma(s, t)`, where it pins `s` and leaves `tau` the time."
+    "the builder pins `station=` on a one-argument curve, so this chart's "
+    "`tau` has nothing left to vary: every `tau` maps to the same ambient "
+    "point and `jacobian_factor` is `nan`. Such a builder is a frame *field*, "
+    "which is fine on its own -- it just cannot parameterise a chart. Drop "
+    "`station=` for a chart whose `tau` moves along the curve, or pass a "
+    "two-argument `gamma(s, t)`, where the station pins `s` and leaves `tau` "
+    "the time."
 )
 
 
@@ -233,16 +229,10 @@ class TubularChart(AbstractParameterizedChart):
         if self.is_time_dependent and lo != "time":
             raise ValueError(_MSG_WORLDTUBE_BOUNDS_NOT_TIME.format(lo=lo))
 
-        # A pinned station is legitimate on the *builder* -- it is how a frame
-        # field along the curve is spelled, and it is differentiable and
-        # vmappable in `station`. It is only degenerate here, where `tau` is
-        # supposed to move along the curve and the pin leaves it nothing to
-        # move. The builder cannot refuse it for that reason, since it does
-        # not know it is about to become a chart, so the check lives here.
-        #
-        # Not caught by the guards above: `is_time_dependent` reads the curve's
-        # *arity*, and a one-argument curve reports `False` however its station
-        # is set, so every worldtube check steps aside.
+        # Here and not on the builder: a pinned station is legitimate there,
+        # and the builder does not know it is about to become a chart. The
+        # worldtube guards above miss it because `is_time_dependent` reads the
+        # curve's *arity*, which a station does not change.
         if self.builder.station is not None and not self.is_time_dependent:
             raise ValueError(_MSG_PINNED_STATION_ON_ONE_ARGUMENT)
 

@@ -1,13 +1,7 @@
-"""A station-pinned one-argument builder cannot supply a tubular chart's `tau`.
+"""A station-pinned one-argument builder cannot parameterise a tubular chart.
 
-Pinning `station=` on a one-argument curve is *legitimate* on the builder: it is
-how a frame field along the curve is spelled, and it is vmappable in `station`.
-It is degenerate only inside a `TubularChart`, where `tau` is meant to move
-along the curve and the pin leaves it nothing to move -- so the chart refuses
-and the builder does not.
-
-None of the worldtube guards caught this: `is_time_dependent` reads the curve's
-*arity*, and a one-argument curve reports `False` however its station is set.
+Legitimate on the builder, degenerate as a chart -- so the chart refuses it and
+the builder does not.
 """
 
 import jax.numpy as jnp
