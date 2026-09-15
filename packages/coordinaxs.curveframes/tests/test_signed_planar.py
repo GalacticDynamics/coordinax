@@ -8,6 +8,10 @@ asserted once in `test_parallel_transport_contract.py`, parametrized.
 
 __all__: tuple[str, ...] = ()
 
+from typing import Any
+
+import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
@@ -258,3 +262,49 @@ class TestFrame:
         from_curve = cxf.frame_transition(frame, cxf.Alice())
         back = cxfm.act(from_curve, tau, out)
         np.testing.assert_allclose(back.ustrip("km"), p.ustrip("km"), atol=1e-10)
+
+
+class PlanarCircle(eqx.Module):
+    """A circle whose ``radius`` (in km) is a differentiable pytree leaf."""
+
+    radius: Any
+
+    def __call__(self, tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.ustrip("s")
+        return u.Q(
+            self.radius * jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km"
+        )
+
+
+class TestJAX:
+    """`Helix` in test_capabilities.py is not planar, so grad coverage lives here."""
+
+    def test_grad_through_a_curve_parameter(self) -> None:
+        """`kappa_s = 1/r`, so `d(kappa_s)/dr = -1/r^2` in closed form."""
+
+        def kappa(radius: Any) -> Any:
+            builder = cxfc.SignedPlanarBuilder(PlanarCircle(radius), "s")
+            return builder.signed_curvature(u.Q(0.3, "s")).ustrip("1/km")
+
+        got = jax.grad(kappa)(1.5)
+        np.testing.assert_allclose(got, -1.0 / 1.5**2, rtol=1e-6)
+
+    def test_jit_and_vmap_across_the_inflection(self) -> None:
+        """The whole point: a batch spanning `t = 0` stays finite under jit."""
+        builder = cxfc.SignedPlanarBuilder(cubic, "s")
+        taus = u.Q(jnp.linspace(-1.0, 1.0, 5), "s")
+
+        @eqx.filter_jit
+        def normal_at(tau: u.AbstractQuantity) -> jax.Array:
+            return builder.normal(tau).value
+
+        got = jax.vmap(normal_at)(taus)
+        assert got.shape == (5, 3)
+        assert jnp.all(jnp.isfinite(got))
+
+    def test_eager_and_jit_agree(self) -> None:
+        builder = cxfc.SignedPlanarBuilder(cubic, "s")
+        tau = u.Q(0.0, "s")
+        eager = builder.rotation_matrix(tau)
+        jitted = eqx.filter_jit(builder.rotation_matrix)(tau)
+        np.testing.assert_allclose(jitted, eager, atol=1e-12)

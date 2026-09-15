@@ -143,6 +143,7 @@ class TestFixedStation:
         ("builder_cls", "tau_val", "atol"),
         [
             (cxfc.FrenetSerretBuilder, 0.0, 1e-10),
+            (cxfc.SignedPlanarBuilder, 0.0, 1e-10),
             (cxfc.BishopBuilder, 2.0, 1e-6),  # ODE, so looser
         ],
     )

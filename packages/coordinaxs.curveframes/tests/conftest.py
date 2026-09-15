@@ -100,6 +100,7 @@ def inverse_rotation(builder: object, tau: u.AbstractQuantity) -> object:
 # `loose`: a multi-step chain, where the per-step error compounds.
 TOLERANCES = {
     "frenet-serret": {"tight": 1e-10, "plumbing": 1e-10, "field": 1e-6, "loose": 1e-5},
+    "signed-planar": {"tight": 1e-10, "plumbing": 1e-10, "field": 1e-6, "loose": 1e-5},
     "bishop": {"tight": 1e-6, "plumbing": 1e-5, "field": 1e-5, "loose": 1e-3},
 }
 
@@ -107,6 +108,11 @@ PARALLEL_TRANSPORT_TYPES = {
     "frenet-serret": SimpleNamespace(
         builder_cls=cxfc.FrenetSerretBuilder,
         frame_cls=cxfc.FrenetSerretFrame,
+        triad=("tangent", "normal", "binormal"),
+    ),
+    "signed-planar": SimpleNamespace(
+        builder_cls=cxfc.SignedPlanarBuilder,
+        frame_cls=cxfc.SignedPlanarFrame,
         triad=("tangent", "normal", "binormal"),
     ),
     "bishop": SimpleNamespace(
