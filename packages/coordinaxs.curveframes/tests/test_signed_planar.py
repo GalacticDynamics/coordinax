@@ -299,6 +299,69 @@ class PlanarCircle(eqx.Module):
         )
 
 
+class TestCurvatureVector:
+    """`kappa_s * N`: continuous through an inflection, where `N` alone is not.
+
+    The curvature vector is the object that behaves the way a reader expects
+    the Frenet normal to behave. It points at the centre of curvature, and it
+    passes through zero at an inflection instead of flipping -- which the
+    *unit* normal cannot do, since "unit", "points at the centre of
+    curvature" and "continuous" are incompatible there.
+    """
+
+    def test_equals_signed_curvature_times_normal(self) -> None:
+        b = cxfc.SignedPlanarBuilder(cubic, "s")
+        tau = u.Q(0.7, "s")
+        expect = b.signed_curvature(tau).ustrip("1/km") * b.normal(tau).value
+        np.testing.assert_allclose(
+            b.curvature_vector(tau).ustrip("1/km"), expect, atol=1e-12
+        )
+
+    def test_dimension_is_inverse_length(self) -> None:
+        kv = cxfc.SignedPlanarBuilder(circle, "s").curvature_vector(u.Q(0.0, "s"))
+        assert u.dimension_of(kv) == u.dimension("1/length")
+
+    @pytest.mark.parametrize(
+        ("t", "expected"),
+        # kappa_s = 6t / (1 + 9t^4)^{3/2}, so ~6t for small t.
+        [(-1e-6, [0.0, -6e-6, 0.0]), (0.0, [0.0, 0.0, 0.0]), (1e-6, [0.0, 6e-6, 0.0])],
+    )
+    def test_passes_through_zero_at_the_inflection(
+        self, t: float, expected: list[float]
+    ) -> None:
+        """Continuous and vanishing, where the unit normal jumps by 180 deg."""
+        kv = cxfc.SignedPlanarBuilder(cubic, "s").curvature_vector(u.Q(t, "s"))
+        np.testing.assert_allclose(kv.ustrip("1/km"), expected, atol=1e-12)
+
+    def test_points_at_the_centre_of_curvature(self) -> None:
+        """Where curvature is nonzero it is parallel to the Frenet normal.
+
+        Both branches of the cubic, so the branch on which the signed-planar
+        *unit* normal opposes Frenet is covered too.
+        """
+        sp = cxfc.SignedPlanarBuilder(cubic, "s")
+        fs = cxfc.FrenetSerretBuilder(cubic, "s")
+        for t in (-1.0, 1.0):
+            tau = u.Q(t, "s")
+            kv = sp.curvature_vector(tau).ustrip("1/km")
+            direction = kv / jnp.linalg.norm(kv)
+            np.testing.assert_allclose(direction, fs.normal(tau).value, atol=1e-8)
+
+    def test_magnitude_is_abs_signed_curvature(self) -> None:
+        b = cxfc.SignedPlanarBuilder(cubic, "s")
+        for t in (-1.0, -0.2, 0.0, 0.2, 1.0):
+            tau = u.Q(t, "s")
+            got = jnp.linalg.norm(b.curvature_vector(tau).ustrip("1/km"))
+            want = abs(b.signed_curvature(tau).ustrip("1/km"))
+            np.testing.assert_allclose(got, want, atol=1e-10)
+
+    def test_zero_on_a_straight_line(self) -> None:
+        kv = cxfc.SignedPlanarBuilder(straight_line, "s").curvature_vector(
+            u.Q(3.0, "s")
+        )
+        np.testing.assert_allclose(kv.ustrip("1/km"), [0.0, 0.0, 0.0], atol=1e-12)
+
+
 class TestJAX:
     """`Helix` in test_capabilities.py is not planar, so grad coverage lives here."""
 

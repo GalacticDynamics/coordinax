@@ -464,6 +464,18 @@ kappa_s = sp.signed_curvature(u.Q(0.0, "s"))
 
 `N` is continuous through the inflection and `kappa_s` passes smoothly through zero, changing sign. Both are defined on a straight line too, where Frenet–Serret has no frame anywhere.
 
+### The Curvature Vector
+
+`curvature_vector` is `kappa_s * N` — the object that behaves the way a reader expects the Frenet–Serret normal to behave. It points at the centre of curvature, and it passes smoothly _through zero_ at an inflection instead of flipping by 180°.
+
+```python
+kv = sp.curvature_vector(u.Q(0.0, "s"))
+```
+
+The unit normal cannot do both. At an inflection the centre of curvature runs off to infinity and swaps sides, so "unit", "points at the centre of curvature" and "continuous" are mutually incompatible there — any two, never all three. `FrenetSerretBuilder` keeps the first two and is undefined at the inflection; `normal` keeps the first and third and points left of travel instead. Dropping the _unit_ requirement buys the other two at once.
+
+That is also why this is an accessor rather than a frame axis: a vanishing row cannot go into a rotation matrix.
+
 ### How the Signed Planar Frame Differs from Frenet–Serret
 
 It is a _different frame_, not a repaired one, and the two are not interchangeable:

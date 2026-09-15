@@ -369,6 +369,64 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
 
         return qnp.sum(qnp.cross(t_vec, d2p) * n_hat) / qnp.sum(dp**2)
 
+    def curvature_vector(self, tau: Any, /) -> u.Q:
+        r"""Return the curvature vector $\kappa_s \mathbf{N}$.
+
+        $$ \frac{d\mathbf{T}}{ds} = \kappa_s \mathbf{N} $$
+
+        This is the object that behaves the way a reader expects the
+        Frenet--Serret normal to behave: it points at the centre of curvature,
+        and it passes smoothly *through zero* at an inflection rather than
+        flipping by $180^\circ$.
+
+        The unit normal cannot do both. At an inflection the centre of
+        curvature runs off to infinity and swaps sides, so "unit", "points at
+        the centre of curvature" and "continuous" are mutually incompatible
+        there -- any two, never all three. `FrenetSerretBuilder` keeps the
+        first two and is undefined at the inflection; `normal` keeps the first
+        and third and points left of travel instead. Dropping the *unit*
+        requirement is what buys the other two at once, which is why this is an
+        accessor and not a frame axis: a vanishing row cannot go in a rotation
+        matrix.
+
+        Returns a `Quantity` of dimension 1/length, whose magnitude is
+        $|\kappa_s|$ and whose direction is the Frenet normal wherever the
+        curvature does not vanish.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        A cubic, across its inflection -- continuous, and zero at the centre:
+
+        >>> def cubic(tau: u.Q) -> u.Q:
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([t, t**3, jnp.zeros_like(t)]), "km")
+
+        >>> sp = cxfc.SignedPlanarBuilder(cubic, "s")
+
+        The y-component alone, which is where all the motion is -- it passes
+        through zero rather than flipping sign discontinuously:
+
+        >>> [float(sp.curvature_vector(u.Q(t, "s")).ustrip("1/km")[1])
+        ...  for t in (-1e-6, 0.0, 1e-6)]
+        [-6e-06, 0.0, 6e-06]
+
+        It is $\\kappa_s$ that vanishes there, not $\\mathbf{N}$: the normal
+        stays a unit vector throughout, so the product is what carries the
+        curvature to zero.
+
+        >>> float(sp.signed_curvature(u.Q(0.0, "s")).ustrip("1/km"))
+        0.0
+
+        >>> float(jnp.linalg.norm(sp.normal(u.Q(0.0, "s")).value))
+        1.0
+
+        """
+        return self.signed_curvature(tau) * self.normal(tau)
+
 
 #####################################################################
 # Frame
