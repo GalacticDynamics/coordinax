@@ -658,6 +658,8 @@ assert field.ustrip("km").shape == (5, 3)
 
 Each row of `field` is the same point `p` expressed in the frame anchored at the corresponding `station` value.
 
+A builder in this shape is a frame _field_, not a curve parameterisation, so it cannot back a `TubularChart`. With `station` pinned there is nothing left for the chart's $\tau$ to vary: the builder evaluates at the station whatever it is handed, so every $\tau$ would name the same ambient point and the inverse solve would be degenerate. `TubularChart` refuses it at construction with a `ValueError` rather than build a map that ignores its own first coordinate. Drop `station=` for a chart whose $\tau$ moves along the curve, or keep the builder on its own, as above, for the fixed-station frame. A station belongs with a two-argument $\gamma(s, t)$, where it pins $s$ and leaves the chart's $\tau$ the time — that is the worldtube case, and it is required there rather than refused.
+
 ### Active Semantics
 
 Curve frames follow coordinax's **active transformation** convention. `act(op, tau, x)` moves the represented point data — it does not merely relabel coordinates. The forward transform takes ambient coordinates and expresses them in the curve frame; the inverse takes curve-frame coordinates and returns them to the ambient frame.
