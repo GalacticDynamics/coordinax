@@ -332,13 +332,29 @@ def test_the_reach_guard_also_fires_under_jit() -> None:
         run(-1.6)
 
 
-def test_the_reach_guard_fires_on_a_nan_factor_from_a_pinned_station() -> None:
+def frozen(s: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+    """A worldtube whose station never moves: `gamma` has no `t` dependence."""
+    sv = s.ustrip("km")
+    return u.Q(jnp.stack([sv, 0.1 * sv**2, jnp.zeros_like(sv)]), "km") * jnp.ones_like(
+        t.ustrip("s")
+    )
+
+
+def test_the_reach_guard_fires_on_a_nan_factor() -> None:
     """See the `~(f > 0)` vs `f <= 0` comment in `TubularChart.check_data`.
 
-    Reachable via public API: `FrenetSerretBuilder(curve, "s", station=...)`.
+    `jacobian_factor` is `dot(dx, T) / speed`, so a station that never moves
+    makes it `0 / 0`. A *frozen* worldtube is the reachable way to get there.
+
+    This used to be reached with `FrenetSerretBuilder(circle, "s", station=...)`
+    -- a one-argument curve with a pinned station. `TubularChart` now refuses
+    that at construction, because it made every `tau` name the same ambient
+    point, so the NaN has to come from a chart that is still legal to build.
+    The branch under test is unchanged; only the vehicle is.
     """
     ch = cxfc.TubularChart(
-        cxfc.FrenetSerretBuilder(circle, "s", station=u.Q(0.5, "s")), tau_bounds=BOUNDS
+        cxfc.FrenetSerretBuilder(frozen, "km", station=u.Q(1.3, "km")),
+        tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
     )
     at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
     assert jnp.isnan(ch.jacobian_factor(at))
