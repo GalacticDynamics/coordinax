@@ -6,6 +6,7 @@ import itertools
 import math
 
 import jaxtyping
+from typing import ClassVar
 
 import jax
 import jax.numpy as jnp
@@ -278,6 +279,29 @@ class TestJacobianPtMapCart2dToPolar2d:
         units = [[str(x) for x in row] for row in J.unit.to_tuple()]
         assert units[0][1] == "km / m"
         assert units[1] == ["rad / km", "rad / m"]
+
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_bare_arrays_use_the_unit_systems_angle(self, angle_unit: str) -> None:
+        """The angular row is per ``usys["angle"]``, not always per radian.
+
+        A bare-array Jacobian carries no units, so the angular row only means
+        anything relative to the unit system the caller's values are in --
+        the same one `pt_map` writes ``theta`` in. The closed form used to
+        return radians per length whatever `usys` said, which is off by a
+        constant 180/pi under a degree system and stays plausible-looking.
+        """
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        at = jnp.array([1.0, 2.0])
+
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys)
+
+        # Differentiating the transition map itself is the ground truth.
+        fn = cxc.pt_map(None, cxc.cart2d, cxc.polar2d, usys=usys)
+        expected = jax.jacfwd(
+            lambda a: jnp.stack(list(fn({"x": a[0], "y": a[1]}).values()))
+        )(at)
+
+        assert_allclose(np.asarray(J), np.asarray(expected), rtol=1e-12)
 
 
 # ===========================================================================
@@ -834,15 +858,18 @@ class TestJacobianPtMapCDictArrayBranch:
         assert_allclose(J_int, J_float, atol=1e-6)
 
     def test_generic_pair_no_usys_fails(self) -> None:
-        """Cart3D→Sph3D CDict with plain floats and no usys raises an error.
+        """A CDict of plain floats and no usys raises, for a generic pair.
 
-        The CDict is_array=True branch forwards to the Array dispatch which
-        requires usys.  For generic chart pairs with no analytical Array
-        dispatch this is a known limitation.
+        The ``is_array=True`` branch forwards to the Array dispatch, and the
+        generic one requires *usys* to know what the bare numbers mean. A pair
+        with a closed form registered does not go that way -- it reads bare
+        angles as radians -- so this has to be checked on a pair that has
+        none. `Cylindrical3D -> Spherical3D` is one today; if it ever gains a
+        closed form, move this to another rather than deleting it.
         """
-        at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
         with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
-            cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
+            cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
 
 
 # ===========================================================================
@@ -989,3 +1016,57 @@ class TestJacobianOfABatchIsABatchOfJacobians:
         at = {k: u.Q(jnp.ones(n), "m") for k in "xyz"}
         size = self._value(cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)).size
         assert size == n * 3 * 3
+
+
+# ===========================================================================
+# Closed forms agree with differentiating the transition map
+# ===========================================================================
+
+
+class TestAnalyticJacobiansAgreeWithAutodiff:
+    """Every closed form must reproduce `jax.jacfwd` of the map it claims.
+
+    Differentiating `pt_map` itself is the ground truth: a test that restated
+    the closed form would agree with a wrong derivation of it. Both angle unit
+    systems are covered because a Jacobian on bare arrays carries no units, so
+    an angular row is per ``usys["angle"]`` and an angular *column* is with
+    respect to it -- getting either wrong is off by a silent factor of 180/pi.
+    """
+
+    PAIRS: ClassVar = [
+        ("cart3d->cyl3d", "cart3d", "cyl3d", "cart"),
+        ("cart3d->sph3d", "cart3d", "sph3d", "cart"),
+        ("cyl3d->cart3d", "cyl3d", "cart3d", "cyl"),
+        ("sph3d->cart3d", "sph3d", "cart3d", "sph"),
+        ("cart2d->polar2d", "cart2d", "polar2d", "cart2"),
+    ]
+
+    @staticmethod
+    def _point(kind: str, ang_per_rad: float):
+        """A generic point, with any angular components in ``usys`` units."""
+        if kind == "cart":
+            return jnp.array([1.3, 2.1, 0.7])
+        if kind == "cart2":
+            return jnp.array([1.3, 2.1])
+        if kind == "cyl":
+            return jnp.array([2.0, 0.7 * ang_per_rad, 3.0])
+        return jnp.array([3.0, 0.6 * ang_per_rad, 1.1 * ang_per_rad])
+
+    @pytest.mark.parametrize(("name", "frm", "to", "kind"), PAIRS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_matches_autodiff(
+        self, name: str, frm: str, to: str, kind: str, angle_unit: str
+    ) -> None:
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = self._point(kind, 1.0 if angle_unit == "rad" else 180 / math.pi)
+
+        got = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys)
+
+        fn = cxc.pt_map(None, from_chart, to_chart, usys=usys)
+        keys = from_chart.components
+        expected = jax.jacfwd(
+            lambda a: jnp.stack(list(fn(dict(zip(keys, a, strict=True))).values()))
+        )(at)
+
+        assert_allclose(np.asarray(got), np.asarray(expected), rtol=1e-11)
