@@ -343,6 +343,14 @@ class TestProperties:
         pv = Coordinate(point=base, velocity=vel)
         assert pv.shape == (2,)
 
+    def test_shapes_that_cannot_broadcast_say_so(self) -> None:
+        """The message names both shapes; nothing covered it before."""
+        base = cxv.Point.from_(jnp.ones((3, 3)), "m")
+        vel = cxv.Tangent.from_(jnp.ones((4, 3)), "m/s", cxc.cart3d, cxr.coord_vel)
+
+        with pytest.raises(ValueError, match=r"\(3,\), \(4,\)\] are not broadcastable"):
+            Coordinate(point=base, velocity=vel)
+
 
 # ---------------------------------------------------------------------------
 # TestCconvert

@@ -211,7 +211,12 @@ class Coordinate(AbstractVector):
         if len(all_shapes) > 1:
             try:
                 jnp.broadcast_shapes(*all_shapes)
-            except Exception as exc:
+            except ValueError as exc:
+                # `ValueError` only: `broadcast_shapes` also raises `TypeError`
+                # for a malformed shape (a negative, non-integer or `None`
+                # entry), which is a broken `.shape` somewhere upstream rather
+                # than an incompatibility between these ones. Relabelling it
+                # "not broadcastable" would name the wrong fault.
                 msg = f"Coordinate: shapes {all_shapes} are not broadcastable: {exc}"
                 raise ValueError(msg) from exc
 
