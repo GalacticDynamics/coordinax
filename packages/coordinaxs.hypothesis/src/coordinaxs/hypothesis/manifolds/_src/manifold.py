@@ -206,9 +206,10 @@ def manifolds(
         raise ValueError("When manifold_cls is provided, ndim must be None.")
 
     manifold_cls = draw(manifold_cls)
+    # No `ndim`: the guard above has already established it is None.
     return draw(
         cast("Any", manifolds)(
-            manifold_cls, ndim=ndim, required_chart_classes=required_chart_classes
+            manifold_cls, required_chart_classes=required_chart_classes
         )
     )
 

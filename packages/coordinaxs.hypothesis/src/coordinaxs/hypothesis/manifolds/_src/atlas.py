@@ -400,11 +400,12 @@ def atlases(
     if ndim is not None:
         raise ValueError("When atlas_cls is provided, ndim must be None.")
 
-    # Draw and redispatch
+    # Draw and redispatch. No `ndim`: the guard above has already
+    # established it is None.
     selected_cls = draw(atlas_cls)
     return draw(
         cast("Any", atlases)(
-            selected_cls, ndim=ndim, required_chart_classes=required_chart_classes
+            selected_cls, required_chart_classes=required_chart_classes
         )
     )
 
