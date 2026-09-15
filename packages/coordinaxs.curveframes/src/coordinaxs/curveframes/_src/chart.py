@@ -278,27 +278,13 @@ class TubularChart(AbstractParameterizedChart):
         and just below ``tau_bounds[1]`` name the same station and the same
         ``(n1, n2)`` offset but different ambient points.
 
-        Returns the size of that tear, as an angle. Zero means the chart
-        closes: either the frame comes back to itself, or -- the case below --
-        there is no seam at all.
+        Returns the size of that tear. Zero when the frame closes, and zero
+        when the curve does not: holonomy belongs to a loop. Closure is judged
+        relative to the curve's own size, at the working dtype's ``sqrt(eps)``.
 
-        Holonomy belongs to a *loop*, so a curve that does not return to its
-        start over ``tau_bounds`` has none and this is zero. Closure is judged
-        on the endpoints' separation relative to the curve's own size,
-        at the working dtype's ``sqrt(eps)``; measured, a closed curve sits at
-        ``~1e-16`` of its scale and an open one at ``~1e0``, so the threshold
-        is nowhere near either.
-
-        ``n_scale`` is how many points that size is read from, and must be at
-        least 3 -- fewer cannot measure it, and gets closure wrong silently in
-        both directions. See the refusal below.
-
-        An open curve is answered **without evaluating the frame at all**, so
-        one whose frame is undefined still answers 0 rather than raising: a
-        straight line under `FrenetSerretBuilder` has no curvature and no
-        normal, but it also has no seam, and "no tear" is the honest answer to
-        the question asked. Use the builder directly if what you wanted was
-        whether its frame exists.
+        An open curve never evaluates the frame, so one whose frame is
+        undefined answers 0 rather than raising -- a straight line under
+        `FrenetSerretBuilder` has no normal, but no seam either.
 
         Examples
         --------
@@ -330,15 +316,8 @@ class TubularChart(AbstractParameterizedChart):
             True
 
         """
-        # A static Python int, so a plain branch is enough -- and it has to be
-        # a refusal rather than a clamp, because both small values are
-        # *silently* wrong in opposite directions. Measured on a trefoil:
-        # `n_scale=2` samples only the two endpoints, which for a closed curve
-        # are the same point, so the spread is zero and a real seam reports
-        # `0.0`; `n_scale=1` samples `lo` alone and compares it with itself, so
-        # the gap is zero for *any* curve and an open one reports a seam it
-        # does not have (-0.456950 where the answer is 0). Three is the first
-        # count with an interior sample to give the curve a size.
+        # Refused, not clamped: both smaller values are silently wrong, in
+        # opposite directions.
         if n_scale < 3:
             msg = (
                 f"`n_scale` must be at least 3, got {n_scale}: it sizes the "
@@ -353,15 +332,10 @@ class TubularChart(AbstractParameterizedChart):
         lo = jnp.asarray(self.tau_bounds[0].ustrip(unit))
         hi = jnp.asarray(self.tau_bounds[1].ustrip(unit))
 
-        # Closure is relative: an absolute tolerance would call a curve of
-        # radius 1e-9 closed and one of radius 1e9 open. The spread of a
-        # coarse scan about its own mean is the curve's size, and needs no
-        # assumption about where the curve sits (a radius from the origin
-        # fails for a curve that passes through it).
-        # `location`, not `curve`: it routes through `_resolve`, so this reads
-        # the same point the forward map does on both branches -- a
-        # two-argument worldtube curve takes `(station, time)` and calling it
-        # with a bare `tau` would pass a time where a station belongs.
+        # Spread about the mean, not a radius from the origin, which fails for
+        # a curve passing through it. `location`, not `curve`: it routes
+        # through `_resolve`, so a two-argument worldtube gets `(station,
+        # time)` rather than a time where a station belongs.
         seeds = jnp.linspace(lo, hi, n_scale)
         len_unit = u.unit_of(self.builder.location(u.Q(lo, unit)))
         pts = jax.vmap(lambda t: self.builder.location(u.Q(t, unit)).ustrip(len_unit))(
@@ -375,11 +349,9 @@ class TubularChart(AbstractParameterizedChart):
         closed = gap <= eps * scale
 
         def _angle(_: Any = None) -> jax.Array:
-            """Measure the rotation the normal picks up about the tangent.
+            """Measure the normal's rotation in the start frame's `(N, B)`.
 
-            Read in the start frame's own `(N, B)` basis, and with `atan2`
-            rather than `arccos` so the sign survives -- which way it twists
-            is the difference between two curves, not a detail.
+            `atan2`, not `arccos`: the sign says which way it twists.
             """
             r_lo = self.builder.rotation_matrix(u.Q(lo, unit))
             r_hi = self.builder.rotation_matrix(u.Q(hi, unit))
@@ -387,16 +359,10 @@ class TubularChart(AbstractParameterizedChart):
             n_hi = r_hi[1]
             return jnp.arctan2(jnp.dot(n_hi, b_lo), jnp.dot(n_hi, n_lo))
 
-        # Branched, not computed-then-discarded with `jnp.where`. Those two
-        # `rotation_matrix` calls are a parallel-transport ODE solve across the
-        # whole of `tau_bounds` for `BishopBuilder`, and on an open curve the
-        # answer is 0 whatever they return. Measured on an open trefoil, they
-        # are effectively the entire cost: a median 6.9 s against 5.3 ms for
-        # the closure scan that decides the branch.
-        #
-        # The same eager/traced hybrid `check_data` and `nearest_tau` use: a
-        # Python branch cannot test a tracer, and `lax.cond` eagerly would
-        # still trace the solve it is trying to skip.
+        # Branched, not `jnp.where`: those two calls are a parallel-transport
+        # ODE solve and the whole cost (6.9 s against 5.3 ms for the scan), and
+        # an open curve discards them. Hybrid because a Python branch cannot
+        # test a tracer, and `lax.cond` eagerly would trace the solve it skips.
         zero = jnp.zeros((), dtype=gap.dtype)
         if isinstance(closed, jax.core.Tracer):
             angle = jax.lax.cond(closed, _angle, lambda _: zero, None)

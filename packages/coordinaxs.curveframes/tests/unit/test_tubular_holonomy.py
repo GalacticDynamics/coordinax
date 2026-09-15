@@ -1,11 +1,6 @@
-"""A Bishop frame does not close around a closed curve, and the chart tears.
+"""`TubularChart.holonomy` reports the seam a closed curve's frame tears at.
 
-The tear is real geometry, not a solver defect: a rotation-minimising frame
-carried once around a closed space curve comes back rotated about the tangent.
-`TubularChart.holonomy` reports how far, so the seam is at least visible.
-
-A **planar** closed curve has zero holonomy, so the obvious probe -- a circle --
-measures nothing. Every test here that matters uses a trefoil.
+A planar closed curve has none, so the tests that matter use a trefoil.
 """
 
 import jax.numpy as jnp
@@ -66,11 +61,7 @@ def test_an_open_curve_has_no_holonomy(curve) -> None:
 
 
 def test_the_holonomy_is_the_size_of_the_actual_tear() -> None:
-    """The number must predict the gap, or it is just a number.
-
-    Two points naming the same station and the same normal offset, one from
-    each side of the seam: a frame that closed would put them together.
-    """
+    """The angle must predict the gap, or it is just a number."""
     ch = _chart(trefoil, CLOSED)
     eps = 1e-7
     off = {"n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
@@ -104,13 +95,7 @@ def test_a_planar_seam_actually_closes() -> None:
 
 @pytest.mark.parametrize("n_scale", [1, 2])
 def test_too_few_scale_samples_are_refused(n_scale: int) -> None:
-    """Both were silently wrong, in opposite directions.
-
-    `n_scale=2` samples only the endpoints, which a closed curve makes the
-    same point: the spread is zero, so a real seam reported `0.0`. `n_scale=1`
-    samples `lo` alone and compares it with itself, so every curve looked
-    closed and an *open* one reported a seam it does not have.
-    """
+    """`n_scale=2` missed a real seam; `n_scale=1` invented one on an open curve."""
     with pytest.raises(ValueError, match="at least 3"):
         _chart(trefoil, CLOSED).holonomy(n_scale=n_scale)
 
@@ -129,13 +114,7 @@ def _rad_at(ch, n_scale: int) -> float:
 
 
 def test_an_open_curve_never_evaluates_the_frame() -> None:
-    """So a curve whose frame is undefined still answers 0 instead of raising.
-
-    A straight line has no curvature, so `FrenetSerretBuilder` refuses to build
-    a normal for it -- but it has no seam either, and the question asked was
-    whether the chart tears. Before the open case was branched away from the
-    transport solve, this raised out of `rotation_matrix`.
-    """
+    """A straight line has no normal, but no seam either: 0, not a raise."""
 
     def line(tau: u.AbstractQuantity) -> u.AbstractQuantity:
         t = tau.ustrip("s")
