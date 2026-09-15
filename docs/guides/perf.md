@@ -448,21 +448,24 @@ Same runtime as the baseline. The idiomatic form also accepts quantity-valued di
 
 Every comparison above is jitted, and under `jit` the three routes are interchangeable. Eager is a different story, and worth understanding before you write a loop that calls `jac_pt_map` a few thousand times.
 
-`jax.jacfwd` builds and evaluates a jaxpr on _every_ call. Jitting hoists that work into a one-time compilation; eagerly you pay it per call, and it dominates everything else:
+`jax.jacfwd` builds and evaluates a jaxpr on _every_ call. Jitting hoists that work into a one-time compilation; eagerly you pay it per call, and it dominates everything else. `Cylindrical3D → Spherical3D` has no closed-form Jacobian, so it is the autodiff path:
 
 ```{code-cell} ipython3
-at_dict = {"x": jnp.asarray(1.3), "y": jnp.asarray(2.1), "z": jnp.asarray(0.7)}
+at_cyl = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.7), "z": jnp.asarray(3.0)}
 
-jitted = jax.jit(lambda a: cxc.jac_pt_map(a, cxc.cart3d, cxc.sph3d, usys=usys))
-_ = jitted(at_dict)  # compile
+jitted = jax.jit(lambda a: cxc.jac_pt_map(a, cxc.cyl3d, cxc.sph3d, usys=usys))
+jax.block_until_ready(jitted(at_cyl))  # compile
+jax.block_until_ready(cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys))  # warm up
 
 print("eager: ", end="")
-%timeit cxc.jac_pt_map(at_dict, cxc.cart3d, cxc.sph3d, usys=usys)
+%timeit jax.block_until_ready(cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys))
 print("jitted:", end="")
-%timeit jax.block_until_ready(jitted(at_dict))
+%timeit jax.block_until_ready(jitted(at_cyl))
 ```
 
-Three orders of magnitude. Two things follow from _where_ that cost sits.
+`jax.block_until_ready` on both: JAX dispatches asynchronously, so timing without it measures how fast Python can queue the work rather than how long it takes.
+
+Two things follow from _where_ that cost sits.
 
 #### The cost is per call, not per point
 
@@ -470,27 +473,28 @@ A chart map is pointwise, so a batch of points is a batch of independent Jacobia
 
 ```{code-cell} ipython3
 for n in (1, 100, 10_000):
-    batch = {k: jnp.full((n,), v) for k, v in (("x", 1.3), ("y", 2.1), ("z", 0.7))}
-    jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cart3d, cxc.sph3d, usys=usys))  # warm up
+    batch = {k: jnp.full((n,), v) for k, v in (("rho", 2.0), ("phi", 0.7), ("z", 3.0))}
+    jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cyl3d, cxc.sph3d, usys=usys))  # warm up
     print(f"N = {n:<6d}", end=" ")
-    %timeit -r 3 jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cart3d, cxc.sph3d, usys=usys))
+    %timeit -r 3 jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cyl3d, cxc.sph3d, usys=usys))
 ```
 
-(A batch of one is not the same as a scalar point: any leading axis takes the `vmap` route, which is why `N = 1` here costs more than the scalar call timed above.)
+(A batch of one is not the same as a scalar point: any leading axis takes the `vmap` route, so `N = 1` need not match the scalar call timed above.)
 
 So if you are working eagerly, hand `jac_pt_map` your points together rather than one at a time. A Python loop over N points pays the trace N times; one batched call pays it once.
 
 #### Some chart pairs skip `jacfwd` entirely
 
-A few transitions have a closed-form Jacobian written out by hand, so they never build a jaxpr at all. Today those are `Cart2D → Polar2D`, and `Cart3D ↔ Cylindrical3D` and `Cart3D ↔ Spherical3D` in both directions. Compare one of them against a pair that has none:
+A few transitions have a closed-form Jacobian written out by hand, so they never build a jaxpr at all. Today those are `Cart2D → Polar2D`, and `Cart3D ↔ Cylindrical3D` and `Cart3D ↔ Spherical3D` in both directions. Compare one of them against the autodiff pair used above:
 
 ```{code-cell} ipython3
-at_cyl = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.7), "z": jnp.asarray(3.0)}
+at_cart = {"x": jnp.asarray(1.3), "y": jnp.asarray(2.1), "z": jnp.asarray(0.7)}
+jax.block_until_ready(cxc.jac_pt_map(at_cart, cxc.cart3d, cxc.sph3d, usys=usys))  # warm up
 
 print("closed form (cart3d -> sph3d):", end=" ")
-%timeit cxc.jac_pt_map(at_dict, cxc.cart3d, cxc.sph3d, usys=usys)
+%timeit jax.block_until_ready(cxc.jac_pt_map(at_cart, cxc.cart3d, cxc.sph3d, usys=usys))
 print("autodiff   (cyl3d  -> sph3d):", end=" ")
-%timeit cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys)
+%timeit jax.block_until_ready(cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys))
 ```
 
 This is invisible under `jit`, where both compile to the same thing, and you do not need to know which pairs have one — the dispatch picks it. It only shows up on the eager path.
