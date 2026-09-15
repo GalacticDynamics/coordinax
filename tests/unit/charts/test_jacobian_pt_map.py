@@ -963,9 +963,10 @@ class TestJacobianPtMapAtExtremeScales:
     ) -> None:
         """Every closed-form Jacobian matches autodiff, at any magnitude.
 
-        Packed input on purpose: a cdict of bare arrays resolves through to the
-        same closed form, but a *unitful* cdict may not, and the generic branch
-        *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with itself.
+        The input is a packed `Array`, not a cdict, so that this exercises the
+        `Array` closed-form dispatch directly. A *unitful* cdict would prove
+        nothing here: for most chart pairs it routes to the generic branch,
+        which *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with itself.
 
         This is where a closed form written in squares gets caught. `r**2` at
         1e17 is 1e34, and a further multiplication by `rho` overflows float32
