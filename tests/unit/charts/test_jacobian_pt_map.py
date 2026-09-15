@@ -279,6 +279,29 @@ class TestJacobianPtMapCart2dToPolar2d:
         assert units[0][1] == "km / m"
         assert units[1] == ["rad / km", "rad / m"]
 
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_bare_arrays_use_the_unit_systems_angle(self, angle_unit: str) -> None:
+        """The angular row is per ``usys["angle"]``, not always per radian.
+
+        A bare-array Jacobian carries no units, so the angular row only means
+        anything relative to the unit system the caller's values are in --
+        the same one `pt_map` writes ``theta`` in. The closed form used to
+        return radians per length whatever `usys` said, which is off by a
+        constant 180/pi under a degree system and stays plausible-looking.
+        """
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        at = jnp.array([1.0, 2.0])
+
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys)
+
+        # Differentiating the transition map itself is the ground truth.
+        fn = cxc.pt_map(None, cxc.cart2d, cxc.polar2d, usys=usys)
+        expected = jax.jacfwd(
+            lambda a: jnp.stack(list(fn({"x": a[0], "y": a[1]}).values()))
+        )(at)
+
+        assert_allclose(np.asarray(J), np.asarray(expected), rtol=1e-12)
+
 
 # ===========================================================================
 # 5. Known values: Polar2D → Cart2D

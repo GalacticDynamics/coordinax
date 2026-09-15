@@ -325,6 +325,22 @@ def jac_pt_map(
     return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
 
+#: The angle unit a bare value carries when no unit system says otherwise.
+RAD: Final = u.unit("rad")
+
+
+def _rad_per_usys_angle(usys: OptUSys, /) -> Any:
+    """How many of *usys*' angle units make a radian.
+
+    A bare-array Jacobian carries no units, so an angular row has to be
+    expressed in whatever angle unit the caller's values are in. The transition
+    map writes its angles through ``usys["angle"]``, so the derivative of one
+    is scaled the same way -- 1 for radians, 180/pi for degrees. Getting this
+    wrong is silent: the numbers stay plausible and are only off by a constant.
+    """
+    return 1.0 if usys is None else u.uconvert_value(usys["angle"], RAD, 1.0)
+
+
 # ===================================================================
 # Cart2D -> Polar2D
 
@@ -403,7 +419,10 @@ def jac_pt_map(
     x, y = at[..., 0], at[..., 1]
     r2 = x**2 + y**2
     r = jnp.sqrt(r2)
-    return jnp.array([[x, y], [-y, x]]) / jnp.array([[r], [r2]])
+    # The angular row is an angle per length, so it is expressed in the unit
+    # system's angle unit -- the same one `pt_map` writes ``theta`` in.
+    ang = _rad_per_usys_angle(usys)
+    return jnp.array([[x, y], [-y * ang, x * ang]]) / jnp.array([[r], [r2]])
 
 
 @plum.dispatch
