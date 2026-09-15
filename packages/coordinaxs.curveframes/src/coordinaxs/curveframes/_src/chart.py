@@ -289,6 +289,10 @@ class TubularChart(AbstractParameterizedChart):
         ``~1e-16`` of its scale and an open one at ``~1e0``, so the threshold
         is nowhere near either.
 
+        ``n_scale`` is how many points that size is read from, and must be at
+        least 3 -- fewer cannot measure it, and gets closure wrong silently in
+        both directions. See the refusal below.
+
         Examples
         --------
         A trefoil over exactly one period closes, but its frame does not::
@@ -319,6 +323,25 @@ class TubularChart(AbstractParameterizedChart):
             True
 
         """
+        # A static Python int, so a plain branch is enough -- and it has to be
+        # a refusal rather than a clamp, because both small values are
+        # *silently* wrong in opposite directions. Measured on a trefoil:
+        # `n_scale=2` samples only the two endpoints, which for a closed curve
+        # are the same point, so the spread is zero and a real seam reports
+        # `0.0`; `n_scale=1` samples `lo` alone and compares it with itself, so
+        # the gap is zero for *any* curve and an open one reports a seam it
+        # does not have (-0.456950 where the answer is 0). Three is the first
+        # count with an interior sample to give the curve a size.
+        if n_scale < 3:
+            msg = (
+                f"`n_scale` must be at least 3, got {n_scale}: it sizes the "
+                "curve so closure can be judged relative to it, and a closed "
+                "curve's two endpoints coincide -- so 2 samples span nothing "
+                "and report no seam where there is one, while 1 compares a "
+                "point with itself and reports a seam on any curve at all."
+            )
+            raise ValueError(msg)
+
         unit = self._tau_unit
         lo = jnp.asarray(self.tau_bounds[0].ustrip(unit))
         hi = jnp.asarray(self.tau_bounds[1].ustrip(unit))

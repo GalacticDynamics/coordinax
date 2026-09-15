@@ -100,3 +100,29 @@ def test_a_planar_seam_actually_closes() -> None:
     ]
     a, b = (jnp.stack([e[k].ustrip("km") for k in ("x", "y", "z")]) for e in ends)
     assert float(jnp.linalg.norm(a - b)) == pytest.approx(0.0, abs=1e-6)
+
+
+@pytest.mark.parametrize("n_scale", [1, 2])
+def test_too_few_scale_samples_are_refused(n_scale: int) -> None:
+    """Both were silently wrong, in opposite directions.
+
+    `n_scale=2` samples only the endpoints, which a closed curve makes the
+    same point: the spread is zero, so a real seam reported `0.0`. `n_scale=1`
+    samples `lo` alone and compares it with itself, so every curve looked
+    closed and an *open* one reported a seam it does not have.
+    """
+    with pytest.raises(ValueError, match="at least 3"):
+        _chart(trefoil, CLOSED).holonomy(n_scale=n_scale)
+
+
+@pytest.mark.parametrize("n_scale", [3, 4, 8, 32])
+def test_the_answer_does_not_depend_on_the_scale_sampling(n_scale: int) -> None:
+    """Above the floor it is a size estimate, and the verdict is insensitive."""
+    assert _rad_at(_chart(trefoil, CLOSED), n_scale) == pytest.approx(
+        -2.225041, abs=1e-5
+    )
+    assert _rad_at(_chart(trefoil, OPEN), n_scale) == pytest.approx(0.0, abs=1e-8)
+
+
+def _rad_at(ch, n_scale: int) -> float:
+    return float(ch.holonomy(n_scale=n_scale).ustrip("rad"))
