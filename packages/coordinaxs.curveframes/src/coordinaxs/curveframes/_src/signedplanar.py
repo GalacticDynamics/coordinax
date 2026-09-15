@@ -59,6 +59,7 @@ from .base import (
     FrameT,
     unit_or_none,
 )
+from .bishop import _float
 from .frenetserret import _normalize
 
 _MSG_NOT_PLANAR = (
@@ -205,7 +206,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
         """
         if self.plane_normal is None:
             return jnp.array([0.0, 0.0, 1.0], dtype=dtype)
-        n = jnp.asarray(self.plane_normal, dtype=dtype)
+        n = _float(self.plane_normal).astype(dtype)
         norm = jnp.linalg.norm(n)
         # `~(norm > 0)`, not `norm <= 0`: NaN is False for both.
         n = eqx.error_if(n, ~(norm > 0), _MSG_DEGENERATE_PLANE_NORMAL)

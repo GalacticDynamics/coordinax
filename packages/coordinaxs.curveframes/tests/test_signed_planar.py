@@ -61,6 +61,11 @@ class TestDefinedWhereFrenetIsNot:
         np.testing.assert_allclose(N.value, [0.0, 1.0, 0.0], atol=1e-12)
         np.testing.assert_allclose(jnp.linalg.norm(N.value), 1.0, atol=1e-12)
 
+    def test_frenet_refuses_on_the_same_straight_line(self) -> None:
+        """The contrast that motivates the type, pinned on the line too."""
+        with pytest.raises(Exception, match="curvature"):
+            cxfc.FrenetSerretBuilder(straight_line, "s").normal(u.Q(5.0, "s"))
+
 
 class TestClosedForm:
     """Values on the unit circle, where this frame coincides with Frenet."""
@@ -117,6 +122,24 @@ class TestGauge:
         b = cxfc.SignedPlanarBuilder(circle, "s", plane_normal=jnp.zeros(3))
         with pytest.raises(Exception, match="zero length"):
             b.normal(u.Q(0.0, "s"))
+
+    def test_vmap_over_a_quantity_plane_normal(self) -> None:
+        """A traced `Quantity` `plane_normal` must not hit `__array__`.
+
+        `jnp.asarray` on a traced `Quantity` raises `TracerArrayConversionError`;
+        `_float` (shared with `BishopBuilder`) strips the unit first instead.
+        """
+        normals = u.Q(jnp.array([[0.0, 0.0, 1.0], [0.0, 0.0, -1.0]]), "")
+
+        def at_normal(n: u.AbstractQuantity) -> jax.Array:
+            return (
+                cxfc.SignedPlanarBuilder(circle, "s", plane_normal=n)
+                .normal(u.Q(0.0, "s"))
+                .value
+            )
+
+        got = jax.vmap(at_normal)(normals)
+        np.testing.assert_allclose(got[0], -got[1], atol=1e-10)
 
 
 class TestPlanarityGuard:
@@ -308,3 +331,18 @@ class TestJAX:
         eager = builder.rotation_matrix(tau)
         jitted = eqx.filter_jit(builder.rotation_matrix)(tau)
         np.testing.assert_allclose(jitted, eager, atol=1e-12)
+
+    def test_vmap_over_station(self) -> None:
+        """A frame field: vmap the fixed curve parameter, not tau."""
+        stations = u.Q(jnp.linspace(0.0, 1.5, 5), "s")
+
+        def at_station(g: u.AbstractQuantity) -> jax.Array:
+            b = cxfc.SignedPlanarBuilder(circle, "s", g)
+            return b.normal(u.Q(0.0, "s")).value
+
+        batched = jax.vmap(at_station)(stations)
+        assert batched.shape == (5, 3)
+
+        for i in range(5):
+            expected = at_station(stations[i])
+            assert jnp.allclose(batched[i], expected, atol=1e-6)
