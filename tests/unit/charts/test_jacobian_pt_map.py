@@ -225,6 +225,60 @@ class TestJacobianPtMapCart2dToPolar2d:
         assert_allclose(J.value[1, 0], -0.5, atol=1e-6)  # ∂θ/∂x = -1/2
         assert_allclose(J.value[1, 1], 0.5, atol=1e-6)  # ∂θ/∂y = 1/2
 
+    def test_a_unitful_dict_reaches_the_closed_form(self) -> None:
+        """The dict route must agree with calling the closed form directly."""
+        at = {"x": u.Q(1.3, "m"), "y": u.Q(2.1, "m")}
+
+        from_dict = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+        direct = cxc.jac_pt_map(
+            u.Q(jnp.array([1.3, 2.1]), "m"), cxc.cart2d, cxc.polar2d
+        )
+
+        assert_allclose(np.asarray(from_dict.value), np.asarray(direct.value), rtol=0)
+        assert from_dict.unit.to_tuple() == direct.unit.to_tuple()
+
+    def test_a_batched_dict_gives_one_jacobian_per_point(self) -> None:
+        """Batching maps the pointwise map; it does not differentiate the batch."""
+        n = 5
+        at = {"x": u.Q(jnp.linspace(1.0, 5.0, n), "m"), "y": u.Q(jnp.full(n, 2.0), "m")}
+
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+
+        assert np.asarray(J.value).shape == (n, 2, 2)
+        for i in range(n):
+            one = cxc.jac_pt_map(
+                {"x": at["x"][i], "y": at["y"][i]}, cxc.cart2d, cxc.polar2d
+            )
+            assert_allclose(np.asarray(J.value)[i], np.asarray(one.value), rtol=1e-12)
+
+    def test_bare_arrays_keep_their_existing_route(self) -> None:
+        """A dict of bare arrays is stacked and re-dispatched, as before."""
+        at = {"x": jnp.asarray(1.3), "y": jnp.asarray(2.1)}
+
+        from_dict = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys_si)
+        direct = cxc.jac_pt_map(
+            jnp.array([1.3, 2.1]), cxc.cart2d, cxc.polar2d, usys=usys_si
+        )
+
+        assert not isinstance(from_dict, ul.QuantityMatrix)
+        assert_allclose(np.asarray(from_dict), np.asarray(direct), rtol=0)
+
+    def test_mixed_units_stay_on_autodiff_and_keep_their_labels(self) -> None:
+        """Packing would re-label the output, so a mixed-unit point is left alone.
+
+        ``x`` in km beside ``y`` in m is the same Jacobian either way, but
+        differentiating reports the off-diagonal entry as ``km / m`` where
+        packing to a common unit reports it as dimensionless. Equal numbers,
+        different presentation -- not something to change silently.
+        """
+        at = {"x": u.Q(1.0, "km"), "y": u.Q(2000.0, "m")}
+
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+
+        units = [[str(x) for x in row] for row in J.unit.to_tuple()]
+        assert units[0][1] == "km / m"
+        assert units[1] == ["rad / km", "rad / m"]
+
 
 # ===========================================================================
 # 5. Known values: Polar2D → Cart2D
