@@ -444,6 +444,61 @@ jac_jit(at)
 
 Same runtime as the baseline. The idiomatic form also accepts quantity-valued dicts directly, without any manual unit management.
 
+### Eager Jacobians
+
+Every comparison above is jitted, and under `jit` the three routes are interchangeable. Eager is a different story, and worth understanding before you write a loop that calls `jac_pt_map` a few thousand times.
+
+`jax.jacfwd` builds and evaluates a jaxpr on _every_ call. Jitting hoists that work into a one-time compilation; eagerly you pay it per call, and it dominates everything else:
+
+```{code-cell} ipython3
+at_dict = {"x": jnp.asarray(1.3), "y": jnp.asarray(2.1), "z": jnp.asarray(0.7)}
+
+jitted = jax.jit(lambda a: cxc.jac_pt_map(a, cxc.cart3d, cxc.sph3d, usys=usys))
+_ = jitted(at_dict)  # compile
+
+print("eager: ", end="")
+%timeit cxc.jac_pt_map(at_dict, cxc.cart3d, cxc.sph3d, usys=usys)
+print("jitted:", end="")
+%timeit jax.block_until_ready(jitted(at_dict))
+```
+
+Three orders of magnitude. Two things follow from _where_ that cost sits.
+
+#### The cost is per call, not per point
+
+A chart map is pointwise, so a batch of points is a batch of independent Jacobians — but the trace happens once for the whole batch. Going from one point to ten thousand costs well under twice the time:
+
+```{code-cell} ipython3
+for n in (1, 100, 10_000):
+    batch = {k: jnp.full((n,), v) for k, v in (("x", 1.3), ("y", 2.1), ("z", 0.7))}
+    jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cart3d, cxc.sph3d, usys=usys))  # warm up
+    print(f"N = {n:<6d}", end=" ")
+    %timeit -r 3 jax.block_until_ready(cxc.jac_pt_map(batch, cxc.cart3d, cxc.sph3d, usys=usys))
+```
+
+(A batch of one is not the same as a scalar point: any leading axis takes the `vmap` route, which is why `N = 1` here costs more than the scalar call timed above.)
+
+So if you are working eagerly, hand `jac_pt_map` your points together rather than one at a time. A Python loop over N points pays the trace N times; one batched call pays it once.
+
+#### Some chart pairs skip `jacfwd` entirely
+
+A few transitions have a closed-form Jacobian written out by hand, so they never build a jaxpr at all. Today those are `Cart2D → Polar2D`, and `Cart3D ↔ Cylindrical3D` and `Cart3D ↔ Spherical3D` in both directions. Compare one of them against a pair that has none:
+
+```{code-cell} ipython3
+at_cyl = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.7), "z": jnp.asarray(3.0)}
+
+print("closed form (cart3d -> sph3d):", end=" ")
+%timeit cxc.jac_pt_map(at_dict, cxc.cart3d, cxc.sph3d, usys=usys)
+print("autodiff   (cyl3d  -> sph3d):", end=" ")
+%timeit cxc.jac_pt_map(at_cyl, cxc.cyl3d, cxc.sph3d, usys=usys)
+```
+
+This is invisible under `jit`, where both compile to the same thing, and you do not need to know which pairs have one — the dispatch picks it. It only shows up on the eager path.
+
+```{note}
+Unlike `pt_map`, there is no large win hiding in the Jacobian bodies here. Rewriting `pt_map` off `Quantity` operands bought roughly 5x because the cost was `quax` re-tracing each arithmetic primitive. A Jacobian's eager cost is `jacfwd` tracing the whole function once, which no amount of rewriting the body removes. Batch, or `jit`.
+```
+
 </br>
 
 ---
