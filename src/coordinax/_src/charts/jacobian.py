@@ -551,7 +551,7 @@ def jac_pt_map(
     x, y = at[..., 0], at[..., 1]
     rho2 = x**2 + y**2
     rho = jnp.sqrt(rho2)
-    ang = _rad_per_usys_angle(usys)
+    ang = _usys_angle_per_rad(usys)
     zero, one = jnp.zeros_like(x), jnp.ones_like(x)
     return jnp.array(
         [
@@ -626,7 +626,7 @@ def jac_pt_map(
 
     """
     at = _real_float_point(at)
-    ang = _rad_per_usys_angle(usys)
+    ang = _usys_angle_per_rad(usys)
     rho, phi = at[..., 0], at[..., 1] / ang
     cos_phi, sin_phi = jnp.cos(phi), jnp.sin(phi)
     zero, one = jnp.zeros_like(rho), jnp.ones_like(rho)
@@ -678,7 +678,7 @@ def jac_pt_map(
     rho = jnp.sqrt(rho2)
     r2 = rho2 + z**2
     r = jnp.sqrt(r2)
-    ang = _rad_per_usys_angle(usys)
+    ang = _usys_angle_per_rad(usys)
     zero = jnp.zeros_like(x)
     return jnp.array(
         [
@@ -761,7 +761,7 @@ def jac_pt_map(
 
     """
     at = _real_float_point(at)
-    ang = _rad_per_usys_angle(usys)
+    ang = _usys_angle_per_rad(usys)
     r = at[..., 0]
     theta, phi = at[..., 1] / ang, at[..., 2] / ang
     sin_t, cos_t = jnp.sin(theta), jnp.cos(theta)
