@@ -65,15 +65,10 @@ _MSG_OUTSIDE_REACH = (
 _MSG_DEGENERATE_FRAME = (
     "the frame is degenerate at the tube axis, so no offset gives a chart "
     "here: `dx/dtau` has no component along the curve's own spatial tangent, "
-    "leaving it inside the normal plane `span(U1, U2)` and the Jacobian "
-    "singular. Either the station moves purely transversely, or -- when the "
-    "factor is `nan`, which is `0/0` -- it does not move at all. This is "
-    "*not* a reach or focal-distance "
-    "failure -- moving `n1`, `n2` inward will not help, because the axis "
-    "itself is already singular. A rod spun about its end is the model case: "
-    "purely transverse motion, `0.0` on the whole `n2 = 0` plane. "
-    "Reparametrise so `tau` advances along the curve, or chart the slice at "
-    "a fixed time with `AtTime(curve, t)` instead of the worldtube."
+    "leaving it in the normal plane `span(U1, U2)` and the Jacobian singular. "
+    "This is *not* a reach failure -- moving `n1`, `n2` inward cannot help. "
+    "Reparametrise so `tau` advances along the curve, or chart the slice at a "
+    "fixed time with `AtTime(curve, t)` instead of the worldtube."
 )
 
 _MSG_PINNED_STATION_ON_ONE_ARGUMENT = (
@@ -430,31 +425,19 @@ class TubularChart(AbstractParameterizedChart):
             # back into `data` -- an unused result silently vanishes under
             # `jit` (verified: it returned n1=-1.6, well outside the reach).
             factor = self.jacobian_factor(data)
-            # Evaluated at the tube *axis* as well, because the two ways this
-            # can vanish want different words. A focal failure needs an
-            # offset: the axis stays healthy (measured 1.0 on the unit circle
-            # while n1=-1.0 reads 0.0). A worldtube whose station moves
-            # transversely is degenerate at the axis itself -- `dx/dtau` lies
-            # in `span(U1, U2)`, so no offset rescues it -- and calling that
-            # "outside the reach" names a distance that is not the problem.
-            #
-            # Costs a second `jacfwd` on a check that is already opt-in
-            # (`values=True`), and it cannot be deferred to the failing
-            # branch: under `jit` there is no branch to defer it to.
+            # Evaluated at the tube *axis* too, because the two ways this can
+            # vanish want different words: a focal failure needs an offset and
+            # leaves the axis healthy, while a transversely-moving worldtube is
+            # singular at the axis, where no offset helps. Costs a second
+            # `jacfwd`, and cannot be deferred to the failing branch -- under
+            # `jit` there is no branch to defer it to.
             axis_data = {**data, "n1": data["n1"] * 0, "n2": data["n2"] * 0}
             axis = self.jacobian_factor(axis_data)
 
-            # Against `sqrt(eps)`, not a bare `0`. An exactly degenerate chart
-            # does not come back exactly zero: the rotating rod above measures
-            # `0.0` eagerly but `1.9469e-17` under `jit`, where XLA's
-            # evaluation order differs -- so `factor > 0` held and the guard
-            # said nothing at all. That miss predates the two messages below;
-            # it is why `check_data(values=True)` could pass a chart that is
-            # singular everywhere on a plane, but only once compiled.
-            #
-            # `~(x > tol)` rather than `x <= tol` so a NaN factor still fires:
-            # every comparison against NaN is False, and only the negated form
-            # turns that into a refusal.
+            # Against `sqrt(eps)`, not a bare `0`: a degenerate chart does not
+            # come back exactly zero (`0.0` eagerly, `1.9469e-17` compiled), so
+            # `> 0` let the guard pass a singular chart once compiled.
+            # `~(x > tol)` rather than `x <= tol` so a NaN still refuses.
             tol = jnp.sqrt(jnp.finfo(jnp.asarray(factor).dtype).eps)
             bad = jnp.any(~(factor > tol))
             axis_bad = jnp.any(~(axis > tol))

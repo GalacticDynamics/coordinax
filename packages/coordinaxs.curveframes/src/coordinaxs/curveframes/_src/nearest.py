@@ -53,16 +53,12 @@ def _check_query(x: u.AbstractQuantity, n_seed: int, /) -> None:
 def _relative_speed_floor(fallback: jax.Array) -> jax.Array:
     """`sqrt(eps)` of the fallback's *own* dtype, times the fallback.
 
-    The eps must come from ``fallback.dtype``, not the default float:
-    ``jnp.finfo(jnp.zeros(()).dtype)`` reads the global default, which under
-    ``jax_enable_x64`` -- this repo's pytest config -- is f64 even for f32 curve
-    data, a floor 2.3e4x too low to clamp f32 rounding noise (at a fallback of
-    2.0: ``2.98e-08`` against f32's own ``6.91e-04``).
+    Not the default float: under ``jax_enable_x64`` that is f64 even for f32
+    curve data, flooring 2.3e4x too low to clamp f32 noise.
 
-    Only conditioning rides on this: ``safe_speed`` stays positive either way,
-    so the residual's sign -- all that any bracket test or the bisection acts
-    on -- and hence the root are unchanged. That is why the test is on this
-    helper and not on a solve.
+    Only conditioning rides on this -- ``safe_speed`` stays positive either
+    way, so the residual's sign and the root are unchanged. Hence the test is
+    on this helper rather than on a solve.
     """
     return jnp.sqrt(jnp.finfo(fallback.dtype).eps) * fallback
 
@@ -204,21 +200,13 @@ def nearest_tau(
     tau0 = seeds[i_best]
     spacing = (hi - lo) / (n_seed - 1)
 
-    # A zero-width `bounds` makes `spacing` zero, and `Bisection`'s
-    # `expand_if_necessary` below grows a bracket by *doubling its width* --
-    # doubling zero never grows it, and that expansion is not bounded by
-    # `max_steps`, so the solve loops with no exit instead of failing
-    # (measured: still running at 45 s, where a proper interval returns in
-    # seconds). Guard here, where every caller routes through: `TubularChart`
-    # validates the *dimensions* of `tau_bounds` but not that they differ, so a
-    # degenerate chart reaches this on every inverse `pt_map`. Threaded through
-    # `spacing` so the check cannot be eliminated ahead of the bracket that
-    # depends on it.
+    # Zero `spacing` hangs the solve rather than failing it: `Bisection`'s
+    # `expand_if_necessary` grows a bracket by doubling, which never grows
+    # zero, and that loop is not bounded by `max_steps`. Guarded here, where
+    # every caller routes through, and threaded through `spacing` so it cannot
+    # be eliminated ahead of the bracket. Two exception types because the check
+    # cannot be a Python branch on a tracer.
     #
-    # Two exception types, because the check cannot be a Python branch on a
-    # tracer: `ValueError` eagerly, `RuntimeError` (equinox's `error_if`) under
-    # `jit` or `vmap`. The docstring says so, and the tests pin `RuntimeError`,
-    # which both satisfy.
     # Reversed bounds work today -- `spacing` goes negative and the grid runs
     # backwards -- but `bracket_has_minimum` and `_S_MAX_MARGIN` both assume
     # ascending. Accidentally correct is not a contract.
@@ -238,9 +226,8 @@ def nearest_tau(
         elif bool(bad):
             raise ValueError(msg)
 
-    # Hoisted: building the transform per residual evaluation costs Python and
-    # JAX overhead in a loop that runs it ~130 times. `offset`, not `-offset` --
-    # the norm below removes the sign.
+    # Hoisted out of a loop that runs ~130 times. `offset`, not `-offset`: the
+    # norm below removes the sign.
     d_offset = jax.jacfwd(offset)
 
     # A characteristic length-per-tau for the problem, used only where the local
@@ -262,66 +249,37 @@ def nearest_tau(
 
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
-        # `tangent()`, not `rotation_matrix()[0]`: both builders override it to
-        # skip the parallel-transport solve only rows 1-2 need, and document the
-        # value as identical. Measured bit-identical and ~110x faster eagerly,
-        # which is what makes the fine residual grid below affordable.
+        # `tangent()`, not `rotation_matrix()[0]`: identical value, ~110x
+        # faster eagerly, which is what makes the fine grid below affordable.
         T = builder.tangent(u.Q(tau_v, unit)).ustrip("")
-        # Divided by |d(offset)/dtau|, which puts the residual in `tau` rather
-        # than in whatever length the ambient point carries. Undivided, one
-        # `atol` served as a tolerance on a length *and* on a tau at once, so
-        # the identical geometry converged differently by unit -- measured
-        # -4.195e-09 in km, pc and Mm against +2.424e-11 in m. Scaling only the
-        # tolerances does not fix it: the sensitivity lives inside the solvers'
-        # own convergence tests on the residual value.
+        # Divided by |d(offset)/dtau| to put the residual in `tau` rather than
+        # in the ambient length, so one `atol` is not a tolerance on both at
+        # once. Scaling the tolerances instead does not work: the sensitivity
+        # is inside the solvers' own convergence tests.
         #
-        # `T` still comes from `builder.tangent`, NOT from this derivative.
-        # They differ on a station-pinned worldtube, where `tau` is a time: the
-        # tangent is the curve's spatial direction while the derivative is the
-        # station's velocity. Reusing the derivative for both -- which looks
-        # like a free saving, since it makes the `tangent` call redundant --
-        # redefines the root and broke every worldtube round trip. The existing
-        # suite caught it; the unit test added here did not.
+        # `T` comes from `builder.tangent`, NOT from this derivative. On a
+        # station-pinned worldtube they differ -- spatial tangent against
+        # station velocity -- and reusing one for both redefines the root.
         speed = jnp.linalg.norm(d_offset(tau_v))
-        # `speed` can be exactly zero while `T` is perfectly well defined. On a
-        # station-pinned worldtube they are different objects: `speed` is the
-        # station's velocity and `T` the slice's spatial tangent, so a station
-        # momentarily at rest zeroes the first and not the second. (A cusp
-        # zeroes both, but that case is already NaN via `builder.tangent`.)
-        #
-        # So the floor must still be a length-per-tau, not the bare `1.0` an
-        # earlier revision used: reverting to an unscaled residual would make it
-        # a length again, reintroducing precisely the tolerance-kind ambiguity
-        # this division exists to remove, and only for the worldtube queries
-        # that need it most. The scan's extent over the bounds span is the
-        # problem's own characteristic speed, unit-correct by construction.
+        # `speed` can be exactly zero while `T` is well defined: a station at
+        # rest zeroes its velocity, not the slice's spatial tangent. The floor
+        # is therefore a length-per-tau, not a bare `1.0`, or the division
+        # above stops removing the ambiguity it exists for.
         safe_speed = jnp.maximum(speed, _speed_floor)
         return jnp.dot(T, offset(tau_v)) / safe_speed
 
-    # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
-    # so once the curve varies on that scale it can hold a whole period -- two
-    # minima and two maxima. Bisection then returns *a* root with the right
-    # endpoint orientation, which may be the worse one: measured on a curve
-    # with 32 wiggles across `bounds`, a bracket of width 0.31746 against a
-    # period of 0.31416 held minima at 8.34701 (distance 0.107) and 8.46367
-    # (distance 0.011), and the solve returned the first.
+    # 1b. Narrow the bracket first. `+/- spacing` is two spacings wide, so a
+    # curve varying on that scale can hold a whole period, and bisection then
+    # returns *a* root with the right orientation rather than the nearest one.
     #
-    # Refined on the **residual**, not on `dist2`. Those coincide only when the
-    # tangent is the unit tangent of the parametrisation; on a station-pinned
-    # worldtube it is the curve's *spatial* tangent while `tau` is a time, so
-    # `dist2`'s minimum sits away from the root. Narrowing around the `dist2`
-    # argmin there excluded the true root and turned a passing round trip into
-    # a refusal. Every crossing with the minimum's orientation is a candidate;
-    # the closest one wins, which is what makes the multi-minimum bracket
-    # resolve to the *nearest* rather than to whichever bisection reaches.
+    # Refined on the **residual**, not `dist2`: they coincide only when the
+    # tangent is the parametrisation's, and on a station-pinned worldtube it is
+    # the spatial tangent while `tau` is a time. Every crossing with the
+    # minimum's orientation is a candidate and the closest wins.
     fine = jnp.linspace(tau0 - spacing, tau0 + spacing, n_seed)
 
-    # `residual` and `dist2` each call `offset`, so this looks like it evaluates
-    # the curve twice per grid point. It does not once compiled: XLA eliminates
-    # the duplicate as a common subexpression. Hand-fusing them into one
-    # tuple-returning `vmap` measured *slower* in both regimes -- eager 0.619s
-    # against 0.373s, jit compile 0.99s against 0.73s, warm call 0.046ms
-    # against 0.042ms -- so the obvious optimisation is a pessimisation here.
+    # Not a double evaluation once compiled: XLA eliminates the shared
+    # `offset` as a common subexpression. Hand-fusing them measured slower.
     r_fine = jax.vmap(lambda t: residual(t, None))(fine)
     d_fine = jax.vmap(dist2)(fine)
 
@@ -336,23 +294,13 @@ def nearest_tau(
     bracket_lo = jnp.where(found, fine[k], tau0 - spacing)
     bracket_hi = jnp.where(found, fine[k + 1], tau0 + spacing)
 
-    # Scale by the epsilon of the dtype the *solve* runs in, not a fixed
-    # `1e-10` and not the global default float. A tolerance below the working
-    # dtype's own resolution can never be met, and the solve reports
-    # `max_steps_reached` on every call despite an already-correct answer.
-    #
-    # Not `jnp.zeros(()).dtype`: that reads the global default, which under
-    # `jax_enable_x64` -- this repo's pytest config -- is f64 even when the
-    # curve data is f32. Measured on f32 data with x64 on, that refused 15 of
-    # 19 circle queries. Same defect as `_relative_speed_floor` guards against,
-    # but this one is not latent: it turns answers into refusals.
-    #
-    # `tau0`, so the tolerance tracks `bounds`. Mixed precision is not covered
-    # and is not worth chasing here: f64 `bounds` over an f32 curve still
-    # refuses 8 of 19, because the f64 `hi - lo` reaches the residual through
-    # `_fallback_speed`, leaving it f64-typed while carrying only f32
-    # information -- a gap no dtype can see. Pass `bounds` in the curve's own
-    # precision, or an explicit `atol`.
+    # From `tau0.dtype`, not the global default float: a tolerance below the
+    # working dtype's resolution can never be met, and the solve reports
+    # `max_steps_reached` on an already-correct answer (measured, 15 of 19 f32
+    # queries under x64). Mixed precision is not covered -- f64 `bounds` over
+    # an f32 curve still refuses, because the f64 `hi - lo` reaches the
+    # residual and leaves it f64-typed carrying f32 information. Pass `bounds`
+    # in the curve's own precision, or an explicit `atol`.
     tol = float(jnp.finfo(tau0.dtype).eps) ** 0.5
     rtol = tol if rtol is None else rtol
     atol = tol if atol is None else atol
