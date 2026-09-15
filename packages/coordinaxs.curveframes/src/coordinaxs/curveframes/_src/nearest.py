@@ -144,12 +144,17 @@ def nearest_tau(
     # them is not merely a shortcut: `_tau_unit_at` prefers a *declared*
     # `tau_unit`, and on a pinned-station builder that describes the station
     # while these bounds are times, so consulting it scans seconds in
-    # kilometres. The builder is the fallback for bare (unitless) bounds only.
+    # kilometres.
+    #
+    # No fallback for bare bounds: `unit_of` returns `None` only for a
+    # non-quantity, and `bounds` is consumed by `.ustrip` just below, which a
+    # non-quantity has not got -- so the branch could never have completed a
+    # call. (`bounds`' declared type says the same, but only catches it when
+    # `COORDINAX_ENABLE_RUNTIME_TYPECHECKING` is on, which it is not by
+    # default.)
     _check_query(x, n_seed)
 
     unit = u.unit_of(bounds[0])
-    if unit is None:
-        unit = builder._tau_unit_at(bounds[0])
     # `jnp.asarray` narrows only here: `ustrip` is typed as a broad union, and
     # `ty` rejects `hi - lo` between two of them. Everywhere else the bare
     # `ustrip` is enough.

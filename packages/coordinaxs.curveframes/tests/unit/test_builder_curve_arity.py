@@ -564,3 +564,38 @@ def test_the_mismatched_form_fails(curve, time, err, match) -> None:
     b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"))
     with pytest.raises(err, match=match):
         b.location(time)
+
+
+class TestTheArityGuardsOnTheArcLengthWrappers:
+    """Both wrappers refuse the arity they cannot serve, at the boundary.
+
+    Same theme as the builder guards above, and for the reason this module's
+    docstring gives: unguarded, each failed from inside the ODE solve, nowhere
+    near the call that caused it. Neither raise was covered.
+    """
+
+    def test_a_two_argument_curve_needs_its_time_at_the_call(self) -> None:
+        """`ArcLength` stays two-argument, so `arc(s)` alone is incomplete."""
+        arc = cxfc.ArcLength(curve2, "km")
+        with pytest.raises(TypeError, match="must be called as `arc\\(s, t\\)`"):
+            arc(u.Q(1.0, "km"))
+
+    def test_binding_the_time_first_is_the_remedy_it_advertises(self) -> None:
+        """The message points at `AtTime`, so that has to work."""
+        arc = cxfc.ArcLength(curve2, "km")
+        bound = cxfc.AtTime(arc, u.Q(0.0, "s"))
+
+        assert jnp.allclose(
+            bound(u.Q(1.0, "km")).ustrip("km"),
+            arc(u.Q(1.0, "km"), u.Q(0.0, "s")).ustrip("km"),
+        )
+
+    def test_lagrangian_refuses_a_one_argument_curve(self) -> None:
+        """With no distinct slices there is no `t0` to fix."""
+        with pytest.raises(TypeError, match="no distinct time slices"):
+            cxfc.LagrangianArcLength(curve1, u.Q(0.0, "s"), "km")
+
+    def test_the_remedy_it_advertises_accepts_that_curve(self) -> None:
+        """The message says to use `ArcLength` instead, so that has to work."""
+        arc = cxfc.ArcLength(curve1, "s")
+        assert arc(u.Q(1.0, "km")).ustrip("km").shape == (3,)
