@@ -1,4 +1,4 @@
-"""Hypothesis strategies for coordinax representations."""
+"""Hypothesis strategies for chart constructor keyword arguments."""
 
 __all__ = ("chart_init_kwargs",)
 

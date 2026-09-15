@@ -1,4 +1,4 @@
-"""Hypothesis strategies for coordinax representations."""
+"""Hypothesis strategies for coordinax Cartesian-product charts."""
 
 __all__: tuple[str, ...] = ("cartesian_product_factors",)
 
