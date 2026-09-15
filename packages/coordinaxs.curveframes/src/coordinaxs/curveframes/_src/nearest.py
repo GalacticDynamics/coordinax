@@ -147,8 +147,11 @@ def nearest_tau(
     # kilometres.
     #
     # No fallback for bare bounds: `unit_of` returns `None` only for a
-    # non-quantity, which `bounds`' declared type excludes and this package's
-    # typecheck hook rejects at the boundary.
+    # non-quantity, and `bounds` is consumed by `.ustrip` just below, which a
+    # non-quantity has not got -- so the branch could never have completed a
+    # call. (`bounds`' declared type says the same, but only catches it when
+    # `COORDINAX_ENABLE_RUNTIME_TYPECHECKING` is on, which it is not by
+    # default.)
     _check_query(x, n_seed)
 
     unit = u.unit_of(bounds[0])
