@@ -501,7 +501,7 @@ op = cxf.frame_transition(cxf.Alice(), frame)
 
 ### When to Use Which Frame
 
-- Use **signed planar** when the curve is planar and you want a frame that survives inflections and straight segments without an ODE solve — and when a consistently left-handed normal, with a signed curvature, is what you mean.
+- Use **signed planar** when the curve is planar and you want a frame that survives inflections and straight segments without an ODE solve — and when a normal consistently to the left of travel, with a signed curvature, is what you mean.
 - Use **Bishop** when the curve may have zero-curvature segments but is _not_ planar, or when you need a twist-free frame.
 - Use **Frenet–Serret** when you want the classical differential-geometry frame that tracks curvature and torsion directly, and the curve's curvature never vanishes.
 

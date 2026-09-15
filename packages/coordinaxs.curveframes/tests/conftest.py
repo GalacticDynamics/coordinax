@@ -1,11 +1,11 @@
 """Shared curves and fixtures for the `coordinaxs.curveframes` tests.
 
-The Frenet-Serret and Bishop frames are two implementations of
-`AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.TimeDep`, so
+The Frenet-Serret, Bishop, and signed planar frames are three implementations
+of `AbstractCurveFrameBuilder`, wrapped by `coordinax.transforms.TimeDep`, so
 most of what the suite checks is the *contract* they share rather than anything
-specific to either. The curves and the per-type spec live here so that contract
-can be written once (``test_parallel_transport_contract.py``) and each type's
-closed-form values stay in its own module.
+specific to any one of them. The curves and the per-type spec live here so
+that contract can be written once (``test_parallel_transport_contract.py``)
+and each type's closed-form values stay in its own module.
 """
 
 __all__: tuple[str, ...] = ()
