@@ -515,9 +515,11 @@ def jac_pt_map(
 # ===================================================================
 # Cart3D <-> Cylindrical3D
 #
-# The closed forms below are each ~4x the cost of differentiating the
-# transition map, measured eagerly on a scalar point. `jax.jacfwd` has to
-# build and evaluate a jaxpr per call; these do not.
+# `jax.jacfwd` builds and evaluates a jaxpr on every eager call; the closed
+# forms below do not, and run in roughly a quarter of the time -- measured
+# 2.5x to 3.6x through the public dict API on a scalar point. Under `jit`
+# the tracing happens once and the gap narrows to a few percent (5.3us
+# against 6.0us), so this is an eager-path win.
 
 
 @plum.dispatch
