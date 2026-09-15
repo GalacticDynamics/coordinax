@@ -41,7 +41,16 @@ def _strain(wrap=lambda v: v, director=_spun) -> float:
         ),
         tau_bounds=BOUNDS,
     )
-    return float(np.asarray(cxfc.rate_of_strain(fam, POINT, u.Q(0.0, "s")).value)[0, 0])
+    # Off-axis, and legitimately so: `director(t)` is carried across the family
+    # rather than each slice seeding itself from the world frame, which is
+    # exactly what the opt-in asserts. See #870.
+    return float(
+        np.asarray(
+            cxfc.rate_of_strain(
+                fam, POINT, u.Q(0.0, "s"), assume_gauge_carried=True
+            ).value
+        )[0, 0]
+    )
 
 
 @pytest.fixture(scope="module")
