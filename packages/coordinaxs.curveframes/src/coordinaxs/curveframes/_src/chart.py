@@ -76,6 +76,16 @@ _MSG_DEGENERATE_FRAME = (
     "a fixed time with `AtTime(curve, t)` instead of the worldtube."
 )
 
+_MSG_PINNED_STATION_ON_ONE_ARGUMENT = (
+    "the builder pins `station=` on a one-argument curve, so this chart's "
+    "`tau` has nothing left to vary: every `tau` maps to the same ambient "
+    "point and `jacobian_factor` is `nan`. Such a builder is a frame *field*, "
+    "which is fine on its own -- it just cannot parameterise a chart. Drop "
+    "`station=` for a chart whose `tau` moves along the curve, or pass a "
+    "two-argument `gamma(s, t)`, where the station pins `s` and leaves `tau` "
+    "the time."
+)
+
 
 _MSG_BOUNDS_HALF_BARE = (
     "`TubularChart.tau_bounds` must be both `Quantity` or both bare, but got "
@@ -218,6 +228,13 @@ class TubularChart(AbstractParameterizedChart):
         # disagreeing with no value satisfying both (see #820).
         if self.is_time_dependent and lo != "time":
             raise ValueError(_MSG_WORLDTUBE_BOUNDS_NOT_TIME.format(lo=lo))
+
+        # Here and not on the builder: a pinned station is legitimate there,
+        # and the builder does not know it is about to become a chart. The
+        # worldtube guards above miss it because `is_time_dependent` reads the
+        # curve's *arity*, which a station does not change.
+        if self.builder.station is not None and not self.is_time_dependent:
+            raise ValueError(_MSG_PINNED_STATION_ON_ONE_ARGUMENT)
 
     @property
     def components(self) -> tuple[str, str, str]:
