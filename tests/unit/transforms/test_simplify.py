@@ -4,6 +4,9 @@ __all__: tuple[str, ...] = ()
 
 
 import inspect
+import itertools
+
+from typing import ClassVar
 
 import jax
 import numpy as np
@@ -467,3 +470,49 @@ class TestMalformedMatricesReportTheSharedMessage:
         shear = jnp.asarray([[1.0, 0.5, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
         with pytest.raises(Exception, match="diagonal"):
             _ = cxfm.Scale(shear).matrix
+
+
+class TestSimplifyPreservesOrderAcrossTypes:
+    """Folding a chain must not reorder it.
+
+    `test_merge_matches_sequential_application` pins this for `Scale | Scale`,
+    which commutes -- so it would pass even if the fold reversed the chain.
+    These four do not commute, and all 24 three-deep orderings of them give 24
+    different points, so a reversal cannot hide.
+    """
+
+    OPS: ClassVar = {
+        "T": lambda: cxfm.Translate.from_([10.0, -4.0, 1.0], "m"),
+        "R": lambda: cxfm.Rotate.from_euler("z", u.Q(37, "deg")),
+        "S": lambda: cxfm.Scale.from_factors(jnp.asarray([2.0, 3.0, 0.5])),
+        "H": lambda: cxfm.Shear(
+            jnp.asarray([[1.0, 0.4, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        ),
+    }
+    POINT: ClassVar = ("p", cx.Point.from_([1.0, 2.0, 3.0], "m"))
+
+    @pytest.mark.parametrize("order", list(itertools.permutations("TRSH", 3)))
+    def test_simplify_matches_the_unsimplified_chain(self, order) -> None:
+        a, b, c = (self.OPS[k]() for k in order)
+        chain = a | b | c
+        assert np.allclose(
+            _xyz(cxfm.simplify(chain)(self.POINT[1])),
+            _xyz(chain(self.POINT[1])),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+
+    def test_the_orderings_are_genuinely_distinct(self) -> None:
+        """Otherwise the test above would pass on a fold that reordered."""
+        seen = {
+            tuple(
+                np.round(
+                    _xyz(
+                        (self.OPS[x]() | self.OPS[y]() | self.OPS[z]())(self.POINT[1])
+                    ),
+                    6,
+                )
+            )
+            for x, y, z in itertools.permutations("TRSH", 3)
+        }
+        assert len(seen) == 24
