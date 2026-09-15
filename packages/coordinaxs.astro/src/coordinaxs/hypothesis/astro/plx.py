@@ -1,4 +1,4 @@
-"""Hypothesis strategies for Distance quantities."""
+"""Hypothesis strategies for parallaxes."""
 
 __all__ = ("parallaxes",)
 
