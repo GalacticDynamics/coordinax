@@ -94,6 +94,15 @@ def nearest_tau(
     check cannot be a Python branch. That is a precondition, not a degradation:
     there is no curve to search.
 
+    ``bounds`` must also ascend: ``bounds[0] < bounds[1]``. A descending pair
+    is refused the same two ways, and for a subtler reason -- it *answers*
+    correctly (measured: a reversed circle agreed with the ascending pair on
+    all 15 probes tried), but only by accident. The bracket's minimum test
+    reads an orientation that means "minimum" only while the pair ascends, and
+    `ArcLength`'s `s_max` margin is sized to "one seed spacing outside
+    `tau_bounds`", a phrase with a direction in it. Swap the ends rather than
+    rely on either staying accidentally right.
+
     That bracket does not always contain a sign change, though -- the
     residual can be one-signed across it in two situations: the true nearest
     point lies outside `tau_bounds` altogether (the scan is confined to
