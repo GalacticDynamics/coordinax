@@ -81,7 +81,7 @@ def jac_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     QM(
         [[ 1.,  0.,  0.],
          [ 0.,  0., -1.],
-         [ 0.,  1.,  0.]],
+         [-0.,  1.,  0.]],
         '((, , ), (rad / m, rad / m, rad / m), (rad / m, rad / m, rad / m))'
     )
 
@@ -111,7 +111,7 @@ def jac_pt_map(
     QM(
         [[ 1.,  0.,  0.],
          [ 0.,  0., -1.],
-         [ 0.,  1.,  0.]],
+         [-0.,  1.,  0.]],
         '((, , ), (rad / m, rad / m, rad / m), (rad / m, rad / m, rad / m))'
     )
 
@@ -372,26 +372,18 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form Jacobian below.
+def _jac_from_dict_via_closed_form(
+    at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
+) -> Any:
+    """Send a coordinate dict to the closed form registered for its chart pair.
 
-    The generic `CDict` dispatch sends a *unitful* point through
-    `jax.jacfwd`, which costs a trace per call and ignores the closed form
-    sitting next to it -- 3589us against 595us for the same point with bare
-    arrays, which do route here. Dispatching on the chart pair lets `plum`
-    pick the analytic method for both input kinds.
+    Three routes. Bare arrays stack and re-dispatch, as they already did.
+    Components that agree on a unit pack into one `Quantity` and take the
+    closed form. A mixed-unit point falls back to autodiff, which labels each
+    entry per column instead of relabelling them to a shared unit.
 
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
-    QM([[ 0.70710678,  0.70710678],
-        [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
-
+    Packing is why `from_chart`'s components must share a dimension: it is
+    what makes the analytic body's ``at[..., i]`` work.
     """
     at = from_chart.check_data(at, keys=True)
 
@@ -406,7 +398,7 @@ def jac_pt_map(
     # reproduce that route rather than changing it.
     if all(unit is None for unit in units):
         at_arr = jnp.stack([at[k] for k in keys], axis=-1)
-        return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
+        return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)
 
     # Only pack when the components already agree on a unit. Converting them
     # to a common one would be arithmetically fine but would re-label the
@@ -419,7 +411,63 @@ def jac_pt_map(
     packed = tree_cast_int_bool_to_float(
         u.Q(jnp.stack([u.ustrip(units[0], at[k]) for k in keys], axis=-1), units[0])
     )
-    return cxcapi.jac_pt_map(packed, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
+    return cxcapi.jac_pt_map(packed, from_chart, to_chart, usys=usys)
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: CDict, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
+) -> Array | ul.QuantityMatrix:
+    """Route a coordinate dict to the closed-form `Cart2D -> Polar2D` Jacobian.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m")}
+    >>> cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+    QM([[ 0.70710678,  0.70710678],
+        [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
+
+    """
+    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: CDict, from_chart: Cart3D, to_chart: Cylindrical3D, /, *, usys: OptUSys = None
+) -> Array | ul.QuantityMatrix:
+    """Route a coordinate dict to the closed-form `Cart3D -> Cylindrical3D` Jacobian.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(3.0, "m")}
+    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d).value
+    Array([[ 1.,  0.,  0.],
+           [-0.,  1.,  0.],
+           [ 0.,  0.,  1.]], dtype=float64)
+
+    """
+    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: CDict, from_chart: Cart3D, to_chart: Spherical3D, /, *, usys: OptUSys = None
+) -> Array | ul.QuantityMatrix:
+    """Route a coordinate dict to the closed-form `Cart3D -> Spherical3D` Jacobian.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d).value
+    Array([[ 1.,  0.,  0.],
+           [ 0.,  0., -1.],
+           [-0.,  1.,  0.]], dtype=float64)
+
+    """
+    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch

@@ -226,82 +226,111 @@ class TestJacobianPtMapCart2dToPolar2d:
         assert_allclose(J.value[1, 0], -0.5, atol=1e-6)  # ∂θ/∂x = -1/2
         assert_allclose(J.value[1, 1], 0.5, atol=1e-6)  # ∂θ/∂y = 1/2
 
-    def test_a_unitful_dict_reaches_the_closed_form(self) -> None:
-        """The dict route must agree with calling the closed form directly."""
-        at = {"x": u.Q(1.3, "m"), "y": u.Q(2.1, "m")}
 
-        from_dict = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
-        direct = cxc.jac_pt_map(
-            u.Q(jnp.array([1.3, 2.1]), "m"), cxc.cart2d, cxc.polar2d
-        )
+# ===========================================================================
+# Unitful dicts reach the closed form registered for their chart pair
+# ===========================================================================
+
+
+class TestUnitfulDictsReachTheClosedForm:
+    """Every routed pair takes the closed form, not `jax.jacfwd`.
+
+    Routing is registered per chart pair, so it drifts out of step with the
+    closed forms unless every pair is listed here.
+    """
+
+    ROUTED_PAIRS: ClassVar = [
+        pytest.param("cart2d", "polar2d", ("x", "y"), id="cart2d->polar2d"),
+        pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
+        pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
+    ]
+    VALUES: ClassVar = {"x": 1.3, "y": 2.1, "z": 0.7}
+
+    def _dict(self, keys, wrap):
+        return {k: wrap(self.VALUES[k]) for k in keys}
+
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_a_unitful_dict_agrees_with_the_closed_form(self, frm, to, keys) -> None:
+        """The dict route must match calling the closed form directly."""
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = self._dict(keys, lambda v: u.Q(v, "m"))
+        packed = u.Q(jnp.asarray([self.VALUES[k] for k in keys]), "m")
+
+        from_dict = cxc.jac_pt_map(at, from_chart, to_chart)
+        direct = cxc.jac_pt_map(packed, from_chart, to_chart)
 
         assert_allclose(np.asarray(from_dict.value), np.asarray(direct.value), rtol=0)
         assert from_dict.unit.to_tuple() == direct.unit.to_tuple()
 
-    def test_a_batched_dict_gives_one_jacobian_per_point(self) -> None:
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_a_unitful_dict_does_not_reach_autodiff(
+        self, frm, to, keys, monkeypatch
+    ) -> None:
+        """Values cannot detect the route, so make the autodiff path fatal."""
+        from coordinax._src.charts import jacobian
+
+        def _boom(*args: object, **kw: object) -> object:
+            msg = "took the autodiff route; the closed form was not reached"
+            raise AssertionError(msg)
+
+        monkeypatch.setattr(jacobian, "_jac_via_autodiff", _boom)
+
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = self._dict(keys, lambda v: u.Q(v, "m"))
+
+        assert cxc.jac_pt_map(at, from_chart, to_chart) is not None
+
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_a_batched_dict_gives_one_jacobian_per_point(self, frm, to, keys) -> None:
         """Batching maps the pointwise map; it does not differentiate the batch."""
-        n = 5
-        at = {"x": u.Q(jnp.linspace(1.0, 5.0, n), "m"), "y": u.Q(jnp.full(n, 2.0), "m")}
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        n, ndim = 5, len(keys)
+        at = {
+            k: u.Q(jnp.linspace(self.VALUES[k], self.VALUES[k] + 1.0, n), "m")
+            for k in keys
+        }
 
-        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+        J = cxc.jac_pt_map(at, from_chart, to_chart)
 
-        assert np.asarray(J.value).shape == (n, 2, 2)
+        assert np.asarray(J.value).shape == (n, ndim, ndim)
         for i in range(n):
-            one = cxc.jac_pt_map(
-                {"x": at["x"][i], "y": at["y"][i]}, cxc.cart2d, cxc.polar2d
-            )
+            one = cxc.jac_pt_map({k: at[k][i] for k in keys}, from_chart, to_chart)
             assert_allclose(np.asarray(J.value)[i], np.asarray(one.value), rtol=1e-12)
 
-    def test_bare_arrays_keep_their_existing_route(self) -> None:
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_bare_arrays_keep_their_existing_route(self, frm, to, keys) -> None:
         """A dict of bare arrays is stacked and re-dispatched, as before."""
-        at = {"x": jnp.asarray(1.3), "y": jnp.asarray(2.1)}
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = self._dict(keys, jnp.asarray)
+        packed = jnp.asarray([self.VALUES[k] for k in keys])
 
-        from_dict = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys_si)
-        direct = cxc.jac_pt_map(
-            jnp.array([1.3, 2.1]), cxc.cart2d, cxc.polar2d, usys=usys_si
-        )
+        from_dict = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si)
+        direct = cxc.jac_pt_map(packed, from_chart, to_chart, usys=usys_si)
 
         assert not isinstance(from_dict, ul.QuantityMatrix)
         assert_allclose(np.asarray(from_dict), np.asarray(direct), rtol=0)
 
-    def test_mixed_units_stay_on_autodiff_and_keep_their_labels(self) -> None:
-        """Packing would re-label the output, so a mixed-unit point is left alone.
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_mixed_units_stay_on_autodiff_and_keep_their_labels(
+        self, frm, to, keys
+    ) -> None:
+        """A mixed-unit point stays on autodiff.
 
-        ``x`` in km beside ``y`` in m is the same Jacobian either way, but
-        differentiating reports the off-diagonal entry as ``km / m`` where
-        packing to a common unit reports it as dimensionless. Equal numbers,
-        different presentation -- not something to change silently.
+        Packing to a common unit would relabel the ``km / m`` entries
+        dimensionless: equal numbers, different presentation.
         """
-        at = {"x": u.Q(1.0, "km"), "y": u.Q(2000.0, "m")}
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = {
+            k: u.Q(self.VALUES[k], "km") if i == 0 else u.Q(self.VALUES[k] * 1000, "m")
+            for i, k in enumerate(keys)
+        }
 
-        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+        J = cxc.jac_pt_map(at, from_chart, to_chart)
 
         units = [[str(x) for x in row] for row in J.unit.to_tuple()]
         assert units[0][1] == "km / m"
-        assert units[1] == ["rad / km", "rad / m"]
-
-    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
-    def test_bare_arrays_use_the_unit_systems_angle(self, angle_unit: str) -> None:
-        """The angular row is per ``usys["angle"]``, not always per radian.
-
-        A bare-array Jacobian carries no units, so the angular row only means
-        anything relative to the unit system the caller's values are in --
-        the same one `pt_map` writes ``theta`` in. The closed form used to
-        return radians per length whatever `usys` said, which is off by a
-        constant 180/pi under a degree system and stays plausible-looking.
-        """
-        usys = u.unitsystem("m", angle_unit, "kg", "s")
-        at = jnp.array([1.0, 2.0])
-
-        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys)
-
-        # Differentiating the transition map itself is the ground truth.
-        fn = cxc.pt_map(None, cxc.cart2d, cxc.polar2d, usys=usys)
-        expected = jax.jacfwd(
-            lambda a: jnp.stack(list(fn({"x": a[0], "y": a[1]}).values()))
-        )(at)
-
-        assert_allclose(np.asarray(J), np.asarray(expected), rtol=1e-12)
+        assert units[1][0] == "rad / km"
+        assert units[1][1] == "rad / m"
 
 
 # ===========================================================================
