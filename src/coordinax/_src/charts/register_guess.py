@@ -1,4 +1,4 @@
-"""Utility functions for charts."""
+"""Register `guess_chart`, and the canonical-chart table it reads."""
 
 __all__: tuple[str, ...] = ()
 

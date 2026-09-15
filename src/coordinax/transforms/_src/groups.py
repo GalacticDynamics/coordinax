@@ -1,4 +1,4 @@
-"""Frames sub-package.
+"""The transform groups a transform can belong to.
 
 This is the private implementation of the frames sub-package.
 

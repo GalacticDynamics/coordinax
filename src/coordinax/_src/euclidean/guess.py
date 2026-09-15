@@ -1,4 +1,4 @@
-"""Manifolds in coordinax."""
+"""Register `guess_manifold` for the Euclidean manifolds."""
 
 __all__: tuple[str, ...] = ()
 

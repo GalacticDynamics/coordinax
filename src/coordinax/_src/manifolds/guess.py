@@ -1,4 +1,4 @@
-"""Utility functions for charts."""
+"""Register `guess_manifold` across the manifold hierarchy."""
 
 __all__: tuple[str, ...] = ()
 
