@@ -57,6 +57,26 @@ _MSG_WORLDTUBE_BOUNDS_NOT_TIME = (
     "declares and accepts."
 )
 
+_MSG_OUTSIDE_REACH = (
+    "point lies outside the reach of the curve: the tubular "
+    "coordinates are not locally injective there"
+)
+
+_MSG_DEGENERATE_FRAME = (
+    "the frame is degenerate at the tube axis, so no offset gives a chart "
+    "here: `dx/dtau` has no component along the curve's own spatial tangent, "
+    "leaving it inside the normal plane `span(U1, U2)` and the Jacobian "
+    "singular. Either the station moves purely transversely, or -- when the "
+    "factor is `nan`, which is `0/0` -- it does not move at all. This is "
+    "*not* a reach or focal-distance "
+    "failure -- moving `n1`, `n2` inward will not help, because the axis "
+    "itself is already singular. A rod spun about its end is the model case: "
+    "purely transverse motion, `0.0` on the whole `n2 = 0` plane. "
+    "Reparametrise so `tau` advances along the curve, or chart the slice at "
+    "a fixed time with `AtTime(curve, t)` instead of the worldtube."
+)
+
+
 _MSG_BOUNDS_HALF_BARE = (
     "`TubularChart.tau_bounds` must be both `Quantity` or both bare, but got "
     "{lo} and {hi}. A bare bound takes its unit from the builder's declared "
@@ -279,27 +299,65 @@ class TubularChart(AbstractParameterizedChart):
             # `ValueError` when concrete. The return value MUST be threaded
             # back into `data` -- an unused result silently vanishes under
             # `jit` (verified: it returned n1=-1.6, well outside the reach).
-            pred = jnp.any(~(self.jacobian_factor(data) > 0))
-            msg = (
-                "point lies outside the reach of the curve: the tubular "
-                "coordinates are not locally injective there"
-            )
-            if isinstance(pred, jax.core.Tracer):
-                data = {**data, "n1": eqx.error_if(data["n1"], pred, msg)}
-            elif bool(pred):
-                raise ValueError(msg)
+            factor = self.jacobian_factor(data)
+            # Evaluated at the tube *axis* as well, because the two ways this
+            # can vanish want different words. A focal failure needs an
+            # offset: the axis stays healthy (measured 1.0 on the unit circle
+            # while n1=-1.0 reads 0.0). A worldtube whose station moves
+            # transversely is degenerate at the axis itself -- `dx/dtau` lies
+            # in `span(U1, U2)`, so no offset rescues it -- and calling that
+            # "outside the reach" names a distance that is not the problem.
+            #
+            # Costs a second `jacfwd` on a check that is already opt-in
+            # (`values=True`), and it cannot be deferred to the failing
+            # branch: under `jit` there is no branch to defer it to.
+            axis_data = {**data, "n1": data["n1"] * 0, "n2": data["n2"] * 0}
+            axis = self.jacobian_factor(axis_data)
+
+            # Against `sqrt(eps)`, not a bare `0`. An exactly degenerate chart
+            # does not come back exactly zero: the rotating rod above measures
+            # `0.0` eagerly but `1.9469e-17` under `jit`, where XLA's
+            # evaluation order differs -- so `factor > 0` held and the guard
+            # said nothing at all. That miss predates the two messages below;
+            # it is why `check_data(values=True)` could pass a chart that is
+            # singular everywhere on a plane, but only once compiled.
+            #
+            # `~(x > tol)` rather than `x <= tol` so a NaN factor still fires:
+            # every comparison against NaN is False, and only the negated form
+            # turns that into a refusal.
+            tol = jnp.sqrt(jnp.finfo(jnp.asarray(factor).dtype).eps)
+            bad = jnp.any(~(factor > tol))
+            axis_bad = jnp.any(~(axis > tol))
+
+            for pred, msg in (
+                (bad & axis_bad, _MSG_DEGENERATE_FRAME),
+                (bad & ~axis_bad, _MSG_OUTSIDE_REACH),
+            ):
+                if isinstance(pred, jax.core.Tracer):
+                    data = {**data, "n1": eqx.error_if(data["n1"], pred, msg)}
+                elif bool(pred):
+                    raise ValueError(msg)
         return data
 
     def jacobian_factor(self, data: dict, /) -> Any:
         r"""$\partial\mathbf{x}/\partial\tau$ scaled by the on-curve speed.
 
-        Equals $1-k_1n_1-k_2n_2$ at *any* parametrisation, not only a
-        unit-speed one: $\partial\mathbf{x}/\partial\tau$ itself picks up a
-        $\|\gamma'\|$ speed factor away from unit speed, but dividing it out
-        below cancels that factor, leaving the same dimensionless quantity a
-        unit-speed curve would give directly. It is positive inside the
-        reach and vanishes at the focal distance, which is the test that
-        matters.
+        On the **static** branch this equals $1-k_1n_1-k_2n_2$ at *any*
+        parametrisation, not only a unit-speed one:
+        $\partial\mathbf{x}/\partial\tau$ itself picks up a $\|\gamma'\|$
+        speed factor away from unit speed, but dividing it out below cancels
+        that factor, leaving the same dimensionless quantity a unit-speed
+        curve would give directly. It is positive inside the reach and
+        vanishes at the focal distance, which is the test that matters.
+
+        **Not on a worldtube**, where $\tau$ is a time rather than the curve
+        parameter. There this is $\cos$ of the angle between the station's
+        velocity and the curve's spatial tangent at $n=0$, so it is already
+        below 1 on the axis and can be 0 there: a rod spun about its end
+        (``s * (cos t, sin t, 0)``) moves purely transversely, giving exactly
+        ``0.0`` on the whole $n_2=0$ plane -- the axis included -- and
+        $n_2/s_0$ off it. That is a degenerate *frame*, not a focal distance,
+        and `check_data` says so separately.
         """
         tau, n1, n2 = data["tau"], data["n1"], data["n2"]
         # The chart's `tau`, not the builder's curve parameter: on a worldtube
