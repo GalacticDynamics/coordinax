@@ -923,28 +923,65 @@ class TestJacobianPtMapAtExtremeScales:
 
         assert_allclose(qnp.matmul(j_inv, j_fwd).value, jnp.eye(curv.ndim), atol=1e-4)
 
-    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
-    def test_analytic_dispatch_agrees_with_jacfwd(self, magnitude: float) -> None:
-        """The closed-form `Cart2D -> Polar2D` Jacobian matches autodiff.
+    #: Every chart pair with a hand-written Jacobian, and how to build a
+    #: generic point in its *input* chart. Cartesian inputs scale wholesale;
+    #: a curvilinear input scales only its length components, since an angle
+    #: has no magnitude to sweep. Angles avoid multiples of pi/2 so no entry
+    #: is exactly zero and a purely relative comparison stays well defined.
+    #:
+    #: Keep this in step with the closed forms in `jacobian.py`. It was left
+    #: listing only `cart2d -> polar2d` when four more were added, which is
+    #: how the overflow this class now pins reached `main`.
+    CLOSED_FORM_PAIRS: ClassVar = [
+        pytest.param("cart2d", "polar2d", "cart2", id="cart2d->polar2d"),
+        pytest.param("cart3d", "cyl3d", "cart3", id="cart3d->cyl3d"),
+        pytest.param("cart3d", "sph3d", "cart3", id="cart3d->sph3d"),
+        pytest.param("cyl3d", "cart3d", "cyl3", id="cyl3d->cart3d"),
+        pytest.param("sph3d", "cart3d", "sph3", id="sph3d->cart3d"),
+    ]
 
-        Packed input on purpose: a cdict resolves to the generic branch, which
-        *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with it. Only
-        array/Quantity reaches the hand-written Jacobian.
+    @staticmethod
+    def _point(kind: str, magnitude: float) -> list[float]:
+        """A generic point of the given magnitude, in *kind*'s coordinates."""
+        theta, phi = 0.7, 0.9
+        if kind == "cart2":
+            return [magnitude * math.cos(theta), magnitude * math.sin(theta)]
+        if kind == "cart3":
+            return [
+                magnitude * math.sin(theta) * math.cos(phi),
+                magnitude * math.sin(theta) * math.sin(phi),
+                magnitude * math.cos(theta),
+            ]
+        if kind == "cyl3":  # (rho, phi, z): two lengths and an angle
+            return [magnitude, phi, magnitude * 0.5]
+        return [magnitude, theta, phi]  # sph3: (r, theta, phi)
+
+    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
+    @pytest.mark.parametrize(("frm", "to", "kind"), CLOSED_FORM_PAIRS)
+    def test_analytic_dispatch_agrees_with_jacfwd(
+        self, frm: str, to: str, kind: str, magnitude: float
+    ) -> None:
+        """Every closed-form Jacobian matches autodiff, at any magnitude.
+
+        The input is a packed `Array`, not a cdict, so that this exercises the
+        `Array` closed-form dispatch directly. A *unitful* cdict would prove
+        nothing here: for most chart pairs it routes to the generic branch,
+        which *is* ``jax.jacfwd(pt_map)`` and so cannot disagree with itself.
+
+        This is where a closed form written in squares gets caught. `r**2` at
+        1e17 is 1e34, and a further multiplication by `rho` overflows float32
+        to `inf`, which turns the affected entry into a silent zero rather than
+        a `nan` -- hence the explicit `isfinite` check *and* the comparison.
 
         Compared relatively, with no ``atol`` -- entries scale like ``1/r``, so
-        any absolute floor is vacuous at 1e18 and unmeetable at 1e-18. At
-        ``theta = 0.7`` no entry is ever exactly zero, so a relative
-        comparison of the full matrix is well defined.
+        any absolute floor is vacuous at 1e18 and unmeetable at 1e-18.
         """
-        theta = 0.7
-        at = jnp.asarray(
-            [magnitude * math.cos(theta), magnitude * math.sin(theta)],
-            dtype=jnp.float32,
-        )
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = jnp.asarray(self._point(kind, magnitude), dtype=jnp.float32)
 
-        got = np.asarray(cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=usys_si))
+        got = np.asarray(cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si))
         expected = np.asarray(
-            jax.jacfwd(cxc.pt_map(None, cxc.cart2d, cxc.polar2d, usys=usys_si))(at)
+            jax.jacfwd(cxc.pt_map(None, from_chart, to_chart, usys=usys_si))(at)
         )
 
         assert np.all(np.isfinite(got))
