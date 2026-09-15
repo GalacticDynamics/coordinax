@@ -315,7 +315,13 @@ def docs(s: nox.Session, /) -> None:
         "-T",  # full tracebacks
         "-W",  # turn warnings into errors
         f"-b={args.builder}",
-        f"-d {args.output_dir}/doctrees",
+        # Two argv elements, not one: sphinx-build reads `-d _build/doctrees`
+        # as a `-d` whose value carries the leading space, and writes the
+        # doctree cache to a directory literally named " _build". `rm -rf
+        # docs/_build` then misses it, so every "clean" build was incremental
+        # and skipped re-checking references in changed docstrings.
+        "-d",
+        f"{args.output_dir}/doctrees",
         "-D",
         "language=en",
         ".",
