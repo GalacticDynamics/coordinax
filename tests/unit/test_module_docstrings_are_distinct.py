@@ -25,6 +25,7 @@ __all__: tuple[str, ...] = ()
 
 import ast
 import collections
+import functools as ft
 import pathlib
 
 _ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -62,8 +63,14 @@ SHARED_BY_DESIGN: dict[str, str] = {
 }
 
 
+@ft.cache
 def _first_lines() -> dict[str, list[str]]:
-    """Every module's docstring first line, mapped to the files that use it."""
+    """Every module's docstring first line, mapped to the files that use it.
+
+    Cached: both tests want the whole mapping, and the walk parses every
+    module under `src/` and `packages/` -- 0.57 s for 271 of them, which is
+    most of this file's runtime. Neither caller mutates what it gets back.
+    """
     out: dict[str, list[str]] = collections.defaultdict(list)
     for root in _SEARCH:
         for path in sorted(root.rglob("*.py")):
