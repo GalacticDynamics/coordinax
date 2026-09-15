@@ -181,3 +181,35 @@ def test_a_degenerate_n_seed_is_refused_clearly() -> None:
     x = u.Q(jnp.asarray(PROBE), "km")
     with pytest.raises(ValueError, match="at least 2"):
         cxfc.nearest_tau(builder, x, bounds=BOUNDS, n_seed=1)
+
+
+def test_a_batch_of_query_points_is_refused_by_name() -> None:
+    """A batched `x` used to surface as a raw broadcasting error.
+
+    The scan contracts `x` against one curve location per seed, so an extra
+    axis collides with the seed axis and the failure named `n_seed`-shaped
+    internals -- `shapes=[(63, 3), (63,), ()]` -- rather than the mistake.
+    """
+    builder = cxfc.FrenetSerretBuilder(wiggly, "s")
+    batch = u.Q(jnp.asarray([[7.2, -0.2, 0.0], [8.4, -0.1, 0.0]]), "km")
+
+    with pytest.raises(ValueError, match="single ambient point"):
+        cxfc.nearest_tau(builder, batch, bounds=BOUNDS)
+
+
+def test_vmap_is_a_working_remedy_for_the_batch_refusal() -> None:
+    """`jax.vmap` is what the message points at, so it has to work."""
+    import jax
+
+    builder = cxfc.FrenetSerretBuilder(wiggly, "s")
+    points = jnp.asarray([[7.2, -0.2, 0.0], [8.4, -0.1, 0.0]])
+
+    got = jax.vmap(
+        lambda p: cxfc.nearest_tau(builder, u.Q(p, "km"), bounds=BOUNDS, n_seed=128)
+    )(points)
+
+    one_at_a_time = [
+        cxfc.nearest_tau(builder, u.Q(p, "km"), bounds=BOUNDS, n_seed=128).ustrip("s")
+        for p in points
+    ]
+    assert np.allclose(np.asarray(got.ustrip("s")), np.asarray(one_at_a_time))
