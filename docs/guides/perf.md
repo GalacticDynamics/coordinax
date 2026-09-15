@@ -500,7 +500,7 @@ print("autodiff   (cyl3d  -> sph3d):", end=" ")
 This is invisible under `jit`, where both compile to the same thing, and you do not need to know which pairs have one — the dispatch picks it. It only shows up on the eager path.
 
 ```{note}
-Unlike `pt_map`, there is no large win hiding in the Jacobian bodies here. Rewriting `pt_map` off `Quantity` operands bought roughly 5x because the cost was `quax` re-tracing each arithmetic primitive. A Jacobian's eager cost is `jacfwd` tracing the whole function once, which no amount of rewriting the body removes. Batch, or `jit`.
+A Jacobian's eager cost is one trace of the whole function, not per-primitive overhead as in `pt_map`, so rewriting the body does not remove it. Batch, or `jit`.
 ```
 
 </br>
