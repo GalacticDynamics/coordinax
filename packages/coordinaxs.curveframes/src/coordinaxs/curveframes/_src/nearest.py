@@ -94,14 +94,10 @@ def nearest_tau(
     check cannot be a Python branch. That is a precondition, not a degradation:
     there is no curve to search.
 
-    ``bounds`` must also ascend: ``bounds[0] < bounds[1]``. A descending pair
-    is refused the same two ways, and for a subtler reason -- it *answers*
-    correctly (measured: a reversed circle agreed with the ascending pair on
-    all 15 probes tried), but only by accident. The bracket's minimum test
-    reads an orientation that means "minimum" only while the pair ascends, and
-    `ArcLength`'s `s_max` margin is sized to "one seed spacing outside
-    `tau_bounds`", a phrase with a direction in it. Swap the ends rather than
-    rely on either staying accidentally right.
+    ``bounds`` must also ascend: ``bounds[0] < bounds[1]``, refused the same
+    two ways. A descending pair happens to answer correctly, but the bracket's
+    minimum test and `ArcLength`'s `s_max` margin both read the pair as
+    ascending, so nothing promises it will keep doing so.
 
     That bracket does not always contain a sign change, though -- the
     residual can be one-signed across it in two situations: the true nearest
@@ -197,16 +193,9 @@ def nearest_tau(
     # tracer: `ValueError` eagerly, `RuntimeError` (equinox's `error_if`) under
     # `jit` or `vmap`. The docstring says so, and the tests pin `RuntimeError`,
     # which both satisfy.
-    # Reversed bounds are refused in the same breath, and for a softer reason:
-    # they *work*. Measured on a circle, `bounds=(2*pi, 0)` agreed with the
-    # ascending pair on all 15 queries tried -- `spacing` merely goes negative
-    # and the fine grid runs backwards. But nothing downstream promises that.
-    # `bracket_has_minimum` tests `(r_lo > 0) & (r_hi < 0)`, an orientation
-    # that only means "minimum" while `lo < hi`, and `_S_MAX_MARGIN` is sized
-    # to "one seed spacing outside `tau_bounds`" -- a phrase with a direction
-    # in it, saved here only because that margin happens to be symmetric.
-    # Accidentally correct is not a contract, so say so at the boundary rather
-    # than let a later change to either quietly turn it wrong.
+    # Reversed bounds work today -- `spacing` goes negative and the grid runs
+    # backwards -- but `bracket_has_minimum` and `_S_MAX_MARGIN` both assume
+    # ascending. Accidentally correct is not a contract.
     msg_zero = (
         "`bounds` has zero width, so there is no curve to search: the "
         "nearest-point scan needs `bounds[0] != bounds[1]`."

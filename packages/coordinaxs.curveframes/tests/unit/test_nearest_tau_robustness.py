@@ -59,13 +59,7 @@ def test_zero_width_bounds_is_refused_under_jit() -> None:
 
 
 def test_reversed_bounds_are_refused() -> None:
-    """They used to pass, which is the whole reason to say something.
-
-    Measured before the guard: `bounds=(2*pi, 0)` agreed with the ascending
-    pair on all 15 probes tried. Accidentally correct, though -- nothing
-    downstream promises it, and `bracket_has_minimum` reads an orientation
-    that only means "minimum" while `lo < hi`.
-    """
+    """They used to pass, which is the whole reason to say something."""
     builder = cxfc.BishopBuilder(circle, "s")
     with pytest.raises(ValueError, match="runs backwards"):
         cxfc.nearest_tau(
