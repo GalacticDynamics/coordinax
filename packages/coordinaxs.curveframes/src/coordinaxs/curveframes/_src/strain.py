@@ -15,6 +15,7 @@ __all__ = ("rate_of_strain",)
 from collections.abc import Callable
 from typing import Any, cast
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 import unxts.linalg as ul
@@ -23,8 +24,8 @@ import unxt as u
 from coordinaxs.api.manifolds import metric_matrix
 
 _MSG_GAUGE = (
-    "`rate_of_strain` is gauge-dependent off the curve axis, and this point has "
-    "n = {n}. Each slice's `(n1, n2)` labels are fixed by that slice's transport "
+    "`rate_of_strain` is gauge-dependent off the curve axis (n1 or n2 is "
+    "non-zero). Each slice's `(n1, n2)` labels are fixed by that slice's transport "
     "seed, which `BishopBuilder` picks from the *world* frame unless given an "
     "`initial_normal` -- so when the tangent rotates with time the labels name a "
     "different physical point on each slice, and differentiating reports the "
@@ -92,7 +93,10 @@ def rate_of_strain(
     it is refused unless ``assume_gauge_carried`` says the caller has handled
     that. On the axis it is gauge-free and always valid. Measured: on a static
     helix ``gamma_tau_tau`` spans 1.040535 to 1.629908 across four seeds at
-    ``n = (0.2, 0.1)`` and is 1.16 for every seed at ``n = 0``.
+    ``n = (0.2, 0.1)`` and is 1.16 for every seed at ``n = 0``. The refusal is
+    an `equinox.error_if`, so under `jax.jit` it fires when the compiled
+    function runs rather than when it is traced; that is what keeps ``point``
+    traceable at all.
 
     ``t`` must be a scalar. A batched one would raise the Jacobian's rank
     above 2, and `TubularChart` is single-point for the same reason; use
@@ -107,10 +111,6 @@ def rate_of_strain(
     if shape != ():
         raise ValueError(_MSG_BATCHED_TIME.format(shape=shape))
 
-    offset = tuple(float(u.ustrip(u.unit_of(point[k]), point[k])) for k in ("n1", "n2"))
-    if not assume_gauge_carried and any(o != 0.0 for o in offset):
-        raise ValueError(_MSG_GAUGE.format(n=offset))
-
     def gamma(t_val: Any) -> Any:
         chart = chart_at_time(u.Q(t_val, t_unit))
         return cast("Any", metric_matrix(chart.M, point, chart)).matrix.value
@@ -119,4 +119,16 @@ def rate_of_strain(
     unit = cast("Any", metric_matrix(here.M, point, here)).matrix.unit / t_unit
 
     d_gamma = jax.jacfwd(gamma)(t.ustrip(t_unit))
+
+    if not assume_gauge_carried:
+        # Deferred, and threaded through the value that is returned. A Python
+        # `float(n)` here was the *only* thing stopping `jit`/`vmap` over
+        # `point` -- the chart itself traces fine -- and an `error_if` whose
+        # result goes unused is dead-code-eliminated under trace.
+        off_axis = jnp.logical_or(
+            u.ustrip(u.unit_of(point["n1"]), point["n1"]) != 0,
+            u.ustrip(u.unit_of(point["n2"]), point["n2"]) != 0,
+        )
+        d_gamma = eqx.error_if(d_gamma, off_axis, _MSG_GAUGE)
+
     return ul.QuantityMatrix(0.5 * d_gamma, unit=unit)

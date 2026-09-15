@@ -8,6 +8,8 @@ that does *not* vanish is the ambient one `velocity` reports; the two are
 different objects and these pin that they behave differently.
 """
 
+import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
@@ -128,8 +130,27 @@ def test_a_rigid_rotation_gives_no_strain_on_axis(axis: list[float]) -> None:
 
 def test_an_off_axis_rate_is_refused_as_gauge_dependent() -> None:
     """Off the axis the answer turns on a seed the caller never chose."""
-    with pytest.raises(ValueError, match="gauge-dependent"):
+    with pytest.raises(eqx.EquinoxRuntimeError, match="gauge-dependent"):
         cxfc.rate_of_strain(_helix_family([0.0, 0.0, 1.0]), HELIX_OFF, u.Q(0.3, "s"))
+
+
+def test_the_gauge_guard_leaves_the_point_traceable() -> None:
+    """The guard defers to runtime rather than reading the point in Python.
+
+    A `float(n)` refuses every tracer, on-axis ones included, which would put
+    the whole function out of reach of `jit` and `vmap` -- the chart itself
+    traces fine. `vmap` also pins that the deferred check still fires, for the
+    off-axis member alone.
+    """
+    fam, t = _helix_family([0.0, 0.0, 1.0]), u.Q(0.3, "s")
+    k = lambda n1: cxfc.rate_of_strain(fam, {**HELIX_ON, "n1": u.Q(n1, "km")}, t).value
+
+    on_axis = np.asarray(jax.jit(k)(0.0))
+    assert np.abs(on_axis).max() < 1e-5
+    assert np.allclose(np.asarray(jax.vmap(k)(jnp.zeros(2))), on_axis)
+
+    with pytest.raises(eqx.EquinoxRuntimeError, match="gauge-dependent"):
+        jax.vmap(k)(jnp.array([0.0, 0.2]))
 
 
 @pytest.mark.xfail(
