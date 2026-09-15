@@ -50,6 +50,23 @@ def _check_query(x: u.AbstractQuantity, n_seed: int, /) -> None:
         raise ValueError(msg)
 
 
+def _relative_speed_floor(fallback: jax.Array) -> jax.Array:
+    """`sqrt(eps)` of the fallback's *own* dtype, times the fallback.
+
+    The eps must come from ``fallback.dtype``, not the default float:
+    ``jnp.finfo(jnp.zeros(()).dtype)`` reads the global default, which under
+    ``jax_enable_x64`` -- this repo's pytest config -- is f64 even for f32 curve
+    data, a floor 2.3e4x too low to clamp f32 rounding noise (at a fallback of
+    2.0: ``2.98e-08`` against f32's own ``6.91e-04``).
+
+    Only conditioning rides on this: ``safe_speed`` stays positive either way,
+    so the residual's sign -- all that any bracket test or the bisection acts
+    on -- and hence the root are unchanged. That is why the test is on this
+    helper and not on a solve.
+    """
+    return jnp.sqrt(jnp.finfo(fallback.dtype).eps) * fallback
+
+
 def nearest_tau(
     builder: Any,
     x: u.AbstractQuantity,
@@ -74,17 +91,21 @@ def nearest_tau(
     one seed spacing either side of it*: the argmin is within one spacing of
     the true minimiser **provided ``n_seed`` resolves the curve** -- it is an
     assumption on the scan, not a guarantee, and a curve that wiggles faster
-    than the spacing breaks it. The residual handed to the
-    solvers is $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})\,/\,\|\gamma'\|$,
-    which for a regular curve equals
-    $-\|\gamma'\|^{-2}\,d/d\tau(\tfrac12\mathrm{dist}^2)$. It crosses from
-    positive to negative across a genuine minimum, so that bracket is
-    well-posed for bisection and cannot land on the maximum next door.
+    than the spacing breaks it. The residual handed to the solvers is
+    $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})$ over the speed
+    $\|\gamma'\|$ -- floored below at a small multiple of the problem's own
+    characteristic speed, so a station momentarily at rest cannot divide it by
+    zero. Wherever that floor does not bind it equals
+    $-\|\gamma'\|^{-2}\,d/d\tau(\tfrac12\mathrm{dist}^2)$ for a regular curve.
+    It crosses from positive to negative across a genuine minimum, so that
+    bracket is well-posed for bisection and cannot land on the maximum next
+    door.
 
-    The division by the speed leaves the root and its sign untouched -- it is
-    there so the residual is measured in $\tau$ rather than in whatever length
-    the ambient point carries, since ``atol`` is compared against both. Without
-    it the same geometry converged differently in km and in m.
+    The division by the speed leaves the root and its sign untouched -- the
+    divisor is positive whether or not the floor binds -- and is there so the
+    residual is measured in $\tau$ rather than in whatever length the ambient
+    point carries, since ``atol`` is compared against both. Without it the same
+    geometry converged differently in km and in m.
 
     ``bounds`` must have non-zero width. A zero-width one makes the seed
     spacing zero, and the bracketed solve's ``expand_if_necessary`` grows a
@@ -222,11 +243,8 @@ def nearest_tau(
     # passes through arbitrarily small speeds, and dividing by one of those
     # amplifies the residual without bound. Any positive scaling leaves the root
     # and its sign untouched, so a floor can only improve conditioning -- it
-    # cannot move the answer. `sqrt(eps)` matches the tolerance convention used
-    # below, and the eps is the fallback's own, not the default dtype's: with x64
-    # enabled but f32 curve data the default eps floors ~2e4x too low to clamp
-    # f32 rounding noise.
-    _speed_floor = jnp.sqrt(jnp.finfo(_fallback_speed.dtype).eps) * _fallback_speed
+    # cannot move the answer.
+    _speed_floor = _relative_speed_floor(_fallback_speed)
 
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
@@ -304,11 +322,24 @@ def nearest_tau(
     bracket_lo = jnp.where(found, fine[k], tau0 - spacing)
     bracket_hi = jnp.where(found, fine[k + 1], tau0 + spacing)
 
-    # Scale by the dtype's epsilon, not a fixed `1e-10`: float32 (JAX's
-    # default outside this repo's x64 pytest config) can never satisfy
-    # `1e-10` below its own epsilon, and reports `max_steps_reached` on
-    # every call despite an already-correct answer.
-    tol = float(jnp.finfo(jnp.zeros(()).dtype).eps) ** 0.5
+    # Scale by the epsilon of the dtype the *solve* runs in, not a fixed
+    # `1e-10` and not the global default float. A tolerance below the working
+    # dtype's own resolution can never be met, and the solve reports
+    # `max_steps_reached` on every call despite an already-correct answer.
+    #
+    # Not `jnp.zeros(()).dtype`: that reads the global default, which under
+    # `jax_enable_x64` -- this repo's pytest config -- is f64 even when the
+    # curve data is f32. Measured on f32 data with x64 on, that refused 15 of
+    # 19 circle queries. Same defect as `_relative_speed_floor` guards against,
+    # but this one is not latent: it turns answers into refusals.
+    #
+    # `tau0`, so the tolerance tracks `bounds`. Mixed precision is not covered
+    # and is not worth chasing here: f64 `bounds` over an f32 curve still
+    # refuses 8 of 19, because the f64 `hi - lo` reaches the residual through
+    # `_fallback_speed`, leaving it f64-typed while carrying only f32
+    # information -- a gap no dtype can see. Pass `bounds` in the curve's own
+    # precision, or an explicit `atol`.
+    tol = float(jnp.finfo(tau0.dtype).eps) ** 0.5
     rtol = tol if rtol is None else rtol
     atol = tol if atol is None else atol
 
