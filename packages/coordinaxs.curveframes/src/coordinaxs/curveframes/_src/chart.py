@@ -126,7 +126,7 @@ class TubularChart(AbstractParameterizedChart):
     at the seam -- `tau` just inside either end names the same station and the
     same ``(n1, n2)``, but a different ambient point. Measured on a trefoil
     over ``(0, 2*pi)``: the normal comes back ``-2.225041 rad`` (``-127.485
-    deg`` ) round, putting the two sides of the seam ``0.358726 km`` apart at
+    deg``) round, putting the two sides of the seam ``0.358726 km`` apart at
     ``n1 = 0.2 km``. A **planar** closed curve has no such tear, which is why
     the obvious probe misses this. `TubularChart.holonomy` measures it.
 

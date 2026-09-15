@@ -590,6 +590,31 @@ True
 
 ```
 
+That tie-break is the whole story only because `circle` is **planar**. A closed _space_ curve tears at the seam as well. A rotation-minimising frame is not periodic: carried once around, it comes back rotated about the tangent, so the two sides of the seam name the same station and the same offset but different ambient points. `TubularChart.holonomy` measures that tear:
+
+```{code-block} python
+>>> def trefoil(tau):
+...     t = tau.ustrip("s")
+...     return u.Q(jnp.stack([jnp.sin(t) + 2 * jnp.sin(2 * t),
+...                           jnp.cos(t) - 2 * jnp.cos(2 * t),
+...                           -jnp.sin(3 * t)]), "km")
+
+>>> knot = cxfc.TubularChart(cxfc.BishopBuilder(trefoil, "s"), tau_bounds=BOUNDS)
+>>> round(float(knot.holonomy().ustrip("rad")), 4)
+-2.225
+
+```
+
+The planar control reads zero, which is exactly why this is easy to miss -- the obvious probe measures nothing:
+
+```{code-block} python
+>>> bool(abs(float(ch_bishop.holonomy().ustrip("rad"))) < 1e-8)
+True
+
+```
+
+So a one-period `tau_bounds` stays necessary for a closed curve, but for a closed _space_ curve it is not sufficient. Query away from the seam, or accept that its two sides disagree by the angle `holonomy` reports -- on this trefoil, 0.358726 km apart at `n1 = 0.2 km`.
+
 `n_seed` (default 64) sets how finely that same scan samples `tau_bounds` before the root-find polish; it is what makes the inverse pick the _nearest_ point rather than merely _a_ stationary one. On a curve that doubles back on itself, too coarse a scan can pick the wrong basin outright and lock onto the wrong branch — raise `n_seed` if the curve has tight folds relative to the sampling density `tau_bounds` implies. The polish itself is confined to one seed spacing either side of the scan's chosen basin, so once the scan has the right basin the polish cannot leave it for a competing stationary point (a local _maximum_ of the distance also satisfies the stationarity condition, and an unconstrained polish could converge there instead — see `nearest_tau`'s docstring for a worked counterexample).
 
 **The chart is injective only _locally_ inside the curve's reach, and that is checked only when you ask for it.** Past the _focal distance_ — where the normal-plane offset cancels the local curvature exactly — nearby ambient points map to the same $(\tau, n_1, n_2)$. `check_data(..., values=True)` raises rather than return coordinates that aren't unique, but `values` defaults to `False`, and every `check_data` call inside `coordinax` itself passes `values=False` or omits it. The inverse `pt_map` does not call `check_data` at all, so it happily returns focal-point coordinates without complaint — the guard below is opt-in, something _you_ must call, not a protection the chart applies for you. On the unit circle with `BishopBuilder`, $+\mathbf{U}_1$ points outward, so the Jacobian factor is $1+n_1$ and the focal point sits at $n_1=-1.0$ — one radius toward the center:
@@ -638,7 +663,7 @@ RuntimeError: nearest-point solve did not converge. The documented causes are: .
 
 ```
 
-That check cannot see the periodic-aliasing case from [Limitations](#limitations) above -- a wide `tau_bounds` still converges, just to the wrong branch -- so a one-period `tau_bounds` remains the caller's responsibility for closed curves.
+That check cannot see the periodic-aliasing case from [Limitations](#limitations) above -- a wide `tau_bounds` still converges, just to the wrong branch -- so a one-period `tau_bounds` remains the caller's responsibility for closed curves -- and on a closed _space_ curve, so does staying clear of the seam it still tears at (see `TubularChart.holonomy` above).
 
 ### Coordinate Data Must Be Scalar Per Point
 
