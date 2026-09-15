@@ -407,6 +407,12 @@ def jac_pt_map(
       = ( \cos\theta & \sin\theta \ -\sin\theta/r & \cos\theta/r )
     $$
 
+    as written, in radians per unit length. The result carries no units, so it
+    has to mean the same thing `pt_map(..., usys=usys)` does: the angular row
+    is scaled by $d\theta_{usys}/d\theta_{rad}$, which is 1 for radians and
+    $180/\pi$ for degrees. A `Quantity` point goes to the overload below
+    instead, which labels the row `rad / length` and needs no such scaling.
+
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
@@ -414,6 +420,14 @@ def jac_pt_map(
     >>> cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
     Array([[ 0.70710678,  0.70710678],
            [-0.5       ,  0.5       ]], dtype=float64)
+
+    The same point under a degree system: the radial row is unchanged, the
+    angular row is the same derivative expressed per degree.
+
+    >>> degrees = u.unitsystem("m", "deg", "kg", "s")
+    >>> cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=degrees)(x)
+    Array([[  0.70710678,   0.70710678],
+           [-28.64788976,  28.64788976]], dtype=float64)
 
     """
     x, y = at[..., 0], at[..., 1]
