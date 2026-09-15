@@ -374,9 +374,7 @@ def jac_pt_map(
         return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
     packed = tree_cast_int_bool_to_float(
-        u.Quantity(
-            jnp.stack([u.ustrip(units[0], at[k]) for k in keys], axis=-1), units[0]
-        )
+        u.Q(jnp.stack([u.ustrip(units[0], at[k]) for k in keys], axis=-1), units[0])
     )
     return cxcapi.jac_pt_map(packed, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
 
