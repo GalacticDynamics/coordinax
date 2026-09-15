@@ -377,16 +377,10 @@ def _jac_from_dict_via_closed_form(
 ) -> Any:
     """Send a coordinate dict to the closed form registered for its chart pair.
 
-    The generic `CDict` dispatch sends a *unitful* point through `jax.jacfwd`,
-    which costs a trace per call and ignores a closed form sitting in the same
-    file -- 4966us against 967us for the same point in bare arrays, which do
-    route to it. A thin `CDict` dispatch per pair lets `plum` pick the analytic
-    method for both input kinds; they all delegate here.
+    The generic `CDict` dispatch differentiates; this takes the closed form.
 
-    Only pairs whose `from_chart` components are dimensionally homogeneous can
-    use this, because packing them into one `Quantity` is what makes the
-    analytic body's `at[..., i]` work. A pair taking an angle beside a length
-    has no such packing and must not be routed here.
+    Only where `from_chart`'s components share a dimension: packing them into
+    one `Quantity` is what makes the analytic body's `at[..., i]` work.
     """
     at = from_chart.check_data(at, keys=True)
 

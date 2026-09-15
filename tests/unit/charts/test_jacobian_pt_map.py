@@ -233,12 +233,10 @@ class TestJacobianPtMapCart2dToPolar2d:
 
 
 class TestUnitfulDictsReachTheClosedForm:
-    """A `CDict` of `Quantity` must take the closed form, not `jax.jacfwd`.
+    """Every routed pair takes the closed form, not `jax.jacfwd`.
 
-    Routing is per chart pair, so it drifts: #882 wired up `Cart2D -> Polar2D`,
-    #884 added four more closed forms without extending the routing, and these
-    tests were likewise written for one pair only. Parametrised over every
-    routed pair so the next one added is either covered or visibly missing.
+    Routing is registered per chart pair, so it drifts out of step with the
+    closed forms unless every pair is listed here.
     """
 
     ROUTED_PAIRS: ClassVar = [
@@ -268,13 +266,7 @@ class TestUnitfulDictsReachTheClosedForm:
     def test_a_unitful_dict_does_not_reach_autodiff(
         self, frm, to, keys, monkeypatch
     ) -> None:
-        """The routing claim itself, not a proxy for it.
-
-        Agreement with the closed form cannot detect the route: in float64 the
-        two agree bit for bit, so the test above passes whether or not the
-        dispatch exists. Make `_jac_via_autodiff` fatal instead -- if the pair
-        loses its `CDict` dispatch, the call lands there and this fails.
-        """
+        """Values cannot detect the route, so make the autodiff path fatal."""
         from coordinax._src.charts import jacobian
 
         def _boom(*args: object, **kw: object) -> object:
@@ -322,12 +314,10 @@ class TestUnitfulDictsReachTheClosedForm:
     def test_mixed_units_stay_on_autodiff_and_keep_their_labels(
         self, frm, to, keys
     ) -> None:
-        """Packing would re-label the output, so a mixed-unit point is left alone.
+        """A mixed-unit point stays on autodiff.
 
-        ``x`` in km beside the rest in m is the same Jacobian either way, but
-        differentiating reports the off-diagonal entries as ``km / m`` where
-        packing to a common unit reports them as dimensionless. Equal numbers,
-        different presentation -- not something to change silently.
+        Packing to a common unit would relabel the ``km / m`` entries
+        dimensionless: equal numbers, different presentation.
         """
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = {
