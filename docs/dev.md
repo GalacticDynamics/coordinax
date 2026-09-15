@@ -84,7 +84,7 @@ The authoritative session definitions live in the repository root `noxfile.py`. 
 
 ### Linting and Type Checks
 
-- `uv run nox -s precommit`: runs all prek/pre-commit hooks.
+- `uv run nox -s precommit`: runs all prek/pre-commit hooks, except `no-commit-to-branch` (it exists to stop a direct commit to `main`, which isn't what this session is for). Run it explicitly with `uv run prek run no-commit-to-branch --all-files` if you need to check it.
 - `uv run nox -s "pylint(package='coordinax')"`: run Pylint for the main package.
 - `uv run nox -s "pylint(package='api')"`: run Pylint for `coordinaxs.api`.
 - `uv run nox -s "pylint(package='astro')"`: run Pylint for `coordinaxs.astro`.
