@@ -103,6 +103,38 @@ def _planar_tol(x: Any, /) -> Array:
     return jnp.sqrt(jnp.finfo(jnp.result_type(x, float)).eps)
 
 
+def _float_param(g: Any, /) -> Any:
+    r"""Promote the curve parameter to float, *preserving* f32.
+
+    ``Quantity.astype(float)`` names the **default** float, so under
+    ``jax_enable_x64`` it silently widens an f32 ``tau`` or ``station`` to f64
+    and discards a deliberate choice of single precision. That matters twice
+    here: the triad widens with it, and so does the threshold `_planar_tol`
+    picks, which is supposed to track the precision actually in use.
+
+    `bishop._float` fixes the same trap for plain arrays, but strips the unit
+    to do it -- which the curve parameter cannot afford, because
+    `unxt.experimental.jacfwd` differentiates *in* that unit. So the dtype
+    logic is shared and the unit is kept.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> from coordinaxs.curveframes._src.signedplanar import _float_param
+
+    >>> _float_param(u.Q(jnp.float32(0.3), "s")).value.dtype
+    dtype('float32')
+
+    An integer parameter still promotes, since it must:
+
+    >>> _float_param(u.Q(jnp.asarray(2), "s")).value.dtype
+    dtype('float64')
+
+    """
+    return g.astype(jnp.result_type(g.value, float))
+
+
 def _check_planar(t_vec: Any, n_hat: Array, /) -> Any:
     r"""Raise (under ``jit`` too) when the tangent leaves the plane.
 
@@ -251,7 +283,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
 
         g, tau_unit = b._param(p)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
-        t_vec = _normalize(dcurve(g.astype(float)))
+        t_vec = _normalize(dcurve(_float_param(g)))
 
         n_hat = b._plane_normal(jnp.result_type(t_vec.value, float))
         # Use the *returned* tangent: an `error_if` whose result is dropped
@@ -354,7 +386,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
         b, p = self._resolve(tau)
 
         g, tau_unit = b._param(p)
-        g = g.astype(float)
+        g = _float_param(g)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
         d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
         dp = dcurve(g)

@@ -41,3 +41,44 @@ def test_planar_tol_f32() -> None:
 
 def test_planar_tol_f64() -> None:
     np.testing.assert_allclose(float(_planar_tol(jnp.float64(1.0))), 1.49e-8, rtol=1e-2)
+
+
+def circle_inherits_dtype(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+    """A circle that does NOT force a dtype -- it inherits from ``tau``.
+
+    The earlier tests here build an f32 curve explicitly, which masks a
+    parameter that was widened on the way in: the curve casts it straight
+    back. This one does not, so the parameter's dtype reaches the output.
+    """
+    t = tau.ustrip("s")
+    return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+
+class TestF32ParameterIsNotWidened:
+    """An f32 ``tau`` must stay f32 through the whole apparatus.
+
+    `Quantity.astype(float)` names the *default* float, which is f64 under
+    `JAX_ENABLE_X64=1`, so the naive cast silently discards a caller's choice
+    of single precision -- and widens `_planar_tol`'s threshold with it.
+    """
+
+    def test_rotation_matrix(self) -> None:
+        tau32 = u.Q(jnp.float32(0.3), "s")
+        R = SignedPlanarBuilder(circle_inherits_dtype, "s").rotation_matrix(tau32)
+        assert R.dtype == jnp.float32
+
+    def test_signed_curvature(self) -> None:
+        tau32 = u.Q(jnp.float32(0.3), "s")
+        k = SignedPlanarBuilder(circle_inherits_dtype, "s").signed_curvature(tau32)
+        assert k.value.dtype == jnp.float32
+
+    def test_curvature_vector(self) -> None:
+        tau32 = u.Q(jnp.float32(0.3), "s")
+        kv = SignedPlanarBuilder(circle_inherits_dtype, "s").curvature_vector(tau32)
+        assert kv.value.dtype == jnp.float32
+
+    def test_an_integer_parameter_still_promotes(self) -> None:
+        """Preserving f32 must not also stop ints from becoming floats."""
+        taui = u.Q(jnp.asarray(1), "s")
+        R = SignedPlanarBuilder(circle_inherits_dtype, "s").rotation_matrix(taui)
+        assert jnp.issubdtype(R.dtype, jnp.floating)
