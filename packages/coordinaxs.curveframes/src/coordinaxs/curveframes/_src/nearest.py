@@ -47,11 +47,17 @@ def nearest_tau(
     one seed spacing either side of it*: the argmin is within one spacing of
     the true minimiser **provided ``n_seed`` resolves the curve** -- it is an
     assumption on the scan, not a guarantee, and a curve that wiggles faster
-    than the spacing breaks it. The residual
-    $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})$ equals
-    $-\|\gamma'\|^{-1}\,d/d\tau(\tfrac12\mathrm{dist}^2)$, which crosses from
+    than the spacing breaks it. The residual handed to the
+    solvers is $\mathbf{T}\cdot(\mathbf{x}-\boldsymbol{\gamma})\,/\,\|\gamma'\|$,
+    which for a regular curve equals
+    $-\|\gamma'\|^{-2}\,d/d\tau(\tfrac12\mathrm{dist}^2)$. It crosses from
     positive to negative across a genuine minimum, so that bracket is
     well-posed for bisection and cannot land on the maximum next door.
+
+    The division by the speed leaves the root and its sign untouched -- it is
+    there so the residual is measured in $\tau$ rather than in whatever length
+    the ambient point carries, since ``atol`` is compared against both. Without
+    it the same geometry converged differently in km and in m.
 
     ``bounds`` must have non-zero width. A zero-width one makes the seed
     spacing zero, and the bracketed solve's ``expand_if_necessary`` grows a
@@ -172,6 +178,31 @@ def nearest_tau(
     elif bool(degenerate):
         raise ValueError(msg_bounds)
 
+    # Hoisted: building the transform per residual evaluation costs Python and
+    # JAX overhead in a loop that runs it ~130 times. `offset`, not `-offset` --
+    # the norm below removes the sign.
+    d_offset = jax.jacfwd(offset)
+
+    # A characteristic length-per-tau for the problem, used only where the local
+    # speed vanishes. The scan's spread of distances is a length and `hi - lo` a
+    # tau, so the ratio has the units the residual needs. Floored so a query
+    # sitting exactly on the curve cannot make it zero in turn.
+    _extent = jnp.sqrt(jnp.max(scan)) - jnp.sqrt(jnp.min(scan))
+    # `ones_like` keeps the fallback in the scan's own dtype instead of leaning
+    # on JAX's weak-typing rules to do it.
+    _fallback_speed = jnp.where(_extent > 0, _extent, jnp.ones_like(_extent)) / jnp.abs(
+        hi - lo
+    )
+    # Floored relatively, not only at exactly zero. A station slowing to rest
+    # passes through arbitrarily small speeds, and dividing by one of those
+    # amplifies the residual without bound. Any positive scaling leaves the root
+    # and its sign untouched, so a floor can only improve conditioning -- it
+    # cannot move the answer. `sqrt(eps)` matches the tolerance convention used
+    # below, and the eps is the fallback's own, not the default dtype's: with x64
+    # enabled but f32 curve data the default eps floors ~2e4x too low to clamp
+    # f32 rounding noise.
+    _speed_floor = jnp.sqrt(jnp.finfo(_fallback_speed.dtype).eps) * _fallback_speed
+
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
         # `tangent()`, not `rotation_matrix()[0]`: both builders override it to
@@ -179,7 +210,36 @@ def nearest_tau(
         # value as identical. Measured bit-identical and ~110x faster eagerly,
         # which is what makes the fine residual grid below affordable.
         T = builder.tangent(u.Q(tau_v, unit)).ustrip("")
-        return jnp.dot(T, offset(tau_v))
+        # Divided by |d(offset)/dtau|, which puts the residual in `tau` rather
+        # than in whatever length the ambient point carries. Undivided, one
+        # `atol` served as a tolerance on a length *and* on a tau at once, so
+        # the identical geometry converged differently by unit -- measured
+        # -4.195e-09 in km, pc and Mm against +2.424e-11 in m. Scaling only the
+        # tolerances does not fix it: the sensitivity lives inside the solvers'
+        # own convergence tests on the residual value.
+        #
+        # `T` still comes from `builder.tangent`, NOT from this derivative.
+        # They differ on a station-pinned worldtube, where `tau` is a time: the
+        # tangent is the curve's spatial direction while the derivative is the
+        # station's velocity. Reusing the derivative for both -- which looks
+        # like a free saving, since it makes the `tangent` call redundant --
+        # redefines the root and broke every worldtube round trip. The existing
+        # suite caught it; the unit test added here did not.
+        speed = jnp.linalg.norm(d_offset(tau_v))
+        # `speed` can be exactly zero while `T` is perfectly well defined. On a
+        # station-pinned worldtube they are different objects: `speed` is the
+        # station's velocity and `T` the slice's spatial tangent, so a station
+        # momentarily at rest zeroes the first and not the second. (A cusp
+        # zeroes both, but that case is already NaN via `builder.tangent`.)
+        #
+        # So the floor must still be a length-per-tau, not the bare `1.0` an
+        # earlier revision used: reverting to an unscaled residual would make it
+        # a length again, reintroducing precisely the tolerance-kind ambiguity
+        # this division exists to remove, and only for the worldtube queries
+        # that need it most. The scan's extent over the bounds span is the
+        # problem's own characteristic speed, unit-correct by construction.
+        safe_speed = jnp.maximum(speed, _speed_floor)
+        return jnp.dot(T, offset(tau_v)) / safe_speed
 
     # 1b. Narrow the bracket before solving. `+/- spacing` is two spacings wide,
     # so once the curve varies on that scale it can hold a whole period -- two
