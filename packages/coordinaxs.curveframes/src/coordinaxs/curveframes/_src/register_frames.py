@@ -64,7 +64,7 @@ def frame_transition(
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.frames as cxf
-    >>> import coordinax.transforms as cxt
+    >>> import coordinax.transforms as cxfm
     >>> import coordinaxs.curveframes as cxfc
 
     >>> def circle(tau):
@@ -74,7 +74,7 @@ def frame_transition(
 
     >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> op = cxf.frame_transition(cxf.Alice(), fs_frame)
-    >>> isinstance(op, cxt.AbstractTransform)
+    >>> isinstance(op, cxfm.AbstractTransform)
     True
 
     """
@@ -101,7 +101,7 @@ def frame_transition(
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.frames as cxf
-    >>> import coordinax.transforms as cxt
+    >>> import coordinax.transforms as cxfm
     >>> import coordinaxs.curveframes as cxfc
 
     >>> def circle(tau):
@@ -111,7 +111,7 @@ def frame_transition(
 
     >>> fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> op = cxf.frame_transition(fs_frame, cxf.Alice())
-    >>> isinstance(op, cxt.AbstractTransform)
+    >>> isinstance(op, cxfm.AbstractTransform)
     True
 
     """
@@ -143,7 +143,7 @@ def frame_transition(
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.frames as cxf
-    >>> import coordinax.transforms as cxt
+    >>> import coordinax.transforms as cxfm
     >>> import coordinaxs.curveframes as cxfc
 
     >>> def circle(tau):
@@ -154,7 +154,7 @@ def frame_transition(
     >>> fs1 = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), circle, "s")
     >>> fs2 = cxfc.FrenetSerretFrame.from_curve(cxf.Alex(), circle, "s")
     >>> op = cxf.frame_transition(fs1, fs2)
-    >>> isinstance(op, cxt.AbstractTransform)
+    >>> isinstance(op, cxfm.AbstractTransform)
     True
 
     """
