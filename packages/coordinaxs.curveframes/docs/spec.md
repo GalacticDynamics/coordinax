@@ -210,6 +210,22 @@ $$
 
 The Bishop frame is the unique frame in this family for which $d\theta/d\tau = 0$ (no torsion-induced twist).
 
+## Signed Planar Frame
+
+The **signed planar frame** attaches an orthonormal triad $(\mathbf{T}, \mathbf{N}, \mathbf{B})$ to each point of a regular **planar** curve $\boldsymbol{\gamma}(\tau)$ lying in the plane normal to a fixed unit vector $\hat{n}$:
+
+$$ \mathbf{T} = \frac{\boldsymbol{\gamma}'}{\|\boldsymbol{\gamma}'\|}, \qquad \mathbf{N} = \frac{\hat{n} \times \mathbf{T}}{\|\hat{n} \times \mathbf{T}\|}, \qquad \mathbf{B} = \mathbf{T} \times \mathbf{N} = \hat{n}. $$
+
+Unlike the Frenet–Serret frame it is **defined where the curvature vanishes**, because $\mathbf{N}$ is not derived from $\boldsymbol{\gamma}''$: the gauge comes from the ambient plane. Unlike the Bishop frame it needs neither an initial normal nor an ODE solve, at the cost of requiring a plane.
+
+The **signed curvature** is
+
+$$ \kappa_s = \frac{(\boldsymbol{\gamma}' \times \boldsymbol{\gamma}'') \cdot \hat{n}}{\|\boldsymbol{\gamma}'\|^3}, $$
+
+fixed in sign by $d\mathbf{T}/ds = \kappa_s \mathbf{N}$. It is positive where the curve turns towards $\mathbf{N}$, negative where it turns away, and passes smoothly through zero at an inflection. Where the Frenet–Serret frame is also defined, $\mathbf{N}$ agrees with the Frenet normal up to a sign and $|\kappa_s| = \kappa$.
+
+$\hat{n}$ is supplied, not inferred: every quantity derivable from $\boldsymbol{\gamma}''$ vanishes precisely at the points this frame exists to cover. A curve whose tangent leaves the plane normal to $\hat{n}$ is **refused**, at a tolerance of $\sqrt{\varepsilon}$ in the working precision, rather than silently projected.
+
 (curveframes-math-bishop-transform)=
 
 ## Bishop Transform
@@ -296,6 +312,8 @@ The public API lives under `coordinaxs.curveframes` (typically imported as `impo
 | `FrenetSerretFrame` | `@final` | Frenet–Serret curve-attached reference frame |
 | `BishopBuilder` | `@final` | Builder for the $(\mathbf{T},\mathbf{U}_1,\mathbf{U}_2)$ triad |
 | `BishopFrame` | `@final` | Bishop (rotation-minimising) curve frame |
+| `SignedPlanarBuilder` | `@final` | Builder for the signed planar $(\mathbf{T},\mathbf{N},\mathbf{B})$ triad |
+| `SignedPlanarFrame` | `@final` | Signed planar curve frame; planar curves only |
 
 Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of these builders — the same single mechanism for time dependence used everywhere else in `coordinax.transforms` (see {ref}`TimeDep <software-spec-transforms-timedep>` in the root spec). `AbstractCurveFrameBuilder` is an `equinox.Module`, so every field is a genuine pytree leaf: differentiable and `vmap`-able, including the curve's own parameters when the curve is itself an `equinox.Module`.
 
@@ -311,7 +329,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     - `xop : TimeDep` — the forward transform (base frame → curve frame), wrapping an `AbstractCurveFrameBuilder`.
     - `xop_inv : TimeDep` — the pre-computed inverse of `xop` (curve frame → base frame).
 
-    `AbstractParallelTransportFrame` is **not instantiable directly**; concrete subclasses (e.g. `FrenetSerretFrame`, `BishopFrame`) must be `@final`.
+    `AbstractParallelTransportFrame` is **not instantiable directly**; concrete subclasses (e.g. `FrenetSerretFrame`, `BishopFrame`, `SignedPlanarFrame`) must be `@final`.
 
     Because `AbstractParallelTransportFrame` IS-A `AbstractTransformedReferenceFrame`, the generic `frame_transition` dispatches registered for `AbstractTransformedReferenceFrame` apply automatically. No additional frame-transition dispatches are needed for concrete curve-frame subclasses.
 
@@ -476,3 +494,25 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     p_ambient = u.Q(jnp.array([1.0, 0.0, 0.0]), "m")
     p_curve = cxfm.act(op, tau, p_ambient)
     ```
+
+!!! info `SignedPlanarBuilder`
+
+    A `@final` `equinox.Module` subclass of `AbstractCurveFrameBuilder` carrying the signed planar apparatus.
+
+    Constructed directly — `SignedPlanarBuilder(curve, tau_unit=None, station=None, plane_normal=None)` — there is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `SignedPlanarFrame`.
+
+    `plane_normal` is a pytree leaf, so it is differentiable and vmappable; `None` means the z-axis, and the vector need not be normalised.
+
+    Beyond the shared accessors it provides `signed_curvature(tau) -> Quantity[1/length]`. This is the only curvature accessor in the package.
+
+    `act` dispatches on `TimeDep(SignedPlanarBuilder(...))`, identically to `FrenetSerretBuilder`.
+
+!!! info `SignedPlanarFrame`
+
+    A `@final` subclass of `AbstractParallelTransportFrame[FrameT]` representing a signed planar curve-attached reference frame.
+
+    - `base_frame : FrameT` — the ambient reference frame.
+    - `xop : TimeDep` — the $\tau$-dependent transform from the base frame to the curve frame, wrapping a `SignedPlanarBuilder`.
+    - `xop_inv : TimeDep` — its inverse.
+
+    `frame_transition` needs no registration of its own: the dispatches are on `AbstractParallelTransportFrame`.

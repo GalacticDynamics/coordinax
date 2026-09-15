@@ -2,7 +2,7 @@
 
 Curve-attached reference frames for [coordinax](https://github.com/GalacticDynamics/coordinax).
 
-This package implements Frenet-Serret and Bishop frames for tau-parameterized smooth curves in 3D Euclidean space.
+This package implements Frenet-Serret, Bishop, and signed planar frames for tau-parameterized smooth curves in 3D Euclidean space.
 
 ## Installation
 
