@@ -50,6 +50,23 @@ def _check_query(x: u.AbstractQuantity, n_seed: int, /) -> None:
         raise ValueError(msg)
 
 
+def _relative_speed_floor(fallback: jax.Array) -> jax.Array:
+    """`sqrt(eps)` of the fallback's *own* dtype, times the fallback.
+
+    The eps must come from ``fallback.dtype``, not the default float:
+    ``jnp.finfo(jnp.zeros(()).dtype)`` reads the global default, which under
+    ``jax_enable_x64`` -- this repo's pytest config -- is f64 even for f32 curve
+    data, a floor 2.3e4x too low to clamp f32 rounding noise (at a fallback of
+    2.0: ``2.98e-08`` against f32's own ``6.91e-04``).
+
+    Only conditioning rides on this: ``safe_speed`` stays positive either way,
+    so the residual's sign -- all that any bracket test or the bisection acts
+    on -- and hence the root are unchanged. That is why the test is on this
+    helper and not on a solve.
+    """
+    return jnp.sqrt(jnp.finfo(fallback.dtype).eps) * fallback
+
+
 def nearest_tau(
     builder: Any,
     x: u.AbstractQuantity,
@@ -217,11 +234,8 @@ def nearest_tau(
     # passes through arbitrarily small speeds, and dividing by one of those
     # amplifies the residual without bound. Any positive scaling leaves the root
     # and its sign untouched, so a floor can only improve conditioning -- it
-    # cannot move the answer. `sqrt(eps)` matches the tolerance convention used
-    # below, and the eps is the fallback's own, not the default dtype's: with x64
-    # enabled but f32 curve data the default eps floors ~2e4x too low to clamp
-    # f32 rounding noise.
-    _speed_floor = jnp.sqrt(jnp.finfo(_fallback_speed.dtype).eps) * _fallback_speed
+    # cannot move the answer.
+    _speed_floor = _relative_speed_floor(_fallback_speed)
 
     def residual(tau_v: jax.Array, args: Any) -> jax.Array:
         del args
