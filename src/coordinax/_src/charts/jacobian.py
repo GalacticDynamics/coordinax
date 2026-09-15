@@ -41,7 +41,7 @@ __all__ = ("jac_pt_map",)
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import jax
 import jax.numpy as jnp
@@ -191,6 +191,55 @@ def _repack_q_from_jac(jac_qq: ul.QuantityMatrix, /) -> ul.QuantityMatrix:
     return ul.QuantityMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
 
 
+def _jac_via_autodiff(
+    at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
+) -> ul.QuantityMatrix:
+    """Differentiate the transition map at a unitful point.
+
+    The general route, for any chart pair with no closed form registered.
+    """
+    # Close over the args/kwargs to construct the point-map function once.
+    pt_map_fn = cxcapi.pt_map(None, from_chart, to_chart, usys=usys)
+    jac_pt_map_fn = jax.jacfwd(pt_map_fn)
+
+    at_in = tree_cast_int_bool_to_float(cxcapi.carray(at, from_chart.components))
+    return _repack_q_from_jac(jac_pt_map_fn(at_in))
+
+
+#: Sentinel for "this point is not batched", so an unbatched call is not
+#: confused with a Jacobian that happens to be `None`.
+_UNBATCHED: Final = object()
+
+
+def _jac_over_batch(
+    at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
+) -> Any:
+    """Map the pointwise Jacobian over any leading batch axes.
+
+    A chart map is pointwise, so a batch of points is a batch of independent
+    Jacobians. Differentiating the batch as one function would instead give the
+    ``(*batch, n_out, *batch, n_in)`` Jacobian of ``R^(N*n) -> R^(N*n)``:
+    correct for *that* function, but block-diagonal with every off-diagonal
+    block identically zero, and O(N^2) to hold.
+
+    `jnp.vectorize` maps this in one call but coerces inputs with ``asarray``,
+    so it cannot carry the Quantity route; timings were within noise. The shape
+    is static, so the unbatched path costs nothing here.
+
+    Returns `_UNBATCHED` when *at* is a single point.
+    """
+    batch = jnp.shape(zeroth(at.values()))
+    if not batch:
+        return _UNBATCHED
+
+    def one(at_i: CDict) -> Any:
+        return cxcapi.jac_pt_map(at_i, from_chart, to_chart, usys=usys)
+
+    for _ in batch:
+        one = jax.vmap(one)
+    return one(at)
+
+
 @plum.dispatch
 def jac_pt_map(
     at: CDict,
@@ -261,25 +310,9 @@ def jac_pt_map(
     """
     at = from_chart.check_data(at, keys=True)
 
-    # A chart map is pointwise, so a batch of points is a batch of
-    # independent Jacobians. Differentiating the batch as one function
-    # would instead give the (*batch, n_out, *batch, n_in) Jacobian of
-    # R^(N*n) -> R^(N*n): correct for *that* function, but block-diagonal
-    # with every off-diagonal block identically zero, and O(N^2) to hold.
-    # Map over the leading axes instead.
-    #
-    # `jnp.vectorize` maps this in one call but coerces inputs with
-    # `asarray`, so it cannot carry the Quantity route; timings were within
-    # noise. The shape is static, so the scalar path costs nothing here.
-    batch = jnp.shape(zeroth(at.values()))
-    if batch:
-
-        def one(at_i: CDict) -> Any:
-            return cxcapi.jac_pt_map(at_i, from_chart, to_chart, usys=usys)
-
-        for _ in batch:
-            one = jax.vmap(one)
-        return one(at)
+    batched = _jac_over_batch(at, from_chart, to_chart, usys)
+    if batched is not _UNBATCHED:
+        return batched
 
     # Determine whether the input is array-valued or quantity-valued.  If it's
     # array-valued, we can skip the packing and unit handling and directly
@@ -289,23 +322,63 @@ def jac_pt_map(
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)
         return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
 
-    # It's Quantity-valued.
-    # Prepare the Jacobian of the point-map function w.r.t. the base point.
-    # Close over the args/kwargs to construct the point-map function once.
-    pt_map_fn = cxcapi.pt_map(None, from_chart, to_chart, usys=usys)
-    jac_pt_map_fn = jax.jacfwd(pt_map_fn)
-
-    # Pack the input CDict to a QuantityMatrix
-    at_in = cxcapi.carray(at, from_chart.components)
-    at_in = tree_cast_int_bool_to_float(at_in)
-
-    # Compute Jacobian as QuantityMatrix
-    J_qq = jac_pt_map_fn(at_in)
-    return _repack_q_from_jac(J_qq)
+    return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
 
 # ===================================================================
 # Cart2D -> Polar2D
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: CDict, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
+) -> Array | ul.QuantityMatrix:
+    """Route a coordinate dict to the closed-form Jacobian below.
+
+    The generic `CDict` dispatch sends a *unitful* point through
+    `jax.jacfwd`, which costs a trace per call and ignores the closed form
+    sitting next to it -- 3589us against 595us for the same point with bare
+    arrays, which do route here. Dispatching on the chart pair lets `plum`
+    pick the analytic method for both input kinds.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m")}
+    >>> cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
+    QM([[ 0.70710678,  0.70710678],
+        [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
+
+    """
+    at = from_chart.check_data(at, keys=True)
+
+    batched = _jac_over_batch(at, from_chart, to_chart, usys)
+    if batched is not _UNBATCHED:
+        return batched
+
+    keys = from_chart.components
+    units = [u.unit_of(at[k]) for k in keys]
+
+    # Bare arrays already reach the closed form through the generic dispatch;
+    # reproduce that route rather than changing it.
+    if all(unit is None for unit in units):
+        at_arr = jnp.stack([at[k] for k in keys], axis=-1)
+        return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
+
+    # Only pack when the components already agree on a unit. Converting them
+    # to a common one would be arithmetically fine but would re-label the
+    # output: `jacfwd` gives a `km / m` entry where packing gives a
+    # dimensionless one. Same Jacobian, different presentation, so leave a
+    # mixed-unit point on the route it takes today.
+    if any(unit != units[0] for unit in units):
+        return _jac_via_autodiff(at, from_chart, to_chart, usys)
+
+    packed = tree_cast_int_bool_to_float(
+        u.Quantity(
+            jnp.stack([u.ustrip(units[0], at[k]) for k in keys], axis=-1), units[0]
+        )
+    )
+    return cxcapi.jac_pt_map(packed, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch
