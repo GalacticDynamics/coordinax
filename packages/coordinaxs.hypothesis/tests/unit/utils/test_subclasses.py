@@ -7,6 +7,7 @@ import types
 import coordinax.charts as cxc
 
 from coordinaxs.hypothesis.utils._src.subclasses import (
+    _public_coordinax_module_candidates,
     canonicalize_coordinax_class,
     get_all_subclasses,
 )
@@ -75,3 +76,46 @@ def test_classes_defined_inside_a_function_are_not_drawn() -> None:
 
     assert _GuardChild in result
     assert _Local not in result
+
+
+def test_canonicalize_falls_through_when_the_qualname_is_absent() -> None:
+    """A coordinax class no candidate module exposes comes back unchanged.
+
+    Exercises the `AttributeError -> continue` arm and the final `return cls`.
+    Those turn on what `sys.modules` happens to hold, which varies with import
+    order and xdist worker, so without a test they are covered by luck.
+    """
+    canonicalize_coordinax_class.cache_clear()
+
+    orphan = type("NotExportedAnywhere", (), {"__module__": "coordinax._src.nowhere"})
+
+    assert canonicalize_coordinax_class(orphan) is orphan
+
+
+def test_canonicalize_ignores_a_non_class_attribute(monkeypatch) -> None:
+    """`isinstance(resolved, type)` is False, so the candidate is not taken."""
+    canonicalize_coordinax_class.cache_clear()
+
+    shadow = types.ModuleType("coordinax.shadow")
+    shadow.Decoy = "not a class"  # same name, wrong kind
+    monkeypatch.setitem(sys.modules, "coordinax.shadow", shadow)
+
+    cls = type("Decoy", (), {"__module__": "coordinax._src.shadow"})
+
+    assert canonicalize_coordinax_class(cls) is cls
+
+
+def test_module_candidates_walk_up_and_stop_at_coordinax() -> None:
+    """The parent walk ends at `coordinax`, and never above it."""
+    got = _public_coordinax_module_candidates("coordinax._src.charts.deep.inner")
+
+    assert got[0] == "coordinax.charts.deep.inner"
+    assert "coordinax" in got
+    assert all("." in c or c == "coordinax" for c in got)
+
+
+def test_module_candidates_are_deduplicated() -> None:
+    """`dict.fromkeys` is doing real work: loaded modules repeat the parents."""
+    got = _public_coordinax_module_candidates("coordinax._src.charts")
+
+    assert len(got) == len(set(got))
