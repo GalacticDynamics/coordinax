@@ -39,6 +39,9 @@ Examples
 
 __all__ = ("jac_pt_map",)
 
+import functools as ft
+import operator
+
 from collections.abc import Callable
 from jaxtyping import Array
 from typing import Any, Final, cast
@@ -379,18 +382,19 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
+def _is_angle(unit: Any, /) -> bool:
+    return u.dimension_of(unit) == ANGLE
+
+
 def _jac_from_dict_via_closed_form(
     at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
 ) -> Any:
     """Send a coordinate dict to the closed form registered for its chart pair.
 
-    Three routes. Bare arrays stack and re-dispatch, as they already did.
-    Components that agree on a unit pack into one `Quantity` and take the
-    closed form. A mixed-unit point falls back to autodiff, which labels each
-    entry per column instead of relabelling them to a shared unit.
-
-    Packing is why `from_chart`'s components must share a dimension: it is
-    what makes the analytic body's ``at[..., i]`` work.
+    The closed forms take bare values, so strip every component to a canonical
+    unit -- angles to radians, everything else to the first unit of its kind --
+    differentiate there, and put the units back afterwards. Convertible units
+    are equivalent, so canonicalising costs a label and nothing else.
     """
     at = from_chart.check_data(at, keys=True)
 
@@ -401,55 +405,52 @@ def _jac_from_dict_via_closed_form(
     keys = from_chart.components
     units: list[Any] = [u.unit_of(at[k]) for k in keys]
 
-    # Bare arrays already reach the closed form through the generic dispatch;
-    # reproduce that route rather than changing it.
+    # No units to strip or restore; *usys* says what the numbers mean.
     if all(unit is None for unit in units):
         at_arr = jnp.stack([at[k] for k in keys], axis=-1)
         return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)
+    # A bare component beside a unitful one has no unit to canonicalise to.
     if any(unit is None for unit in units):
         return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
-    lengths: list[Any] = [unit for unit in units if u.dimension_of(unit) != ANGLE]
-    if any(unit != lengths[0] for unit in lengths):
-        # Lengths in different units would be relabelled by any packing --
-        # `jacfwd` reports a `km / m` entry where a shared unit reports a
-        # dimensionless one. Same Jacobian, different presentation.
+    # `dimension_of` is a `plum` dispatch, so resolve each component's once.
+    dims = [u.dimension_of(unit) for unit in units]
+
+    # One unit per dimension: radians for angles, the first one seen otherwise.
+    # Angles are seeded because a closed form emits them whether or not the
+    # input had any -- `Cart3D -> Spherical3D` takes three lengths.
+    canonical: dict[Any, Any] = {ANGLE: RAD}
+    for unit, dim in zip(units, dims, strict=True):
+        canonical.setdefault(dim, RAD if dim == ANGLE else unit)
+
+    out_dims = [u.dimension(dim) for dim in to_chart.coord_dimensions]
+    if any(dim not in canonical for dim in out_dims):
+        # An output dimension the input cannot name -- nothing to label it with.
         return _jac_via_autodiff(at, from_chart, to_chart, usys)
-    length = lengths[0]
 
-    if all(unit == units[0] for unit in units):
-        packed = tree_cast_int_bool_to_float(
-            u.Q(jnp.stack([u.ustrip(length, at[k]) for k in keys], axis=-1), length)
-        )
-        return cxcapi.jac_pt_map(packed, from_chart, to_chart, usys=usys)
-
-    # A length beside an angle cannot share a `Quantity`, so hand the closed
-    # form bare values in a canonical unit -- lengths in `length`, angles in
-    # radians -- and put the units back on the result.
-    values, rad_per_unit = [], []
-    for key, unit in zip(keys, units, strict=True):
-        if u.dimension_of(unit) == ANGLE:
-            values.append(u.uconvert_value(RAD, unit, u.ustrip(unit, at[key])))
-            rad_per_unit.append(u.uconvert_value(RAD, unit, 1.0))
-        else:
-            values.append(u.ustrip(length, at[key]))
-            rad_per_unit.append(1.0)
+    targets = [canonical[dim] for dim in dims]
+    values = [
+        u.ustrip(unit, at[k])
+        if target == unit
+        else u.uconvert_value(target, unit, u.ustrip(unit, at[k]))
+        for k, unit, target in zip(keys, units, targets, strict=True)
+    ]
     raw = tree_cast_int_bool_to_float(jnp.stack(values, axis=-1))
 
-    jac = cxcapi.jac_pt_map(raw, from_chart, to_chart, usys=None)
+    jac = jnp.asarray(cxcapi.jac_pt_map(raw, from_chart, to_chart, usys=None))
 
-    # Column *i* was differentiated with respect to radians; the caller's
-    # angle unit is what the entry has to be per, so rescale and label it so.
-    out_units: list[Any] = [
-        RAD if dim == ANGLE else length for dim in to_chart.coord_dimensions
+    # Column *i* was differentiated with respect to the canonical unit, so
+    # rescale it to the caller's and label it to match. A chart has a handful
+    # of distinct units, and dividing two costs far more than a dict lookup.
+    scale = [
+        1.0 if target == unit else u.uconvert_value(target, unit, 1.0)
+        for unit, target in zip(units, targets, strict=True)
     ]
-    # Match the Jacobian's dtype: the factors are Python floats, and letting
-    # them set the result type would silently widen a float32 point.
-    jac = jnp.asarray(jac)
-    return ul.QuantityMatrix(
-        jac * jnp.asarray(rad_per_unit, dtype=jac.dtype),
-        unit=tuple(tuple(out / col for col in units) for out in out_units),
+    quotient = ft.lru_cache(maxsize=None)(operator.truediv)
+    unit_rows = tuple(
+        tuple(quotient(canonical[dim], col) for col in units) for dim in out_dims
     )
+    return ul.QuantityMatrix(jac * jnp.asarray(scale, dtype=jac.dtype), unit=unit_rows)
 
 
 @plum.dispatch

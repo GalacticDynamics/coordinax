@@ -400,13 +400,12 @@ class TestUnitfulDictsReachTheClosedForm:
                 assert_allclose(float(converted), float(want[i, k]), atol=1e-12)
 
     @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
-    def test_mixed_units_stay_on_autodiff_and_keep_their_labels(
-        self, frm, to, keys
-    ) -> None:
-        """A mixed-unit point stays on autodiff.
+    def test_a_mixed_unit_point_keeps_a_unit_per_column(self, frm, to, keys) -> None:
+        """Canonicalising the input does not flatten the output's labels.
 
-        Packing to a common unit would relabel the ``km / m`` entries
-        dimensionless: equal numbers, different presentation.
+        Each column is still reported per the unit that column came in, so a
+        point with ``x`` in km beside ``y`` in m keeps its ``km / m`` entries
+        rather than being reduced to one unit throughout.
         """
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = {
