@@ -53,7 +53,13 @@ import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from .d2 import Cart2D, Polar2D
-from .d3 import Cart3D, Cylindrical3D, Spherical3D
+from .d3 import (
+    Cart3D,
+    Cylindrical3D,
+    LonCosLatSpherical3D,
+    LonLatSpherical3D,
+    Spherical3D,
+)
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import OptUSys
 from coordinax.internal import tree_cast_int_bool_to_float
@@ -889,5 +895,157 @@ def jac_pt_map(
             [sin_t * cos_p, r * cos_t * cos_p / ang, -r * sin_t * sin_p / ang],
             [sin_t * sin_p, r * cos_t * sin_p / ang, r * sin_t * cos_p / ang],
             [cos_t, -r * sin_t / ang, zero],
+        ]
+    )
+
+
+# ===================================================================
+# LonLatSpherical3D <-> LonCosLatSpherical3D
+#
+# `lon_coslat = lon * cos(lat)`, with `lat` and `distance` untouched. The
+# generic route reaches these through colatitude and back, which is both the
+# slowest transition in the suite and more arithmetic than the map needs.
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: CDict,
+    from_chart: LonLatSpherical3D,
+    to_chart: LonCosLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array | ul.QuantityMatrix:
+    """Route a coordinate dict to the closed form below.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> at = {"lon": u.Q(0.0, "rad"), "lat": u.Q(0.0, "rad"),
+    ...       "distance": u.Q(2.0, "m")}
+    >>> cxc.jac_pt_map(at, cxc.lonlat_sph3d, cxc.loncoslat_sph3d).value
+    Array([[ 1., -0.,  0.],
+           [ 0.,  1.,  0.],
+           [ 0.,  0.,  1.]], dtype=float64)
+
+    """
+    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: LonLatSpherical3D,
+    to_chart: LonCosLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``LonLatSpherical3D -> LonCosLatSpherical3D``.
+
+    $$
+    J = \frac{\partial(\lambda\cos\phi, \phi, d)}{\partial(\lambda, \phi, d)}
+      = \begin{pmatrix}
+          \cos\phi & -\lambda\sin\phi & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1
+        \end{pmatrix}
+    $$
+
+    The angle-to-angle entries are unit-agnostic -- both sides scale together --
+    so only the longitude in the second column has to be in radians.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([0.0, 0.0, 2.0])
+    >>> cxc.jac_pt_map(at, cxc.lonlat_sph3d, cxc.loncoslat_sph3d,
+    ...                usys=u.unitsystems.si)
+    Array([[ 1., -0.,  0.],
+           [ 0.,  1.,  0.],
+           [ 0.,  0.,  1.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    ang = _usys_angle_per_rad(usys)
+    lon, lat = at[..., 0] / ang, at[..., 1] / ang
+    zero, one = jnp.zeros_like(lon), jnp.ones_like(lon)
+    return jnp.array(
+        [
+            [jnp.cos(lat), -lon * jnp.sin(lat), zero],
+            [zero, one, zero],
+            [zero, zero, one],
+        ]
+    )
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: CDict,
+    from_chart: LonCosLatSpherical3D,
+    to_chart: LonLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array | ul.QuantityMatrix:
+    """Route a coordinate dict to the closed form below.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> at = {"lon_coslat": u.Q(0.0, "rad"), "lat": u.Q(0.0, "rad"),
+    ...       "distance": u.Q(2.0, "m")}
+    >>> cxc.jac_pt_map(at, cxc.loncoslat_sph3d, cxc.lonlat_sph3d).value
+    Array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]], dtype=float64)
+
+    """
+    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: LonCosLatSpherical3D,
+    to_chart: LonLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``LonCosLatSpherical3D -> LonLatSpherical3D``.
+
+    $$
+    J = \frac{\partial(\lambda, \phi, d)}{\partial(\lambda\cos\phi, \phi, d)}
+      = \begin{pmatrix}
+          1/\cos\phi & \lambda\cos\phi\,\sin\phi/\cos^2\phi & 0 \\
+          0 & 1 & 0 \\ 0 & 0 & 1
+        \end{pmatrix}
+    $$
+
+    Singular at the poles, where `cos(lat)` vanishes and longitude is not
+    recoverable from `lon * cos(lat)` -- the same place the map itself is.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([0.0, 0.0, 2.0])
+    >>> cxc.jac_pt_map(at, cxc.loncoslat_sph3d, cxc.lonlat_sph3d,
+    ...                usys=u.unitsystems.si)
+    Array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    ang = _usys_angle_per_rad(usys)
+    lon_coslat, lat = at[..., 0] / ang, at[..., 1] / ang
+    cos_lat = jnp.cos(lat)
+    zero, one = jnp.zeros_like(lat), jnp.ones_like(lat)
+    return jnp.array(
+        [
+            [one / cos_lat, lon_coslat * jnp.sin(lat) / cos_lat**2, zero],
+            [zero, one, zero],
+            [zero, zero, one],
         ]
     )

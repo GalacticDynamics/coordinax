@@ -251,6 +251,18 @@ class TestUnitfulDictsReachTheClosedForm:
     HETEROGENEOUS_PAIRS: ClassVar = [
         pytest.param("cyl3d", "cart3d", ("rho", "phi", "z"), id="cyl3d->cart3d"),
         pytest.param("sph3d", "cart3d", ("r", "theta", "phi"), id="sph3d->cart3d"),
+        pytest.param(
+            "lonlat_sph3d",
+            "loncoslat_sph3d",
+            ("lon", "lat", "distance"),
+            id="lonlat->loncoslat",
+        ),
+        pytest.param(
+            "loncoslat_sph3d",
+            "lonlat_sph3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->lonlat",
+        ),
     ]
     ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
 
@@ -262,8 +274,19 @@ class TestUnitfulDictsReachTheClosedForm:
         "rho": 2.0,
         "theta": 0.7,
         "phi": 0.9,
+        "lon": 0.9,
+        "lon_coslat": 0.7,
+        "lat": 0.35,
+        "distance": 2.5,
     }
-    UNITS: ClassVar = {"theta": "rad", "phi": "rad"}  # everything else a length
+    #: Everything not listed here is a length.
+    UNITS: ClassVar = {
+        "theta": "rad",
+        "phi": "rad",
+        "lon": "rad",
+        "lon_coslat": "rad",
+        "lat": "rad",
+    }
 
     def _unit(self, key: str) -> str:
         return self.UNITS.get(key, "m")
@@ -362,8 +385,19 @@ class TestUnitfulDictsReachTheClosedForm:
         J = cxc.jac_pt_map(at, from_chart, to_chart)
         expected = via_autodiff(at, from_chart, to_chart, None)
 
-        assert_allclose(np.asarray(J.value), np.asarray(expected.value), rtol=1e-12)
-        assert J.unit.to_tuple() == expected.unit.to_tuple()
+        # Compare physically, not by label: a closed form may legitimately
+        # report an entry in a different but convertible unit, and a
+        # `Quantity` carries exactly that information. Only the value binds.
+        got = np.asarray(jnp.asarray(J.value))
+        want = np.asarray(jnp.asarray(expected.value))
+        got_u, want_u = J.unit.to_tuple(), expected.unit.to_tuple()
+        for i in range(got.shape[-2]):
+            for k in range(got.shape[-1]):
+                converted = u.ustrip(
+                    want_u[i][k],
+                    u.uconvert(want_u[i][k], u.Q(float(got[i, k]), got_u[i][k])),
+                )
+                assert_allclose(float(converted), float(want[i, k]), atol=1e-12)
 
     @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
     def test_mixed_units_stay_on_autodiff_and_keep_their_labels(
