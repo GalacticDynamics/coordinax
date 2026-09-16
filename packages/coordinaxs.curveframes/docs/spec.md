@@ -236,7 +236,7 @@ The **signed planar frame** attaches an orthonormal triad $(\mathbf{T}, \mathbf{
 
 $$ \mathbf{T} = \frac{\boldsymbol{\gamma}'}{\|\boldsymbol{\gamma}'\|}, \qquad \mathbf{N} = \frac{\hat{n} \times \mathbf{T}}{\|\hat{n} \times \mathbf{T}\|}, \qquad \mathbf{B} = \mathbf{T} \times \mathbf{N}. $$
 
-$\mathbf{B} = \hat{n}$ **on a planar curve**, which is the only case this frame is defined for; it is written as $\mathbf{T} \times \mathbf{N}$ rather than as $\hat{n}$ because that is what the implementation computes, and computing it is what keeps $R$ exactly orthonormal for a curve that drifts slightly off the plane.
+$\mathbf{B} = \hat{n}$ **on a planar curve**, which is the only case this frame is defined for; it is written as $\mathbf{T} \times \mathbf{N}$ rather than as $\hat{n}$ because that is what the implementation computes, and computing it is what keeps the triad exactly orthonormal for a curve that drifts slightly off the plane.
 
 Unlike the Frenet–Serret frame it is **defined where the curvature vanishes**, because $\mathbf{N}$ is not derived from $\boldsymbol{\gamma}''$: the gauge comes from the ambient plane. Unlike the Bishop frame it needs neither an initial normal nor an ODE solve, at the cost of requiring a plane.
 
