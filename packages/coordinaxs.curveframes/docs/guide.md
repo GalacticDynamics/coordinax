@@ -73,6 +73,24 @@ fs_rad = cxfc.FrenetSerretBuilder(helix, tau_unit="rad")
 
 This affects only the automatic differentiation step — the builder's methods still accept any `Quantity` with compatible dimensions.
 
+### Curvature and Torsion
+
+The two classical invariants are separate accessors, so `rotation_matrix` never pays for them:
+
+```python
+kappa = fs_transform.curvature(tau)  # 1/length, always >= 0
+torsion = fs_transform.torsion(tau)  # 1/length, zero on a planar curve
+```
+
+They behave differently where the curvature vanishes, and the difference is worth knowing:
+
+- **`curvature` is defined there.** At an inflection, and on a straight segment, it simply reads zero. The _frame_ is undefined at those points — `rotation_matrix` refuses, because the normal has no direction — but a non-negative scalar has no such problem, so `curvature` is unguarded.
+- **`torsion` is not.** It divides by $\|\gamma' \times \gamma''\|^2$, which is $(\kappa\|\gamma'\|^3)^2$, so the same points give $0/0$. It is refused there rather than returned as NaN.
+
+So on a straight line `curvature` answers and `torsion` raises. `torsion` costs a third derivative; `curvature` costs the same two as `rotation_matrix`.
+
+On a planar curve, `curvature` is the magnitude of `SignedPlanarBuilder.signed_curvature` — the signed version keeps the sign that tells you which way the curve turns, which is what lets it pass smoothly through an inflection.
+
 ### Inversion
 
 The builder itself has no `.inverse` — wrap it in `TimeDep` first, whose `.inverse` reverses the mapping pointwise in $\tau$:

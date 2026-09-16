@@ -44,6 +44,16 @@ _MSG_ZERO_CURVATURE = (
 )
 
 
+_MSG_ZERO_TORSION = (
+    "the torsion is undefined where the curvature vanishes: it divides by "
+    "|gamma' x gamma''|^2, which is (kappa |gamma'|^3)^2, so a straight "
+    "segment or an inflection makes it 0/0. Note that `curvature` IS defined "
+    "at those points and reads zero -- only the torsion degenerates. If you "
+    "need a frame there rather than an invariant, use `BishopBuilder`, or "
+    "`SignedPlanarBuilder` on a planar curve."
+)
+
+
 def _normalize(v: Any) -> Any:
     r"""Normalize a vector to unit length.
 
@@ -298,6 +308,114 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         """
         return u.Q(self.rotation_matrix(tau)[2], "")
+
+    def curvature(self, tau: Any, /) -> u.Q:
+        r"""Return the curvature $\kappa(\tau) \ge 0$.
+
+        $$ \kappa = \frac{\|\boldsymbol{\gamma}' \times
+           \boldsymbol{\gamma}''\|}{\|\boldsymbol{\gamma}'\|^3} $$
+
+        **Defined where the frame is not.** `rotation_matrix` refuses at an
+        inflection and on a straight segment, because the *normal* has no
+        direction there. The curvature has no such problem: it is a
+        non-negative scalar that simply reads zero. Guarding it would refuse a
+        correct answer, so it is unguarded.
+
+        Returns a `Quantity` of dimension 1/length. Costs two `jacfwd` passes,
+        the same as `rotation_matrix`; only `torsion` pays for a third.
+
+        On a planar curve this is $|\kappa_s|$, the magnitude of
+        `SignedPlanarBuilder.signed_curvature`.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        A straight line, where the *frame* is undefined everywhere:
+
+        >>> def line(tau: u.Q) -> u.Q:
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([t, jnp.zeros_like(t),
+        ...                           jnp.zeros_like(t)]), "km")
+
+        >>> float(cxfc.FrenetSerretBuilder(line, "s").curvature(u.Q(2.0, "s"))
+        ...       .ustrip("1/km"))
+        0.0
+
+        """
+        b, p = self._resolve(tau)
+        g, tau_unit = b._param(p)
+        dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
+        d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
+        dp = dcurve(g)
+        d2p = d2curve(g)
+        return qnp.sqrt(qnp.sum(qnp.cross(dp, d2p) ** 2)) / (
+            qnp.sqrt(qnp.sum(dp**2)) ** 3
+        )
+
+    def torsion(self, tau: Any, /) -> u.Q:
+        r"""Return the torsion: how fast the curve leaves its osculating plane.
+
+        $$ \tau_g = \frac{(\boldsymbol{\gamma}' \times
+           \boldsymbol{\gamma}'') \cdot \boldsymbol{\gamma}'''}
+           {\|\boldsymbol{\gamma}' \times \boldsymbol{\gamma}''\|^2} $$
+
+        Unlike `curvature`, this **is** undefined where the curvature
+        vanishes: the denominator is $(\kappa \|\gamma'\|^3)^2$, so a straight
+        segment or an inflection gives $0/0$. It is refused there rather than
+        returned as NaN, in the same way `rotation_matrix` refuses.
+
+        Zero on any planar curve, wherever it is defined.
+
+        Returns a `Quantity` of dimension 1/length. Costs a third `jacfwd`
+        pass, which is why it is a separate accessor: `rotation_matrix` never
+        pays for it.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinaxs.curveframes as cxfc
+
+        A helix ``(a cos t, a sin t, b t)`` has torsion ``b / (a^2 + b^2)``:
+
+        >>> def helix(tau: u.Q) -> u.Q:
+        ...     t = tau.ustrip("s")
+        ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
+
+        >>> float(cxfc.FrenetSerretBuilder(helix, "s").torsion(u.Q(0.7, "s"))
+        ...       .ustrip("1/km").round(6))
+        0.275229
+
+        """
+        b, p = self._resolve(tau)
+        g, tau_unit = b._param(p)
+        dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
+        d2curve = u.experimental.jacfwd(dcurve, units=(tau_unit,))
+        d3curve = u.experimental.jacfwd(d2curve, units=(tau_unit,))
+        dp = dcurve(g)
+        d2p = d2curve(g)
+        d3p = d3curve(g)
+
+        cross = qnp.cross(dp, d2p)
+        # Guard on the *relative* magnitude, as `rotation_matrix` does: this
+        # ratio is the sine of the angle between gamma' and gamma'', so it is
+        # dimensionless (which `error_if` needs) and vanishes exactly when the
+        # two are parallel -- which is exactly when kappa = 0. `~(x > tol)`,
+        # not `x <= tol`: a straight segment gives `0/0 = nan`, and NaN is
+        # False for both. The *checked* value is what the result is built
+        # from, since an `error_if` whose result is dropped is dead code.
+        ratio = qnp.sqrt(qnp.sum(cross**2)) / (
+            qnp.sqrt(qnp.sum(dp**2)) * qnp.sqrt(qnp.sum(d2p**2))
+        )
+        cross = eqx.error_if(
+            cross,
+            ~(cast("Array", u.ustrip(AllowValue, "", ratio)) > 1e-12),
+            _MSG_ZERO_TORSION,
+        )
+        return qnp.sum(cross * d3p) / qnp.sum(cross**2)
 
 
 #####################################################################

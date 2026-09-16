@@ -26,7 +26,7 @@ import coordinax.transforms as cxfm
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
-from .conftest import circle, circle_yr, helix, inverse_rotation
+from .conftest import circle, circle_yr, helix, inverse_rotation, straight_line
 
 # ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -143,3 +143,105 @@ class TestTangentFastPathMatchesBase:
         base = cxfc.AbstractCurveFrameBuilder.tangent(builder, t)
         np.testing.assert_allclose(base.value, builder.tangent(t).value, atol=1e-6)
         np.testing.assert_allclose(np.linalg.norm(base.value), 1.0, atol=1e-6)
+
+
+def cubic(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+    """``(t, t^3, 0)`` km: an inflection at ``t = 0``."""
+    t = tau.ustrip("s")
+    return u.Q(jnp.stack([t, t**3, jnp.zeros_like(t)]), "km")
+
+
+def circle_r2(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+    """Circle of radius 2 km: curvature 0.5 per km."""
+    t = tau.ustrip("s")
+    return u.Q(2.0 * jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
+
+
+class TestCurvature:
+    """Curvature is defined where the *frame* is not: it reads zero.
+
+    These cover the straight line and the inflection, which `rotation_matrix`
+    refuses -- that contrast is the point of the accessor.
+    """
+
+    def test_unit_circle(self) -> None:
+        k = cxfc.FrenetSerretBuilder(circle, "s").curvature(u.Q(0.4, "s"))
+        np.testing.assert_allclose(k.ustrip("1/km"), 1.0, atol=1e-8)
+
+    def test_radius_scales_inversely(self) -> None:
+        k = cxfc.FrenetSerretBuilder(circle_r2, "s").curvature(u.Q(0.4, "s"))
+        np.testing.assert_allclose(k.ustrip("1/km"), 0.5, atol=1e-8)
+
+    def test_helix(self) -> None:
+        """For ``(a cos t, a sin t, b t)``: kappa = a / (a^2 + b^2)."""
+        k = cxfc.FrenetSerretBuilder(helix, "s").curvature(u.Q(0.7, "s"))
+        np.testing.assert_allclose(k.ustrip("1/km"), 1.0 / 1.09, atol=1e-8)
+
+    def test_dimension_is_inverse_length(self) -> None:
+        k = cxfc.FrenetSerretBuilder(circle, "s").curvature(u.Q(0.0, "s"))
+        assert u.dimension_of(k) == u.dimension("1/length")
+
+    def test_defined_on_a_straight_line(self) -> None:
+        """Zero, and *not* refused -- the frame is, the curvature is not."""
+        b = cxfc.FrenetSerretBuilder(straight_line, "s")
+        np.testing.assert_allclose(
+            b.curvature(u.Q(3.0, "s")).ustrip("1/km"), 0.0, atol=1e-12
+        )
+        with pytest.raises(Exception, match="curvature"):
+            b.rotation_matrix(u.Q(3.0, "s"))
+
+    def test_defined_at_an_inflection(self) -> None:
+        """Same contrast on the cubic, where only one parameter degenerates."""
+        b = cxfc.FrenetSerretBuilder(cubic, "s")
+        np.testing.assert_allclose(
+            b.curvature(u.Q(0.0, "s")).ustrip("1/km"), 0.0, atol=1e-12
+        )
+        with pytest.raises(Exception, match="curvature"):
+            b.rotation_matrix(u.Q(0.0, "s"))
+
+    @pytest.mark.parametrize("t", [-1.0, -0.3, 0.3, 1.0])
+    def test_matches_signed_planar_magnitude(self, t: float) -> None:
+        """`|kappa_s| == kappa` pins the two builders against each other."""
+        tau = u.Q(t, "s")
+        k = cxfc.FrenetSerretBuilder(cubic, "s").curvature(tau).ustrip("1/km")
+        ks = cxfc.SignedPlanarBuilder(cubic, "s").signed_curvature(tau).ustrip("1/km")
+        np.testing.assert_allclose(k, abs(ks), atol=1e-10)
+
+
+class TestTorsion:
+    """Torsion, unlike curvature, *is* undefined where the curvature vanishes.
+
+    Its denominator is ``|gamma' x gamma''|^2``, which is
+    ``(kappa |gamma'|^3)^2``.
+    """
+
+    def test_helix(self) -> None:
+        """For ``(a cos t, a sin t, b t)``: torsion = b / (a^2 + b^2)."""
+        tor = cxfc.FrenetSerretBuilder(helix, "s").torsion(u.Q(0.7, "s"))
+        np.testing.assert_allclose(tor.ustrip("1/km"), 0.3 / 1.09, atol=1e-8)
+
+    def test_zero_on_a_planar_curve(self) -> None:
+        """A plane curve has no torsion, wherever it is defined."""
+        tor = cxfc.FrenetSerretBuilder(circle, "s").torsion(u.Q(0.4, "s"))
+        np.testing.assert_allclose(tor.ustrip("1/km"), 0.0, atol=1e-8)
+
+    def test_dimension_is_inverse_length(self) -> None:
+        tor = cxfc.FrenetSerretBuilder(helix, "s").torsion(u.Q(0.0, "s"))
+        assert u.dimension_of(tor) == u.dimension("1/length")
+
+    def test_refuses_on_a_straight_line(self) -> None:
+        with pytest.raises(Exception, match="torsion"):
+            cxfc.FrenetSerretBuilder(straight_line, "s").torsion(u.Q(3.0, "s"))
+
+    def test_refuses_at_an_inflection(self) -> None:
+        with pytest.raises(Exception, match="torsion"):
+            cxfc.FrenetSerretBuilder(cubic, "s").torsion(u.Q(0.0, "s"))
+
+    def test_curvature_is_defined_where_torsion_is_not(self) -> None:
+        """The asymmetry, pinned: same parameter, one answers and one refuses."""
+        b = cxfc.FrenetSerretBuilder(cubic, "s")
+        np.testing.assert_allclose(
+            b.curvature(u.Q(0.0, "s")).ustrip("1/km"), 0.0, atol=1e-12
+        )
+        with pytest.raises(Exception, match="torsion"):
+            b.torsion(u.Q(0.0, "s"))
