@@ -8,12 +8,8 @@ from typing import final
 
 import jax
 
-import unxt as u
-
 from .embedmap import AbstractEmbeddingMap
 from coordinax._src.base import AbstractMetricField
-
-DMLS = u.unit("")
 
 
 @jax.tree_util.register_static
