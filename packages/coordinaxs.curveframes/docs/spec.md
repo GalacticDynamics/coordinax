@@ -234,7 +234,9 @@ The Bishop frame is the unique frame in this family for which $d\theta/d\tau = 0
 
 The **signed planar frame** attaches an orthonormal triad $(\mathbf{T}, \mathbf{N}, \mathbf{B})$ to each point of a regular **planar** curve $\boldsymbol{\gamma}(\tau)$ lying in the plane normal to a fixed unit vector $\hat{n}$:
 
-$$ \mathbf{T} = \frac{\boldsymbol{\gamma}'}{\|\boldsymbol{\gamma}'\|}, \qquad \mathbf{N} = \frac{\hat{n} \times \mathbf{T}}{\|\hat{n} \times \mathbf{T}\|}, \qquad \mathbf{B} = \mathbf{T} \times \mathbf{N} = \hat{n}. $$
+$$ \mathbf{T} = \frac{\boldsymbol{\gamma}'}{\|\boldsymbol{\gamma}'\|}, \qquad \mathbf{N} = \frac{\hat{n} \times \mathbf{T}}{\|\hat{n} \times \mathbf{T}\|}, \qquad \mathbf{B} = \mathbf{T} \times \mathbf{N}. $$
+
+$\mathbf{B} = \hat{n}$ **on a planar curve**, which is the only case this frame is defined for; it is written as $\mathbf{T} \times \mathbf{N}$ rather than as $\hat{n}$ because that is what the implementation computes, and computing it is what keeps $R$ exactly orthonormal for a curve that drifts slightly off the plane.
 
 Unlike the Frenet–Serret frame it is **defined where the curvature vanishes**, because $\mathbf{N}$ is not derived from $\boldsymbol{\gamma}''$: the gauge comes from the ambient plane. Unlike the Bishop frame it needs neither an initial normal nor an ODE solve, at the cost of requiring a plane.
 
