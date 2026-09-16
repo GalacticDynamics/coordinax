@@ -239,21 +239,43 @@ class TestUnitfulDictsReachTheClosedForm:
     closed forms unless every pair is listed here.
     """
 
-    ROUTED_PAIRS: ClassVar = [
+    #: Pairs whose `from_chart` components are all lengths, so a unitful dict
+    #: packs into a single `Quantity`.
+    HOMOGENEOUS_PAIRS: ClassVar = [
         pytest.param("cart2d", "polar2d", ("x", "y"), id="cart2d->polar2d"),
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
     ]
-    VALUES: ClassVar = {"x": 1.3, "y": 2.1, "z": 0.7}
+    #: Pairs taking an angle beside a length, which reach the closed form
+    #: through bare values in a canonical unit rather than a packed `Quantity`.
+    HETEROGENEOUS_PAIRS: ClassVar = [
+        pytest.param("cyl3d", "cart3d", ("rho", "phi", "z"), id="cyl3d->cart3d"),
+        pytest.param("sph3d", "cart3d", ("r", "theta", "phi"), id="sph3d->cart3d"),
+    ]
+    ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
+
+    VALUES: ClassVar = {
+        "x": 1.3,
+        "y": 2.1,
+        "z": 0.7,
+        "r": 2.5,
+        "rho": 2.0,
+        "theta": 0.7,
+        "phi": 0.9,
+    }
+    UNITS: ClassVar = {"theta": "rad", "phi": "rad"}  # everything else a length
+
+    def _unit(self, key: str) -> str:
+        return self.UNITS.get(key, "m")
 
     def _dict(self, keys, wrap):
-        return {k: wrap(self.VALUES[k]) for k in keys}
+        return {k: wrap(self.VALUES[k], self._unit(k)) for k in keys}
 
-    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
     def test_a_unitful_dict_agrees_with_the_closed_form(self, frm, to, keys) -> None:
         """The dict route must match calling the closed form directly."""
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        at = self._dict(keys, lambda v: u.Q(v, "m"))
+        at = self._dict(keys, u.Q)
         packed = u.Q(jnp.asarray([self.VALUES[k] for k in keys]), "m")
 
         from_dict = cxc.jac_pt_map(at, from_chart, to_chart)
@@ -276,7 +298,7 @@ class TestUnitfulDictsReachTheClosedForm:
         monkeypatch.setattr(jacobian, "_jac_via_autodiff", _boom)
 
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        at = self._dict(keys, lambda v: u.Q(v, "m"))
+        at = self._dict(keys, u.Q)
 
         assert cxc.jac_pt_map(at, from_chart, to_chart) is not None
 
@@ -286,7 +308,7 @@ class TestUnitfulDictsReachTheClosedForm:
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         n, ndim = 5, len(keys)
         at = {
-            k: u.Q(jnp.linspace(self.VALUES[k], self.VALUES[k] + 1.0, n), "m")
+            k: u.Q(jnp.linspace(self.VALUES[k], self.VALUES[k] + 1.0, n), self._unit(k))
             for k in keys
         }
 
@@ -301,7 +323,7 @@ class TestUnitfulDictsReachTheClosedForm:
     def test_bare_arrays_keep_their_existing_route(self, frm, to, keys) -> None:
         """A dict of bare arrays is stacked and re-dispatched, as before."""
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        at = self._dict(keys, jnp.asarray)
+        at = {k: jnp.asarray(self.VALUES[k]) for k in keys}
         packed = jnp.asarray([self.VALUES[k] for k in keys])
 
         from_dict = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si)
@@ -310,7 +332,40 @@ class TestUnitfulDictsReachTheClosedForm:
         assert not isinstance(from_dict, ul.QuantityMatrix)
         assert_allclose(np.asarray(from_dict), np.asarray(direct), rtol=0)
 
-    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    @pytest.mark.parametrize(("frm", "to", "keys"), HETEROGENEOUS_PAIRS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_an_angle_column_is_per_the_caller_s_angle_unit(
+        self, frm, to, keys, angle_unit
+    ) -> None:
+        """A length beside an angle reaches the closed form through bare values.
+
+        The closed form differentiates with respect to radians, so each angular
+        column has to be rescaled and labelled per the unit the caller used.
+        Skipping that is a silent factor of 180/pi, so compare against
+        differentiating the transition map.
+        """
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = {
+            k: u.Q(
+                math.degrees(self.VALUES[k])
+                if angle_unit == "deg" and k in self.UNITS
+                else self.VALUES[k],
+                angle_unit if k in self.UNITS else "m",
+            )
+            for k in keys
+        }
+
+        # The module helper, not this file's same-named one: it keeps the
+        # units, which is half of what is being checked.
+        from coordinax._src.charts.jacobian import _jac_via_autodiff as via_autodiff
+
+        J = cxc.jac_pt_map(at, from_chart, to_chart)
+        expected = via_autodiff(at, from_chart, to_chart, None)
+
+        assert_allclose(np.asarray(J.value), np.asarray(expected.value), rtol=1e-12)
+        assert J.unit.to_tuple() == expected.unit.to_tuple()
+
+    @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
     def test_mixed_units_stay_on_autodiff_and_keep_their_labels(
         self, frm, to, keys
     ) -> None:
