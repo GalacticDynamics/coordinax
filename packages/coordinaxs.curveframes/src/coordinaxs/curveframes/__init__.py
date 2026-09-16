@@ -56,6 +56,7 @@ __all__ = (
     "SignedPlanarFrame",
     "TubularChart",
     "nearest_tau",
+    "SweptTube",
     "rate_of_strain",
 )
 
@@ -74,6 +75,7 @@ with install_import_hook("coordinaxs.curveframes"):
         LagrangianArcLength,
         SignedPlanarBuilder,
         SignedPlanarFrame,
+        SweptTube,
         TubularChart,
         nearest_tau,
         rate_of_strain,

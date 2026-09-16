@@ -23,6 +23,8 @@ import unxts.linalg as ul
 import unxt as u
 from coordinaxs.api.manifolds import metric_matrix
 
+from .swepttube import SweptTube
+
 _MSG_GAUGE = (
     "`rate_of_strain` is gauge-dependent off the curve axis (n1 or n2 is "
     "non-zero). Each slice's `(n1, n2)` labels are fixed by that slice's transport "
@@ -66,7 +68,9 @@ def rate_of_strain(
     ----------
     chart_at_time
         The slice family: given a time, the chart of the tube at that time.
-        Typically ``lambda t: TubularChart(BishopBuilder(AtTime(curve, t), ...))``.
+        A `SweptTube` is the intended form -- it owns the recipe and carries
+        one director across every slice. A bare callable still works, and then
+        the gauge is the caller's to get right; see ``assume_gauge_carried``.
     point
         Chart coordinates at which to evaluate, e.g.
         ``{"tau": ..., "n1": ..., "n2": ...}``.
@@ -76,7 +80,9 @@ def rate_of_strain(
         Opt out of the off-axis refusal. Set this only when the family carries
         one director across every slice -- by passing `initial_normal` rather
         than letting each `BishopBuilder` pick its own. It is an assertion by
-        the caller, not something this can verify (#870).
+        the caller, not something this can verify (#870). Unnecessary when
+        ``chart_at_time`` is a `SweptTube`, whose required ``director`` makes
+        the same assertion structurally.
 
     Notes
     -----
@@ -138,7 +144,16 @@ def rate_of_strain(
 
     d_gamma = jax.jacfwd(gamma)(t.ustrip(t_unit))
 
-    if not assume_gauge_carried:
+    # A `SweptTube` carries one declared director across every slice, which is
+    # exactly the assertion `assume_gauge_carried` exists to extract from a
+    # caller who wrote the family as a lambda. Having chosen a gauge is not the
+    # same as having chosen a *correct* one -- a director that does not follow
+    # a rotating body still reports drift as strain, measured 7.085e-03 where
+    # an isometry demands zero -- but the choice is now the caller's and is
+    # visible in their code, which is all this guard ever asked for (#829).
+    gauge_declared = assume_gauge_carried or isinstance(chart_at_time, SweptTube)
+
+    if not gauge_declared:
         # Deferred, and threaded through the value that is returned. A Python
         # `float(n)` here was the *only* thing stopping `jit`/`vmap` over
         # `point` -- the chart itself traces fine -- and an `error_if` whose
