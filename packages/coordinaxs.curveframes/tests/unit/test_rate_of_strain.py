@@ -13,6 +13,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from coordinaxs.api.manifolds import metric_matrix
 
 import unxt as u
 
@@ -170,6 +171,31 @@ def test_a_rigid_rotation_gives_no_strain_off_axis() -> None:
         assume_gauge_carried=True,
     )
     assert np.abs(np.asarray(k.value)).max() < 1e-5
+
+
+def test_only_the_longitudinal_component_can_be_nonzero(k_deforming) -> None:
+    """`K` is longitudinal, whatever the name suggests (#870).
+
+    `n1`, `n2` are Cartesian in an orthonormal normal plane, so
+    `gamma_nn = delta_ij` at every offset, and `d_t` of a constant is zero. A
+    tube doubling in radius reports the same `K` as one holding it, which the
+    docstring now says out loud.
+    """
+    assert np.abs(k_deforming[0, 0]) > 0.1  # the one that carries the strain
+    assert np.abs(k_deforming[1:, 1:]).max() < 1e-15
+    assert np.abs(k_deforming[0, 1:]).max() < 1e-10
+
+
+def test_the_normal_plane_metric_is_the_identity() -> None:
+    """The reason the block above is zero, pinned at the source."""
+    ch = _family(stretch_and_bend)(u.Q(T0, "s"))
+    for n1, n2 in [(0.0, 0.0), (0.2, 0.1), (0.5, 0.4)]:
+        at = {"tau": u.Q(S0, "km"), "n1": u.Q(n1, "km"), "n2": u.Q(n2, "km")}
+        g = np.asarray(metric_matrix(ch.M, at, ch).matrix.ustrip(""))
+
+        # One ulp, not exact: the block is built from the Jacobian rather
+        # than read off symbolically. Measured 2.22e-16 at all three offsets.
+        assert np.abs(g[1:, 1:] - np.eye(2)).max() < 1e-15
 
 
 def test_a_static_curve_does_not_deform() -> None:
