@@ -80,6 +80,24 @@ def rate_of_strain(
 
     Notes
     -----
+    **Longitudinal only.** The name invites the opposite expectation, but in
+    exact arithmetic $K_{n_in_j}=0$ and $K_{\tau n_i}=0$, leaving
+    $K_{\tau\tau}$ the only component that can carry anything. $n_1, n_2$ are
+    Cartesian coordinates in an orthonormal normal plane, so
+    $\gamma_{n_in_j}=\delta_{ij}$ at every offset whatever the tube does, and
+    $\partial_t$ of a constant is zero.
+
+    What comes back is that zero at floating-point noise, not exactly it: the
+    metric is built from the Jacobian rather than read off symbolically, and
+    $\partial_t$ runs through a `diffrax` solve. Measured on a curve that
+    stretches and bends, against $K_{\tau\tau}=0.8176$: the normal block at
+    ``2.8e-17``, the mixed block at ``7.5e-12``, and $\gamma_{n_in_j}$ within
+    one ulp of $\delta_{ij}$. Compare against a tolerance, not against zero.
+
+    Radial inflation and cross-sectional shear are not represented here at
+    all; a tube doubling in radius reports the same $K$ as one holding it.
+    What this measures is the rate the *labelling along the curve* stretches.
+
     The value depends on the *labelling*, and correctly so. A material
     parametrisation shows the tube genuinely stretching; wrapping the same
     curve in `ArcLength` holds the metric near unit-speed, so its rate of
