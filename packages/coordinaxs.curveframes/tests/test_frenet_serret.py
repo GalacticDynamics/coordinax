@@ -245,3 +245,66 @@ class TestTorsion:
         )
         with pytest.raises(Exception, match="torsion"):
             b.torsion(u.Q(0.0, "s"))
+
+
+def _power_curve(n: int):
+    """``(t, t^n, 0)`` km: an inflection at ``t = 0`` of order ``n - 2``."""
+
+    def curve(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        t = tau.ustrip("s")
+        return u.Q(jnp.stack([t, t**n, jnp.zeros_like(t)]), "km")
+
+    return curve
+
+
+class TestInflectionParity:
+    """Whether the refusal at an inflection is *necessary* turns on parity.
+
+    `gamma''_perp` vanishes to order ``n - 2`` on ``(t, t^n, 0)``. At **odd**
+    order the normal flips across the point and there is genuinely no value to
+    return. At **even** order it does not: the two-sided limit exists, so the
+    refusal is conservative rather than forced.
+
+    Both are refused, and that is the current, deliberate behaviour -- see
+    GalacticDynamics/coordinax#887. These tests pin it so the distinction
+    lives in the suite rather than only in an issue.
+    """
+
+    @pytest.mark.parametrize(("n", "dot"), [(3, -1.0), (4, 1.0), (5, -1.0), (6, 1.0)])
+    def test_two_sided_limit_agrees_only_at_even_order(
+        self, n: int, dot: float
+    ) -> None:
+        """Odd order flips the normal; even order does not."""
+        b = cxfc.FrenetSerretBuilder(_power_curve(n), "s")
+        n_minus = b.normal(u.Q(-1e-3, "s")).value
+        n_plus = b.normal(u.Q(1e-3, "s")).value
+        np.testing.assert_allclose(jnp.dot(n_minus, n_plus), dot, atol=1e-6)
+
+    @pytest.mark.parametrize("n", [3, 4, 5, 6])
+    def test_all_orders_are_refused_at_the_inflection(self, n: int) -> None:
+        """Including the even ones, whose limit exists. Conservative by design."""
+        b = cxfc.FrenetSerretBuilder(_power_curve(n), "s")
+        with pytest.raises(Exception, match="curvature"):
+            b.rotation_matrix(u.Q(0.0, "s"))
+
+    def test_the_message_distinguishes_the_two_cases(self) -> None:
+        """A refusal that overstates its own necessity is a bad error message.
+
+        The even-order case is refused for a *computational* reason, not a
+        mathematical one, and the message must not claim otherwise.
+        """
+        b = cxfc.FrenetSerretBuilder(_power_curve(4), "s")
+        with pytest.raises(Exception, match="curvature") as exc:
+            b.rotation_matrix(u.Q(0.0, "s"))
+        msg = str(exc.value)
+        assert "odd-order" in msg
+        assert "even-order" in msg
+
+    def test_the_message_names_both_alternatives(self) -> None:
+        """`SignedPlanarBuilder` is the cheaper answer on a planar curve."""
+        b = cxfc.FrenetSerretBuilder(_power_curve(4), "s")
+        with pytest.raises(Exception, match="curvature") as exc:
+            b.rotation_matrix(u.Q(0.0, "s"))
+        msg = str(exc.value)
+        assert "BishopBuilder" in msg
+        assert "SignedPlanarBuilder" in msg

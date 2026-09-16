@@ -36,11 +36,19 @@ from .base import (
 )
 
 _MSG_ZERO_CURVATURE = (
-    "the Frenet--Serret frame is undefined where the curvature vanishes: the "
-    "normal direction is not determined, and the triad would be all-NaN. That "
-    "is every straight segment and every inflection, not an edge case. Use "
-    "`BishopBuilder` instead: its rotation-minimising frame stays defined "
-    "where the curvature vanishes."
+    "the Frenet--Serret frame cannot be computed where the curvature "
+    "vanishes: the normal is the Gram--Schmidt rejection of gamma'' from the "
+    "tangent, normalised, and that rejection is 0/0 here. That is every "
+    "straight segment and every inflection, not an edge case. Whether the "
+    "refusal is *forced* depends on the order at which the rejection "
+    "vanishes: at a generic, odd-order inflection the normal flips across the "
+    "point and there is no value to return, but at an even-order one the "
+    "two-sided limit exists and this refusal is merely conservative -- "
+    "recovering it would need the vanishing order, a discrete quantity that "
+    "is not JIT-traceable and is itself discontinuous in families. Use "
+    "`BishopBuilder`, whose rotation-minimising frame stays defined wherever "
+    "the curve is regular; or, on a planar curve, `SignedPlanarBuilder`, "
+    "whose normal is continuous through an inflection."
 )
 
 
@@ -168,6 +176,22 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
            get $\mathbf{N}$.
         3. Cross product: $\mathbf{B} = \mathbf{T} \times \mathbf{N}$.
         4. Stack rows into a $3 \times 3$ matrix.
+
+        Notes
+        -----
+        Where the curvature vanishes this raises rather than returning NaN.
+        Whether that refusal is *forced* turns on the order at which the
+        Gram--Schmidt rejection of $\gamma''$ vanishes. At a generic,
+        odd-order inflection the normal flips sign across the point, so there
+        is genuinely nothing to return. At an even-order one it does not: the
+        two-sided limit exists and the refusal is conservative.
+
+        Recovering the even-order value would require determining that order,
+        which is a discrete quantity -- not JIT-traceable when unknown, and
+        discontinuous in families, since $t^4$ deformed to
+        $t^3 + \epsilon t^4$ changes the answer abruptly. A generic
+        inflection is odd-order, so refusing is right in the common case.
+        See GalacticDynamics/coordinax#887.
 
         Examples
         --------
