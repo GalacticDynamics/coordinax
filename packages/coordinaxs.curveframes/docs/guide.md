@@ -278,7 +278,7 @@ The **Bishop transform** (also called rotation-minimising or parallel-transport 
 | Field | Meaning |
 | --- | --- |
 | `tau_0` | reference parameter where the initial frame is defined (a leaf); `None` resolves to `Q(0.0, tau_unit)` |
-| `initial_normal` | initial $\mathbf{U}_{1,0}$ (a leaf), or `None` for Gram–Schmidt auto-selection |
+| `initial_normal` | initial $\mathbf{U}_{1,0}$ (a leaf), or `"auto"` for Gram–Schmidt; **required** |
 
 …plus `diffeqsolver`, a single [`diffraxtra.DiffEqSolver`](https://github.com/GalacticDynamics/diffraxtra) holding the whole `diffrax` configuration — solver, step-size controller, adjoint, step budget — covered in [Configuring the solve](#configuring-the-solve). It is a _static_ field, so it adds no pytree leaves and a `jax.tree.map` over the curve's parameters cannot reach it.
 

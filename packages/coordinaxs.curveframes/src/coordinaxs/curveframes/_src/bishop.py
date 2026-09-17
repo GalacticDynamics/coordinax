@@ -104,8 +104,8 @@ _MSG_STRADDLES_TAU_0 = (
 
 _MSG_PARALLEL_NORMAL = (
     "`initial_normal` is parallel to the tangent at tau_0; it has no component "
-    "in the normal plane. Pass a vector that is not along the tangent, or leave "
-    "it `None` to have one chosen automatically."
+    "in the normal plane. Pass a vector that is not along the tangent, or "
+    '`initial_normal="auto"` to have one chosen automatically.'
 )
 
 
