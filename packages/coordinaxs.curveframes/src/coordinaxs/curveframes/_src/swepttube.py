@@ -67,10 +67,10 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     r"""One-parameter family of tubular slices: $t \mapsto$ `TubularChart`.
 
     The 4-D object whose two 3-D sections are the *spatial slice* (time pinned,
-    coordinates $(\sigma, n_1, n_2)$) and the *worldtube* (station pinned,
-    coordinates $(t, n_1, n_2)$). Callers used to write the family out as a
-    lambda; owning it is what lets one gauge be carried across every slice
-    rather than each slice picking its own.
+    coordinates $(\tau, n_1, n_2)$ -- the names `TubularChart` actually uses)
+    and the *worldtube* (station pinned, coordinates $(t, n_1, n_2)$).
+    Callers used to write the family out as a lambda; owning it is what lets
+    one gauge be settled once rather than per slice.
 
     Parameters
     ----------

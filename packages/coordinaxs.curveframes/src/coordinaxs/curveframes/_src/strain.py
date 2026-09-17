@@ -68,9 +68,11 @@ def rate_of_strain(
     ----------
     chart_at_time
         The slice family: given a time, the chart of the tube at that time.
-        A `SweptTube` is the intended form -- it owns the recipe and carries
-        one director across every slice. A bare callable still works, and then
-        the gauge is the caller's to get right; see ``assume_gauge_carried``.
+        A `SweptTube` is the intended form: it owns the recipe and settles
+        the gauge, either by carrying one declared director across every slice
+        (the Bishop path) or by using a builder that needs no seed and is
+        already equivariant (`FrenetSerretBuilder`). A bare callable still
+        works, and then the gauge is the caller's; see ``assume_gauge_carried``.
     point
         Chart coordinates at which to evaluate, e.g.
         ``{"tau": ..., "n1": ..., "n2": ...}``.
@@ -81,8 +83,8 @@ def rate_of_strain(
         one director across every slice -- by passing `initial_normal` rather
         than letting each `BishopBuilder` pick its own. It is an assertion by
         the caller, not something this can verify (#870). Unnecessary when
-        ``chart_at_time`` is a `SweptTube`, whose required ``director`` makes
-        the same assertion structurally.
+        ``chart_at_time`` is a `SweptTube`: it has settled the gauge at
+        construction, by a required director or by a seedless builder.
 
     Notes
     -----
@@ -144,13 +146,18 @@ def rate_of_strain(
 
     d_gamma = jax.jacfwd(gamma)(t.ustrip(t_unit))
 
-    # A `SweptTube` carries one declared director across every slice, which is
-    # exactly the assertion `assume_gauge_carried` exists to extract from a
-    # caller who wrote the family as a lambda. Having chosen a gauge is not the
-    # same as having chosen a *correct* one -- a director that does not follow
-    # a rotating body still reports drift as strain, measured 7.085e-03 where
-    # an isometry demands zero -- but the choice is now the caller's and is
-    # visible in their code, which is all this guard ever asked for (#829).
+    # A `SweptTube` has settled the gauge at construction, which is what
+    # `assume_gauge_carried` exists to extract from a caller who wrote the
+    # family as a lambda. Two ways, and the guard lifts for both: a declared
+    # director carried across every slice (Bishop), or a builder that needs no
+    # seed because the curve fixes its frame pointwise -- measured, a Frenet
+    # `SweptTube` with `director=None` gives 1.80e-16 under the same rigid
+    # rotation that makes a drifting Bishop gauge report 7.085e-03.
+    #
+    # Having settled it is not having settled it *well*: a director that does
+    # not follow a rotating body still reports drift as strain. But the choice
+    # is the caller's and visible in their code, which is all this ever asked
+    # for (#829).
     gauge_declared = assume_gauge_carried or isinstance(chart_at_time, SweptTube)
 
     if not gauge_declared:
