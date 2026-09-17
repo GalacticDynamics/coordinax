@@ -17,9 +17,30 @@ unless looked for. See #924.
 
 __all__: tuple[str, ...] = ()
 
+import importlib.util
+import pathlib
+import sys
+
 import pytest
 
-from scripts.api_report import _is_dispatched, dispatched_paths
+# Loaded by path, not imported. `scripts/` is not part of the installed
+# distribution, and the suite runs under `--import-mode=importlib`, which
+# deliberately leaves the rootdir off `sys.path` -- so `import scripts` works
+# under `python -m pytest` (which adds the cwd) and fails under the `pytest`
+# console script that nox and CI use. Loading the file directly works under
+# both, and does not put the repo root on the path for every other test.
+_SPEC = importlib.util.spec_from_file_location(
+    "_api_report_under_test",
+    pathlib.Path(__file__).resolve().parents[2] / "scripts" / "api_report.py",
+)
+assert _SPEC is not None
+assert _SPEC.loader is not None
+_api_report = importlib.util.module_from_spec(_SPEC)
+sys.modules[_SPEC.name] = _api_report
+_SPEC.loader.exec_module(_api_report)
+
+_is_dispatched = _api_report._is_dispatched
+dispatched_paths = _api_report.dispatched_paths
 
 #: A dispatched verb's own qualified path, and a same-named module beside it.
 _EXCLUDED = frozenset(
