@@ -14,7 +14,6 @@ from quax import register
 
 import quaxed.lax as qlax
 import unxt as u
-from unxt.quantity import Quantity
 
 from .base import AbstractDistance
 
@@ -32,7 +31,7 @@ def atan2_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.
     Q(0.32175055, 'rad')
 
     """
-    return qlax.atan2(convert(x, Quantity), convert(y, Quantity))  # ty: ignore[invalid-return-type]
+    return qlax.atan2(convert(x, u.Q), convert(y, u.Q))  # ty: ignore[invalid-return-type]
 
 
 # ==============================================================================
@@ -232,7 +231,7 @@ def div_p_arraylike_abstractdistance(x: ArrayLike, y: AbstractDistance, /) -> u.
 
 
 @register(lax.cbrt_p)
-def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
+def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Q:
     """Cube root of a distance.
 
     >>> import quaxed.numpy as jnp
@@ -242,7 +241,7 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantit
     Q(2., 'm(1/3)')
 
     """
-    return qlax.cbrt(convert(x, Quantity), accuracy=accuracy)  # ty: ignore[invalid-return-type]
+    return qlax.cbrt(convert(x, u.Q), accuracy=accuracy)  # ty: ignore[invalid-return-type]
 
 
 # ==============================================================================
@@ -270,7 +269,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
 @register(lax.dot_general_p)
 def dot_general_p_abstractdistances(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
-) -> Quantity:
+) -> u.Q:
     """Dot product of two Distances.
 
     This is a dot product of two Distances.
@@ -300,14 +299,14 @@ def dot_general_p_abstractdistances(
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
-    return Quantity(value, unit=lhs.unit * rhs.unit)
+    return u.Q(value, unit=lhs.unit * rhs.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.integer_pow_p)
-def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> Quantity:
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> u.Q:
     """Integer power of a Distance.
 
     >>> from coordinax.distances import Distance
@@ -316,7 +315,7 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> Quantit
     Q(8, 'm3')
 
     """
-    return qlax.integer_pow(convert(x, Quantity), y)  # ty: ignore[invalid-return-type]
+    return qlax.integer_pow(convert(x, u.Q), y)  # ty: ignore[invalid-return-type]
 
 
 # ==============================================================================
@@ -351,7 +350,7 @@ def neg_p_abstractdistance(x: AbstractDistance, /) -> u.Q:
 
 
 @register(lax.pow_p)
-def pow_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> Quantity:
+def pow_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> u.Q:
     """Power of a Distance by redispatching to Quantity.
 
     >>> import math
@@ -363,14 +362,14 @@ def pow_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> Qu
     Q(1000., 'm3')
 
     """
-    return convert(x, Quantity) ** y
+    return convert(x, u.Q) ** y
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Q:
     """Square root of a quantity.
 
     >>> import quaxed.numpy as jnp
@@ -386,14 +385,14 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantit
     Q(3., 'mas(1/2)')
 
     """
-    return qlax.sqrt(convert(x, Quantity), accuracy=accuracy)  # ty: ignore[invalid-return-type]
+    return qlax.sqrt(convert(x, u.Q), accuracy=accuracy)  # ty: ignore[invalid-return-type]
 
 
 # ==============================================================================
 
 
 @register(lax.tan_p)
-def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity:
+def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Q:
     """Tangent of a distance kind, degrading to a quantity.
 
     Only the angle-valued kinds have a tangent; `Distance` and `DistanceModulus`
@@ -406,4 +405,4 @@ def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> Quantity
     Q(4.3633...e-08, '')
 
     """
-    return qlax.tan(convert(x, Quantity), accuracy=accuracy)  # ty: ignore[invalid-return-type]
+    return qlax.tan(convert(x, u.Q), accuracy=accuracy)  # ty: ignore[invalid-return-type]
