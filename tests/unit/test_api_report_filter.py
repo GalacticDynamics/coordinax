@@ -96,8 +96,10 @@ def test_a_name_collision_is_not_excluded(path: str) -> None:
 def test_the_live_package_still_has_a_dispatched_surface_to_exclude() -> None:
     """If `pt_map` stops being dispatched, the filter is excluding nothing.
 
-    The script raises on this rather than report noise; this catches it here,
-    where the message can say why, instead of in CI.
+    This test *is* the safety mechanism. An earlier version of the script
+    raised at runtime as well; that was removed in `1ab230f3` because the job
+    is written never to fail, leaving the check here -- where it names the
+    cause -- rather than in a CI run nobody reads.
     """
     paths = dispatched_paths()
     assert any(p.endswith(".pt_map") for p in paths), (
