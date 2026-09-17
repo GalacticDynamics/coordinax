@@ -55,7 +55,13 @@ _BASELINE_REFS = ("upstream/main", "origin/main", "main")
 
 
 def _resolve_baseline(explicit: str | None) -> str | None:
-    """Return the first ref this checkout has, or `explicit` if it resolves."""
+    """Resolve the baseline: `explicit` if given, else the first `_BASELINE_REFS`.
+
+    An explicit ref that does not resolve returns `None` rather than falling
+    back. Falling back would compare against a *different* baseline than the
+    caller asked for and report the difference as though it were theirs, which
+    is worse than reporting nothing -- so the caller is told instead.
+    """
     for ref in (explicit,) if explicit else _BASELINE_REFS:
         done = subprocess.run(  # noqa: S603
             ["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],  # noqa: S607
@@ -132,6 +138,14 @@ def render(ref: str, changes: list[griffe.Breakage]) -> str:
     )
 
 
+def _emit(report: str) -> None:
+    """Print the report, and append it to the CI job summary when there is one."""
+    print(report)
+    if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+        with pathlib.Path(summary).open("a", encoding="utf-8") as fh:
+            fh.write(report)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Write the report; return 0 unless `--strict` and something changed."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -146,15 +160,19 @@ def main(argv: list[str] | None = None) -> int:
     ref = _resolve_baseline(args.ref)
     if ref is None:
         tried = args.ref or ", ".join(_BASELINE_REFS)
-        print(f"no baseline ref available (tried {tried}); nothing to compare")
-        return 0
+        # Written to the summary too, not just stdout: a missing baseline used
+        # to leave the job green with an empty summary, which reads exactly
+        # like "no API changes" and is the one outcome this must never fake.
+        _emit(
+            "### Public API\n\n**No report.** No baseline ref resolved "
+            f"(tried `{tried}`). Nothing was compared -- this is *not* a "
+            "statement that the API is unchanged. A shallow checkout is the "
+            "usual cause; this job needs `fetch-depth: 0`.\n"
+        )
+        return 1 if args.strict else 0
 
     changes = find_changes(ref)
-    report = render(ref, changes)
-    print(report)
-    if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
-        with pathlib.Path(summary).open("a", encoding="utf-8") as fh:
-            fh.write(report)
+    _emit(render(ref, changes))
     return 1 if (args.strict and changes) else 0
 
 

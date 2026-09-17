@@ -369,9 +369,6 @@ def build(s: nox.Session, /) -> None:
 
 ################################################################################
 
-if __name__ == "__main__":
-    nox.main()
-
 
 @session(uv_groups=["api"], uv_extras=["workspace"], reuse_venv=True)
 def api_report(s: nox.Session, /) -> None:
@@ -380,3 +377,7 @@ def api_report(s: nox.Session, /) -> None:
     Pass ``-- --strict`` to exit non-zero instead, for a release check.
     """
     s.run("python", "scripts/api_report.py", *s.posargs)
+
+
+if __name__ == "__main__":
+    nox.main()
