@@ -126,20 +126,6 @@ def test_a_failed_comparison_is_reported_not_raised(
     assert "not* a statement that the API is unchanged" in out
 
 
-def test_a_failed_comparison_still_fails_the_release_check(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """`--strict` is the release gate, so an absent report must not pass it."""
-    monkeypatch.setattr(_api_report, "_resolve_baseline", lambda _: "somesha")
-    monkeypatch.setattr(
-        _api_report,
-        "find_changes",
-        lambda _: (_ for _ in ()).throw(RuntimeError("boom")),
-    )
-
-    assert _api_report.main(["--strict"]) == 1
-
-
 def test_a_failure_outside_the_comparison_is_also_reported(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

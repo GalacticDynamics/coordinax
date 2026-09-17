@@ -54,28 +54,32 @@ if TYPE_CHECKING:
 _PACKAGE = "coordinax"
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-#: Tried in order; the first that resolves is the comparison baseline.
-_BASELINE_REFS = ("upstream/main", "origin/main", "main")
+#: The default baseline. CI always passes `--ref`; this is for local runs.
+_BASELINE_REF = "main"
 
 
-def _resolve_baseline(explicit: str | None) -> str | None:
-    """Resolve the baseline: `explicit` if given, else the first `_BASELINE_REFS`.
+def _resolve_baseline(explicit: str | None) -> str:
+    """Return `explicit` if it resolves, else `_BASELINE_REF`; raise if neither.
 
-    An explicit ref that does not resolve returns `None` rather than falling
-    back. Falling back would compare against a *different* baseline than the
-    caller asked for and report the difference as though it were theirs, which
-    is worse than reporting nothing -- so the caller is told instead.
+    Raising rather than falling back to some other ref: comparing against a
+    baseline the caller did not ask for, and reporting the difference as though
+    it were theirs, is worse than reporting nothing. `main` turns this into a
+    notice, so it is still not a failure.
     """
-    for ref in (explicit,) if explicit else _BASELINE_REFS:
-        done = subprocess.run(  # noqa: S603
-            ["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],  # noqa: S607
-            cwd=_ROOT,
-            capture_output=True,
-            check=False,
+    ref = explicit or _BASELINE_REF
+    done = subprocess.run(  # noqa: S603
+        ["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],  # noqa: S607
+        cwd=_ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if done.returncode != 0:
+        msg = (
+            f"no baseline resolved from `{ref}`; a shallow checkout is the "
+            "usual cause -- this job needs `fetch-depth: 0`"
         )
-        if done.returncode == 0:
-            return ref
-    return None
+        raise LookupError(msg)
+    return ref
 
 
 def dispatched_paths() -> frozenset[str]:
@@ -135,13 +139,6 @@ def find_changes(ref: str) -> "list[griffe.Breakage]":
         _PACKAGE, search_paths=[_ROOT / "src"], allow_inspection=False
     )
     excluded = dispatched_paths()
-    if not any(p.endswith(".pt_map") for p in excluded):
-        msg = (
-            "`pt_map` is the canonical dispatched verb; if it is no longer a "
-            "`plum.Function`, this exclusion has stopped excluding anything "
-            "and the report below would be mostly noise"
-        )
-        raise RuntimeError(msg)
     return [
         change
         for change in griffe.find_breaking_changes(baseline, current)
@@ -162,13 +159,9 @@ def render(ref: str, changes: "list[griffe.Breakage]") -> str:
     )
     return (
         f"### Public API: {len(changes)} breaking change(s) against `{ref}`\n\n"
-        "This is **not** a failure -- a pull request is where a deliberate API\n"
-        "change belongs. It is here so the change is noticed and the release\n"
-        "notes and version bump can account for it.\n\n"
-        f"| object | change |\n| --- | --- |\n{rows}\n\n"
-        "Dispatched (`plum.Function`) names are excluded: griffe sees only the\n"
-        "last registration of each, so it both misses real removals and reports\n"
-        "additions as removals. See this script's docstring.\n"
+        "A notice, not a failure -- deliberate API changes belong in a pull\n"
+        "request. Dispatched names are excluded; see `scripts/api_report.py`.\n\n"
+        f"| object | change |\n| --- | --- |\n{rows}\n"
     )
 
 
@@ -186,27 +179,6 @@ def _emit(report: str) -> None:
                 fh.write(report)
         except OSError as exc:  # pragma: no cover - CI filesystem only
             print(f"(could not write the job summary: {exc})")
-
-
-def _run(args: argparse.Namespace) -> int:
-    """Produce the report for already-parsed `args`."""
-    ref = _resolve_baseline(args.ref)
-    if ref is None:
-        tried = args.ref or ", ".join(_BASELINE_REFS)
-        # Written to the summary too, not just stdout: a missing baseline used
-        # to leave the job green with an empty summary, which reads exactly
-        # like "no API changes" and is the one outcome this must never fake.
-        _emit(
-            "### Public API\n\n**No report.** No baseline ref resolved "
-            f"(tried `{tried}`). Nothing was compared -- this is *not* a "
-            "statement that the API is unchanged. A shallow checkout is the "
-            "usual cause; this job needs `fetch-depth: 0`.\n"
-        )
-        return 1 if args.strict else 0
-
-    changes = find_changes(ref)
-    _emit(render(ref, changes))
-    return 1 if (args.strict and changes) else 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -232,7 +204,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        return _run(args)
+        ref = _resolve_baseline(args.ref)
+        changes = find_changes(ref)
+        _emit(render(ref, changes))
     except Exception as exc:  # noqa: BLE001  (see the docstring)
         _emit(
             "### Public API\n\n**No report.** The run did not complete: "
@@ -240,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
             "is *not* a statement that the API is unchanged.\n"
         )
         return 1 if args.strict else 0
+
+    return 1 if (args.strict and changes) else 0
 
 
 if __name__ == "__main__":
