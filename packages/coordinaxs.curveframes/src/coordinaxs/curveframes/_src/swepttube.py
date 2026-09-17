@@ -41,6 +41,28 @@ _MSG_DIRECTOR_UNUSED = (
 )
 
 
+def _check_builder(builder: Any, /) -> None:
+    """Require ``builder`` to be a builder *class*.
+
+    Before `issubclass` reaches it, which raises a bare "arg 1 must be a class"
+    on an instance and -- worse -- accepts any *unrelated* class, sending
+    `builder=dict` on to be told it is a seedless builder.
+
+    A module-level function rather than inline in `__check_init__` so it can be
+    tested directly. Through the constructor the non-class branch is
+    unreachable wherever runtime typechecking is on, because the field
+    annotation rejects it first with a message that names neither the argument
+    nor the fix -- which left these lines uncovered while still being the ones
+    that run for a user with typechecking off.
+    """
+    if not isinstance(builder, type):
+        raise TypeError(
+            _MSG_NOT_A_BUILDER.format(what=f"a `{type(builder).__name__}` value")
+        )
+    if not issubclass(builder, AbstractCurveFrameBuilder):
+        raise TypeError(_MSG_NOT_A_BUILDER.format(what=f"`{builder.__name__}`"))
+
+
 class SweptTube(eqx.Module):  # type: ignore[misc]
     r"""One-parameter family of tubular slices: $t \mapsto$ `TubularChart`.
 
@@ -110,17 +132,7 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
         ``initial_normal`` one layer down, but with a different error and only
         once a slice is built -- too late to name the choice that was wrong.
         """
-        # Checked before `issubclass`, which raises a bare "arg 1 must be a
-        # class" on an instance and -- worse -- accepts any *unrelated* class,
-        # sending `builder=dict` into the "takes no seed" branch below to be
-        # told it is a seedless builder.
-        if not isinstance(self.builder, type):
-            what = f"a `{type(self.builder).__name__}` value"
-            raise TypeError(_MSG_NOT_A_BUILDER.format(what=what))
-        if not issubclass(self.builder, AbstractCurveFrameBuilder):
-            raise TypeError(
-                _MSG_NOT_A_BUILDER.format(what=f"`{self.builder.__name__}`")
-            )
+        _check_builder(self.builder)
 
         is_bishop = issubclass(self.builder, BishopBuilder)
         if is_bishop and self.director is None:

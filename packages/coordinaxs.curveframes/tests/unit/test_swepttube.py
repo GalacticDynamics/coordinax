@@ -6,6 +6,8 @@ at all, two directors, two different correct answers. No rule derived from the
 curve can produce both, which is why the library refuses to guess (#829, #870).
 """
 
+import re
+
 from jaxtyping import TypeCheckError
 from typing import Any
 
@@ -17,6 +19,7 @@ import pytest
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
+from coordinaxs.curveframes._src.swepttube import _check_builder
 
 BOUNDS = (u.Q(-1.0, "km"), u.Q(2.0, "km"))
 OFF_AXIS = {"tau": u.Q(0.5, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
@@ -153,6 +156,23 @@ def test_a_seedless_builder_needs_no_director() -> None:
     )
 
     assert tube(u.Q(0.0, "s")).components == ("tau", "n1", "n2")
+
+
+@pytest.mark.parametrize(
+    ("bad", "needle"),
+    [(object(), "`object` value"), ("BishopBuilder", "`str` value"), (dict, "`dict`")],
+)
+def test_the_builder_check_names_what_was_passed(bad, needle) -> None:
+    """Tested directly, not through the constructor.
+
+    There the non-class branch is unreachable wherever runtime typechecking is
+    on, because the field annotation rejects it first -- and those are exactly
+    the lines a user *without* typechecking hits.
+    """
+    with pytest.raises(TypeError, match="must be a builder"):
+        _check_builder(bad)
+    with pytest.raises(TypeError, match=re.escape(needle)):
+        _check_builder(bad)
 
 
 def test_a_builder_instance_is_refused() -> None:
