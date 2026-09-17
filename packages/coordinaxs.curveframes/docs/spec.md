@@ -285,7 +285,7 @@ $$
 
 ### Applying the Transform
 
-Exactly as for `FrenetSerretBuilder` ({ref}`curveframes-math-frenet-transform`): a `BishopBuilder` stores the curve $\boldsymbol{\gamma}$ (and `tau_unit`, `tau_0`, `initial_normal`), not $\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2$ as separate fields, and builds
+Exactly as for `FrenetSerretBuilder` ({ref}`curveframes-math-frenet-transform`): a `BishopBuilder` stores the curve $\boldsymbol{\gamma}$ (and `tau_unit`, `tau_0`, `normal_0`), not $\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2$ as separate fields, and builds
 
 $$
 B(\tau) = \mathrm{Translate}\bigl(-\boldsymbol{\gamma}(\tau)\bigr)\;\big|\;\mathrm{Rotate}\bigl(R(\tau)\bigr),
@@ -459,7 +459,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     - `tau_unit : unxt.AbstractUnit | None` — unit of the curve parameter. Static. `None` (the default) reads the unit off the parameter the builder is called with -- the station when one is pinned, otherwise the call-time $\tau$. Declare it for a curve that reads its argument's `.value` rather than converting, or for a raw (unitless) parameter.
     - `station : Any` — optional fixed curve parameter (a leaf); see `AbstractCurveFrameBuilder`.
     - `tau_0 : unxt.AbstractQuantity | None` — reference parameter where the initial frame is defined (a leaf). `None` is resolved to `Q(0.0, tau_unit)` by `__post_init__` when the unit is declared, and at call time when it is being inferred. Only the declared case leaves it a pytree leaf; pass `tau_0` explicitly to differentiate through it otherwise.
-    - `initial_normal : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `"auto"` for the world-axis rule (Gram–Schmidt); **required**.
+    - `normal_0 : Any` — initial $\mathbf{U}_{1,0}$ (dimensionless 3-vector, a leaf), or `"auto"` for the world-axis rule (Gram–Schmidt); **required**.
     - `diffeqsolver : diffraxtra.DiffEqSolver` — the whole `diffrax` configuration (solver, step-size controller, adjoint, step budget) in one **static** field (hashable, contributes no array leaves, so the builder's pytree stays about the curve). Defaults below.
 
     `rotation_matrix(tau)` computes $R = [\mathbf{T}; \mathbf{U}_1; \mathbf{U}_2]$: $\mathbf{T}$ from the unit-aware first derivative of `curve`; $\mathbf{U}_1$ by solving the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1\cdot\mathbf{T}')\,\mathbf{T}$ from `tau_0` to the resolved parameter via the `diffeqsolver` (defaulting to `DiffEqSolver(Tsit5(), PIDController(rtol=1e-10, atol=1e-10), DirectAdjoint(), max_steps=16384)`); $\mathbf{U}_2 = \mathbf{T}\times\mathbf{U}_1$.
@@ -470,9 +470,9 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
 
     `rotation_matrices(taus)` evaluates a **1-D batch** of parameters from a *single* ODE solve, using `diffrax.SaveAt` on the already-rescaled $s \in [0, 1]$ interval. It returns `(N, 3, 3)`, matching `rotation_matrix` element for element, and is the preferred route when every $\tau$ lies on one side of `tau_0` — the gain scales with $N$ (~2.9x at 8 parameters, ~8.9x at 64, jitted). Every $\tau$ **must** share a side of `tau_0`: the transport marches outward in one monotonic sweep, so a straddling set is refused via `equinox.error_if` rather than silently split. Use `jax.vmap(rotation_matrix)` when the parameters straddle `tau_0`, when the batch is higher-rank, or on `FrenetSerretBuilder`, which has no batched accessor. A pinned `station` makes every $\tau$ name the same frame, so a batched $\tau$ is accepted there and answered by one solve.
 
-    Constructed directly — `BishopBuilder(curve, tau_unit=None, station=None, tau_0=None, initial_normal=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))`. The `None` default on `initial_normal` is a dataclass declaration, not a permitted value: `__check_init__` rejects it, so the argument is **required** — a dimensionless 3-vector, or `"auto"` for the world-axis rule. Omitting it raises, because the seed is the n-plane gauge and nothing in the curve fixes it. In practice: `BishopBuilder(curve, "s", initial_normal="auto")`, or `BishopBuilder(curve, "s", initial_normal=jnp.asarray([0.0, 0.0, 1.0]))`. There is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
+    Constructed directly — `BishopBuilder(curve, tau_unit=None, station=None, tau_0=None, normal_0=None, diffeqsolver=DiffEqSolver(Tsit5(), PIDController(1e-10, 1e-10), DirectAdjoint(), max_steps=16384))`. The `None` default on `normal_0` is a dataclass declaration, not a permitted value: `__check_init__` rejects it, so the argument is **required** — a dimensionless 3-vector, or `"auto"` for the world-axis rule. Omitting it raises, because the seed is the n-plane gauge and nothing in the curve fixes it. In practice: `BishopBuilder(curve, "s", normal_0="auto")`, or `BishopBuilder(curve, "s", normal_0=jnp.asarray([0.0, 0.0, 1.0]))`. There is no `from_curve`/`from_` classmethod on the builder; that convenience lives on `BishopFrame`.
 
-    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `initial_normal` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap` or, for a same-side batch, `rotation_matrices`. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
+    JAX compatibility: same as `FrenetSerretBuilder` — `curve`, `station`, `tau_0`, `normal_0` are dynamic leaves; `tau_unit` and `diffeqsolver` are static. `rotation_matrix` and `__call__` operate on scalar $\tau$; batching is via `jax.vmap` or, for a same-side batch, `rotation_matrices`. A plain `jax.jit` cannot hash a builder holding array leaves; use `eqx.filter_jit`.
 
     `act` dispatches on `TimeDep(BishopBuilder(...))`, identically to `FrenetSerretBuilder`.
 
@@ -491,7 +491,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
     Constructors:
 
     - `BishopFrame(base_frame, xop, xop_inv)` — direct construction.
-    - `from_curve(base_frame, curve, /, tau_unit=None, *, station=None, tau_0=None, initial_normal)` — `initial_normal` is keyword-only and **required**, so omission is caught by the call signature — convenience constructor that builds `BishopBuilder(curve, tau_unit, station, tau_0, initial_normal)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
+    - `from_curve(base_frame, curve, /, tau_unit=None, *, station=None, tau_0=None, normal_0)` — `normal_0` is keyword-only and **required**, so omission is caught by the call signature — convenience constructor that builds `BishopBuilder(curve, tau_unit, station, tau_0, normal_0)`, wraps it in `TimeDep`, and sets `xop_inv = xop.inverse`.
 
     Frame transitions:
 
@@ -512,7 +512,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "m")
 
 
-    b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), curve, "s", initial_normal="auto")
+    b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), curve, "s", normal_0="auto")
     op = cxf.frame_transition(cxf.Alice(), b_frame)
     tau = u.Q(0.0, "s")
     p_ambient = u.Q(jnp.array([1.0, 0.0, 0.0]), "m")

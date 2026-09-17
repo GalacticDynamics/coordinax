@@ -103,9 +103,9 @@ _MSG_STRADDLES_TAU_0 = (
 )
 
 _MSG_PARALLEL_NORMAL = (
-    "`initial_normal` is parallel to the tangent at tau_0; it has no component "
+    "`normal_0` is parallel to the tangent at tau_0; it has no component "
     "in the normal plane. Pass a vector that is not along the tangent, or "
-    '`initial_normal="auto"` to have one chosen automatically.'
+    '`normal_0="auto"` to have one chosen automatically.'
 )
 
 
@@ -127,15 +127,15 @@ def _float(x: Any, /) -> Array:
 
 
 _MSG_SEED_NOT_AUTO = (
-    "`initial_normal={seed!r}` is not a seed. The only string accepted is "
+    "`normal_0={seed!r}` is not a seed. The only string accepted is "
     '`"auto"`, naming the world-axis rule. Pass that, or a dimensionless '
     "3-vector."
 )
 
 _MSG_SEED_REQUIRED = (
-    "`initial_normal` is required: nothing in the curve fixes the n-plane "
+    "`normal_0` is required: nothing in the curve fixes the n-plane "
     "gauge, so leaving it out chose one silently. Pass a dimensionless "
-    '3-vector, or `initial_normal="auto"` for the world-axis rule -- see '
+    '3-vector, or `normal_0="auto"` for the world-axis rule -- see '
     "`BishopBuilder` for why that rule is not free (#870)."
 )
 
@@ -172,7 +172,7 @@ def _orthonormalize(v: Any, T0_val: Any) -> Any:
     return w / norm
 
 
-def _auto_initial_normal(T0_val: Any) -> Any:
+def _auto_normal_0(T0_val: Any) -> Any:
     r"""Choose an initial unit normal to the unit tangent $\mathbf{T}_0$.
 
     Gram--Schmidt against the standard basis vector least aligned with
@@ -182,12 +182,12 @@ def _auto_initial_normal(T0_val: Any) -> Any:
     Examples
     --------
     >>> import jax.numpy as jnp
-    >>> from coordinaxs.curveframes._src.bishop import _auto_initial_normal
+    >>> from coordinaxs.curveframes._src.bishop import _auto_normal_0
 
     When the tangent is along x, the initial normal avoids x:
 
     >>> T0 = jnp.array([1.0, 0.0, 0.0])
-    >>> U1 = _auto_initial_normal(T0)
+    >>> U1 = _auto_normal_0(T0)
     >>> float(jnp.dot(U1, T0))
     0.0
     >>> float(jnp.linalg.norm(U1))
@@ -240,7 +240,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     tau_0 : Quantity, optional
         Reference parameter where the initial frame is defined.  Defaults to
         ``Q(0.0, tau_unit)``.
-    initial_normal : array-like or ``"auto"``
+    normal_0 : array-like or ``"auto"``
         **Required.**  Dimensionless 3-vector for $\mathbf{U}_{1,0}$, or
         ``"auto"`` for the world-axis rule -- Gram--Schmidt against the
         tangent at ``tau_0``, which is what `None` used to select silently.
@@ -312,7 +312,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-    >>> bt = cxfc.BishopBuilder(helix, "s", initial_normal="auto")
+    >>> bt = cxfc.BishopBuilder(helix, "s", normal_0="auto")
     >>> bt.location(u.Q(0.0, "s"))
     Q([1., 0., 0.], 'm')
 
@@ -333,12 +333,12 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     The unit may be left off, in which case it is read off the parameter --
     which is a `Quantity`, so it states its own unit already:
 
-    >>> cxfc.BishopBuilder(helix, initial_normal="auto").tangent(u.Q(0.0, "s"))
+    >>> cxfc.BishopBuilder(helix, normal_0="auto").tangent(u.Q(0.0, "s"))
     Q([-0.        ,  0.70710678,  0.70710678], '')
 
     Declaring it is still accepted and gives the same answer:
 
-    >>> cxfc.BishopBuilder(helix, "s", initial_normal="auto").tangent(u.Q(0.0, "s"))
+    >>> cxfc.BishopBuilder(helix, "s", normal_0="auto").tangent(u.Q(0.0, "s"))
     Q([-0.        ,  0.70710678,  0.70710678], '')
 
     The Bishop frame works on a straight line (where Frenet-Serret is singular):
@@ -348,13 +348,13 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     ...     return u.Q(jnp.stack([t, jnp.zeros_like(t),
     ...                           jnp.zeros_like(t)]), "m")
 
-    >>> U1 = cxfc.BishopBuilder(line, "s", initial_normal="auto").normal1(u.Q(5.0, "s"))
+    >>> U1 = cxfc.BishopBuilder(line, "s", normal_0="auto").normal1(u.Q(5.0, "s"))
     >>> jnp.sqrt(jnp.sum(U1.value**2))
     Array(1., dtype=float64)
 
     """
 
-    gauge_field: ClassVar[str | None] = "initial_normal"
+    gauge_field: ClassVar[str | None] = "normal_0"
 
     curve: Callable[[Any], Any]
     """The constructing curve."""
@@ -375,7 +375,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     earliest that unit is known.
     """
 
-    initial_normal: Any = None
+    normal_0: Any = None
     """The initial U1 at ``tau_0`` -- a dimensionless 3-vector, or ``"auto"``.
 
     Required as an *input*: omitting it, or passing `None`, raises. What is
@@ -387,7 +387,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     auto_seed: bool = eqx.field(static=True, default=False, repr=False, kw_only=True)
     """Whether the world-axis rule was selected by name.
 
-    Set from ``initial_normal`` in ``__post_init__``. ``kw_only`` because
+    Set from ``normal_0`` in ``__post_init__``. ``kw_only`` because
     `BishopFrame.from_curve` forwards *positionally*.
     """
 
@@ -426,13 +426,13 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         *and* load-bearing, so a silent default let a caller depend on a choice
         they never made -- the defect behind #870.
         """
-        if self.initial_normal is None and not self.auto_seed:
+        if self.normal_0 is None and not self.auto_seed:
             raise ValueError(_MSG_SEED_REQUIRED)
         # `ValueError`, not the `TypeError` TRY004 asks for: `str` is an
         # accepted type here -- `"auto"` is legal -- so a near-miss is a bad
         # *value*.
-        if isinstance(self.initial_normal, str):
-            raise ValueError(_MSG_SEED_NOT_AUTO.format(seed=self.initial_normal))  # noqa: TRY004
+        if isinstance(self.normal_0, str):
+            raise ValueError(_MSG_SEED_NOT_AUTO.format(seed=self.normal_0))  # noqa: TRY004
 
     def __post_init__(self) -> None:
         """Resolve a `None` ``tau_0`` to zero in a *declared* ``tau_unit``.
@@ -446,9 +446,9 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         also declares its unit, and is the only way to say "start somewhere
         other than zero" regardless.
         """
-        if isinstance(self.initial_normal, str) and self.initial_normal == "auto":
+        if isinstance(self.normal_0, str) and self.normal_0 == "auto":
             self.auto_seed = True
-            self.initial_normal = None
+            self.normal_0 = None
 
         if self.tau_0 is None and self.tau_unit is not None:
             self.tau_0 = u.Q(0.0, self.tau_unit)
@@ -477,13 +477,13 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         tau_0 = u.Q(0.0 if tau_0_in is None else tau_0_in.ustrip(tau_unit), tau_unit)
 
         T0_val = self._tangent_at(tau_0).value
-        if self.initial_normal is not None:
+        if self.normal_0 is not None:
             # A supplied vector is NOT trusted to be unit or normal-plane: the
             # transport ODE conserves any error in it forever, so R would not
             # be a rotation.  Gram--Schmidt it exactly as the auto path does.
-            U1_0_val = _orthonormalize(_float(self.initial_normal), T0_val)
+            U1_0_val = _orthonormalize(_float(self.normal_0), T0_val)
         else:
-            U1_0_val = _auto_initial_normal(T0_val)
+            U1_0_val = _auto_normal_0(T0_val)
 
         # Pre-compute dT/dtau as a callable.  This avoids nesting AD inside
         # the ODE right-hand-side, which would be both slower and harder
@@ -559,7 +559,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> b = cxfc.BishopBuilder(circle, "s", normal_0="auto")
         >>> R = b.rotation_matrix(u.Q(0.0, "s"))
         >>> bool(jnp.allclose(R @ R.T, jnp.eye(3), atol=1e-6))
         True
@@ -612,7 +612,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> b = cxfc.BishopBuilder(circle, "s", normal_0="auto")
         >>> Rs = b.rotation_matrices(u.Q(jnp.asarray([0.5, 1.0]), "s"))
         >>> Rs.shape
         (2, 3, 3)
@@ -719,7 +719,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> b = cxfc.BishopBuilder(circle, "s", normal_0="auto")
         >>> b.tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
@@ -753,7 +753,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> b = cxfc.BishopBuilder(circle, "s", normal_0="auto")
         >>> U1 = b.normal1(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U1.value))
         1.0
@@ -782,7 +782,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> b = cxfc.BishopBuilder(circle, "s", normal_0="auto")
         >>> U2 = b.normal2(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U2.value))
         1.0
@@ -836,7 +836,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
     Build a frame relative to Alice:
 
     >>> b_frame = cxfc.BishopFrame.from_curve(
-    ...     cxf.Alice(), circle, "s", initial_normal="auto"
+    ...     cxf.Alice(), circle, "s", normal_0="auto"
     ... )
     >>> b_frame.base_frame
     Alice()
@@ -868,7 +868,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         *,
         station: Any = None,
         tau_0: u.AbstractQuantity | None = None,
-        initial_normal: Any,
+        normal_0: Any,
         diffeqsolver: DiffEqSolver = _DIFFEQSOLVER,
     ) -> "BishopFrame[FrameT]":
         r"""Construct a BishopFrame from a base frame and curve.
@@ -891,7 +891,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
             frame *field* along the curve rather than a moving frame.
         tau_0 : Quantity, optional
             Reference parameter.  Defaults to ``Q(0.0, tau_unit)``.
-        initial_normal : array-like or ``"auto"``
+        normal_0 : array-like or ``"auto"``
             **Required.**  Dimensionless 3-vector for $\mathbf{U}_{1,0}$, or
             ``"auto"`` for the world-axis rule.  See `BishopBuilder`.
         diffeqsolver : DiffEqSolver, optional
@@ -919,14 +919,12 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         ...                           jnp.zeros_like(t)]), "km")
 
         >>> frame = cxfc.BishopFrame.from_curve(
-        ...     cxf.Alice(), circle, "s", initial_normal="auto"
+        ...     cxf.Alice(), circle, "s", normal_0="auto"
         ... )
         >>> frame.base_frame
         Alice()
 
         """
-        builder = BishopBuilder(
-            curve, tau_unit, station, tau_0, initial_normal, diffeqsolver
-        )
+        builder = BishopBuilder(curve, tau_unit, station, tau_0, normal_0, diffeqsolver)
         xop = cxfm.TimeDep(builder)
         return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)

@@ -47,7 +47,7 @@ def jit_act(op: object, tau: object, x: object) -> object:
     """`eqx.filter_jit` handles builders carrying array leaves.
 
     Plain `jax.jit` cannot: a `BishopBuilder` holds ``tau_0`` (and possibly
-    ``initial_normal``) as real pytree leaves, so the operator argument is not
+    ``normal_0``) as real pytree leaves, so the operator argument is not
     a valid static argument.
     """
     return cxfm.act(op, tau, x)

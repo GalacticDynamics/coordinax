@@ -27,7 +27,7 @@ T0 = jnp.array([1.0, 0.0, 0.0])
     [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, jnp.nan, 0.0], [1.0, jnp.inf, 0.0]],
     ids=["parallel", "zero", "nan", "inf"],
 )
-def test_an_unusable_initial_normal_is_rejected(v: list[float]) -> None:
+def test_an_unusable_normal_0_is_rejected(v: list[float]) -> None:
     """`parallel` and `zero` are the original cases; the rest returned a NaN triad."""
     with pytest.raises(eqx.EquinoxRuntimeError, match="parallel"):
         _orthonormalize(jnp.array(v), T0)

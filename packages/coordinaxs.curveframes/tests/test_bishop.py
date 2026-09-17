@@ -3,7 +3,7 @@
 Structural guarantees shared with Frenet-Serret are asserted once in
 ``test_parallel_transport_contract.py``. What is left here is what Bishop does
 that Frenet-Serret cannot: stay well-defined on a curve with kappa=0, where the
-Frenet frame is singular -- plus the `tau_0` / `initial_normal` transport
+Frenet frame is singular -- plus the `tau_0` / `normal_0` transport
 parameters, which only a parallel-transported frame has.
 """
 
@@ -38,24 +38,22 @@ VEL = {"x": u.Q(0.1, "km/s"), "y": u.Q(0.2, "km/s"), "z": u.Q(-0.3, "km/s")}
 
 @pytest.fixture
 def circle_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+    return cxfc.BishopBuilder(circle, "s", normal_0="auto")
 
 
 @pytest.fixture
 def line_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(straight_line, "s", initial_normal="auto")
+    return cxfc.BishopBuilder(straight_line, "s", normal_0="auto")
 
 
 @pytest.fixture
 def helix_bishop() -> cxfc.BishopBuilder:
-    return cxfc.BishopBuilder(helix, "s", initial_normal="auto")
+    return cxfc.BishopBuilder(helix, "s", normal_0="auto")
 
 
 @pytest.fixture
 def line_bishop_frame() -> cxfc.BishopFrame:
-    return cxfc.BishopFrame.from_curve(
-        cxf.Alice(), straight_line, "s", initial_normal="auto"
-    )
+    return cxfc.BishopFrame.from_curve(cxf.Alice(), straight_line, "s", normal_0="auto")
 
 
 # ── Straight line (kappa = 0) ────────────────────────────────────────
@@ -96,7 +94,7 @@ class TestBishopOnStraightLine:
 
 
 class TestBishopTau0:
-    """`tau_0` and `initial_normal` set the reference of the transport."""
+    """`tau_0` and `normal_0` set the reference of the transport."""
 
     def test_default_tau_0(self, circle_bishop: cxfc.BishopBuilder):
         """Default tau_0 is Q(0, tau_unit)."""
@@ -110,14 +108,14 @@ class TestBishopTau0:
 
     def test_custom_tau_0_still_yields_a_unit_tangent(self):
         """Shifting the transport origin does not disturb the tangent."""
-        bt = cxfc.BishopBuilder(circle, "s", tau_0=u.Q(1.0, "s"), initial_normal="auto")
+        bt = cxfc.BishopBuilder(circle, "s", tau_0=u.Q(1.0, "s"), normal_0="auto")
         T = bt.tangent(u.Q(1, "s"))
         assert jnp.allclose(jnp.linalg.norm(T.value), 1, atol=1e-5)
 
-    def test_explicit_initial_normal_is_used(self):
-        """An explicit initial_normal fixes U1 at tau_0."""
+    def test_explicit_normal_0_is_used(self):
+        """An explicit normal_0 fixes U1 at tau_0."""
         n0 = jnp.array([0.0, 0.0, 1.0])
-        bt = cxfc.BishopBuilder(circle, "s", initial_normal=n0)
+        bt = cxfc.BishopBuilder(circle, "s", normal_0=n0)
         np.testing.assert_allclose(bt.normal1(u.Q(0.0, "s")).value, n0, atol=1e-6)
 
     def test_backwards_transport_is_a_rotation(self):
@@ -126,21 +124,21 @@ class TestBishopTau0:
         `odeint` integrates forward only, so a decreasing t_span silently
         yields NaN. With the default tau_0=0 that broke *every* negative tau.
         """
-        R = cxfc.BishopBuilder(helix, "s", initial_normal="auto").rotation_matrix(
+        R = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(
             u.Q(-1.5, "s")
         )
         assert jnp.all(jnp.isfinite(R))
         np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
         np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
 
-    def test_supplied_initial_normal_is_orthonormalized(self):
-        """A non-orthonormal `initial_normal` must not corrupt the frame.
+    def test_supplied_normal_0_is_orthonormalized(self):
+        """A non-orthonormal `normal_0` must not corrupt the frame.
 
         The transport ODE conserves any error in U1_0 forever, so a supplied
         vector that is not unit and normal-plane makes R not a rotation.
         """
         n0 = jnp.array([0.0, 1.0, 0.0])  # neither unit-normal to T nor unique
-        bt = cxfc.BishopBuilder(helix, "s", initial_normal=n0)
+        bt = cxfc.BishopBuilder(helix, "s", normal_0=n0)
         R = bt.rotation_matrix(u.Q(1.0, "s"))
         np.testing.assert_allclose(R @ R.T, jnp.eye(3), atol=1e-5)
         np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-5)
@@ -153,19 +151,19 @@ class TestBishopTau0:
             [0.0, 0.0, 0.0],  # no direction at all
         ],
     )
-    def test_initial_normal_parallel_to_tangent_raises(self, n0):
-        """A degenerate `initial_normal` fails loudly rather than as NaN.
+    def test_normal_0_parallel_to_tangent_raises(self, n0):
+        """A degenerate `normal_0` fails loudly rather than as NaN.
 
         The guard is on the rejection *relative* to ``|v|``, so shrinking a
         parallel vector must not sneak it past.
         """
         # Tangent of the straight line at tau_0 = 0 is +x.
-        bt = cxfc.BishopBuilder(straight_line, "s", initial_normal=jnp.array(n0))
+        bt = cxfc.BishopBuilder(straight_line, "s", normal_0=jnp.array(n0))
         with pytest.raises(Exception, match="parallel to the tangent"):
             bt.rotation_matrix(u.Q(1.0, "s"))
 
-    def test_small_initial_normal_is_a_direction_not_a_magnitude(self):
-        """A valid but tiny `initial_normal` must not be rejected.
+    def test_small_normal_0_is_a_direction_not_a_magnitude(self):
+        """A valid but tiny `normal_0` must not be rejected.
 
         `_orthonormalize` is homogeneous of degree zero in its input, so
         ``1e-12 * n`` and ``n`` are the *same* initial condition. An absolute
@@ -173,10 +171,8 @@ class TestBishopTau0:
         degenerate.
         """
         tau = u.Q(1.0, "s")
-        unit = cxfc.BishopBuilder(helix, "s", initial_normal=jnp.array([0.0, 0.0, 1.0]))
-        tiny = cxfc.BishopBuilder(
-            helix, "s", initial_normal=jnp.array([0.0, 0.0, 1e-12])
-        )
+        unit = cxfc.BishopBuilder(helix, "s", normal_0=jnp.array([0.0, 0.0, 1.0]))
+        tiny = cxfc.BishopBuilder(helix, "s", normal_0=jnp.array([0.0, 0.0, 1e-12]))
 
         R_tiny = tiny.rotation_matrix(tau)
         np.testing.assert_allclose(R_tiny, unit.rotation_matrix(tau), atol=1e-12)
@@ -242,7 +238,7 @@ class TestBishopTangentPropagation:
         agree to solver accuracy -- an oracle that needs no finite differences.
         """
         tau = u.Q(tau_val, "s")
-        bishop = cxfm.TimeDep(cxfc.BishopBuilder(helix, "s", initial_normal="auto"))
+        bishop = cxfm.TimeDep(cxfc.BishopBuilder(helix, "s", normal_0="auto"))
         frenet = cxfm.TimeDep(cxfc.FrenetSerretBuilder(helix, "s"))
 
         kw = {"at": AT}
@@ -342,7 +338,7 @@ def _orthonormality_error(R: jax.Array) -> float:
 #: The default solve configuration, reached the way a user reaches it. The
 #: builder's field is `static=True`, so `equinox.tree_at` cannot descend into
 #: it (a static field is not a leaf) -- `dataclasses.replace` is the move.
-_DEFAULT_SOLVE = cxfc.BishopBuilder(helix, "s", initial_normal="auto").diffeqsolver
+_DEFAULT_SOLVE = cxfc.BishopBuilder(helix, "s", normal_0="auto").diffeqsolver
 
 
 def _configured(**kw: object) -> cxfc.BishopBuilder:
@@ -352,7 +348,7 @@ def _configured(**kw: object) -> cxfc.BishopBuilder:
     whole point; see `test_partial_override_preserves_the_direct_adjoint`.
     """
     return dataclasses.replace(
-        cxfc.BishopBuilder(helix, "s", initial_normal="auto"),
+        cxfc.BishopBuilder(helix, "s", normal_0="auto"),
         diffeqsolver=dataclasses.replace(_DEFAULT_SOLVE, **kw),
     )
 
@@ -367,7 +363,7 @@ class TestBishopSolveConfiguration:
 
     def test_defaults_are_the_previous_constants(self):
         """The defaults reproduce the module-level constants they replaced."""
-        solve = cxfc.BishopBuilder(helix, "s", initial_normal="auto").diffeqsolver
+        solve = cxfc.BishopBuilder(helix, "s", normal_0="auto").diffeqsolver
         assert isinstance(solve, DiffEqSolver)
         assert solve.solver == dfx.Tsit5()
         assert solve.adjoint == dfx.DirectAdjoint()
@@ -382,7 +378,7 @@ class TestBishopSolveConfiguration:
         accurate to 9.403e-12 out at ``|tau| = 60``, where it also stays
         inside the 16384-step budget (~20 steps per unit of ``|dtau|``).
         """
-        R = cxfc.BishopBuilder(helix, "s", initial_normal="auto").rotation_matrix(
+        R = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(
             u.Q(tau_val, "s")
         )
         assert _orthonormality_error(R) < 1e-11
@@ -430,7 +426,7 @@ class TestBishopSolveConfiguration:
         # Configuring the solve adds no leaves: the `DiffEqSolver` carries ten
         # of its own (floats, ints, a bool, a function) once it is dynamic.
         assert len(jax.tree.leaves(bt)) == len(
-            jax.tree.leaves(cxfc.BishopBuilder(helix, "s", initial_normal="auto"))
+            jax.tree.leaves(cxfc.BishopBuilder(helix, "s", normal_0="auto"))
         )
 
         # So a tree_map over the curve parameters cannot reach the config.
@@ -446,9 +442,7 @@ class TestBishopSolveConfiguration:
         merely accepted.
         """
         tau = u.Q(7.0, "s")
-        default = cxfc.BishopBuilder(helix, "s", initial_normal="auto").rotation_matrix(
-            tau
-        )
+        default = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(tau)
         loose = _configured(
             stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3)
         ).rotation_matrix(tau)
@@ -461,9 +455,7 @@ class TestBishopSolveConfiguration:
     def test_alternative_solver_agrees_with_the_default(self):
         """A different solver is a different integrator, not a different answer."""
         tau = u.Q(7.0, "s")
-        default = cxfc.BishopBuilder(helix, "s", initial_normal="auto").rotation_matrix(
-            tau
-        )
+        default = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(tau)
         dopri = _configured(solver=dfx.Dopri5()).rotation_matrix(tau)
         np.testing.assert_allclose(dopri, default, atol=1e-9)
 
@@ -484,7 +476,7 @@ class TestBishopSolveConfiguration:
 
         def build(r: jax.Array) -> cxfc.BishopBuilder:
             return cxfc.BishopBuilder(
-                ParametricHelix(r), "s", diffeqsolver=solve, initial_normal="auto"
+                ParametricHelix(r), "s", diffeqsolver=solve, normal_0="auto"
             )
 
         one = jnp.asarray(1.0)
@@ -557,7 +549,7 @@ class TestBishopSolveConfiguration:
                     ParametricHelix(r),
                     "s",
                     diffeqsolver=dataclasses.replace(_DEFAULT_SOLVE, adjoint=adjoint),
-                    initial_normal="auto",
+                    normal_0="auto",
                 ).rotation_matrix(tau)[1, 2]
             )(jnp.asarray(1.0))
 
@@ -595,7 +587,7 @@ class TestBishopSolveConfiguration:
                     ParametricHelix(r),
                     "s",
                     diffeqsolver=dataclasses.replace(_DEFAULT_SOLVE, adjoint=bs),
-                    initial_normal="auto",
+                    normal_0="auto",
                 ).rotation_matrix(tau)[1, 2]
             )(jnp.asarray(1.0))
 
@@ -619,15 +611,13 @@ class TestBishopSolveConfiguration:
             _DEFAULT_SOLVE, stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3)
         )
         frame = cxfc.BishopFrame.from_curve(
-            cxf.Alice(), helix, "s", diffeqsolver=loose, initial_normal="auto"
+            cxf.Alice(), helix, "s", diffeqsolver=loose, normal_0="auto"
         )
 
         assert frame.xop.builder.diffeqsolver is loose
         assert _orthonormality_error(frame.xop.builder.rotation_matrix(tau)) > 1e-5
 
         # The default path is untouched.
-        default = cxfc.BishopFrame.from_curve(
-            cxf.Alice(), helix, "s", initial_normal="auto"
-        )
+        default = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s", normal_0="auto")
         assert default.xop.builder.diffeqsolver == _DEFAULT_SOLVE
         assert _orthonormality_error(default.xop.builder.rotation_matrix(tau)) < 1e-11

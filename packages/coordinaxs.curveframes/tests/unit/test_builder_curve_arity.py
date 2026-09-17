@@ -80,7 +80,7 @@ def test_two_argument_curve_without_a_station_is_rejected(builder, build_frame) 
 def test_the_error_names_the_remedy() -> None:
     """A message that only says "no" costs the reader the fix."""
     with pytest.raises(ValueError, match="AtTime"):
-        cxfc.BishopBuilder(curve2, "km", initial_normal="auto")
+        cxfc.BishopBuilder(curve2, "km", normal_0="auto")
 
 
 @pytest.mark.parametrize(
@@ -123,7 +123,7 @@ def test_the_frame_actually_evolves_with_time() -> None:
     genuinely differs between two times -- on a curve that bends, so the
     rotation moves and not merely the origin.
     """
-    b = cxfc.BishopBuilder(curve2, "km", station=u.Q(1.3, "km"), initial_normal="auto")
+    b = cxfc.BishopBuilder(curve2, "km", station=u.Q(1.3, "km"), normal_0="auto")
     l0 = b.location(u.Q(0.0, "s")).ustrip("km")
     l1 = b.location(u.Q(1.7, "s")).ustrip("km")
     t0 = b.tangent(u.Q(0.0, "s")).ustrip("")
@@ -140,17 +140,13 @@ def test_gradients_flow_to_time_and_to_the_station() -> None:
     ``d(y)/dt = s^2/10`` and ``d(y)/ds = t s / 5``.
     """
     s0_val, t_val = 1.3, 1.0
-    b = cxfc.BishopBuilder(
-        curve2, "km", station=u.Q(s0_val, "km"), initial_normal="auto"
-    )
+    b = cxfc.BishopBuilder(curve2, "km", station=u.Q(s0_val, "km"), normal_0="auto")
 
     d_dt = jax.grad(lambda tv: b.location(u.Q(tv, "s")).ustrip("km")[1])(t_val)
     assert jnp.allclose(d_dt, 0.1 * s0_val**2, atol=1e-10), d_dt
 
     def loc_of_station(sv: float) -> float:
-        moved = cxfc.BishopBuilder(
-            curve2, "km", station=u.Q(sv, "km"), initial_normal="auto"
-        )
+        moved = cxfc.BishopBuilder(curve2, "km", station=u.Q(sv, "km"), normal_0="auto")
         return moved.location(u.Q(t_val, "s")).ustrip("km")[1]
 
     d_ds = jax.grad(loc_of_station)(s0_val)
@@ -160,7 +156,7 @@ def test_gradients_flow_to_time_and_to_the_station() -> None:
 def test_at_time_makes_a_two_argument_curve_usable() -> None:
     """The remedy the message names has to actually work."""
     frozen = cxfc.AtTime(curve2, u.Q(0.5, "s"))
-    b = cxfc.BishopBuilder(frozen, "km", initial_normal="auto")
+    b = cxfc.BishopBuilder(frozen, "km", normal_0="auto")
     # gamma(s=1.3, t=0.5) = (1.3 * 1.25, 0.1 * 0.5 * 1.69, 0)
     got = b.location(u.Q(1.3, "km")).ustrip("km")
     assert jnp.allclose(got, jnp.array([1.625, 0.0845, 0.0]), atol=1e-8), got
@@ -168,7 +164,7 @@ def test_at_time_makes_a_two_argument_curve_usable() -> None:
 
 def test_a_defaulted_second_parameter_is_still_one_argument() -> None:
     """``def curve(tau, smoothing=0.1)`` is a one-argument curve."""
-    cxfc.BishopBuilder(curve_with_knob, "s", initial_normal="auto")
+    cxfc.BishopBuilder(curve_with_knob, "s", normal_0="auto")
 
 
 def test_a_variadic_second_parameter_is_still_one_argument() -> None:
@@ -189,8 +185,8 @@ def test_a_variadic_second_parameter_is_still_one_argument() -> None:
         del kw
         return curve1(tau)
 
-    cxfc.BishopBuilder(with_args, "s", initial_normal="auto")
-    cxfc.BishopBuilder(with_kwargs, "s", initial_normal="auto")
+    cxfc.BishopBuilder(with_args, "s", normal_0="auto")
+    cxfc.BishopBuilder(with_kwargs, "s", normal_0="auto")
 
 
 def test_a_required_keyword_only_second_parameter_is_rejected() -> None:
@@ -207,13 +203,13 @@ def test_a_required_keyword_only_second_parameter_is_rejected() -> None:
         return curve1(tau)
 
     with pytest.raises(TypeError, match="keyword-only"):
-        cxfc.BishopBuilder(kw_only, "s", initial_normal="auto")
+        cxfc.BishopBuilder(kw_only, "s", normal_0="auto")
 
 
 def test_a_partial_frozen_time_is_still_one_argument() -> None:
     """`ft.partial` leaves the bound parameter visible, with a default."""
     frozen = ft.partial(curve2, t=u.Q(0.5, "s"))
-    cxfc.BishopBuilder(frozen, "km", initial_normal="auto")
+    cxfc.BishopBuilder(frozen, "km", normal_0="auto")
 
 
 # --------------------------------------------------------------------------
@@ -242,7 +238,7 @@ def test_the_eulerian_station_composes_into_a_builder() -> None:
     """
     s0 = u.Q(1.3, "km")
     b = cxfc.BishopBuilder(
-        cxfc.ArcLength(curve2, "km"), "km", station=s0, initial_normal="auto"
+        cxfc.ArcLength(curve2, "km"), "km", station=s0, normal_0="auto"
     )
 
     # at t = 0 the curve is the straight line (s, 0, 0), so arc length 1.3
@@ -268,13 +264,13 @@ def test_eulerian_holds_arc_length_where_lagrangian_follows_the_material_point()
     """
     s0 = u.Q(1.3, "km")
     eul = cxfc.BishopBuilder(
-        cxfc.ArcLength(curve2, "km"), "km", station=s0, initial_normal="auto"
+        cxfc.ArcLength(curve2, "km"), "km", station=s0, normal_0="auto"
     )
     lag = cxfc.BishopBuilder(
         cxfc.LagrangianArcLength(curve2, u.Q(0.0, "s"), "km"),
         "km",
         station=s0,
-        initial_normal="auto",
+        normal_0="auto",
     )
 
     def radius(b, t_val: float) -> float:
@@ -302,10 +298,10 @@ def test_tau_unit_must_match_the_dimension_the_curve_exposes() -> None:
     """
     arc = cxfc.ArcLength(curve1, "s")  # exposes arc length: a *length*
     with pytest.raises(ValueError, match="dimension length"):
-        cxfc.BishopBuilder(arc, "s", initial_normal="auto")
+        cxfc.BishopBuilder(arc, "s", normal_0="auto")
     with pytest.raises(ValueError, match="dimension length"):
         cxfc.FrenetSerretBuilder(arc, "s")
-    cxfc.BishopBuilder(arc, "km", initial_normal="auto")  # correct, and still fine
+    cxfc.BishopBuilder(arc, "km", normal_0="auto")  # correct, and still fine
 
 
 def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
@@ -326,7 +322,7 @@ def test_the_wrong_unit_is_only_half_visible_when_unguarded() -> None:
         return u.Q(jnp.stack([d, jnp.zeros_like(d), jnp.zeros_like(d)]), "km")
 
     b = cxfc.BishopBuilder(
-        by_length, "s", initial_normal="auto"
+        by_length, "s", normal_0="auto"
     )  # a time, but the curve wants a length
     s_val = u.Q(1.0, "km")
 
@@ -349,10 +345,8 @@ def test_a_wrapper_forwards_the_dimension_it_wraps() -> None:
     frozen = cxfc.AtTime(cxfc.ArcLength(curve2, "km"), u.Q(0.5, "s"))
     assert frozen._param_dimension == "length"
     with pytest.raises(ValueError, match="dimension length"):
-        cxfc.BishopBuilder(frozen, "s", initial_normal="auto")
-    cxfc.BishopBuilder(
-        frozen, "km", initial_normal="auto"
-    )  # correct unit is unaffected
+        cxfc.BishopBuilder(frozen, "s", normal_0="auto")
+    cxfc.BishopBuilder(frozen, "km", normal_0="auto")  # correct unit is unaffected
 
     # A wrapper over a curve that claims nothing must claim nothing itself.
     assert cxfc.AtTime(curve2, u.Q(0.5, "s"))._param_dimension is None
@@ -389,12 +383,8 @@ def test_a_dimensionally_compatible_mismatch_is_absorbed_by_a_converting_curve()
     where the mismatch really does corrupt the answer.
     """
     tau = u.Q(2.0, "Gyr")
-    right = cxfc.BishopBuilder(curve_gyr, "Gyr", initial_normal="auto").rotation_matrix(
-        tau
-    )
-    wrong = cxfc.BishopBuilder(curve_gyr, "s", initial_normal="auto").rotation_matrix(
-        tau
-    )
+    right = cxfc.BishopBuilder(curve_gyr, "Gyr", normal_0="auto").rotation_matrix(tau)
+    wrong = cxfc.BishopBuilder(curve_gyr, "s", normal_0="auto").rotation_matrix(tau)
     assert jnp.allclose(right, wrong)
 
 
@@ -412,10 +402,9 @@ def test_a_value_reading_curve_is_the_case_that_needs_the_unit() -> None:
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "kpc")
 
     tau = u.Q(2.0, "Gyr")
-    truth = cxfc.BishopBuilder(by_value, "Gyr", initial_normal="auto").tangent(tau)
+    truth = cxfc.BishopBuilder(by_value, "Gyr", normal_0="auto").tangent(tau)
     assert jnp.allclose(
-        cxfc.BishopBuilder(by_value, initial_normal="auto").tangent(tau).value,
-        truth.value,
+        cxfc.BishopBuilder(by_value, normal_0="auto").tangent(tau).value, truth.value
     )
 
     # Silently wrong, and finite: `tangent` returns a plausible unit vector
@@ -423,7 +412,7 @@ def test_a_value_reading_curve_is_the_case_that_needs_the_unit() -> None:
     # the ODE gives up on a curve made 3.15e16 times stiffer -- so `tangent`
     # is what pins the *silent* failure.
     assert not jnp.allclose(
-        cxfc.BishopBuilder(by_value, "s", initial_normal="auto").tangent(tau).value,
+        cxfc.BishopBuilder(by_value, "s", normal_0="auto").tangent(tau).value,
         truth.value,
     )
 
@@ -452,17 +441,17 @@ def test_a_unitless_station_blames_the_station_not_the_call() -> None:
     already correct, so the message names the station and shows how to fix
     *that*.
     """
-    b = cxfc.BishopBuilder(curve_gyr, station=jnp.asarray(0.3), initial_normal="auto")
+    b = cxfc.BishopBuilder(curve_gyr, station=jnp.asarray(0.3), normal_0="auto")
     with pytest.raises(TypeError, match="pinned `station`"):
         b.tangent(u.Q(1.0, "Gyr"))  # a Quantity, and it does not help
 
     # Declaring the unit is the other way out, and does work.
     pinned = cxfc.BishopBuilder(
-        curve_gyr, "Gyr", station=jnp.asarray(0.3), initial_normal="auto"
+        curve_gyr, "Gyr", station=jnp.asarray(0.3), normal_0="auto"
     )
     assert jnp.allclose(
         pinned.tangent(u.Q(1.0, "Gyr")).value,
-        cxfc.BishopBuilder(curve_gyr, station=u.Q(0.3, "Gyr"), initial_normal="auto")
+        cxfc.BishopBuilder(curve_gyr, station=u.Q(0.3, "Gyr"), normal_0="auto")
         .tangent(u.Q(1.0, "Gyr"))
         .value,
     )
@@ -489,12 +478,10 @@ def test_a_raw_array_parameter_works_when_the_unit_is_declared(build_frame) -> N
             assert jnp.allclose(jnp.asarray(got), jnp.asarray(want)), (cls, meth)
 
     # A raw `station` takes the same funnel, so it is covered by the same wrap.
-    pinned = cxfc.BishopBuilder(
-        curve1, "s", station=jnp.asarray(0.3), initial_normal="auto"
-    )
+    pinned = cxfc.BishopBuilder(curve1, "s", station=jnp.asarray(0.3), normal_0="auto")
     assert jnp.allclose(
         pinned.tangent(quantity).value,
-        cxfc.BishopBuilder(curve1, "s", station=u.Q(0.3, "s"), initial_normal="auto")
+        cxfc.BishopBuilder(curve1, "s", station=u.Q(0.3, "s"), normal_0="auto")
         .tangent(quantity)
         .value,
     )
@@ -508,7 +495,7 @@ def test_the_dimension_guard_still_fires_on_an_inferred_unit() -> None:
     number is returned.
     """
     arc = cxfc.ArcLength(curve1, "s")  # exposes a *length*
-    b = cxfc.BishopBuilder(arc, initial_normal="auto")
+    b = cxfc.BishopBuilder(arc, normal_0="auto")
     with pytest.raises(ValueError, match="dimension length"):
         b.tangent(u.Q(1.0, "s"))
     b.tangent(u.Q(1.0, "km"))  # a length is what it wants, and needs no declaring
@@ -555,7 +542,7 @@ def test_the_curve_decides_whether_the_time_carries_a_unit(
     times" -- and that would break the raw-reading curve, which is the
     time-side analogue of the array fastpath.
     """
-    b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"), initial_normal="auto")
+    b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"), normal_0="auto")
 
     assert jnp.allclose(
         b.location(time).ustrip("km"), jnp.array([1.95, 0.169, 0.0]), atol=1e-5
@@ -592,7 +579,7 @@ def test_the_mismatched_form_fails(curve, time, err, match) -> None:
     the raw-reading curve cannot mix a time into a dimensionless expression.
     A broad catch would pass on an unrelated error and hide the regression.
     """
-    b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"), initial_normal="auto")
+    b = cxfc.BishopBuilder(curve, "km", station=u.Q(1.3, "km"), normal_0="auto")
     with pytest.raises(err, match=match):
         b.location(time)
 

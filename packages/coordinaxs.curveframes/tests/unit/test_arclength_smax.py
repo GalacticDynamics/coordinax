@@ -376,7 +376,7 @@ def test_chart_round_trip_at_and_near_the_tau_zero_boundary(s_val: float) -> Non
     """
     s_max = u.Q(_CHART_S_MAX_KM, "km")
     arc = cxfc.ArcLength(helix, "s", s_max=s_max)
-    bishop = cxfc.BishopBuilder(arc, "km", initial_normal="auto")
+    bishop = cxfc.BishopBuilder(arc, "km", normal_0="auto")
     ch = cxfc.TubularChart(bishop, tau_bounds=(u.Q(0.0, "km"), s_max))
 
     on_curve = ch.builder.location(u.Q(s_val, "km"))
@@ -397,7 +397,7 @@ def test_bishop_wrapped_arclength_survives_jacfwd(
     def f(theta_val: float) -> float:
         arc = cxfc.ArcLength(Helix(u.Q(theta_val, "km")), "s", s_max=s_max)
         return (
-            cxfc.BishopBuilder(arc, "km", initial_normal="auto")
+            cxfc.BishopBuilder(arc, "km", normal_0="auto")
             .location(u.Q(2.0, "km"))
             .ustrip("km")[2]
         )

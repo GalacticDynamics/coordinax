@@ -52,13 +52,13 @@ def test_the_builder_itself_still_accepts_a_pinned_station(
 def test_an_unpinned_one_argument_builder_still_charts() -> None:
     """The control: dropping `station=` is the remedy the message names."""
     ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(circle, "s", initial_normal="auto"), tau_bounds=BOUNDS
+        cxfc.BishopBuilder(circle, "s", normal_0="auto"), tau_bounds=BOUNDS
     )
     assert ch.components == ("tau", "n1", "n2")
 
 
 def test_a_worldtube_still_charts() -> None:
     """A station on a *two*-argument curve is required, not refused."""
-    b = cxfc.BishopBuilder(two_arg, "s", station=STATION, initial_normal="auto")
+    b = cxfc.BishopBuilder(two_arg, "s", station=STATION, normal_0="auto")
     ch = cxfc.TubularChart(b, tau_bounds=BOUNDS)
     assert ch.is_time_dependent

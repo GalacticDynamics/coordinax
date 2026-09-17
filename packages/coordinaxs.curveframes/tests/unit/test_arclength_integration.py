@@ -23,7 +23,7 @@ def _chart(builder_cls, build_frame):
 
 
 def test_a_builder_accepts_an_arc_length_curve_unchanged() -> None:
-    b = cxfc.BishopBuilder(cxfc.ArcLength(helix, "s"), "km", initial_normal="auto")
+    b = cxfc.BishopBuilder(cxfc.ArcLength(helix, "s"), "km", normal_0="auto")
     R = b.rotation_matrix(u.Q(1.0, "km"))
     assert jnp.allclose(jnp.linalg.norm(R[0]), 1.0, atol=1e-6)
 

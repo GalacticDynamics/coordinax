@@ -60,9 +60,7 @@ def test_the_message_points_at_the_frame_that_does_work() -> None:
     with pytest.raises(Exception, match="BishopBuilder"):
         builder.normal(u.Q(0.0, "s"))
     # ...and it genuinely works there.
-    got = cxfc.BishopBuilder(straight, "s", initial_normal="auto").normal1(
-        u.Q(0.0, "s")
-    )
+    got = cxfc.BishopBuilder(straight, "s", normal_0="auto").normal1(u.Q(0.0, "s"))
     assert np.all(np.isfinite(np.asarray(getattr(got, "value", got))))
 
 

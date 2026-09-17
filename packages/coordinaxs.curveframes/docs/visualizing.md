@@ -67,7 +67,7 @@ The tangent always points along the direction of travel, the normal points towar
 The {doc}`Bishop frame <guide>` is _rotation-minimising_: instead of tracking the principal normal (which spins around the tangent as the curve twists), it transports its cross-section axes as smoothly as possible. On the helix this shows up as a visible lag between the Frenet normal and the Bishop `normal1` axis.
 
 ```{code-cell} python
-bishop = cxfc.BishopBuilder(helix, "s", initial_normal="auto")
+bishop = cxfc.BishopBuilder(helix, "s", normal_0="auto")
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111, projection="3d")

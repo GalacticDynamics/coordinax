@@ -136,7 +136,7 @@ def test_a_seedless_builder_refuses_a_director() -> None:
     """Frenet fixes N and B from the curve, so a seed would be ignored.
 
     Rejected here rather than one layer down: `FrenetSerretBuilder` does raise
-    on `initial_normal`, but with a different error and only once a slice is
+    on `normal_0`, but with a different error and only once a slice is
     built -- too late to name the argument that was wrong.
     """
     with pytest.raises(ValueError, match="takes no seed"):
@@ -186,7 +186,7 @@ def test_a_builder_instance_is_refused() -> None:
     a class`, which names nothing.
     """
     instance = cxfc.BishopBuilder(
-        cxfc.AtTime(static_helix, u.Q(0.0, "s")), "km", initial_normal=jnp.asarray(_E)
+        cxfc.AtTime(static_helix, u.Q(0.0, "s")), "km", normal_0=jnp.asarray(_E)
     )
     with pytest.raises((TypeError, TypeCheckError)):
         cxfc.SweptTube(
@@ -227,14 +227,14 @@ def planar_circle(tau: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQ
 
 
 def test_the_gauge_requirement_follows_the_builder_not_its_class() -> None:
-    """`SignedPlanarBuilder` has a gauge too, and it is not `initial_normal`.
+    """`SignedPlanarBuilder` has a gauge too, and it is not `normal_0`.
 
     Its `plane_normal` is gauge in exactly the sense Bishop's seed is -- its
     own docstring says so -- so asking `issubclass(..., BishopBuilder)` got
     this wrong and refused a director the frame genuinely needs. Each builder
     declares the argument instead.
     """
-    assert cxfc.BishopBuilder.gauge_field == "initial_normal"
+    assert cxfc.BishopBuilder.gauge_field == "normal_0"
     assert cxfc.SignedPlanarBuilder.gauge_field == "plane_normal"
     assert cxfc.FrenetSerretBuilder.gauge_field is None
 
@@ -310,7 +310,7 @@ def test_a_bare_family_is_still_refused_off_axis() -> None:
     drift the off-axis guard exists to refuse.
     """
     family = lambda t: cxfc.TubularChart(
-        cxfc.BishopBuilder(cxfc.AtTime(static_helix, t), "km", initial_normal="auto"),
+        cxfc.BishopBuilder(cxfc.AtTime(static_helix, t), "km", normal_0="auto"),
         tau_bounds=BOUNDS,
     )
 

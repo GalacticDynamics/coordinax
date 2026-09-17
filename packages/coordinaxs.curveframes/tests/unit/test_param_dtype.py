@@ -85,7 +85,7 @@ def test_bishop_transport_is_f64_by_design() -> None:
     meeting its stated tolerance -- so this asserting f64 is the guard, not
     an admission.
     """
-    R = cxfc.BishopBuilder(circle, "s", initial_normal="auto").rotation_matrix(
+    R = cxfc.BishopBuilder(circle, "s", normal_0="auto").rotation_matrix(
         u.Q(jnp.float32(0.3), "s")
     )
     assert R.dtype == jnp.float64

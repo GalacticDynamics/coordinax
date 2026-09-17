@@ -29,12 +29,12 @@ Typical usage::
 
     # `tau_unit` is read off the parameter; Bishop also needs an n-plane seed.
     fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve)
-    b_frame = cxfc.BishopFrame.from_curve(base_frame, curve, initial_normal="auto")
+    b_frame = cxfc.BishopFrame.from_curve(base_frame, curve, normal_0="auto")
 
     # ... or state `tau_unit` outright, which a `.value`-reading curve needs:
     fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve, "s")
     b_frame = cxfc.BishopFrame.from_curve(
-        base_frame, curve, "s", initial_normal="auto"
+        base_frame, curve, "s", normal_0="auto"
     )
 
 See Also

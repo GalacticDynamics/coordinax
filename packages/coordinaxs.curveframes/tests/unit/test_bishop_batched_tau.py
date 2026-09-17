@@ -17,7 +17,7 @@ def helix(tau):
 
 
 def _builder():
-    return cxfc.BishopBuilder(helix, "s", initial_normal="auto")
+    return cxfc.BishopBuilder(helix, "s", normal_0="auto")
 
 
 def _per_tau(b, taus):
@@ -110,7 +110,7 @@ class TestRoutingIsNotBypassed:
     """
 
     def test_a_pinned_station_gives_one_frame_for_every_tau(self):
-        b = cxfc.BishopBuilder(helix, "s", station=u.Q(0.7, "s"), initial_normal="auto")
+        b = cxfc.BishopBuilder(helix, "s", station=u.Q(0.7, "s"), normal_0="auto")
         taus = jnp.asarray([0.5, 1.0, 1.9])
         got = b.rotation_matrices(u.Q(taus, "s"))
         assert jnp.allclose(got, _per_tau(b, taus), atol=1e-7)
@@ -124,9 +124,7 @@ class TestRoutingIsNotBypassed:
             x, s = tau.ustrip("s"), t.ustrip("s")
             return u.Q(jnp.stack([jnp.cos(x + s), jnp.sin(x + s), 0.3 * x]), "km")
 
-        b = cxfc.BishopBuilder(
-            moving, "s", station=u.Q(0.4, "s"), initial_normal="auto"
-        )
+        b = cxfc.BishopBuilder(moving, "s", station=u.Q(0.4, "s"), normal_0="auto")
         with pytest.raises(ValueError, match="one-argument curve"):
             b.rotation_matrices(u.Q(jnp.asarray([0.5, 1.0]), "s"))
 
@@ -140,7 +138,7 @@ class TestRoutingIsNotBypassed:
         It reached for `taus[0]` first, so an empty batch met `IndexError`
         rather than the message written for it.
         """
-        b = cxfc.BishopBuilder(helix, "s", station=u.Q(0.7, "s"), initial_normal="auto")
+        b = cxfc.BishopBuilder(helix, "s", station=u.Q(0.7, "s"), normal_0="auto")
         with pytest.raises(ValueError, match="at least one tau"):
             b.rotation_matrices(u.Q(jnp.asarray([]), "s"))
 
@@ -175,7 +173,7 @@ class TestTheSolveStaysAtTau0WhenItShould:
             t = eqx.error_if(t, jnp.abs(t) > 1e-3, "curve evaluated away from tau_0")
             return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
-        b = cxfc.BishopBuilder(local_only, "s", initial_normal="auto")
+        b = cxfc.BishopBuilder(local_only, "s", normal_0="auto")
         got = b.rotation_matrices(u.Q(jnp.asarray([0.0, 0.0]), "s"))
         assert got.shape == (2, 3, 3)
         assert jnp.allclose(got[0], b.rotation_matrix(u.Q(0.0, "s")), atol=1e-9)

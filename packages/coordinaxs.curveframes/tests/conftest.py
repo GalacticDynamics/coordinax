@@ -168,17 +168,17 @@ def build_frame():
 def _build_frame(builder_cls, /, *args, **kwargs):
     """Construct ``builder_cls``, supplying the Bishop seed only where it fits.
 
-    `BishopBuilder` requires `initial_normal` and the others reject it, so a
+    `BishopBuilder` requires `normal_0` and the others reject it, so a
     test parametrized over builder *classes* cannot share one call. ``"auto"``
     keeps these tests' existing numbers; one that cares should pass its own.
     """
     if issubclass(builder_cls, cxfc.BishopBuilder):
-        kwargs.setdefault("initial_normal", "auto")
+        kwargs.setdefault("normal_0", "auto")
     return builder_cls(*args, **kwargs)
 
 
 def _from_curve(frame_cls, /, *args, **kwargs):
     """`frame_cls.from_curve`, seeded where needed. See `_build_frame`."""
     if issubclass(frame_cls, cxfc.BishopFrame):
-        kwargs.setdefault("initial_normal", "auto")
+        kwargs.setdefault("normal_0", "auto")
     return frame_cls.from_curve(*args, **kwargs)

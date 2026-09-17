@@ -110,7 +110,7 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     the library refuses to supply one.
 
     Whether it is required is the *builder's* statement, read from
-    `AbstractCurveFrameBuilder.gauge_field`: ``"initial_normal"`` for
+    `AbstractCurveFrameBuilder.gauge_field`: ``"normal_0"`` for
     `BishopBuilder`'s transport seed, ``"plane_normal"`` for
     `SignedPlanarBuilder`'s plane, and `None` for `FrenetSerretBuilder`, which
     fixes $\mathbf{N}$ and $\mathbf{B}$ pointwise from the curve and would
@@ -150,7 +150,7 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
 
         A dataclass field cannot be "required iff ``builder`` is Bishop", so
         the rule lives here. `FrenetSerretBuilder` does reject an
-        ``initial_normal`` one layer down, but with a different error and only
+        ``normal_0`` one layer down, but with a different error and only
         once a slice is built -- too late to name the choice that was wrong.
         """
         _check_builder(self.builder)
