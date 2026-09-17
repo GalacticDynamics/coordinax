@@ -385,6 +385,12 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
+#: `unit_of` is cheap but `dimension_of` is a `plum` dispatch costing ~60us a
+#: unit, and a chart sees the same handful forever. Same reasoning as the
+#: quotient cache below.
+_dimension_of = ft.lru_cache(maxsize=None)(u.dimension_of)
+
+
 #: Dividing two units costs ~20x a dict lookup and a chart has only a handful,
 #: so the quotients are cached across calls. Cached *here* rather than per
 #: call: a fresh `lru_cache` each time caches nothing and costs more than the
@@ -432,8 +438,7 @@ def _jac_from_dict_via_closed_form(
     if any(unit is None for unit in units):
         return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
-    # `dimension_of` is a `plum` dispatch, so resolve each component's once.
-    dims = [u.dimension_of(unit) for unit in units]
+    dims = [_dimension_of(unit) for unit in units]
 
     # One unit per dimension: radians for angles, the first one seen otherwise.
     # Angles are seeded because a closed form emits them whether or not the
@@ -464,7 +469,9 @@ def _jac_from_dict_via_closed_form(
     unit_rows = tuple(
         tuple(_unit_quotient(canonical[dim], col) for col in units) for dim in out_dims
     )
-    return ul.QuantityMatrix(jac * jnp.asarray(scale, dtype=jac.dtype), unit=unit_rows)
+    if any(f != 1.0 for f in scale):
+        jac = jac * jnp.asarray(scale, dtype=jac.dtype)
+    return ul.QuantityMatrix(jac, unit=unit_rows)
 
 
 @_closed_form(Cart2D, Polar2D)
