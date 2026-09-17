@@ -8,7 +8,7 @@ from typing import Any
 import equinox as eqx
 
 from .attime import AtTime
-from .base import unit_or_none
+from .base import AbstractCurveFrameBuilder, unit_or_none
 from .bishop import BishopBuilder
 from .chart import TubularChart
 
@@ -24,6 +24,14 @@ _MSG_DIRECTOR_REQUIRED = (
     "callable of time because a materially spinning rod needs one. Pass "
     "`builder=FrenetSerretBuilder` instead if the frame the curve itself fixes "
     "is what you want -- that one needs no seed and is already equivariant."
+)
+
+_MSG_NOT_A_BUILDER = (
+    "`builder` must be a builder *class*, not {what}. Every other argument "
+    "here is a value, so `builder=BishopBuilder(...)` is the natural slip -- "
+    "but this chooses the kind of frame each slice gets and constructs one per "
+    "slice itself, from the curve bound at that time. Pass the class: "
+    "`builder=BishopBuilder`."
 )
 
 _MSG_DIRECTOR_UNUSED = (
@@ -102,6 +110,18 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
         ``initial_normal`` one layer down, but with a different error and only
         once a slice is built -- too late to name the choice that was wrong.
         """
+        # Checked before `issubclass`, which raises a bare "arg 1 must be a
+        # class" on an instance and -- worse -- accepts any *unrelated* class,
+        # sending `builder=dict` into the "takes no seed" branch below to be
+        # told it is a seedless builder.
+        if not isinstance(self.builder, type):
+            what = f"a `{type(self.builder).__name__}` value"
+            raise TypeError(_MSG_NOT_A_BUILDER.format(what=what))
+        if not issubclass(self.builder, AbstractCurveFrameBuilder):
+            raise TypeError(
+                _MSG_NOT_A_BUILDER.format(what=f"`{self.builder.__name__}`")
+            )
+
         is_bishop = issubclass(self.builder, BishopBuilder)
         if is_bishop and self.director is None:
             raise ValueError(_MSG_DIRECTOR_REQUIRED)

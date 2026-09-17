@@ -6,6 +6,7 @@ at all, two directors, two different correct answers. No rule derived from the
 curve can produce both, which is why the library refuses to guess (#829, #870).
 """
 
+from jaxtyping import TypeCheckError
 from typing import Any
 
 import jax
@@ -152,6 +153,45 @@ def test_a_seedless_builder_needs_no_director() -> None:
     )
 
     assert tube(u.Q(0.0, "s")).components == ("tau", "n1", "n2")
+
+
+def test_a_builder_instance_is_refused() -> None:
+    """`builder=BishopBuilder(...)` is the natural slip: everything else is a value.
+
+    Two layers catch it, and which one fires depends on the environment. With
+    runtime typechecking on -- as under this repo's pytest config -- the
+    ``builder: type`` annotation rejects the instance before `__check_init__`
+    runs, as a `TypeCheckError`. With it off, `__check_init__` does, naming the
+    argument and the fix. Unguarded it was neither: `issubclass() arg 1 must be
+    a class`, which names nothing.
+    """
+    instance = cxfc.BishopBuilder(
+        cxfc.AtTime(static_helix, u.Q(0.0, "s")), "km", initial_normal=jnp.asarray(_E)
+    )
+    with pytest.raises((TypeError, TypeCheckError)):
+        cxfc.SweptTube(
+            static_helix,
+            "km",
+            tau_bounds=BOUNDS,
+            director=lambda t: jnp.asarray(_E),
+            builder=instance,
+        )
+
+
+def test_an_unrelated_class_is_refused_rather_than_misdiagnosed() -> None:
+    """The worse case: a *class* passes `issubclass` and gets a wrong answer.
+
+    `builder=dict` reached the seedless branch and was told it "takes no seed",
+    as though `dict` were a legitimate seedless builder.
+    """
+    with pytest.raises(TypeError, match="must be a builder"):
+        cxfc.SweptTube(
+            static_helix,
+            "km",
+            tau_bounds=BOUNDS,
+            director=lambda t: jnp.asarray(_E),
+            builder=dict,
+        )
 
 
 # --------------------------------------------------------------------------
