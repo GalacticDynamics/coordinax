@@ -12,7 +12,7 @@ import plum
 import quaxed.numpy as jnp
 import unxt as u
 import unxts.linalg as ul
-from unxt.quantity import Quantity, is_any_quantity
+from unxt.quantity import is_any_quantity
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
@@ -37,12 +37,12 @@ _RAD = u.unit("rad")
 
 def _drop_rad_unit(q: ArrayLike | u.AbstractQuantity) -> ArrayLike | u.AbstractQuantity:
     """Drop the "rad" unit from a quantity, otherwise return unchanged."""
-    return Quantity(q.value, unit=q.unit / _RAD) if is_any_quantity(q) else q
+    return u.Q(q.value, unit=q.unit / _RAD) if is_any_quantity(q) else q
 
 
 def _add_rad_unit(q: ArrayLike | u.AbstractQuantity) -> ArrayLike | u.AbstractQuantity:
     """Add the "rad" unit to a quantity, otherwise return unchanged."""
-    return Quantity(q.value, unit=q.unit * _RAD) if is_any_quantity(q) else q
+    return u.Q(q.value, unit=q.unit * _RAD) if is_any_quantity(q) else q
 
 
 def _qm_triangular_solve(E: ul.QM, b: ul.QM) -> ul.QM:

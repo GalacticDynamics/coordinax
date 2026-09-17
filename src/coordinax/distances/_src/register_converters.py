@@ -15,10 +15,10 @@ from .measures import Distance
 def convert_quantity_to_distance(q: u.AbstractQuantity, /) -> Distance:
     """Convert any quantity to a Distance.
 
+    >>> import unxt as u
     >>> from plum import convert
-    >>> from unxt.quantity import Quantity
     >>> from coordinax.distances import Distance
-    >>> q = Quantity(1, "m")
+    >>> q = u.Q(1, "m")
     >>> q
     Q(1, 'm')
 
