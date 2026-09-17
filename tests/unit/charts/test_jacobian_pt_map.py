@@ -239,15 +239,18 @@ class TestUnitfulDictsReachTheClosedForm:
     closed forms unless every pair is listed here.
     """
 
-    #: Pairs whose `from_chart` components are all lengths, so a unitful dict
-    #: packs into a single `Quantity`.
+    #: Pairs whose `from_chart` components share a dimension, so canonicalising
+    #: leaves every column in the unit it arrived in and nothing needs
+    #: rescaling afterwards.
     HOMOGENEOUS_PAIRS: ClassVar = [
         pytest.param("cart2d", "polar2d", ("x", "y"), id="cart2d->polar2d"),
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
     ]
-    #: Pairs taking an angle beside a length, which reach the closed form
-    #: through bare values in a canonical unit rather than a packed `Quantity`.
+    #: Pairs taking an angle beside a length. Both groups reach the closed form
+    #: through bare canonical values; what distinguishes these is that their
+    #: angular columns come back in radians and must be rescaled to the unit
+    #: the caller used.
     HETEROGENEOUS_PAIRS: ClassVar = [
         pytest.param("cyl3d", "cart3d", ("rho", "phi", "z"), id="cyl3d->cart3d"),
         pytest.param("sph3d", "cart3d", ("r", "theta", "phi"), id="sph3d->cart3d"),

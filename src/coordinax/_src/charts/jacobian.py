@@ -385,6 +385,13 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
+#: Dividing two units costs ~20x a dict lookup and a chart has only a handful,
+#: so the quotients are cached across calls. Cached *here* rather than per
+#: call: a fresh `lru_cache` each time caches nothing and costs more than the
+#: divisions it replaces (14us against 2.7us for nine entries).
+_unit_quotient = ft.lru_cache(maxsize=None)(operator.truediv)
+
+
 #: Chart pairs with a hand-written Jacobian. Populated by `_closed_form` at
 #: each definition, so a closed form added without that line is simply not
 #: routed to -- rather than routed to and failing.
@@ -454,9 +461,8 @@ def _jac_from_dict_via_closed_form(
         1.0 if target == unit else u.uconvert_value(target, unit, 1.0)
         for unit, target in zip(units, targets, strict=True)
     ]
-    quotient = ft.lru_cache(maxsize=None)(operator.truediv)
     unit_rows = tuple(
-        tuple(quotient(canonical[dim], col) for col in units) for dim in out_dims
+        tuple(_unit_quotient(canonical[dim], col) for col in units) for dim in out_dims
     )
     return ul.QuantityMatrix(jac * jnp.asarray(scale, dtype=jac.dtype), unit=unit_rows)
 
