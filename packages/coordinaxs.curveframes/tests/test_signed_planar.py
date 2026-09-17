@@ -271,6 +271,21 @@ class TestFrame:
         )
         np.testing.assert_allclose(frame.xop.builder.plane_normal, -Z, atol=0)
 
+    def test_station_reaches_the_builder(self) -> None:
+        """`station=` is forwarded to the builder, and lands in its own slot.
+
+        `from_curve` constructs the builder positionally, and `station` and
+        `plane_normal` are adjacent in that order -- so they are the pair a
+        slip would transpose. `test_plane_normal_reaches_the_builder` catches
+        that indirectly; this says it directly.
+        """
+        station = u.Q(0.4, "s")
+        frame = cxfc.SignedPlanarFrame.from_curve(
+            cxf.Alice(), circle, "s", station=station
+        )
+        assert frame.xop.builder.station == station
+        assert frame.xop.builder.plane_normal is None
+
     def test_frame_transition_round_trip(self) -> None:
         """`frame_transition` is inherited, not registered. Pin that."""
         frame = cxfc.SignedPlanarFrame.from_curve(cxf.Alice(), circle, "s")
