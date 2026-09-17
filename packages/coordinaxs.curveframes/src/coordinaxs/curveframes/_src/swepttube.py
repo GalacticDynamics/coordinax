@@ -147,8 +147,11 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     def __call__(self, t: Any, /) -> TubularChart:
         """Return the spatial slice at ``t``."""
         # `__check_init__` has paired these: a gauge name implies a director.
+        # Spelled `is not None` to match that check -- `gauge_field` is typed
+        # `str | None`, so truthiness would also skip an empty-string name.
         gauge = self.builder.gauge_field
-        seed = {gauge: self.director(t)} if gauge and self.director else {}
+        seeded = gauge is not None and self.director is not None
+        seed = {gauge: self.director(t)} if seeded else {}
         return TubularChart(
             self.builder(AtTime(self.curve, t), self.tau_unit, **seed),
             tau_bounds=self.tau_bounds,
