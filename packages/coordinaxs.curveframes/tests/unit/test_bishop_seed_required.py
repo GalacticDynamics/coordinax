@@ -79,3 +79,35 @@ def test_a_near_miss_string_is_refused(typo: str) -> None:
     """A stray string would ride along as a pytree leaf, failing later in JAX."""
     with pytest.raises(ValueError, match="is not a seed"):
         cxfc.BishopBuilder(circle, "s", normal_0=typo)
+
+
+def test_auto_seed_with_an_explicit_vector_is_refused() -> None:
+    """The flag would claim the world-axis rule while the vector is what runs."""
+    with pytest.raises(ValueError, match="no builder should be in"):
+        cxfc.BishopBuilder(
+            circle, "s", normal_0=jnp.asarray([0.0, 0.0, 1.0]), auto_seed=True
+        )
+
+
+def test_replace_still_works_on_an_auto_seeded_builder() -> None:
+    """`auto_seed=True` with `normal_0=None` must stay legal.
+
+    `dataclasses.replace` is a documented way to change one knob, and on an
+    auto builder it re-passes exactly that pair -- so the guard above cannot
+    be tightened to "auto_seed is not a public input".
+    """
+    import dataclasses
+
+    auto = cxfc.BishopBuilder(circle, "s", normal_0="auto")
+    moved = dataclasses.replace(auto, tau_0=u.Q(0.5, "s"))
+
+    assert moved.auto_seed is True
+    assert moved.normal_0 is None
+    assert np.array_equal(
+        np.asarray(moved.rotation_matrix(u.Q(0.37, "s"))),
+        np.asarray(
+            cxfc.BishopBuilder(
+                circle, "s", tau_0=u.Q(0.5, "s"), normal_0="auto"
+            ).rotation_matrix(u.Q(0.37, "s"))
+        ),
+    )

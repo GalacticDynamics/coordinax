@@ -132,6 +132,16 @@ _MSG_SEED_NOT_AUTO = (
     "3-vector."
 )
 
+_MSG_AUTO_SEED_WITH_VECTOR = (
+    "`auto_seed=True` was given with an explicit `normal_0`, which is a state "
+    "no builder should be in: the frame uses the vector, so the flag would "
+    "say the world-axis rule was chosen when it was not. `auto_seed` is "
+    "derived from `normal_0`, not an independent input -- it is public only "
+    'so `dataclasses.replace` can rebuild a builder. Pass `normal_0="auto"` '
+    "for the world-axis rule, or a dimensionless 3-vector to choose one, but "
+    "not both."
+)
+
 _MSG_SEED_REQUIRED = (
     "`normal_0` is required: nothing in the curve fixes the n-plane "
     "gauge, so leaving it out chose one silently. Pass a dimensionless "
@@ -428,6 +438,12 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         """
         if self.normal_0 is None and not self.auto_seed:
             raise ValueError(_MSG_SEED_REQUIRED)
+        # `auto_seed` implies no vector. The converse is not checkable here:
+        # `dataclasses.replace` on an auto builder re-passes `auto_seed=True`
+        # with `normal_0=None`, which is indistinguishable from setting the
+        # flag by hand -- and is a documented workflow, so it must be allowed.
+        if self.auto_seed and self.normal_0 is not None:
+            raise ValueError(_MSG_AUTO_SEED_WITH_VECTOR)
         # `ValueError`, not the `TypeError` TRY004 asks for: `str` is an
         # accepted type here -- `"auto"` is legal -- so a near-miss is a bad
         # *value*.
