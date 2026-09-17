@@ -72,6 +72,12 @@ _MSG_NOT_PLANAR = (
     "is defined for every regular curve, in or out of a plane."
 )
 
+_MSG_PLANE_NORMAL_STRING = (
+    "`plane_normal={value!r}` is not a plane normal: this takes a dimensionless "
+    "3-vector. No string is valid here -- unlike `BishopBuilder`, there is no "
+    '`"auto"`, because omitting `plane_normal` already takes the z-axis.'
+)
+
 _MSG_DEGENERATE_PLANE_NORMAL = (
     "`plane_normal` has zero length, so it names no plane and would "
     "normalise to NaN, poisoning the whole triad. Pass a nonzero 3-vector, "
@@ -197,6 +203,21 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
 
     plane_normal: Any = None
     """Normal of the plane the curve lies in (a leaf); `None` means the z-axis."""
+
+    def __check_init__(self) -> None:
+        """Refuse a string ``plane_normal``.
+
+        It is a *dynamic* field, so a string sits in the pytree as a leaf and
+        survives construction, `jax.tree.leaves` and even `location`, to fail
+        in `_plane_normal` as `not a valid JAX array type`.
+
+        `TypeError`, where `BishopBuilder` raises `ValueError` on the same
+        slip: there ``"auto"`` makes `str` an *accepted* type, so a near-miss
+        is a bad value. Here no string is ever valid, so it is the type that
+        is wrong.
+        """
+        if isinstance(self.plane_normal, str):
+            raise TypeError(_MSG_PLANE_NORMAL_STRING.format(value=self.plane_normal))
 
     def _plane_normal(self, dtype: Any, /) -> Array:
         """Resolve `plane_normal` to a *unit* 3-vector in ``dtype``.
