@@ -428,6 +428,13 @@ def _jac_from_dict_via_closed_form(
     unit -- angles to radians, everything else to the first unit of its kind --
     differentiate there, and put the units back afterwards. Convertible units
     are equivalent, so canonicalising costs a label and nothing else.
+
+    Bare on purpose, not for want of a container: a `QuantityMatrix` carries
+    per-column units and would pack this point exactly. Feeding one to a closed
+    form would put the arithmetic back on `Quantity` operands, and `quax` costs
+    a trace per primitive there -- the whole reason these bodies compute on raw
+    arrays. Stripping is also cheaper than packing, 589us against 751us for
+    `carray` on a 3-component point.
     """
     keys = from_chart.components
     units: list[Any] = [u.unit_of(at[k]) for k in keys]
