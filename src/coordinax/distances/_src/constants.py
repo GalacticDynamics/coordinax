@@ -1,4 +1,4 @@
-"""Dimensions and units the distance kinds check against. Internal use only."""
+"""Dimensions that tell the distance kinds apart. Internal use only."""
 
 __all__ = ("ANGLE", "LENGTH", "MAGNITUDE")
 
