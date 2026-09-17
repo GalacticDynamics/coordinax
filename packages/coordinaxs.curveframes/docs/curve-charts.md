@@ -24,7 +24,7 @@ For the frame-based moving-frame machinery `TubularChart` builds on, see {doc}`W
 ...     t = tau.ustrip("s")
 ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
->>> op = cxfm.TimeDep(cxfc.BishopBuilder(circle, "s"))
+>>> op = cxfm.TimeDep(cxfc.BishopBuilder(circle, "s", initial_normal="auto"))
 >>> x = u.Q(jnp.array([0.5, 0.0, 0.0]), "km")
 >>> tau = u.Q(0.7, "s")
 >>> cxfm.act(op, tau, x)  # tau supplied separately from x
@@ -38,7 +38,7 @@ Q([...], 'km')
 >>> import coordinax.charts as cxc
 
 >>> BOUNDS = (u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s"))
->>> chart = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS)
+>>> chart = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s", initial_normal="auto"), tau_bounds=BOUNDS)
 >>> p = {"x": u.Q(0.5, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
 >>> got = cxc.pt_map(p, chart.M, cxc.cart3d, chart.M, chart)
 >>> sorted(got)
@@ -53,7 +53,7 @@ That is a categorical difference, not a stylistic one. A frame transform has no 
 `TubularChart` wraps either builder unchanged — it is agnostic to which triad supplies $\mathbf{U}_1,\mathbf{U}_2$:
 
 ```{code-block} python
->>> ch_bishop = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS)
+>>> ch_bishop = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s", initial_normal="auto"), tau_bounds=BOUNDS)
 >>> ch_bishop.components
 ('tau', 'n1', 'n2')
 >>> ch_bishop.coord_dimensions
@@ -73,7 +73,7 @@ That is a categorical difference, not a stylistic one. A frame transform has no 
 ...     return u.Q(jnp.stack([s, jnp.zeros_like(s), jnp.zeros_like(s)]), "km")
 
 >>> ch_len = cxfc.TubularChart(
-...     cxfc.BishopBuilder(by_length, "km"),
+...     cxfc.BishopBuilder(by_length, "km", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(1.0, "km")),
 ... )
 >>> ch_len.coord_dimensions
@@ -90,7 +90,7 @@ The exception is a builder over a **two-argument** curve with a pinned `station`
 ...     return u.Q(jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
 
 >>> ch_tube = cxfc.TubularChart(
-...     cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km")),
+...     cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km"), initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
 ... )
 >>> ch_tube.coord_dimensions
@@ -142,7 +142,7 @@ Make the curve's radius a live, fittable parameter by holding it in an `equinox.
 >>> HELIX_BOUNDS = (u.Q(-1.0, "s"), u.Q(6.0, "s"))
 >>> def chart_for(radius_km):
 ...     curve = Helix(radius=u.Q(radius_km, "km"))
-...     return cxfc.TubularChart(cxfc.BishopBuilder(curve, "s"), tau_bounds=HELIX_BOUNDS)
+...     return cxfc.TubularChart(cxfc.BishopBuilder(curve, "s", initial_normal="auto"), tau_bounds=HELIX_BOUNDS)
 
 >>> import coordinax.manifolds as cxm
 >>> x = {"x": u.Q(1.1, "km"), "y": u.Q(0.4, "km"), "z": u.Q(0.2, "km")}
@@ -179,7 +179,7 @@ No `metric_matrix` rule is registered for `TubularChart` — it has no closed fo
 
 >>> at = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
 
->>> ch_b = cxfc.TubularChart(cxfc.BishopBuilder(helix, "s"), tau_bounds=HELIX_BOUNDS)
+>>> ch_b = cxfc.TubularChart(cxfc.BishopBuilder(helix, "s", initial_normal="auto"), tau_bounds=HELIX_BOUNDS)
 >>> g_b = metric_matrix(ch_b.M, at, ch_b).matrix
 >>> bool(jnp.abs(g_b[0, 1].ustrip("km / s")) < 1e-8)  # Bishop: no d(tau).d(n1) cross term
 True
@@ -212,7 +212,7 @@ Prefer Bishop for this chart when the metric matters and the diagonal structure 
 ```{code-block} python
 >>> arc = cxfc.ArcLength(helix, "s")
 >>> ch_arc = cxfc.TubularChart(
-...     cxfc.BishopBuilder(arc, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(5.0, "km"))
+...     cxfc.BishopBuilder(arc, "km", initial_normal="auto"), tau_bounds=(u.Q(0.0, "km"), u.Q(5.0, "km"))
 ... )
 
 ```
@@ -284,7 +284,7 @@ Which of the two readings a frame is built on is not a setting on the chart or t
 ...     z = jnp.zeros_like(sv)
 ...     return u.Q(jnp.stack([sv * (1 + 0.5 * tv), 0.1 * tv * sv**2, z]), "km")
 
->>> worldtube = cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km"))
+>>> worldtube = cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km"), initial_normal="auto")
 >>> worldtube.velocity(u.Q(1.0, "s")).round(3)
 Q([0.65 , 0.169, 0.   ], 'km / s')
 
@@ -293,7 +293,7 @@ Q([0.65 , 0.169, 0.   ], 'km / s')
 Its argument means what `location`'s does on the same builder: the evaluation time when a station is pinned, the station otherwise. The two sections agree where they cross, so binding the slice with `AtTime` gives the same answer at the same event:
 
 ```{code-block} python
->>> slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretching, u.Q(1.0, "s")), "km")
+>>> slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretching, u.Q(1.0, "s")), "km", initial_normal="auto")
 >>> slice_.velocity(u.Q(1.3, "km")).round(3)
 Q([0.65 , 0.169, 0.   ], 'km / s')
 
@@ -343,7 +343,7 @@ The lapse is identically 1 under absolute time, and the Lie-drag term vanishes b
 
 ```{code-block} python
 >>> family = lambda t: cxfc.TubularChart(
-...     cxfc.BishopBuilder(cxfc.AtTime(stretching, t), "km"),
+...     cxfc.BishopBuilder(cxfc.AtTime(stretching, t), "km", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(3.0, "km")),
 ... )
 >>> on_axis = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
@@ -428,7 +428,7 @@ A curve is not always handed to `ArcLength` to be reparametrised — it can also
 1.0
 
 >>> ch_direct = cxfc.TubularChart(
-...     cxfc.BishopBuilder(arclen_circle, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(4 * jnp.pi, "km"))
+...     cxfc.BishopBuilder(arclen_circle, "km", initial_normal="auto"), tau_bounds=(u.Q(0.0, "km"), u.Q(4 * jnp.pi, "km"))
 ... )
 >>> at_direct = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
 >>> float(metric_matrix(ch_direct.M, at_direct, ch_direct).matrix[0, 0].ustrip(""))
@@ -462,7 +462,7 @@ Harmless, but it is an ODE solve the caller did not need — do not wrap a curve
 [1.0, 1.0, 1.0]
 
 >>> ch_series = cxfc.TubularChart(
-...     cxfc.BishopBuilder(cxfc.AtTime(slice_series, u.Q(0.0, "s")), "km"),
+...     cxfc.BishopBuilder(cxfc.AtTime(slice_series, u.Q(0.0, "s")), "km", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(30.0, "km")),
 ... )
 >>> at_series = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
@@ -507,7 +507,7 @@ At the timesteps the blend was actually stitched from, $t=0$ and $t=1$, it colla
 
 ```{code-block} python
 >>> ch_blend = cxfc.TubularChart(
-...     cxfc.BishopBuilder(cxfc.AtTime(stitched_blend, u.Q(0.5, "s")), "km"),
+...     cxfc.BishopBuilder(cxfc.AtTime(stitched_blend, u.Q(0.5, "s")), "km", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(20.0, "km")),
 ... )
 >>> at_blend = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
@@ -524,7 +524,7 @@ The remedy is to wrap the stitched curve in `ArcLength` before using it, rather 
 [1.0, 1.0]
 
 >>> ch_blend_fixed = cxfc.TubularChart(
-...     cxfc.BishopBuilder(cxfc.AtTime(arc_blend, u.Q(0.5, "s")), "km"),
+...     cxfc.BishopBuilder(cxfc.AtTime(arc_blend, u.Q(0.5, "s")), "km", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(20.0, "km")),
 ... )
 >>> round(float(metric_matrix(ch_blend_fixed.M, at_blend, ch_blend_fixed).matrix[0, 0].ustrip("")), 6)
@@ -584,7 +584,7 @@ The builders themselves stay $\tau$-parameterised, not unit-speed: $g_{\tau\tau}
 A bounds range spanning two periods recovers the _wrong_ branch for a point that was originally at $\tau=0.7\,\mathrm{s}$:
 
 ```{code-block} python
->>> wide = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(4 * jnp.pi, "s")))
+>>> wide = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s", initial_normal="auto"), tau_bounds=(u.Q(0.0, "s"), u.Q(4 * jnp.pi, "s")))
 >>> on_curve = circle(u.Q(0.7, "s"))
 >>> d = {"x": on_curve[0], "y": on_curve[1], "z": on_curve[2]}
 >>> recovered = cxc.pt_map(d, wide.M, cxc.cart3d, wide.M, wide)["tau"]
@@ -613,7 +613,7 @@ That tie-break is the whole story only because `circle` is **planar**. A closed 
 ...                           jnp.cos(t) - 2 * jnp.cos(2 * t),
 ...                           -jnp.sin(3 * t)]), "km")
 
->>> knot = cxfc.TubularChart(cxfc.BishopBuilder(trefoil, "s"), tau_bounds=BOUNDS)
+>>> knot = cxfc.TubularChart(cxfc.BishopBuilder(trefoil, "s", initial_normal="auto"), tau_bounds=BOUNDS)
 >>> round(float(knot.holonomy().ustrip("rad")), 4)
 -2.225
 
@@ -661,7 +661,7 @@ The factor is a _local_ test only: it says nothing about a point mirrored across
 ...                           jnp.zeros_like(sv * tv)]), "km")
 
 >>> rod = cxfc.TubularChart(
-...     cxfc.BishopBuilder(spun_rod, "km", station=u.Q(1.3, "km")),
+...     cxfc.BishopBuilder(spun_rod, "km", station=u.Q(1.3, "km"), initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")),
 ... )
 >>> on_plane = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.0, "km")}
@@ -725,7 +725,7 @@ Use `jax.vmap` over single points, which works and is the fast path anyway -- th
 >>> import jax
 
 >>> tubular = cxfc.TubularChart(
-...     cxfc.BishopBuilder(circle, "s"),
+...     cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
 ... )
 >>> def to_cart(tau, n1):

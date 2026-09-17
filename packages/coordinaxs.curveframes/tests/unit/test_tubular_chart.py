@@ -26,7 +26,9 @@ BOUNDS = (u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s"))
 
 
 def _chart(**kw):
-    return cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS, **kw)
+    return cxfc.TubularChart(
+        cxfc.BishopBuilder(circle, "s", initial_normal="auto"), tau_bounds=BOUNDS, **kw
+    )
 
 
 def stretching(s: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
@@ -47,7 +49,8 @@ TIME_BOUNDS = (u.Q(0.0, "s"), u.Q(2.0, "s"))
 def _worldtube(tau_bounds=TIME_BOUNDS):
     """The tube at a fixed station, swept through time: coordinates (t, n1, n2)."""
     return cxfc.TubularChart(
-        cxfc.BishopBuilder(stretching, "km", station=STATION), tau_bounds=tau_bounds
+        cxfc.BishopBuilder(stretching, "km", station=STATION, initial_normal="auto"),
+        tau_bounds=tau_bounds,
     )
 
 
@@ -69,7 +72,8 @@ def test_dimension_follows_the_curve_parameter() -> None:
         return u.Q(jnp.stack([s, jnp.zeros_like(s), jnp.zeros_like(s)]), "km")
 
     ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(by_length, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(1.0, "km"))
+        cxfc.BishopBuilder(by_length, "km", initial_normal="auto"),
+        tau_bounds=(u.Q(0.0, "km"), u.Q(1.0, "km")),
     )
     assert ch.coord_dimensions == ("length", "length", "length")
 
@@ -131,7 +135,9 @@ def test_the_two_sections_meet() -> None:
     contradiction.
     """
     slice_ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(cxfc.AtTime(stretching, AT_TIME), "km"),
+        cxfc.BishopBuilder(
+            cxfc.AtTime(stretching, AT_TIME), "km", initial_normal="auto"
+        ),
         tau_bounds=(u.Q(0.0, "km"), u.Q(2.0, "km")),
     )
     assert slice_ch.coord_dimensions == ("length", "length", "length")
@@ -224,7 +230,7 @@ def test_the_chart_carries_the_builders_leaves() -> None:
 def test_static_bounds_drop_their_leaves() -> None:
     """`tau_bounds` follows the usual opt-in rule for chart parameters."""
     ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(circle, "s"),
+        cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
         tau_bounds=(u.StaticQuantity(-1.0, "s"), u.StaticQuantity(7.0, "s")),
     )
     assert len(jax.tree.leaves(ch)) == 2  # builder only
@@ -240,7 +246,8 @@ def test_bounds_of_two_dimensions_are_rejected() -> None:
     """
     with pytest.raises(ValueError, match="must state one dimension"):
         cxfc.TubularChart(
-            cxfc.BishopBuilder(circle, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "km"))
+            cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
+            tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "km")),
         )
 
 
@@ -254,7 +261,8 @@ def test_bounds_may_not_be_half_bare() -> None:
     """
     with pytest.raises(ValueError, match="both `Quantity` or both bare"):
         cxfc.TubularChart(
-            cxfc.BishopBuilder(circle, "s"), tau_bounds=(0.0, u.Q(2.0, "s"))
+            cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
+            tau_bounds=(0.0, u.Q(2.0, "s")),
         )
 
 
@@ -265,14 +273,17 @@ def test_bare_bounds_are_still_allowed() -> None:
     what the numbers mean, so there is nothing for the two ends to disagree
     about.
     """
-    ch = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=(0.0, 2.0))
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(circle, "s", initial_normal="auto"), tau_bounds=(0.0, 2.0)
+    )
     assert ch.coord_dimensions == ("time", "length", "length")
 
 
 def test_bounds_in_different_units_of_one_dimension_still_work() -> None:
     """The check is on the dimension, not the unit: `ms` converts to `s`."""
     ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(circle, "s"), tau_bounds=(u.Q(0.0, "s"), u.Q(2000.0, "ms"))
+        cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
+        tau_bounds=(u.Q(0.0, "s"), u.Q(2000.0, "ms")),
     )
     p = {"x": u.Q(0.5, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
     got = cxc.pt_map(p, ch.M, cxc.cart3d, ch.M, ch)
@@ -433,7 +444,9 @@ def test_identity_falls_back_through_cartesian_for_different_charts() -> None:
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.ones_like(t)]), "km")
 
     ch1 = _chart()
-    ch2 = cxfc.TubularChart(cxfc.BishopBuilder(shifted, "s"), tau_bounds=BOUNDS)
+    ch2 = cxfc.TubularChart(
+        cxfc.BishopBuilder(shifted, "s", initial_normal="auto"), tau_bounds=BOUNDS
+    )
     p = {"tau": u.Q(0.7, "s"), "n1": u.Q(0.13, "km"), "n2": u.Q(-0.21, "km")}
     got = cxc.pt_map(p, ch1.M, ch1, ch2.M, ch2)
 
@@ -476,7 +489,9 @@ def test_bishop_metric_is_diagonal_with_unit_normal_blocks() -> None:
     `test_frenet_metric_has_torsion_cross_terms` for the contrast on the same
     curve.
     """
-    ch = cxfc.TubularChart(cxfc.BishopBuilder(_helix, "s"), tau_bounds=_HELIX_BOUNDS)
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(_helix, "s", initial_normal="auto"), tau_bounds=_HELIX_BOUNDS
+    )
     g = metric_matrix(ch.M, _HELIX_AT, ch).matrix
 
     assert jnp.allclose(g[0, 1].ustrip("km / s"), 0.0, atol=1e-8)

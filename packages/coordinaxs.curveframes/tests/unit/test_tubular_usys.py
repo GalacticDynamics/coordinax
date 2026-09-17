@@ -29,7 +29,7 @@ def circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
 @pytest.fixture
 def chart() -> cxfc.TubularChart:
     return cxfc.TubularChart(
-        cxfc.BishopBuilder(circle, "s"),
+        cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
         tau_bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")),
     )
 
@@ -101,7 +101,9 @@ def test_raw_tau_bounds_are_where_the_raw_route_stops() -> None:
     `tuple[Any, Any]`, which is why the chart is the path that reaches it.
     """
     chart = cxfc.TubularChart(
-        cxfc.BishopBuilder(circle),  # inferring, so nothing declared
+        cxfc.BishopBuilder(
+            circle, initial_normal="auto"
+        ),  # inferring, so nothing declared
         tau_bounds=(0.0, 2 * jnp.pi),
     )
     with pytest.raises(TypeError, match="carries no unit"):
@@ -109,6 +111,7 @@ def test_raw_tau_bounds_are_where_the_raw_route_stops() -> None:
 
     # Declaring the unit is the way through, exactly as for a raw parameter.
     declared = cxfc.TubularChart(
-        cxfc.BishopBuilder(circle, "s"), tau_bounds=(0.0, 2 * jnp.pi)
+        cxfc.BishopBuilder(circle, "s", initial_normal="auto"),
+        tau_bounds=(0.0, 2 * jnp.pi),
     )
     assert declared.coord_dimensions == ("time", "length", "length")

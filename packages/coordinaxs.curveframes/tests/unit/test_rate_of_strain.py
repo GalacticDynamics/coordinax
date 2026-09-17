@@ -42,7 +42,8 @@ def stretch_and_bend(
 def _family(curve):
     """The slice family: the tube's chart at each time."""
     return lambda t: cxfc.TubularChart(
-        cxfc.BishopBuilder(cxfc.AtTime(curve, t), "km"), tau_bounds=BOUNDS
+        cxfc.BishopBuilder(cxfc.AtTime(curve, t), "km", initial_normal="auto"),
+        tau_bounds=BOUNDS,
     )
 
 
@@ -107,7 +108,7 @@ def _helix_family(axis: list[float]):
         return u.Q(_rotation(axis, t.ustrip("s")) @ base, "km")
 
     return lambda t: cxfc.TubularChart(
-        cxfc.BishopBuilder(cxfc.AtTime(curve, t), "km"),
+        cxfc.BishopBuilder(cxfc.AtTime(curve, t), "km", initial_normal="auto"),
         tau_bounds=(u.Q(-1.0, "km"), u.Q(2.0, "km")),
     )
 
@@ -206,7 +207,7 @@ def test_a_static_curve_does_not_deform() -> None:
         return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
 
     family = lambda t: cxfc.TubularChart(
-        cxfc.BishopBuilder(circle, "km"), tau_bounds=BOUNDS
+        cxfc.BishopBuilder(circle, "km", initial_normal="auto"), tau_bounds=BOUNDS
     )
     k = cxfc.rate_of_strain(family, ON_AXIS, u.Q(T0, "s"))
     assert np.allclose(np.asarray(k.value), np.zeros((3, 3)), atol=1e-6)

@@ -44,7 +44,9 @@ def stretch_and_bend(
 
 
 def _worldtube():
-    b = cxfc.BishopBuilder(stretch_and_bend, "km", station=u.Q(S0, "km"))
+    b = cxfc.BishopBuilder(
+        stretch_and_bend, "km", station=u.Q(S0, "km"), initial_normal="auto"
+    )
     ch = cxfc.TubularChart(b, tau_bounds=(u.Q(0.0, "s"), u.Q(2.0, "s")))
     return b, ch
 
@@ -111,7 +113,9 @@ def test_g00_is_the_squared_speed_of_the_point_at_that_offset() -> None:
 def test_the_spatial_slice_is_three_lengths(n1: float) -> None:
     """`AtTime` gives the other section: no time coordinate, so no shift block."""
     ch = cxfc.TubularChart(
-        cxfc.BishopBuilder(cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km"),
+        cxfc.BishopBuilder(
+            cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km", initial_normal="auto"
+        ),
         tau_bounds=(u.Q(0.0, "km"), u.Q(3.0, "km")),
     )
     assert ch.coord_dimensions == ("length", "length", "length")

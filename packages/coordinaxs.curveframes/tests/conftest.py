@@ -136,7 +136,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     naming ``binormal`` or ``normal2``.
     """
     spec = PARALLEL_TRANSPORT_TYPES[request.param]
-    builder = spec.builder_cls(circle, "s")
+    builder = _build_frame(spec.builder_cls, circle, "s")
 
     def fields(bldr: object, tau: u.AbstractQuantity) -> tuple:
         return tuple(getattr(bldr, name)(tau) for name in spec.triad)
@@ -145,11 +145,56 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
         name=request.param,
         builder=builder,
         builder_cls=spec.builder_cls,
-        yr_builder=spec.builder_cls(circle_yr, "yr"),
+        yr_builder=_build_frame(spec.builder_cls, circle_yr, "yr"),
         xop=cxfm.TimeDep(builder),
-        frame=spec.frame_cls.from_curve(cxf.Alice(), circle, "s"),
+        frame=_from_curve(spec.frame_cls, cxf.Alice(), circle, "s"),
         frame_cls=spec.frame_cls,
         triad=spec.triad,
         tol=SimpleNamespace(**TOLERANCES[request.param]),
         fields=fields,
     )
+
+
+# ===================================================================
+# Building a builder when the class is a parameter
+
+
+@pytest.fixture(scope="session")
+def build_frame():
+    """See `_build_frame`; a fixture so subdirectories need no import.
+
+    The suite forbids parent-relative imports (TID252), and `tests/` is
+    not importable absolutely, so a fixture is how a helper reaches
+    `tests/unit/`.
+    """
+    return _build_frame
+
+
+def _build_frame(builder_cls, /, *args, **kwargs):
+    """Construct ``builder_cls``, supplying the Bishop seed only where it fits.
+
+    `BishopBuilder` requires `initial_normal`; the others reject it, because
+    their frames are fixed pointwise by the curve and a seed would be silently
+    ignored. So a test parametrized over builder *classes* cannot share one
+    call -- passing the seed breaks Frenet, omitting it breaks Bishop -- and
+    this is the one place that difference is spelled.
+
+    ``"auto"`` rather than a vector: these tests predate the requirement and
+    assert against the world-axis rule's numbers. A test that cares which gauge
+    it gets should pass its own, and say why.
+    """
+    if issubclass(builder_cls, cxfc.BishopBuilder):
+        kwargs.setdefault("initial_normal", "auto")
+    return builder_cls(*args, **kwargs)
+
+
+def _from_curve(frame_cls, /, *args, **kwargs):
+    """`frame_cls.from_curve`, with the Bishop seed where that path needs one.
+
+    `from_curve` builds a builder internally, so it inherits the same
+    requirement -- and the same problem for a test parametrized over frame
+    *classes*. See `_build_frame`.
+    """
+    if issubclass(frame_cls, cxfc.BishopFrame):
+        kwargs.setdefault("initial_normal", "auto")
+    return frame_cls.from_curve(*args, **kwargs)

@@ -56,7 +56,8 @@ Its speed equals the radius, not 1 — a time parametrisation has no reason to b
 ```pycon
 >>> arc_time = cxfc.ArcLength(time_circle, "s")
 >>> ch_time = cxfc.TubularChart(
-...     cxfc.BishopBuilder(arc_time, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(10.0, "km"))
+...     cxfc.BishopBuilder(arc_time, "km", initial_normal="auto"),
+...     tau_bounds=(u.Q(0.0, "km"), u.Q(10.0, "km")),
 ... )
 >>> at_time = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
 >>> round(float(metric_matrix(ch_time.M, at_time, ch_time).matrix[0, 0].ustrip("")), 6)
@@ -87,7 +88,7 @@ It goes straight into a builder, with no `ArcLength` wrap:
 
 ```pycon
 >>> ch_direct = cxfc.TubularChart(
-...     cxfc.BishopBuilder(arc_circle, "km"),
+...     cxfc.BishopBuilder(arc_circle, "km", initial_normal="auto"),
 ...     tau_bounds=(u.Q(0.0, "km"), u.Q(4 * jnp.pi, "km")),
 ... )
 >>> at_direct = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}

@@ -33,7 +33,7 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinaxs.curveframes as cxfc
-from .conftest import circle, inverse_rotation
+from .conftest import _from_curve, circle, inverse_rotation
 
 TAUS = [0, 0.5, 1, 2.5, jnp.pi]
 
@@ -240,8 +240,10 @@ class TestJAX:
 class TestConstructors:
     """A builder is built from a bare curve; the frame wraps it in TimeDep."""
 
-    def test_builder_from_bare_curve(self, pt_case: SimpleNamespace) -> None:
-        built = pt_case.builder_cls(circle, "s")
+    def test_builder_from_bare_curve(
+        self, pt_case: SimpleNamespace, build_frame
+    ) -> None:
+        built = build_frame(pt_case.builder_cls, circle, "s")
         np.testing.assert_allclose(
             built.location(u.Q(0, "s")).value, [1, 0, 0], atol=pt_case.tol.tight
         )
@@ -263,7 +265,7 @@ class TestConstructors:
             assert isinstance(frame.xop.builder, pt_case.builder_cls)
 
     def test_frame_from_curve_accepts_tau_unit(self, pt_case: SimpleNamespace) -> None:
-        frame = pt_case.frame_cls.from_curve(cxf.Alice(), circle, tau_unit="yr")
+        frame = _from_curve(pt_case.frame_cls, cxf.Alice(), circle, tau_unit="yr")
         assert frame.xop.builder.tau_unit == u.unit("yr")
 
 

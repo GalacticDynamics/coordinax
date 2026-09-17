@@ -512,7 +512,7 @@ Every curve frame is built from a `coordinax.transforms.TimeDep` wrapping one of
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "m")
 
 
-    b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), curve, "s")
+    b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), curve, "s", initial_normal="auto")
     op = cxf.frame_transition(cxf.Alice(), b_frame)
     tau = u.Q(0.0, "s")
     p_ambient = u.Q(jnp.array([1.0, 0.0, 0.0]), "m")

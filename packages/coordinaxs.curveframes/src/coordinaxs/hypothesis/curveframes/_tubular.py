@@ -64,8 +64,17 @@ def _tubular_kwargs(draw: st.DrawFn, /) -> dict[str, Any]:
     """Shared draw logic behind both `charts()` and `chart_init_kwargs()`."""
     curve, (lo, hi) = draw(st.sampled_from(_CURVES))
     builder_cls = draw(st.sampled_from(_BUILDERS))
+    # `BishopBuilder` requires a seed and the others reject one, so a strategy
+    # drawing the *class* cannot share a call. `"auto"` because a drawn chart
+    # has no opinion about its n-plane gauge; a test that does should build the
+    # chart itself and say which gauge it wants.
+    seed = (
+        {"initial_normal": "auto"}
+        if issubclass(builder_cls, cxfc.BishopBuilder)
+        else {}
+    )
     return {
-        "builder": builder_cls(curve, "s"),
+        "builder": builder_cls(curve, "s", **seed),
         "tau_bounds": (u.Q(lo, "s"), u.Q(hi, "s")),
     }
 

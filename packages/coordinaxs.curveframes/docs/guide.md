@@ -254,7 +254,7 @@ trajectory = jax.jit(jax.vmap(lambda t: cxfm.act(op_to_curve, t, p)))(taus)
 `vmap` is the general route and always available. For `BishopBuilder` specifically there is a cheaper one: every frame it produces costs an ODE solve, and `rotation_matrices` gets a whole batch from a **single** solve.
 
 ```python
-bishop = cxfc.BishopBuilder(Helix(jnp.asarray(1.5)), "s")
+bishop = cxfc.BishopBuilder(Helix(jnp.asarray(1.5)), "s", initial_normal="auto")
 Rs = bishop.rotation_matrices(u.Q(jnp.linspace(0.1, 2.0, 64), "s"))
 assert Rs.shape == (64, 3, 3)
 ```
@@ -309,7 +309,7 @@ def helix(tau: u.Q) -> u.Q:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-bt = cxfc.BishopBuilder(helix, "s")
+bt = cxfc.BishopBuilder(helix, "s", initial_normal="auto")
 ```
 
 `BishopBuilder` automatically:
@@ -341,7 +341,7 @@ import dataclasses
 
 import diffrax as dfx
 
-bt = cxfc.BishopBuilder(helix, "s")
+bt = cxfc.BishopBuilder(helix, "s", initial_normal="auto")
 fast = dataclasses.replace(
     bt,
     diffeqsolver=dataclasses.replace(
@@ -379,7 +379,7 @@ bt_custom = cxfc.BishopBuilder(helix, "s", initial_normal=jnp.array([0.0, 0.0, 1
 The reference parameter $\tau_0$ can also be set:
 
 ```python
-bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"))
+bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"), initial_normal="auto")
 ```
 
 ### Straight Lines
@@ -392,7 +392,7 @@ def line(tau):
     return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
 
 
-bt_line = cxfc.BishopBuilder(line, "s")
+bt_line = cxfc.BishopBuilder(line, "s", initial_normal="auto")
 bt_line.normal1(u.Q(5.0, "s"))  # well-defined unit vector
 ```
 
@@ -437,7 +437,7 @@ A `BishopFrame` pairs a `BishopBuilder` with a base frame, exactly like `FrenetS
 ### Convenience Constructor
 
 ```python
-b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s")
+b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s", initial_normal="auto")
 ```
 
 ### Frame Transitions
@@ -541,7 +541,7 @@ A builder accepts an arc-length curve exactly as it accepts any other curve — 
 
 ```python
 arc = cxfc.ArcLength(helix, "s")
-bt_arc = cxfc.BishopBuilder(arc, "km")
+bt_arc = cxfc.BishopBuilder(arc, "km", initial_normal="auto")
 bt_arc.tangent(u.Q(1.0, "km"))
 ```
 
@@ -560,7 +560,7 @@ class Circle(eqx.Module):
 
 
 arc_circle = cxfc.ArcLength(Circle(radius=u.Q(2.0, "km")), "s")
-bt_circle = cxfc.BishopBuilder(arc_circle, "km")
+bt_circle = cxfc.BishopBuilder(arc_circle, "km", initial_normal="auto")
 bt_circle.tangent(u.Q(1.0, "km"))
 ```
 
@@ -580,11 +580,16 @@ def stretching(s, t):
 s0 = u.Q(1.3, "km")
 
 # Eulerian: a fixed *arc length* along whatever the curve is now
-eulerian = cxfc.BishopBuilder(cxfc.ArcLength(stretching, "km"), "km", station=s0)
+eulerian = cxfc.BishopBuilder(
+    cxfc.ArcLength(stretching, "km"), "km", station=s0, initial_normal="auto"
+)
 
 # Lagrangian: the material point that was at s0 on the reference slice
 material = cxfc.BishopBuilder(
-    cxfc.LagrangianArcLength(stretching, u.Q(0.0, "s"), "km"), "km", station=s0
+    cxfc.LagrangianArcLength(stretching, u.Q(0.0, "s"), "km"),
+    "km",
+    station=s0,
+    initial_normal="auto",
 )
 ```
 

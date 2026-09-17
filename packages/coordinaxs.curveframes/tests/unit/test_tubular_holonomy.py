@@ -37,7 +37,9 @@ def planar_circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
 
 
 def _chart(curve, bounds):
-    return cxfc.TubularChart(cxfc.BishopBuilder(curve, "s"), tau_bounds=bounds)
+    return cxfc.TubularChart(
+        cxfc.BishopBuilder(curve, "s", initial_normal="auto"), tau_bounds=bounds
+    )
 
 
 def _rad(ch) -> float:

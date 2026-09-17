@@ -126,6 +126,28 @@ def _float(x: Any, /) -> Array:
     return arr.astype(jnp.result_type(arr, float))
 
 
+#: Sentinel selecting the world-axis seed rule, by name rather than by silence.
+AUTO_SEED = "auto"
+
+_MSG_SEED_REQUIRED = (
+    "`initial_normal` is required: nothing in the curve fixes the n-plane "
+    "gauge, and a chart's `(n1, n2)` genuinely depend on it wherever the "
+    "curvature and the offset are both non-zero -- so a caller who never chose "
+    "a seed still depends on one. Pass a dimensionless 3-vector to choose it, "
+    'or `initial_normal="auto"` to take the world-axis rule '
+    "(`_auto_initial_normal`) and its caveats: it is anchored to the world "
+    "frame rather than the curve, so it is not equivariant under a rotating "
+    "body, and `argmin` makes it jump where two tangent components cross. "
+    "Those are the two failure modes behind #870; `SweptTube` is the way to "
+    "carry one seed across a family of slices."
+)
+
+
+def _is_auto(seed: Any, /) -> bool:
+    """Whether ``seed`` selects the world-axis rule rather than a vector."""
+    return isinstance(seed, str) and seed == AUTO_SEED
+
+
 def _orthonormalize(v: Any, T0_val: Any) -> Any:
     r"""Gram--Schmidt ``v`` against the unit tangent, then normalise.
 
@@ -226,9 +248,13 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     tau_0 : Quantity, optional
         Reference parameter where the initial frame is defined.  Defaults to
         ``Q(0.0, tau_unit)``.
-    initial_normal : array-like, optional
-        Dimensionless 3-vector for $\mathbf{U}_{1,0}$.  When `None`,
-        auto-chosen via Gram--Schmidt against the tangent at ``tau_0``.
+    initial_normal : array-like or ``"auto"``
+        **Required.**  Dimensionless 3-vector for $\mathbf{U}_{1,0}$, or
+        ``"auto"`` for the world-axis rule -- Gram--Schmidt against the
+        tangent at ``tau_0``, which is what `None` used to select silently.
+        Omitting it raises: the seed is the n-plane gauge, and a chart's
+        $(n_1, n_2)$ depend on it wherever the curvature and the offset are
+        both non-zero, so a caller who never chose one still depended on it.
     diffeqsolver : DiffEqSolver, optional
         `diffraxtra.DiffEqSolver` configuring the parallel-transport solve:
         solver, step-size controller, adjoint and step budget in one object.
@@ -286,7 +312,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     ...     t = tau.ustrip("s")
     ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), t]), "m")
 
-    >>> bt = cxfc.BishopBuilder(helix, "s")
+    >>> bt = cxfc.BishopBuilder(helix, "s", initial_normal="auto")
     >>> bt.location(u.Q(0.0, "s"))
     Q([1., 0., 0.], 'm')
 
@@ -307,12 +333,12 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     The unit may be left off, in which case it is read off the parameter --
     which is a `Quantity`, so it states its own unit already:
 
-    >>> cxfc.BishopBuilder(helix).tangent(u.Q(0.0, "s"))
+    >>> cxfc.BishopBuilder(helix, initial_normal="auto").tangent(u.Q(0.0, "s"))
     Q([-0.        ,  0.70710678,  0.70710678], '')
 
     Declaring it is still accepted and gives the same answer:
 
-    >>> cxfc.BishopBuilder(helix, "s").tangent(u.Q(0.0, "s"))
+    >>> cxfc.BishopBuilder(helix, "s", initial_normal="auto").tangent(u.Q(0.0, "s"))
     Q([-0.        ,  0.70710678,  0.70710678], '')
 
     The Bishop frame works on a straight line (where Frenet-Serret is singular):
@@ -322,7 +348,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     ...     return u.Q(jnp.stack([t, jnp.zeros_like(t),
     ...                           jnp.zeros_like(t)]), "m")
 
-    >>> U1 = cxfc.BishopBuilder(line, "s").normal1(u.Q(5.0, "s"))
+    >>> U1 = cxfc.BishopBuilder(line, "s", initial_normal="auto").normal1(u.Q(5.0, "s"))
     >>> jnp.sqrt(jnp.sum(U1.value**2))
     Array(1., dtype=float64)
 
@@ -350,7 +376,30 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     """
 
     initial_normal: Any = None
-    """Initial U1 vector at tau_0 (dimensionless jax array, or None for auto)."""
+    """Initial U1 at tau_0: a dimensionless 3-vector, or ``"auto"``.
+
+    Required. `None` raises -- see `_MSG_SEED_REQUIRED`: the seed is the
+    n-plane gauge, and omitting it chose one silently.
+
+    ``"auto"`` is recorded in `auto_seed` and this is set back to `None`, so
+    the stored field is always an array or `None`. A string here would be a
+    *pytree leaf*: `jax.tree.leaves` would return it alongside the arrays, and
+    every `jit`/`vmap`/`grad` over the builder would carry a non-array leaf.
+    Measured before the split: 103 failures and 72 errors across the package.
+    """
+
+    auto_seed: bool = eqx.field(static=True, default=False, repr=False, kw_only=True)
+    """Whether the world-axis rule was selected by name.
+
+    Derived from ``initial_normal`` in ``__post_init__``. Keyword-only and
+    declared last, because `BishopFrame.from_curve` forwards to the constructor
+    *positionally* -- a field inserted mid-list silently shifted
+    `diffeqsolver` into this one. Not ``init=False``, which would be the
+    tighter statement but breaks `dataclasses.replace` on every builder.
+
+    ``repr=False`` because showing it changed the printed form of every
+    builder, which is expected output in a great many doctests.
+    """
 
     # `static=True` is *safe* because a `DiffEqSolver` is hashable, compares
     # equal across freshly-built instances, and contributes no **array** leaves
@@ -380,6 +429,16 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     (``builder.diffeqsolver.solver``) and no longer means the whole solve.
     """
 
+    def __check_init__(self) -> None:
+        """Require the seed to be chosen, by vector or by name.
+
+        `equinox` runs this for every construction. The gauge is arbitrary
+        *and* load-bearing, so a silent default let a caller depend on a choice
+        they never made -- the defect behind #870.
+        """
+        if self.initial_normal is None and not self.auto_seed:
+            raise ValueError(_MSG_SEED_REQUIRED)
+
     def __post_init__(self) -> None:
         """Resolve a `None` ``tau_0`` to zero in a *declared* ``tau_unit``.
 
@@ -392,6 +451,10 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         also declares its unit, and is the only way to say "start somewhere
         other than zero" regardless.
         """
+        if _is_auto(self.initial_normal):
+            self.auto_seed = True
+            self.initial_normal = None
+
         if self.tau_0 is None and self.tau_unit is not None:
             self.tau_0 = u.Q(0.0, self.tau_unit)
 
@@ -501,7 +564,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> R = cxfc.BishopBuilder(circle, "s").rotation_matrix(u.Q(0.0, "s"))
+        >>> R = cxfc.BishopBuilder(
+        ...     circle,
+        ...     "s",
+        ...     initial_normal="auto",
+        ... ).rotation_matrix(u.Q(0.0, "s"))
         >>> bool(jnp.allclose(R @ R.T, jnp.eye(3), atol=1e-6))
         True
 
@@ -553,7 +620,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> b = cxfc.BishopBuilder(circle, "s")
+        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
         >>> Rs = b.rotation_matrices(u.Q(jnp.asarray([0.5, 1.0]), "s"))
         >>> Rs.shape
         (2, 3, 3)
@@ -660,7 +727,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.BishopBuilder(circle, "s").tangent(u.Q(0.0, "s"))
+        >>> cxfc.BishopBuilder(
+        ...     circle,
+        ...     "s",
+        ...     initial_normal="auto",
+        ... ).tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         """
@@ -693,7 +764,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> U1 = cxfc.BishopBuilder(circle, "s").normal1(u.Q(0.0, "s"))
+        >>> U1 = cxfc.BishopBuilder(
+        ...     circle,
+        ...     "s",
+        ...     initial_normal="auto",
+        ... ).normal1(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U1.value))
         1.0
 
@@ -721,7 +796,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> U2 = cxfc.BishopBuilder(circle, "s").normal2(u.Q(0.0, "s"))
+        >>> U2 = cxfc.BishopBuilder(
+        ...     circle,
+        ...     "s",
+        ...     initial_normal="auto",
+        ... ).normal2(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U2.value))
         1.0
 
@@ -773,7 +852,9 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
 
     Build a frame relative to Alice:
 
-    >>> b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), circle, "s")
+    >>> b_frame = cxfc.BishopFrame.from_curve(
+    ...     cxf.Alice(), circle, "s", initial_normal="auto"
+    ... )
     >>> b_frame.base_frame
     Alice()
 
@@ -827,8 +908,9 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
             frame *field* along the curve rather than a moving frame.
         tau_0 : Quantity, optional
             Reference parameter.  Defaults to ``Q(0.0, tau_unit)``.
-        initial_normal : array-like, optional
-            Dimensionless 3-vector for $\mathbf{U}_{1,0}$.
+        initial_normal : array-like or ``"auto"``
+            **Required.**  Dimensionless 3-vector for $\mathbf{U}_{1,0}$, or
+            ``"auto"`` for the world-axis rule.  See `BishopBuilder`.
         diffeqsolver : DiffEqSolver, optional
             `diffraxtra.DiffEqSolver` configuring the parallel-transport
             solve; see `BishopBuilder`.  Defaults to the same object the
@@ -853,7 +935,9 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "km")
 
-        >>> frame = cxfc.BishopFrame.from_curve(cxf.Alice(), circle, "s")
+        >>> frame = cxfc.BishopFrame.from_curve(
+        ...     cxf.Alice(), circle, "s", initial_normal="auto"
+        ... )
         >>> frame.base_frame
         Alice()
 
