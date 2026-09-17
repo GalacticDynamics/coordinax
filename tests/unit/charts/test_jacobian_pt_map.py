@@ -1342,3 +1342,54 @@ class TestCart3dToLonLatRestatesCart3dToSph3d:
             rtol=0,
             atol=0,
         )
+
+
+# ===========================================================================
+# LonLat -> Cart3D restates Sph3D -> Cart3D
+# ===========================================================================
+
+
+class TestLonLatToCart3dRestatesSph3dToCart3d:
+    """The mirror of the pair above, on the columns instead of the rows.
+
+    Differentiating with respect to ``(lon, lat, distance)`` rather than
+    ``(r, theta, phi)`` permutes the columns to ``(phi, theta, r)`` and flips
+    the middle one, `lat` being the colatitude negated.
+
+    Close, not exact, unlike the row pin: the two forms have to be evaluated
+    at the same physical point, and reaching the spherical one means passing
+    it ``pi/2 - lat``. `sin(pi/2 - lat)` and `cos(lat)` agree to a couple of
+    ulps, not to the bit. That subtraction is also why no point sits near a
+    pole -- there it loses most of its significant digits, and the two forms
+    would disagree for a reason this test introduced rather than found.
+    """
+
+    #: ``(lon, lat, distance)`` with the angles in radians; the test scales
+    #: them into whichever angle unit it is checking.
+    POINTS: ClassVar = [
+        pytest.param((0.9, 0.35, 2.5), id="generic"),
+        pytest.param((0.0, -0.8, 1.0), id="on-the-prime-meridian"),
+        pytest.param((2.7, 1.1, 4e12), id="large"),
+        pytest.param((-1.4, 0.05, 3e-9), id="small"),
+    ]
+
+    @pytest.mark.parametrize("at", POINTS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_the_columns_are_the_spherical_columns_rearranged(
+        self, at: tuple[float, float, float], angle_unit: str
+    ) -> None:
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        ang = 1.0 if angle_unit == "rad" else 180 / math.pi
+        lon, lat, dist = at
+        lonlat_at = jnp.array([lon * ang, lat * ang, dist])
+        sph_at = jnp.array([dist, (math.pi / 2 - lat) * ang, lon * ang])
+
+        lonlat = cxc.jac_pt_map(lonlat_at, cxc.lonlat_sph3d, cxc.cart3d, usys=usys)
+        sph = cxc.jac_pt_map(sph_at, cxc.sph3d, cxc.cart3d, usys=usys)
+
+        assert_allclose(
+            np.asarray(lonlat),
+            np.asarray(jnp.stack([sph[:, 2], -sph[:, 1], sph[:, 0]], axis=-1)),
+            rtol=1e-13,
+            atol=0,
+        )
