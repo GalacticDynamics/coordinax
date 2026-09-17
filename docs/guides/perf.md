@@ -519,6 +519,8 @@ The cold trace matches the eager timing above — that is the same work, run onc
 
 Where it does pay is anywhere the trace itself is repeated or is the whole cost: eager loops, and code that re-traces — a new input shape, a fresh jitted closure per call, `grad` of something not yet cached. That is also why some chart pairs have a closed-form Jacobian written out rather than differentiated; the dispatch picks one where it exists.
 
+A closed form is a hand-written matrix, so the fast path is not a less-trusted number: every one is tested against `jax.jacfwd` of the very map it claims — never against a restatement of its own formula, which would agree with a wrong derivation — under both `rad` and `deg`, and at magnitudes from $10^{-9}$ to $10^{12}$. Where two of them are the same matrix rearranged, as `cart3d -> lonlat_sph3d` is `cart3d -> sph3d` with its rows reordered and one flipped, they are also pinned to each other, so a correction to one cannot quietly miss the other.
+
 </br>
 
 ---
