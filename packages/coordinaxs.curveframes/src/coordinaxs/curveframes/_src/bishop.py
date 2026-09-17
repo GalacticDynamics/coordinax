@@ -138,8 +138,10 @@ _MSG_SEED_REQUIRED = (
     "(`_auto_initial_normal`) and its caveats: it is anchored to the world "
     "frame rather than the curve, so it is not equivariant under a rotating "
     "body, and `argmin` makes it jump where two tangent components cross. "
-    "Those are the two failure modes behind #870; `SweptTube` is the way to "
-    "carry one seed across a family of slices."
+    "Those are the two failure modes behind #870. Across a family of slices, "
+    "pass the *same* vector to every builder: a seed chosen per slice makes "
+    "`(n1, n2)` name a different physical point on each one, which is how "
+    "frame drift gets reported as physical strain."
 )
 
 
