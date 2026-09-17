@@ -43,7 +43,7 @@ __all__ = ("SignedPlanarBuilder", "SignedPlanarFrame")
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, cast, final
+from typing import Any, ClassVar, cast, final
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -181,6 +181,8 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
     Q([0., 0., 0.], 'm')
 
     """
+
+    gauge_field: ClassVar[str | None] = "plane_normal"
 
     curve: Callable[[Any], Any]
     """The constructing curve."""

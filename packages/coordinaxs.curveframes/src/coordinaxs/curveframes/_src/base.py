@@ -18,7 +18,7 @@ import dataclasses
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 from typing_extensions import TypeVar
 
 import equinox as eqx
@@ -223,6 +223,20 @@ class AbstractCurveFrameBuilder(eqx.Module):
         $\tau$-independent: a frame *field* along the curve, differentiable and
         vmappable in ``station``.
 
+    """
+
+    gauge_field: ClassVar[str | None] = None
+    """Name of the constructor argument that fixes this frame's n-plane gauge.
+
+    `None` when the curve fixes the frame pointwise and there is nothing to
+    choose -- `FrenetSerretBuilder`. Otherwise the argument a caller must
+    supply to pin it: ``"initial_normal"`` for `BishopBuilder`'s transport
+    seed, ``"plane_normal"`` for `SignedPlanarBuilder`'s plane.
+
+    Declared here so callers can *ask* rather than test the concrete class.
+    `SweptTube` did the latter, and so told `SignedPlanarBuilder` it "takes no
+    seed" -- which is wrong: its `plane_normal` is gauge in exactly the sense
+    `initial_normal` is, and its own docstring says so.
     """
 
     curve: eqx.AbstractVar[Callable[[Any], Any]]

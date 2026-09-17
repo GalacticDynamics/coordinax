@@ -12,6 +12,7 @@ implementation modules:
 - {mod}`.signedplanar` — signed planar transform and frame.
 - {mod}`.chart` — `TubularChart`, on the parameterized branch.
 - {mod}`.strain` — `rate_of_strain`, the ADM `K_ij` of a slice family.
+- {mod}`.swepttube` — `SweptTube`, the family those slices come from.
 - {mod}`.nearest` — `nearest_tau`, the seeded Newton solve `TubularChart`'s
   inverse `pt_map` uses.
 - {mod}`.register_frames` — ``frame_transition`` dispatch registrations.
@@ -33,3 +34,4 @@ from .register_frames import *
 from .register_ptmap import *
 from .signedplanar import *
 from .strain import *
+from .swepttube import *

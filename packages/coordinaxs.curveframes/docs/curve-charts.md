@@ -367,9 +367,23 @@ frame's drift as strain. On a static helix $\gamma_{\tau\tau}$ spans
 $K = 0$ exactly — instead gives $\lvert K\rvert_{\max} = 0.017405$ about
 $\hat z$.
 
-On the axis the answer is gauge-free. Off it, `assume_gauge_carried=True`
-opts in, and asserts that *you* carry one director across the family. See
-[#870](https://github.com/GalacticDynamics/coordinax/issues/870).
+On the axis the answer is gauge-free. Off it there are two ways to proceed.
+
+**Pass a `SweptTube`.** It owns the slice recipe and settles the gauge at
+construction — by a declared `director` carried across every slice on the
+Bishop path, or by a builder that needs no seed because the curve fixes its
+frame pointwise. `rate_of_strain` then needs no `assume_gauge_carried`. This
+is the intended form.
+
+**Or assert it yourself** with `assume_gauge_carried=True` on a hand-rolled
+family, which says that *you* carry one director across it.
+
+Neither makes a bad gauge good. A `SweptTube` whose director does not follow
+a rotating body still reports drift as strain — measured `7.085e-03` where an
+isometry demands zero. What changes is that the choice is yours and visible
+in your code, rather than a seed you never picked. See
+[#870](https://github.com/GalacticDynamics/coordinax/issues/870) and
+[#829](https://github.com/GalacticDynamics/coordinax/issues/829).
 ```
 
 One more boundary: $\gamma_{n_in_j} = \delta_{ij}$ for every builder, so $K_{n_in_j} \equiv 0$ always. The formalism represents longitudinal stretch — not radial inflation, and not cross-sectional shear of the tube.
