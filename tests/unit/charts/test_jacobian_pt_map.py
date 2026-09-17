@@ -239,21 +239,69 @@ class TestUnitfulDictsReachTheClosedForm:
     closed forms unless every pair is listed here.
     """
 
-    ROUTED_PAIRS: ClassVar = [
+    #: Pairs whose `from_chart` components share a dimension, so canonicalising
+    #: leaves every column in the unit it arrived in and nothing needs
+    #: rescaling afterwards.
+    HOMOGENEOUS_PAIRS: ClassVar = [
         pytest.param("cart2d", "polar2d", ("x", "y"), id="cart2d->polar2d"),
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
     ]
-    VALUES: ClassVar = {"x": 1.3, "y": 2.1, "z": 0.7}
+    #: Pairs taking an angle beside a length. Both groups reach the closed form
+    #: through bare canonical values; what distinguishes these is that their
+    #: angular columns come back in radians and must be rescaled to the unit
+    #: the caller used.
+    HETEROGENEOUS_PAIRS: ClassVar = [
+        pytest.param("cyl3d", "cart3d", ("rho", "phi", "z"), id="cyl3d->cart3d"),
+        pytest.param("sph3d", "cart3d", ("r", "theta", "phi"), id="sph3d->cart3d"),
+        pytest.param(
+            "lonlat_sph3d",
+            "loncoslat_sph3d",
+            ("lon", "lat", "distance"),
+            id="lonlat->loncoslat",
+        ),
+        pytest.param(
+            "loncoslat_sph3d",
+            "lonlat_sph3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->lonlat",
+        ),
+    ]
+    ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
+
+    VALUES: ClassVar = {
+        "x": 1.3,
+        "y": 2.1,
+        "z": 0.7,
+        "r": 2.5,
+        "rho": 2.0,
+        "theta": 0.7,
+        "phi": 0.9,
+        "lon": 0.9,
+        "lon_coslat": 0.7,
+        "lat": 0.35,
+        "distance": 2.5,
+    }
+    #: Everything not listed here is a length.
+    UNITS: ClassVar = {
+        "theta": "rad",
+        "phi": "rad",
+        "lon": "rad",
+        "lon_coslat": "rad",
+        "lat": "rad",
+    }
+
+    def _unit(self, key: str) -> str:
+        return self.UNITS.get(key, "m")
 
     def _dict(self, keys, wrap):
-        return {k: wrap(self.VALUES[k]) for k in keys}
+        return {k: wrap(self.VALUES[k], self._unit(k)) for k in keys}
 
-    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
     def test_a_unitful_dict_agrees_with_the_closed_form(self, frm, to, keys) -> None:
         """The dict route must match calling the closed form directly."""
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        at = self._dict(keys, lambda v: u.Q(v, "m"))
+        at = self._dict(keys, u.Q)
         packed = u.Q(jnp.asarray([self.VALUES[k] for k in keys]), "m")
 
         from_dict = cxc.jac_pt_map(at, from_chart, to_chart)
@@ -276,7 +324,7 @@ class TestUnitfulDictsReachTheClosedForm:
         monkeypatch.setattr(jacobian, "_jac_via_autodiff", _boom)
 
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        at = self._dict(keys, lambda v: u.Q(v, "m"))
+        at = self._dict(keys, u.Q)
 
         assert cxc.jac_pt_map(at, from_chart, to_chart) is not None
 
@@ -286,7 +334,7 @@ class TestUnitfulDictsReachTheClosedForm:
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         n, ndim = 5, len(keys)
         at = {
-            k: u.Q(jnp.linspace(self.VALUES[k], self.VALUES[k] + 1.0, n), "m")
+            k: u.Q(jnp.linspace(self.VALUES[k], self.VALUES[k] + 1.0, n), self._unit(k))
             for k in keys
         }
 
@@ -301,7 +349,7 @@ class TestUnitfulDictsReachTheClosedForm:
     def test_bare_arrays_keep_their_existing_route(self, frm, to, keys) -> None:
         """A dict of bare arrays is stacked and re-dispatched, as before."""
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
-        at = self._dict(keys, jnp.asarray)
+        at = {k: jnp.asarray(self.VALUES[k]) for k in keys}
         packed = jnp.asarray([self.VALUES[k] for k in keys])
 
         from_dict = cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si)
@@ -310,14 +358,102 @@ class TestUnitfulDictsReachTheClosedForm:
         assert not isinstance(from_dict, ul.QuantityMatrix)
         assert_allclose(np.asarray(from_dict), np.asarray(direct), rtol=0)
 
-    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
-    def test_mixed_units_stay_on_autodiff_and_keep_their_labels(
-        self, frm, to, keys
+    @pytest.mark.parametrize(("frm", "to", "keys"), HETEROGENEOUS_PAIRS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_an_angle_column_is_per_the_caller_s_angle_unit(
+        self, frm, to, keys, angle_unit
     ) -> None:
-        """A mixed-unit point stays on autodiff.
+        """A length beside an angle reaches the closed form through bare values.
 
-        Packing to a common unit would relabel the ``km / m`` entries
-        dimensionless: equal numbers, different presentation.
+        The closed form differentiates with respect to radians, so each angular
+        column has to be rescaled and labelled per the unit the caller used.
+        Skipping that is a silent factor of 180/pi, so compare against
+        differentiating the transition map.
+        """
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = {
+            k: u.Q(
+                math.degrees(self.VALUES[k])
+                if angle_unit == "deg" and k in self.UNITS
+                else self.VALUES[k],
+                angle_unit if k in self.UNITS else "m",
+            )
+            for k in keys
+        }
+
+        # The module helper, not this file's same-named one: it keeps the
+        # units, which is half of what is being checked.
+        from coordinax._src.charts.jacobian import _jac_via_autodiff as via_autodiff
+
+        J = cxc.jac_pt_map(at, from_chart, to_chart)
+        expected = via_autodiff(at, from_chart, to_chart, None)
+
+        # Compare physically, not by label: a closed form may legitimately
+        # report an entry in a different but convertible unit, and a
+        # `Quantity` carries exactly that information. Only the value binds.
+        got = np.asarray(jnp.asarray(J.value))
+        want = np.asarray(jnp.asarray(expected.value))
+        got_u, want_u = J.unit.to_tuple(), expected.unit.to_tuple()
+        for i in range(got.shape[-2]):
+            for k in range(got.shape[-1]):
+                converted = u.ustrip(
+                    want_u[i][k],
+                    u.uconvert(want_u[i][k], u.Q(float(got[i, k]), got_u[i][k])),
+                )
+                assert_allclose(float(converted), float(want[i, k]), atol=1e-12)
+
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_a_bare_component_beside_a_unitful_one_leaves_the_fast_path(
+        self, frm, to, keys, monkeypatch
+    ) -> None:
+        """A half-unitful point has no unit to canonicalise the bare one against.
+
+        What happens next is the general route's business -- for some pairs it
+        computes, for others it refuses -- so this pins only the handover.
+        """
+        from coordinax._src.charts import jacobian
+
+        class HandedOverError(Exception):
+            """Raised in place of the general route, to prove it was reached."""
+
+        def _handover(*args: object, **kw: object) -> object:
+            raise HandedOverError
+
+        monkeypatch.setattr(jacobian, "_jac_via_autodiff", _handover)
+
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = {
+            k: (
+                jnp.asarray(self.VALUES[k])
+                if i == 0
+                else u.Q(self.VALUES[k], self._unit(k))
+            )
+            for i, k in enumerate(keys)
+        }
+
+        with pytest.raises(HandedOverError):
+            cxc.jac_pt_map(at, from_chart, to_chart)
+
+    def test_a_batched_dict_on_an_unrouted_pair_still_maps_pointwise(self) -> None:
+        """The generic dict dispatch batches too; only the inner route differs."""
+        n = 4
+        at = {
+            "rho": u.Q(jnp.full((n,), 2.0), "m"),
+            "phi": u.Q(jnp.full((n,), 0.7), "rad"),
+            "z": u.Q(jnp.linspace(1.0, 3.0, n), "m"),
+        }
+
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
+
+        assert np.asarray(jnp.asarray(J.value)).shape == (n, 3, 3)
+
+    @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
+    def test_a_mixed_unit_point_keeps_a_unit_per_column(self, frm, to, keys) -> None:
+        """Canonicalising the input does not flatten the output's labels.
+
+        Each column is still reported per the unit that column came in, so a
+        point with ``x`` in km beside ``y`` in m keeps its ``km / m`` entries
+        rather than being reduced to one unit throughout.
         """
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = {

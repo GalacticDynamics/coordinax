@@ -39,6 +39,9 @@ Examples
 
 __all__ = ("jac_pt_map",)
 
+import functools as ft
+import operator
+
 from collections.abc import Callable
 from jaxtyping import Array
 from typing import Any, Final, cast
@@ -53,7 +56,13 @@ import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from .d2 import Cart2D, Polar2D
-from .d3 import Cart3D, Cylindrical3D, Spherical3D
+from .d3 import (
+    Cart3D,
+    Cylindrical3D,
+    LonCosLatSpherical3D,
+    LonLatSpherical3D,
+    Spherical3D,
+)
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import OptUSys
 from coordinax.internal import tree_cast_int_bool_to_float
@@ -322,6 +331,9 @@ def jac_pt_map(
     # Determine whether the input is array-valued or quantity-valued.  If it's
     # array-valued, we can skip the packing and unit handling and directly
     # compute the Jacobian as an array.
+    if (type(from_chart), type(to_chart)) in _CLOSED_FORM_PAIRS:
+        return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)
@@ -350,6 +362,7 @@ def _real_float_point(at: Array, /) -> Array:
 
 #: The angle unit a bare value carries when no unit system says otherwise.
 RAD: Final = u.unit("rad")
+ANGLE: Final = u.dimension("angle")
 
 
 def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
@@ -372,104 +385,105 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
+#: `unit_of` is cheap but `dimension_of` is a `plum` dispatch costing ~60us a
+#: unit, and a chart sees the same handful forever. Same reasoning as the
+#: quotient cache below. Bounded, as the repo's other per-unit caches are:
+#: nothing here needs more than a few entries, and a caller building units
+#: programmatically should not grow a cache without limit.
+_dimension_of = ft.lru_cache(maxsize=128)(u.dimension_of)
+
+
+#: Dividing two units costs ~20x a dict lookup and a chart has only a handful,
+#: so the quotients are cached across calls. Cached *here* rather than per
+#: call: a fresh `lru_cache` each time caches nothing and costs more than the
+#: divisions it replaces (14us against 2.7us for nine entries).
+_unit_quotient = ft.lru_cache(maxsize=128)(operator.truediv)
+
+
+#: Chart pairs with a hand-written Jacobian. Populated by `_closed_form` at
+#: each definition, so a closed form added without that line is simply not
+#: routed to -- rather than routed to and failing.
+_CLOSED_FORM_PAIRS: set[tuple[type, type]] = set()
+
+
+def _closed_form(from_cls: type, to_cls: type, /) -> Callable[[Any], Any]:
+    """Mark the decorated `Array` Jacobian as the closed form for a chart pair."""
+
+    def register(fn: Any) -> Any:
+        _CLOSED_FORM_PAIRS.add((from_cls, to_cls))
+        return fn
+
+    return register
+
+
 def _jac_from_dict_via_closed_form(
     at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
 ) -> Any:
     """Send a coordinate dict to the closed form registered for its chart pair.
 
-    Three routes. Bare arrays stack and re-dispatch, as they already did.
-    Components that agree on a unit pack into one `Quantity` and take the
-    closed form. A mixed-unit point falls back to autodiff, which labels each
-    entry per column instead of relabelling them to a shared unit.
+    Called with a checked, unbatched point: the dispatch above has already
+    validated the keys and mapped any leading axes.
 
-    Packing is why `from_chart`'s components must share a dimension: it is
-    what makes the analytic body's ``at[..., i]`` work.
+    The closed forms take bare values, so strip every component to a canonical
+    unit -- angles to radians, everything else to the first unit of its kind --
+    differentiate there, and put the units back afterwards. Convertible units
+    are equivalent, so canonicalising costs a label and nothing else.
+
+    Bare on purpose, not for want of a container: a `QuantityMatrix` carries
+    per-column units and would pack this point exactly. Feeding one to a closed
+    form would put the arithmetic back on `Quantity` operands, and `quax` costs
+    a trace per primitive there -- the whole reason these bodies compute on raw
+    arrays. Stripping is also cheaper than packing, 589us against 751us for
+    `carray` on a 3-component point.
     """
-    at = from_chart.check_data(at, keys=True)
-
-    batched = _jac_over_batch(at, from_chart, to_chart, usys)
-    if batched is not _UNBATCHED:
-        return batched
-
     keys = from_chart.components
-    units = [u.unit_of(at[k]) for k in keys]
+    units: list[Any] = [u.unit_of(at[k]) for k in keys]
 
-    # Bare arrays already reach the closed form through the generic dispatch;
-    # reproduce that route rather than changing it.
+    # No units to strip or restore; *usys* says what the numbers mean.
     if all(unit is None for unit in units):
         at_arr = jnp.stack([at[k] for k in keys], axis=-1)
         return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)
-
-    # Only pack when the components already agree on a unit. Converting them
-    # to a common one would be arithmetically fine but would re-label the
-    # output: `jacfwd` gives a `km / m` entry where packing gives a
-    # dimensionless one. Same Jacobian, different presentation, so leave a
-    # mixed-unit point on the route it takes today.
-    if any(unit != units[0] for unit in units):
+    # A bare component beside a unitful one has no unit to canonicalise to.
+    if any(unit is None for unit in units):
         return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
-    packed = tree_cast_int_bool_to_float(
-        u.Q(jnp.stack([u.ustrip(units[0], at[k]) for k in keys], axis=-1), units[0])
+    dims = [_dimension_of(unit) for unit in units]
+
+    # One unit per dimension: radians for angles, the first one seen otherwise.
+    # Angles are seeded because a closed form emits them whether or not the
+    # input had any -- `Cart3D -> Spherical3D` takes three lengths.
+    canonical: dict[Any, Any] = {ANGLE: RAD}
+    for unit, dim in zip(units, dims, strict=True):
+        canonical.setdefault(dim, RAD if dim == ANGLE else unit)
+
+    out_dims = [u.dimension(dim) for dim in to_chart.coord_dimensions]
+    targets = [canonical[dim] for dim in dims]
+    values = [
+        u.ustrip(unit, at[k])
+        if target == unit
+        else u.uconvert_value(target, unit, u.ustrip(unit, at[k]))
+        for k, unit, target in zip(keys, units, targets, strict=True)
+    ]
+    raw = tree_cast_int_bool_to_float(jnp.stack(values, axis=-1))
+
+    jac = jnp.asarray(cxcapi.jac_pt_map(raw, from_chart, to_chart, usys=None))
+
+    # Column *i* was differentiated with respect to the canonical unit, so
+    # rescale it to the caller's and label it to match. A chart has a handful
+    # of distinct units, and dividing two costs far more than a dict lookup.
+    scale = [
+        1.0 if target == unit else u.uconvert_value(target, unit, 1.0)
+        for unit, target in zip(units, targets, strict=True)
+    ]
+    unit_rows = tuple(
+        tuple(_unit_quotient(canonical[dim], col) for col in units) for dim in out_dims
     )
-    return cxcapi.jac_pt_map(packed, from_chart, to_chart, usys=usys)
+    if any(f != 1.0 for f in scale):
+        jac = jac * jnp.asarray(scale, dtype=jac.dtype)
+    return ul.QuantityMatrix(jac, unit=unit_rows)
 
 
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cart2D -> Polar2D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
-    QM([[ 0.70710678,  0.70710678],
-        [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart3D, to_chart: Cylindrical3D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cart3D -> Cylindrical3D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(3.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d).value
-    Array([[ 1.,  0.,  0.],
-           [-0.,  1.,  0.],
-           [ 0.,  0.,  1.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart3D, to_chart: Spherical3D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cart3D -> Spherical3D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d).value
-    Array([[ 1.,  0.,  0.],
-           [ 0.,  0., -1.],
-           [-0.,  1.,  0.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
+@_closed_form(Cart2D, Polar2D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
@@ -572,6 +586,7 @@ def jac_pt_map(
 # against 6.0us), so this is an eager-path win.
 
 
+@_closed_form(Cart3D, Cylindrical3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cart3D, to_chart: Cylindrical3D, /, *, usys: OptUSys = None
@@ -644,6 +659,7 @@ def jac_pt_map(
     )
 
 
+@_closed_form(Cylindrical3D, Cart3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cylindrical3D, to_chart: Cart3D, /, *, usys: OptUSys = None
@@ -689,6 +705,7 @@ def jac_pt_map(
 # `theta` is the colatitude, measured from +z.
 
 
+@_closed_form(Cart3D, Spherical3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cart3D, to_chart: Spherical3D, /, *, usys: OptUSys = None
@@ -782,6 +799,7 @@ def jac_pt_map(
     )
 
 
+@_closed_form(Spherical3D, Cart3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Spherical3D, to_chart: Cart3D, /, *, usys: OptUSys = None
@@ -819,5 +837,110 @@ def jac_pt_map(
             [sin_t * cos_p, r * cos_t * cos_p / ang, -r * sin_t * sin_p / ang],
             [sin_t * sin_p, r * cos_t * sin_p / ang, r * sin_t * cos_p / ang],
             [cos_t, -r * sin_t / ang, zero],
+        ]
+    )
+
+
+# ===================================================================
+# LonLatSpherical3D <-> LonCosLatSpherical3D
+#
+# `lon_coslat = lon * cos(lat)`, with `lat` and `distance` untouched. The
+# generic route reaches these through colatitude and back, which is both the
+# slowest transition in the suite and more arithmetic than the map needs.
+
+
+@_closed_form(LonLatSpherical3D, LonCosLatSpherical3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: LonLatSpherical3D,
+    to_chart: LonCosLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``LonLatSpherical3D -> LonCosLatSpherical3D``.
+
+    $$
+    J = \frac{\partial(\lambda\cos\phi, \phi, d)}{\partial(\lambda, \phi, d)}
+      = \begin{pmatrix}
+          \cos\phi & -\lambda\sin\phi & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1
+        \end{pmatrix}
+    $$
+
+    Both angles are converted to radians for the trigonometry. The *entries*
+    then need no further scaling: each is an angle per angle, so the caller's
+    unit cancels between numerator and denominator.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([0.0, 0.0, 2.0])
+    >>> cxc.jac_pt_map(at, cxc.lonlat_sph3d, cxc.loncoslat_sph3d,
+    ...                usys=u.unitsystems.si)
+    Array([[ 1., -0.,  0.],
+           [ 0.,  1.,  0.],
+           [ 0.,  0.,  1.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    ang = _usys_angle_per_rad(usys)
+    lon, lat = at[..., 0] / ang, at[..., 1] / ang
+    zero, one = jnp.zeros_like(lon), jnp.ones_like(lon)
+    return jnp.array(
+        [
+            [jnp.cos(lat), -lon * jnp.sin(lat), zero],
+            [zero, one, zero],
+            [zero, zero, one],
+        ]
+    )
+
+
+@_closed_form(LonCosLatSpherical3D, LonLatSpherical3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: LonCosLatSpherical3D,
+    to_chart: LonLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``LonCosLatSpherical3D -> LonLatSpherical3D``.
+
+    $$
+    J = \frac{\partial(\lambda, \phi, d)}{\partial(\lambda\cos\phi, \phi, d)}
+      = \begin{pmatrix}
+          1/\cos\phi & \lambda\cos\phi\,\sin\phi/\cos^2\phi & 0 \\
+          0 & 1 & 0 \\ 0 & 0 & 1
+        \end{pmatrix}
+    $$
+
+    Singular at the poles, where `cos(lat)` vanishes and longitude is not
+    recoverable from `lon * cos(lat)` -- the same place the map itself is.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([0.0, 0.0, 2.0])
+    >>> cxc.jac_pt_map(at, cxc.loncoslat_sph3d, cxc.lonlat_sph3d,
+    ...                usys=u.unitsystems.si)
+    Array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    ang = _usys_angle_per_rad(usys)
+    lon_coslat, lat = at[..., 0] / ang, at[..., 1] / ang
+    cos_lat = jnp.cos(lat)
+    zero, one = jnp.zeros_like(lat), jnp.ones_like(lat)
+    return jnp.array(
+        [
+            [one / cos_lat, lon_coslat * jnp.sin(lat) / cos_lat**2, zero],
+            [zero, one, zero],
+            [zero, zero, one],
         ]
     )
