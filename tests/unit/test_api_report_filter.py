@@ -38,6 +38,20 @@ _SPEC.loader.exec_module(_api_report)
 _is_dispatched = _api_report._is_dispatched
 dispatched_paths = _api_report.dispatched_paths
 
+
+@pytest.fixture(autouse=True)
+def _no_step_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep `main()` from writing to the real CI job summary.
+
+    GitHub Actions sets `GITHUB_STEP_SUMMARY` for *every* step, so without
+    this the tests below append their "No report" blocks to the summary of
+    whichever test job ran them -- measured at 484 bytes of `RuntimeError:
+    boom` landing in "Check Python 3.13 on ubuntu-latest". Autouse rather
+    than per-test, so a test added later cannot reintroduce it.
+    """
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+
+
 #: A dispatched verb's own qualified path, and a same-named module beside it.
 _EXCLUDED = frozenset(
     {
