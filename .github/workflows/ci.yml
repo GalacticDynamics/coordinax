@@ -42,8 +42,7 @@ jobs:
     # Reports only. A pull request is exactly where a deliberate API change
     # belongs, so this never fails the build -- it writes what changed to the
     # job summary so the change is noticed and the release notes can account
-    # for it. `continue-on-error` is deliberately NOT used: the script exits 0
-    # on a finding, and reserves a non-zero exit for `--strict` at release.
+    # for it.
     #
     # Deliberately absent from `status`'s `needs`: adding it there would
     # turn the report back into the gate this is written not to be.

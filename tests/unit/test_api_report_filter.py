@@ -19,7 +19,6 @@ __all__: tuple[str, ...] = ()
 
 import importlib.util
 import pathlib
-import sys
 
 import pytest
 
@@ -33,10 +32,7 @@ _SPEC = importlib.util.spec_from_file_location(
     "_api_report_under_test",
     pathlib.Path(__file__).resolve().parents[2] / "scripts" / "api_report.py",
 )
-assert _SPEC is not None
-assert _SPEC.loader is not None
 _api_report = importlib.util.module_from_spec(_SPEC)
-sys.modules[_SPEC.name] = _api_report
 _SPEC.loader.exec_module(_api_report)
 
 _is_dispatched = _api_report._is_dispatched
@@ -81,13 +77,6 @@ def test_a_dispatched_verb_is_excluded(path: str) -> None:
 def test_a_name_collision_is_not_excluded(path: str) -> None:
     """What the bare-name filter dropped, silently."""
     assert not _is_dispatched(path, _EXCLUDED)
-
-
-def test_something_inside_a_dispatched_function_is_excluded() -> None:
-    """A descendant travels with its parent, so a nested object is dropped too."""
-    assert _is_dispatched(
-        "coordinax._src.charts.register_ptmap.pt_map.inner", _EXCLUDED
-    )
 
 
 def test_the_live_package_still_has_a_dispatched_surface_to_exclude() -> None:

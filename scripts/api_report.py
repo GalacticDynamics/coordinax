@@ -115,12 +115,12 @@ def dispatched_paths() -> frozenset[str]:
 
 
 def _is_dispatched(path: str, excluded: frozenset[str]) -> bool:
-    """Report whether `path` is a dispatched function, or inside one.
+    """Report whether `path` is one of the dispatched functions.
 
-    Exact match, or a descendant of one -- never a bare-name match, which
-    collides with same-named modules and methods.
+    Exact match, never a bare-name match: bare names collide with same-named
+    modules and methods, which is what `dispatched_paths` explains.
     """
-    return path in excluded or any(path.startswith(f"{p}.") for p in excluded)
+    return path in excluded
 
 
 def find_changes(ref: str) -> "list[griffe.Breakage]":
