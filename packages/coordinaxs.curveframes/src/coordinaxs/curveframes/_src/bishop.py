@@ -378,7 +378,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     """
 
     initial_normal: Any = None
-    """Initial U1 at tau_0: a dimensionless 3-vector, or ``"auto"``.
+    """The initial U1 at ``tau_0`` -- a dimensionless 3-vector, or ``"auto"``.
 
     Required. `None` raises -- see `_MSG_SEED_REQUIRED`: the seed is the
     n-plane gauge, and omitting it chose one silently.
@@ -887,7 +887,7 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
         *,
         station: Any = None,
         tau_0: u.AbstractQuantity | None = None,
-        initial_normal: Any | None = None,
+        initial_normal: Any,
         diffeqsolver: DiffEqSolver = _DIFFEQSOLVER,
     ) -> "BishopFrame[FrameT]":
         r"""Construct a BishopFrame from a base frame and curve.
