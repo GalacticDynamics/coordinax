@@ -95,6 +95,16 @@ Invalid:
 
 ## Versioning Strategy
 
+### Before tagging: check what the public API did
+
+```bash
+uv run nox -s api_report -- --ref <last-release-tag> --strict
+```
+
+Reports what the public API removed or changed since that tag, and exits non-zero if anything did -- which is the signal that the release needs a major bump rather than a minor one. On a pull request the same job runs without `--strict`, reporting into the run summary and never gating.
+
+Two limits, both deliberate. It excludes `plum.Function` names, because `griffe` reads source statically and sees only the last registration of a dispatched verb, so it would both miss real removals and report additions as removals. And it does not detect a changed _return_ annotation. Neither is covered by the report, so neither is evidence of absence -- see [`scripts/api_report.py`](scripts/api_report.py).
+
 All packages use `hatch-vcs` with package-specific tag matching:
 
 - `coordinax` matches `coordinax-v*`
