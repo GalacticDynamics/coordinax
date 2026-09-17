@@ -1327,21 +1327,27 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     dispatches. Optional (`None`) for the `CDict` generic dispatch's quantity-valued
     branch, and for all analytical dispatches.
 
-    **Analytical dispatches** (higher precedence than the generic `CDict` fallback;
+    **Analytical dispatches** (higher precedence than differentiating the map;
     `usys` is optional):
 
-    - `Cart2D -> Polar2D`: `Array`, `AbstractQuantity`, and `CDict` overloads.
-      The `AbstractQuantity` overload computes closed-form partial derivatives and
-      explicitly sets the ∂θ row units to `rad / input_length_unit` (astropy treats rad
-      as dimensionless, so the unit must be forced manually).
-    - Further analytical pairs (`Polar2D -> Cart2D`, `Cart3D ↔ Sph3D`,
-      `Cart3D ↔ Cyl3D`) follow the same pattern via the generic `CDict` dispatch.
+    A chart pair may have a hand-written Jacobian, given as an `Array` dispatch
+    tagged `@_closed_form(From, To)`. The tag records the pair in
+    `_CLOSED_FORM_PAIRS`, which the `CDict` dispatch consults; that registry is
+    the authoritative list of such pairs and is deliberately not duplicated here.
+
+    Two constraints apply to writing one, both of which are silent when broken:
+
+    - An angular row must have its unit forced — astropy treats `rad` as
+      dimensionless, so `rad / length` will not arise from the arithmetic.
+    - On bare arrays an angular row is per `usys["angle"]` and an angular column
+      with respect to it, so rows scale by that factor and columns divide by it.
 
     **Failure semantics:**
 
     - Raises `plum.NotFoundLookupError` when calling the `(at: CDict, ...)` dispatch
-      with `is_array=True` values and `usys=None` for a chart pair that has no analytical
-      `Array` dispatch (e.g., `cart3d -> sph3d` without a unit system).
+      with `is_array=True` values and `usys=None` for a chart pair with no closed form:
+      nothing then says what the bare numbers mean. A pair *with* one reads bare angles
+      as radians and needs no unit system.
     - Raises `ValueError` if `at` keys do not match `from_chart.components` (via
       `check_data`).
 
