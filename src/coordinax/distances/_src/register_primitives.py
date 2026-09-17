@@ -316,7 +316,7 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> Quantit
     Q(8, 'm3')
 
     """
-    return Quantity(lax.integer_pow(x.value, y), unit=x.unit**y)
+    return qlax.integer_pow(convert(x, Quantity), y)  # ty: ignore[invalid-return-type]
 
 
 # ==============================================================================
