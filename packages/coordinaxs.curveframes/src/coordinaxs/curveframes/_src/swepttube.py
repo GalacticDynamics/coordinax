@@ -44,12 +44,14 @@ _MSG_DIRECTOR_UNUSED = (
 
 
 def _check_builder(builder: Any, /) -> None:
-    """Require ``builder`` to be a builder *class*, before `issubclass` sees it.
+    """Require ``builder`` to be a builder *class*, with a message that names it.
 
-    `issubclass` raises a bare "arg 1 must be a class" on an instance, and
-    accepts any *unrelated* class. Module-level so it can be tested directly:
-    with runtime typechecking on, the ``builder: type`` annotation rejects a
-    bad value first, so the raises below fire only with it off.
+    `issubclass` raises a bare "arg 1 must be a class" on an instance, and for
+    an unrelated class returns `False` rather than raising at all -- so the two
+    branches below are what turn either into a usable message. Module-level so
+    it can be tested directly: with runtime typechecking on, the
+    ``builder: type`` annotation rejects a bad value first, so these fire only
+    with it off.
     """
     if not isinstance(builder, type):
         raise TypeError(
@@ -147,8 +149,7 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     def __call__(self, t: Any, /) -> TubularChart:
         """Return the spatial slice at ``t``."""
         # `__check_init__` has paired these: a gauge name implies a director.
-        # Spelled `is not None` to match that check -- `gauge_field` is typed
-        # `str | None`, so truthiness would also skip an empty-string name.
+        # Spelled `is not None` to match how that check tests them.
         gauge = self.builder.gauge_field
         seeded = gauge is not None and self.director is not None
         seed = {gauge: self.director(t)} if seeded else {}
