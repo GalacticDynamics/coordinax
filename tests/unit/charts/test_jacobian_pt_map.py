@@ -21,6 +21,7 @@ import unxts.linalg as ul
 
 import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst
+from coordinax._src.charts import jacobian
 
 usys_si = u.unitsystems.si
 
@@ -447,15 +448,25 @@ class TestUnitfulDictsReachTheClosedForm:
             cxc.jac_pt_map(at, from_chart, to_chart)
 
     def test_a_batched_dict_on_an_unrouted_pair_still_maps_pointwise(self) -> None:
-        """The generic dict dispatch batches too; only the inner route differs."""
+        """The generic dict dispatch batches too; only the inner route differs.
+
+        The pair must be one with no closed form, or this silently becomes a
+        second test of the routed path. `Cylindrical3D -> LonCosLatSpherical3D`
+        is one today; if it gains one, move this rather than deleting it --
+        the assertion below cannot tell which route it took.
+        """
         n = 4
         at = {
             "rho": u.Q(jnp.full((n,), 2.0), "m"),
             "phi": u.Q(jnp.full((n,), 0.7), "rad"),
             "z": u.Q(jnp.linspace(1.0, 3.0, n), "m"),
         }
+        assert (
+            type(cxc.cyl3d),
+            type(cxc.loncoslat_sph3d),
+        ) not in jacobian._CLOSED_FORM_PAIRS
 
-        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
 
         assert np.asarray(jnp.asarray(J.value)).shape == (n, 3, 3)
 
@@ -1049,6 +1060,11 @@ class TestJacobianPtMapCDictArrayBranch:
         gains a closed form, move this to another rather than deleting it.
         """
         at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
+        assert (
+            type(cxc.cyl3d),
+            type(cxc.loncoslat_sph3d),
+        ) not in jacobian._CLOSED_FORM_PAIRS
+
         with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
             cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
 
