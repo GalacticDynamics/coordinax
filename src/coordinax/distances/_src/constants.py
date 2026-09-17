@@ -1,6 +1,6 @@
-"""Dimensions and units the distance kinds check against. Internal use only."""
+"""Dimensions that tell the distance kinds apart. Internal use only."""
 
-__all__ = ("ANGLE", "LENGTH", "MAGNITUDE", "ONE", "RADIAN")
+__all__ = ("ANGLE", "LENGTH", "MAGNITUDE")
 
 from typing import cast
 
@@ -14,6 +14,3 @@ LENGTH: u.AbstractDimension = cast("u.AbstractDimension", u.dimension("length"))
 MAGNITUDE: u.AbstractDimension = cast(
     "u.AbstractDimension", u.dimension_of(u.Q(1.0, "mag"))
 )
-
-ONE = u.unit("")
-RADIAN = u.unit("radian")
