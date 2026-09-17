@@ -20,6 +20,7 @@ uv run nox -s all                       # lint + test + docs (the contributor ga
 uv run nox -s lint                      # prek + ty  (pylint currently disabled)
 uv run nox -s test                      # full pytest across the workspace
 uv run nox -s docs                      # build docs ("-- --serve" to preview)
+uv run nox -s api_report                # what this branch changes about the public API
 ```
 
 Parametrized sessions need quoting, and take pytest args after `--`:

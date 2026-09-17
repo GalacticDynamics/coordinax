@@ -369,5 +369,12 @@ def build(s: nox.Session, /) -> None:
 
 ################################################################################
 
+
+@session(uv_groups=["api"], uv_extras=["workspace"], reuse_venv=True)
+def api_report(s: nox.Session, /) -> None:
+    """Report public API changes (``-- --strict`` to fail on them)."""
+    s.run("python", "scripts/api_report.py", *s.posargs)
+
+
 if __name__ == "__main__":
     nox.main()
