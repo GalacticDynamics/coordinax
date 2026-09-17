@@ -161,27 +161,16 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
 
 @pytest.fixture(scope="session")
 def build_frame():
-    """See `_build_frame`; a fixture so subdirectories need no import.
-
-    The suite forbids parent-relative imports (TID252), and `tests/` is
-    not importable absolutely, so a fixture is how a helper reaches
-    `tests/unit/`.
-    """
+    """See `_build_frame`; a fixture because TID252 bars the import."""
     return _build_frame
 
 
 def _build_frame(builder_cls, /, *args, **kwargs):
     """Construct ``builder_cls``, supplying the Bishop seed only where it fits.
 
-    `BishopBuilder` requires `initial_normal`; the others reject it, because
-    their frames are fixed pointwise by the curve and a seed would be silently
-    ignored. So a test parametrized over builder *classes* cannot share one
-    call -- passing the seed breaks Frenet, omitting it breaks Bishop -- and
-    this is the one place that difference is spelled.
-
-    ``"auto"`` rather than a vector: these tests predate the requirement and
-    assert against the world-axis rule's numbers. A test that cares which gauge
-    it gets should pass its own, and say why.
+    `BishopBuilder` requires `initial_normal` and the others reject it, so a
+    test parametrized over builder *classes* cannot share one call. ``"auto"``
+    keeps these tests' existing numbers; one that cares should pass its own.
     """
     if issubclass(builder_cls, cxfc.BishopBuilder):
         kwargs.setdefault("initial_normal", "auto")
@@ -189,12 +178,7 @@ def _build_frame(builder_cls, /, *args, **kwargs):
 
 
 def _from_curve(frame_cls, /, *args, **kwargs):
-    """`frame_cls.from_curve`, with the Bishop seed where that path needs one.
-
-    `from_curve` builds a builder internally, so it inherits the same
-    requirement -- and the same problem for a test parametrized over frame
-    *classes*. See `_build_frame`.
-    """
+    """`frame_cls.from_curve`, seeded where needed. See `_build_frame`."""
     if issubclass(frame_cls, cxfc.BishopFrame):
         kwargs.setdefault("initial_normal", "auto")
     return frame_cls.from_curve(*args, **kwargs)

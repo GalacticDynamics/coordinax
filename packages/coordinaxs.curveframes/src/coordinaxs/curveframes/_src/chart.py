@@ -330,12 +330,8 @@ class TubularChart(AbstractParameterizedChart):
             ...                           jnp.cos(t) - 2 * jnp.cos(2 * t),
             ...                           -jnp.sin(3 * t)]), "km")
             >>> bounds = (u.Q(0.0, "s"), u.Q(float(2 * np.pi), "s"))
-            >>> ch = cxfc.TubularChart(cxfc.BishopBuilder(
-            ...     trefoil,
-            ...     "s",
-            ...     initial_normal="auto",
-            ... ),
-            ...                        tau_bounds=bounds)
+            >>> b = cxfc.BishopBuilder(trefoil, "s", initial_normal="auto")
+            >>> ch = cxfc.TubularChart(b, tau_bounds=bounds)
             >>> bool(abs(ch.holonomy().ustrip("rad")) > 2.2)
             True
 
@@ -346,12 +342,8 @@ class TubularChart(AbstractParameterizedChart):
             ...     t = tau.ustrip("s")
             ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
             ...                           jnp.zeros_like(t)]), "km")
-            >>> ch = cxfc.TubularChart(cxfc.BishopBuilder(
-            ...     circle,
-            ...     "s",
-            ...     initial_normal="auto",
-            ... ),
-            ...                        tau_bounds=bounds)
+            >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+            >>> ch = cxfc.TubularChart(b, tau_bounds=bounds)
             >>> bool(abs(ch.holonomy().ustrip("rad")) < 1e-8)
             True
 

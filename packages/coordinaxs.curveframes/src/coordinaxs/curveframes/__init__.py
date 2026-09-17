@@ -27,9 +27,7 @@ Typical usage::
 
     import coordinaxs.curveframes as cxfc
 
-    # `tau_unit` is read off the parameter the frame is evaluated at.
-    # Bishop needs a seed: nothing in the curve fixes its n-plane gauge, and
-    # `"auto"` names the world-axis rule (a 3-vector picks the plane yourself).
+    # `tau_unit` is read off the parameter; Bishop also needs an n-plane seed.
     fs_frame = cxfc.FrenetSerretFrame.from_curve(base_frame, curve)
     b_frame = cxfc.BishopFrame.from_curve(base_frame, curve, initial_normal="auto")
 

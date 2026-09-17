@@ -126,9 +126,6 @@ def _float(x: Any, /) -> Array:
     return arr.astype(jnp.result_type(arr, float))
 
 
-#: Sentinel selecting the world-axis seed rule, by name rather than by silence.
-AUTO_SEED = "auto"
-
 _MSG_SEED_NOT_AUTO = (
     "`initial_normal={seed!r}` is not a seed. The only string accepted is "
     '`"auto"`, naming the world-axis rule. Pass that, or a dimensionless '
@@ -137,23 +134,10 @@ _MSG_SEED_NOT_AUTO = (
 
 _MSG_SEED_REQUIRED = (
     "`initial_normal` is required: nothing in the curve fixes the n-plane "
-    "gauge, and a chart's `(n1, n2)` genuinely depend on it wherever the "
-    "curvature and the offset are both non-zero -- so a caller who never chose "
-    "a seed still depends on one. Pass a dimensionless 3-vector to choose it, "
-    'or `initial_normal="auto"` to take the world-axis rule '
-    "(`_auto_initial_normal`) and its caveats: it is anchored to the world "
-    "frame rather than the curve, so it is not equivariant under a rotating "
-    "body, and `argmin` makes it jump where two tangent components cross. "
-    "Those are the two failure modes behind #870. Across a family of slices, "
-    "pass the *same* vector to every builder: a seed chosen per slice makes "
-    "`(n1, n2)` name a different physical point on each one, which is how "
-    "frame drift gets reported as physical strain."
+    "gauge, so leaving it out chose one silently. Pass a dimensionless "
+    '3-vector, or `initial_normal="auto"` for the world-axis rule -- see '
+    "`BishopBuilder` for why that rule is not free (#870)."
 )
-
-
-def _is_auto(seed: Any, /) -> bool:
-    """Whether ``seed`` selects the world-axis rule rather than a vector."""
-    return isinstance(seed, str) and seed == AUTO_SEED
 
 
 def _orthonormalize(v: Any, T0_val: Any) -> Any:
@@ -263,6 +247,14 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         Omitting it raises: the seed is the n-plane gauge, and a chart's
         $(n_1, n_2)$ depend on it wherever the curvature and the offset are
         both non-zero, so a caller who never chose one still depended on it.
+
+        ``"auto"`` is not free.  It is anchored to the world frame rather than
+        the curve, so it is not equivariant under a rotating body, and
+        ``argmin`` makes it jump where two tangent components cross -- the two
+        failure modes behind #870.  Across a family of slices pass the *same*
+        vector to every builder: a seed chosen per slice makes $(n_1, n_2)$
+        name a different physical point on each one, which is how frame drift
+        gets reported as physical strain.
     diffeqsolver : DiffEqSolver, optional
         `diffraxtra.DiffEqSolver` configuring the parallel-transport solve:
         solver, step-size controller, adjoint and step budget in one object.
@@ -386,24 +378,16 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     initial_normal: Any = None
     """The initial U1 at ``tau_0`` -- a dimensionless 3-vector, or ``"auto"``.
 
-    Required. `None` raises -- see `_MSG_SEED_REQUIRED`: the seed is the
-    n-plane gauge, and omitting it chose one silently.
-
-    ``"auto"`` is recorded in `auto_seed` and this is set back to `None`, so
-    the stored field is always an array or `None`. A string here would be a
-    *pytree leaf*: `jax.tree.leaves` would return it alongside the arrays, and
-    every `jit`/`vmap`/`grad` over the builder would carry a non-array leaf.
-    Measured before the split: 103 failures and 72 errors across the package.
+    Required; `None` raises. ``"auto"`` is recorded in `auto_seed` and this is
+    set back to `None`, so the stored field is never a string -- which would
+    be a pytree leaf riding along in every trace.
     """
 
     auto_seed: bool = eqx.field(static=True, default=False, repr=False, kw_only=True)
     """Whether the world-axis rule was selected by name.
 
-    Derived from ``initial_normal`` in ``__post_init__``. ``kw_only`` because
-    `BishopFrame.from_curve` forwards *positionally*, so a field in the
-    positional list shifts `diffeqsolver` into this one. ``init=False`` would
-    be tighter but breaks `dataclasses.replace`. ``repr=False`` keeps every
-    builder's printed form -- doctested in many places -- unchanged.
+    Set from ``initial_normal`` in ``__post_init__``. ``kw_only`` because
+    `BishopFrame.from_curve` forwards *positionally*.
     """
 
     # `static=True` is *safe* because a `DiffEqSolver` is hashable, compares
@@ -461,7 +445,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         also declares its unit, and is the only way to say "start somewhere
         other than zero" regardless.
         """
-        if _is_auto(self.initial_normal):
+        if isinstance(self.initial_normal, str) and self.initial_normal == "auto":
             self.auto_seed = True
             self.initial_normal = None
 
@@ -574,11 +558,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> R = cxfc.BishopBuilder(
-        ...     circle,
-        ...     "s",
-        ...     initial_normal="auto",
-        ... ).rotation_matrix(u.Q(0.0, "s"))
+        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> R = b.rotation_matrix(u.Q(0.0, "s"))
         >>> bool(jnp.allclose(R @ R.T, jnp.eye(3), atol=1e-6))
         True
 
@@ -737,11 +718,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> cxfc.BishopBuilder(
-        ...     circle,
-        ...     "s",
-        ...     initial_normal="auto",
-        ... ).tangent(u.Q(0.0, "s"))
+        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> b.tangent(u.Q(0.0, "s"))
         Q([-0.,  1.,  0.], '')
 
         """
@@ -774,11 +752,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> U1 = cxfc.BishopBuilder(
-        ...     circle,
-        ...     "s",
-        ...     initial_normal="auto",
-        ... ).normal1(u.Q(0.0, "s"))
+        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> U1 = b.normal1(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U1.value))
         1.0
 
@@ -806,11 +781,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         ...     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t),
         ...                           jnp.zeros_like(t)]), "m")
 
-        >>> U2 = cxfc.BishopBuilder(
-        ...     circle,
-        ...     "s",
-        ...     initial_normal="auto",
-        ... ).normal2(u.Q(0.0, "s"))
+        >>> b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+        >>> U2 = b.normal2(u.Q(0.0, "s"))
         >>> float(jnp.linalg.norm(U2.value))
         1.0
 

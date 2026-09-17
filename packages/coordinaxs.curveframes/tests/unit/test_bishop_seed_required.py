@@ -8,6 +8,7 @@ a rigid rotation -- an isometry -- reported `|K| = 0.1178` instead of zero.
 These pin the breaking half directly, so it cannot drift back to a default.
 """
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
@@ -23,27 +24,22 @@ def circle(tau: u.AbstractQuantity) -> u.AbstractQuantity:
 
 
 def test_omitting_the_seed_raises() -> None:
-    """The whole point of the change: silence is no longer a choice."""
-    with pytest.raises(ValueError, match="`initial_normal` is required"):
-        cxfc.BishopBuilder(circle, "s")
-
-
-def test_the_message_names_both_ways_out() -> None:
-    """A vector, or the world-axis rule by name -- and the caveats of the latter."""
+    """Silence is no longer a choice, and the message names both ways out."""
     with pytest.raises(ValueError, match="`initial_normal` is required") as excinfo:
         cxfc.BishopBuilder(circle, "s")
     msg = str(excinfo.value)
 
+    assert "3-vector" in msg
     assert "auto" in msg
-    assert "equivariant" in msg  # why the auto rule is not free
-    assert "#870" in msg
+    assert "#870" in msg  # where the caveats are written down
 
 
 def test_auto_reproduces_the_old_default_exactly() -> None:
-    """Bit-identical, which is why ~170 existing sites kept their numbers.
+    """``"auto"`` seeds from `_auto_initial_normal` at ``tau_0``, exactly.
 
-    If this ever drifts, every call site that opted into ``"auto"`` silently
-    changed frame -- so it is asserted exactly rather than within a tolerance.
+    That wiring is what the old `None` default did, so every site that opted
+    into ``"auto"`` kept its numbers. Asserted exactly, not within a tolerance:
+    any drift is a silent change of frame.
     """
     b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
     r = np.asarray(b.rotation_matrix(u.Q(0.37, "s")))
@@ -75,16 +71,11 @@ def test_an_explicit_vector_is_honoured() -> None:
 
 
 def test_the_sentinel_is_not_a_pytree_leaf() -> None:
-    """`'auto'` in a dynamic field would ride along in every trace.
+    """`'auto'` in a dynamic field would ride along in every trace."""
+    b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
 
-    Measured when it did: 103 failures across the package, because
-    `jax.tree.leaves` returned a `str` beside the arrays.
-    """
-    import jax
-
-    leaves = jax.tree.leaves(cxfc.BishopBuilder(circle, "s", initial_normal="auto"))
-
-    assert not any(isinstance(leaf, str) for leaf in leaves)
+    assert b.auto_seed is True
+    assert not any(isinstance(leaf, str) for leaf in jax.tree.leaves(b))
 
 
 @pytest.mark.parametrize("typo", ["atuo", "AUTO", "Auto", "auto "])
@@ -92,13 +83,3 @@ def test_a_near_miss_string_is_refused(typo: str) -> None:
     """A stray string would ride along as a pytree leaf, failing later in JAX."""
     with pytest.raises(ValueError, match="is not a seed"):
         cxfc.BishopBuilder(circle, "s", initial_normal=typo)
-
-
-def test_only_the_exact_sentinel_is_accepted() -> None:
-    """And it leaves nothing behind in the tree."""
-    import jax
-
-    b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
-
-    assert b.auto_seed is True
-    assert not any(isinstance(leaf, str) for leaf in jax.tree.leaves(b))

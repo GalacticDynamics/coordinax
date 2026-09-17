@@ -510,11 +510,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         time:
 
         >>> worldtube = cxfc.BishopBuilder(
-        ...     stretching,
-        ...     "km",
-        ...     station=u.Q(1.3, "km"),
-        ...     initial_normal="auto",
-        ... )
+        ...     stretching, "km", station=u.Q(1.3, "km"), initial_normal="auto")
         >>> worldtube.velocity(u.Q(1.0, "s")).round(3)
         Q([0.65 , 0.169, 0.   ], 'km / s')
 
@@ -522,10 +518,7 @@ class AbstractCurveFrameBuilder(eqx.Module):
         answer is the same, because it is the same event either way:
 
         >>> slice_ = cxfc.BishopBuilder(
-        ...     cxfc.AtTime(stretching, u.Q(1.0, "s")),
-        ...     "km",
-        ...     initial_normal="auto",
-        ... )
+        ...     cxfc.AtTime(stretching, u.Q(1.0, "s")), "km", initial_normal="auto")
         >>> slice_.velocity(u.Q(1.3, "km")).round(3)
         Q([0.65 , 0.169, 0.   ], 'km / s')
 
@@ -538,11 +531,8 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     a = arc.ustrip("km")
         ...     return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
 
-        >>> cxfc.BishopBuilder(
-        ...     circle,
-        ...     "km",
-        ...     initial_normal="auto",
-        ... ).velocity(u.Q(0.0, "km"))
+        >>> b = cxfc.BishopBuilder(circle, "km", initial_normal="auto")
+        >>> b.velocity(u.Q(0.0, "km"))
         Q([0., 0., 0.], 'km / s')
 
         Notes
