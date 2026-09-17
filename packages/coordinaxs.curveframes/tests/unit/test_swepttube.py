@@ -270,6 +270,25 @@ def test_a_signed_planar_tube_requires_its_plane() -> None:
         )
 
 
+def test_a_one_argument_curve_is_refused_at_construction() -> None:
+    """Unbound, this failed only once a slice was *evaluated*.
+
+    Construction and `tube(t)` both succeeded -- the chart is built lazily --
+    and the failure arrived as a bare `takes 1 positional argument but 2 were
+    given` from inside the curve, with nothing naming the tube. A static tube
+    is still spelled `lambda tau, t: gamma(tau)`, as `static_helix` above is.
+    """
+
+    def one_argument(tau: u.AbstractQuantity) -> u.AbstractQuantity:
+        s = tau.ustrip("km")
+        return u.Q(jnp.stack([jnp.cos(s), jnp.sin(s), 0.4 * s]), "km")
+
+    with pytest.raises(ValueError, match="two-argument"):
+        cxfc.SweptTube(
+            one_argument, "km", tau_bounds=BOUNDS, director=lambda t: jnp.asarray(_E)
+        )
+
+
 # --------------------------------------------------------------------------
 # The narrowing, and criterion 6.
 

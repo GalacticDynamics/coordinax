@@ -7,10 +7,24 @@ from typing import Any
 
 import equinox as eqx
 
+from .arclength import _is_two_argument
 from .attime import AtTime
 from .base import AbstractCurveFrameBuilder, unit_or_none
 from .bishop import BishopBuilder
 from .chart import TubularChart
+
+_MSG_ONE_ARGUMENT_CURVE = (
+    "`SweptTube` needs a two-argument `gamma(tau, t)`: it binds the time per "
+    "slice with `AtTime`, and a one-argument curve has no slot for it. "
+    "Unbound, this surfaced only once a slice was *evaluated* -- construction "
+    "and `tube(t)` both succeeded, and the failure arrived as a bare "
+    "`takes 1 positional argument but 2 were given` from inside the curve, "
+    "often under `jacfwd`, with nothing naming the tube. A tube that does not "
+    "change with time is still spelled with both: "
+    "`lambda tau, t: gamma(tau)`, which says the time-independence rather "
+    "than leaving it to be inferred from an arity."
+)
+
 
 _MSG_DIRECTOR_REQUIRED = (
     "`director` is required: `{name}` fixes its normal plane from `{arg}`, "
@@ -140,6 +154,9 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
         once a slice is built -- too late to name the choice that was wrong.
         """
         _check_builder(self.builder)
+
+        if not _is_two_argument(self.curve):
+            raise ValueError(_MSG_ONE_ARGUMENT_CURVE)
 
         # The builder says whether it has a gauge, and what to call it. Asking
         # `issubclass(..., BishopBuilder)` instead asserted that the question
