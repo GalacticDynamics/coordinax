@@ -165,7 +165,7 @@ def test_an_ordinary_curve_is_not_refused_by_the_resolution_check() -> None:
         t = tau.ustrip("s")
         return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), jnp.zeros_like(t)]), "km")
 
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
     x = u.Q(jnp.asarray([2.0 * np.cos(1.0), 2.0 * np.sin(1.0), 0.0]), "km")
     tau = cxfc.nearest_tau(builder, x, bounds=(u.Q(0.0, "s"), u.Q(2 * np.pi, "s")))
     assert float(tau.ustrip("s")) == pytest.approx(1.0, abs=1e-3)

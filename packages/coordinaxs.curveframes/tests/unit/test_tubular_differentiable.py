@@ -32,7 +32,9 @@ BOUNDS = (u.Q(-1.0, "s"), u.Q(6.0, "s"))
 
 def _chart(radius_km: float) -> cxfc.TubularChart:
     curve = Helix(radius=u.Q(radius_km, "km"))
-    return cxfc.TubularChart(cxfc.BishopBuilder(curve, "s"), tau_bounds=BOUNDS)
+    return cxfc.TubularChart(
+        cxfc.BishopBuilder(curve, "s", normal_0="auto"), tau_bounds=BOUNDS
+    )
 
 
 def test_a_live_curve_parameter_is_a_leaf() -> None:

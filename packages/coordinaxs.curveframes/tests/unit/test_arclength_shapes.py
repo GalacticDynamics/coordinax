@@ -38,7 +38,8 @@ def circle(s: u.AbstractQuantity, radius_km: float = 2.0) -> u.AbstractQuantity:
 
 def _chart(curve, s_max: float) -> cxfc.TubularChart:
     return cxfc.TubularChart(
-        cxfc.BishopBuilder(curve, "km"), tau_bounds=(u.Q(0.0, "km"), u.Q(s_max, "km"))
+        cxfc.BishopBuilder(curve, "km", normal_0="auto"),
+        tau_bounds=(u.Q(0.0, "km"), u.Q(s_max, "km")),
     )
 
 

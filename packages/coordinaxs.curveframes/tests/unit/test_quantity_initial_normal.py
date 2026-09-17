@@ -1,4 +1,4 @@
-r"""A `Quantity` ``initial_normal`` must survive differentiation.
+r"""A `Quantity` ``normal_0`` must survive differentiation.
 
 Only a *traced* one ever failed -- a constant `Quantity` has always worked.
 """
@@ -36,9 +36,7 @@ def _spun(t: u.AbstractQuantity) -> jax.Array:
 def _strain(wrap=lambda v: v, director=_spun) -> float:
     """`K_tau_tau` for ``director(t)`` wrapped by ``wrap``."""
     fam = lambda t: cxfc.TubularChart(
-        cxfc.BishopBuilder(
-            cxfc.AtTime(helix, t), "km", initial_normal=wrap(director(t))
-        ),
+        cxfc.BishopBuilder(cxfc.AtTime(helix, t), "km", normal_0=wrap(director(t))),
         tau_bounds=BOUNDS,
     )
     # Off-axis, and legitimately so: `director(t)` is carried across the family

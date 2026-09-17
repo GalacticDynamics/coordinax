@@ -7,7 +7,7 @@ round -- and ``jax.experimental.enable_x64`` no longer exists.
 
 Tested at `_float` rather than through `BishopBuilder`: the builder's output
 dtype is set by the curve and the ODE solver, which promote to f64 under x64
-whatever the ``initial_normal`` was, so an end-to-end assertion would be
+whatever the ``normal_0`` was, so an end-to-end assertion would be
 testing diffrax rather than this contract.
 """
 

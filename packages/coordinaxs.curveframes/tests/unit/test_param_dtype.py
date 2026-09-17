@@ -48,18 +48,18 @@ CLOSED_FORM_IDS = ["frenet-serret", "signed-planar"]
 class TestF32ParameterIsPreserved:
     """An f32 parameter must stay f32 through every accessor."""
 
-    def test_tangent(self, builder_cls: Any) -> None:
+    def test_tangent(self, builder_cls: Any, build_frame) -> None:
         """Inherited from `base.tangent`, which cast independently."""
-        T = builder_cls(circle, "s").tangent(u.Q(jnp.float32(0.3), "s"))
+        T = build_frame(builder_cls, circle, "s").tangent(u.Q(jnp.float32(0.3), "s"))
         assert T.value.dtype == jnp.float32
 
-    def test_location(self, builder_cls: Any) -> None:
-        loc = builder_cls(circle, "s").location(u.Q(jnp.float32(0.3), "s"))
+    def test_location(self, builder_cls: Any, build_frame) -> None:
+        loc = build_frame(builder_cls, circle, "s").location(u.Q(jnp.float32(0.3), "s"))
         assert loc.value.dtype == jnp.float32
 
-    def test_f32_station(self, builder_cls: Any) -> None:
+    def test_f32_station(self, builder_cls: Any, build_frame) -> None:
         """A pinned f32 `station` is the other way the parameter arrives."""
-        b = builder_cls(circle, "s", u.Q(jnp.float32(0.4), "s"))
+        b = build_frame(builder_cls, circle, "s", u.Q(jnp.float32(0.4), "s"))
         assert b.tangent(u.Q(jnp.float32(0.0), "s")).value.dtype == jnp.float32
 
 
@@ -67,12 +67,14 @@ class TestF32ParameterIsPreserved:
 class TestF32RotationMatrixClosedForm:
     """The closed-form builders keep the whole triad in f32."""
 
-    def test_from_tau(self, builder_cls: Any) -> None:
-        R = builder_cls(circle, "s").rotation_matrix(u.Q(jnp.float32(0.3), "s"))
+    def test_from_tau(self, builder_cls: Any, build_frame) -> None:
+        R = build_frame(builder_cls, circle, "s").rotation_matrix(
+            u.Q(jnp.float32(0.3), "s")
+        )
         assert R.dtype == jnp.float32
 
-    def test_from_station(self, builder_cls: Any) -> None:
-        b = builder_cls(circle, "s", u.Q(jnp.float32(0.4), "s"))
+    def test_from_station(self, builder_cls: Any, build_frame) -> None:
+        b = build_frame(builder_cls, circle, "s", u.Q(jnp.float32(0.4), "s"))
         assert b.rotation_matrix(u.Q(jnp.float32(0.0), "s")).dtype == jnp.float32
 
 
@@ -83,7 +85,9 @@ def test_bishop_transport_is_f64_by_design() -> None:
     meeting its stated tolerance -- so this asserting f64 is the guard, not
     an admission.
     """
-    R = cxfc.BishopBuilder(circle, "s").rotation_matrix(u.Q(jnp.float32(0.3), "s"))
+    R = cxfc.BishopBuilder(circle, "s", normal_0="auto").rotation_matrix(
+        u.Q(jnp.float32(0.3), "s")
+    )
     assert R.dtype == jnp.float64
 
 
@@ -91,17 +95,19 @@ def test_bishop_transport_is_f64_by_design() -> None:
 class TestIntegerParameterStillPromotes:
     """Preserving f32 must not stop ints from becoming floats."""
 
-    def test_rotation_matrix(self, builder_cls: Any) -> None:
-        R = builder_cls(circle, "s").rotation_matrix(u.Q(jnp.asarray(1), "s"))
+    def test_rotation_matrix(self, builder_cls: Any, build_frame) -> None:
+        R = build_frame(builder_cls, circle, "s").rotation_matrix(
+            u.Q(jnp.asarray(1), "s")
+        )
         assert jnp.issubdtype(R.dtype, jnp.floating)
 
-    def test_tangent(self, builder_cls: Any) -> None:
-        T = builder_cls(circle, "s").tangent(u.Q(jnp.asarray(1), "s"))
+    def test_tangent(self, builder_cls: Any, build_frame) -> None:
+        T = build_frame(builder_cls, circle, "s").tangent(u.Q(jnp.asarray(1), "s"))
         assert jnp.issubdtype(T.value.dtype, jnp.floating)
 
-    def test_location(self, builder_cls: Any) -> None:
+    def test_location(self, builder_cls: Any, build_frame) -> None:
         """`location` did not promote before; under #886's fix it does."""
-        loc = builder_cls(circle, "s").location(u.Q(jnp.asarray(1), "s"))
+        loc = build_frame(builder_cls, circle, "s").location(u.Q(jnp.asarray(1), "s"))
         assert jnp.issubdtype(loc.value.dtype, jnp.floating)
 
 

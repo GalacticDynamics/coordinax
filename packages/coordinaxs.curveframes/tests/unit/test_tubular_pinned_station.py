@@ -28,17 +28,21 @@ def two_arg(s: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
 
 
 @pytest.mark.parametrize("builder", [cxfc.BishopBuilder, cxfc.FrenetSerretBuilder])
-def test_a_chart_over_a_pinned_one_argument_builder_is_refused(builder) -> None:
+def test_a_chart_over_a_pinned_one_argument_builder_is_refused(
+    builder, build_frame
+) -> None:
     """Every `tau` mapped to `gamma(station)`, and nothing said so."""
-    b = builder(circle, "s", station=STATION)
+    b = build_frame(builder, circle, "s", station=STATION)
     with pytest.raises(ValueError, match="nothing left to vary"):
         cxfc.TubularChart(b, tau_bounds=BOUNDS)
 
 
 @pytest.mark.parametrize("builder", [cxfc.BishopBuilder, cxfc.FrenetSerretBuilder])
-def test_the_builder_itself_still_accepts_a_pinned_station(builder) -> None:
+def test_the_builder_itself_still_accepts_a_pinned_station(
+    builder, build_frame
+) -> None:
     """The frame field is the documented use and must survive the guard."""
-    b = builder(circle, "s", station=STATION)
+    b = build_frame(builder, circle, "s", station=STATION)
     # tau-independent by construction: two different call parameters, one frame.
     a = b.rotation_matrix(u.Q(1.0, "s"))
     c = b.rotation_matrix(u.Q(2.5, "s"))
@@ -47,12 +51,14 @@ def test_the_builder_itself_still_accepts_a_pinned_station(builder) -> None:
 
 def test_an_unpinned_one_argument_builder_still_charts() -> None:
     """The control: dropping `station=` is the remedy the message names."""
-    ch = cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=BOUNDS)
+    ch = cxfc.TubularChart(
+        cxfc.BishopBuilder(circle, "s", normal_0="auto"), tau_bounds=BOUNDS
+    )
     assert ch.components == ("tau", "n1", "n2")
 
 
 def test_a_worldtube_still_charts() -> None:
     """A station on a *two*-argument curve is required, not refused."""
-    b = cxfc.BishopBuilder(two_arg, "s", station=STATION)
+    b = cxfc.BishopBuilder(two_arg, "s", station=STATION, normal_0="auto")
     ch = cxfc.TubularChart(b, tau_bounds=BOUNDS)
     assert ch.is_time_dependent

@@ -80,7 +80,9 @@ def test_lagrangian_arclength_restores_the_material_velocity() -> None:
 
 def test_a_worldtube_reports_the_material_velocity() -> None:
     """A pinned station makes `tau` the time, so `velocity` differentiates it."""
-    b = cxfc.BishopBuilder(stretch_and_bend, "km", station=u.Q(S0, "km"))
+    b = cxfc.BishopBuilder(
+        stretch_and_bend, "km", station=u.Q(S0, "km"), normal_0="auto"
+    )
     got = b.velocity(u.Q(T0, "s"))
     assert str(u.unit_of(got)) == "km / s"
     assert jnp.allclose(got.ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5)
@@ -88,7 +90,9 @@ def test_a_worldtube_reports_the_material_velocity() -> None:
 
 def test_an_attime_slice_reports_the_same_velocity() -> None:
     """The two sections are cuts of one object, so they agree where they cross."""
-    b = cxfc.BishopBuilder(cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km")
+    b = cxfc.BishopBuilder(
+        cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km", normal_0="auto"
+    )
     got = b.velocity(u.Q(S0, "km"))
     assert jnp.allclose(got.ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5)
 
@@ -102,7 +106,9 @@ def test_the_attime_slice_is_not_the_tangent() -> None:
     implementation written as "differentiate `location`" fails here rather
     than passing quietly.
     """
-    b = cxfc.BishopBuilder(cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km")
+    b = cxfc.BishopBuilder(
+        cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km", normal_0="auto"
+    )
     tangent = jax.jacfwd(lambda sv: b.location(u.Q(sv, "km")).ustrip("km"))(S0)
 
     assert not jnp.allclose(tangent, MATERIAL_VELOCITY, atol=1e-3)  # they differ
@@ -121,13 +127,17 @@ def test_the_array_fastpath_reaches_velocity(bare: bool) -> None:
     nothing to say why.
     """
     station = S0 if bare else u.Q(S0, "km")
-    worldtube = cxfc.BishopBuilder(stretch_and_bend, "km", station=station)
+    worldtube = cxfc.BishopBuilder(
+        stretch_and_bend, "km", station=station, normal_0="auto"
+    )
     assert jnp.allclose(
         worldtube.velocity(u.Q(T0, "s")).ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5
     )
 
     tau = S0 if bare else u.Q(S0, "km")
-    slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km")
+    slice_ = cxfc.BishopBuilder(
+        cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km", normal_0="auto"
+    )
     assert jnp.allclose(
         slice_.velocity(tau).ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5
     )
@@ -147,7 +157,7 @@ def test_a_one_argument_curve_has_a_frame_that_does_not_move() -> None:
         a = arc.ustrip("km")
         return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
 
-    got = cxfc.BishopBuilder(circle, "km").velocity(u.Q(0.3, "km"))
+    got = cxfc.BishopBuilder(circle, "km", normal_0="auto").velocity(u.Q(0.3, "km"))
     assert str(u.unit_of(got)) == "km / s"
     assert jnp.allclose(got.ustrip("km/s"), jnp.zeros(3))
 
@@ -159,10 +169,12 @@ def test_the_reading_follows_the_curve_not_the_accessor() -> None:
     -- which is the whole point of #779.
     """
     eulerian = cxfc.BishopBuilder(
-        cxfc.AtTime(cxfc.ArcLength(stretch_and_bend, "km"), u.Q(T0, "s")), "km"
+        cxfc.AtTime(cxfc.ArcLength(stretch_and_bend, "km"), u.Q(T0, "s")),
+        "km",
+        normal_0="auto",
     ).velocity(u.Q(S0, "km"))
     lagrangian = cxfc.BishopBuilder(
-        cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km"
+        cxfc.AtTime(stretch_and_bend, u.Q(T0, "s")), "km", normal_0="auto"
     ).velocity(u.Q(S0, "km"))
 
     assert jnp.allclose(lagrangian.ustrip("km/s"), MATERIAL_VELOCITY, atol=1e-5)
@@ -197,7 +209,9 @@ def test_timedep_transports_a_velocity_correctly_off_axis(offset: float) -> None
     """
     import coordinax.transforms as cxfm
 
-    b = cxfc.BishopBuilder(stretch_and_bend, "km", station=u.Q(S0, "km"))
+    b = cxfc.BishopBuilder(
+        stretch_and_bend, "km", station=u.Q(S0, "km"), normal_0="auto"
+    )
     op = cxfm.TimeDep(b)
 
     beta = b.velocity(u.Q(T0, "s")).ustrip("km/s")

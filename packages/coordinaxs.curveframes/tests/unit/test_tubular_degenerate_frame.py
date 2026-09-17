@@ -41,13 +41,15 @@ def rotating_rod(s: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuan
 
 def _rod():
     return cxfc.TubularChart(
-        cxfc.BishopBuilder(rotating_rod, "km", station=u.Q(S0, "km")),
+        cxfc.BishopBuilder(rotating_rod, "km", station=u.Q(S0, "km"), normal_0="auto"),
         tau_bounds=TIME_BOUNDS,
     )
 
 
 def _circle():
-    return cxfc.TubularChart(cxfc.BishopBuilder(circle, "s"), tau_bounds=CIRCLE_BOUNDS)
+    return cxfc.TubularChart(
+        cxfc.BishopBuilder(circle, "s", normal_0="auto"), tau_bounds=CIRCLE_BOUNDS
+    )
 
 
 def _at(n1: float, n2: float) -> dict:

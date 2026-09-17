@@ -136,7 +136,7 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
     naming ``binormal`` or ``normal2``.
     """
     spec = PARALLEL_TRANSPORT_TYPES[request.param]
-    builder = spec.builder_cls(circle, "s")
+    builder = _build_frame(spec.builder_cls, circle, "s")
 
     def fields(bldr: object, tau: u.AbstractQuantity) -> tuple:
         return tuple(getattr(bldr, name)(tau) for name in spec.triad)
@@ -145,11 +145,40 @@ def pt_case(request: pytest.FixtureRequest) -> SimpleNamespace:
         name=request.param,
         builder=builder,
         builder_cls=spec.builder_cls,
-        yr_builder=spec.builder_cls(circle_yr, "yr"),
+        yr_builder=_build_frame(spec.builder_cls, circle_yr, "yr"),
         xop=cxfm.TimeDep(builder),
-        frame=spec.frame_cls.from_curve(cxf.Alice(), circle, "s"),
+        frame=_from_curve(spec.frame_cls, cxf.Alice(), circle, "s"),
         frame_cls=spec.frame_cls,
         triad=spec.triad,
         tol=SimpleNamespace(**TOLERANCES[request.param]),
         fields=fields,
     )
+
+
+# ===================================================================
+# Building a builder when the class is a parameter
+
+
+@pytest.fixture(scope="session")
+def build_frame():
+    """See `_build_frame`; a fixture because TID252 bars the import."""
+    return _build_frame
+
+
+def _build_frame(builder_cls, /, *args, **kwargs):
+    """Construct ``builder_cls``, supplying the Bishop seed only where it fits.
+
+    `BishopBuilder` requires `normal_0` and the others reject it, so a
+    test parametrized over builder *classes* cannot share one call. ``"auto"``
+    keeps these tests' existing numbers; one that cares should pass its own.
+    """
+    if issubclass(builder_cls, cxfc.BishopBuilder):
+        kwargs.setdefault("normal_0", "auto")
+    return builder_cls(*args, **kwargs)
+
+
+def _from_curve(frame_cls, /, *args, **kwargs):
+    """`frame_cls.from_curve`, seeded where needed. See `_build_frame`."""
+    if issubclass(frame_cls, cxfc.BishopFrame):
+        kwargs.setdefault("normal_0", "auto")
+    return frame_cls.from_curve(*args, **kwargs)

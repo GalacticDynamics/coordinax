@@ -64,8 +64,12 @@ def _tubular_kwargs(draw: st.DrawFn, /) -> dict[str, Any]:
     """Shared draw logic behind both `charts()` and `chart_init_kwargs()`."""
     curve, (lo, hi) = draw(st.sampled_from(_CURVES))
     builder_cls = draw(st.sampled_from(_BUILDERS))
+    # `BishopBuilder` requires an n-plane seed and the others take none; see
+    # `BishopBuilder`.  A drawn chart has no opinion about its gauge, so it
+    # takes the world-axis rule; one that cares should be built directly.
+    seed = {"normal_0": "auto"} if builder_cls is cxfc.BishopBuilder else {}
     return {
-        "builder": builder_cls(curve, "s"),
+        "builder": builder_cls(curve, "s", **seed),
         "tau_bounds": (u.Q(lo, "s"), u.Q(hi, "s")),
     }
 

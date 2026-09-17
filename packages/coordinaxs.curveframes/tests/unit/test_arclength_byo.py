@@ -23,7 +23,7 @@ _AT = {"tau": u.Q(1.3, "km"), "n1": u.Q(0.0, "km"), "n2": u.Q(0.0, "km")}
 
 def _g_ss(curve, tau_unit: str, s_max: float) -> float:
     chart = cxfc.TubularChart(
-        cxfc.BishopBuilder(curve, tau_unit),
+        cxfc.BishopBuilder(curve, tau_unit, normal_0="auto"),
         tau_bounds=(u.Q(0.0, tau_unit), u.Q(s_max, tau_unit)),
     )
     g = metric_matrix(chart.M, _AT, chart).matrix

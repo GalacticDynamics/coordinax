@@ -230,13 +230,13 @@ class AbstractCurveFrameBuilder(eqx.Module):
 
     `None` when the curve fixes the frame pointwise and there is nothing to
     choose -- `FrenetSerretBuilder`. Otherwise the argument a caller must
-    supply to pin it: ``"initial_normal"`` for `BishopBuilder`'s transport
+    supply to pin it: ``"normal_0"`` for `BishopBuilder`'s transport
     seed, ``"plane_normal"`` for `SignedPlanarBuilder`'s plane.
 
     Declared here so callers can *ask* rather than test the concrete class.
     `SweptTube` did the latter, and so told `SignedPlanarBuilder` it "takes no
     seed" -- which is wrong: its `plane_normal` is gauge in exactly the sense
-    `initial_normal` is, and its own docstring says so.
+    `normal_0` is, and its own docstring says so.
     """
 
     curve: eqx.AbstractVar[Callable[[Any], Any]]
@@ -509,14 +509,16 @@ class AbstractCurveFrameBuilder(eqx.Module):
         A pinned station is one material point's history, so ``tau`` is the
         time:
 
-        >>> worldtube = cxfc.BishopBuilder(stretching, "km", station=u.Q(1.3, "km"))
+        >>> worldtube = cxfc.BishopBuilder(
+        ...     stretching, "km", station=u.Q(1.3, "km"), normal_0="auto")
         >>> worldtube.velocity(u.Q(1.0, "s")).round(3)
         Q([0.65 , 0.169, 0.   ], 'km / s')
 
         `AtTime` fixes the slice instead, so ``tau`` is the station -- and the
         answer is the same, because it is the same event either way:
 
-        >>> slice_ = cxfc.BishopBuilder(cxfc.AtTime(stretching, u.Q(1.0, "s")), "km")
+        >>> slice_ = cxfc.BishopBuilder(
+        ...     cxfc.AtTime(stretching, u.Q(1.0, "s")), "km", normal_0="auto")
         >>> slice_.velocity(u.Q(1.3, "km")).round(3)
         Q([0.65 , 0.169, 0.   ], 'km / s')
 
@@ -529,7 +531,8 @@ class AbstractCurveFrameBuilder(eqx.Module):
         ...     a = arc.ustrip("km")
         ...     return u.Q(jnp.stack([jnp.cos(a), jnp.sin(a), jnp.zeros_like(a)]), "km")
 
-        >>> cxfc.BishopBuilder(circle, "km").velocity(u.Q(0.0, "km"))
+        >>> b = cxfc.BishopBuilder(circle, "km", normal_0="auto")
+        >>> b.velocity(u.Q(0.0, "km"))
         Q([0., 0., 0.], 'km / s')
 
         Notes

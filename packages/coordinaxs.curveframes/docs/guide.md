@@ -194,7 +194,7 @@ p_recovered = cxfm.act(op4, tau, p_fs2)
 
 ## JAX Integration
 
-Curve frames are JAX-native. The builder is an `equinox.Module`, so its fields — the curve (and, when the curve is itself an `equinox.Module`, its parameters), `gamma`, `tau_0`, `initial_normal` — are genuine PyTree leaves: differentiable and vmappable.
+Curve frames are JAX-native. The builder is an `equinox.Module`, so its fields — the curve (and, when the curve is itself an `equinox.Module`, its parameters), `gamma`, `tau_0`, `normal_0` — are genuine PyTree leaves: differentiable and vmappable.
 
 ### JIT Compilation
 
@@ -254,7 +254,7 @@ trajectory = jax.jit(jax.vmap(lambda t: cxfm.act(op_to_curve, t, p)))(taus)
 `vmap` is the general route and always available. For `BishopBuilder` specifically there is a cheaper one: every frame it produces costs an ODE solve, and `rotation_matrices` gets a whole batch from a **single** solve.
 
 ```python
-bishop = cxfc.BishopBuilder(Helix(jnp.asarray(1.5)), "s")
+bishop = cxfc.BishopBuilder(Helix(jnp.asarray(1.5)), "s", normal_0="auto")
 Rs = bishop.rotation_matrices(u.Q(jnp.linspace(0.1, 2.0, 64), "s"))
 assert Rs.shape == (64, 3, 3)
 ```
@@ -278,7 +278,7 @@ The **Bishop transform** (also called rotation-minimising or parallel-transport 
 | Field | Meaning |
 | --- | --- |
 | `tau_0` | reference parameter where the initial frame is defined (a leaf); `None` resolves to `Q(0.0, tau_unit)` |
-| `initial_normal` | initial $\mathbf{U}_{1,0}$ (a leaf), or `None` for Gram–Schmidt auto-selection |
+| `normal_0` | initial $\mathbf{U}_{1,0}$ (a leaf), or `"auto"` for Gram–Schmidt; **required** |
 
 …plus `diffeqsolver`, a single [`diffraxtra.DiffEqSolver`](https://github.com/GalacticDynamics/diffraxtra) holding the whole `diffrax` configuration — solver, step-size controller, adjoint, step budget — covered in [Configuring the solve](#configuring-the-solve). It is a _static_ field, so it adds no pytree leaves and a `jax.tree.map` over the curve's parameters cannot reach it.
 
@@ -309,7 +309,7 @@ def helix(tau: u.Q) -> u.Q:
     return u.Q(jnp.stack([jnp.cos(t), jnp.sin(t), 0.3 * t]), "km")
 
 
-bt = cxfc.BishopBuilder(helix, "s")
+bt = cxfc.BishopBuilder(helix, "s", normal_0="auto")
 ```
 
 `BishopBuilder` automatically:
@@ -341,7 +341,7 @@ import dataclasses
 
 import diffrax as dfx
 
-bt = cxfc.BishopBuilder(helix, "s")
+bt = cxfc.BishopBuilder(helix, "s", normal_0="auto")
 fast = dataclasses.replace(
     bt,
     diffeqsolver=dataclasses.replace(
@@ -373,13 +373,13 @@ For `RecursiveCheckpointAdjoint`, "forward: no" means tangent and jet propagatio
 By default, the builder picks the standard basis vector least aligned with $\mathbf{T}(\tau_0)$ via Gram–Schmidt. You can provide an explicit initial normal:
 
 ```python
-bt_custom = cxfc.BishopBuilder(helix, "s", initial_normal=jnp.array([0.0, 0.0, 1.0]))
+bt_custom = cxfc.BishopBuilder(helix, "s", normal_0=jnp.array([0.0, 0.0, 1.0]))
 ```
 
 The reference parameter $\tau_0$ can also be set:
 
 ```python
-bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"))
+bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"), normal_0="auto")
 ```
 
 ### Straight Lines
@@ -392,7 +392,7 @@ def line(tau):
     return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
 
 
-bt_line = cxfc.BishopBuilder(line, "s")
+bt_line = cxfc.BishopBuilder(line, "s", normal_0="auto")
 bt_line.normal1(u.Q(5.0, "s"))  # well-defined unit vector
 ```
 
@@ -437,7 +437,7 @@ A `BishopFrame` pairs a `BishopBuilder` with a base frame, exactly like `FrenetS
 ### Convenience Constructor
 
 ```python
-b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s")
+b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s", normal_0="auto")
 ```
 
 ### Frame Transitions
@@ -541,7 +541,7 @@ A builder accepts an arc-length curve exactly as it accepts any other curve — 
 
 ```python
 arc = cxfc.ArcLength(helix, "s")
-bt_arc = cxfc.BishopBuilder(arc, "km")
+bt_arc = cxfc.BishopBuilder(arc, "km", normal_0="auto")
 bt_arc.tangent(u.Q(1.0, "km"))
 ```
 
@@ -560,7 +560,7 @@ class Circle(eqx.Module):
 
 
 arc_circle = cxfc.ArcLength(Circle(radius=u.Q(2.0, "km")), "s")
-bt_circle = cxfc.BishopBuilder(arc_circle, "km")
+bt_circle = cxfc.BishopBuilder(arc_circle, "km", normal_0="auto")
 bt_circle.tangent(u.Q(1.0, "km"))
 ```
 
@@ -580,11 +580,16 @@ def stretching(s, t):
 s0 = u.Q(1.3, "km")
 
 # Eulerian: a fixed *arc length* along whatever the curve is now
-eulerian = cxfc.BishopBuilder(cxfc.ArcLength(stretching, "km"), "km", station=s0)
+eulerian = cxfc.BishopBuilder(
+    cxfc.ArcLength(stretching, "km"), "km", station=s0, normal_0="auto"
+)
 
 # Lagrangian: the material point that was at s0 on the reference slice
 material = cxfc.BishopBuilder(
-    cxfc.LagrangianArcLength(stretching, u.Q(0.0, "s"), "km"), "km", station=s0
+    cxfc.LagrangianArcLength(stretching, u.Q(0.0, "s"), "km"),
+    "km",
+    station=s0,
+    normal_0="auto",
 )
 ```
 
@@ -613,7 +618,7 @@ For the different shapes an arc-length curve can arrive in — including a user'
 
 ### Builder Evaluation
 
-A curve-frame builder is an `equinox.Module`: `curve`, `station` (and, for `BishopBuilder`, `tau_0`, `initial_normal`) are pytree **leaves**, not lazy callables stashed on the instance. Nothing is pre-computed at construction time — `rotation_matrix(tau)` and `__call__(tau)` are ordinary methods that derive the tangent/normal/binormal (or Bishop's parallel-transported normals) from `curve` afresh, on every call, via `unxt.experimental.jacfwd`. This means:
+A curve-frame builder is an `equinox.Module`: `curve`, `station` (and, for `BishopBuilder`, `tau_0`, `normal_0`) are pytree **leaves**, not lazy callables stashed on the instance. Nothing is pre-computed at construction time — `rotation_matrix(tau)` and `__call__(tau)` are ordinary methods that derive the tangent/normal/binormal (or Bishop's parallel-transported normals) from `curve` afresh, on every call, via `unxt.experimental.jacfwd`. This means:
 
 - **Structural, not procedural, JAX integration**: because the parameters are real pytree data, `jit`, `vmap`, and `grad` operate on a builder — or a whole frame — the same way they operate on any other pytree; there's no separate "make it JAX-compatible" step.
 - **Differentiable curve parameters**: if `curve` is itself an `equinox.Module` with leaf fields, gradients flow through curve construction and into the frame (see "Differentiating the Curve" below) — not possible when a curve was a bare Python closure.

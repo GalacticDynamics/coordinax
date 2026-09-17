@@ -38,14 +38,14 @@ def _at_angle(ang: float) -> u.AbstractQuantity:
 
 def test_zero_width_bounds_is_refused() -> None:
     """It must raise, and promptly -- hanging is the failure this guards."""
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
     with pytest.raises(ValueError, match="zero width"):
         cxfc.nearest_tau(builder, PROBE, bounds=(u.Q(3.0, "s"), u.Q(3.0, "s")))
 
 
 def test_zero_width_bounds_is_refused_under_jit() -> None:
     """The eager path uses a Python branch; the traced path needs `error_if`."""
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
 
     @jax.jit
     def solve(lo: u.AbstractQuantity, hi: u.AbstractQuantity) -> u.AbstractQuantity:
@@ -60,7 +60,7 @@ def test_zero_width_bounds_is_refused_under_jit() -> None:
 
 def test_reversed_bounds_are_refused() -> None:
     """They used to pass, which is the whole reason to say something."""
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
     with pytest.raises(ValueError, match="runs backwards"):
         cxfc.nearest_tau(
             builder, PROBE, bounds=(u.Q(float(2 * jnp.pi), "s"), u.Q(0.0, "s"))
@@ -69,7 +69,7 @@ def test_reversed_bounds_are_refused() -> None:
 
 def test_reversed_bounds_are_refused_under_jit() -> None:
     """Same hybrid as the zero-width guard: `error_if` once traced."""
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
 
     @jax.jit
     def solve(lo: u.AbstractQuantity, hi: u.AbstractQuantity) -> u.AbstractQuantity:
@@ -81,7 +81,7 @@ def test_reversed_bounds_are_refused_under_jit() -> None:
 
 def test_the_two_bounds_complaints_stay_distinct() -> None:
     """Zero width and backwards are different mistakes and get different words."""
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
     with pytest.raises(ValueError, match="zero width"):
         cxfc.nearest_tau(builder, PROBE, bounds=(u.Q(1.0, "s"), u.Q(1.0, "s")))
     with pytest.raises(ValueError, match="runs backwards"):
@@ -90,7 +90,7 @@ def test_the_two_bounds_complaints_stay_distinct() -> None:
 
 def test_a_proper_interval_still_works() -> None:
     """The guard must not disturb the ordinary case."""
-    builder = cxfc.BishopBuilder(circle, "s")
+    builder = cxfc.BishopBuilder(circle, "s", normal_0="auto")
     tau = cxfc.nearest_tau(builder, PROBE, bounds=(u.Q(0.0, "s"), u.Q(2 * jnp.pi, "s")))
     assert float(tau.ustrip("s")) == pytest.approx(1.0, abs=1e-3)
 
@@ -100,8 +100,10 @@ def test_s_max_does_not_disturb_an_in_bounds_query() -> None:
 
     This is exactly what `ArcLength.s_max` promises, and it holds.
     """
-    free = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s"), "km")
-    pinned = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s", s_max=u.Q(1.0, "km")), "km")
+    free = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s"), "km", normal_0="auto")
+    pinned = cxfc.BishopBuilder(
+        cxfc.ArcLength(circle, "s", s_max=u.Q(1.0, "km")), "km", normal_0="auto"
+    )
     x = _at_angle(0.5)
 
     want = float(cxfc.nearest_tau(free, x, bounds=ARC_BOUNDS).ustrip("km"))
@@ -123,12 +125,14 @@ def test_s_max_must_cover_the_answer_not_just_the_scan() -> None:
     """
     x = _at_angle(1.2)
 
-    free = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s"), "km")
+    free = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s"), "km", normal_0="auto")
     assert float(cxfc.nearest_tau(free, x, bounds=ARC_BOUNDS).ustrip("km")) == (
         pytest.approx(1.2, abs=1e-3)
     )
 
-    pinned = cxfc.BishopBuilder(cxfc.ArcLength(circle, "s", s_max=u.Q(1.0, "km")), "km")
+    pinned = cxfc.BishopBuilder(
+        cxfc.ArcLength(circle, "s", s_max=u.Q(1.0, "km")), "km", normal_0="auto"
+    )
     # `EquinoxRuntimeError` subclasses `RuntimeError`; this matches how
     # `test_arclength_smax.py` already pins the same guard.
     with pytest.raises(RuntimeError, match="outside the solved domain"):

@@ -29,7 +29,7 @@ _MSG_GAUGE = (
     "`rate_of_strain` is gauge-dependent off the curve axis (n1 or n2 is "
     "non-zero). Each slice's `(n1, n2)` labels are fixed by that slice's transport "
     "seed, which `BishopBuilder` picks from the *world* frame unless given an "
-    "`initial_normal` -- so when the tangent rotates with time the labels name a "
+    "`normal_0` -- so when the tangent rotates with time the labels name a "
     "different physical point on each slice, and differentiating reports the "
     "frame's drift as strain. Measured on a static helix, gamma_tau_tau spans "
     "1.040535 to 1.629908 across four seeds at n = (0.2, 0.1); on the axis it is "
@@ -37,7 +37,7 @@ _MSG_GAUGE = (
     "K = 0, instead gives |K|max = 0.017405 about z-hat.\n\n"
     "On the axis (n = 0) the result is gauge-free and always valid. Off it, pass "
     "`assume_gauge_carried=True` only if your family carries one director through "
-    "`initial_normal` rather than letting each slice choose. See #870."
+    "`normal_0` rather than letting each slice choose. See #870."
 )
 
 _MSG_BATCHED_TIME = (
@@ -80,7 +80,7 @@ def rate_of_strain(
         The time to differentiate at. Must carry a unit.
     assume_gauge_carried
         Opt out of the off-axis refusal. Set this only when the family carries
-        one director across every slice -- by passing `initial_normal` rather
+        one director across every slice -- by passing `normal_0` rather
         than letting each `BishopBuilder` pick its own. It is an assertion by
         the caller, not something this can verify (#870). Unnecessary when
         ``chart_at_time`` is a `SweptTube`: it has settled the gauge at

@@ -50,7 +50,7 @@ The Bishop frame $(\mathbf{T}, \mathbf{U}_1, \mathbf{U}_2)$ is obtained by paral
 ...     cxf.alice,
 ...     circle,
 ...     "s",
-...     initial_normal=jnp.array([-1.0, 0.0, 0.0]),
+...     normal_0=jnp.array([-1.0, 0.0, 0.0]),
 ... )
 ```
 
@@ -189,7 +189,7 @@ Let's verify on a helix that the three frames **disagree**:
 >>> bp_helix = cxfc.BishopBuilder(
 ...     helix,
 ...     "s",
-...     initial_normal=jnp.array([-1.0, 0.0, 0.0]),
+...     normal_0=jnp.array([-1.0, 0.0, 0.0]),
 ... )
 
 >>> tau_h = u.Q(1.0, "s")

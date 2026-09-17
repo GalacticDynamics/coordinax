@@ -78,12 +78,12 @@ class TestGradThroughCurveParameter:
         ],
     )
     def test_grad_is_nonzero_and_matches_finite_differences(
-        self, builder_cls, h, rtol, atol
+        self, builder_cls, h, rtol, atol, build_frame
     ):
         r0 = 1.5
 
         def loss(radius):
-            return _readout(builder_cls(Helix(radius), "s"))
+            return _readout(build_frame(builder_cls, Helix(radius), "s"))
 
         g = jax.grad(loss)(r0)
 
@@ -148,11 +148,11 @@ class TestFixedStation:
         ],
     )
     def test_station_frame_matches_the_moving_frame_at_station(
-        self, builder_cls, tau_val, atol
+        self, builder_cls, tau_val, atol, build_frame
     ):
         station = u.Q(0.7, "s")
-        fixed = cxfm.TimeDep(builder_cls(circle, "s", station))
-        moving = cxfm.TimeDep(builder_cls(circle, "s"))
+        fixed = cxfm.TimeDep(build_frame(builder_cls, circle, "s", station))
+        moving = cxfm.TimeDep(build_frame(builder_cls, circle, "s"))
 
         assert jnp.allclose(
             cxfm.act(fixed, u.Q(tau_val, "s"), P).ustrip("km"),

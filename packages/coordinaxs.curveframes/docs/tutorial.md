@@ -244,7 +244,7 @@ Define a helix with a vertical drift:
 Build the Bishop transform:
 
 ```pycon
->>> bt = cxfc.BishopBuilder(helix, "s")
+>>> bt = cxfc.BishopBuilder(helix, "s", normal_0="auto")
 >>> bt
 BishopBuilder(...)
 ```
@@ -290,7 +290,7 @@ The Frenet–Serret frame is **singular** on a straight line (zero curvature). T
 ...     return u.Q(jnp.stack([t, jnp.zeros_like(t), jnp.zeros_like(t)]), "km")
 ...
 
->>> bt_line = cxfc.BishopBuilder(line, "s")
+>>> bt_line = cxfc.BishopBuilder(line, "s", normal_0="auto")
 ```
 
 The normals are well-defined unit vectors at any $\tau$:
@@ -311,7 +311,7 @@ The normals are well-defined unit vectors at any $\tau$:
 Attach the Bishop transform to Alice's frame:
 
 ```pycon
->>> b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s")
+>>> b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s", normal_0="auto")
 >>> b_frame.base_frame
 Alice()
 
@@ -341,7 +341,7 @@ Transform a point at the curve origin to the Bishop frame:
 Specify an explicit initial normal:
 
 ```pycon
->>> bt_custom = cxfc.BishopBuilder(helix, "s", initial_normal=jnp.array([0.0, 0.0, 1.0]))
+>>> bt_custom = cxfc.BishopBuilder(helix, "s", normal_0=jnp.array([0.0, 0.0, 1.0]))
 >>> U1_custom = bt_custom.normal1(tau0)
 >>> np.testing.assert_allclose(jnp.linalg.norm(U1_custom.value), 1.0, atol=1e-5)
 ```
@@ -349,7 +349,7 @@ Specify an explicit initial normal:
 Shift the reference parameter:
 
 ```pycon
->>> bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"))
+>>> bt_shifted = cxfc.BishopBuilder(helix, "s", tau_0=u.Q(1.0, "s"), normal_0="auto")
 >>> bt_shifted.tau_0
 Q(1., 's')
 ```
