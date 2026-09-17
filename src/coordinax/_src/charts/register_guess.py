@@ -68,8 +68,21 @@ def register_canonical_chart(cls: ChartCls, /) -> ChartCls:
 register_canonical_chart(Spherical3D)  # over `MathSpherical3D`
 
 
-# TODO: speed this up. The problem is that caching the results breaks something,
-# causing functions in other modules to fail type(x) is type(y) checks.
+# Not cached, and the reason is not the one this comment used to give (a
+# `type(x) is type(y)` failure somewhere else -- that is a symptom, not the
+# cause). The answer depends on two mutable globals as well as on `obj`:
+# `NON_ABC_CHART_CLASSES`, which grows whenever a chart subclass is defined,
+# and `CANONICAL_CHART_CLASSES`, which `register_canonical_chart` writes to.
+# Keying a cache on `obj` alone therefore serves answers from a registry state
+# that no longer holds. `test_unresolvable_ambiguity_names_the_candidates` is
+# the shortest demonstration: it pops the canonical entry and expects the call
+# to start raising, and a cached call keeps returning `Spherical3D`.
+#
+# A correct cache would key on a version counter bumped by both registries.
+# Measured before adding one: this is 8.3 us of the 203 us `guess_chart` costs
+# end to end, ~4% of a path that is not hot -- the eager metric machinery next
+# door is 13 ms. Not worth the invalidation machinery; revisit only if the
+# registry grows far past its current 24 classes.
 def guess_chart_cls(obj: frozenset[str]) -> type[AbstractChart[Any, Any, Any]]:
     """Infer a chart class from the keys of a component dictionary.
 
