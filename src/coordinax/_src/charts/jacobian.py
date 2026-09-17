@@ -280,8 +280,7 @@ def jac_pt_map(
         which requires *usys*.  For chart pairs without an analytical
         ``Array`` dispatch this means *usys* must be provided.
 
-    **Quantity-valued branch** (at least one value carries a unit, and the
-    pair has no closed form)
+    **Quantity-valued branch** (a unitful value, no closed form for the pair)
         Packs *at* into a 1-D ``QuantityMatrix`` via
         ``carray(at, from_chart.components)``, promotes any
         integer or boolean leaves to the default floating-point dtype (other
