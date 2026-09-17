@@ -268,11 +268,9 @@ def jac_pt_map(
     The primary dict-input dispatch.  Takes the first route that applies:
 
     **Closed form registered for the chart pair**
-        Pairs with a hand-written Jacobian are recorded in
-        `_CLOSED_FORM_PAIRS` by the ``@_closed_form`` tag on the ``Array``
-        dispatch implementing one. `_jac_from_dict_via_closed_form` then
-        canonicalises the components, evaluates it, and restores the units.
-        This takes precedence for unitful and plain-array dicts alike.
+        `_jac_from_dict_via_closed_form` canonicalises the components,
+        evaluates the closed form, and restores the units -- for unitful and
+        plain-array dicts alike.
 
     **Array-valued branch** (no units in any value)
         Stacks the dict values into a plain array via ``jnp.stack``, then
@@ -303,10 +301,8 @@ def jac_pt_map(
     ------
     ValueError
         If *at* keys do not match ``from_chart.components`` (via
-        ``check_data``), or if bare values reach a pair with no closed form
-        and no *usys* says what they mean -- ``pt_map`` refuses first, with
-        "usys must be provided for array input", so this never gets as far as
-        a dispatch-resolution failure.
+        ``check_data``), or -- from ``pt_map`` -- "usys must be provided for
+        array input" when bare values reach a pair with no closed form.
 
     Examples
     --------
@@ -340,8 +336,6 @@ def jac_pt_map(
     if (type(from_chart), type(to_chart)) in _CLOSED_FORM_PAIRS:
         return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
 
-    # Otherwise: plain arrays skip the packing and unit handling entirely, and
-    # anything unitful goes through `jacfwd`.
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)
@@ -1090,9 +1084,6 @@ def jac_pt_map(
           \rho/r & 0 & z/r \\ z/r^2 & 0 & -\rho/r^2 \\ 0 & 1 & 0
         \end{pmatrix}
     $$
-
-    The azimuth is shared, so its row is an identity that no unit system
-    changes: an angle per the same angle.
 
     >>> import coordinax.charts as cxc
     >>> import unxt as u

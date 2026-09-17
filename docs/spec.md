@@ -1294,8 +1294,11 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         stripped to its dimension's canonical unit — radians for angles, the first unit
         seen otherwise — the closed form is evaluated on the resulting bare array, and
         the units are restored, each column rescaled to the unit it arrived in. Applies
-        to unitful and plain-array dicts alike. A dict mixing a bare component with a
-        unitful one has no unit to canonicalise against and falls through.
+        to unitful and plain-array dicts alike. An entry therefore carries whichever
+        convertible unit the canonicalisation produced, which need not be the label
+        `jacfwd` would have given it; the quantities are equal. A dict mixing a bare
+        component with a unitful one has no unit to canonicalise against and falls
+        through.
 
       - **Array-valued** (`is_array=True`): stacks `at` into a plain array via
         `jnp.stack`, then forwards to the `(at: Array, ...)` dispatch. `usys` is
@@ -1309,10 +1312,6 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         units, and whose `.unit` encodes the output units. `_repack_q_from_jac` extracts
         both to build the correct 2-D `UnitsMatrix` and returns
         `QuantityMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
-
-        The closed-form route reports an entry in whichever convertible unit its
-        canonicalisation produced, which need not be the one `jacfwd` would have
-        labelled it with. The quantities are equal; only the labels differ.
 
       - **Batched base points**: components may carry arbitrary leading batch
         axes. A chart map is pointwise, so `N` points give `N` independent
@@ -1330,12 +1329,8 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     **Analytical dispatches** (higher precedence than differentiating the map;
     `usys` is optional):
 
-    A chart pair may have a hand-written Jacobian, given as an `Array` dispatch
-    tagged `@_closed_form(From, To)`. The tag records the pair in
-    `_CLOSED_FORM_PAIRS`, which the `CDict` dispatch consults; that registry is
-    the authoritative list of such pairs and is deliberately not duplicated here.
-
-    Two constraints apply to writing one, both of which are silent when broken:
+    `_CLOSED_FORM_PAIRS` is the authoritative list of such pairs and is deliberately
+    not duplicated here. Two constraints apply to writing one, both silent when broken:
 
     - An angular row must have its unit forced — astropy treats `rad` as
       dimensionless, so `rad / length` will not arise from the arithmetic.
@@ -1346,9 +1341,8 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - Raises `ValueError` ("usys must be provided for array input") when calling the
       `(at: CDict, ...)` dispatch with `is_array=True` values and `usys=None` for a
-      chart pair with no closed form: nothing then says what the bare numbers mean.
-      The refusal comes from `pt_map`, not from dispatch resolution. A pair *with* a
-      closed form reads bare angles as radians and needs no unit system.
+      chart pair with no closed form. It comes from `pt_map`, not from dispatch
+      resolution. A pair *with* a closed form reads bare angles as radians instead.
     - Raises `ValueError` if `at` keys do not match `from_chart.components` (via
       `check_data`).
 

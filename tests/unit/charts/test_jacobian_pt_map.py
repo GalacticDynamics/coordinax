@@ -306,12 +306,7 @@ class TestUnitfulDictsReachTheClosedForm:
 
     @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
     def test_a_unitful_dict_agrees_with_the_closed_form(self, frm, to, keys) -> None:
-        """The dict route must match calling the closed form directly.
-
-        Against the `Array` form, which every routed pair has and which the
-        router itself uses. Feeding it the same point in SI makes the numbers
-        directly comparable; the units are the layer the router adds on top.
-        """
+        """The dict route must match the `Array` form the router itself uses."""
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = self._dict(keys, u.Q)
         bare = jnp.asarray([self.VALUES[k] for k in keys])
@@ -448,13 +443,7 @@ class TestUnitfulDictsReachTheClosedForm:
             cxc.jac_pt_map(at, from_chart, to_chart)
 
     def test_a_batched_dict_on_an_unrouted_pair_still_maps_pointwise(self) -> None:
-        """The generic dict dispatch batches too; only the inner route differs.
-
-        The pair must be one with no closed form, or this silently becomes a
-        second test of the routed path. `Cylindrical3D -> LonCosLatSpherical3D`
-        is one today; if it gains one, move this rather than deleting it --
-        the assertion below cannot tell which route it took.
-        """
+        """The generic dict dispatch batches too; only the inner route differs."""
         n = 4
         at = {
             "rho": u.Q(jnp.full((n,), 2.0), "m"),
@@ -486,10 +475,7 @@ class TestUnitfulDictsReachTheClosedForm:
 
         J = cxc.jac_pt_map(at, from_chart, to_chart)
 
-        # Stated as a property rather than per row, because which outputs are
-        # lengths and which are angles differs by chart: every row must divide
-        # by the unit its column came in, so the ratio between two columns is
-        # the ratio of their inputs, whatever the row above it is.
+        # Which rows are angles differs by chart; the column ratio does not.
         rows = J.unit.to_tuple()
         km_per_m = u.unit("km") / u.unit("m")
         for row in rows:
@@ -1054,10 +1040,7 @@ class TestJacobianPtMapCDictArrayBranch:
 
         The ``is_array=True`` branch forwards to the Array dispatch, and the
         generic one requires *usys* to know what the bare numbers mean. A pair
-        with a closed form registered does not go that way -- it reads bare
-        angles as radians -- so this has to be checked on a pair that has
-        none. `Cylindrical3D -> LonCosLatSpherical3D` is one today; if it ever
-        gains a closed form, move this to another rather than deleting it.
+        with a closed form reads bare angles as radians instead.
         """
         at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
         assert (
