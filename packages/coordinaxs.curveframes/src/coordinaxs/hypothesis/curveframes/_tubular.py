@@ -64,8 +64,9 @@ def _tubular_kwargs(draw: st.DrawFn, /) -> dict[str, Any]:
     """Shared draw logic behind both `charts()` and `chart_init_kwargs()`."""
     curve, (lo, hi) = draw(st.sampled_from(_CURVES))
     builder_cls = draw(st.sampled_from(_BUILDERS))
-    # A drawn chart has no opinion about its n-plane gauge; one that does
-    # should build the chart itself.  See `tests/conftest.py::_build_frame`.
+    # `BishopBuilder` requires an n-plane seed and the others take none; see
+    # `BishopBuilder`.  A drawn chart has no opinion about its gauge, so it
+    # takes the world-axis rule; one that cares should be built directly.
     seed = {"initial_normal": "auto"} if builder_cls is cxfc.BishopBuilder else {}
     return {
         "builder": builder_cls(curve, "s", **seed),

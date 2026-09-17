@@ -378,9 +378,10 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     initial_normal: Any = None
     """The initial U1 at ``tau_0`` -- a dimensionless 3-vector, or ``"auto"``.
 
-    Required; `None` raises. ``"auto"`` is recorded in `auto_seed` and this is
-    set back to `None`, so the stored field is never a string -- which would
-    be a pytree leaf riding along in every trace.
+    Required as an *input*: omitting it, or passing `None`, raises. What is
+    *stored* is different -- ``"auto"`` is recorded in `auto_seed` and this
+    field set to `None`, so it always holds an array or `None`, never a
+    string, which would be a pytree leaf riding along in every trace.
     """
 
     auto_seed: bool = eqx.field(static=True, default=False, repr=False, kw_only=True)
