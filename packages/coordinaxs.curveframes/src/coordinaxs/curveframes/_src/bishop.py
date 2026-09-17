@@ -35,7 +35,7 @@ __all__ = ("BishopBuilder", "BishopFrame")
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, final
+from typing import Any, ClassVar, final
 
 import diffrax as dfx
 import equinox as eqx
@@ -327,6 +327,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     Array(1., dtype=float64)
 
     """
+
+    gauge_field: ClassVar[str | None] = "initial_normal"
 
     curve: Callable[[Any], Any]
     """The constructing curve."""

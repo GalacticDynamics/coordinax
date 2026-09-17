@@ -13,8 +13,8 @@ from .bishop import BishopBuilder
 from .chart import TubularChart
 
 _MSG_DIRECTOR_REQUIRED = (
-    "`director` is required: `BishopBuilder` transports the normal plane from "
-    "a seed, and nothing in the curve fixes that seed. The n-plane gauge is "
+    "`director` is required: `{name}` fixes its normal plane from `{arg}`, "
+    "and nothing in the curve fixes that. The n-plane gauge is "
     "*director* data -- a Cosserat frame -- and a curve does not carry it: a "
     "rod spinning about its own axis and one at rest trace the same curve, and "
     "have different rates of strain (measured, on a static helix with a spun "
@@ -82,7 +82,8 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
         Scan range for each slice's inverse solve.
     director
         The n-plane gauge, as a callable of $t$ returning a 3-vector. Required
-        on the Bishop path and refused on any other -- see the class notes.
+        exactly when ``builder.gauge_field`` names an argument, and refused
+        when it does not -- see the class notes.
     builder
         Frame builder for each slice. `BishopBuilder` (the default) transports
         from ``director``; `FrenetSerretBuilder` needs no seed.
@@ -94,10 +95,14 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     physically different tube from one at rest -- which is the whole reason
     the library refuses to supply one.
 
-    It is required **only** on the Bishop path. `FrenetSerretBuilder` fixes
-    $\mathbf{N}$ and $\mathbf{B}$ pointwise from the curve, so it is already
-    equivariant and a seed would be silently ignored; passing one is a caller
-    error rather than a no-op.
+    Whether it is required is the *builder's* statement, read from
+    `AbstractCurveFrameBuilder.gauge_field`: ``"initial_normal"`` for
+    `BishopBuilder`'s transport seed, ``"plane_normal"`` for
+    `SignedPlanarBuilder`'s plane, and `None` for `FrenetSerretBuilder`, which
+    fixes $\mathbf{N}$ and $\mathbf{B}$ pointwise from the curve and would
+    silently ignore one. Asking the class instead -- `issubclass(...,
+    BishopBuilder)` -- asserted the question was Bishop-versus-everything, and
+    refused `SignedPlanarBuilder` a gauge it genuinely needs.
 
     Examples
     --------
@@ -122,7 +127,9 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     tau_unit: Any = eqx.field(static=True, converter=unit_or_none)
     tau_bounds: tuple[Any, Any] = eqx.field(kw_only=True)
     director: Callable[[Any], Any] | None = eqx.field(kw_only=True, default=None)
-    builder: type = eqx.field(static=True, kw_only=True, default=BishopBuilder)
+    builder: type[AbstractCurveFrameBuilder] = eqx.field(
+        static=True, kw_only=True, default=BishopBuilder
+    )
 
     def __check_init__(self) -> None:
         """Require a director on the Bishop path, and refuse one elsewhere.
@@ -134,15 +141,27 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
         """
         _check_builder(self.builder)
 
-        is_bishop = issubclass(self.builder, BishopBuilder)
-        if is_bishop and self.director is None:
-            raise ValueError(_MSG_DIRECTOR_REQUIRED)
-        if not is_bishop and self.director is not None:
+        # The builder says whether it has a gauge, and what to call it. Asking
+        # `issubclass(..., BishopBuilder)` instead asserted that the question
+        # is Bishop-versus-everything, which is false: `SignedPlanarBuilder`
+        # has `plane_normal`, gauge in exactly the same sense, and was being
+        # told it "takes no seed".
+        gauge = self.builder.gauge_field
+        if gauge is not None and self.director is None:
+            raise ValueError(
+                _MSG_DIRECTOR_REQUIRED.format(name=self.builder.__name__, arg=gauge)
+            )
+        if gauge is None and self.director is not None:
             raise ValueError(_MSG_DIRECTOR_UNUSED.format(name=self.builder.__name__))
 
     def __call__(self, t: Any, /) -> TubularChart:
         """Return the spatial slice at ``t``."""
-        seed = {} if self.director is None else {"initial_normal": self.director(t)}
+        gauge = self.builder.gauge_field
+        # `__check_init__` has already paired these: a gauge name implies a
+        # director, and its absence implies none.
+        seed = (
+            {} if gauge is None or self.director is None else {gauge: self.director(t)}
+        )
         return TubularChart(
             self.builder(AtTime(self.curve, t), self.tau_unit, **seed),
             tau_bounds=self.tau_bounds,

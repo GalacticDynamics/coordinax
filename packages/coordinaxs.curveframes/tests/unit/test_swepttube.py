@@ -203,14 +203,70 @@ def test_an_unrelated_class_is_refused_rather_than_misdiagnosed() -> None:
 
     `builder=dict` reached the seedless branch and was told it "takes no seed",
     as though `dict` were a legitimate seedless builder.
+
+    Either layer may fire: with runtime typechecking on, the
+    ``type[AbstractCurveFrameBuilder]`` annotation rejects it first; with it
+    off, `_check_builder` does, and names what was passed. That message is
+    pinned directly in `test_the_builder_check_names_what_was_passed`.
     """
-    with pytest.raises(TypeError, match="must be a builder"):
+    with pytest.raises((TypeError, TypeCheckError)):
         cxfc.SweptTube(
             static_helix,
             "km",
             tau_bounds=BOUNDS,
             director=lambda t: jnp.asarray(_E),
             builder=dict,
+        )
+
+
+def planar_circle(tau: u.AbstractQuantity, t: u.AbstractQuantity) -> u.AbstractQuantity:
+    """A planar circle carried bodily -- `SignedPlanarBuilder`'s home ground."""
+    s = tau.ustrip("km")
+    base = jnp.stack([jnp.cos(s), jnp.sin(s), jnp.zeros_like(s)])
+    return u.Q(_rotation(t.ustrip("s")) @ base, "km")
+
+
+def test_the_gauge_requirement_follows_the_builder_not_its_class() -> None:
+    """`SignedPlanarBuilder` has a gauge too, and it is not `initial_normal`.
+
+    Its `plane_normal` is gauge in exactly the sense Bishop's seed is -- its
+    own docstring says so -- so asking `issubclass(..., BishopBuilder)` got
+    this wrong and refused a director the frame genuinely needs. Each builder
+    declares the argument instead.
+    """
+    assert cxfc.BishopBuilder.gauge_field == "initial_normal"
+    assert cxfc.SignedPlanarBuilder.gauge_field == "plane_normal"
+    assert cxfc.FrenetSerretBuilder.gauge_field is None
+
+
+def test_a_signed_planar_tube_carries_its_plane() -> None:
+    """The configuration the class check made unreachable.
+
+    A rigid rotation is an isometry, and carrying the plane with the body
+    gives zero to machine precision -- the same result the Bishop path gives
+    with a carried director, through a different gauge argument.
+    """
+    tube = cxfc.SweptTube(
+        planar_circle,
+        "km",
+        tau_bounds=(u.Q(0.1, "km"), u.Q(2.0, "km")),
+        director=lambda t: _rotation(t.ustrip("s")) @ jnp.asarray([0.0, 0.0, 1.0]),
+        builder=cxfc.SignedPlanarBuilder,
+    )
+    at = {"tau": u.Q(0.7, "km"), "n1": u.Q(0.2, "km"), "n2": u.Q(0.1, "km")}
+    k = np.asarray(cxfc.rate_of_strain(tube, at, u.Q(0.3, "s")).value)
+
+    assert np.abs(k).max() < 1e-9
+
+
+def test_a_signed_planar_tube_requires_its_plane() -> None:
+    """Omission raises there too, naming that builder's own argument."""
+    with pytest.raises(ValueError, match="plane_normal"):
+        cxfc.SweptTube(
+            planar_circle,
+            "km",
+            tau_bounds=(u.Q(0.1, "km"), u.Q(2.0, "km")),
+            builder=cxfc.SignedPlanarBuilder,
         )
 
 
