@@ -1299,3 +1299,46 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
         )(at)
 
         assert_allclose(np.asarray(got), np.asarray(expected), rtol=1e-11)
+
+
+# ===========================================================================
+# Cart3D -> LonLat restates Cart3D -> Sph3D
+# ===========================================================================
+
+
+class TestCart3dToLonLatRestatesCart3dToSph3d:
+    """The two closed forms are one matrix, and must not drift apart.
+
+    `lat` is the colatitude negated, so `Cart3D -> LonLat` is `Cart3D ->
+    Sph3D` with rows ``(r, theta, phi)`` reordered to ``(lon, lat, distance)``
+    and the middle one flipped. Both are written out entry by entry, so
+    nothing but this test stops a change to one missing the other.
+
+    Exactly equal, not merely close: the entries are the same arithmetic on
+    the same intermediates, and negation is exact.
+    """
+
+    POINTS: ClassVar = [
+        pytest.param([1.3, 2.1, 0.7], id="generic"),
+        pytest.param([1.0, 0.0, -2.5], id="in-the-xz-plane"),
+        pytest.param([3e11, -1e12, 4e11], id="large"),
+        pytest.param([2e-9, 5e-9, -1e-9], id="small"),
+    ]
+
+    @pytest.mark.parametrize("at", POINTS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_the_rows_are_the_spherical_rows_rearranged(
+        self, at: list[float], angle_unit: str
+    ) -> None:
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        point = jnp.asarray(at)
+
+        lonlat = cxc.jac_pt_map(point, cxc.cart3d, cxc.lonlat_sph3d, usys=usys)
+        sph = cxc.jac_pt_map(point, cxc.cart3d, cxc.sph3d, usys=usys)
+
+        assert_allclose(
+            np.asarray(lonlat),
+            np.asarray(jnp.stack([sph[2], -sph[1], sph[0]])),
+            rtol=0,
+            atol=0,
+        )
