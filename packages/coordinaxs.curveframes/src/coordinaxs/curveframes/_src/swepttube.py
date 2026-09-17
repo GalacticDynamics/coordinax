@@ -48,8 +48,8 @@ def _check_builder(builder: Any, /) -> None:
 
     `issubclass` raises a bare "arg 1 must be a class" on an instance, and
     accepts any *unrelated* class. Module-level so it can be tested directly:
-    with runtime typechecking on, the annotation rejects first and these lines
-    never run.
+    with runtime typechecking on, the ``builder: type`` annotation rejects a
+    bad value first, so the raises below fire only with it off.
     """
     if not isinstance(builder, type):
         raise TypeError(
