@@ -33,6 +33,7 @@ from .base import (
     AbstractParallelTransportFrame,
     FrameT,
     unit_or_none,
+    unit_tangent,
 )
 
 _MSG_ZERO_CURVATURE = (
@@ -228,7 +229,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         d2p = d2curve(g)
 
         # Tangent: normalised first derivative
-        t_vec = _normalize(dp)
+        t_vec = unit_tangent(dp)
 
         # Normal via Gram-Schmidt: remove component of gamma'' along T,
         # then normalise the remainder.
@@ -278,7 +279,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
         b, p = self._resolve(tau)
         g, tau_unit = b._param(p)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
-        return u.Q(_normalize(dcurve(g)).value, "")
+        return u.Q(unit_tangent(dcurve(g)).value, "")
 
     def normal(self, tau: Any, /) -> u.Q:
         r"""Return the unit normal vector $\mathbf{N}(\tau)$ (row 1 of R).
