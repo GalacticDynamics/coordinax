@@ -53,8 +53,8 @@ from .base import (
     FrameT,
     float_param,
     unit_or_none,
+    unit_tangent,
 )
-from .frenetserret import _normalize
 
 #: Default integrator for the parallel-transport ODE.  `DirectAdjoint` is the
 #: only adjoint that is differentiable in *both* modes: the `diffrax` default
@@ -479,7 +479,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         # a `functools.partial` at every call. `g` always arrives from
         # `_param`, so the read is a `unit_of` on a `Quantity` and cannot fail.
         dcurve = u.experimental.jacfwd(self.curve, units=(self._tau_unit_at(g),))
-        return _normalize(dcurve(float_param(g)))
+        return unit_tangent(dcurve(float_param(g)))
 
     def _transport_start(self, tau_unit: Any, /) -> tuple[Any, Any, Any, Any]:
         """Resolve everything the transport ODE needs before it can run.

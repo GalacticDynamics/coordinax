@@ -58,6 +58,7 @@ from .base import (
     AbstractParallelTransportFrame,
     FrameT,
     unit_or_none,
+    unit_tangent,
 )
 from .bishop import _float
 from .frenetserret import _normalize
@@ -253,7 +254,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
 
         g, tau_unit = b._param(p)
         dcurve = u.experimental.jacfwd(b.curve, units=(tau_unit,))
-        t_vec = _normalize(dcurve(g))
+        t_vec = unit_tangent(dcurve(g))
 
         n_hat = b._plane_normal(jnp.result_type(t_vec.value, float))
         # Use the *returned* tangent: an `error_if` whose result is dropped
@@ -366,7 +367,7 @@ class SignedPlanarBuilder(AbstractCurveFrameBuilder):
         # the guard alive: an `error_if` whose result is dropped is dead code.
         # It also cancels one power of |gamma'|, since
         # (T x gamma'') . n / |gamma'|^2 == (gamma' x gamma'') . n / |gamma'|^3.
-        t_vec = _check_planar(_normalize(dp), n_hat)
+        t_vec = _check_planar(unit_tangent(dp), n_hat)
 
         return qnp.sum(qnp.cross(t_vec, d2p) * n_hat) / qnp.sum(dp**2)
 

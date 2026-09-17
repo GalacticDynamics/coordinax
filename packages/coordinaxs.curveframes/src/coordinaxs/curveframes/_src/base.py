@@ -27,7 +27,9 @@ import jax.numpy as jnp
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
+import quaxed.numpy as qnp
 import unxt as u
+from unxt.quantity import AllowValue
 
 from .arclength import _is_two_argument
 from .attime import AtTime
@@ -87,6 +89,51 @@ def unit_or_none(obj: Any, /) -> u.AbstractUnit | None:
     builder is called with* -- see `AbstractCurveFrameBuilder._tau_unit_at`.
     """
     return None if obj is None else cast("u.AbstractUnit", u.unit(obj))
+
+
+_MSG_NOT_REGULAR = (
+    "the curve is not regular at this parameter: gamma' vanishes, so there is "
+    "no tangent direction to normalise and the triad would be all-NaN. That is "
+    "a property of the parametrisation rather than of the frame, so no other "
+    "builder repairs it -- every curve frame here needs gamma' != 0. A cusp "
+    "lands here, and so does a curve whose speed is merely parametrised down "
+    "to zero at a point. Reparametrise so that gamma' stays nonzero, or keep "
+    "the offending parameter out of the domain."
+)
+
+
+def unit_tangent(dp: Any, /) -> Any:
+    r"""Normalise $\gamma'$ to a unit tangent, refusing a degenerate parameter.
+
+    Where $\gamma'$ vanishes there is no direction to return. Before this
+    guard existed, `tangent` handed back an all-NaN vector on
+    `FrenetSerretBuilder` and `BishopBuilder` with no error -- the silent-NaN
+    class that #856 removed from `normal` and `rotation_matrix`, left behind
+    on the tangent path -- while the messages that did fire named the wrong
+    cause: a vanishing *curvature* on Frenet--Serret, leaving the *plane* on
+    signed planar. Neither is what went wrong, and neither is repaired by
+    switching builder.
+
+    The test is for **exact** zero rather than a tolerance. A merely small
+    speed is still a genuine direction, and the unit tangent is homogeneous of
+    degree zero in $\gamma'$ -- scaling the curve's parametrisation down does
+    not make its tangent any less well defined. Only the exact degeneracy has
+    no answer.
+
+    ``~(x > 0)`` rather than ``x <= 0``: NaN is False for both, so the ``<=``
+    form would pass an already-NaN derivative straight through the guard that
+    exists to stop it.
+
+    Used for the first derivative only. `frenetserret._normalize` keeps the
+    other call sites -- the Gram--Schmidt rejection and the in-plane rotation
+    -- because those vanish for their own reasons and already say so.
+    """
+    norm = qnp.sqrt(qnp.sum(dp**2))
+    mag = cast("Array", u.ustrip(AllowValue, u.unit_of(norm) or "", norm))
+    # The *checked* derivative is what the result is built from: an
+    # `equinox.error_if` whose result is discarded is dead code.
+    dp = eqx.error_if(dp, ~(mag > 0), _MSG_NOT_REGULAR)
+    return dp / norm
 
 
 def float_param(g: Any, /) -> Any:
