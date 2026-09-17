@@ -8,76 +8,8 @@ from typing import final
 
 import jax
 
-import quaxed.numpy as qnp
-import unxt as u
-import unxts.linalg as ul
-
-import coordinaxs.api.charts as cxcapi
 from .embedmap import AbstractEmbeddingMap
 from coordinax._src.base import AbstractMetricField
-from coordinax._src.custom_types import OptUSys
-from coordinaxs.api.custom_types import CDict
-
-DMLS = u.unit("")
-
-
-def _jacobian_embed_map(
-    embed_map: AbstractEmbeddingMap, at: CDict, usys: OptUSys
-) -> ul.QuantityMatrix:
-    """Compute the Jacobian of ``embed_map`` at ``at`` as a ``QuantityMatrix``.
-
-    Mirrors the general fallback of ``jac_pt_map`` but differentiates
-    the embedding function instead of a chart transition map.
-
-    Parameters
-    ----------
-    embed_map
-        Embedding from intrinsic to ambient coordinates.
-    at
-        Base point in intrinsic coordinates.
-    usys
-        Optional unit system for the computation.
-
-    Returns
-    -------
-    QuantityMatrix
-        2-D ``QuantityMatrix`` of shape ``(n_ambient, n_intrinsic)`` where
-        ``J.value[j, i] = \u2202(ambient_j) / \u2202(intrinsic_i)``.
-
-    """
-    embed_fn = embed_map.embed
-    intrinsic_keys = embed_map.intrinsic.components
-    ambient_keys = embed_map.ambient.components
-
-    # Pack `at` → plain array + per-component from-units
-    _qm: ul.QM = cxcapi.carray(at, intrinsic_keys)  # ty: ignore[invalid-assignment]
-    xat, ufrom = _qm.value, _qm.unit.to_tuple()
-
-    # Run embedding once to determine output units
-    at_ambient = embed_fn(at, usys=usys)
-    uto = ul.cdict_units(at_ambient, ambient_keys)
-
-    # Replace None with dimensionless
-    ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
-    uto_ = tuple(ut if ut is not None else DMLS for ut in uto)
-
-    # Build (n_ambient × n_intrinsic) unit matrix
-    unit_matrix = ul.UnitsMatrix(tuple(tuple(tj / fi for fi in ufrom_) for tj in uto_))  # ty: ignore[unsupported-operator]
-
-    # Plain-array embedding for jacfwd
-    def embed_fn_arr(x_arr: qnp.ndarray) -> qnp.ndarray:
-        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(intrinsic_keys)}
-        out = embed_fn(q, usys=usys)
-        vals = [
-            u.ustrip(uto_[j], out[k])
-            if isinstance(out[k], u.AbstractQuantity)
-            else qnp.asarray(out[k])
-            for j, k in enumerate(ambient_keys)
-        ]
-        return qnp.stack(vals)
-
-    J_arr = jax.jacfwd(embed_fn_arr)(xat)  # shape (n_ambient, n_intrinsic)
-    return ul.QuantityMatrix(J_arr, unit=unit_matrix)
 
 
 @jax.tree_util.register_static
