@@ -1344,10 +1344,11 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     **Failure semantics:**
 
-    - Raises `plum.NotFoundLookupError` when calling the `(at: CDict, ...)` dispatch
-      with `is_array=True` values and `usys=None` for a chart pair with no closed form:
-      nothing then says what the bare numbers mean. A pair *with* one reads bare angles
-      as radians and needs no unit system.
+    - Raises `ValueError` ("usys must be provided for array input") when calling the
+      `(at: CDict, ...)` dispatch with `is_array=True` values and `usys=None` for a
+      chart pair with no closed form: nothing then says what the bare numbers mean.
+      The refusal comes from `pt_map`, not from dispatch resolution. A pair *with* a
+      closed form reads bare angles as radians and needs no unit system.
     - Raises `ValueError` if `at` keys do not match `from_chart.components` (via
       `check_data`).
 

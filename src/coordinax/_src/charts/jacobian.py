@@ -276,9 +276,10 @@ def jac_pt_map(
 
     **Array-valued branch** (no units in any value)
         Stacks the dict values into a plain array via ``jnp.stack``, then
-        forwards to ``jac_pt_map(at_arr, from_chart, to_chart, usys=usys)``
-        which requires *usys*.  For chart pairs without an analytical
-        ``Array`` dispatch this means *usys* must be provided.
+        forwards to ``jac_pt_map(at_arr, from_chart, to_chart, usys=usys)``.
+        A pair with a closed form reads bare angles as radians; any other
+        needs *usys* to say what the numbers mean, and raises `ValueError`
+        without one.
 
     **Quantity-valued branch** (a unitful value, no closed form for the pair)
         Packs *at* into a 1-D ``QuantityMatrix`` via
@@ -302,10 +303,10 @@ def jac_pt_map(
     ------
     ValueError
         If *at* keys do not match ``from_chart.components`` (via
-        ``check_data``).
-    plum.NotFoundLookupError
-        If the array-valued branch cannot resolve a dispatch (e.g.
-        generic chart pair with ``usys=None``).
+        ``check_data``), or if bare values reach a pair with no closed form
+        and no *usys* says what they mean -- ``pt_map`` refuses first, with
+        "usys must be provided for array input", so this never gets as far as
+        a dispatch-resolution failure.
 
     Examples
     --------
