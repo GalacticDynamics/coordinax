@@ -303,9 +303,15 @@ def test_a_swept_tube_needs_no_gauge_assertion_flag() -> None:
 
 
 def test_a_bare_family_is_still_refused_off_axis() -> None:
-    """Narrowing buys omission-raises; it does not loosen the old path."""
+    """Narrowing buys omission-raises; it does not loosen the old path.
+
+    ``"auto"`` per slice *is* the bare family: each one takes the world-axis
+    rule independently, so nothing carries a gauge across them -- which is the
+    drift the off-axis guard exists to refuse.
+    """
     family = lambda t: cxfc.TubularChart(
-        cxfc.BishopBuilder(cxfc.AtTime(static_helix, t), "km"), tau_bounds=BOUNDS
+        cxfc.BishopBuilder(cxfc.AtTime(static_helix, t), "km", initial_normal="auto"),
+        tau_bounds=BOUNDS,
     )
 
     with pytest.raises(RuntimeError, match="gauge-dependent"):
