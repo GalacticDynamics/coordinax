@@ -446,7 +446,7 @@ Same runtime as the baseline. The idiomatic form also accepts quantity-valued di
 
 ### Eager Jacobians
 
-Everything above is jitted. Eager is a different story, and worth knowing before you loop over a few thousand points.
+Everything above is jitted. Eager is a different story — and it is not only an eager-path concern, because tracing a jitted function runs this code too.
 
 `jax.jacfwd` builds and evaluates a jaxpr on _every_ call. Jitting hoists that into a one-time compilation; eagerly you pay it per call, and it dominates everything else:
 
@@ -480,6 +480,44 @@ for n in (1, 100, 10_000):
 (A batch of one is not the same as a scalar point: any leading axis takes the `vmap` route, so `N = 1` need not match the scalar call timed above.)
 
 So batch your points rather than looping: N points cost one trace, not N.
+
+#### Tracing pays it too
+
+`jit` does not avoid this work, it moves it: tracing your jitted function runs `jac_pt_map` with tracers, so whatever an eager call costs, tracing costs about the same. Measuring that needs care, because JAX caches traces — time a warm one and you get microseconds and no signal:
+
+```{code-cell} ipython3
+import time
+
+
+def cold_trace_ms(chart_from, chart_to, at):
+    """A fresh function each time, so JAX's trace cache cannot answer for us."""
+    times = []
+    for _ in range(5):
+        fn = lambda a, f=chart_from, t=chart_to: cxc.jac_pt_map(a, f, t, usys=usys)
+        start = time.perf_counter()
+        jax.make_jaxpr(fn)(at)
+        times.append(time.perf_counter() - start)
+    return min(times) * 1e3
+
+
+def first_call_ms(chart_from, chart_to, at):
+    """Trace *and* XLA compilation: what a jitted function's first call costs."""
+    times = []
+    for _ in range(5):
+        fn = jax.jit(lambda a, f=chart_from, t=chart_to: cxc.jac_pt_map(a, f, t, usys=usys))
+        start = time.perf_counter()
+        jax.block_until_ready(fn(at))
+        times.append(time.perf_counter() - start)
+    return min(times) * 1e3
+
+
+print(f"cold trace:     {cold_trace_ms(cxc.cyl3d, cxc.sph3d, at_cyl):6.2f} ms")
+print(f"first jit call: {first_call_ms(cxc.cyl3d, cxc.sph3d, at_cyl):6.2f} ms")
+```
+
+The cold trace matches the eager timing above — that is the same work, run once with tracers. But note the second number: **tracing is only a small part of a first `jit` call**, which is dominated by XLA compiling the jaxpr. So a faster eager path shortens tracing, not compilation, and is not a way to make your first call cheap.
+
+Where it does pay is anywhere the trace itself is repeated or is the whole cost: eager loops, and code that re-traces — a new input shape, a fresh jitted closure per call, `grad` of something not yet cached. That is also why some chart pairs have a closed-form Jacobian written out rather than differentiated; the dispatch picks one where it exists.
 
 </br>
 
