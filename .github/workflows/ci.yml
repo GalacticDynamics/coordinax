@@ -36,6 +36,34 @@ jobs:
       - name: Lint & type-check
         run: uv run --frozen nox -s lint
 
+  api_report:
+    name: Public API report
+    runs-on: ubuntu-latest
+    # Reports only. A pull request is exactly where a deliberate API change
+    # belongs, so this never fails the build -- it writes what changed to the
+    # job summary so the change is noticed and the release notes can account
+    # for it. `continue-on-error` is deliberately NOT used: the script exits 0
+    # on a finding, and reserves a non-zero exit for `--strict` at release.
+    #
+    # Deliberately absent from `status`'s `needs`: adding it there would
+    # turn the report back into the gate this is written not to be.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # `griffe` loads the baseline from git, so the merge base must be a
+          # real object: the default depth-1 checkout has no parent to compare.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v6
+
+      - name: Install
+        run: uv sync --no-default-groups --group api --extra workspace --locked
+
+      - name: Report public API changes
+        run: uv run --frozen python scripts/api_report.py --ref "origin/${{ github.base_ref }}"
+
   # Smoke test
   #
   # `coordinax` and each `packages/*` member carries a `tests/smoke/` folder of
