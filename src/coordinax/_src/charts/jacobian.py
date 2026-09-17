@@ -265,8 +265,14 @@ def jac_pt_map(
 ) -> Array | ul.QuantityMatrix:
     r"""Compute the Jacobian at a coordinate-dictionary base point.
 
-    The primary dict-input dispatch.  Branches on whether the values of *at*
-    carry physical units:
+    The primary dict-input dispatch.  Takes the first route that applies:
+
+    **Closed form registered for the chart pair**
+        Pairs with a hand-written Jacobian are recorded in
+        `_CLOSED_FORM_PAIRS` by the ``@_closed_form`` tag on the ``Array``
+        dispatch implementing one. `_jac_from_dict_via_closed_form` then
+        canonicalises the components, evaluates it, and restores the units.
+        This takes precedence for unitful and plain-array dicts alike.
 
     **Array-valued branch** (no units in any value)
         Stacks the dict values into a plain array via ``jnp.stack``, then
@@ -274,7 +280,8 @@ def jac_pt_map(
         which requires *usys*.  For chart pairs without an analytical
         ``Array`` dispatch this means *usys* must be provided.
 
-    **Quantity-valued branch** (at least one value carries a unit)
+    **Quantity-valued branch** (at least one value carries a unit, and the
+    pair has no closed form)
         Packs *at* into a 1-D ``QuantityMatrix`` via
         ``carray(at, from_chart.components)``, promotes any
         integer or boolean leaves to the default floating-point dtype (other
@@ -328,12 +335,13 @@ def jac_pt_map(
     if batched is not _UNBATCHED:
         return batched
 
-    # Determine whether the input is array-valued or quantity-valued.  If it's
-    # array-valued, we can skip the packing and unit handling and directly
-    # compute the Jacobian as an array.
+    # A hand-written Jacobian beats differentiating the map, whatever the
+    # values carry, so this is asked first.
     if (type(from_chart), type(to_chart)) in _CLOSED_FORM_PAIRS:
         return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
 
+    # Otherwise: plain arrays skip the packing and unit handling entirely, and
+    # anything unitful goes through `jacfwd`.
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)

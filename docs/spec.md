@@ -1285,8 +1285,17 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
       raw array Jacobian. Requires `usys`.
 
     - `(at: CDict, from_chart, to_chart, /, *, usys: OptUSys = None)` ->
-      `Array | QuantityMatrix`. The general dict dispatch. Branches on whether `at`
-      values are plain arrays or quantities:
+      `Array | QuantityMatrix`. The general dict dispatch. Takes the first route
+      that applies:
+
+      - **Closed form registered for the pair**: chart pairs with a hand-written
+        Jacobian are recorded in `_CLOSED_FORM_PAIRS` by the `@_closed_form(From, To)`
+        tag on the `Array` dispatch that implements one. For those, every component is
+        stripped to its dimension's canonical unit — radians for angles, the first unit
+        seen otherwise — the closed form is evaluated on the resulting bare array, and
+        the units are restored, each column rescaled to the unit it arrived in. Applies
+        to unitful and plain-array dicts alike. A dict mixing a bare component with a
+        unitful one has no unit to canonicalise against and falls through.
 
       - **Array-valued** (`is_array=True`): stacks `at` into a plain array via
         `jnp.stack`, then forwards to the `(at: Array, ...)` dispatch. `usys` is
@@ -1300,6 +1309,10 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         units, and whose `.unit` encodes the output units. `_repack_q_from_jac` extracts
         both to build the correct 2-D `UnitsMatrix` and returns
         `QuantityMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
+
+        The closed-form route reports an entry in whichever convertible unit its
+        canonicalisation produced, which need not be the one `jacfwd` would have
+        labelled it with. The quantities are equal; only the labels differ.
 
       - **Batched base points**: components may carry arbitrary leading batch
         axes. A chart map is pointwise, so `N` points give `N` independent
