@@ -331,6 +331,9 @@ def jac_pt_map(
     # Determine whether the input is array-valued or quantity-valued.  If it's
     # array-valued, we can skip the packing and unit handling and directly
     # compute the Jacobian as an array.
+    if (type(from_chart), type(to_chart)) in _CLOSED_FORM_PAIRS:
+        return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)
@@ -382,22 +385,35 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
+#: Chart pairs with a hand-written Jacobian. Populated by `_closed_form` at
+#: each definition, so a closed form added without that line is simply not
+#: routed to -- rather than routed to and failing.
+_CLOSED_FORM_PAIRS: set[tuple[type, type]] = set()
+
+
+def _closed_form(from_cls: type, to_cls: type, /) -> Callable[[Any], Any]:
+    """Mark the decorated `Array` Jacobian as the closed form for a chart pair."""
+
+    def register(fn: Any) -> Any:
+        _CLOSED_FORM_PAIRS.add((from_cls, to_cls))
+        return fn
+
+    return register
+
+
 def _jac_from_dict_via_closed_form(
     at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
 ) -> Any:
     """Send a coordinate dict to the closed form registered for its chart pair.
+
+    Called with a checked, unbatched point: the dispatch above has already
+    validated the keys and mapped any leading axes.
 
     The closed forms take bare values, so strip every component to a canonical
     unit -- angles to radians, everything else to the first unit of its kind --
     differentiate there, and put the units back afterwards. Convertible units
     are equivalent, so canonicalising costs a label and nothing else.
     """
-    at = from_chart.check_data(at, keys=True)
-
-    batched = _jac_over_batch(at, from_chart, to_chart, usys)
-    if batched is not _UNBATCHED:
-        return batched
-
     keys = from_chart.components
     units: list[Any] = [u.unit_of(at[k]) for k in keys]
 
@@ -445,62 +461,7 @@ def _jac_from_dict_via_closed_form(
     return ul.QuantityMatrix(jac * jnp.asarray(scale, dtype=jac.dtype), unit=unit_rows)
 
 
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cart2D -> Polar2D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
-    QM([[ 0.70710678,  0.70710678],
-        [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart3D, to_chart: Cylindrical3D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cart3D -> Cylindrical3D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(3.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d).value
-    Array([[ 1.,  0.,  0.],
-           [-0.,  1.,  0.],
-           [ 0.,  0.,  1.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cart3D, to_chart: Spherical3D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cart3D -> Spherical3D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d).value
-    Array([[ 1.,  0.,  0.],
-           [ 0.,  0., -1.],
-           [-0.,  1.,  0.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
+@_closed_form(Cart2D, Polar2D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
@@ -603,6 +564,7 @@ def jac_pt_map(
 # against 6.0us), so this is an eager-path win.
 
 
+@_closed_form(Cart3D, Cylindrical3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cart3D, to_chart: Cylindrical3D, /, *, usys: OptUSys = None
@@ -675,44 +637,7 @@ def jac_pt_map(
     )
 
 
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Cylindrical3D, to_chart: Cart3D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Cylindrical3D -> Cart3D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"rho": u.Q(2.0, "m"), "phi": u.Q(0.0, "rad"), "z": u.Q(3.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.cyl3d, cxc.cart3d).value
-    Array([[ 1., -0.,  0.],
-           [ 0.,  2.,  0.],
-           [ 0.,  0.,  1.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
-@plum.dispatch
-def jac_pt_map(
-    at: CDict, from_chart: Spherical3D, to_chart: Cart3D, /, *, usys: OptUSys = None
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed-form `Spherical3D -> Cart3D` Jacobian.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"r": u.Q(1.0, "m"), "theta": u.Q(0.0, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> cxc.jac_pt_map(at, cxc.sph3d, cxc.cart3d).value
-    Array([[ 0.,  1., -0.],
-           [ 0.,  0.,  0.],
-           [ 1., -0.,  0.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
+@_closed_form(Cylindrical3D, Cart3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cylindrical3D, to_chart: Cart3D, /, *, usys: OptUSys = None
@@ -758,6 +683,7 @@ def jac_pt_map(
 # `theta` is the colatitude, measured from +z.
 
 
+@_closed_form(Cart3D, Spherical3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Cart3D, to_chart: Spherical3D, /, *, usys: OptUSys = None
@@ -851,6 +777,7 @@ def jac_pt_map(
     )
 
 
+@_closed_form(Spherical3D, Cart3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array, from_chart: Spherical3D, to_chart: Cart3D, /, *, usys: OptUSys = None
@@ -900,31 +827,7 @@ def jac_pt_map(
 # slowest transition in the suite and more arithmetic than the map needs.
 
 
-@plum.dispatch
-def jac_pt_map(
-    at: CDict,
-    from_chart: LonLatSpherical3D,
-    to_chart: LonCosLatSpherical3D,
-    /,
-    *,
-    usys: OptUSys = None,
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed form below.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"lon": u.Q(0.0, "rad"), "lat": u.Q(0.0, "rad"),
-    ...       "distance": u.Q(2.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.lonlat_sph3d, cxc.loncoslat_sph3d).value
-    Array([[ 1., -0.,  0.],
-           [ 0.,  1.,  0.],
-           [ 0.,  0.,  1.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
+@_closed_form(LonLatSpherical3D, LonCosLatSpherical3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array,
@@ -972,31 +875,7 @@ def jac_pt_map(
     )
 
 
-@plum.dispatch
-def jac_pt_map(
-    at: CDict,
-    from_chart: LonCosLatSpherical3D,
-    to_chart: LonLatSpherical3D,
-    /,
-    *,
-    usys: OptUSys = None,
-) -> Array | ul.QuantityMatrix:
-    """Route a coordinate dict to the closed form below.
-
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    >>> at = {"lon_coslat": u.Q(0.0, "rad"), "lat": u.Q(0.0, "rad"),
-    ...       "distance": u.Q(2.0, "m")}
-    >>> cxc.jac_pt_map(at, cxc.loncoslat_sph3d, cxc.lonlat_sph3d).value
-    Array([[1., 0., 0.],
-           [0., 1., 0.],
-           [0., 0., 1.]], dtype=float64)
-
-    """
-    return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
-
-
+@_closed_form(LonCosLatSpherical3D, LonLatSpherical3D)
 @plum.dispatch
 def jac_pt_map(
     at: Array,
