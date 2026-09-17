@@ -387,15 +387,17 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 
 #: `unit_of` is cheap but `dimension_of` is a `plum` dispatch costing ~60us a
 #: unit, and a chart sees the same handful forever. Same reasoning as the
-#: quotient cache below.
-_dimension_of = ft.lru_cache(maxsize=None)(u.dimension_of)
+#: quotient cache below. Bounded, as the repo's other per-unit caches are:
+#: nothing here needs more than a few entries, and a caller building units
+#: programmatically should not grow a cache without limit.
+_dimension_of = ft.lru_cache(maxsize=128)(u.dimension_of)
 
 
 #: Dividing two units costs ~20x a dict lookup and a chart has only a handful,
 #: so the quotients are cached across calls. Cached *here* rather than per
 #: call: a fresh `lru_cache` each time caches nothing and costs more than the
 #: divisions it replaces (14us against 2.7us for nine entries).
-_unit_quotient = ft.lru_cache(maxsize=None)(operator.truediv)
+_unit_quotient = ft.lru_cache(maxsize=128)(operator.truediv)
 
 
 #: Chart pairs with a hand-written Jacobian. Populated by `_closed_form` at
