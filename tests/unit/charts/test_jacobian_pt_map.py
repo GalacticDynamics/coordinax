@@ -399,6 +399,51 @@ class TestUnitfulDictsReachTheClosedForm:
                 )
                 assert_allclose(float(converted), float(want[i, k]), atol=1e-12)
 
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
+    def test_a_bare_component_beside_a_unitful_one_leaves_the_fast_path(
+        self, frm, to, keys, monkeypatch
+    ) -> None:
+        """A half-unitful point has no unit to canonicalise the bare one against.
+
+        What happens next is the general route's business -- for some pairs it
+        computes, for others it refuses -- so this pins only the handover.
+        """
+        from coordinax._src.charts import jacobian
+
+        class HandedOverError(Exception):
+            """Raised in place of the general route, to prove it was reached."""
+
+        def _handover(*args: object, **kw: object) -> object:
+            raise HandedOverError
+
+        monkeypatch.setattr(jacobian, "_jac_via_autodiff", _handover)
+
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = {
+            k: (
+                jnp.asarray(self.VALUES[k])
+                if i == 0
+                else u.Q(self.VALUES[k], self._unit(k))
+            )
+            for i, k in enumerate(keys)
+        }
+
+        with pytest.raises(HandedOverError):
+            cxc.jac_pt_map(at, from_chart, to_chart)
+
+    def test_a_batched_dict_on_an_unrouted_pair_still_maps_pointwise(self) -> None:
+        """The generic dict dispatch batches too; only the inner route differs."""
+        n = 4
+        at = {
+            "rho": u.Q(jnp.full((n,), 2.0), "m"),
+            "phi": u.Q(jnp.full((n,), 0.7), "rad"),
+            "z": u.Q(jnp.linspace(1.0, 3.0, n), "m"),
+        }
+
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
+
+        assert np.asarray(jnp.asarray(J.value)).shape == (n, 3, 3)
+
     @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
     def test_a_mixed_unit_point_keeps_a_unit_per_column(self, frm, to, keys) -> None:
         """Canonicalising the input does not flatten the output's labels.

@@ -382,10 +382,6 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
-def _is_angle(unit: Any, /) -> bool:
-    return u.dimension_of(unit) == ANGLE
-
-
 def _jac_from_dict_via_closed_form(
     at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
 ) -> Any:
@@ -424,10 +420,6 @@ def _jac_from_dict_via_closed_form(
         canonical.setdefault(dim, RAD if dim == ANGLE else unit)
 
     out_dims = [u.dimension(dim) for dim in to_chart.coord_dimensions]
-    if any(dim not in canonical for dim in out_dims):
-        # An output dimension the input cannot name -- nothing to label it with.
-        return _jac_via_autodiff(at, from_chart, to_chart, usys)
-
     targets = [canonical[dim] for dim in dims]
     values = [
         u.ustrip(unit, at[k])
@@ -951,8 +943,9 @@ def jac_pt_map(
         \end{pmatrix}
     $$
 
-    The angle-to-angle entries are unit-agnostic -- both sides scale together --
-    so only the longitude in the second column has to be in radians.
+    Both angles are converted to radians for the trigonometry. The *entries*
+    then need no further scaling: each is an angle per angle, so the caller's
+    unit cancels between numerator and denominator.
 
     >>> import coordinax.charts as cxc
     >>> import unxt as u
