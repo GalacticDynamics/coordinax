@@ -101,3 +101,40 @@ def test_the_live_package_still_has_a_dispatched_surface_to_exclude() -> None:
         "no `pt_map` among the dispatched paths -- either dispatch was removed "
         "or `dispatched_paths` stopped finding it; the report would be noise"
     )
+
+
+def test_a_failed_comparison_is_reported_not_raised(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Report a failed comparison instead of raising out of `main`.
+
+    An exception escaping `main` exits non-zero and reddens the job -- and if
+    the check were ever added to a required list, would turn the report into
+    the gate it is written not to be. The reason belongs in the summary.
+    """
+    monkeypatch.setattr(_api_report, "_resolve_baseline", lambda _: "somesha")
+    monkeypatch.setattr(
+        _api_report,
+        "find_changes",
+        lambda _: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    assert _api_report.main([]) == 0
+    out = capsys.readouterr().out
+    assert "No report" in out
+    assert "RuntimeError: boom" in out
+    assert "not* a statement that the API is unchanged" in out
+
+
+def test_a_failed_comparison_still_fails_the_release_check(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--strict` is the release gate, so an absent report must not pass it."""
+    monkeypatch.setattr(_api_report, "_resolve_baseline", lambda _: "somesha")
+    monkeypatch.setattr(
+        _api_report,
+        "find_changes",
+        lambda _: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    assert _api_report.main(["--strict"]) == 1

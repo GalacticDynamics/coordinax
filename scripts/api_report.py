@@ -205,7 +205,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1 if args.strict else 0
 
-    changes = find_changes(ref)
+    try:
+        changes = find_changes(ref)
+    except Exception as exc:  # noqa: BLE001  (see below)
+        # Reported, not raised. "Never fails" has to hold for the failures too:
+        # an exception here exits non-zero, reddens the job, and -- if anyone
+        # ever adds this to a required-checks list -- turns the report into the
+        # gate it is written not to be. The reason goes to the summary instead,
+        # where it is visible rather than buried in a log, and `--strict` still
+        # surfaces it as a failure for the release check.
+        _emit(
+            f"### Public API\n\n**No report.** The comparison against "
+            f"`{ref}` did not complete: `{type(exc).__name__}: {exc}`\n\n"
+            "Nothing was compared -- this is *not* a statement that the API is "
+            "unchanged.\n"
+        )
+        return 1 if args.strict else 0
+
     _emit(render(ref, changes))
     return 1 if (args.strict and changes) else 0
 
