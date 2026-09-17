@@ -74,22 +74,43 @@ def _resolve_baseline(explicit: str | None) -> str | None:
     return None
 
 
-def dispatched_names() -> frozenset[str]:
-    """Collect attribute names bound to a `plum.Function` in the package.
+def dispatched_paths() -> frozenset[str]:
+    """Collect fully-qualified paths of every `plum.Function` in the package.
 
     Read from the live objects, not the source: dispatch exists only at
     runtime, which is the whole reason griffe cannot see it.
+
+    Qualified, not bare. Bare names look sufficient and are not: eight modules
+    here are *named* after a dispatched verb -- `norm.py`, `interval.py`,
+    `add.py`, `angle_between.py`, `chord_distance.py`, `geodesic_distance.py`,
+    `scale_factors.py`, `tangent_map.py` -- so matching a bare "norm" anywhere
+    in a dotted path silently excluded every object defined in those files,
+    dispatch or not, along with any class method sharing a verb's name
+    (`Coordinate.cconvert`). Excluding real breakages is the one failure this
+    script cannot afford, since its output is trusted precisely where nobody
+    is looking closely.
     """
     import coordinax as cx  # noqa: F401, PLC0415  (populates `sys.modules`)
 
-    names: set[str] = set()
+    paths: set[str] = set()
     for mod_name, module in list(sys.modules.items()):
         if not mod_name.startswith(_PACKAGE) or module is None:
             continue
-        names |= {
-            attr for attr, val in vars(module).items() if isinstance(val, plum.Function)
+        paths |= {
+            f"{mod_name}.{attr}"
+            for attr, val in vars(module).items()
+            if isinstance(val, plum.Function)
         }
-    return frozenset(names)
+    return frozenset(paths)
+
+
+def _is_dispatched(path: str, excluded: frozenset[str]) -> bool:
+    """Report whether `path` is a dispatched function, or inside one.
+
+    Exact match, or a descendant of one -- never a bare-name match, which
+    collides with same-named modules and methods.
+    """
+    return path in excluded or any(path.startswith(f"{p}.") for p in excluded)
 
 
 def find_changes(ref: str) -> list[griffe.Breakage]:
@@ -100,8 +121,8 @@ def find_changes(ref: str) -> list[griffe.Breakage]:
     current = griffe.load(
         _PACKAGE, search_paths=[_ROOT / "src"], allow_inspection=False
     )
-    excluded = dispatched_names()
-    if "pt_map" not in excluded:
+    excluded = dispatched_paths()
+    if not any(p.endswith(".pt_map") for p in excluded):
         msg = (
             "`pt_map` is the canonical dispatched verb; if it is no longer a "
             "`plum.Function`, this exclusion has stopped excluding anything "
@@ -111,7 +132,7 @@ def find_changes(ref: str) -> list[griffe.Breakage]:
     return [
         change
         for change in griffe.find_breaking_changes(baseline, current)
-        if not (set(change.obj.path.split(".")) & excluded)
+        if not _is_dispatched(change.obj.path, excluded)
     ]
 
 
