@@ -59,12 +59,14 @@ _BASELINE_REF = "main"
 
 
 def _resolve_baseline(explicit: str | None) -> str:
-    """Return `explicit` if it resolves, else `_BASELINE_REF`; raise if neither.
+    """Validate `explicit`, or `_BASELINE_REF` when none was given.
 
-    Raising rather than falling back to some other ref: comparing against a
-    baseline the caller did not ask for, and reporting the difference as though
-    it were theirs, is worse than reporting nothing. `main` turns this into a
-    notice, so it is still not a failure.
+    Exactly one ref is checked -- whichever the caller ended up with -- and an
+    explicit one that does not resolve raises rather than falling back. There
+    is no substitution: comparing against a baseline the caller did not ask
+    for, and reporting the difference as though it were theirs, is worse than
+    reporting nothing. `main` turns the raise into a notice, so it is still not
+    a failure.
     """
     ref = explicit or _BASELINE_REF
     done = subprocess.run(  # noqa: S603
