@@ -44,8 +44,12 @@ import pathlib
 import subprocess
 import sys
 
-import griffe
+from typing import TYPE_CHECKING
+
 import plum
+
+if TYPE_CHECKING:
+    import griffe
 
 _PACKAGE = "coordinax"
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -113,8 +117,17 @@ def _is_dispatched(path: str, excluded: frozenset[str]) -> bool:
     return path in excluded or any(path.startswith(f"{p}.") for p in excluded)
 
 
-def find_changes(ref: str) -> list[griffe.Breakage]:
-    """Find breaking changes against `ref`, less the dispatched surface."""
+def find_changes(ref: str) -> "list[griffe.Breakage]":
+    """Find breaking changes against `ref`, less the dispatched surface.
+
+    `griffe` is imported here, not at module scope, so the filter above stays
+    importable without it. The test suite exercises `_is_dispatched` in jobs
+    that install only the `test` group, and a module-level import made the
+    whole file unimportable there -- which broke collection rather than
+    skipping, since the filter itself needs no griffe at all.
+    """
+    import griffe  # noqa: PLC0415  (see above)
+
     baseline = griffe.load_git(
         _PACKAGE, ref=ref, repo=_ROOT, search_paths=["src"], allow_inspection=False
     )
@@ -136,7 +149,7 @@ def find_changes(ref: str) -> list[griffe.Breakage]:
     ]
 
 
-def render(ref: str, changes: list[griffe.Breakage]) -> str:
+def render(ref: str, changes: "list[griffe.Breakage]") -> str:
     """Render a Markdown summary, for `$GITHUB_STEP_SUMMARY` or a terminal."""
     if not changes:
         return (
