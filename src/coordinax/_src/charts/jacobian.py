@@ -944,3 +944,213 @@ def jac_pt_map(
             [zero, zero, one],
         ]
     )
+
+
+# ===================================================================
+# Cart3D <-> LonLatSpherical3D
+#
+# `lat` is the latitude, measured from the equator, where `Spherical3D` takes
+# a colatitude from +z.
+
+
+@_closed_form(Cart3D, LonLatSpherical3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: Cart3D,
+    to_chart: LonLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``Cart3D -> LonLatSpherical3D``.
+
+    $$
+    J = \frac{\partial(\lambda, \phi, d)}{\partial(x,y,z)}
+      = \begin{pmatrix}
+          -y/\rho^2 & x/\rho^2 & 0 \\
+          -xz/(r^2\rho) & -yz/(r^2\rho) & \rho/r^2 \\
+          x/r & y/r & z/r
+        \end{pmatrix}
+    $$
+
+    The latitude row is the colatitude's negated, `lat` increasing towards +z
+    where `theta` decreases.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([1.0, 0.0, 0.0])
+    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.lonlat_sph3d, usys=u.unitsystems.si)
+    Array([[-0.,  1.,  0.],
+           [-0., -0.,  1.],
+           [ 1.,  0.,  0.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    x, y, z = at[..., 0], at[..., 1], at[..., 2]
+    rho = jnp.hypot(x, y)
+    r = jnp.hypot(rho, z)
+    xr, yr, zr = x / r, y / r, z / r
+    xrho, yrho = x / rho, y / rho
+    ang = _usys_angle_per_rad(usys)
+    zero = jnp.zeros_like(x)
+    return jnp.array(
+        [
+            [-yrho * ang / rho, xrho * ang / rho, zero],
+            [-xrho * zr * ang / r, -yrho * zr * ang / r, (rho / r) * ang / r],
+            [xr, yr, zr],
+        ]
+    )
+
+
+@_closed_form(LonLatSpherical3D, Cart3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: LonLatSpherical3D,
+    to_chart: Cart3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``LonLatSpherical3D -> Cart3D``.
+
+    $$
+    J = \frac{\partial(x,y,z)}{\partial(\lambda, \phi, d)}
+      = \begin{pmatrix}
+          -d\cos\phi\sin\lambda & -d\sin\phi\cos\lambda & \cos\phi\cos\lambda \\
+          d\cos\phi\cos\lambda & -d\sin\phi\sin\lambda & \cos\phi\sin\lambda \\
+          0 & d\cos\phi & \sin\phi
+        \end{pmatrix}
+    $$
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([0.0, 0.0, 2.0])
+    >>> cxc.jac_pt_map(at, cxc.lonlat_sph3d, cxc.cart3d, usys=u.unitsystems.si)
+    Array([[-0., -0.,  1.],
+           [ 2., -0.,  0.],
+           [ 0.,  2.,  0.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    ang = _usys_angle_per_rad(usys)
+    lon, lat, dist = at[..., 0] / ang, at[..., 1] / ang, at[..., 2]
+    cos_lat, sin_lat = jnp.cos(lat), jnp.sin(lat)
+    cos_lon, sin_lon = jnp.cos(lon), jnp.sin(lon)
+    zero = jnp.zeros_like(lon)
+    return jnp.array(
+        [
+            [
+                -dist * cos_lat * sin_lon / ang,
+                -dist * sin_lat * cos_lon / ang,
+                cos_lat * cos_lon,
+            ],
+            [
+                dist * cos_lat * cos_lon / ang,
+                -dist * sin_lat * sin_lon / ang,
+                cos_lat * sin_lon,
+            ],
+            [zero, dist * cos_lat / ang, sin_lat],
+        ]
+    )
+
+
+# ===================================================================
+# Cylindrical3D <-> Spherical3D
+
+
+@_closed_form(Cylindrical3D, Spherical3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: Cylindrical3D,
+    to_chart: Spherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``Cylindrical3D -> Spherical3D``.
+
+    $$
+    J = \frac{\partial(r,\theta,\phi)}{\partial(\rho,\phi,z)}
+      = \begin{pmatrix}
+          \rho/r & 0 & z/r \\ z/r^2 & 0 & -\rho/r^2 \\ 0 & 1 & 0
+        \end{pmatrix}
+    $$
+
+    The azimuth is shared, so its row is an identity that no unit system
+    changes: an angle per the same angle.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([1.0, 0.0, 0.0])
+    >>> cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d, usys=u.unitsystems.si)
+    Array([[ 1.,  0.,  0.],
+           [ 0.,  0., -1.],
+           [ 0.,  1.,  0.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    rho, z = at[..., 0], at[..., 2]
+    r = jnp.hypot(rho, z)
+    ang = _usys_angle_per_rad(usys)
+    zero, one = jnp.zeros_like(rho), jnp.ones_like(rho)
+    return jnp.array(
+        [
+            [rho / r, zero, z / r],
+            [(z / r) * ang / r, zero, -(rho / r) * ang / r],
+            [zero, one, zero],
+        ]
+    )
+
+
+@_closed_form(Spherical3D, Cylindrical3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: Spherical3D,
+    to_chart: Cylindrical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``Spherical3D -> Cylindrical3D``.
+
+    $$
+    J = \frac{\partial(\rho,\phi,z)}{\partial(r,\theta,\phi)}
+      = \begin{pmatrix}
+          \sin\theta & r\cos\theta & 0 \\ 0 & 0 & 1 \\
+          \cos\theta & -r\sin\theta & 0
+        \end{pmatrix}
+    $$
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([2.0, 0.0, 0.0])
+    >>> cxc.jac_pt_map(at, cxc.sph3d, cxc.cyl3d, usys=u.unitsystems.si)
+    Array([[ 0.,  2.,  0.],
+           [ 0.,  0.,  1.],
+           [ 1., -0.,  0.]], dtype=float64)
+
+    """
+    at = _real_float_point(at)
+    ang = _usys_angle_per_rad(usys)
+    r, theta = at[..., 0], at[..., 1] / ang
+    sin_t, cos_t = jnp.sin(theta), jnp.cos(theta)
+    zero, one = jnp.zeros_like(r), jnp.ones_like(r)
+    return jnp.array(
+        [
+            [sin_t, r * cos_t / ang, zero],
+            [zero, zero, one],
+            [cos_t, -r * sin_t / ang, zero],
+        ]
+    )

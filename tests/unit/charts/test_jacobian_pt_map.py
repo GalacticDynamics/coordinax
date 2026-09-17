@@ -246,6 +246,7 @@ class TestUnitfulDictsReachTheClosedForm:
         pytest.param("cart2d", "polar2d", ("x", "y"), id="cart2d->polar2d"),
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
+        pytest.param("cart3d", "lonlat_sph3d", ("x", "y", "z"), id="cart3d->lonlat"),
     ]
     #: Pairs taking an angle beside a length. Both groups reach the closed form
     #: through bare canonical values; what distinguishes these is that their
@@ -266,6 +267,11 @@ class TestUnitfulDictsReachTheClosedForm:
             ("lon_coslat", "lat", "distance"),
             id="loncoslat->lonlat",
         ),
+        pytest.param(
+            "lonlat_sph3d", "cart3d", ("lon", "lat", "distance"), id="lonlat->cart3d"
+        ),
+        pytest.param("cyl3d", "sph3d", ("rho", "phi", "z"), id="cyl3d->sph3d"),
+        pytest.param("sph3d", "cyl3d", ("r", "theta", "phi"), id="sph3d->cyl3d"),
     ]
     ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
 
@@ -297,18 +303,24 @@ class TestUnitfulDictsReachTheClosedForm:
     def _dict(self, keys, wrap):
         return {k: wrap(self.VALUES[k], self._unit(k)) for k in keys}
 
-    @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
     def test_a_unitful_dict_agrees_with_the_closed_form(self, frm, to, keys) -> None:
-        """The dict route must match calling the closed form directly."""
+        """The dict route must match calling the closed form directly.
+
+        Against the `Array` form, which every routed pair has and which the
+        router itself uses. Feeding it the same point in SI makes the numbers
+        directly comparable; the units are the layer the router adds on top.
+        """
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = self._dict(keys, u.Q)
-        packed = u.Q(jnp.asarray([self.VALUES[k] for k in keys]), "m")
+        bare = jnp.asarray([self.VALUES[k] for k in keys])
 
         from_dict = cxc.jac_pt_map(at, from_chart, to_chart)
-        direct = cxc.jac_pt_map(packed, from_chart, to_chart)
+        direct = cxc.jac_pt_map(bare, from_chart, to_chart, usys=usys_si)
 
-        assert_allclose(np.asarray(from_dict.value), np.asarray(direct.value), rtol=0)
-        assert from_dict.unit.to_tuple() == direct.unit.to_tuple()
+        assert_allclose(
+            np.asarray(jnp.asarray(from_dict.value)), np.asarray(direct), rtol=0
+        )
 
     @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
     def test_a_unitful_dict_does_not_reach_autodiff(
@@ -463,10 +475,14 @@ class TestUnitfulDictsReachTheClosedForm:
 
         J = cxc.jac_pt_map(at, from_chart, to_chart)
 
-        units = [[str(x) for x in row] for row in J.unit.to_tuple()]
-        assert units[0][1] == "km / m"
-        assert units[1][0] == "rad / km"
-        assert units[1][1] == "rad / m"
+        # Stated as a property rather than per row, because which outputs are
+        # lengths and which are angles differs by chart: every row must divide
+        # by the unit its column came in, so the ratio between two columns is
+        # the ratio of their inputs, whatever the row above it is.
+        rows = J.unit.to_tuple()
+        km_per_m = u.unit("km") / u.unit("m")
+        for row in rows:
+            assert row[1] / row[0] == km_per_m
 
 
 # ===========================================================================
@@ -1029,12 +1045,12 @@ class TestJacobianPtMapCDictArrayBranch:
         generic one requires *usys* to know what the bare numbers mean. A pair
         with a closed form registered does not go that way -- it reads bare
         angles as radians -- so this has to be checked on a pair that has
-        none. `Cylindrical3D -> Spherical3D` is one today; if it ever gains a
-        closed form, move this to another rather than deleting it.
+        none. `Cylindrical3D -> LonCosLatSpherical3D` is one today; if it ever
+        gains a closed form, move this to another rather than deleting it.
         """
         at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
         with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
-            cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
+            cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
 
 
 # ===========================================================================
@@ -1103,6 +1119,10 @@ class TestJacobianPtMapAtExtremeScales:
         pytest.param("cart3d", "sph3d", "cart3", id="cart3d->sph3d"),
         pytest.param("cyl3d", "cart3d", "cyl3", id="cyl3d->cart3d"),
         pytest.param("sph3d", "cart3d", "sph3", id="sph3d->cart3d"),
+        pytest.param("cart3d", "lonlat_sph3d", "cart3", id="cart3d->lonlat"),
+        pytest.param("lonlat_sph3d", "cart3d", "lonlat3", id="lonlat->cart3d"),
+        pytest.param("cyl3d", "sph3d", "cyl3", id="cyl3d->sph3d"),
+        pytest.param("sph3d", "cyl3d", "sph3", id="sph3d->cyl3d"),
     ]
 
     @staticmethod
@@ -1119,6 +1139,8 @@ class TestJacobianPtMapAtExtremeScales:
             ]
         if kind == "cyl3":  # (rho, phi, z): two lengths and an angle
             return [magnitude, phi, magnitude * 0.5]
+        if kind == "lonlat3":  # (lon, lat, distance)
+            return [phi, theta, magnitude]
         return [magnitude, theta, phi]  # sph3: (r, theta, phi)
 
     @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
@@ -1241,6 +1263,10 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
         ("cyl3d->cart3d", "cyl3d", "cart3d", "cyl"),
         ("sph3d->cart3d", "sph3d", "cart3d", "sph"),
         ("cart2d->polar2d", "cart2d", "polar2d", "cart2"),
+        ("cart3d->lonlat", "cart3d", "lonlat_sph3d", "cart"),
+        ("lonlat->cart3d", "lonlat_sph3d", "cart3d", "lonlat"),
+        ("cyl3d->sph3d", "cyl3d", "sph3d", "cyl"),
+        ("sph3d->cyl3d", "sph3d", "cyl3d", "sph"),
     ]
 
     @staticmethod
@@ -1252,6 +1278,8 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
             return jnp.array([1.3, 2.1])
         if kind == "cyl":
             return jnp.array([2.0, 0.7 * ang_per_rad, 3.0])
+        if kind == "lonlat":  # (lon, lat, distance)
+            return jnp.array([0.9 * ang_per_rad, 0.35 * ang_per_rad, 2.5])
         return jnp.array([3.0, 0.6 * ang_per_rad, 1.1 * ang_per_rad])
 
     @pytest.mark.parametrize(("name", "frm", "to", "kind"), PAIRS)
