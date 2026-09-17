@@ -1285,8 +1285,20 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
       raw array Jacobian. Requires `usys`.
 
     - `(at: CDict, from_chart, to_chart, /, *, usys: OptUSys = None)` ->
-      `Array | QuantityMatrix`. The general dict dispatch. Branches on whether `at`
-      values are plain arrays or quantities:
+      `Array | QuantityMatrix`. The general dict dispatch. Takes the first route
+      that applies:
+
+      - **Closed form registered for the pair**: chart pairs with a hand-written
+        Jacobian are recorded in `_CLOSED_FORM_PAIRS` by the `@_closed_form(From, To)`
+        tag on the `Array` dispatch that implements one. For those, every component is
+        stripped to its dimension's canonical unit — radians for angles, the first unit
+        seen otherwise — the closed form is evaluated on the resulting bare array, and
+        the units are restored, each column rescaled to the unit it arrived in. Applies
+        to unitful and plain-array dicts alike. An entry therefore carries whichever
+        convertible unit the canonicalisation produced, which need not be the label
+        `jacfwd` would have given it; the quantities are equal. A dict mixing a bare
+        component with a unitful one has no unit to canonicalise against and falls
+        through.
 
       - **Array-valued** (`is_array=True`): stacks `at` into a plain array via
         `jnp.stack`, then forwards to the `(at: Array, ...)` dispatch. `usys` is
@@ -1314,21 +1326,23 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     dispatches. Optional (`None`) for the `CDict` generic dispatch's quantity-valued
     branch, and for all analytical dispatches.
 
-    **Analytical dispatches** (higher precedence than the generic `CDict` fallback;
+    **Analytical dispatches** (higher precedence than differentiating the map;
     `usys` is optional):
 
-    - `Cart2D -> Polar2D`: `Array`, `AbstractQuantity`, and `CDict` overloads.
-      The `AbstractQuantity` overload computes closed-form partial derivatives and
-      explicitly sets the ∂θ row units to `rad / input_length_unit` (astropy treats rad
-      as dimensionless, so the unit must be forced manually).
-    - Further analytical pairs (`Polar2D -> Cart2D`, `Cart3D ↔ Sph3D`,
-      `Cart3D ↔ Cyl3D`) follow the same pattern via the generic `CDict` dispatch.
+    `_CLOSED_FORM_PAIRS` is the authoritative list of such pairs and is deliberately
+    not duplicated here. Two constraints apply to writing one, both silent when broken:
+
+    - An angular row must have its unit forced — astropy treats `rad` as
+      dimensionless, so `rad / length` will not arise from the arithmetic.
+    - On bare arrays an angular row is per `usys["angle"]` and an angular column
+      with respect to it, so rows scale by that factor and columns divide by it.
 
     **Failure semantics:**
 
-    - Raises `plum.NotFoundLookupError` when calling the `(at: CDict, ...)` dispatch
-      with `is_array=True` values and `usys=None` for a chart pair that has no analytical
-      `Array` dispatch (e.g., `cart3d -> sph3d` without a unit system).
+    - Raises `ValueError` ("usys must be provided for array input") when calling the
+      `(at: CDict, ...)` dispatch with `is_array=True` values and `usys=None` for a
+      chart pair with no closed form. It comes from `pt_map`, not from dispatch
+      resolution. A pair *with* a closed form reads bare angles as radians instead.
     - Raises `ValueError` if `at` keys do not match `from_chart.components` (via
       `check_data`).
 

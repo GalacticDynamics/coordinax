@@ -21,6 +21,7 @@ import unxts.linalg as ul
 
 import coordinax.charts as cxc
 import coordinaxs.hypothesis.main as cxst
+from coordinax._src.charts import jacobian
 
 usys_si = u.unitsystems.si
 
@@ -246,6 +247,7 @@ class TestUnitfulDictsReachTheClosedForm:
         pytest.param("cart2d", "polar2d", ("x", "y"), id="cart2d->polar2d"),
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
+        pytest.param("cart3d", "lonlat_sph3d", ("x", "y", "z"), id="cart3d->lonlat"),
     ]
     #: Pairs taking an angle beside a length. Both groups reach the closed form
     #: through bare canonical values; what distinguishes these is that their
@@ -266,6 +268,11 @@ class TestUnitfulDictsReachTheClosedForm:
             ("lon_coslat", "lat", "distance"),
             id="loncoslat->lonlat",
         ),
+        pytest.param(
+            "lonlat_sph3d", "cart3d", ("lon", "lat", "distance"), id="lonlat->cart3d"
+        ),
+        pytest.param("cyl3d", "sph3d", ("rho", "phi", "z"), id="cyl3d->sph3d"),
+        pytest.param("sph3d", "cyl3d", ("r", "theta", "phi"), id="sph3d->cyl3d"),
     ]
     ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
 
@@ -297,18 +304,19 @@ class TestUnitfulDictsReachTheClosedForm:
     def _dict(self, keys, wrap):
         return {k: wrap(self.VALUES[k], self._unit(k)) for k in keys}
 
-    @pytest.mark.parametrize(("frm", "to", "keys"), HOMOGENEOUS_PAIRS)
+    @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
     def test_a_unitful_dict_agrees_with_the_closed_form(self, frm, to, keys) -> None:
-        """The dict route must match calling the closed form directly."""
+        """The dict route must match the `Array` form the router itself uses."""
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = self._dict(keys, u.Q)
-        packed = u.Q(jnp.asarray([self.VALUES[k] for k in keys]), "m")
+        bare = jnp.asarray([self.VALUES[k] for k in keys])
 
         from_dict = cxc.jac_pt_map(at, from_chart, to_chart)
-        direct = cxc.jac_pt_map(packed, from_chart, to_chart)
+        direct = cxc.jac_pt_map(bare, from_chart, to_chart, usys=usys_si)
 
-        assert_allclose(np.asarray(from_dict.value), np.asarray(direct.value), rtol=0)
-        assert from_dict.unit.to_tuple() == direct.unit.to_tuple()
+        assert_allclose(
+            np.asarray(jnp.asarray(from_dict.value)), np.asarray(direct), rtol=0
+        )
 
     @pytest.mark.parametrize(("frm", "to", "keys"), ROUTED_PAIRS)
     def test_a_unitful_dict_does_not_reach_autodiff(
@@ -442,8 +450,12 @@ class TestUnitfulDictsReachTheClosedForm:
             "phi": u.Q(jnp.full((n,), 0.7), "rad"),
             "z": u.Q(jnp.linspace(1.0, 3.0, n), "m"),
         }
+        assert (
+            type(cxc.cyl3d),
+            type(cxc.loncoslat_sph3d),
+        ) not in jacobian._CLOSED_FORM_PAIRS
 
-        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
 
         assert np.asarray(jnp.asarray(J.value)).shape == (n, 3, 3)
 
@@ -463,10 +475,11 @@ class TestUnitfulDictsReachTheClosedForm:
 
         J = cxc.jac_pt_map(at, from_chart, to_chart)
 
-        units = [[str(x) for x in row] for row in J.unit.to_tuple()]
-        assert units[0][1] == "km / m"
-        assert units[1][0] == "rad / km"
-        assert units[1][1] == "rad / m"
+        # Which rows are angles differs by chart; the column ratio does not.
+        rows = J.unit.to_tuple()
+        km_per_m = u.unit("km") / u.unit("m")
+        for row in rows:
+            assert row[1] / row[0] == km_per_m
 
 
 # ===========================================================================
@@ -1027,14 +1040,16 @@ class TestJacobianPtMapCDictArrayBranch:
 
         The ``is_array=True`` branch forwards to the Array dispatch, and the
         generic one requires *usys* to know what the bare numbers mean. A pair
-        with a closed form registered does not go that way -- it reads bare
-        angles as radians -- so this has to be checked on a pair that has
-        none. `Cylindrical3D -> Spherical3D` is one today; if it ever gains a
-        closed form, move this to another rather than deleting it.
+        with a closed form reads bare angles as radians instead.
         """
         at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
+        assert (
+            type(cxc.cyl3d),
+            type(cxc.loncoslat_sph3d),
+        ) not in jacobian._CLOSED_FORM_PAIRS
+
         with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
-            cxc.jac_pt_map(at, cxc.cyl3d, cxc.sph3d)
+            cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
 
 
 # ===========================================================================
@@ -1103,6 +1118,10 @@ class TestJacobianPtMapAtExtremeScales:
         pytest.param("cart3d", "sph3d", "cart3", id="cart3d->sph3d"),
         pytest.param("cyl3d", "cart3d", "cyl3", id="cyl3d->cart3d"),
         pytest.param("sph3d", "cart3d", "sph3", id="sph3d->cart3d"),
+        pytest.param("cart3d", "lonlat_sph3d", "cart3", id="cart3d->lonlat"),
+        pytest.param("lonlat_sph3d", "cart3d", "lonlat3", id="lonlat->cart3d"),
+        pytest.param("cyl3d", "sph3d", "cyl3", id="cyl3d->sph3d"),
+        pytest.param("sph3d", "cyl3d", "sph3", id="sph3d->cyl3d"),
     ]
 
     @staticmethod
@@ -1119,6 +1138,8 @@ class TestJacobianPtMapAtExtremeScales:
             ]
         if kind == "cyl3":  # (rho, phi, z): two lengths and an angle
             return [magnitude, phi, magnitude * 0.5]
+        if kind == "lonlat3":  # (lon, lat, distance)
+            return [phi, theta, magnitude]
         return [magnitude, theta, phi]  # sph3: (r, theta, phi)
 
     @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
@@ -1241,6 +1262,10 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
         ("cyl3d->cart3d", "cyl3d", "cart3d", "cyl"),
         ("sph3d->cart3d", "sph3d", "cart3d", "sph"),
         ("cart2d->polar2d", "cart2d", "polar2d", "cart2"),
+        ("cart3d->lonlat", "cart3d", "lonlat_sph3d", "cart"),
+        ("lonlat->cart3d", "lonlat_sph3d", "cart3d", "lonlat"),
+        ("cyl3d->sph3d", "cyl3d", "sph3d", "cyl"),
+        ("sph3d->cyl3d", "sph3d", "cyl3d", "sph"),
     ]
 
     @staticmethod
@@ -1252,6 +1277,8 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
             return jnp.array([1.3, 2.1])
         if kind == "cyl":
             return jnp.array([2.0, 0.7 * ang_per_rad, 3.0])
+        if kind == "lonlat":  # (lon, lat, distance)
+            return jnp.array([0.9 * ang_per_rad, 0.35 * ang_per_rad, 2.5])
         return jnp.array([3.0, 0.6 * ang_per_rad, 1.1 * ang_per_rad])
 
     @pytest.mark.parametrize(("name", "frm", "to", "kind"), PAIRS)
@@ -1272,3 +1299,97 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
         )(at)
 
         assert_allclose(np.asarray(got), np.asarray(expected), rtol=1e-11)
+
+
+# ===========================================================================
+# Cart3D -> LonLat restates Cart3D -> Sph3D
+# ===========================================================================
+
+
+class TestCart3dToLonLatRestatesCart3dToSph3d:
+    """The two closed forms are one matrix, and must not drift apart.
+
+    `lat` is the colatitude negated, so `Cart3D -> LonLat` is `Cart3D ->
+    Sph3D` with rows ``(r, theta, phi)`` reordered to ``(lon, lat, distance)``
+    and the middle one flipped. Both are written out entry by entry, so
+    nothing but this test stops a change to one missing the other.
+
+    Exactly equal, not merely close: the entries are the same arithmetic on
+    the same intermediates, and negation is exact.
+    """
+
+    POINTS: ClassVar = [
+        pytest.param([1.3, 2.1, 0.7], id="generic"),
+        pytest.param([1.0, 0.0, -2.5], id="in-the-xz-plane"),
+        pytest.param([3e11, -1e12, 4e11], id="large"),
+        pytest.param([2e-9, 5e-9, -1e-9], id="small"),
+    ]
+
+    @pytest.mark.parametrize("at", POINTS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_the_rows_are_the_spherical_rows_rearranged(
+        self, at: list[float], angle_unit: str
+    ) -> None:
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        point = jnp.asarray(at)
+
+        lonlat = cxc.jac_pt_map(point, cxc.cart3d, cxc.lonlat_sph3d, usys=usys)
+        sph = cxc.jac_pt_map(point, cxc.cart3d, cxc.sph3d, usys=usys)
+
+        assert_allclose(
+            np.asarray(lonlat),
+            np.asarray(jnp.stack([sph[2], -sph[1], sph[0]])),
+            rtol=0,
+            atol=0,
+        )
+
+
+# ===========================================================================
+# LonLat -> Cart3D restates Sph3D -> Cart3D
+# ===========================================================================
+
+
+class TestLonLatToCart3dRestatesSph3dToCart3d:
+    """The mirror of the pair above, on the columns instead of the rows.
+
+    Differentiating with respect to ``(lon, lat, distance)`` rather than
+    ``(r, theta, phi)`` permutes the columns to ``(phi, theta, r)`` and flips
+    the middle one, `lat` being the colatitude negated.
+
+    Close, not exact, unlike the row pin: the two forms have to be evaluated
+    at the same physical point, and reaching the spherical one means passing
+    it ``pi/2 - lat``. `sin(pi/2 - lat)` and `cos(lat)` agree to a couple of
+    ulps, not to the bit. That subtraction is also why no point sits near a
+    pole -- there it loses most of its significant digits, and the two forms
+    would disagree for a reason this test introduced rather than found.
+    """
+
+    #: ``(lon, lat, distance)`` with the angles in radians; the test scales
+    #: them into whichever angle unit it is checking.
+    POINTS: ClassVar = [
+        pytest.param((0.9, 0.35, 2.5), id="generic"),
+        pytest.param((0.0, -0.8, 1.0), id="on-the-prime-meridian"),
+        pytest.param((2.7, 1.1, 4e12), id="large"),
+        pytest.param((-1.4, 0.05, 3e-9), id="small"),
+    ]
+
+    @pytest.mark.parametrize("at", POINTS)
+    @pytest.mark.parametrize("angle_unit", ["rad", "deg"])
+    def test_the_columns_are_the_spherical_columns_rearranged(
+        self, at: tuple[float, float, float], angle_unit: str
+    ) -> None:
+        usys = u.unitsystem("m", angle_unit, "kg", "s")
+        ang = 1.0 if angle_unit == "rad" else 180 / math.pi
+        lon, lat, dist = at
+        lonlat_at = jnp.array([lon * ang, lat * ang, dist])
+        sph_at = jnp.array([dist, (math.pi / 2 - lat) * ang, lon * ang])
+
+        lonlat = cxc.jac_pt_map(lonlat_at, cxc.lonlat_sph3d, cxc.cart3d, usys=usys)
+        sph = cxc.jac_pt_map(sph_at, cxc.sph3d, cxc.cart3d, usys=usys)
+
+        assert_allclose(
+            np.asarray(lonlat),
+            np.asarray(jnp.stack([sph[:, 2], -sph[:, 1], sph[:, 0]], axis=-1)),
+            rtol=1e-13,
+            atol=0,
+        )
