@@ -129,6 +129,12 @@ def _float(x: Any, /) -> Array:
 #: Sentinel selecting the world-axis seed rule, by name rather than by silence.
 AUTO_SEED = "auto"
 
+_MSG_SEED_NOT_AUTO = (
+    "`initial_normal={seed!r}` is not a seed. The only string accepted is "
+    '`"auto"`, naming the world-axis rule. Pass that, or a dimensionless '
+    "3-vector."
+)
+
 _MSG_SEED_REQUIRED = (
     "`initial_normal` is required: nothing in the curve fixes the n-plane "
     "gauge, and a chart's `(n1, n2)` genuinely depend on it wherever the "
@@ -393,14 +399,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
     auto_seed: bool = eqx.field(static=True, default=False, repr=False, kw_only=True)
     """Whether the world-axis rule was selected by name.
 
-    Derived from ``initial_normal`` in ``__post_init__``. Keyword-only and
-    declared last, because `BishopFrame.from_curve` forwards to the constructor
-    *positionally* -- a field inserted mid-list silently shifted
-    `diffeqsolver` into this one. Not ``init=False``, which would be the
-    tighter statement but breaks `dataclasses.replace` on every builder.
-
-    ``repr=False`` because showing it changed the printed form of every
-    builder, which is expected output in a great many doctests.
+    Derived from ``initial_normal`` in ``__post_init__``. ``kw_only`` because
+    `BishopFrame.from_curve` forwards *positionally*, so a field in the
+    positional list shifts `diffeqsolver` into this one. ``init=False`` would
+    be tighter but breaks `dataclasses.replace`. ``repr=False`` keeps every
+    builder's printed form -- doctested in many places -- unchanged.
     """
 
     # `static=True` is *safe* because a `DiffEqSolver` is hashable, compares
@@ -440,6 +443,11 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         """
         if self.initial_normal is None and not self.auto_seed:
             raise ValueError(_MSG_SEED_REQUIRED)
+        # `ValueError`, not the `TypeError` TRY004 asks for: `str` is an
+        # accepted type here -- `"auto"` is legal -- so a near-miss is a bad
+        # *value*.
+        if isinstance(self.initial_normal, str):
+            raise ValueError(_MSG_SEED_NOT_AUTO.format(seed=self.initial_normal))  # noqa: TRY004
 
     def __post_init__(self) -> None:
         """Resolve a `None` ``tau_0`` to zero in a *declared* ``tau_unit``.

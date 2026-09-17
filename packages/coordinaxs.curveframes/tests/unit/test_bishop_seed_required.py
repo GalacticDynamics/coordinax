@@ -85,3 +85,20 @@ def test_the_sentinel_is_not_a_pytree_leaf() -> None:
     leaves = jax.tree.leaves(cxfc.BishopBuilder(circle, "s", initial_normal="auto"))
 
     assert not any(isinstance(leaf, str) for leaf in leaves)
+
+
+@pytest.mark.parametrize("typo", ["atuo", "AUTO", "Auto", "auto "])
+def test_a_near_miss_string_is_refused(typo: str) -> None:
+    """A stray string would ride along as a pytree leaf, failing later in JAX."""
+    with pytest.raises(ValueError, match="is not a seed"):
+        cxfc.BishopBuilder(circle, "s", initial_normal=typo)
+
+
+def test_only_the_exact_sentinel_is_accepted() -> None:
+    """And it leaves nothing behind in the tree."""
+    import jax
+
+    b = cxfc.BishopBuilder(circle, "s", initial_normal="auto")
+
+    assert b.auto_seed is True
+    assert not any(isinstance(leaf, str) for leaf in jax.tree.leaves(b))
