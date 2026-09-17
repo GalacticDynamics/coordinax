@@ -31,10 +31,7 @@ _MSG_GAUGE = (
     "seed, which `BishopBuilder` picks from the *world* frame unless given an "
     "`normal_0` -- so when the tangent rotates with time the labels name a "
     "different physical point on each slice, and differentiating reports the "
-    "frame's drift as strain. Measured on a static helix, gamma_tau_tau spans "
-    "1.040535 to 1.629908 across four seeds at n = (0.2, 0.1); on the axis it is "
-    "1.16 for every seed. A rigid rotation, which is an isometry and must give "
-    "K = 0, instead gives |K|max = 0.017405 about z-hat.\n\n"
+    "frame's drift as strain.\n\n"
     "On the axis (n = 0) the result is gauge-free and always valid. Off it, pass "
     "`assume_gauge_carried=True` only if your family carries one director through "
     "`normal_0` rather than letting each slice choose. See #870."
@@ -43,8 +40,7 @@ _MSG_GAUGE = (
 _MSG_BATCHED_TIME = (
     "`rate_of_strain` differentiates at one time, so `t` must be a scalar; got "
     "shape {shape}. `K_ij` is a 2-tensor, and a batched `t` would make the "
-    "Jacobian one rank higher -- `TubularChart` is single-point for the same "
-    "reason. Use `jax.vmap` over scalar calls."
+    "Jacobian one rank higher. Use `jax.vmap` over scalar calls."
 )
 
 _MSG_BARE_TIME = (
@@ -126,8 +122,7 @@ def rate_of_strain(
 
     ``t`` must be a scalar. A batched one would raise the Jacobian's rank
     above 2, and `TubularChart` is single-point for the same reason; use
-    `jax.vmap` over scalar calls. Left unguarded it failed inside the chart
-    with ``All input arrays must have the same shape``, naming nothing.
+    `jax.vmap` over scalar calls.
 
     """
     t_unit = u.unit_of(t)
