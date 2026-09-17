@@ -173,24 +173,23 @@ def render(ref: str, changes: "list[griffe.Breakage]") -> str:
 
 
 def _emit(report: str) -> None:
-    """Print the report, and append it to the CI job summary when there is one."""
+    """Print the report, and append it to the CI job summary when there is one.
+
+    The summary write is best-effort. stdout is the reliable channel; a
+    summary file that is missing or unwritable is a worse outcome if it takes
+    the whole run down with it, since this job is not supposed to fail.
+    """
     print(report)
     if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
-        with pathlib.Path(summary).open("a", encoding="utf-8") as fh:
-            fh.write(report)
+        try:
+            with pathlib.Path(summary).open("a", encoding="utf-8") as fh:
+                fh.write(report)
+        except OSError as exc:  # pragma: no cover - CI filesystem only
+            print(f"(could not write the job summary: {exc})")
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Write the report; return 0 unless `--strict` and something changed."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ref", default=None, help="baseline ref to compare against")
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="exit non-zero when the API broke (for a release check)",
-    )
-    args = parser.parse_args(argv)
-
+def _run(args: argparse.Namespace) -> int:
+    """Produce the report for already-parsed `args`."""
     ref = _resolve_baseline(args.ref)
     if ref is None:
         tried = args.ref or ", ".join(_BASELINE_REFS)
@@ -205,25 +204,42 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1 if args.strict else 0
 
-    try:
-        changes = find_changes(ref)
-    except Exception as exc:  # noqa: BLE001  (see below)
-        # Reported, not raised. "Never fails" has to hold for the failures too:
-        # an exception here exits non-zero, reddens the job, and -- if anyone
-        # ever adds this to a required-checks list -- turns the report into the
-        # gate it is written not to be. The reason goes to the summary instead,
-        # where it is visible rather than buried in a log, and `--strict` still
-        # surfaces it as a failure for the release check.
-        _emit(
-            f"### Public API\n\n**No report.** The comparison against "
-            f"`{ref}` did not complete: `{type(exc).__name__}: {exc}`\n\n"
-            "Nothing was compared -- this is *not* a statement that the API is "
-            "unchanged.\n"
-        )
-        return 1 if args.strict else 0
-
+    changes = find_changes(ref)
     _emit(render(ref, changes))
     return 1 if (args.strict and changes) else 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Write the report; return 0 unless `--strict` and something went wrong.
+
+    Every failure is *reported*, not raised. An exception escaping here exits
+    non-zero, reddens the job, and -- if the check were ever added to a
+    required list -- turns the report into the gate it is written not to be.
+    So the whole run is guarded, not just the comparison: resolving the
+    baseline shells out to git, and writing the summary touches the
+    filesystem, and neither is worth failing a non-gating job over. The reason
+    goes to the summary, where it is visible instead of buried in a log, and
+    `--strict` still returns 1 so a release check cannot pass on a report that
+    never ran.
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--ref", default=None, help="baseline ref to compare against")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero when the API broke (for a release check)",
+    )
+    args = parser.parse_args(argv)
+
+    try:
+        return _run(args)
+    except Exception as exc:  # noqa: BLE001  (see the docstring)
+        _emit(
+            "### Public API\n\n**No report.** The run did not complete: "
+            f"`{type(exc).__name__}: {exc}`\n\nNothing was compared -- this "
+            "is *not* a statement that the API is unchanged.\n"
+        )
+        return 1 if args.strict else 0
 
 
 if __name__ == "__main__":

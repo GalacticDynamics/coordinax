@@ -138,3 +138,23 @@ def test_a_failed_comparison_still_fails_the_release_check(
     )
 
     assert _api_report.main(["--strict"]) == 1
+
+
+def test_a_failure_outside_the_comparison_is_also_reported(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The guard covers the whole run, not only `find_changes`.
+
+    Resolving the baseline shells out to git. That is as capable of failing as
+    the comparison is, and just as little worth reddening a non-gating job.
+    """
+
+    def boom(_: object) -> str:
+        msg = "git exploded"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(_api_report, "_resolve_baseline", boom)
+
+    assert _api_report.main([]) == 0
+    assert "RuntimeError: git exploded" in capsys.readouterr().out
+    assert _api_report.main(["--strict"]) == 1
