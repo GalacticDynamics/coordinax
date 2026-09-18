@@ -22,14 +22,21 @@ _PYPROJECTS = [
 
 
 def _requirement_name(req: str) -> str:
-    """The distribution name at the start of a PEP 508 requirement string.
+    """The PEP 503-normalised distribution name starting a PEP 508 requirement.
 
-    PEP 508 names are case-insensitive, so the name is case-folded for robust
-    matching. (Only case is folded, not the ``.``/``-`` separators, so the
-    ``coordinaxs.`` namespace prefix stays intact.)
+    Normalised, not merely case-folded: PEP 503 makes runs of ``.``, ``-`` and
+    ``_`` equivalent, so ``coordinaxs.api``, ``coordinaxs-api`` and
+    ``coordinaxs_api`` are one distribution and any of the three is a legal
+    spelling in a dependency list.
+
+    An earlier version folded only case, reasoning that leaving the separators
+    alone kept the ``coordinaxs.`` prefix intact. It does, and it also meant a
+    dependency written ``coordinaxs-api`` was not recognised as a sibling at
+    all -- so it skipped the floor check silently rather than failing it. The
+    prefix survives normalisation perfectly well as ``coordinaxs-``.
     """
     match = re.match(r"\s*([A-Za-z0-9._-]+)", req)
-    return match.group(1).casefold() if match else ""
+    return re.sub(r"[-_.]+", "-", match.group(1)).lower() if match else ""
 
 
 def _interpackage_reqs(cfg: dict) -> list[str]:
@@ -48,7 +55,7 @@ def _interpackage_reqs(cfg: dict) -> list[str]:
         r
         for r in reqs
         if (name := _requirement_name(r)) == "coordinax"
-        or name.startswith("coordinaxs.")
+        or name.startswith("coordinaxs-")
     ]
 
 
