@@ -11,10 +11,11 @@ _ROOT = Path(__file__).resolve().parents[2]
 #:
 #: Anchored to `__file__`, not the cwd. Relative paths made this silently
 #: under-test: run from anywhere but the repo root the glob matched nothing,
-#: the per-package parametrisation vanished, and the file still reported
-#: success -- 14 cases collected from the root against 4 from `tests/`, with
-#: `coordinaxs.curveframes` among the five lost. An empty parametrisation is
-#: the quietest way for a guard to stop guarding.
+#: every per-package case vanished, and the file still reported success. An
+#: empty parametrisation is the quietest way for a guard to stop guarding --
+#: nothing fails, there is simply less of it. Counts are deliberately not
+#: quoted here: the last ones went stale the moment a test below gained its
+#: own parametrisation.
 _ALL_PYPROJECTS = [
     _ROOT / "pyproject.toml",
     *sorted((_ROOT / "packages").glob("coordinaxs.*/pyproject.toml")),
