@@ -63,7 +63,10 @@ def _no_step_summary(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
 
 
-#: A dispatched verb's own qualified path, and a same-named module beside it.
+#: Two dispatched verbs, by qualified path. The second is the interesting
+#: one: `norm` the function lives in `norm` the module, so it is where a
+#: bare-name filter confuses the two. Both entries are functions -- no
+#: module path belongs in this set.
 _EXCLUDED = frozenset(
     {
         "coordinax._src.charts.register_ptmap.pt_map",
