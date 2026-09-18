@@ -40,7 +40,6 @@ Examples
 __all__ = ("jac_pt_map",)
 
 import functools as ft
-import operator
 
 from collections.abc import Callable
 from jaxtyping import Array
@@ -387,19 +386,41 @@ def _usys_angle_per_rad(usys: OptUSys, /) -> Any:
 # Cart2D -> Polar2D
 
 
-#: `unit_of` is cheap but `dimension_of` is a `plum` dispatch costing ~60us a
-#: unit, and a chart sees the same handful forever. Same reasoning as the
-#: quotient cache below. Bounded, as the repo's other per-unit caches are:
-#: nothing here needs more than a few entries, and a caller building units
-#: programmatically should not grow a cache without limit.
-_dimension_of = ft.lru_cache(maxsize=128)(u.dimension_of)
+@ft.lru_cache(maxsize=128)
+def _conversion_plan(
+    units: tuple[Any, ...], out_dims: tuple[str, ...], /
+) -> tuple[tuple[Any, ...], tuple[Any, ...], tuple[tuple[Any, ...], ...]]:
+    """Plan the trip to canonical units and back, for one set of input units.
 
+    Returns the unit to differentiate each component in, the factor its column
+    is rescaled by afterwards, and the unit of every entry of the result.
 
-#: Dividing two units costs ~20x a dict lookup and a chart has only a handful,
-#: so the quotients are cached across calls. Cached *here* rather than per
-#: call: a fresh `lru_cache` each time caches nothing and costs more than the
-#: divisions it replaces (14us against 2.7us for nine entries).
-_unit_quotient = ft.lru_cache(maxsize=128)(operator.truediv)
+    Pure in the units, so the whole plan is cached: a chart is called far more
+    often than it is called with a set of units it has not seen. Bounded, as
+    the repo's other per-unit caches are -- a caller building units
+    programmatically should not grow one without limit.
+
+    One unit per dimension: the first one seen, except angles, which are
+    seeded as radians and so never take the input's. Seeded rather than
+    special-cased in the loop because a closed form emits an angle whether or
+    not the input had one -- `Cart3D -> Spherical3D` takes three lengths.
+    """
+    canonical: dict[Any, Any] = {ANGLE: RAD}
+    dims = [u.dimension_of(unit) for unit in units]
+    for unit, dim in zip(units, dims, strict=True):
+        canonical.setdefault(dim, unit)
+
+    targets = tuple(canonical[dim] for dim in dims)
+    # Column *i* was differentiated with respect to the canonical unit, so it
+    # is rescaled to the caller's afterwards and labelled to match.
+    scale = tuple(
+        1.0 if target == unit else u.uconvert_value(target, unit, 1.0)
+        for unit, target in zip(units, targets, strict=True)
+    )
+    rows = tuple(
+        tuple(canonical[u.dimension(dim)] / col for col in units) for dim in out_dims
+    )
+    return targets, scale, rows
 
 
 #: Chart pairs with a hand-written Jacobian. Populated by `_closed_form` at
@@ -435,11 +456,10 @@ def _jac_from_dict_via_closed_form(
     per-column units and would pack this point exactly. Feeding one to a closed
     form would put the arithmetic back on `Quantity` operands, and `quax` costs
     a trace per primitive there -- the whole reason these bodies compute on raw
-    arrays. Stripping is also cheaper than packing, 589us against 751us for
-    `carray` on a 3-component point.
+    arrays.
     """
     keys = from_chart.components
-    units: list[Any] = [u.unit_of(at[k]) for k in keys]
+    units = tuple(u.unit_of(at[k]) for k in keys)
 
     # No units to strip or restore; *usys* says what the numbers mean.
     if all(unit is None for unit in units):
@@ -449,17 +469,8 @@ def _jac_from_dict_via_closed_form(
     if any(unit is None for unit in units):
         return _jac_via_autodiff(at, from_chart, to_chart, usys)
 
-    dims = [_dimension_of(unit) for unit in units]
+    targets, scale, unit_rows = _conversion_plan(units, to_chart.coord_dimensions)
 
-    # One unit per dimension: radians for angles, the first one seen otherwise.
-    # Angles are seeded because a closed form emits them whether or not the
-    # input had any -- `Cart3D -> Spherical3D` takes three lengths.
-    canonical: dict[Any, Any] = {ANGLE: RAD}
-    for unit, dim in zip(units, dims, strict=True):
-        canonical.setdefault(dim, RAD if dim == ANGLE else unit)
-
-    out_dims = [u.dimension(dim) for dim in to_chart.coord_dimensions]
-    targets = [canonical[dim] for dim in dims]
     values = [
         u.ustrip(unit, at[k])
         if target == unit
@@ -470,16 +481,6 @@ def _jac_from_dict_via_closed_form(
 
     jac = jnp.asarray(cxcapi.jac_pt_map(raw, from_chart, to_chart, usys=None))
 
-    # Column *i* was differentiated with respect to the canonical unit, so
-    # rescale it to the caller's and label it to match. A chart has a handful
-    # of distinct units, and dividing two costs far more than a dict lookup.
-    scale = [
-        1.0 if target == unit else u.uconvert_value(target, unit, 1.0)
-        for unit, target in zip(units, targets, strict=True)
-    ]
-    unit_rows = tuple(
-        tuple(_unit_quotient(canonical[dim], col) for col in units) for dim in out_dims
-    )
     if any(f != 1.0 for f in scale):
         jac = jac * jnp.asarray(scale, dtype=jac.dtype)
     return ul.QuantityMatrix(jac, unit=unit_rows)
