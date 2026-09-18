@@ -5,10 +5,19 @@ from pathlib import Path
 
 import pytest
 
+_ROOT = Path(__file__).resolve().parents[2]
+
 #: Every distribution in the workspace (root + the five sub-packages).
+#:
+#: Anchored to `__file__`, not the cwd. Relative paths made this silently
+#: under-test: run from anywhere but the repo root the glob matched nothing,
+#: the per-package parametrisation vanished, and the file still reported
+#: success -- 14 cases collected from the root against 4 from `tests/`, with
+#: `coordinaxs.curveframes` among the five lost. An empty parametrisation is
+#: the quietest way for a guard to stop guarding.
 _ALL_PYPROJECTS = [
-    Path("pyproject.toml"),
-    *sorted(Path("packages").glob("coordinaxs.*/pyproject.toml")),
+    _ROOT / "pyproject.toml",
+    *sorted((_ROOT / "packages").glob("coordinaxs.*/pyproject.toml")),
 ]
 
 
