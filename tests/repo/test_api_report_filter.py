@@ -32,6 +32,17 @@ _SPEC = importlib.util.spec_from_file_location(
     "_api_report_under_test",
     pathlib.Path(__file__).resolve().parents[2] / "scripts" / "api_report.py",
 )
+# Narrowing, not runtime guarding. At run time these cannot fire: for a
+# missing file `spec_from_file_location` still returns a spec with a loader,
+# and `exec_module` raises `FileNotFoundError` naming the path, which beats
+# any message an assert could give. They are here because `_SPEC` is
+# `ModuleSpec | None` and `.loader` is `Loader | None`, so `ty` reports two
+# `unresolved-attribute` errors without them -- not on `ty check .`, which
+# `[tool.ty.src] exclude` skips for tests, but on a direct run at this file.
+# A previous pass removed them as dead weight for exactly the runtime reason
+# above; this comment is so the type-narrowing purpose is not lost again.
+assert _SPEC is not None
+assert _SPEC.loader is not None
 _api_report = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_api_report)
 
