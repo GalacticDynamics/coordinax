@@ -15,37 +15,25 @@ from .chart import TubularChart
 
 _MSG_ONE_ARGUMENT_CURVE = (
     "`SweptTube` needs a two-argument `gamma(tau, t)`: it binds the time per "
-    "slice with `AtTime`, and a one-argument curve has no slot for it. "
-    "Unbound, this surfaced only once a slice was *evaluated* -- construction "
-    "and `tube(t)` both succeeded, and the failure arrived as a bare "
-    "`takes 1 positional argument but 2 were given` from inside the curve, "
-    "often under `jacfwd`, with nothing naming the tube. A tube that does not "
-    "change with time is still spelled with both: "
-    "`lambda tau, t: gamma(tau)`, which says the time-independence rather "
-    "than leaving it to be inferred from an arity."
+    "slice with `AtTime`, and a one-argument curve has no slot for it. A tube "
+    "that does not change with time is still spelled with both, "
+    "`lambda tau, t: gamma(tau)`, which says so rather than leaving it to be "
+    "inferred from an arity."
 )
 
 
 _MSG_DIRECTOR_REQUIRED = (
-    "`director` is required: `{name}` fixes its normal plane from `{arg}`, "
-    "and nothing in the curve fixes that. The n-plane gauge is "
-    "*director* data -- a Cosserat frame -- and a curve does not carry it: a "
-    "rod spinning about its own axis and one at rest trace the same curve, and "
-    "have different rates of strain (measured, on a static helix with a spun "
-    "director: `K_tau_tau = -0.067526` against exactly `0.0` for a fixed one). "
-    "So this cannot be guessed, and guessing it silently reported frame drift "
-    "as physical strain (#870). Pass `director=lambda t: <unit 3-vector>`, a "
-    "callable of time because a materially spinning rod needs one. Pass "
-    "`builder=FrenetSerretBuilder` instead if the frame the curve itself fixes "
-    "is what you want -- that one needs no seed and is already equivariant."
+    "`director` is required: `{name}` fixes its normal plane from `{arg}`, and "
+    "nothing in the curve fixes that -- a rod spinning about its own axis and "
+    "one at rest trace the same curve and strain differently, so it cannot be "
+    "guessed (#870). Pass `director=lambda t: <unit 3-vector>`, or "
+    "`builder=FrenetSerretBuilder` for the frame the curve itself fixes."
 )
 
 _MSG_NOT_A_BUILDER = (
-    "`builder` must be a builder *class*, not {what}. Every other argument "
-    "here is a value, so `builder=BishopBuilder(...)` is the natural slip -- "
-    "but this chooses the kind of frame each slice gets and constructs one per "
-    "slice itself, from the curve bound at that time. Pass the class: "
-    "`builder=BishopBuilder`."
+    "`builder` must be a builder *class*, not {what}: `SweptTube` constructs "
+    "one per slice itself, from the curve bound at that time. Pass the class, "
+    "`builder=BishopBuilder`, not an instance."
 )
 
 _MSG_DIRECTOR_UNUSED = (
@@ -56,18 +44,14 @@ _MSG_DIRECTOR_UNUSED = (
 
 
 def _check_builder(builder: Any, /) -> None:
-    """Require ``builder`` to be a builder *class*.
+    """Require ``builder`` to be a builder *class*, with a message that names it.
 
-    Before `issubclass` reaches it, which raises a bare "arg 1 must be a class"
-    on an instance and -- worse -- accepts any *unrelated* class, sending
-    `builder=dict` on to be told it is a seedless builder.
-
-    A module-level function rather than inline in `__check_init__` so it can be
-    tested directly. Through the constructor the non-class branch is
-    unreachable wherever runtime typechecking is on, because the field
-    annotation rejects it first with a message that names neither the argument
-    nor the fix -- which left these lines uncovered while still being the ones
-    that run for a user with typechecking off.
+    `issubclass` raises a bare "arg 1 must be a class" on an instance, and for
+    an unrelated class returns `False` rather than raising at all -- so the two
+    branches below are what turn either into a usable message. Module-level so
+    it can be tested directly: with runtime typechecking on, the
+    ``builder: type`` annotation rejects a bad value first, so these fire only
+    with it off.
     """
     if not isinstance(builder, type):
         raise TypeError(
@@ -83,8 +67,7 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     The 4-D object whose two 3-D sections are the *spatial slice* (time pinned,
     coordinates $(\tau, n_1, n_2)$ -- the names `TubularChart` actually uses)
     and the *worldtube* (station pinned, coordinates $(t, n_1, n_2)$).
-    Callers used to write the family out as a lambda; owning it is what lets
-    one gauge be settled once rather than per slice.
+    Owning the family is what lets one gauge be settled once, not per slice.
 
     Parameters
     ----------
@@ -114,9 +97,7 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     `BishopBuilder`'s transport seed, ``"plane_normal"`` for
     `SignedPlanarBuilder`'s plane, and `None` for `FrenetSerretBuilder`, which
     fixes $\mathbf{N}$ and $\mathbf{B}$ pointwise from the curve and would
-    silently ignore one. Asking the class instead -- `issubclass(...,
-    BishopBuilder)` -- asserted the question was Bishop-versus-everything, and
-    refused `SignedPlanarBuilder` a gauge it genuinely needs.
+    silently ignore one.
 
     Examples
     --------
@@ -146,23 +127,17 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
     )
 
     def __check_init__(self) -> None:
-        """Require a director on the Bishop path, and refuse one elsewhere.
+        """Pair ``director`` with the builder's gauge: required, or refused.
 
-        A dataclass field cannot be "required iff ``builder`` is Bishop", so
-        the rule lives here. `FrenetSerretBuilder` does reject an
-        ``normal_0`` one layer down, but with a different error and only
-        once a slice is built -- too late to name the choice that was wrong.
+        A dataclass field cannot be "required iff the builder has a gauge", and
+        the layer below only refuses once a slice is built -- too late to name
+        the choice that was wrong.
         """
         _check_builder(self.builder)
 
         if not _is_two_argument(self.curve):
             raise ValueError(_MSG_ONE_ARGUMENT_CURVE)
 
-        # The builder says whether it has a gauge, and what to call it. Asking
-        # `issubclass(..., BishopBuilder)` instead asserted that the question
-        # is Bishop-versus-everything, which is false: `SignedPlanarBuilder`
-        # has `plane_normal`, gauge in exactly the same sense, and was being
-        # told it "takes no seed".
         gauge = self.builder.gauge_field
         if gauge is not None and self.director is None:
             raise ValueError(
@@ -173,12 +148,11 @@ class SweptTube(eqx.Module):  # type: ignore[misc]
 
     def __call__(self, t: Any, /) -> TubularChart:
         """Return the spatial slice at ``t``."""
+        # `__check_init__` has paired these: a gauge name implies a director.
+        # Spelled `is not None` to match how that check tests them.
         gauge = self.builder.gauge_field
-        # `__check_init__` has already paired these: a gauge name implies a
-        # director, and its absence implies none.
-        seed = (
-            {} if gauge is None or self.director is None else {gauge: self.director(t)}
-        )
+        seeded = gauge is not None and self.director is not None
+        seed = {gauge: self.director(t)} if seeded else {}
         return TubularChart(
             self.builder(AtTime(self.curve, t), self.tau_unit, **seed),
             tau_bounds=self.tau_bounds,

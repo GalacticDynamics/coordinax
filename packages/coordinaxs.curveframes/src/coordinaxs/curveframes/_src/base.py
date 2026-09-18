@@ -280,10 +280,9 @@ class AbstractCurveFrameBuilder(eqx.Module):
     supply to pin it: ``"normal_0"`` for `BishopBuilder`'s transport
     seed, ``"plane_normal"`` for `SignedPlanarBuilder`'s plane.
 
-    Declared here so callers can *ask* rather than test the concrete class.
-    `SweptTube` did the latter, and so told `SignedPlanarBuilder` it "takes no
-    seed" -- which is wrong: its `plane_normal` is gauge in exactly the sense
-    `normal_0` is, and its own docstring says so.
+    Declared here so callers can *ask* rather than test the concrete class,
+    which gets `SignedPlanarBuilder` wrong: its `plane_normal` is gauge in
+    exactly the sense `normal_0` is.
     """
 
     curve: eqx.AbstractVar[Callable[[Any], Any]]
