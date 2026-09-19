@@ -1393,3 +1393,89 @@ class TestLonLatToCart3dRestatesSph3dToCart3d:
             rtol=1e-13,
             atol=0,
         )
+
+
+# ===========================================================================
+# The unit-conversion plan
+# ===========================================================================
+
+
+class TestConversionPlan:
+    """The plan the router follows is pure in the units, so it is pinned here.
+
+    Its output never reaches a caller directly -- it is targets, column scales
+    and labels -- so a mistake in it shows up as a wrong unit on a Jacobian
+    somewhere downstream rather than as a failure here.
+    """
+
+    def test_one_unit_per_dimension_angles_in_radians(self) -> None:
+        """Angles canonicalise to radians, other dimensions to the first seen."""
+        units = (u.unit("km"), u.unit("deg"), u.unit("m"))
+        targets, scale, rows = jacobian._conversion_plan(
+            units, ("length", "angle", "angle")
+        )
+
+        # `m` follows `km`, the first length; the angle goes to radians.
+        assert targets == (u.unit("km"), u.unit("rad"), u.unit("km"))
+        assert_allclose(np.asarray(scale), [1.0, math.pi / 180, 1e-3], rtol=1e-15)
+        assert [[str(x) for x in row] for row in rows] == [
+            ["", "km / deg", "km / m"],
+            ["rad / km", "rad / deg", "rad / m"],
+            ["rad / km", "rad / deg", "rad / m"],
+        ]
+
+    def test_an_angle_row_survives_a_point_carrying_no_angle(self) -> None:
+        """`Cart3D -> Spherical3D` takes three lengths and emits two angles."""
+        units = (u.unit("m"),) * 3
+        _, _, rows = jacobian._conversion_plan(units, ("length", "angle", "angle"))
+
+        assert [str(x) for x in rows[1]] == ["rad / m"] * 3
+
+    def test_a_degree_input_is_still_differentiated_in_radians(self) -> None:
+        """The angle seed outranks an input's own unit, unlike every other.
+
+        The closed forms' trigonometry takes radians whatever came in.
+        """
+        targets, scale, _ = jacobian._conversion_plan((u.unit("deg"),), ("angle",))
+
+        assert targets == (u.unit("rad"),)
+        assert_allclose(float(scale[0]), math.pi / 180, rtol=1e-15)
+
+
+# ===========================================================================
+# The closed-form registry matches the dispatches it claims to list
+# ===========================================================================
+
+
+def _pairs_with_an_array_dispatch() -> set[tuple[type, type]]:
+    """Chart pairs `plum` resolves to an `Array` Jacobian of their own.
+
+    The generic fallback is annotated with the abstract base, so a pair
+    reaching a *concrete* one has a hand-written Jacobian by definition.
+    """
+    found = set()
+    for method in jacobian.jac_pt_map.methods:
+        types = getattr(method.signature, "types", ())
+        if len(types) != 3:
+            continue
+        _, frm, to = types
+        if not (isinstance(frm, type) and isinstance(to, type)):
+            continue
+        if not (
+            issubclass(frm, cxc.AbstractChart) and issubclass(to, cxc.AbstractChart)
+        ):
+            continue
+        if frm is cxc.AbstractChart or to is cxc.AbstractChart:
+            continue
+        found.add((frm, to))
+    return found
+
+
+def test_the_registry_lists_exactly_the_pairs_that_have_a_closed_form() -> None:
+    """`@_closed_form` is a hand-maintained tag, and this is what keeps it honest.
+
+    Forgetting it on a new closed form fails silently -- the pair is simply
+    never routed to, and stays as slow as it was -- so the tag is checked
+    against the dispatches `plum` actually holds rather than trusted.
+    """
+    assert _pairs_with_an_array_dispatch() == jacobian._CLOSED_FORM_PAIRS
