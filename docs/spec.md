@@ -1215,11 +1215,12 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Input `unxt.AbstractQuantity` with last axis size 1, 2, or 3: call `guess_chart` on the quantity to infer chart dimensionality, then apply the chart-based dispatch.
     - Input array-like with chart context: split last axis into named components using `chart.components`. Last axis length MUST match the chart's component count.
     - Input `unxt.AbstractQuantity` with chart context: split last axis into named quantities using `chart.components`. Requires last axis size to match chart.
-    - Input `QuantityMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component.
+    - Input `QuantityMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component. The matrix MUST be 1-D — one point, not a stack of them.
 
     Failure semantics:
 
     - If last axis size does not match the number of chart components, raise `ValueError`.
+    - If a `QuantityMatrix` input has more than one axis, raise `ValueError`. The chart names one row's components and nothing names a second axis.
     - If input type has no registered dispatch, `plum.NotFoundLookupError` is raised.
 
     Notes:

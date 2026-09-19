@@ -73,3 +73,31 @@ def test_cdict_from_array_and_chart(data, chart):
     assert set(got.keys()) == set(chart.components)
     for i, k in enumerate(chart.components):
         assert jnp.array_equal(got[k], q[..., i], equal_nan=True)
+
+
+def test_cdict_from_a_quantity_matrix() -> None:
+    """cdict(QuantityMatrix, chart) splits it into per-component quantities."""
+    import unxts.linalg as ul
+
+    qm = ul.QuantityMatrix(jnp.asarray([1.0, 2.0, 3.0]), unit=("m", "m", "m"))
+
+    got = cxc.cdict(qm, cxc.cart3d)
+
+    assert set(got.keys()) == set(cxc.cart3d.components)
+    assert float(u.ustrip("m", got["y"])) == 2.0
+
+
+def test_cdict_refuses_a_two_dimensional_quantity_matrix() -> None:
+    """A `QuantityMatrix` reaching `cdict` must be one point, not a stack.
+
+    The chart says how to name one row's components and nothing says how to
+    name a second axis, so the guard refuses rather than guessing. Pinned
+    because the shape that trips it -- the (1, n) a matrix naturally has -- is
+    the one a caller is most likely to try.
+    """
+    import unxts.linalg as ul
+
+    qm = ul.QuantityMatrix(jnp.zeros((1, 3)), unit=(("m", "m", "m"),))
+
+    with pytest.raises(ValueError, match="must be 1D"):
+        cxc.cdict(qm, cxc.cart3d)
