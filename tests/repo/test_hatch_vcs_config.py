@@ -5,10 +5,20 @@ from pathlib import Path
 
 import pytest
 
+_ROOT = Path(__file__).resolve().parents[2]
+
 #: Every distribution in the workspace (root + the five sub-packages).
+#:
+#: Anchored to `__file__`, not the cwd. Relative paths made this silently
+#: under-test: run from anywhere but the repo root the glob matched nothing,
+#: every per-package case vanished, and the file still reported success. An
+#: empty parametrisation is the quietest way for a guard to stop guarding --
+#: nothing fails, there is simply less of it. Counts are deliberately not
+#: quoted here: the last ones went stale the moment a test below gained its
+#: own parametrisation.
 _ALL_PYPROJECTS = [
-    Path("pyproject.toml"),
-    *sorted(Path("packages").glob("coordinaxs.*/pyproject.toml")),
+    _ROOT / "pyproject.toml",
+    *sorted((_ROOT / "packages").glob("coordinaxs.*/pyproject.toml")),
 ]
 
 
@@ -56,7 +66,7 @@ def test_distribution_ships_a_license_file(path: Path) -> None:
 
 def test_main_package_uses_vcs_source() -> None:
     """Main package should use vcs as the version source."""
-    cfg = _read_pyproject(Path("pyproject.toml"))
+    cfg = _read_pyproject(_ROOT / "pyproject.toml")
     version_config = cfg["tool"]["hatch"]["version"]
 
     assert version_config.get("source") == "vcs"
@@ -75,37 +85,37 @@ def test_main_package_uses_vcs_source() -> None:
     ]
 
 
-def test_workspace_packages_use_package_specific_git_describe_match() -> None:
-    """Workspace packages use git describe with package match patterns."""
-    package_patterns = {
-        "coordinaxs.api": Path("packages/coordinaxs.api/pyproject.toml"),
-        "coordinaxs.astro": Path("packages/coordinaxs.astro/pyproject.toml"),
-        "coordinaxs.hypothesis": Path("packages/coordinaxs.hypothesis/pyproject.toml"),
-        "coordinaxs.interop.astropy": Path(
-            "packages/coordinaxs.interop.astropy/pyproject.toml"
-        ),
-    }
+#: The sub-package distributions, enumerated rather than listed.
+_PACKAGE_PYPROJECTS = sorted((_ROOT / "packages").glob("coordinaxs.*/pyproject.toml"))
 
-    expected_patterns = {
-        "coordinaxs.api": "coordinaxs-api-v*",
-        "coordinaxs.astro": "coordinaxs-astro-v*",
-        "coordinaxs.hypothesis": "coordinaxs-hypothesis-v*",
-        "coordinaxs.interop.astropy": "coordinaxs-interop-astropy-v*",
-    }
 
-    for package, path in package_patterns.items():
-        cfg = _read_pyproject(path)
-        cmd = cfg["tool"]["hatch"]["version"]["raw-options"]["scm"]["git"][
-            "describe_command"
-        ]
+@pytest.mark.parametrize("path", _PACKAGE_PYPROJECTS, ids=lambda p: str(p.parent.name))
+def test_workspace_packages_use_package_specific_git_describe_match(path: Path) -> None:
+    """Each sub-package matches only its own tags.
 
-        assert isinstance(cmd, list)
-        assert cmd == [
-            "git",
-            "describe",
-            "--dirty",
-            "--tags",
-            "--long",
-            "--match",
-            expected_patterns[package],
-        ]
+    The packages are read off disk and the expected pattern derived from the
+    directory name, because the hardcoded pair of dicts this replaces listed
+    four of the five: `coordinaxs.curveframes` was absent, so its match
+    pattern was unguarded and a wrong one would have shipped silently. A
+    listing that has to be updated by hand is a listing that eventually is
+    not -- enumerating means the next package is covered by existing.
+
+    The derivation (dots to dashes, then `-v*`) is checked against all five
+    actual values, `coordinaxs.interop.astropy` -> `coordinaxs-interop-astropy-v*`
+    included.
+    """
+    expected = f"{path.parent.name.replace('.', '-')}-v*"
+    cmd = _read_pyproject(path)["tool"]["hatch"]["version"]["raw-options"]["scm"][
+        "git"
+    ]["describe_command"]
+
+    assert isinstance(cmd, list)
+    assert cmd == [
+        "git",
+        "describe",
+        "--dirty",
+        "--tags",
+        "--long",
+        "--match",
+        expected,
+    ]
