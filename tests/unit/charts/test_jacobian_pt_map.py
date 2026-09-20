@@ -235,10 +235,12 @@ class TestJacobianPtMapCart2dToPolar2d:
 
 
 class TestUnitfulDictsReachTheClosedForm:
-    """Every routed pair takes the closed form, not `jax.jacfwd`.
+    """Every routed pair takes a closed form, not `jax.jacfwd`.
 
     Routing is registered per chart pair, so it drifts out of step with the
-    closed forms unless every pair is listed here.
+    closed forms unless every pair is listed here -- including the pairs that
+    reach one only by chaining two, whose unit handling is the same and whose
+    route is the one a unitful dict takes most often.
     """
 
     #: Pairs whose `from_chart` components share a dimension, so canonicalising
@@ -249,6 +251,9 @@ class TestUnitfulDictsReachTheClosedForm:
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
         pytest.param("cart3d", "lonlat_sph3d", ("x", "y", "z"), id="cart3d->lonlat"),
+        pytest.param(
+            "cart3d", "loncoslat_sph3d", ("x", "y", "z"), id="cart3d->loncoslat"
+        ),
     ]
     #: Pairs taking an angle beside a length. Both groups reach the closed form
     #: through bare canonical values; what distinguishes these is that their
@@ -274,8 +279,47 @@ class TestUnitfulDictsReachTheClosedForm:
         ),
         pytest.param("cyl3d", "sph3d", ("rho", "phi", "z"), id="cyl3d->sph3d"),
         pytest.param("sph3d", "cyl3d", ("r", "theta", "phi"), id="sph3d->cyl3d"),
+        pytest.param(
+            "loncoslat_sph3d",
+            "cart3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->cart3d",
+        ),
     ]
-    ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
+    #: Pairs with no closed form of their own, reaching one by chaining two
+    #: through the Cartesian chart. The unit handling is the same, so they
+    #: belong to the same checks.
+    CHAINED_PAIRS: ClassVar = [
+        pytest.param("cyl3d", "lonlat_sph3d", ("rho", "phi", "z"), id="cyl3d->lonlat"),
+        pytest.param(
+            "cyl3d", "loncoslat_sph3d", ("rho", "phi", "z"), id="cyl3d->loncoslat"
+        ),
+        pytest.param(
+            "sph3d", "lonlat_sph3d", ("r", "theta", "phi"), id="sph3d->lonlat"
+        ),
+        pytest.param(
+            "sph3d", "loncoslat_sph3d", ("r", "theta", "phi"), id="sph3d->loncoslat"
+        ),
+        pytest.param(
+            "lonlat_sph3d", "cyl3d", ("lon", "lat", "distance"), id="lonlat->cyl3d"
+        ),
+        pytest.param(
+            "lonlat_sph3d", "sph3d", ("lon", "lat", "distance"), id="lonlat->sph3d"
+        ),
+        pytest.param(
+            "loncoslat_sph3d",
+            "cyl3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->cyl3d",
+        ),
+        pytest.param(
+            "loncoslat_sph3d",
+            "sph3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->sph3d",
+        ),
+    ]
+    ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS + CHAINED_PAIRS
 
     VALUES: ClassVar = {
         "x": 1.3,
