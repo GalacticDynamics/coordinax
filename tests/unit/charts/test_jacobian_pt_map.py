@@ -1132,10 +1132,14 @@ class TestJacobianPtMapAtExtremeScales:
     #: magnitude to overflow -- so they are checked for finiteness, the part
     #: of the comparison above that stays meaningful for them.
     CHAINED_PAIRS: ClassVar = [
+        pytest.param("cyl3d", "lonlat_sph3d", "cyl3", id="cyl3d->lonlat"),
         pytest.param("cyl3d", "loncoslat_sph3d", "cyl3", id="cyl3d->loncoslat"),
         pytest.param("sph3d", "lonlat_sph3d", "sph3", id="sph3d->lonlat"),
+        pytest.param("sph3d", "loncoslat_sph3d", "sph3", id="sph3d->loncoslat"),
+        pytest.param("lonlat_sph3d", "cyl3d", "lonlat3", id="lonlat->cyl3d"),
         pytest.param("lonlat_sph3d", "sph3d", "lonlat3", id="lonlat->sph3d"),
         pytest.param("loncoslat_sph3d", "cyl3d", "lonlat3", id="loncoslat->cyl3d"),
+        pytest.param("loncoslat_sph3d", "sph3d", "lonlat3", id="loncoslat->sph3d"),
     ]
 
     @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
@@ -1609,3 +1613,29 @@ class TestFastRoute:
         # Exact: the router performs this very product, so anything else means
         # it chained through a different pivot or in the other order.
         assert_allclose(np.asarray(got), np.asarray(by_hand), rtol=0, atol=0)
+
+
+def test_a_chart_with_no_cartesian_is_not_chained() -> None:
+    """A pivot needs a Cartesian chart, and an intrinsic chart has none.
+
+    `_fast_route` asks for `from_chart.cartesian` before it can look for two
+    closed forms, and a two-sphere chart raises rather than answering. It has
+    to fall through to `jacfwd`, not propagate that error.
+    """
+    assert jacobian._fast_route(cxc.sph2, cxc.lonlat_sph2) is jacobian._NO_FAST_ROUTE
+
+
+def test_a_bare_array_dict_reaches_the_chained_route() -> None:
+    """A dict of plain arrays chains too, given a *usys* to read them by.
+
+    It gets there by way of the `Array` route rather than the canonicalising
+    one, so this pins that the two agree -- exactly, since the dict is only
+    stacked on the way.
+    """
+    at = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.7), "z": jnp.asarray(3.0)}
+
+    got = cxc.jac_pt_map(at, cxc.cyl3d, cxc.lonlat_sph3d, usys=usys_si)
+
+    packed = jnp.asarray([2.0, 0.7, 3.0])
+    expected = cxc.jac_pt_map(packed, cxc.cyl3d, cxc.lonlat_sph3d, usys=usys_si)
+    assert_allclose(np.asarray(got), np.asarray(expected), rtol=0, atol=0)

@@ -525,9 +525,9 @@ def _jac_from_dict_via_closed_form(
 
     # No units to strip or restore; *usys* says what the numbers mean.
     if all(unit is None for unit in units):
+        # Straight to the `Array` route, which takes the same three routes
+        # this one does -- including the chain, so no pivot branch here.
         at_arr = jnp.stack([at[k] for k in keys], axis=-1)
-        if pivot is not None:
-            return _jac_chained(at_arr, from_chart, pivot, to_chart, usys)
         return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)
     # A bare component beside a unitful one has no unit to canonicalise to.
     if any(unit is None for unit in units):
