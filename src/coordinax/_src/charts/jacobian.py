@@ -504,10 +504,12 @@ def _jac_from_dict_via_closed_form(
     pivot: Any,
     /,
 ) -> Any:
-    """Send a coordinate dict to the closed form registered for its chart pair.
+    """Send a coordinate dict to the closed form that serves its chart pair.
 
-    Called with a checked, unbatched point: the dispatch above has already
-    validated the keys and mapped any leading axes.
+    Called with a checked, unbatched point and the route `_fast_route` chose:
+    *pivot* is `None` when the pair has a closed form of its own, and the
+    chart to chain through when two of them cover it instead. Either way the
+    Jacobian arrives on bare values and the unit handling here is the same.
 
     The closed forms take bare values, so strip every component to a canonical
     unit -- angles to radians, everything else to the first unit of its kind --
