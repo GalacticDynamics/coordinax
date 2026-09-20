@@ -64,6 +64,7 @@ from .d3 import (
 )
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import OptUSys
+from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax.internal import tree_cast_int_bool_to_float
 from coordinaxs.api.custom_types import CDict
 
@@ -155,9 +156,9 @@ def jac_pt_map(
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    This is the fallback: a chart pair with a closed-form Jacobian registered
-    is served by that instead. `Cylindrical3D -> Spherical3D` has none, so it
-    comes here.
+    This is the last fallback: a pair with a closed form of its own is served
+    by that, and a pair whose two legs through the Cartesian chart have one
+    is chained instead. Only a pair reaching neither is differentiated here.
 
     >>> jac_fn = cxc.jac_pt_map(None, cxc.cyl3d, cxc.sph3d, usys=u.unitsystems.si)
 
@@ -175,6 +176,12 @@ def jac_pt_map(
     """
     # jacfwd requires real floating inputs; promote only integer/bool.
     at = tree_cast_int_bool_to_float(jnp.asarray(at))
+
+    # Two chained closed forms beat differentiating the composite, so the
+    # array route takes the same chain the dict route does.
+    pivot = _fast_route(from_chart, to_chart)
+    if pivot is not None and pivot is not _NO_FAST_ROUTE:
+        return _jac_chained(at, from_chart, pivot, to_chart, usys)
 
     # Prepare the Jacobian of the point-map function w.r.t. the base point.
     # Close over the args/kwargs to construct the point-map function once.
@@ -331,9 +338,11 @@ def jac_pt_map(
         return batched
 
     # A hand-written Jacobian beats differentiating the map, whatever the
-    # values carry, so this is asked first.
-    if (type(from_chart), type(to_chart)) in _CLOSED_FORM_PAIRS:
-        return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys)  # ty: ignore[invalid-return-type]
+    # values carry, so this is asked first -- and a pair with none of its own
+    # still avoids `jacfwd` if two chained ones reach it.
+    pivot = _fast_route(from_chart, to_chart)
+    if pivot is not _NO_FAST_ROUTE:
+        return _jac_from_dict_via_closed_form(at, from_chart, to_chart, usys, pivot)
 
     is_array = not any(hasattr(v, "unit") for v in at.values())
     if is_array:
@@ -439,8 +448,61 @@ def _closed_form(from_cls: type, to_cls: type, /) -> Callable[[Any], Any]:
     return register
 
 
+#: Returned by `_fast_route` when neither a closed form nor a chained pair of
+#: them applies, and the map has to be differentiated after all.
+_NO_FAST_ROUTE: Final = object()
+
+
+def _fast_route(from_chart: AbstractChart, to_chart: AbstractChart, /) -> Any:
+    """How this pair avoids `jacfwd`, if it can.
+
+    `None` when the pair has a closed form of its own, the chart to pivot
+    through when two chained ones cover it, and `_NO_FAST_ROUTE` when neither
+    does.
+    """
+    if (type(from_chart), type(to_chart)) in _CLOSED_FORM_PAIRS:
+        return None
+    try:
+        pivot = from_chart.cartesian
+    except NoGlobalCartesianChartError:  # an intrinsic chart has no Cartesian
+        return _NO_FAST_ROUTE
+    legs = ((type(from_chart), type(pivot)), (type(pivot), type(to_chart)))
+    if all(leg in _CLOSED_FORM_PAIRS for leg in legs):
+        return pivot
+    return _NO_FAST_ROUTE
+
+
+def _jac_chained(
+    at: Array,
+    from_chart: AbstractChart,
+    pivot: AbstractChart,
+    to_chart: AbstractChart,
+    usys: OptUSys,
+    /,
+) -> Array:
+    """Chain two closed forms rather than differentiate the composite map.
+
+    `J(A -> C) = J(B -> C) @ J(A -> B)`, each leg evaluated where it starts,
+    so the pivot point is computed alongside the two matrices. `pt_map`
+    already falls back through the Cartesian chart for a pair with no direct
+    transition; this follows the same pivot.
+    """
+    keys = from_chart.components
+    point = {k: at[..., i] for i, k in enumerate(keys)}
+    mid = cast("CDict", cxcapi.pt_map(point, from_chart, pivot, usys=usys))
+    mid_at = jnp.stack([mid[k] for k in pivot.components], axis=-1)
+    first = jnp.asarray(cxcapi.jac_pt_map(at, from_chart, pivot, usys=usys))
+    second = jnp.asarray(cxcapi.jac_pt_map(mid_at, pivot, to_chart, usys=usys))
+    return second @ first
+
+
 def _jac_from_dict_via_closed_form(
-    at: CDict, from_chart: AbstractChart, to_chart: AbstractChart, usys: OptUSys, /
+    at: CDict,
+    from_chart: AbstractChart,
+    to_chart: AbstractChart,
+    usys: OptUSys,
+    pivot: Any,
+    /,
 ) -> Any:
     """Send a coordinate dict to the closed form registered for its chart pair.
 
@@ -464,6 +526,8 @@ def _jac_from_dict_via_closed_form(
     # No units to strip or restore; *usys* says what the numbers mean.
     if all(unit is None for unit in units):
         at_arr = jnp.stack([at[k] for k in keys], axis=-1)
+        if pivot is not None:
+            return _jac_chained(at_arr, from_chart, pivot, to_chart, usys)
         return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)
     # A bare component beside a unitful one has no unit to canonicalise to.
     if any(unit is None for unit in units):
@@ -479,7 +543,11 @@ def _jac_from_dict_via_closed_form(
     ]
     raw = tree_cast_int_bool_to_float(jnp.stack(values, axis=-1))
 
-    jac = jnp.asarray(cxcapi.jac_pt_map(raw, from_chart, to_chart, usys=None))
+    jac = (
+        _jac_chained(raw, from_chart, pivot, to_chart, None)
+        if pivot is not None
+        else jnp.asarray(cxcapi.jac_pt_map(raw, from_chart, to_chart, usys=None))
+    )
 
     if any(f != 1.0 for f in scale):
         jac = jac * jnp.asarray(scale, dtype=jac.dtype)
@@ -1154,3 +1222,67 @@ def jac_pt_map(
             [cos_t, -r * sin_t / ang, zero],
         ]
     )
+
+
+# ===================================================================
+# Cart3D <-> LonCosLatSpherical3D
+#
+# `lon_coslat = lon * cos(lat)`. Both directions are a `LonLat` Jacobian and
+# that chart's own closed form, chained -- not a third derivation of the same
+# trigonometry. They are registered so that pairs pivoting through `Cart3D`
+# reach `LonCosLat` too.
+
+#: The pivot both directions below chain through.
+_LONLAT3D: Final = LonLatSpherical3D()
+
+
+@_closed_form(Cart3D, LonCosLatSpherical3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: Cart3D,
+    to_chart: LonCosLatSpherical3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``Cart3D -> LonCosLatSpherical3D``.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([1.0, 0.0, 0.0])
+    >>> cxc.jac_pt_map(at, cxc.cart3d, cxc.loncoslat_sph3d, usys=u.unitsystems.si)
+    Array([[0., 1., 0.],
+           [0., 0., 1.],
+           [1., 0., 0.]], dtype=float64)
+
+    """
+    return _jac_chained(_real_float_point(at), from_chart, _LONLAT3D, to_chart, usys)
+
+
+@_closed_form(LonCosLatSpherical3D, Cart3D)
+@plum.dispatch
+def jac_pt_map(
+    at: Array,
+    from_chart: LonCosLatSpherical3D,
+    to_chart: Cart3D,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> Array:
+    r"""Compute the Jacobian of ``LonCosLatSpherical3D -> Cart3D``.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    >>> at = jnp.array([0.0, 0.0, 2.0])
+    >>> cxc.jac_pt_map(at, cxc.loncoslat_sph3d, cxc.cart3d, usys=u.unitsystems.si)
+    Array([[0., 0., 1.],
+           [2., 0., 0.],
+           [0., 2., 0.]], dtype=float64)
+
+    """
+    return _jac_chained(_real_float_point(at), from_chart, _LONLAT3D, to_chart, usys)
