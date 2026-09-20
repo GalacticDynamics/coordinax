@@ -464,6 +464,13 @@ def _fast_route(from_chart: AbstractChart, to_chart: AbstractChart, /) -> Any:
         return None
     try:
         pivot = from_chart.cartesian
+        # Both charts must pivot through the *same* Cartesian chart. The
+        # registry keys on chart types, which say nothing about the manifold,
+        # so two charts of chainable types can still be on different ones --
+        # a transition `pt_map` refuses. Comparing the charts, not their
+        # types, is what keeps that refusal reachable.
+        if to_chart.cartesian != pivot:
+            return _NO_FAST_ROUTE
     except NoGlobalCartesianChartError:  # an intrinsic chart has no Cartesian
         return _NO_FAST_ROUTE
     legs = ((type(from_chart), type(pivot)), (type(pivot), type(to_chart)))

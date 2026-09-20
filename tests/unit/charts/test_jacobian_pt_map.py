@@ -20,6 +20,7 @@ import unxt as u
 import unxts.linalg as ul
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 import coordinaxs.hypothesis.main as cxst
 from coordinax._src.charts import jacobian
 
@@ -1639,3 +1640,18 @@ def test_a_bare_array_dict_reaches_the_chained_route() -> None:
     packed = jnp.asarray([2.0, 0.7, 3.0])
     expected = cxc.jac_pt_map(packed, cxc.cyl3d, cxc.lonlat_sph3d, usys=usys_si)
     assert_allclose(np.asarray(got), np.asarray(expected), rtol=0, atol=0)
+
+
+def test_charts_on_different_manifolds_are_not_chained() -> None:
+    """A pivot has to be a chart both sides actually share.
+
+    `_CLOSED_FORM_PAIRS` keys on chart *types*, which say nothing about the
+    manifold, so two charts of chainable types can sit on different ones --
+    a transition `pt_map` refuses with `ManifoldMismatchError`. Chaining them
+    anyway walked into a `RecursionError` instead of that refusal.
+    """
+    frm = cxc.Cylindrical3D(M=cxm.Sn(3))
+    to = cxc.LonLatSpherical3D(M=cxm.Rn(3))
+    assert frm.cartesian != to.cartesian
+
+    assert jacobian._fast_route(frm, to) is jacobian._NO_FAST_ROUTE
