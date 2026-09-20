@@ -1241,8 +1241,16 @@ def jac_pt_map(
 # trigonometry. They are registered so that pairs pivoting through `Cart3D`
 # reach `LonCosLat` too.
 
-#: The pivot both directions below chain through.
-_LONLAT3D: Final = LonLatSpherical3D()
+
+@ft.lru_cache(maxsize=128)
+def _lonlat_on(manifold: Any, /) -> LonLatSpherical3D:
+    """Build the `LonLat` chart both directions below chain through.
+
+    Per manifold rather than fixed, so a chart on a manifold other than the
+    default chains through its own and not one `pt_map` would refuse to
+    reach. Cached because the construction is small but the charts repeat.
+    """
+    return LonLatSpherical3D(M=manifold)
 
 
 @_closed_form(Cart3D, LonCosLatSpherical3D)
@@ -1268,7 +1276,8 @@ def jac_pt_map(
            [1., 0., 0.]], dtype=float64)
 
     """
-    return _jac_chained(_real_float_point(at), from_chart, _LONLAT3D, to_chart, usys)
+    pivot = _lonlat_on(from_chart.M)
+    return _jac_chained(_real_float_point(at), from_chart, pivot, to_chart, usys)
 
 
 @_closed_form(LonCosLatSpherical3D, Cart3D)
@@ -1294,4 +1303,5 @@ def jac_pt_map(
            [0., 2., 0.]], dtype=float64)
 
     """
-    return _jac_chained(_real_float_point(at), from_chart, _LONLAT3D, to_chart, usys)
+    pivot = _lonlat_on(from_chart.M)
+    return _jac_chained(_real_float_point(at), from_chart, pivot, to_chart, usys)

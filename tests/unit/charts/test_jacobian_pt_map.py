@@ -1655,3 +1655,23 @@ def test_charts_on_different_manifolds_are_not_chained() -> None:
     assert frm.cartesian != to.cartesian
 
     assert jacobian._fast_route(frm, to) is jacobian._NO_FAST_ROUTE
+
+
+def test_the_loncoslat_pivot_follows_the_chart_manifold() -> None:
+    """`Cart3D <-> LonCosLat` chain through `LonLat` on their *own* manifold.
+
+    A fixed pivot would be on the default one, and the chain would then ask
+    for a transition across two manifolds -- which `pt_map` refuses, even
+    though the pair itself is perfectly valid.
+    """
+    other = cxm.Rn(4)
+    at = jnp.asarray([1.3, 2.1, 0.7])
+
+    got = cxc.jac_pt_map(
+        at, cxc.Cart3D(M=other), cxc.LonCosLatSpherical3D(M=other), usys=usys_si
+    )
+
+    # The manifold changes nothing about the numbers, only which charts are
+    # reachable, so the default-manifold result is the reference.
+    expected = cxc.jac_pt_map(at, cxc.cart3d, cxc.loncoslat_sph3d, usys=usys_si)
+    assert_allclose(np.asarray(got), np.asarray(expected), rtol=0, atol=0)
