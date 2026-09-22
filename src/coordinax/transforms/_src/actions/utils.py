@@ -135,8 +135,8 @@ def act_array_via_cdict(
             f"{type(op).__name__} cannot act on a bare array in the "
             f"{type(rep.basis).__name__}: units for a bare array are read from "
             "the chart's coordinate dimensions, which describe the coordinate "
-            "basis. Pass a Quantity, a QuantityMatrix, or a typed vector, which "
-            "carry their own per-component units."
+            "basis. Pass a Quantity, a QuantityMatrix, a component dict, or a "
+            "typed vector, which carry their own per-component units."
         )
         raise TypeError(msg)
 

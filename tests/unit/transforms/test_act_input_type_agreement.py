@@ -335,3 +335,38 @@ def test_the_missing_usys_message_names_every_unit_carrying_input() -> None:
     qm = ul.QuantityMatrix(x, unit=ul.UnitsMatrix(("kpc", "kpc", "kpc")))
     got = cxfm.act(boost, u.Q(1.0, "Myr"), qm, cxc.cart3d)
     assert np.allclose(np.asarray(u.ustrip("kpc", got)), [2.0, 0.0, 0.0])
+
+
+def test_the_physical_basis_message_names_every_unit_carrying_input() -> None:
+    """The other suggestion list must match what the funnel accepts too.
+
+    Sibling of the missing-`usys` guard: a bare array cannot be read in a
+    non-coordinate basis, and the message offers the inputs that carry their
+    own per-component units. A component dict is one of them and was missing.
+    """
+    rate = {k: u.Q(v, "kpc/Myr") for k, v in [("x", 1.0), ("y", 0.0), ("z", 0.0)]}
+    boost = cxfm.Boost(rate, chart=cxc.cart3d)
+
+    with pytest.raises(TypeError, match="cannot act on a bare array") as excinfo:
+        cxfm.act(
+            boost,
+            u.Q(1.0, "Myr"),
+            jnp.asarray([1.0, 2.0, 3.0]),
+            cxc.sph3d,
+            cxr.phys_vel,
+            usys=u.unitsystems.galactic,
+        )
+
+    msg = str(excinfo.value)
+    for name in ("Quantity", "QuantityMatrix", "component dict", "typed vector"):
+        assert name in msg, f"{name!r} missing from the suggestion list"
+
+    # ... and the component dict it now names really does act in that basis.
+    # `Rotate`, not the `Boost` above: a boost's rate is a cart3d velocity and
+    # does not convert into a spherical physical basis. The point here is that
+    # a CDict is accepted where a bare array is not, which any linear op shows.
+    rot = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg"))
+    v = {k: u.Q(val, "km/s") for k, val in [("r", 1.0), ("theta", 2.0), ("phi", 3.0)]}
+    at = {"r": u.Q(1.0, "kpc"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+    got = cxfm.act(rot, None, v, cxc.sph3d, cxr.phys_vel, at=at)
+    assert set(got) == set(v)
