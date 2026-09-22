@@ -61,13 +61,32 @@ class TestGalactocentricGalcenCoord:
         assert a0.is_equivalent_frame(self.round_trip(a0))
 
     def test_the_transform_is_unchanged(self):
-        """Same numbers as astropy's own frame, to the bit."""
+        """Dropping the distance off ``galcen_coord`` does not move the answer.
+
+        The bound is headroom, not observed error: on this machine the two
+        transforms agree bit-for-bit. 1e-6 pc is ~1e6x above the double-
+        precision floor for a ~9 kpc vector (~2e-12 pc), so a libm or Astropy
+        version difference cannot trip it -- while still far below any real
+        regression: stripping ``galcen_distance`` by mistake (rather than the
+        distance off ``galcen_coord``) moves the point by ~7 kpc, and the
+        bound catches a ``galcen_coord`` direction wrong by a quarter of a
+        milliarcsecond.
+
+        ``separation_3d`` compares directly rather than transforming only
+        because the two frames are equivalent -- which the test above pins.
+        """
+        atol_pc = 1e-6
         a0 = apyc.Galactocentric()
         sc = apyc.SkyCoord(ra=90 * apyu.deg, dec=45 * apyu.deg, distance=1 * apyu.kpc)
         g0 = sc.transform_to(a0)
         g1 = sc.transform_to(self.round_trip(a0))
-        assert np.array_equal(g0.cartesian.xyz.value, g1.cartesian.xyz.value)
-        assert g0.separation_3d(g1).to_value("pc") == 0.0
+        assert np.allclose(
+            g0.cartesian.xyz.to_value("pc"),
+            g1.cartesian.xyz.to_value("pc"),
+            rtol=0.0,
+            atol=atol_pc,
+        )
+        assert g0.separation_3d(g1).to_value("pc") < atol_pc
 
     def test_the_frame_parameters_survive_the_round_trip(self):
         """`roll` comes back a float rather than a weak int, hence `allclose`."""
