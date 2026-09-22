@@ -1,20 +1,14 @@
-"""R is a rotation to machine precision, not to solver tolerance (#952).
+"""R is a rotation to machine precision, not to solver tolerance.
 
-The transport solve returns a U1 that satisfies neither ``|U1| = 1`` nor
-``U1 . T = 0`` exactly. Renormalising restores the first and leaves the second,
-and ``U2 = T x U1`` then inherits it, so ``R R^T`` differed from the identity by
-1e-12 -- 3e-11 depending on tau and ``R^T`` was only an approximate inverse.
-Re-orthonormalising against the tangent restores both.
+The transport solve returns a U1 satisfying neither ``|U1| = 1`` nor
+``U1 . T = 0``; orthonormalising against the tangent restores both, so ``R^T``
+is an exact inverse rather than an approximate one.
 
-The thresholds here are deliberately far below the ``1e-6``/``1e-5`` tiers the
-rest of the Bishop suite uses: those pass on the *unfixed* code, so they cannot
-see this. ``1e-14`` separates the measured before (>= 1e-12) from the measured
-after (<= 5e-16) with two orders of headroom on each side.
-
-Every `numpy.testing.assert_allclose` here passes ``rtol=0``: the default
-``1e-7`` is relative to the *desired* value, so on the non-zero targets below
-(``det R = 1``, a round trip to a point 3 km out) it would set the tolerance
-at ~1e-7 and swallow the whole defect. It did, on the first draft of this file.
+Two conventions the thresholds depend on. ``1e-14`` is far below the
+``1e-6``/``1e-5`` tiers the rest of the Bishop suite uses, which are too loose
+to see this. And every `assert_allclose` passes ``rtol=0``, because the default
+``1e-7`` is relative to the desired value and would set a ~1e-7 tolerance on
+the non-zero targets here (``det R = 1``, a round trip 3 km out).
 """
 
 __all__: tuple[str, ...] = ()
@@ -68,10 +62,9 @@ class TestRIsARotation:
     def test_the_batched_solve_is_orthonormal_too(
         self, helix_bishop: cxfc.BishopBuilder
     ):
-        """`rotation_matrices` is a second, independent renormalisation site.
+        """`rotation_matrices` orthonormalises at its own, separate site.
 
-        It saves interior points of one sweep rather than solving per tau, so
-        it carries its own residual -- the worst measured of any tau tried.
+        It saves interior points of one sweep rather than solving per tau.
         """
         Rs = helix_bishop.rotation_matrices(u.Q(jnp.asarray(TAUS), "s"))
         err = jnp.abs(Rs @ jnp.swapaxes(Rs, -1, -2) - jnp.eye(3))
@@ -82,10 +75,9 @@ class TestRIsARotation:
 class TestTheInverseIsExact:
     """``R^T`` inverts ``R``, so a round trip through the frame is the identity.
 
-    This is what the orthonormality residual actually costs a caller: it is not
-    a cosmetic property of R but the accuracy of Alice -> curve frame -> Alice.
-    Frenet--Serret, which has no solve, round-trips at ~2e-16; Bishop now does
-    too, where it used to lose 1e-12 -- 2e-11.
+    This is what orthonormality costs a caller: the accuracy of
+    Alice -> curve frame -> Alice. Frenet--Serret, which has no solve,
+    round-trips at ~2e-16; Bishop does too.
     """
 
     @pytest.mark.parametrize("tau", [1.0, 20.0, 100.0])
@@ -105,11 +97,10 @@ class TestTheInverseIsExact:
 class TestTheTransportIsStillRotationMinimising:
     """Orthogonalising U1 must not add a twist about the tangent.
 
-    Projecting out the ``U1 . T`` residual is the one correction that cannot:
-    it moves U1 along T, i.e. out of the normal plane it spans with U2, so the
-    gauge within that plane is untouched. Pinned here because the cheap fix --
-    re-orthogonalising the *pair* -- would rotate the gauge instead, and would
-    still pass every assertion above.
+    Projecting out the ``U1 . T`` residual moves U1 along T, out of the normal
+    plane it spans with U2, so the gauge within that plane is untouched.
+    Orthogonalising the *pair* instead would rotate the gauge and still pass
+    every assertion above, which is why this is pinned.
     """
 
     @pytest.mark.parametrize("tau", [1.0, 5.0, 20.0])

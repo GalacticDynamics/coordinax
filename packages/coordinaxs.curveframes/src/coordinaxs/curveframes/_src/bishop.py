@@ -63,18 +63,13 @@ from .base import (
 #: jet machinery does; `BacksolveAdjoint` is unusable here in *either* mode,
 #: because the reparametrised right-hand side closes over ``dtau`` /
 #: ``tau_0_val`` and its backwards solve cannot carry them; and `ForwardMode`
-#: gives up reverse mode.  These tolerances do *not* set the orthonormality of
-#: the resulting R: since #952 the solved U1 is re-orthonormalised against the
-#: tangent, so ``max|R R^T - I|`` is ~2e-16 -- machine precision, flat in tau
-#: (measured at ``|tau|`` of 1 through 500 on a helix) -- rather than the ~9e-12
-#: it was when the solve's ``U1 . T`` residual was merely renormalised.  What
-#: the tolerances do set is how accurately U1 is *transported*, which is a
-#: quadrature error and so does grow with the interval: against a 1e-14 solve,
-#: ~1e-12 at ``|tau| = 1`` and ~6e-10 at ``|tau| = 100``.  The transport stays
-#: rotation-minimising either way -- ``U1' . U2`` and ``U2' . U1`` are equal and
-#: opposite to ~1e-17.  ``max_steps`` is raised from `diffrax`'s 4096,
-#: which is tight: a unit-radius helix at these tolerances takes ~20 steps per
-#: unit of ``|tau - tau_0|``, so the default caps transport at ``|dtau| ~ 200``.
+#: gives up reverse mode.  The tolerances set how accurately U1 is
+#: *transported* -- a quadrature error, so it grows with the interval: ~1e-12 at
+#: ``|tau| = 1``, ~6e-10 at ``|tau| = 100``.  They do not set orthonormality of
+#: R, which `_solve_U1` restores exactly.  ``max_steps`` is raised from
+#: `diffrax`'s 4096, which is tight: a unit-radius helix at these tolerances
+#: takes ~20 steps per unit of ``|tau - tau_0|``, so the default caps transport
+#: at ``|dtau| ~ 200``.
 #: Measured to cost nothing in either compile or run time; a longer transport
 #: raises rather than silently truncating.
 #:
@@ -548,21 +543,17 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         derivative survives.  Both signs of $\Delta$ are handled by the same
         expression -- no forward-only workaround is needed.
 
-        ``T_val`` is the unit tangent at ``g``, passed in rather than recomputed
-        because the caller has it already. It is what the solved $\mathbf{U}_1$
-        is re-orthonormalised against: see the note below on why normalising
-        alone is not enough.
+        ``T_val`` is the unit tangent at ``g``, which the solved
+        $\mathbf{U}_1$ is re-orthonormalised against.
         """
         _, tau_0_val, U1_0_val, dTangent_fn = self._transport_start(tau_unit)
         dtau = _float(g.ustrip(tau_unit)) - tau_0_val
         ode_rhs = self._transport_rhs(tau_0_val, dtau, tau_unit, dTangent_fn)
 
         sol = self.diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, U1_0_val)
-        # Re-orthonormalise, not just re-normalise: |U1| = 1 and U1 . T = 0 are
-        # two independent properties and the solver's residual breaks the
-        # second one, which a bare division leaves in place. U2 = T x U1 then
-        # inherits it and R stops being a rotation at solver tolerance, so R^T
-        # is only an approximate inverse -- #952.
+        # |U1| = 1 and U1 . T = 0 are independent, and the solve breaks both.
+        # Normalising alone leaves U2 = T x U1 carrying the second residual, so
+        # R is only a rotation to solver tolerance.
         return _orthonormalize(sol.ys[-1], T_val)
 
     def rotation_matrix(self, tau: Any, /) -> Array:
@@ -724,9 +715,8 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         U1s = sol.ys[jnp.argsort(order)]
 
         Ts = jax.vmap(lambda tv: self._tangent_at(u.Q(tv, tau_unit)).value)(taus_val)
-        # Each U1 is re-orthonormalised against *its own* tangent, so the
-        # tangents are resolved before the triad rather than after -- the same
-        # fix as `_solve_U1`, per tau. See the note there (#952).
+        # Each U1 is orthonormalised against its own tangent, so the tangents
+        # are resolved before the triad.
         U1s = jax.vmap(_orthonormalize)(U1s, Ts)
         U2s = jnp.cross(Ts, U1s)
         return jnp.stack([Ts, U1s, U2s], axis=-2)

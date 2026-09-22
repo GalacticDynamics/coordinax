@@ -1,13 +1,9 @@
-"""The Frenet--Serret reductions run on the last axis, not on all of them (#953).
+"""The Frenet--Serret reductions run per row, on the last axis.
 
-``qnp.sum(v**2)`` and ``qnp.sum(d2p * t_vec)`` are the right numbers for one
-3-vector and the *wrong* ones -- silently, with no error and the right shape --
-for anything stacked: a single global norm divides every row, and a single
-global dot product projects every row. ``axis=-1`` is correct for both ``(3,)``
-and ``(..., 3)``, so both are asserted here.
-
-`_normalize` is shared with `signedplanar`, where its one caller also passes a
-single 3-vector; the ``(3,)`` cases below are what pins that contract.
+The norm and the Gram--Schmidt dot product are both per-vector, so they must
+hold for ``(3,)`` and ``(..., 3)`` alike; both are asserted here. The ``(3,)``
+cases also pin the contract `signedplanar` relies on, which shares
+`_normalize`.
 """
 
 __all__: tuple[str, ...] = ()
@@ -32,11 +28,7 @@ class TestNormalizeIsRowWise:
         )
 
     def test_a_stack_normalises_per_row(self):
-        """Globally it was ``[[.424, .566, 0], [0, 0, .707]]`` -- 1/sqrt(2) out.
-
-        Both rows are short of unit by the same factor, which is why nothing
-        downstream complained: the result still looked like a direction.
-        """
+        """Each row is unit-length, not merely a direction."""
         got = _normalize(jnp.array([[3.0, 4.0, 0.0], [0.0, 0.0, 5.0]]))
         np.testing.assert_allclose(got, [[0.6, 0.8, 0.0], [0.0, 0.0, 1.0]], atol=1e-15)
         np.testing.assert_allclose(jnp.linalg.norm(got, axis=-1), 1.0, atol=1e-15)
@@ -54,9 +46,8 @@ class TestTheGramSchmidtProjectionIsRowWise:
     """The normal of a stacked curve is one normal per point.
 
     Only the ``N`` row is asserted: ``T`` comes from `base.unit_tangent`, whose
-    own reduction is global too, so the tangent row of a stacked curve is still
-    mis-scaled and the binormal inherits that. This test is about the two
-    reductions #953 names.
+    reduction is still global, so a stacked tangent row stays mis-scaled and
+    the binormal inherits that.
     """
 
     def test_each_point_gets_its_own_unit_normal(self):
@@ -80,7 +71,7 @@ class TestTheGramSchmidtProjectionIsRowWise:
 
 
 class TestTheScalarPathIsUnchanged:
-    """``keepdims`` must not disturb the ``(3,)`` contract -- the only one used.
+    """``keepdims`` must not disturb the ``(3,)`` contract.
 
     Closed form on the unit circle at tau=0: ``T = (0,1,0)``, ``N = (-1,0,0)``,
     ``B = (0,0,1)``.

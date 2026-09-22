@@ -372,16 +372,11 @@ class TestBishopSolveConfiguration:
 
     @pytest.mark.parametrize("tau_val", [0.0, 1.0, -1.5, 7.0])
     def test_default_accuracy_oracle(self, tau_val: float):
-        """Pinned values: R is orthonormal to machine precision.
+        """R is orthonormal to machine precision, either side of ``tau_0``.
 
-        Measured at ``float64`` on the 0.3-pitch helix, either side of
-        ``tau_0`` and at ``tau_0`` itself. This is *not* a tolerance
-        observable: since #952 the solved U1 is re-orthonormalised against the
-        tangent, so the bar is machine precision at any tolerance the solve is
-        given -- see `test_loose_tolerances_are_measurably_worse`, which is
-        what still pins the tolerances themselves. The step budget is the
-        separate claim: ~20 steps per unit of ``|dtau|``, so 16384 carries
-        ``|tau|`` well past the values here.
+        Not a tolerance observable -- `_solve_U1` orthonormalises, so this
+        holds at any tolerance. `test_loose_tolerances_are_measurably_worse`
+        pins the tolerances.
         """
         R = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(
             u.Q(tau_val, "s")
@@ -440,14 +435,11 @@ class TestBishopSolveConfiguration:
         assert doubled.diffeqsolver.stepsize_controller.rtol == 1e-3
 
     def test_loose_tolerances_are_measurably_worse(self):
-        """A deliberately loose controller transports measurably worse.
+        """A loose controller transports measurably worse.
 
-        The observable is the *frame*, not its orthonormality: since #952 both
-        solves are orthonormal to machine precision, because the residual the
-        tolerances control is projected out rather than carried into R. What
-        the tolerances still control is where U1 ends up, and a loose solve
-        puts it somewhere visibly different -- which is what proves the field
-        is read rather than merely accepted.
+        The observable is where U1 ends up, not orthonormality -- both solves
+        are orthonormal. That the frame moves is what proves the field is read
+        rather than merely accepted.
         """
         tau = u.Q(7.0, "s")
         default = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(tau)
@@ -611,8 +603,7 @@ class TestBishopSolveConfiguration:
 
         `BishopFrame.from_curve` forwards every other builder field, so a
         ``diffeqsolver`` it dropped would leave the documented entry point
-        silently stuck on the default. Asserted by *effect*, on the same
-        observable as `test_loose_tolerances_are_measurably_worse`: the loose
+        silently stuck on the default. Asserted by *effect*: the loose
         controller must move the frame here too.
         """
         tau = u.Q(7.0, "s")

@@ -73,9 +73,8 @@ def _normalize(v: Any) -> Any:
     Parameters
     ----------
     v : array-like or Quantity
-        A vector, shape ``(..., 3)``.  The norm is per row -- over the last
-        axis only -- so a stacked input normalises each vector separately
-        rather than dividing the whole array by one global norm (#953).
+        A vector, shape ``(..., 3)``.  The norm is per row, over the last
+        axis.
 
     Returns
     -------
@@ -240,9 +239,7 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         # Normal via Gram-Schmidt: remove component of gamma'' along T,
         # then normalise the remainder.
-        # `axis=-1, keepdims=True`: the projection is a per-vector dot product.
-        # Summed over every axis it is one global scalar, which is the same
-        # number only for a lone 3-vector and silently wrong for a stack (#953).
+        # Per-vector dot product, hence `axis=-1`.
         proj = qnp.sum(d2p * t_vec, axis=-1, keepdims=True) * t_vec
         n_unnorm = d2p - proj
         # Relative to |gamma''|, as `bishop._orthonormalize` guards its own
