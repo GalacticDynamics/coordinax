@@ -224,7 +224,7 @@ def test_unsupported_astropy_frame_is_refused_by_convert(frame) -> None:
 
 
 @pytest.mark.xfail(
-    reason="unfiled: KeyError('AbstractReferenceFrame') masks the "
+    reason="#968: KeyError('AbstractReferenceFrame') masks the "
     "NotFoundLookupError whenever runtime typechecking is on",
     strict=True,
 )
