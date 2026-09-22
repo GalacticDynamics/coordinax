@@ -11,16 +11,17 @@ __all__: tuple[str, ...] = ()
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
+import jax
 import numpy as np
 import plum
 import pytest
 
-import coordinaxs.astro as cxastro
-import jax
 import quaxed.numpy as jnp
 import unxt as u
+
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
+import coordinaxs.astro as cxastro
 import coordinaxs.interop.astropy  # noqa: F401
 
 
@@ -109,6 +110,7 @@ class TestGalactocentricGalcenCoord:
         assert np.allclose(a1.z_sun.to_value("pc"), 15.0)
         assert np.allclose(a1.roll.to_value("deg"), 3.0)
 
+
 KMS = apyu.km / apyu.s
 
 #: The four astropy frames with no coordinax counterpart. `FK5` appears twice
@@ -175,9 +177,11 @@ def test_astropy_galactocentric_round_trip() -> None:
         )
 
 
-@pytest.mark.xfail(reason="#947", strict=True)
 def test_round_trip_does_not_invent_a_galcen_coord_distance() -> None:
     """The round trip must not give ``galcen_coord`` a physical distance.
+
+    Was `xfail(reason="#947", strict=True)`; #965 fixed it on main, so the
+    rebase turned it into an `XPASS(strict)`. Now a live regression test.
 
     Astropy's default ``galcen_coord`` is a direction: its spherical distance
     is the dimensionless 1.0 that `UnitSphericalRepresentation` carries. The
