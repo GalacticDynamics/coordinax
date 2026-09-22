@@ -25,6 +25,19 @@ def frame_transition(*args: Any, **kwargs: Any) -> Any:
       ``xop``.
     - The returned transform is invertible: ``op.inverse`` gives the
       *to_frame* → *from_frame* direction.
+    - **Build the operator outside ``jit``, then pass it in as an argument.**
+      ``frame_transition`` is pure Python: it walks the dispatch table,
+      composes the chain and simplifies it. That work does not belong inside a
+      traced function -- do it once, up front, and hand the operator to the
+      jitted function that applies it. Frames and transforms are pytrees, so
+      changing frame *parameters* reuses the same compiled code; closing over
+      the operator instead makes it static and buys a fresh compile per
+      operator. The payoff is large: applying a precomputed operator under
+      ``jit`` runs in microseconds rather than milliseconds (roughly 30x at
+      ``N=1``, and over 100x against ``to_frame``, which rebuilds the operator
+      on every call). Eager application costs a few milliseconds of fixed
+      Python plus tens of nanoseconds per element, so below ~1e5 elements you
+      are paying almost entirely for Python.
     - This function uses multiple dispatch. To inspect all registered pairs::
 
         >>> import coordinax.frames as cxf
@@ -70,6 +83,23 @@ def frame_transition(*args: Any, **kwargs: Any) -> Any:
     >>> op = cxf.frame_transition(ICRS(), frame)
     >>> type(op).__name__
     'Composed'
+
+    **Under ``jit`` -- operator built outside, passed in:**
+
+    >>> import equinox as eqx
+    >>> import coordinax as cx
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxf.frame_transition(cxf.alice, cxf.alex)
+
+    >>> @eqx.filter_jit
+    ... def to_alex(op, p):
+    ...     return cxfm.act(op, None, p)
+
+    >>> p = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
+    >>> print(to_alex(op, p))
+    <Point: chart=Cart3D (x, y, z) [kpc]
+        [-2.  1.  3.]>
 
     """
     raise NotImplementedError  # pragma: no cover
