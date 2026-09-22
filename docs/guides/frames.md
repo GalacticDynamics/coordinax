@@ -163,7 +163,7 @@ import coordinax.frames as cxf
 import coordinax.transforms as cxfm
 
 t_id = cxfm.Identity()
-# cxf.identity is the same instance: Identity()
+# cxfm.identity is a module-level Identity() you can reuse instead.
 ```
 
 #### Translation (Displacement)
@@ -249,14 +249,18 @@ $$
 
 ### Inversion (Reversing)
 
-```python
-# Inverse transforms are not yet available via cxf.inverse().
-# Construct the reverse manually:
-t_original = cxfm.Translate({"x": 1, "y": 0, "z": 0}, chart=cxc.cart3d)
-t_inverse = cxfm.Translate({"x": -1, "y": 0, "z": 0}, chart=cxc.cart3d)
+Every transform carries its own inverse on `.inverse` -- there is no need to construct the reverse by hand:
 
-# These cancel out:
-cancelled = t_inverse | t_original  # Equivalent to identity
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.transforms as cxfm
+
+>>> t_original = cxfm.Translate({"x": 1, "y": 0, "z": 0}, chart=cxc.cart3d)
+>>> t_original.inverse
+Translate({'x': -1, 'y': 0, 'z': 0}, chart=Cart3D(M=Rn(3)))
+
+>>> cxfm.simplify(t_original.inverse | t_original)
+Identity()
 ```
 
 ### Simplification (Optimization)
@@ -440,22 +444,41 @@ position_rotating = cxfm.act(xform, None, position_inertial)
 print(position_rotating.data)  # Different coordinates, same point
 ```
 
-## JAX Integration Patterns
+## JAX Integration: Build the Operator Outside `jit`
 
-```python
-# JAX integration sketch (illustrative):
-#
-# import jax
-# import coordinax.frames as cxf
-# import coordinax as cx
-#
-# @jax.jit
-# def batch_transform_points(frame1, frame2, vectors):
-#     transform = cxf.frame_transition(frame1, frame2)
-#     return jax.vmap(lambda v: cxfm.act(transform, None, v))(vectors)
-#
-# Result is JIT-compiled and efficient
+`frame_transition` is pure Python: it walks the dispatch table, composes the chain and simplifies it. That work does not belong inside a traced function. Build the operator once, outside, and pass it in as an **argument** to the jitted function that applies it:
+
+```{code-block} python
+>>> import equinox as eqx
+>>> import coordinax as cx
+>>> import coordinax.frames as cxf
+>>> import coordinax.transforms as cxfm
+
+>>> op = cxf.frame_transition(cxf.alice, cxf.alex)  # once, outside
+
+>>> @eqx.filter_jit
+... def to_alex(op, p):
+...     return cxfm.act(op, None, p)
+
+>>> p = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
+>>> print(to_alex(op, p))
+<Point: chart=Cart3D (x, y, z) [kpc]
+    [-2.  1.  3.]>
 ```
+
+An argument, not a closure. Frames and transforms are pytrees, so two `Galactocentric` frames differing only in their parameters reuse the same compiled code; closing over the operator instead makes it static and buys a fresh compile for every operator you use.
+
+This is the largest single speedup available here. Applying an ICRS -> Galactocentric transition to one `Point`, measured on a loaded laptop (so treat these as orders of magnitude, not benchmarks):
+
+| call                                       | time    |
+| ------------------------------------------ | ------- |
+| `p.to_frame(gc)` -- rebuilds the operator  | ~15 ms  |
+| `act(op, None, p)` -- operator precomputed | ~3 ms   |
+| the same, jitted                           | ~100 us |
+
+Eager application costs a few milliseconds of fixed Python plus tens of nanoseconds per element, so below roughly `1e5` elements you are paying almost entirely for Python. `jit` is not an optimisation here, it is the intended mode.
+
+`to_frame` is the convenience form and builds the operator inside itself, so the construction cost cannot be lifted out of a loop as written. Use it for one-off work; on a hot path reach for `frame_transition` plus `act`.
 
 ## Common Pitfalls
 

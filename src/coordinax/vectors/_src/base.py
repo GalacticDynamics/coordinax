@@ -639,6 +639,14 @@ class AbstractVector(
             New vector with the data transformed into ``toframe`` and
             ``frame=toframe``.
 
+        Notes
+        -----
+        This is a convenience: it rebuilds the frame-transition operator on
+        every call, which is pure Python and dominates the cost. On a hot path
+        or under ``jit``, build the operator once outside with
+        `coordinax.frames.frame_transition` and pass it into the jitted
+        function that applies it -- see that function's notes.
+
         Examples
         --------
         >>> import coordinax as cx
