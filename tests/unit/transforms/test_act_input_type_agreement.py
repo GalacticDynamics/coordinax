@@ -532,21 +532,42 @@ class TestLorentzBoostSharesTheLinearArrayPath:
     _CHART = cxc.minkowskict
     _X = jnp.asarray([1.0, 0.5, 0.0, 0.0])
 
-    def _cdict(self):
-        return {
-            k: u.Q(float(v), "km")
-            for k, v in zip(self._CHART.components, self._X, strict=True)
-        }
+    @staticmethod
+    def _units(rep):
+        """The per-component units the array path reads from `USYS`.
+
+        Derived from `rep`, not hard-coded: a displacement is in `km` and a
+        velocity in `km / s`, so a fixed unit would compare the two paths in
+        different units -- and pass anyway, because a Lorentz boost acts on
+        components linearly and is indifferent to which unit they carry.
+        """
+        return tuple(
+            USYS[d] for d in rep.semantic_kind.coord_dimensions(cxc.minkowskict)
+        )
 
     @pytest.mark.parametrize(
         "rep", [cxr.coord_disp, cxr.coord_vel], ids=["disp", "vel"]
     )
     def test_a_tangent_rep_array_matches_the_cdict_spelling(self, rep) -> None:
+        units = self._units(rep)
+        cdict = {
+            k: u.Q(float(v), unit)
+            for k, v, unit in zip(self._CHART.components, self._X, units, strict=True)
+        }
+
         got = cxfm.act(self._OP, None, self._X, self._CHART, rep, usys=USYS)
-        ref = cxfm.act(self._OP, None, self._cdict(), self._CHART, rep, usys=USYS)
+        ref = cxfm.act(self._OP, None, cdict, self._CHART, rep, usys=USYS)
+
         np.testing.assert_allclose(
             np.asarray(got),
-            [float(u.ustrip("km", ref[k])) for k in self._CHART.components],
+            [
+                float(u.ustrip(unit, ref[k]))
+                for k, unit in zip(self._CHART.components, units, strict=True)
+            ],
             rtol=0,
             atol=1e-12,
         )
+
+    def test_the_two_reps_are_not_trivially_the_same_comparison(self) -> None:
+        """The units really do differ between the reps, so the test has teeth."""
+        assert self._units(cxr.coord_disp) != self._units(cxr.coord_vel)

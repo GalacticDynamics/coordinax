@@ -159,8 +159,9 @@ def act(
     """
     # A non-point rep routes to the CDict path, the reference implementation of
     # the (representation, semantic kind) ladder, so the array spelling can
-    # never disagree with it. Done before the chart is re-guessed below: the
-    # CDict path handles non-Cartesian charts (given an `at` anchor) too.
+    # never disagree with it. It is also the more permissive of the two on
+    # charts: given an `at` anchor it handles a non-Cartesian one, which the
+    # point path below refuses.
     if rep != cxr.point:
         return cast("Array", act_array_via_cdict(op, tau, x, chart, rep, **kw))
 
