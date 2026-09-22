@@ -21,10 +21,14 @@ import unxt as u
 
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
+
+import coordinax.charts as cxc
+import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 import jax.tree_util as jtu
 from plum import convert
 import coordinaxs.interop.astropy  # noqa: F401
+from coordinaxs.interop.astropy._src.frames import to_astropy_frame
 
 
 @pytest.mark.parametrize(
@@ -428,3 +432,28 @@ def test_unsupported_target_raises(
 
     with pytest.raises(TypeError, match="Cannot convert"):
         convert(cx_frame, target)
+
+
+class UnregisteredFrame(cxastro.AbstractSpaceFrame):
+    """A frame with no Astropy equivalent.
+
+    Defined at module scope, never inside a test: plum registers dispatch
+    methods globally, so a test-local class leaks a method keyed to a class
+    that dies with the test.
+    """
+
+
+def test_unregistered_frame_raises_typeerror() -> None:
+    """A frame with no registered Astropy equivalent raises a clear `TypeError`."""
+    match = "Cannot convert `UnregisteredFrame` to an Astropy frame"
+    with pytest.raises(TypeError, match=match):
+        to_astropy_frame(UnregisteredFrame())
+
+    # ... and the same through the `Point`-with-data conversion path.
+    point = cxv.Point(
+        {"lon": u.Q(90.0, "deg"), "lat": u.Q(45.0, "deg"), "distance": u.Q(1.0, "kpc")},
+        chart=cxc.lonlat_sph3d,
+        frame=UnregisteredFrame(),
+    )
+    with pytest.raises(TypeError, match=match):
+        convert(point, apyc.BaseCoordinateFrame)

@@ -88,6 +88,27 @@ def to_astropy_frame(frame: cxastro.AbstractSpaceFrame, /) -> apyc.BaseCoordinat
     raise NotImplementedError  # pragma: no cover
 
 
+def _to_astropy_frame_fallback(
+    frame: cxastro.AbstractSpaceFrame, /
+) -> apyc.BaseCoordinateFrame:
+    """Raise for an `AbstractSpaceFrame` with no registered Astropy equivalent.
+
+    Without this method, a user-defined subclass would fail with plum's
+    `NotFoundLookupError` -- a `LookupError`, not the `TypeError` that
+    `plum.convert` raises for an unsupported target. That leaks through
+    ``plum.convert(point, apyc.BaseCoordinateFrame)``, so answer with the same
+    exception type and a message that names the offending frame.
+    """
+    msg = (
+        f"Cannot convert `{type(frame).__name__}` to an Astropy frame: no "
+        "Astropy equivalent is registered for this coordinax frame."
+    )
+    raise TypeError(msg)
+
+
+to_astropy_frame.dispatch(_to_astropy_frame_fallback)
+
+
 # =============================================================================
 # ICRS
 
