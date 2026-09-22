@@ -121,8 +121,9 @@ def act_array_via_cdict(
     if usys is None:
         msg = (
             f"{type(op).__name__} requires 'usys' to act on a bare array, "
-            "which carries no units. Pass usys=..., or a Quantity, component "
-            "dict, or typed vector, which carry their own."
+            "which carries no units. Pass usys=..., or a Quantity, "
+            "QuantityMatrix, component dict, or typed vector, which carry "
+            "their own."
         )
         raise TypeError(msg)
 

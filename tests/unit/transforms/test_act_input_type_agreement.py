@@ -310,3 +310,28 @@ class TestTheArrayFunnelNamesABadShape:
             usys=USYS,
         )
         assert np.asarray(got).shape == (3,)
+
+
+def test_the_missing_usys_message_names_every_unit_carrying_input() -> None:
+    """The suggestion list must match what the funnel actually accepts.
+
+    `act_array_via_cdict` refuses a bare array without ``usys`` and offers the
+    inputs that carry their own units. `QuantityMatrix` was missing from that
+    list even though it goes through this same funnel -- a message that
+    enumerates supported types rots as soon as one is added, so pin it.
+    """
+    rate = {k: u.Q(v, "kpc/Myr") for k, v in [("x", 1.0), ("y", 0.0), ("z", 0.0)]}
+    boost = cxfm.Boost(rate, chart=cxc.cart3d)
+    x = jnp.asarray([1.0, 0.0, 0.0])
+
+    with pytest.raises(TypeError, match="requires 'usys'") as excinfo:
+        cxfm.act(boost, u.Q(1.0, "Myr"), x)
+
+    msg = str(excinfo.value)
+    for name in ("Quantity", "QuantityMatrix", "component dict", "typed vector"):
+        assert name in msg, f"{name!r} missing from the suggestion list"
+
+    # ... and each named input really does work through the same funnel.
+    qm = ul.QuantityMatrix(x, unit=ul.UnitsMatrix(("kpc", "kpc", "kpc")))
+    got = cxfm.act(boost, u.Q(1.0, "Myr"), qm, cxc.cart3d)
+    assert np.allclose(np.asarray(u.ustrip("kpc", got)), [2.0, 0.0, 0.0])
