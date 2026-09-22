@@ -100,7 +100,7 @@ class Shear(AbstractLinearTransform):
         """Return the inverse shear transform.
 
         `__init__` has already established that ``H`` is invertible, so the
-        solve below is well posed; the new operator re-checks its own matrix
+        inversion below is well posed; the new operator re-checks its own matrix
         on the way in, as any other construction would.
         """
         return type(self)(jnp.linalg.inv(self.H))

@@ -9,6 +9,7 @@ from jaxtyping import Array, Shaped
 from typing import Any, Final, final
 
 import equinox as eqx
+import jax
 import jax.scipy.spatial.transform as jtransform
 import plum
 from astropy.units import UnitConversionError
@@ -57,7 +58,7 @@ def _not_orthogonal(R: Any, /) -> Any:
     if R.ndim != 2 or R.shape[0] != R.shape[1]:
         return False
     gram = jnp.matmul(jnp.swapaxes(R, -2, -1), R)
-    return ~jnp.allclose(gram, jnp.eye(R.shape[0]), atol=_ATOL)
+    return ~jnp.allclose(gram, jnp.eye(R.shape[0], dtype=gram.dtype), atol=_ATOL)
 
 
 def _as_rotation_matrix(R: Any, /) -> Array:
@@ -222,11 +223,15 @@ class Rotate(AbstractLinearTransform):
         ['DiffeomorphismGroup', 'OrthogonalGroup']
 
         """
-        grp = (
-            groups.SpecialOrthogonalGroup
-            if jnp.linalg.det(self.R) > 0
-            else groups.OrthogonalGroup
-        )
+        det = jnp.linalg.det(self.R)
+        # Under trace the sign is not known here, and a membership claim must
+        # never be stronger than what can be shown: `SO(n) < O(n)`, so the
+        # orthogonal group alone is true either way. Answering conservatively
+        # beats raising -- `groups()` is metadata, and a `TracerBoolConversion`
+        # from reading it would be a surprising way for a jitted function to
+        # die.
+        proper = not isinstance(det, jax.core.Tracer) and bool(det > 0)  # ty: ignore[possibly-missing-submodule]
+        grp = groups.SpecialOrthogonalGroup if proper else groups.OrthogonalGroup
         return frozenset((grp, groups.DiffeomorphismGroup))
 
     def __init__(self, R: Any) -> None:

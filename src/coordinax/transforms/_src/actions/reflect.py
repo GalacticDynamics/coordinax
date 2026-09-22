@@ -47,7 +47,8 @@ def _not_involutive(H: Any, /) -> Any:
     """
     if H.ndim != 2 or H.shape[0] != H.shape[1]:
         return False
-    return ~jnp.allclose(jnp.matmul(H, H), jnp.eye(H.shape[0]), atol=_ATOL)
+    sq = jnp.matmul(H, H)
+    return ~jnp.allclose(sq, jnp.eye(H.shape[0], dtype=sq.dtype), atol=_ATOL)
 
 
 @final
