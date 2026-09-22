@@ -778,15 +778,30 @@ def _require_contiguous_ladder(
     if not missing:
         return
     by_order = {order: name for name, (order, _, _) in ladder.items()}
+    # Mirror the routing order in `act`: time dependence is tested first, so
+    # it is the reason whenever it holds. Asking about affinity first would
+    # misreport every `TimeDep`, which reports as non-affine in any chart.
+    if cxfm.is_time_dependent(op):
+        why = (
+            f"{type(op).__name__} is time-dependent, so slot {top} gains the "
+            "time-derivative terms of the slots below it. Add the missing "
+            "fibre."
+        )
+    elif not is_affine_in_chart(op, point_chart):
+        why = (
+            f"the order-{top} law carries the curvature term d2phi(v, v), "
+            f"which is built from them -- {type(op).__name__} is not affine "
+            f"in {point_chart!r}, so that term does not vanish. Add the "
+            "missing fibre, or work in a chart where the action is affine."
+        )
+    else:  # pragma: no cover - the joint path is taken for one of the two
+        why = "the joint prolongation was required. Add the missing fibre."
     msg = (
         f"act on a Coordinate cannot transform the order-{top} fibre "
         f"{by_order[top]!r} without the lower ladder fibre(s) of order "
-        f"{missing}: the order-{top} law carries the curvature term "
-        f"d2phi(v, v), which is built from them. {type(op).__name__} is not "
-        f"affine in {point_chart!r}, so that term does not vanish, and an "
-        "absent fibre means 'not tracked', not 'zero' -- answering without it "
-        "is the silently first-order result this refuses to return. Add the "
-        "missing fibre, or work in a chart where the action is affine."
+        f"{missing}: the joint prolongation reads every slot below the one it "
+        f"is producing, and {why} An absent fibre means 'not tracked', not "
+        "'zero', so this refuses rather than returning a first-order answer."
     )
     raise TypeError(msg)
 
@@ -854,6 +869,29 @@ def _carry_foreign_ladder_fibre(
     return cast("Tangent", replace(fibre, chart=point_chart, data=out[order]))
 
 
+def _require_coordinate_basis(name: str, order: int, fibre: Tangent, /) -> None:
+    """Refuse a ladder fibre whose components are not curve derivatives.
+
+    The jet law is written on the curve's coordinate derivatives. A physical
+    (orthonormal) basis holds rescaled components, so they are not jet slots
+    and feeding them in would prolong the wrong numbers. The units usually
+    catch it downstream -- an angular slot meeting a length one -- but as a
+    `UnitConversionError` from deep inside the engine, which says nothing
+    about what the caller did. `Coordinate.cconvert` refuses this in its own
+    words; so should `act`.
+    """
+    if fibre.basis == cxr.coord_basis:
+        return
+    msg = (
+        f"act on a Coordinate cannot carry the order-{order} fibre {name!r} "
+        f"in basis {fibre.basis!r}: the jet law is written on the curve's "
+        "coordinate derivatives, and a non-coordinate basis holds rescaled "
+        "components. Convert it to the coordinate basis first with "
+        "change_basis(..., at=point)."
+    )
+    raise TypeError(msg)
+
+
 def _return_ladder_fibre(
     f: Tangent,
     order: int,
@@ -908,6 +946,7 @@ def _act_coordinate_jet(
         if order is None or order == 0:
             push_fibres[name] = fibre
             continue
+        _require_coordinate_basis(name, order, fibre)
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:

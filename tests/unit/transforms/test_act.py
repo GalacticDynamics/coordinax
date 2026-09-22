@@ -675,3 +675,96 @@ class TestBundleFibreInAnotherChart:
         )
         with pytest.raises(TypeError, match=r"without an order-1 fibre"):
             cxfm.act(self.ROT, None, lone)
+
+
+class TestJointProlongationPreconditions:
+    """What the joint path refuses, and whether it says why correctly.
+
+    These are errors rather than first-order answers, so the message is the
+    whole product: it is the only thing telling the caller which fibre to add.
+    """
+
+    SPH: ClassVar = cxc.sph3d
+    Q0: ClassVar = {
+        "r": u.Q(2.0, "kpc"),
+        "theta": u.Q(0.9, "rad"),
+        "phi": u.Q(0.4, "rad"),
+    }
+    A0: ClassVar = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+    CQ: ClassVar = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+    CA: ClassVar = {
+        "x": u.Q(0.1, "kpc/Myr2"),
+        "y": u.Q(0.2, "kpc/Myr2"),
+        "z": u.Q(0.3, "kpc/Myr2"),
+    }
+
+    @staticmethod
+    def _gap(chart, q, a):
+        return cx.Coordinate(
+            point=cx.Point(q, chart),
+            acceleration=cx.Tangent(a, chart, cxr.coord_basis, cxr.acc),
+        )
+
+    def test_a_static_curved_gap_blames_the_curvature(self):
+        op = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg"))
+        with pytest.raises(TypeError, match=r"is not affine in"):
+            cxfm.act(op, None, self._gap(self.SPH, self.Q0, self.A0))
+
+    def test_a_time_dependent_gap_blames_the_time_dependence(self):
+        """It is joint because of tau, not curvature -- in a flat chart no less.
+
+        `is_affine_in_chart` reports a `TimeDep` as non-affine in *any* chart,
+        so asking about affinity first would blame curvature every time.
+        """
+        op = cxfm.TimeDep.from_(
+            lambda t: cxfm.Translate(
+                {
+                    "x": u.Q(3.0, "kpc/Myr") * t,
+                    "y": u.Q(0.0, "kpc"),
+                    "z": u.Q(0.0, "kpc"),
+                },
+                chart=cxc.cart3d,
+            )
+        )
+        with pytest.raises(TypeError, match=r"is time-dependent"):
+            cxfm.act(op, u.Q(1.0, "Myr"), self._gap(cxc.cart3d, self.CQ, self.CA))
+        # and specifically NOT the curvature story
+        with pytest.raises(TypeError, match=r"^(?!.*not affine).*$"):
+            cxfm.act(op, u.Q(1.0, "Myr"), self._gap(cxc.cart3d, self.CQ, self.CA))
+
+    def test_a_physical_basis_fibre_is_refused_in_the_same_words_as_cconvert(self):
+        """Its components are rescaled, so they are not jet slots.
+
+        The units caught this downstream as a `UnitConversionError` from deep
+        inside the engine, which says nothing about what the caller did.
+        """
+        crd = cx.Coordinate(
+            point=cx.Point(self.Q0, self.SPH),
+            velocity=cx.Tangent(
+                {
+                    "r": u.Q(1.0, "kpc/Myr"),
+                    "theta": u.Q(0.3, "rad/Myr"),
+                    "phi": u.Q(0.7, "rad/Myr"),
+                },
+                self.SPH,
+                cxr.coord_basis,
+                cxr.vel,
+            ),
+            acceleration=cx.Tangent(
+                {
+                    "r": u.Q(0.1, "kpc/Myr2"),
+                    "theta": u.Q(0.05, "kpc/Myr2"),
+                    "phi": u.Q(-0.02, "kpc/Myr2"),
+                },
+                self.SPH,
+                cxr.phys_basis,
+                cxr.acc,
+            ),
+        )
+        op = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg"))
+        with pytest.raises(TypeError, match=r"non-coordinate basis holds rescaled"):
+            cxfm.act(op, None, crd)

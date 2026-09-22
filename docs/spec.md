@@ -2584,7 +2584,17 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     which is built from the *lower* fibre and so is invisible to a pass that converts one fibre at a time. The bundle is the one holder of that lower fibre, so `Coordinate.cconvert` carries the **whole jet** $\{0: q, 1: v, 2: a, \ldots\}$ through the transition instead, and each fibre is read back out of the prolonged jet. A lone `Tangent` cannot do this and is unchanged: `tangent_map` and `cconvert` on a single fibre remain the Jacobian pushforward at `at`.
 
-    The second term vanishes identically where the transition is **affine** — a chart with itself, two Cartesian-type charts, or two members of one relabelling family such as `sph3d`/`math_sph3d`/`lonlat_sph3d` — and there the per-fibre path is kept, being both exact and cheaper. Where it does not vanish and the bundle's ladder has a hole, the conversion **raises** rather than returning the first-order answer: an absent fibre means "not tracked", not "zero". See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
+    The second term vanishes identically where the transition is **affine** — a chart with itself, two Cartesian-type charts, or two members of one relabelling family such as `sph3d`/`math_sph3d`/`lonlat_sph3d` — and there the per-fibre path is kept, being both exact and cheaper. See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
+
+    **Preconditions of the joint path.** Order $\leq 1$ fibres are unaffected by all of this, and mixed-chart and mixed-basis bundles remain valid. But when a conversion is *not* affine and an order $\geq 2$ fibre is present, the jet has to be assembled, and three things that are otherwise allowed become errors rather than first-order answers:
+
+    | Condition | Why it cannot be answered |
+    |-----------|---------------------------|
+    | the ladder skips an order (e.g. an acceleration with no velocity) | the missing fibre is what the second term is built from, and absent means "not tracked", not "zero" |
+    | a ladder fibre is not in `coord_basis` | a physical basis holds rescaled components, which are not the curve's coordinate derivatives and so are not jet slots |
+    | a ladder fibre is stored in a chart other than the point's (`Coordinate.cconvert` only) | its own jet would be needed in that chart, and the bundle holds one |
+
+    The last is a restriction of `cconvert` alone. `act` on a `Coordinate` carries such a fibre correctly, by building its jet in its own chart — where the lower slots convert exactly — and prolonging that across.
 
     **Fields:**
 
