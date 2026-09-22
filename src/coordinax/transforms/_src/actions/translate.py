@@ -191,9 +191,7 @@ def act(
     """
     # Not a point: the CDict path covers the whole ladder, so route, not refuse.
     if rep != cxr.point:
-        return cast(
-            "Array", act_array_via_cdict(op, tau, x, chart, rep, usys=usys, **kw)
-        )
+        return act_array_via_cdict(op, tau, x, chart, rep, usys=usys, **kw)
 
     del kw
 
@@ -285,10 +283,7 @@ def act(
     """
     # Not a point: the CDict path covers the whole ladder, so route, not refuse.
     if rep != cxr.point:
-        return cast(
-            "u.AbstractQuantity",
-            act_quantity_via_cdict(op, tau, x, chart, rep, usys=usys, **kw),
-        )
+        return act_quantity_via_cdict(op, tau, x, chart, rep, usys=usys, **kw)
 
     # A vel/acc-semantic translate does not move position points.
     if not isinstance(op.semantic_kind, cxr.Displacement):

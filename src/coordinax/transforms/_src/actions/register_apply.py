@@ -201,8 +201,7 @@ def act(
     Array([2., 0., 0.], dtype=float64)
 
     """
-    out = act_array_via_cdict(op, tau, x, chart, rep, **kw)
-    return cast("Array", out)
+    return act_array_via_cdict(op, tau, x, chart, rep, **kw)
 
 
 # ===================================================================
@@ -237,7 +236,7 @@ def act(
     Q([0., 1., 0.], 'km')
 
     """
-    return cast("AbcQ", act_quantity_via_cdict(op, tau, x, chart, rep, **kw))
+    return act_quantity_via_cdict(op, tau, x, chart, rep, **kw)
 
 
 # ===================================================================

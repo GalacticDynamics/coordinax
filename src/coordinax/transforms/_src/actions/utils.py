@@ -12,6 +12,7 @@ __all__: tuple[str, ...] = (
 )
 
 from collections.abc import Iterable
+from jaxtyping import Array
 from typing import Any
 
 import jax.numpy as jnp
@@ -93,7 +94,7 @@ def require_matching_keys(
 
 def act_quantity_via_cdict(
     op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, **kw: Any
-) -> Any:
+) -> u.Q:
     """Act on a `unxt.AbstractQuantity` through its `CDict` in ``chart``.
 
     The repack needs the components to share a unit. `cdict` already refuses a
@@ -108,7 +109,7 @@ def act_quantity_via_cdict(
 
 def act_array_via_cdict(
     op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, *, usys: Any = None, **kw: Any
-) -> Any:
+) -> Array:
     """Act on a bare array through a `CDict`, taking its units from ``usys``.
 
     A bare array carries no units, so ``usys`` supplies them: each component
