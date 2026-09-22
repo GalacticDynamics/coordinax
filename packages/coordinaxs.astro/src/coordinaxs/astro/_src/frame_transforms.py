@@ -489,7 +489,9 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
 
 
 @plum.dispatch
-def frame_transition(from_frame: Galactocentric, to_frame: ICRS, /) -> cxfm.Composed:
+def frame_transition(
+    from_frame: Galactocentric, to_frame: ICRS, /
+) -> cxfm.AbstractTransform:
     r"""Return a Galactocentric to ICRS frame transformation operator.
 
     This transformation inverts the ICRS→Galactocentric transformation,
@@ -544,10 +546,10 @@ def frame_transition(from_frame: Galactocentric, to_frame: ICRS, /) -> cxfm.Comp
     """  # noqa: E501
     key = _frame_key("gcf->icrs", from_frame)
     if key is not None and (hit := _TRANSITION_CACHE.get(key)) is not None:
-        return cast("cxfm.Composed", hit)
+        return hit
 
     icrs2gcf = cxf.frame_transition(to_frame, from_frame)  # pylint: disable=W1114
     op = icrs2gcf.inverse.simplify()  # ty: ignore[unresolved-attribute]
     if key is not None and len(_TRANSITION_CACHE) < _TRANSITION_CACHE_MAX:
         _TRANSITION_CACHE[key] = op
-    return cast("cxfm.Composed", op)
+    return op
