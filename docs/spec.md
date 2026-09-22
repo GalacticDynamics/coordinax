@@ -5642,7 +5642,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Shear`
 
-    A **Shear** is a transformation that applies a linear shear map to position components. Tangent data is carried by the pushforward with the same matrix, $v \mapsto L v$, rather than left unchanged.
+    A **Shear** is a transformation that applies a linear shear map to position components. Tangent data is carried by the pushforward with the same matrix, $v \mapsto H v$, rather than left unchanged.
 
     **Mathematical definition**:
 
