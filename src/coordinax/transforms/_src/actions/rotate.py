@@ -109,15 +109,18 @@ class Rotate(AbstractLinearTransform):
 
     Parameters
     ----------
-    rotation : Array[float, (3, 3)]
+    R : Array[float, (N, N)]
         The rotation matrix.
 
     Raises
     ------
     equinox.EquinoxRuntimeError
-        If the rotation matrix is not orthogonal. The check is deferred onto
-        the stored ``R`` so it survives `jax.jit`: eagerly it raises from the
-        constructor, under `jit` when the traced graph runs.
+        If ``R`` is not square, or is not a rotation -- ``R^T R = I`` *and*
+        ``det R = +1``, i.e. SO(N). Orthogonality alone is not enough: an
+        improper orthogonal matrix reverses orientation, and `Reflect` or
+        `Linear` is its home. Both checks are deferred onto the stored ``R``
+        so they survive `jax.jit`: eagerly they raise from the constructor,
+        under `jit` when the traced graph runs.
 
     Notes
     -----
