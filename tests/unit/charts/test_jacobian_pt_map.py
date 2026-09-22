@@ -20,6 +20,7 @@ import unxt as u
 import unxts.linalg as ul
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 import coordinaxs.hypothesis.main as cxst
 from coordinax._src.charts import jacobian
 
@@ -234,10 +235,12 @@ class TestJacobianPtMapCart2dToPolar2d:
 
 
 class TestUnitfulDictsReachTheClosedForm:
-    """Every routed pair takes the closed form, not `jax.jacfwd`.
+    """Every routed pair takes a closed form, not `jax.jacfwd`.
 
     Routing is registered per chart pair, so it drifts out of step with the
-    closed forms unless every pair is listed here.
+    closed forms unless every pair is listed here -- including the pairs that
+    reach one only by chaining two, whose unit handling is the same and whose
+    route is the one a unitful dict takes most often.
     """
 
     #: Pairs whose `from_chart` components share a dimension, so canonicalising
@@ -248,6 +251,9 @@ class TestUnitfulDictsReachTheClosedForm:
         pytest.param("cart3d", "cyl3d", ("x", "y", "z"), id="cart3d->cyl3d"),
         pytest.param("cart3d", "sph3d", ("x", "y", "z"), id="cart3d->sph3d"),
         pytest.param("cart3d", "lonlat_sph3d", ("x", "y", "z"), id="cart3d->lonlat"),
+        pytest.param(
+            "cart3d", "loncoslat_sph3d", ("x", "y", "z"), id="cart3d->loncoslat"
+        ),
     ]
     #: Pairs taking an angle beside a length. Both groups reach the closed form
     #: through bare canonical values; what distinguishes these is that their
@@ -273,8 +279,47 @@ class TestUnitfulDictsReachTheClosedForm:
         ),
         pytest.param("cyl3d", "sph3d", ("rho", "phi", "z"), id="cyl3d->sph3d"),
         pytest.param("sph3d", "cyl3d", ("r", "theta", "phi"), id="sph3d->cyl3d"),
+        pytest.param(
+            "loncoslat_sph3d",
+            "cart3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->cart3d",
+        ),
     ]
-    ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS
+    #: Pairs with no closed form of their own, reaching one by chaining two
+    #: through the Cartesian chart. The unit handling is the same, so they
+    #: belong to the same checks.
+    CHAINED_PAIRS: ClassVar = [
+        pytest.param("cyl3d", "lonlat_sph3d", ("rho", "phi", "z"), id="cyl3d->lonlat"),
+        pytest.param(
+            "cyl3d", "loncoslat_sph3d", ("rho", "phi", "z"), id="cyl3d->loncoslat"
+        ),
+        pytest.param(
+            "sph3d", "lonlat_sph3d", ("r", "theta", "phi"), id="sph3d->lonlat"
+        ),
+        pytest.param(
+            "sph3d", "loncoslat_sph3d", ("r", "theta", "phi"), id="sph3d->loncoslat"
+        ),
+        pytest.param(
+            "lonlat_sph3d", "cyl3d", ("lon", "lat", "distance"), id="lonlat->cyl3d"
+        ),
+        pytest.param(
+            "lonlat_sph3d", "sph3d", ("lon", "lat", "distance"), id="lonlat->sph3d"
+        ),
+        pytest.param(
+            "loncoslat_sph3d",
+            "cyl3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->cyl3d",
+        ),
+        pytest.param(
+            "loncoslat_sph3d",
+            "sph3d",
+            ("lon_coslat", "lat", "distance"),
+            id="loncoslat->sph3d",
+        ),
+    ]
+    ROUTED_PAIRS: ClassVar = HOMOGENEOUS_PAIRS + HETEROGENEOUS_PAIRS + CHAINED_PAIRS
 
     VALUES: ClassVar = {
         "x": 1.3,
@@ -450,12 +495,13 @@ class TestUnitfulDictsReachTheClosedForm:
             "phi": u.Q(jnp.full((n,), 0.7), "rad"),
             "z": u.Q(jnp.linspace(1.0, 3.0, n), "m"),
         }
+        # Absence from `_CLOSED_FORM_PAIRS` is no longer enough: a pair with
+        # no closed form of its own may still be chained through one.
         assert (
-            type(cxc.cyl3d),
-            type(cxc.loncoslat_sph3d),
-        ) not in jacobian._CLOSED_FORM_PAIRS
+            jacobian._fast_route(cxc.cyl3d, cxc.math_sph3d) is jacobian._NO_FAST_ROUTE
+        )
 
-        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.math_sph3d)
 
         assert np.asarray(jnp.asarray(J.value)).shape == (n, 3, 3)
 
@@ -1040,16 +1086,16 @@ class TestJacobianPtMapCDictArrayBranch:
 
         The ``is_array=True`` branch forwards to the Array dispatch, and the
         generic one requires *usys* to know what the bare numbers mean. A pair
-        with a closed form reads bare angles as radians instead.
+        reaching a closed form -- its own or two chained -- reads bare angles
+        as radians instead, so this needs a pair that reaches neither.
         """
         at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
         assert (
-            type(cxc.cyl3d),
-            type(cxc.loncoslat_sph3d),
-        ) not in jacobian._CLOSED_FORM_PAIRS
+            jacobian._fast_route(cxc.cyl3d, cxc.math_sph3d) is jacobian._NO_FAST_ROUTE
+        )
 
         with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
-            cxc.jac_pt_map(at, cxc.cyl3d, cxc.loncoslat_sph3d)
+            cxc.jac_pt_map(at, cxc.cyl3d, cxc.math_sph3d)
 
 
 # ===========================================================================
@@ -1122,7 +1168,40 @@ class TestJacobianPtMapAtExtremeScales:
         pytest.param("lonlat_sph3d", "cart3d", "lonlat3", id="lonlat->cart3d"),
         pytest.param("cyl3d", "sph3d", "cyl3", id="cyl3d->sph3d"),
         pytest.param("sph3d", "cyl3d", "sph3", id="sph3d->cyl3d"),
+        pytest.param("cart3d", "loncoslat_sph3d", "cart3", id="cart3d->loncoslat"),
+        pytest.param("loncoslat_sph3d", "cart3d", "lonlat3", id="loncoslat->cart3d"),
     ]
+
+    #: Pairs the router chains through `Cart3D`. They build an intermediate
+    #: point the direct forms never do, which is a second place for a
+    #: magnitude to overflow -- so they are checked for finiteness, the part
+    #: of the comparison above that stays meaningful for them.
+    CHAINED_PAIRS: ClassVar = [
+        pytest.param("cyl3d", "lonlat_sph3d", "cyl3", id="cyl3d->lonlat"),
+        pytest.param("cyl3d", "loncoslat_sph3d", "cyl3", id="cyl3d->loncoslat"),
+        pytest.param("sph3d", "lonlat_sph3d", "sph3", id="sph3d->lonlat"),
+        pytest.param("sph3d", "loncoslat_sph3d", "sph3", id="sph3d->loncoslat"),
+        pytest.param("lonlat_sph3d", "cyl3d", "lonlat3", id="lonlat->cyl3d"),
+        pytest.param("lonlat_sph3d", "sph3d", "lonlat3", id="lonlat->sph3d"),
+        pytest.param("loncoslat_sph3d", "cyl3d", "lonlat3", id="loncoslat->cyl3d"),
+        pytest.param("loncoslat_sph3d", "sph3d", "lonlat3", id="loncoslat->sph3d"),
+    ]
+
+    @pytest.mark.parametrize("magnitude", EXTREME_MAGNITUDES)
+    @pytest.mark.parametrize(("frm", "to", "kind"), CHAINED_PAIRS)
+    def test_a_chained_pair_stays_finite(
+        self, frm: str, to: str, kind: str, magnitude: float
+    ) -> None:
+        """The intermediate point must not overflow the way #898's squares did."""
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+        at = jnp.asarray(self._point(kind, magnitude), dtype=jnp.float32)
+
+        got = np.asarray(cxc.jac_pt_map(at, from_chart, to_chart, usys=usys_si))
+
+        assert np.all(np.isfinite(got))
+        # An overflow that became `inf` and then a silent zero would pass the
+        # check above, so the matrix must also not have collapsed.
+        assert np.abs(got).max() > 0.0
 
     @staticmethod
     def _point(kind: str, magnitude: float) -> list[float]:
@@ -1161,6 +1240,14 @@ class TestJacobianPtMapAtExtremeScales:
 
         Compared relatively, with no ``atol`` -- entries scale like ``1/r``, so
         any absolute floor is vacuous at 1e18 and unmeetable at 1e-18.
+
+        Only pairs with a closed form of their *own* belong here. A chained
+        pair reaches its structurally-zero entries -- ``d(phi)/d(distance)``,
+        say -- as a difference of larger terms, and in float32 at these
+        magnitudes both it and `jacfwd` return noise for them, several percent
+        of the matrix. Comparing two noise values relatively compares their
+        signs. Chained pairs are covered by `test_matches_autodiff` in float64
+        and by the finiteness check below.
         """
         from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
         at = jnp.asarray(self._point(kind, magnitude), dtype=jnp.float32)
@@ -1266,6 +1353,18 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
         ("lonlat->cart3d", "lonlat_sph3d", "cart3d", "lonlat"),
         ("cyl3d->sph3d", "cyl3d", "sph3d", "cyl"),
         ("sph3d->cyl3d", "sph3d", "cyl3d", "sph"),
+        # Two new closed forms, and the eight pairs they let the router chain
+        # through `Cart3D` rather than differentiate.
+        ("cart3d->loncoslat", "cart3d", "loncoslat_sph3d", "cart"),
+        ("loncoslat->cart3d", "loncoslat_sph3d", "cart3d", "loncoslat"),
+        ("cyl3d->lonlat", "cyl3d", "lonlat_sph3d", "cyl"),
+        ("cyl3d->loncoslat", "cyl3d", "loncoslat_sph3d", "cyl"),
+        ("sph3d->lonlat", "sph3d", "lonlat_sph3d", "sph"),
+        ("sph3d->loncoslat", "sph3d", "loncoslat_sph3d", "sph"),
+        ("lonlat->cyl3d", "lonlat_sph3d", "cyl3d", "lonlat"),
+        ("lonlat->sph3d", "lonlat_sph3d", "sph3d", "lonlat"),
+        ("loncoslat->cyl3d", "loncoslat_sph3d", "cyl3d", "loncoslat"),
+        ("loncoslat->sph3d", "loncoslat_sph3d", "sph3d", "loncoslat"),
     ]
 
     @staticmethod
@@ -1279,6 +1378,8 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
             return jnp.array([2.0, 0.7 * ang_per_rad, 3.0])
         if kind == "lonlat":  # (lon, lat, distance)
             return jnp.array([0.9 * ang_per_rad, 0.35 * ang_per_rad, 2.5])
+        if kind == "loncoslat":  # (lon_coslat, lat, distance)
+            return jnp.array([0.8 * ang_per_rad, 0.35 * ang_per_rad, 2.5])
         return jnp.array([3.0, 0.6 * ang_per_rad, 1.1 * ang_per_rad])
 
     @pytest.mark.parametrize(("name", "frm", "to", "kind"), PAIRS)
@@ -1298,7 +1399,10 @@ class TestAnalyticJacobiansAgreeWithAutodiff:
             lambda a: jnp.stack(list(fn(dict(zip(keys, a, strict=True))).values()))
         )(at)
 
-        assert_allclose(np.asarray(got), np.asarray(expected), rtol=1e-11)
+        # `atol` because a chained pair reaches a structural zero as a sum of
+        # products, landing on ~1e-16 where a direct form writes `zeros_like`.
+        # Entries here are of order 1, so this still pins every real one.
+        assert_allclose(np.asarray(got), np.asarray(expected), rtol=1e-11, atol=1e-12)
 
 
 # ===========================================================================
@@ -1479,3 +1583,139 @@ def test_the_registry_lists_exactly_the_pairs_that_have_a_closed_form() -> None:
     against the dispatches `plum` actually holds rather than trusted.
     """
     assert _pairs_with_an_array_dispatch() == jacobian._CLOSED_FORM_PAIRS
+
+
+# ===========================================================================
+# Chaining two closed forms instead of differentiating the composite
+# ===========================================================================
+
+
+class TestFastRoute:
+    """Which of the three routes a pair takes, pinned per pair.
+
+    A shape or value assertion cannot tell them apart -- all three return the
+    same Jacobian -- so the route is asserted directly. Without this, a pair
+    could quietly fall back to `jacfwd` and only a benchmark would notice.
+    """
+
+    #: Pairs the router chains through the Cartesian chart, having no closed
+    #: form of their own.
+    CHAINED: ClassVar = [
+        ("cyl3d", "lonlat_sph3d"),
+        ("cyl3d", "loncoslat_sph3d"),
+        ("sph3d", "lonlat_sph3d"),
+        ("sph3d", "loncoslat_sph3d"),
+        ("lonlat_sph3d", "cyl3d"),
+        ("lonlat_sph3d", "sph3d"),
+        ("loncoslat_sph3d", "cyl3d"),
+        ("loncoslat_sph3d", "sph3d"),
+    ]
+
+    @pytest.mark.parametrize(("frm", "to"), CHAINED)
+    def test_a_chained_pair_pivots_through_cartesian(self, frm, to) -> None:
+        from_chart, to_chart = getattr(cxc, frm), getattr(cxc, to)
+
+        route = jacobian._fast_route(from_chart, to_chart)
+
+        assert route is not None, "would use its own closed form"
+        assert route is not jacobian._NO_FAST_ROUTE, "would be differentiated"
+        assert route == from_chart.cartesian
+        # Both legs must be closed forms, or the chain is not a win.
+        assert (type(from_chart), type(route)) in jacobian._CLOSED_FORM_PAIRS
+        assert (type(route), type(to_chart)) in jacobian._CLOSED_FORM_PAIRS
+
+    @pytest.mark.parametrize(
+        ("frm", "to"), [("cart3d", "sph3d"), ("lonlat_sph3d", "cart3d")]
+    )
+    def test_a_pair_with_its_own_closed_form_is_not_chained(self, frm, to) -> None:
+        assert jacobian._fast_route(getattr(cxc, frm), getattr(cxc, to)) is None
+
+    def test_a_pair_reaching_neither_is_differentiated(self) -> None:
+        """`MathSpherical3D` has no closed form, so nothing chains to it."""
+        route = jacobian._fast_route(cxc.cyl3d, cxc.math_sph3d)
+
+        assert route is jacobian._NO_FAST_ROUTE
+
+    def test_chaining_agrees_with_the_two_legs_done_by_hand(self) -> None:
+        """The chain rule, spelled out, against the router's own version."""
+        at = jnp.asarray([2.0, 0.7, 3.0])
+        mid = jnp.stack(
+            list(
+                cxc.pt_map(
+                    dict(zip(cxc.cyl3d.components, at, strict=True)),
+                    cxc.cyl3d,
+                    cxc.cart3d,
+                    usys=usys_si,
+                ).values()
+            )
+        )
+
+        got = cxc.jac_pt_map(at, cxc.cyl3d, cxc.lonlat_sph3d, usys=usys_si)
+        by_hand = jnp.asarray(
+            cxc.jac_pt_map(mid, cxc.cart3d, cxc.lonlat_sph3d, usys=usys_si)
+        ) @ jnp.asarray(cxc.jac_pt_map(at, cxc.cyl3d, cxc.cart3d, usys=usys_si))
+
+        # Exact: the router performs this very product, so anything else means
+        # it chained through a different pivot or in the other order.
+        assert_allclose(np.asarray(got), np.asarray(by_hand), rtol=0, atol=0)
+
+
+def test_a_chart_with_no_cartesian_is_not_chained() -> None:
+    """A pivot needs a Cartesian chart, and an intrinsic chart has none.
+
+    `_fast_route` asks for `from_chart.cartesian` before it can look for two
+    closed forms, and a two-sphere chart raises rather than answering. It has
+    to fall through to `jacfwd`, not propagate that error.
+    """
+    assert jacobian._fast_route(cxc.sph2, cxc.lonlat_sph2) is jacobian._NO_FAST_ROUTE
+
+
+def test_a_bare_array_dict_reaches_the_chained_route() -> None:
+    """A dict of plain arrays chains too, given a *usys* to read them by.
+
+    It gets there by way of the `Array` route rather than the canonicalising
+    one, so this pins that the two agree -- exactly, since the dict is only
+    stacked on the way.
+    """
+    at = {"rho": jnp.asarray(2.0), "phi": jnp.asarray(0.7), "z": jnp.asarray(3.0)}
+
+    got = cxc.jac_pt_map(at, cxc.cyl3d, cxc.lonlat_sph3d, usys=usys_si)
+
+    packed = jnp.asarray([2.0, 0.7, 3.0])
+    expected = cxc.jac_pt_map(packed, cxc.cyl3d, cxc.lonlat_sph3d, usys=usys_si)
+    assert_allclose(np.asarray(got), np.asarray(expected), rtol=0, atol=0)
+
+
+def test_charts_on_different_manifolds_are_not_chained() -> None:
+    """A pivot has to be a chart both sides actually share.
+
+    `_CLOSED_FORM_PAIRS` keys on chart *types*, which say nothing about the
+    manifold, so two charts of chainable types can sit on different ones --
+    a transition `pt_map` refuses with `ManifoldMismatchError`. Chaining them
+    anyway walked into a `RecursionError` instead of that refusal.
+    """
+    frm = cxc.Cylindrical3D(M=cxm.Sn(3))
+    to = cxc.LonLatSpherical3D(M=cxm.Rn(3))
+    assert frm.cartesian != to.cartesian
+
+    assert jacobian._fast_route(frm, to) is jacobian._NO_FAST_ROUTE
+
+
+def test_the_loncoslat_pivot_follows_the_chart_manifold() -> None:
+    """`Cart3D <-> LonCosLat` chain through `LonLat` on their *own* manifold.
+
+    A fixed pivot would be on the default one, and the chain would then ask
+    for a transition across two manifolds -- which `pt_map` refuses, even
+    though the pair itself is perfectly valid.
+    """
+    other = cxm.Rn(4)
+    at = jnp.asarray([1.3, 2.1, 0.7])
+
+    got = cxc.jac_pt_map(
+        at, cxc.Cart3D(M=other), cxc.LonCosLatSpherical3D(M=other), usys=usys_si
+    )
+
+    # The manifold changes nothing about the numbers, only which charts are
+    # reachable, so the default-manifold result is the reference.
+    expected = cxc.jac_pt_map(at, cxc.cart3d, cxc.loncoslat_sph3d, usys=usys_si)
+    assert_allclose(np.asarray(got), np.asarray(expected), rtol=0, atol=0)
