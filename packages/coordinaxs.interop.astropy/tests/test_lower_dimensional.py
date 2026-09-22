@@ -33,7 +33,7 @@ class TestSkyPositionWithoutDistance:
     def test_the_frame_comes_across_too(self):
         point = cx.Point.from_(apyc.ICRS(ra=1.0 * apyu.deg, dec=2.0 * apyu.deg))
         assert point.chart == cxc.lonlat_sph2
-        assert plum.convert(point.frame, apyc.BaseCoordinateFrame).name == "icrs"
+        assert plum.convert(point.frame, apyc.ICRS).name == "icrs"
 
     def test_a_cdict_converts_straight_to_the_representation(self):
         """`test_ptmap_cdict.py` is a 3D cross-chart table; these two are not."""

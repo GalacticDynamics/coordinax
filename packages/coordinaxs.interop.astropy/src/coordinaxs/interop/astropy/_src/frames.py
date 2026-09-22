@@ -63,11 +63,35 @@ import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 from .custom_types import CDict
 
+
+@plum.dispatch.abstract
+def to_astropy_frame(frame: cxastro.AbstractSpaceFrame, /) -> apyc.BaseCoordinateFrame:
+    """Return the Astropy frame that corresponds to a coordinaxs.astro frame.
+
+    `plum.convert` cannot do this job: its ``type[...]`` targets match
+    covariantly, so a conversion registered on
+    `astropy.coordinates.BaseCoordinateFrame` would claim every Astropy frame
+    class and silently answer the wrong one. This has one method per supported
+    frame instead, so there is no target class to get wrong.
+
+    >>> import astropy.coordinates as apyc
+    >>> import coordinaxs.astro as cxastro
+    >>> from coordinaxs.interop.astropy._src.frames import to_astropy_frame
+
+    >>> to_astropy_frame(cxastro.ICRS())
+    <ICRS Frame>
+
+    >>> to_astropy_frame(cxastro.Galactic())
+    <Galactic Frame>
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
 # =============================================================================
 # ICRS
 
 
-@plum.conversion_method(cxastro.ICRS, apyc.BaseCoordinateFrame)
 @plum.conversion_method(cxastro.ICRS, apyc.ICRS)
 def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     """Convert coordinax ICRS frame to Astropy ICRS frame.
@@ -85,11 +109,19 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     >>> plum.convert(cx_frame, apyc.ICRS)
     <ICRS Frame>
 
-    >>> plum.convert(cx_frame, apyc.BaseCoordinateFrame)
-    <ICRS Frame>
+    Only the exact Astropy frame class is registered; any other target
+    raises rather than silently returning an ICRS frame:
+
+    >>> plum.convert(cx_frame, apyc.FK5)
+    Traceback (most recent call last):
+        ...
+    TypeError: Cannot convert `ICRS()` to `...FK5`.
 
     """
     return apyc.ICRS()
+
+
+to_astropy_frame.dispatch(coordinax_icrs_to_astropy_icrs)
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -143,7 +175,6 @@ def astropy_icrs_to_coordinax_icrs(frame: apyc.ICRS, /) -> cxastro.ICRS:
 # Galactic
 
 
-@plum.conversion_method(cxastro.Galactic, apyc.BaseCoordinateFrame)
 @plum.conversion_method(cxastro.Galactic, apyc.Galactic)
 def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.Galactic:
     """Convert coordinax Galactic frame to Astropy Galactic frame.
@@ -159,11 +190,19 @@ def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.G
     >>> plum.convert(cx_frame, apyc.Galactic)
     <Galactic Frame>
 
-    >>> plum.convert(cx_frame, apyc.BaseCoordinateFrame)
-    <Galactic Frame>
+    Only the exact Astropy frame class is registered; any other target
+    raises rather than silently returning a Galactic frame:
+
+    >>> plum.convert(cx_frame, apyc.FK5)
+    Traceback (most recent call last):
+        ...
+    TypeError: Cannot convert `Galactic()` to `...FK5`.
 
     """
     return apyc.Galactic()
+
+
+to_astropy_frame.dispatch(coordinax_galactic_to_astropy_galactic)
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -208,7 +247,6 @@ def astropy_galactic_to_coordinax_galactic(frame: apyc.Galactic, /) -> cxastro.G
 # Galactocentric
 
 
-@plum.conversion_method(cxastro.Galactocentric, apyc.BaseCoordinateFrame)
 @plum.conversion_method(cxastro.Galactocentric, apyc.Galactocentric)
 def coordinax_galactocentric_to_astropy_galactocentric(
     frame: cxastro.Galactocentric, /
@@ -260,9 +298,13 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     >>> isinstance(apy_frame, apyc.Galactocentric)
     True
 
-    >>> apy_frame = plum.convert(cx_frame, apyc.BaseCoordinateFrame)
-    >>> isinstance(apy_frame, apyc.Galactocentric)
-    True
+    Only the exact Astropy frame class is registered; any other target
+    raises rather than silently returning a Galactocentric frame:
+
+    >>> plum.convert(cxastro.Galactocentric(), apyc.FK5)
+    Traceback (most recent call last):
+        ...
+    TypeError: Cannot convert `Galactocentric()` to `...FK5`.
 
     """  # noqa: E501
     # Convert the galcen position
@@ -287,6 +329,9 @@ def coordinax_galactocentric_to_astropy_galactocentric(
         z_sun=plum.convert(frame.z_sun, apyu.Quantity),
         roll=plum.convert(frame.roll, apyu.Quantity),
     )
+
+
+to_astropy_frame.dispatch(coordinax_galactocentric_to_astropy_galactocentric)
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]

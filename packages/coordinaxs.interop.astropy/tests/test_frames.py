@@ -22,6 +22,8 @@ import unxt as u
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
 import coordinaxs.astro as cxastro
+import jax.tree_util as jtu
+from plum import convert
 import coordinaxs.interop.astropy  # noqa: F401
 
 
@@ -379,3 +381,50 @@ def test_float32_z_sun_is_not_promoted() -> None:
 
     frame = plum.convert(apy, cxastro.Galactocentric)
     assert frame.z_sun.dtype == np.float32
+# Each coordinax frame paired with its one supported Astropy frame class.
+FRAME_PAIRS = [
+    (cxastro.ICRS(), apyc.ICRS),
+    (cxastro.Galactic(), apyc.Galactic),
+    (cxastro.Galactocentric(), apyc.Galactocentric),
+]
+
+# Astropy classes used as conversion *targets* that are unsupported for at
+# least one coordinax frame. Distinct from `UNSUPPORTED` above, which is the
+# astropy->coordinax direction; the per-pair skip drops supported combinations.
+UNSUPPORTED_TARGETS = [apyc.FK5, apyc.FK4, apyc.Galactic, apyc.AltAz]
+
+
+@pytest.mark.parametrize(("cx_frame", "apy_cls"), FRAME_PAIRS)
+def test_roundtrip_exact_class(
+    cx_frame: cxastro.AbstractSpaceFrame, apy_cls: type[apyc.BaseCoordinateFrame]
+) -> None:
+    """Conversion to the exact Astropy class round-trips."""
+    apy_frame = convert(cx_frame, apy_cls)
+    assert isinstance(apy_frame, apy_cls)
+    assert type(apy_frame) is apy_cls
+
+    back = convert(apy_frame, type(cx_frame))
+    assert isinstance(back, type(cx_frame))
+    # Compare leaves, not the frames: Galactocentric's round trip promotes
+    # `roll` from a weak int to a float, so the pytrees are not `==`.
+    assert jtu.tree_leaves(back) == pytest.approx(jtu.tree_leaves(cx_frame))
+
+
+@pytest.mark.parametrize(("cx_frame", "apy_cls"), FRAME_PAIRS)
+@pytest.mark.parametrize("target", UNSUPPORTED_TARGETS)
+def test_unsupported_target_raises(
+    cx_frame: cxastro.AbstractSpaceFrame,
+    apy_cls: type[apyc.BaseCoordinateFrame],
+    target: type[apyc.BaseCoordinateFrame],
+) -> None:
+    """Unsupported Astropy targets raise instead of silently mis-converting.
+
+    Registering a conversion on `astropy.coordinates.BaseCoordinateFrame`
+    claimed every Astropy frame class, so e.g. ``convert(ICRS(), apyc.Galactic)``
+    quietly returned an ICRS frame -- a ~60 degree error.
+    """
+    if target is apy_cls:  # this one is genuinely supported
+        pytest.skip(f"{target.__name__} is the supported target")
+
+    with pytest.raises(TypeError, match="Cannot convert"):
+        convert(cx_frame, target)
