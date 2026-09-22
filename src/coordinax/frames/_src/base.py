@@ -178,12 +178,14 @@ def from_(cls: type[AbstractReferenceFrame], obj: Any, /) -> AbstractReferenceFr
     --------
     >>> import coordinax.frames as cxf
 
+    The message is a single line -- elided here only because it is longer
+    than this file's line limit:
+
     >>> try:
     ...     cxf.Alice.from_(1)
     ... except TypeError as e:
     ...     print(e)
-    Cannot construct 'Alice' from 1, of type 'int'.
-    Supported input types are listed by `Alice.from_.methods`.
+    Cannot construct 'Alice' from 1, of type 'int'. Supported input types ...
 
     The value is shown by `repr`, so a string is not mistaken for a name:
 
@@ -191,8 +193,7 @@ def from_(cls: type[AbstractReferenceFrame], obj: Any, /) -> AbstractReferenceFr
     ...     cxf.Alice.from_("alice")
     ... except TypeError as e:
     ...     print(e)
-    Cannot construct 'Alice' from 'alice', of type 'str'.
-    Supported input types are listed by `Alice.from_.methods`.
+    Cannot construct 'Alice' from 'alice', of type 'str'. Supported input ...
 
     """
     # `repr` over `str`: unambiguous (quotes survive) and stable across types.
