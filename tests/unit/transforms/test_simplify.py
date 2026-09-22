@@ -516,3 +516,25 @@ class TestSimplifyPreservesOrderAcrossTypes:
             for x, y, z in itertools.permutations("TRSH", 3)
         }
         assert len(seen) == 24
+
+
+@pytest.mark.parametrize("n", [2, 3, 4, 5])
+def test_rotate_simplify_accepts_any_dimension(n: int) -> None:
+    """`Rotate` is N x N, so `simplify` must not assume 3 x 3 (#943)."""
+    assert cxfm.simplify(cxfm.Rotate(jnp.eye(n))) is cxfm.identity
+
+
+@pytest.mark.parametrize("n", [2, 4])
+def test_rotate_simplify_keeps_a_non_identity_of_any_dimension(n: int) -> None:
+    """A genuine rotation is preserved, whatever its dimension (#943)."""
+    M = np.eye(n)
+    M[:2, :2] = [[0.0, -1.0], [1.0, 0.0]]  # a quarter turn in the first plane
+    R = jnp.asarray(M)
+    op = cxfm.Rotate(R)
+    assert cxfm.simplify(op) is op
+
+
+def test_rotate_simplify_does_not_promote_an_integer_matrix() -> None:
+    """The identity is built at the operand's dtype (#943)."""
+    op = cxfm.Rotate(jnp.eye(3, dtype=int))
+    assert cxfm.simplify(op) is cxfm.identity
