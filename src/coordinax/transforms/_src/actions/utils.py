@@ -12,7 +12,7 @@ __all__: tuple[str, ...] = (
 )
 
 from collections.abc import Iterable
-from typing import Any, Final
+from typing import Any
 
 import jax.numpy as jnp
 
@@ -25,8 +25,6 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax.internal import pack_uniform_unit
-
-DMLS: Final = u.unit("")
 
 
 def is_flat_chart(chart: Any, /) -> bool:
@@ -87,13 +85,10 @@ def require_matching_keys(
 # ===================================================================
 # Coerce-act-repack funnels
 #
-# The CDict methods are the reference implementation of every operator: they
-# cover the full (representation, semantic kind) ladder. A Quantity or a bare
-# array is therefore best served by converting to a CDict, acting there, and
-# repacking — which is what these two helpers do. They are shared by the
-# generic arity-5 fallbacks in `register_apply` and by the typed fast paths
-# (e.g. `Translate`) for the cells their fast path does not cover, so the two
-# can never disagree.
+# The CDict methods cover the full (representation, semantic kind) ladder, so
+# a Quantity or a bare array is served by coercing to a CDict, acting, and
+# repacking. Shared by `register_apply`'s fallbacks and by the typed fast
+# paths, so the two cannot disagree.
 
 
 def act_quantity_via_cdict(
@@ -101,12 +96,9 @@ def act_quantity_via_cdict(
 ) -> Any:
     """Act on a `unxt.AbstractQuantity` through its `CDict` in ``chart``.
 
-    ``chart`` is whatever the caller passed; nothing here requires it to be
-    Cartesian. What the repack requires is that the acted-on components share
-    a unit, which is a property of the chart being dimensionally homogeneous
-    rather than of it being Cartesian -- and `cdict` already refuses a
-    single-unit Quantity for a chart whose components differ, so a chart that
-    would break the repack does not reach this function.
+    The repack needs the components to share a unit. `cdict` already refuses a
+    single-unit Quantity for a dimensionally heterogeneous chart, so one that
+    would break it never arrives here -- Cartesian is not required.
     """
     v = cxc.cdict(x, chart)
     nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
@@ -127,19 +119,15 @@ def act_array_via_cdict(
     """
     if usys is None:
         msg = (
-            f"{type(op).__name__} requires 'usys' to act on a bare array: the "
-            "array carries no units, so they are read from the unit system. "
-            "Pass usys=..., or use a Quantity / component dict / typed vector, "
-            "which carry their own units."
+            f"{type(op).__name__} requires 'usys' to act on a bare array, "
+            "which carries no units. Pass usys=..., or a Quantity, component "
+            "dict, or typed vector, which carry their own."
         )
         raise TypeError(msg)
 
-    # `coord_dimensions` answers for the *coordinate* basis, so it is only a
-    # correct reading of a bare array when that is the basis in play. In a
-    # physical (orthonormal) basis every component of a velocity is a speed,
-    # while `coord_dimensions` still reports angular speed for the angular
-    # components of a curvilinear chart -- which would silently mis-unit the
-    # array. Refuse rather than guess; a unit-carrying container says it.
+    # The units below come from `coord_dimensions`, which answers for the
+    # *coordinate* basis -- so reading a bare array that way is only right when
+    # that is the basis in play. Refuse the others rather than mis-unit them.
     if not isinstance(rep.basis, cxr.NoBasis | cxr.CoordinateBasis):
         msg = (
             f"{type(op).__name__} cannot act on a bare array in the "
@@ -151,14 +139,12 @@ def act_array_via_cdict(
         raise TypeError(msg)
 
     dims = rep.semantic_kind.coord_dimensions(chart)
-    units = tuple(DMLS if d is None else usys[d] for d in dims)
+    units = tuple(u.unit("") if d is None else usys[d] for d in dims)
 
     x_arr = jnp.asarray(x)
-    # Check the shape here rather than letting `QuantityMatrix` reject it: it
-    # would, but in its own vocabulary ("value trailing shape (2,) does not
-    # match the unit structure"), which describes a type the caller never
-    # named. Ask about the last axis rather than indexing for it -- a 0-D
-    # array has none, and that is as wrong a shape as a mismatched one.
+    # Checked here so the message names the caller's array rather than
+    # `QuantityMatrix`'s unit structure. `shape`, not `shape[-1]`: a 0-D array
+    # has no last axis to index.
     shape = jnp.shape(x_arr)
     if not shape or shape[-1] != len(chart.components):
         got = shape[-1] if shape else "no axes"

@@ -189,8 +189,7 @@ def act(
     Array([0., 0., 0.], dtype=float64)
 
     """
-    # Not a point: the (rep, semantic_kind) ladder lives on the CDict path,
-    # which covers every cell. Route through it rather than refuse (#942).
+    # Not a point: the CDict path covers the whole ladder, so route, not refuse.
     if rep != cxr.point:
         return cast(
             "Array", act_array_via_cdict(op, tau, x, chart, rep, usys=usys, **kw)
@@ -284,8 +283,7 @@ def act(
     Q([2., 2., 3.], 'km / s')
 
     """
-    # Not a point: the (rep, semantic_kind) ladder lives on the CDict path,
-    # which covers every cell. Route through it rather than refuse (#942).
+    # Not a point: the CDict path covers the whole ladder, so route, not refuse.
     if rep != cxr.point:
         return cast(
             "u.AbstractQuantity",

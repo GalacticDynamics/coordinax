@@ -4,22 +4,10 @@ The `CDict` methods are the reference implementation of every operator: they
 cover the full (representation, semantic kind) ladder. So the same data
 written as a bare array, a `unxt.Quantity`, a `unxts.linalg.QuantityMatrix`,
 a `coordinax.Point`, a `coordinax.Tangent` or a `coordinax.Coordinate` bundle
-must give the same answer as the `CDict` spelling. Three holes in the dispatch
-table used to break that:
+must give the same answer as the `CDict` spelling.
 
-- #942: `Translate` refused a tangent-rep Quantity (and a tangent-rep array)
-  outright, so a bare velocity Quantity could not pass through any operator
-  containing a position `Translate` — including ICRS -> Galactocentric.
-- #948: the generic arity-5 `ArrayLike` method re-dispatched to a 6-argument
-  `act` that only ever exists for `CDict`, so an operator without its own
-  typed array fast path (e.g. `Boost`) found no method at all.
-- #955: a `QuantityMatrix` defaulted to ``rep=point`` even though it stores
-  per-component units, making a fibre-only operator a silent no-op on it.
-
-The intentionally-unsupported cells are listed in ``UNSUPPORTED`` and pinned
-by `test_unsupported_cells_raise`: a bare array carries no units, so it cannot
-say whether it is a position or tangent data, and that ambiguity is rejected
-loudly rather than guessed at.
+``UNSUPPORTED`` lists the cells that stay an error, pinned by
+`test_unsupported_cells_raise`.
 """
 
 __all__: tuple[str, ...] = ()
@@ -81,11 +69,9 @@ def _ops():
 
 OPS = _ops()
 
-# Cells that are intentionally still an error. A bare array has no units, so
-# it cannot distinguish a position from tangent data; operators that treat the
-# two differently refuse it instead of silently picking one. (`icrs_to_gc`
-# contains such a fibre kick, and its `Rotate` has its own point-only array
-# fast path.) These are a separate design question, not a dispatch hole.
+# A bare array has no units, so it cannot say whether it is a position or
+# tangent data. Operators that treat the two differently refuse it rather than
+# pick one. (`icrs_to_gc` contains such a fibre kick.)
 UNSUPPORTED = {
     ("vel_kick", "pos", "array"),
     ("icrs_to_gc", "pos", "array"),
@@ -204,16 +190,10 @@ def test_fibre_kick_moves_only_matching_order():
 @pytest.mark.parametrize("unit", ["km/s", "km/s2"])
 def test_icrs_to_galactocentric_accepts_a_bare_tangent_quantity(unit):
     """ICRS -> Galactocentric composes a position `Translate` (#942)."""
-    op = frame_transition(*_gc_frames())
+    op, _ = OPS["icrs_to_gc"]
     got = op(u.Q([10.0, 20.0, 30.0], unit))
     assert isinstance(got, u.AbstractQuantity)
     assert u.unit_of(got) == u.unit(unit)
-
-
-def _gc_frames():
-    from coordinaxs.astro import ICRS, Galactocentric
-
-    return ICRS(), Galactocentric()
 
 
 def test_boost_acts_on_a_bare_array():
@@ -263,13 +243,10 @@ def test_heterogeneous_quantitymatrix_rep_is_an_error_not_a_guess():
 
 
 class TestABareArrayIsRefusedInAPhysicalBasis:
-    """Units for a bare array come from the coordinate basis (#970 review).
+    """A bare array's units come from the coordinate basis, so only it is read.
 
-    `rep.semantic_kind.coord_dimensions(chart)` describes the *coordinate*
-    basis: in `sph3d` it reports angular speed for the angular components. A
-    physical (orthonormal) basis has every velocity component a speed, so
-    reading a bare array that way would silently mis-unit two of its three
-    components. Both bases used to return the same numbers, which was the tell.
+    In `sph3d` the angular components are angular speeds in the coordinate
+    basis and speeds in a physical one; a bare array cannot say which.
     """
 
     _OP = cxfm.Translate.from_([1.0, 2.0, 3.0], "kpc")
@@ -307,12 +284,9 @@ class TestABareArrayIsRefusedInAPhysicalBasis:
 
 
 class TestTheArrayFunnelNamesABadShape:
-    """A wrong-shaped array is described in the caller's terms (#970 review).
+    """A wrong-shaped array is named in the caller's terms, not QuantityMatrix's.
 
-    `QuantityMatrix` would reject these anyway, but in its own vocabulary --
-    "value trailing shape (2,) does not match the unit structure" names a type
-    the caller never mentioned. A 0-D array has no last axis at all, so the
-    check asks whether there is one instead of indexing for it.
+    A 0-D array has no last axis at all, which is as wrong as a mismatched one.
     """
 
     _OP = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
