@@ -688,6 +688,9 @@ class TestFrameTransitionUnderJit:
             return cxfm.simplify(bridge)(self.Q)
 
         got = jax.jit(f)(a, b)
+        assert jnp.allclose(u.ustrip("kpc", got), jnp.asarray(self.EXPECT_KPC))
+
+
 class TestGalactocentricSelfTransition:
     """Regression for #940.
 
@@ -734,16 +737,14 @@ class TestGalactocentricSelfTransition:
         got = op(u.Q([1.0, 2.0, 3.0], "kpc"))
         assert jnp.allclose(u.ustrip("kpc", got), jnp.asarray(self.EXPECT_KPC))
 
-    @pytest.mark.xfail(
-        raises=jax.errors.TracerBoolConversionError,
-        strict=True,
-        reason=(
-            "the fast path is trace-safe now, but the fall-through still hits "
-            "`simplify(Rotate)`'s `jnp.allclose` under trace (out of scope for "
-            "#940); flip this to a plain test once that is fixed"
-        ),
-    )
     def test_the_whole_transition_under_jit(self) -> None:
+        """The fall-through traces too, not just the self-transition fast path.
+
+        Was an `xfail(raises=TracerBoolConversionError, strict=True)`: the
+        fall-through hit `simplify(Rotate)`'s `jnp.allclose` under trace, which
+        was out of scope for #940. #978 made a traced operand mean "do not
+        simplify", so this is a live test now.
+        """
         a, b = cxastro.Galactocentric(), cxastro.Galactocentric(roll=u.Q(10, "deg"))
         q = u.Q([1.0, 2.0, 3.0], "kpc")
         got = jax.jit(lambda x, y: cxf.frame_transition(x, y)(q))(a, b)

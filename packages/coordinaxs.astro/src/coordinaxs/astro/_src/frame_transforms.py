@@ -257,7 +257,10 @@ def frame_transition(from_frame: Galactic, to_frame: ICRS, /) -> cxfm.Rotate:
 def frame_transition(
     from_frame: Galactocentric, to_frame: Galactocentric, /
 ) -> cxfm.AbstractTransform:
-    """Return a sequence of operators for the Galactocentric frame self transformation.
+    """Return the transform between two Galactocentric frames.
+
+    The identity when the two are the same frame; otherwise the simplified
+    composition of the routes through ICRS.
 
     >>> import unxt as u
     >>> import coordinax.frames as cxf
