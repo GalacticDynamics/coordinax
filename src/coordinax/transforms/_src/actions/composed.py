@@ -20,7 +20,7 @@ import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform, is_time_dependent
 from .custom_types import CDict, OptUSys
 from .identity import Identity, identity
-from .prolong import AnchorJet, _merge_slot0, prolong_slot
+from .prolong import AnchorJet, _merge_slot0, _reject_unusable_slots, prolong_slot
 from coordinax.transforms._src import groups
 
 Ts = TypeVarTuple("Ts")
@@ -390,7 +390,9 @@ def act(
     # time-independent pipeline -- folds sub-op by sub-op. Only the base point
     # travels with it: these paths all end in the frozen-tau pushforward, which
     # anchors on slot 0 alone, so there is no shadow jet left to keep in step.
-    current_at = _merge_slot0(op, kw.get("at"), kw.get("at_jet"))
+    at_jet = cast("AnchorJet | None", kw.get("at_jet"))
+    _reject_unusable_slots(op, at_jet, m)
+    current_at = _merge_slot0(op, cast("CDict | None", kw.get("at")), at_jet)
     kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_jet")}
     step_kw = dict(kw_rest)
     result = x

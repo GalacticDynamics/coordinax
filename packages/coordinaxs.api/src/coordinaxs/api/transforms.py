@@ -126,8 +126,11 @@ def pushforward(*args: Any, **kwargs: Any) -> Any:
     $$ v' = \partial_x \phi(\tau, \cdot)\big|_{\mathrm{at}} \cdot v $$
 
     holding the time parameter fixed. This is the transformation law for
-    `Displacement` data (a same-$\tau$ point difference) and coincides with
-    `act` on all tangent kinds for time-independent transforms.
+    `Displacement` data (a same-$\tau$ point difference). For a
+    time-independent transform it coincides with `act` on order-1 tangent
+    kinds (velocity); at order $m \geq 2$ the prolongation also carries
+    $\partial_{xx}\phi(v, v)$, which vanishes only where $\phi$ is affine in
+    the chart's own coordinates, so reach for `act_jet` there.
 
     Contrast with `act` on kinematic tangent data (velocity, acceleration,
     ...), which is the full *prolongation* and includes $\partial_\tau \phi$
