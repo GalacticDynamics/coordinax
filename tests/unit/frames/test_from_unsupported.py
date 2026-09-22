@@ -14,13 +14,32 @@ import os
 import subprocess
 import sys
 
+import numpy as np
 import pytest
 
 import coordinax.frames as cxf
 
+
+def _is_installed(pkg: str) -> bool:
+    """`find_spec`, but an absent parent namespace means "not installed".
+
+    `find_spec` *raises* ModuleNotFoundError (rather than returning None) when
+    a parent namespace is absent -- e.g. `coordinaxs` itself on a minimal
+    install, or `coordinaxs.interop` when only the astro extra is present -- so
+    treat that as "not installed" too. Any other missing module is a genuine
+    packaging/runtime failure: let it propagate. Same guard as
+    `tests/integration/frames/test_interop_import_order.py`.
+    """
+    try:
+        return importlib.util.find_spec(pkg) is not None
+    except ModuleNotFoundError as exc:
+        if not f"{pkg}.".startswith(f"{exc.name}."):
+            raise
+        return False
+
+
 _HAS_INTEROP = all(
-    importlib.util.find_spec(pkg) is not None
-    for pkg in ("coordinaxs.astro", "coordinaxs.interop.astropy")
+    _is_installed(pkg) for pkg in ("coordinaxs.astro", "coordinaxs.interop.astropy")
 )
 
 # ============================================================================
@@ -36,6 +55,34 @@ def test_unsupported_input_names_class_and_argument(obj: object) -> None:
     with pytest.raises(TypeError, match=type(obj).__qualname__):
         cxf.Alice.from_(obj)
 
+
+def test_the_offending_value_is_shown_unambiguously() -> None:
+    """`repr`, not `str`: a string keeps its quotes rather than reading as a name."""
+    with pytest.raises(TypeError, match=r"from 'alice', of type 'str'"):
+        cxf.Alice.from_("alice")
+
+
+def test_a_huge_value_does_not_become_a_huge_error() -> None:
+    """The quoted value is flattened to one line and capped.
+
+    `repr` of a 1000-element array runs to thousands of characters over dozens
+    of lines -- and so does `str`. An error message is not the place for the
+    tail of an array.
+    """
+    obj = np.arange(1000.0).reshape(100, 10)
+    with pytest.raises(TypeError) as exc:
+        cxf.Alice.from_(obj)
+
+    msg = str(exc.value)
+    assert len(repr(obj)) > 500  # the input really is enormous
+    assert "\n" not in msg
+    assert len(msg) < 300
+    assert msg.startswith("Cannot construct 'Alice' from array([[")
+    assert "of type 'ndarray'" in msg
+
+
+# ============================================================================
+# ... and under runtime typechecking too
 
 # The child cold-imports astropy, coordinax and JAX; ~2s idle. See
 # `tests/integration/frames/test_interop_import_order.py` for the same budget.

@@ -157,6 +157,10 @@ def from_(
     return obj
 
 
+#: Cap on how much of the offending value the error quotes.
+_MAX_SHOWN_CHARS = 120
+
+
 @AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[AbstractReferenceFrame], obj: Any, /) -> AbstractReferenceFrame:
     """Reject an unsupported input, naming the class and the argument.
@@ -181,9 +185,25 @@ def from_(cls: type[AbstractReferenceFrame], obj: Any, /) -> AbstractReferenceFr
     Cannot construct 'Alice' from 1, of type 'int'.
     Supported input types are listed by `Alice.from_.methods`.
 
+    The value is shown by `repr`, so a string is not mistaken for a name:
+
+    >>> try:
+    ...     cxf.Alice.from_("alice")
+    ... except TypeError as e:
+    ...     print(e)
+    Cannot construct 'Alice' from 'alice', of type 'str'.
+    Supported input types are listed by `Alice.from_.methods`.
+
     """
+    # `repr` over `str`: unambiguous (quotes survive) and stable across types.
+    # But either can run to thousands of characters over dozens of lines for an
+    # array or a coordinate dict, so flatten and cap it -- a one-line error is
+    # worth more here than the tail of a 1000-element array.
+    shown = " ".join(repr(obj).split())
+    if len(shown) > _MAX_SHOWN_CHARS:
+        shown = shown[: _MAX_SHOWN_CHARS - 3] + "..."
     msg = (
-        f"Cannot construct {cls.__qualname__!r} from {obj}, of type "
+        f"Cannot construct {cls.__qualname__!r} from {shown}, of type "
         f"{type(obj).__qualname__!r}. Supported input types are listed by "
         f"`{cls.__qualname__}.from_.methods`."
     )
