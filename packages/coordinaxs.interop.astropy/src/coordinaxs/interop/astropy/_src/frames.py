@@ -64,7 +64,7 @@ import coordinaxs.astro as cxastro
 from .custom_types import CDict
 
 
-@plum.dispatch.abstract
+@plum.dispatch
 def to_astropy_frame(frame: cxf.AbstractReferenceFrame, /) -> apyc.BaseCoordinateFrame:
     """Return the Astropy frame that corresponds to a coordinax frame.
 
@@ -74,7 +74,17 @@ def to_astropy_frame(frame: cxf.AbstractReferenceFrame, /) -> apyc.BaseCoordinat
     class and silently answer the wrong one. This has one method per supported
     frame instead, so there is no target class to get wrong.
 
+    This signature is the least specific one, so it is also the fallback: it
+    catches every frame the registered pairs miss -- a user-defined
+    `AbstractSpaceFrame` subclass, or a frame that is not a space frame at all
+    such as `coordinax.frames.alice`. Without it those fail with plum's
+    `NotFoundLookupError`, a `LookupError` rather than the `TypeError`
+    `plum.convert` raises for an unsupported target, and that leaks through
+    ``plum.convert(point, apyc.BaseCoordinateFrame)``. Raising here answers
+    with the same exception type and names the offending frame.
+
     >>> import astropy.coordinates as apyc
+    >>> import coordinax.frames as cxf
     >>> import coordinaxs.astro as cxastro
     >>> from coordinaxs.interop.astropy._src.frames import to_astropy_frame
 
@@ -84,31 +94,21 @@ def to_astropy_frame(frame: cxf.AbstractReferenceFrame, /) -> apyc.BaseCoordinat
     >>> to_astropy_frame(cxastro.Galactic())
     <Galactic Frame>
 
-    """
-    raise NotImplementedError  # pragma: no cover
+    A frame with no registered Astropy equivalent:
 
+    >>> try:
+    ...     to_astropy_frame(cxf.alice)
+    ... except TypeError as e:
+    ...     print(e)
+    Cannot convert `Alice` to an Astropy frame: no Astropy equivalent is
+    registered for this coordinax frame.
 
-def _to_astropy_frame_fallback(
-    frame: cxf.AbstractReferenceFrame, /
-) -> apyc.BaseCoordinateFrame:
-    """Raise for a reference frame with no registered Astropy equivalent.
-
-    This is the least specific method, so it catches every frame the registered
-    pairs miss -- both a user-defined `AbstractSpaceFrame` subclass and a frame
-    that is not a space frame at all, such as `coordinax.frames.alice`. Without
-    it those fail with plum's `NotFoundLookupError` -- a `LookupError`, not the
-    `TypeError` that `plum.convert` raises for an unsupported target. That leaks
-    through ``plum.convert(point, apyc.BaseCoordinateFrame)``, so answer with
-    the same exception type and a message that names the offending frame.
     """
     msg = (
         f"Cannot convert `{type(frame).__name__}` to an Astropy frame: no "
         "Astropy equivalent is registered for this coordinax frame."
     )
     raise TypeError(msg)
-
-
-to_astropy_frame.dispatch(_to_astropy_frame_fallback)
 
 
 # =============================================================================
@@ -144,7 +144,7 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     return apyc.ICRS()
 
 
-to_astropy_frame.dispatch(coordinax_icrs_to_astropy_icrs)
+to_astropy_frame.dispatch(coordinax_icrs_to_astropy_icrs)  # ty: ignore[unresolved-attribute]
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -225,7 +225,7 @@ def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.G
     return apyc.Galactic()
 
 
-to_astropy_frame.dispatch(coordinax_galactic_to_astropy_galactic)
+to_astropy_frame.dispatch(coordinax_galactic_to_astropy_galactic)  # ty: ignore[unresolved-attribute]
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -354,7 +354,7 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     )
 
 
-to_astropy_frame.dispatch(coordinax_galactocentric_to_astropy_galactocentric)
+to_astropy_frame.dispatch(coordinax_galactocentric_to_astropy_galactocentric)  # ty: ignore[unresolved-attribute]
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
