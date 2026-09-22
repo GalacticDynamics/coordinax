@@ -9,7 +9,9 @@ import pytest
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.transforms as cxfm
+from coordinax.transforms._src.actions.rotate import _not_orthogonal
 
 _RZ90 = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
 
@@ -78,6 +80,23 @@ class TestRotationMatrixIsOrthogonal:
     def test_orthogonal_still_constructs_under_jit(self):
         op = eqx.filter_jit(cxfm.Rotate)(_RZ90)
         assert bool(jnp.allclose(op.R, _RZ90))
+
+    def test_a_non_square_matrix_is_named_by_the_shape_check(self):
+        """The orthogonality check defers to `_validate_square` on shape.
+
+        A non-square matrix has no ``R^T R`` to compare, so `_not_orthogonal`
+        declines and the error the caller sees is the one that actually names
+        the problem -- not a confusing "not orthogonal".
+        """
+        rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+        assert _not_orthogonal(rect) is False
+        # Constructing is allowed; the shape is caught where it is used, by
+        # `_get_R`, with a message that names the shape.
+        op = cxfm.Rotate(rect)
+        with pytest.raises(
+            eqx.EquinoxTracetimeError, match=r"square matrix; got shape"
+        ):
+            cx.act(op, None, cx.Point.from_(u.Q(jnp.asarray([1.0, 2.0, 3.0]), "kpc")))
 
     def test_a_valid_rotation_round_trips(self):
         """What the bad matrix broke: `inverse` really does undo the map."""
