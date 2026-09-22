@@ -1,4 +1,4 @@
-"""Cross-input-type agreement for ``act`` (#942, #948, #955).
+"""Cross-input-type agreement for ``act`` (#942, #948, #955, #972).
 
 The `CDict` methods are the reference implementation of every operator: they
 cover the full (representation, semantic kind) ladder. So the same data
@@ -64,19 +64,32 @@ def _ops():
         # The common astro pipeline: contains a position Translate AND a
         # fibre-kick Translate (the solar motion) under a Rotate.
         "icrs_to_gc": (frame_transition(ICRS(), Galactocentric()), None),
+        # The pure linear maps (#972): `x -> M x` on points, `v -> M v` on any
+        # tangent order, so every spelling of either kind must be served.
+        "rotate": (cx.Rotate.from_euler("z", u.Q(37.0, "deg")), None),
+        "scale": (cxfm.Scale.from_factors([2.0, 3.0, 1.0]), None),
+        "shear": (
+            cxfm.Shear.from_([[1.0, 0.5, 0.0], [0.0, 1.0, 0.0], [0, 0, 1.0]]),
+            None,
+        ),
+        "reflect": (cxfm.Reflect.from_normal([0.0, 0.0, 1.0]), None),
     }
 
 
 OPS = _ops()
 
-# A bare array has no units, so it cannot say whether it is a position or
-# tangent data. Operators that treat the two differently refuse it rather than
-# pick one. (`icrs_to_gc` contains such a fibre kick.)
-UNSUPPORTED = {
-    ("vel_kick", "pos", "array"),
-    ("icrs_to_gc", "pos", "array"),
-    ("icrs_to_gc", "vel", "array"),
-}
+# Cells that are intentionally still an error. A bare array has no units, so
+# it cannot distinguish a position from tangent data; operators that treat the
+# two differently refuse it instead of silently picking one. (`icrs_to_gc`
+# contains such a fibre kick.) That ambiguity is a design question, not a
+# dispatch hole.
+#
+# Note both surviving cells are ``rep=point`` under a fibre kick: THAT is the
+# ambiguous spelling, because a unitless array tagged `point` could equally be
+# the kick's own tangent data. An explicit tangent ``rep`` says what the data
+# is, so it is served -- including through the `Rotate` inside `icrs_to_gc`,
+# whose array path used to refuse it (#972).
+UNSUPPORTED = {("vel_kick", "pos", "array"), ("icrs_to_gc", "pos", "array")}
 
 
 # ===================================================================
@@ -370,3 +383,107 @@ def test_the_physical_basis_message_names_every_unit_carrying_input() -> None:
     at = {"r": u.Q(1.0, "kpc"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
     got = cxfm.act(rot, None, v, cxc.sph3d, cxr.phys_vel, at=at)
     assert set(got) == set(v)
+
+
+# ===================================================================
+# #972 -- a linear map acts on a tangent given as a raw array
+#
+# `Rotate`, `Scale`, `Shear` and `Reflect` share one `ArrayLike` ``act``
+# (`AbstractLinearTransform`), which refused any non-point ``rep`` outright.
+# Unlike a `Translate` -- where a position shift is the identity on a velocity,
+# so refusing merely withheld a no-op -- a linear map genuinely acts on a
+# tangent, by the same matrix, so the refusal withheld a real computation that
+# the `CDict` path next door already performed.
+
+LINEAR_OPS = ["rotate", "scale", "shear", "reflect"]
+
+
+@pytest.mark.parametrize("op_name", LINEAR_OPS)
+@pytest.mark.parametrize(
+    ("rep", "unit"), [(cxr.coord_vel, "km/s"), (cxr.coord_acc, "km/s2")]
+)
+def test_linear_op_tangent_array_agrees_with_every_spelling(op_name, rep, unit):
+    """A tangent array through a linear map matches CDict/Tangent/Quantity (#972)."""
+    op, tau = OPS[op_name]
+    vals = [10.0, 20.0, 30.0]
+    arr = jnp.asarray(vals)
+
+    reference = np.asarray(
+        [
+            float(u.ustrip(unit, q))
+            for q in (
+                cxfm.act(
+                    op,
+                    tau,
+                    {k: u.Q(v, unit) for k, v in zip("xyz", vals, strict=True)},
+                    cxc.cart3d,
+                    rep,
+                    usys=USYS,
+                )[k]
+                for k in "xyz"
+            )
+        ]
+    )
+    # The answer is not the input: the matrix really is applied.
+    assert not np.allclose(reference, vals)
+
+    got_array = np.asarray(cxfm.act(op, tau, arr, cxc.cart3d, rep, usys=USYS))
+    np.testing.assert_allclose(got_array, reference, rtol=1e-12, atol=1e-12)
+
+    tangent = cxfm.act(
+        op, tau, cx.Tangent.from_(vals, unit, cxc.cart3d, rep), usys=USYS
+    )
+    np.testing.assert_allclose(
+        _extract(tangent, "vel", unit), reference, rtol=1e-12, atol=1e-12
+    )
+
+    quantity = cxfm.act(op, tau, u.Q(vals, unit), cxc.cart3d, rep, usys=USYS)
+    np.testing.assert_allclose(
+        _extract(quantity, "vel", unit), reference, rtol=1e-12, atol=1e-12
+    )
+
+
+def test_tangent_array_on_a_non_cartesian_chart_with_an_anchor():
+    """The CDict ladder serves a curved chart too, given its ``at`` anchor (#972)."""
+    # A rotation about x, so the spherical velocity components genuinely move
+    # (a rotation about z is a phi shift, hence the identity on them).
+    op = cx.Rotate.from_euler("x", u.Q(37.0, "deg"))
+    at = {"r": u.Q(2.0, "km"), "theta": u.Q(0.7, "rad"), "phi": u.Q(0.3, "rad")}
+    comps = ("r", "theta", "phi")
+    units = ("km/s", "rad/s", "rad/s")
+    vals = [1.0, 0.1, 0.2]
+    v = {k: u.Q(x, un) for k, x, un in zip(comps, vals, units, strict=True)}
+
+    reference = cxfm.act(op, None, v, cxc.sph3d, cxr.coord_vel, at=at, usys=USYS)
+    ref = np.asarray(
+        [float(u.ustrip(un, reference[k])) for k, un in zip(comps, units, strict=True)]
+    )
+    assert not np.allclose(ref, vals)  # not a vacuous identity
+
+    got = cxfm.act(
+        op, None, jnp.asarray(vals), cxc.sph3d, cxr.coord_vel, at=at, usys=USYS
+    )
+    np.testing.assert_allclose(np.asarray(got), ref, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("op_name", LINEAR_OPS)
+def test_bare_array_without_a_rep_is_still_a_point(op_name):
+    """No ``rep`` still means `point`: the fix does not re-read unitless data (#972)."""
+    op, tau = OPS[op_name]
+    arr = jnp.asarray([1.0, 2.0, 3.0])
+    implicit = cxfm.act(op, tau, arr, usys=USYS)
+    explicit = cxfm.act(op, tau, arr, cxc.cart3d, cxr.point, usys=USYS)
+    np.testing.assert_array_equal(np.asarray(implicit), np.asarray(explicit))
+
+
+def test_fibre_kick_ambiguity_survives_the_linear_fix():
+    """A no-``rep`` array under a fibre kick is still refused, not guessed (#972).
+
+    The companion to `test_unsupported_cells_raise`: the `Rotate` inside
+    ICRS -> Galactocentric no longer refuses a tangent array, but the solar-motion
+    fibre kick still cannot tell a unitless `point` array from its own tangent
+    data, so the pipeline keeps saying so.
+    """
+    op, _ = OPS["icrs_to_gc"]
+    with pytest.raises(TypeError, match=r"ambiguous|representation"):
+        cxfm.act(op, None, jnp.asarray([1.0, 2.0, 3.0]), usys=USYS)
