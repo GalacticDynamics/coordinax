@@ -291,8 +291,24 @@ def cdict(
     >>> cx.cdict(arr, "m", ('x', 'y', 'z'))
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
+    A `unxts.linalg.UnitsMatrix` gives each component its own unit:
+
+    >>> import unxts.linalg as ul
+    >>> cx.cdict(arr, ul.UnitsMatrix(("kpc", "rad", "rad")), ('r', 'theta', 'phi'))
+    {'r': Q(1., 'kpc'), 'theta': Q(2., 'rad'), 'phi': Q(3., 'rad')}
+
     """
     theunit = u.unit(unit) if unit is not None else None
+    if isinstance(theunit, ul.UnitsMatrix):
+        if theunit.shape != (len(keys),):
+            msg = (
+                f"UnitsMatrix shape {theunit.shape} does not match "
+                f"provided keys {len(keys)}."
+            )
+            raise ValueError(msg)
+        qm = ul.QuantityMatrix(jnp.asarray(obj), unit=theunit)
+        return cast("CDict", cxcapi.cdict(qm, keys))
+
     vals = jnp.asarray(obj) if theunit is None else u.Q(jnp.asarray(obj), theunit)
     return {k: vals[..., i] for i, k in enumerate(keys)}
 
@@ -312,6 +328,13 @@ def cdict(
     >>> cx.cdict(arr, "m", cx.cart3d)
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
+    A `unxts.linalg.UnitsMatrix` gives each component its own unit:
+
+    >>> import coordinax.charts as cxc
+    >>> import unxts.linalg as ul
+    >>> cx.cdict(arr, ul.UnitsMatrix(("kpc", "rad", "rad")), cxc.sph3d)
+    {'r': Q(1., 'kpc'), 'theta': Q(2., 'rad'), 'phi': Q(3., 'rad')}
+
     """
     return cxcapi.cdict(obj, unit, chart.components)  # ty: ignore[invalid-return-type]
 
@@ -330,9 +353,15 @@ def cdict(obj: ArrayLike, unit: u.AbstractUnit | str | ul.UnitsMatrix, /) -> CDi
     >>> cxc.cdict(arr, "m")
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
+    A `unxts.linalg.UnitsMatrix` gives each component its own unit:
+
+    >>> import unxts.linalg as ul
+    >>> cxc.cdict(arr, ul.UnitsMatrix(("m", "km/s", "rad")))
+    {'x': Q(1., 'm'), 'y': Q(2., 'km / s'), 'z': Q(3., 'rad')}
+
     """
-    q = u.Q(jnp.asarray(obj), cast("u.AbstractUnit", u.unit(unit)))
-    out = cxcapi.cdict(q)
+    arr = jnp.asarray(obj)
+    out = cxcapi.cdict(arr, unit, cxcapi.guess_chart(arr))
     return cast("CDict", out)
 
 
