@@ -6,7 +6,7 @@ __all__ = ("Rotate",)
 from dataclasses import replace
 
 from jaxtyping import Array, Shaped
-from typing import Any, final
+from typing import Any, Final, final
 
 import equinox as eqx
 import jax.scipy.spatial.transform as jtransform
@@ -27,6 +27,37 @@ from .linear import AbstractLinearTransform
 from .utils import is_traced
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
+
+_ATOL: Final = 1e-6
+"""Absolute tolerance on ``R^T R = I``. See `_not_orthogonal`."""
+
+_MSG_NOT_ORTHOGONAL: Final = (
+    "Rotate requires an orthogonal matrix: R^T R = I. That is the invariant "
+    "`inverse` relies on -- it transposes -- and `groups` reports. For a "
+    "general invertible linear map use `Linear`."
+)
+
+
+def _not_orthogonal(R: Any, /) -> Any:
+    """Whether ``R`` fails ``R^T R = I``.
+
+    A non-square ``R`` answers `False`: it has no transpose product to compare,
+    and `_validate_square` is the one that names a bad shape. The shape is
+    static under tracing, so this branch traces.
+
+    ``atol`` is explicit rather than `jnp.allclose`'s ``1e-8``, which is below
+    the round-off of an honest rotation matrix. The off-diagonal entries are
+    compared against zero, where ``rtol`` contributes nothing, so ``1e-8`` is
+    the whole budget -- and a parallel-transported Bishop triad
+    (`coordinaxs.curveframes`) drifts to ~``5e-8`` off orthogonal, which is
+    why that package's own doctests assert orthogonality at ``1e-6``. The same
+    number here. It is many orders away from catching less: the matrix in #938
+    has ``R^T R`` entries in the tens.
+    """
+    if R.ndim != 2 or R.shape[0] != R.shape[1]:
+        return False
+    gram = jnp.matmul(jnp.swapaxes(R, -2, -1), R)
+    return ~jnp.allclose(gram, jnp.eye(R.shape[0]), atol=_ATOL)
 
 
 def _as_rotation_matrix(R: Any, /) -> Array:
@@ -76,8 +107,10 @@ class Rotate(AbstractLinearTransform):
 
     Raises
     ------
-    ValueError
-        If the rotation matrix is not orthogonal.
+    equinox.EquinoxRuntimeError
+        If the rotation matrix is not orthogonal. The check is deferred onto
+        the stored ``R`` so it survives `jax.jit`: eagerly it raises from the
+        constructor, under `jit` when the traced graph runs.
 
     Notes
     -----
@@ -162,14 +195,54 @@ class Rotate(AbstractLinearTransform):
     R: Shaped[Array, " N N"] = eqx.field(converter=_as_rotation_matrix)
     """The rotation matrix."""
 
-    @classmethod
-    def groups(cls) -> frozenset[type]:
-        """Return the groups to which this map belongs."""
-        del cls
-        return frozenset((groups.SpecialOrthogonalGroup, groups.DiffeomorphismGroup))
+    def groups(self) -> frozenset[type]:
+        """Return the groups to which this map belongs.
+
+        An instance method, not a classmethod: ``R`` is orthogonal, but only
+        ``det R = +1`` preserves orientation. A class-level answer of
+        `SpecialOrthogonalGroup` made every ``det = -1`` matrix claim an
+        orientation it does not keep, and that claim propagates through
+        `~coordinax.transforms.Composed.groups` and
+        `~coordinax.transforms.groups.least_common_supergroup`.
+
+        The sign is read eagerly, as `simplify` and ``_merge`` -- the callers --
+        already do with their own value checks.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+        >>> sorted(g.__name__ for g in cxfm.Rotate(Rz).groups())
+        ['DiffeomorphismGroup', 'SpecialOrthogonalGroup']
+
+        >>> D = jnp.asarray([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> sorted(g.__name__ for g in cxfm.Rotate(D).groups())
+        ['DiffeomorphismGroup', 'OrthogonalGroup']
+
+        """
+        grp = (
+            groups.SpecialOrthogonalGroup
+            if jnp.linalg.det(self.R) > 0
+            else groups.OrthogonalGroup
+        )
+        return frozenset((grp, groups.DiffeomorphismGroup))
 
     def __init__(self, R: Any) -> None:
-        object.__setattr__(self, "R", jnp.asarray(R))
+        # Through the field converter, not `quaxed.numpy.asarray`: the
+        # converter is what strips (or refuses) units, and `jnp.asarray` hands
+        # a `~unxt.Quantity` straight back. Equinox re-applies the converter
+        # after this returns, so the only thing that changed is *when* -- and
+        # the orthogonality check below needs a bare array to test.
+        R = _as_rotation_matrix(R)
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # `TracerBoolConversionError`), and threaded onto the stored array so
+        # it is not dead-code-eliminated: `inverse` transposes instead of
+        # inverting, which is the inverse only for an orthogonal `R`.
+        object.__setattr__(
+            self, "R", eqx.error_if(R, _not_orthogonal(R), _MSG_NOT_ORTHOGONAL)
+        )
 
     # -----------------------------------------------------
     # Constructors

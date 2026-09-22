@@ -70,6 +70,52 @@ def test_scale_from_factors_nonsingular_jits() -> None:
     np.testing.assert_allclose(np.asarray(op.s), [2.0, 3.0, 4.0])
 
 
+class TestShearMatrixIsInvertible:
+    """``H`` must be invertible, the invariant `inverse` relies on.
+
+    Regression for #950 -- the same hole `Scale` had, fixed in #805.
+    ``Shear([[1,1,0],[1,1,0],[0,0,1]])`` has ``det = 0`` and built fine; its
+    `inverse.H` came back ``[[inf, -inf, nan], [-inf, inf, nan], ...]``.
+    """
+
+    _SINGULAR: ClassVar = jnp.asarray(
+        [[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    )
+    _GOOD: ClassVar = jnp.asarray([[1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+
+    def test_singular_is_refused(self) -> None:
+        assert float(jnp.linalg.det(self._SINGULAR)) == 0.0
+        with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
+            cxfm.Shear(self._SINGULAR)
+
+    @pytest.mark.parametrize("bad", [jnp.nan, jnp.inf], ids=["nan", "inf"])
+    def test_a_non_finite_entry_is_refused(self, bad: float) -> None:
+        with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
+            cxfm.Shear(jnp.asarray([[1.0, bad], [0.0, 1.0]]))
+
+    def test_singular_is_refused_under_jit(self) -> None:
+        """Deferred `error_if`, so the guard traces instead of dying on a bool."""
+        build = eqx.filter_jit(lambda m: cxfm.Shear(m).H)
+        with pytest.raises(eqx.EquinoxRuntimeError, match="invertible"):
+            jax.block_until_ready(build(self._SINGULAR))
+
+    def test_invertible_still_constructs(self) -> None:
+        assert np.array_equal(
+            np.asarray(cxfm.Shear(self._GOOD).matrix), np.asarray(self._GOOD)
+        )
+
+    def test_invertible_still_constructs_under_jit(self) -> None:
+        op = eqx.filter_jit(cxfm.Shear)(self._GOOD)
+        assert np.array_equal(np.asarray(op.H), np.asarray(self._GOOD))
+
+    def test_a_valid_shear_round_trips(self) -> None:
+        """What the singular matrix broke: `inverse` really does undo the map."""
+        op = cxfm.Shear(self._GOOD)
+        q = u.Q(jnp.asarray([1.0, 2.0, 3.0]), "m")
+        back = cxfm.act(op.inverse, None, cxfm.act(op, None, q))
+        np.testing.assert_allclose(_to_np(back, "m"), [1.0, 2.0, 3.0], atol=1e-12)
+
+
 def test_public_surface_includes_scale_and_shear() -> None:
     """`coordinax.transforms` exports Scale and Shear."""
     assert hasattr(cxfm, "Scale")
