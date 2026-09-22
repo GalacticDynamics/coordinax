@@ -125,7 +125,11 @@ def _spellings(values, unit, rep):
 def _extract(result, kind, unit):
     """Read the acted-on ``kind`` component out of any result type, in ``unit``."""
     if isinstance(result, cx.Coordinate):
-        result = result.point if kind == "pos" else result["velocity"]
+        # Explicit, so a kind this helper cannot place fails loudly rather
+        # than silently reading the velocity slot.
+        result = {"pos": lambda r: r.point, "vel": lambda r: r["velocity"]}[kind](
+            result
+        )
     if isinstance(result, cx.Point | cx.Tangent):
         result = result.data
     if isinstance(result, dict):
@@ -400,30 +404,25 @@ LINEAR_OPS = ["rotate", "scale", "shear", "reflect"]
 
 @pytest.mark.parametrize("op_name", LINEAR_OPS)
 @pytest.mark.parametrize(
-    ("rep", "unit"), [(cxr.coord_vel, "km/s"), (cxr.coord_acc, "km/s2")]
+    ("rep", "unit", "kind"),
+    [(cxr.coord_vel, "km/s", "vel"), (cxr.coord_acc, "km/s2", "acc")],
 )
-def test_linear_op_tangent_array_agrees_with_every_spelling(op_name, rep, unit):
+def test_linear_op_tangent_array_agrees_with_every_spelling(op_name, rep, unit, kind):
     """A tangent array through a linear map matches CDict/Tangent/Quantity (#972)."""
     op, tau = OPS[op_name]
     vals = [10.0, 20.0, 30.0]
     arr = jnp.asarray(vals)
 
-    reference = np.asarray(
-        [
-            float(u.ustrip(unit, q))
-            for q in (
-                cxfm.act(
-                    op,
-                    tau,
-                    {k: u.Q(v, unit) for k, v in zip("xyz", vals, strict=True)},
-                    cxc.cart3d,
-                    rep,
-                    usys=USYS,
-                )[k]
-                for k in "xyz"
-            )
-        ]
+    # Act once; indexing the result per component would re-run the operator.
+    acted_cdict = cxfm.act(
+        op,
+        tau,
+        {k: u.Q(v, unit) for k, v in zip("xyz", vals, strict=True)},
+        cxc.cart3d,
+        rep,
+        usys=USYS,
     )
+    reference = np.asarray([float(u.ustrip(unit, acted_cdict[k])) for k in "xyz"])
     # The answer is not the input: the matrix really is applied.
     assert not np.allclose(reference, vals)
 
@@ -434,12 +433,12 @@ def test_linear_op_tangent_array_agrees_with_every_spelling(op_name, rep, unit):
         op, tau, cx.Tangent.from_(vals, unit, cxc.cart3d, rep), usys=USYS
     )
     np.testing.assert_allclose(
-        _extract(tangent, "vel", unit), reference, rtol=1e-12, atol=1e-12
+        _extract(tangent, kind, unit), reference, rtol=1e-12, atol=1e-12
     )
 
     quantity = cxfm.act(op, tau, u.Q(vals, unit), cxc.cart3d, rep, usys=USYS)
     np.testing.assert_allclose(
-        _extract(quantity, "vel", unit), reference, rtol=1e-12, atol=1e-12
+        _extract(quantity, kind, unit), reference, rtol=1e-12, atol=1e-12
     )
 
 

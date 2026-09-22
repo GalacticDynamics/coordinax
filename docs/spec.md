@@ -5515,7 +5515,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Rotate`
 
-    A **Rotate** is a transformation that applies a linear orthogonal map to position components. Tangent data is not left alone: a linear map acts on a tangent by the pushforward with the same matrix, $v \mapsto R v$ (through the chart Jacobian where the chart is not flat). Only the bare-`ArrayLike` fast path for *points* is Cartesian-only; every other spelling goes through the `CDict` ladder, which carries the semantic kind.
+    A **Rotate** is a transformation that applies a linear orthogonal map to position components. Tangent data is not left alone: a linear map acts on a tangent by the pushforward with the same matrix, $v \mapsto R v$ (through the chart Jacobian where the chart is not flat). The bare-`ArrayLike` fast path applies only to *points* and is Cartesian-only; an `ArrayLike` with an explicit non-point `rep` delegates to the `CDict` reference path instead. Spellings that carry their own semantic kind -- a component dict, `Tangent`, `Quantity` or `QuantityMatrix` -- give the same answer, however they are dispatched.
 
     **Mathematical definition**:
 
