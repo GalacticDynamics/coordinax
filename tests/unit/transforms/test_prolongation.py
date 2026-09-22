@@ -1272,3 +1272,260 @@ class TestRobustness:
         at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
         out = cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
         assert jnp.allclose(u.ustrip("m/s", out["y"]), 3.0)
+
+
+# ============================================================================
+# gh#936: an anchor slot `act` cannot use must never be swallowed
+
+
+# `act` on point CDict data resolves to one of exactly four methods; each is
+# a separate registration, so each needs its own guard. Keep this in step with
+# the dispatch table -- a new transform that registers its own CDict `act`
+# rule leaves the generic funnel and belongs here.
+POINT_ACTION_PATHS = [
+    pytest.param(
+        cxfm.Rotate.from_euler("z", u.Q(37.0, "deg")), None, id="funnel"
+    ),  # generic funnel
+    pytest.param(
+        cxfm.Translate.from_([1, 2, 3], "kpc"), None, id="translate"
+    ),  # translate.py
+    pytest.param(
+        cxfm.Boost.from_([1.0, 0.0, 0.0], "kpc/Myr"), u.Q(1.0, "Myr"), id="boost"
+    ),  # boost.py
+    pytest.param(
+        cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),)), None, id="composed"
+    ),  # composed.py
+]
+
+
+class TestUnusableAnchorSlotsAreRefused:
+    r"""`act` anchors on slot 0; a higher slot it cannot read must raise.
+
+    `act` on a lone order-$m$ slot under a *static* transform is the
+    frozen-$\tau$ pushforward $\partial_x\phi \cdot v$ — first order, slot 0
+    only. That is the documented split from `act_jet` (the full prolongation),
+    but it used to *accept* `at_jet={1: v}` and discard it, so a caller who
+    assembled the jet correctly got a silently first-order answer: for
+    acceleration in a curvilinear chart the term $\partial_{xx}\phi(v,v)$ is
+    simply missing.
+    """
+
+    ROT: ClassVar = cxfm.Rotate.from_euler(
+        "z", u.Q(37.0, "deg")
+    ) | cxfm.Rotate.from_euler("x", u.Q(20.0, "deg"))
+    Q0: ClassVar = {
+        "r": u.Q(2.0, "kpc"),
+        "theta": u.Q(50.0, "deg"),
+        "phi": u.Q(25.0, "deg"),
+    }
+    V0: ClassVar = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    A0: ClassVar = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+
+    def test_a_velocity_slot_on_an_acceleration_act_raises(self):
+        """The reported case: a supplied slot 1 was ignored, not used."""
+        with pytest.raises(TypeError, match=r"act_jet"):
+            cxfm.act(
+                self.ROT,
+                None,
+                self.A0,
+                cxc.sph3d,
+                cxr.coord_acc,
+                at=self.Q0,
+                at_jet={1: self.V0},
+            )
+
+    def test_a_nonsense_slot_raises_too(self):
+        """A slot no order could ever read is the same defect, louder."""
+        op = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg"))
+        with pytest.raises(TypeError, match=r"act_jet"):
+            cxfm.act(
+                op,
+                None,
+                self.A0,
+                cxc.sph3d,
+                cxr.coord_acc,
+                at=self.Q0,
+                at_jet={7: self.V0},
+            )
+
+    def test_act_jet_is_the_documented_way_and_differs_materially(self):
+        """`act_jet` uses every slot; the pushforward answer is not close.
+
+        The measured gap is what made the silent discard worth an error
+        rather than a docs note: ~82% on theta, ~99.9% on phi.
+        """
+        pushed = cxfm.act(self.ROT, None, self.A0, cxc.sph3d, cxr.coord_acc, at=self.Q0)
+        full = cxfm.act_jet(
+            self.ROT, None, {0: self.Q0, 1: self.V0, 2: self.A0}, cxc.sph3d
+        )[2]
+        rel = {}
+        for k in ("theta", "phi"):
+            ref = float(u.ustrip("rad/Myr2", full[k]))
+            # The gap is stated relative to `full`, so a `full` near zero would
+            # make the ratio meaningless (0/0 -> nan, which fails the assert
+            # below for the wrong reason). Fail on the premise instead.
+            assert abs(ref) > 1e-12, f"{k}: reference acceleration is ~0"
+            rel[k] = abs(float(u.ustrip("rad/Myr2", pushed[k] - full[k])) / ref)
+        assert rel["theta"] > 0.5
+        assert rel["phi"] > 0.5
+
+    def test_slot_zero_alone_still_works(self):
+        """Only slots >= 1 are refused; `at_jet={0: q}` is `at=q`."""
+        via_at = cxfm.act(self.ROT, None, self.A0, cxc.sph3d, cxr.coord_acc, at=self.Q0)
+        via_jet = cxfm.act(
+            self.ROT, None, self.A0, cxc.sph3d, cxr.coord_acc, at_jet={0: self.Q0}
+        )
+        for k in via_at:
+            unit = u.unit_of(via_at[k])
+            assert jnp.allclose(u.ustrip(unit, via_at[k]), u.ustrip(unit, via_jet[k]))
+
+    def test_flat_cartesian_acceleration_is_unchanged(self):
+        """A linear op in a flat chart needs no anchor at all, and still does.
+
+        This is the behaviour the numerically-complete fix would have broken:
+        routing order >= 2 through `prolong_slot` turns these exact,
+        anchor-free calls into missing-slot errors.
+        """
+        op = cxfm.Rotate.from_euler("z", u.Q(90.0, "deg"))
+        a = q3(1.0, 2.0, 3.0, "m/s2")
+        out = cxfm.act(op, None, a, cxc.cart3d, cxr.coord_acc)
+        full = cxfm.act_jet(
+            op,
+            None,
+            {0: q3(1.0, 0.0, 0.0, "m"), 1: q3(0.5, -0.5, 0.0, "m/s"), 2: a},
+            cxc.cart3d,
+        )[2]
+        assert allclose_cdict(out, full, "m/s2")
+
+    def test_act_jet_itself_takes_every_slot_untouched(self):
+        """`act_jet` is not narrowed by the guard: it reads slots 0..m."""
+        out = cxfm.act_jet(
+            self.ROT, None, {0: self.Q0, 1: self.V0, 2: self.A0}, cxc.sph3d
+        )
+        assert set(out) == {0, 1, 2}
+        scaled = cxfm.act_jet(
+            self.ROT,
+            None,
+            {0: self.Q0, 1: {k: 100 * v for k, v in self.V0.items()}, 2: self.A0},
+            cxc.sph3d,
+        )
+        # slot 1 genuinely feeds slot 2 there -- the discriminator that the
+        # jet path is not itself a disguised pushforward.
+        assert not jnp.allclose(
+            u.ustrip("rad/Myr2", out[2]["phi"]), u.ustrip("rad/Myr2", scaled[2]["phi"])
+        )
+
+    def test_the_fibre_offset_ladder_still_accepts_a_redundant_slot(self):
+        r"""The ladder is exact, so a spare slot there is redundant, not lossy.
+
+        Deliberately *not* guarded: `act` on a fibre offset applies
+        $d^{m-k}\delta/d\tau^{m-k}$, which has no $x$-dependence to curve.
+        """
+        kick = cxfm.TimeDep.from_(
+            lambda t: cxfm.Translate(
+                {
+                    "x": u.Q(3.0, "km/s3") * t,
+                    "y": u.Q(0.0, "km/s2"),
+                    "z": u.Q(0.0, "km/s2"),
+                },
+                chart=cxc.cart3d,
+                semantic_kind=cxr.acc,
+            )
+        )
+        a = q3(1.0, 1.0, 1.0, "km/s2")
+        out = cxfm.act(
+            kick,
+            u.Q(2.0, "s"),
+            a,
+            cxc.cart3d,
+            cxr.coord_acc,
+            at_jet={0: q3(0.0, 0.0, 0.0, "km"), 1: q3(1.0, 2.0, 3.0, "km/s")},
+        )
+        assert jnp.allclose(u.ustrip("km/s2", out["x"]), 7.0)
+
+    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS)
+    def test_a_point_action_refuses_the_slot_in_point_language(self, op, tau):
+        """Every point action refuses, and not in the tangent language.
+
+        Point geometry has no ladder order (`None`, not 0), so the rejection
+        needs its own wording: this pins the point message rather than a
+        message claiming "order-None tangent data".
+
+        The parameters are the *dispatch* map, not a sample of operators.
+        `act` on point CDict data resolves to one of exactly four methods --
+        the generic geometry funnel, `Translate`, `Boost` and `Composed` --
+        and a guard on one of them says nothing about the other three. That
+        is how gh#936 survived in the first place: `Composed` checked, and
+        every primitive beside it swallowed the slot.
+        """
+        with pytest.raises(TypeError, match=r"on point data reads jet slot 0 alone"):
+            cxfm.act(op, tau, self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0})
+
+    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS)
+    def test_a_point_action_still_takes_slot_zero(self, op, tau):
+        """Only slots >= 1 are refused on the point path as well."""
+        q = q3(1.0, 2.0, 3.0, "kpc")
+        via_plain = cxfm.act(op, tau, q, cxc.cart3d, cxr.point)
+        via_jet = cxfm.act(op, tau, q, cxc.cart3d, cxr.point, at_jet={0: q})
+        assert allclose_cdict(via_plain, via_jet, "kpc")
+
+    def test_the_guard_covers_the_whole_point_dispatch_table(self):
+        """The guard must cover the dispatch table, not a sample of it.
+
+        This is the shape of gh#936's recurrence: `Composed` checked and
+        every primitive beside it did not, because a transform that
+        registers its own CDict `act` rule leaves the generic funnel --
+        and the guard with it -- without anything saying so. So pin the set
+        of methods `act` resolves to for point data. Growing that set is
+        exactly the moment to add a guard, and this fails *then*, rather
+        than on a quietly first-order answer much later.
+
+        `identity` is the one deliberate omission: its rule is a total
+        catch-all over every input shape (arrays, `Point`s, CDicts, with or
+        without a chart), so it has no `rep` to tell a point call from a
+        tangent one -- and it returns its input, so no slot it ignores can
+        make the answer wrong.
+        """
+        act = cxfm.act
+        act._resolve_pending_registrations()
+
+        def subclasses(cls):
+            for sub in cls.__subclasses__():
+                yield sub
+                yield from subclasses(sub)
+
+        modules = set()
+        for cls in subclasses(cxfm.AbstractTransform):
+            try:
+                # Only the *type* reaches dispatch, so an uninitialized
+                # instance resolves the same method a real one would -- and
+                # spares this a constructor call per transform.
+                impl, _ = act.resolve_method(
+                    (object.__new__(cls), None, self.Q0, cxc.sph3d, cxr.point)
+                )
+            except TypeError:  # abstract class
+                continue
+            modules.add(impl.__module__.rsplit(".", maxsplit=1)[-1])
+
+        assert modules == {"prolong", "translate", "boost", "composed", "identity"}
+
+    def test_the_error_names_the_operator_the_caller_wrote(self):
+        """`Boost` delegates its point action; the message must not leak that.
+
+        `Boost` reaches the ladder through the equivalent
+        ``TimeDep(Translate)``, which would refuse the slot under *its* name.
+        The caller wrote `Boost`.
+        """
+        op = cxfm.Boost.from_([1.0, 0.0, 0.0], "kpc/Myr")
+        with pytest.raises(TypeError, match=r"^act\(Boost, "):
+            cxfm.act(
+                op, u.Q(1.0, "Myr"), self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0}
+            )

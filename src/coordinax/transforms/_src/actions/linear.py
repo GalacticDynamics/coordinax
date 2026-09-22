@@ -184,23 +184,6 @@ def act(
     tau: Any,
     x: CDict,
     chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    *,
-    usys: OptUSys = None,
-    **kw: Any,
-) -> CDict:
-    """Redispatch a CDict to the geometry-specific implementation."""
-    out = cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, usys=usys, **kw)
-    return cast("CDict", out)
-
-
-@plum.dispatch
-def act(
-    op: AbstractLinearTransform,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
     geom: cxr.PointGeometry,
     rep: cxr.Representation,
     /,

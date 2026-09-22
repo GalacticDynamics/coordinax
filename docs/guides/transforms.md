@@ -497,7 +497,9 @@ For an operator with point action $\phi$, acting on data of each kind ($J = \par
 | `Boost` (Galilean) | $x+\Delta v\,\tau$ | $d$ | $v+\Delta v$ | $a$ |
 | `Rotate`, static $R$ | $Rx$ | $Rd$ | $Rv$ | $Ra$ |
 | `Rotate`, $R(\tau)$ | $R(\tau)x$ | $R(\tau)d$ | $Rv+\dot Rx$ | $Ra+2\dot Rv+\ddot Rx$ |
-| any static op | $\phi(x)$ | $Jd$ | $Jv$ | $Ja$ |
+| any static op | $\phi(x)$ | $Jd$ | $Jv$ | $Ja + \partial_{xx}\phi(v,v)$ [^static-acc] |
+
+[^static-acc]: The curvature term $\partial_{xx}\phi(v,v)$ vanishes when $\phi$ is affine in the chart's own coordinates — which covers the rows above it, but not a general static map in a curvilinear chart. `act` on a lone acceleration is the frozen-$\tau$ pushforward $Ja$ and so refuses an `at_jet` velocity slot it cannot use; `act_jet(op, tau, {0: q, 1: v, 2: a}, chart)` gives the full law. See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
 
 Every hand-written rule above is property-tested against the generic autodiff prolongation, which derives all of them from the point action by nested `jax.jvp` — a custom operator only needs to register its point action to get correct velocity and acceleration transforms for free.
 

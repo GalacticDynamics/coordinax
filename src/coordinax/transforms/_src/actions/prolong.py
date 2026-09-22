@@ -29,7 +29,9 @@ Two related verbs are distinguished:
   \phi(\tau, \cdot) \cdot v$. This is the transformation law for
   `Displacement` data (order 0), which is a same-$\tau$ point difference and
   never gains $\partial_\tau$ terms. For time-independent transforms the two
-  verbs coincide.
+  verbs coincide *to first order only*: at order $m \geq 2$ the prolongation
+  also carries $\partial_{xx}\phi(v, v)$, which vanishes only where $\phi$ is
+  affine in the chart's own coordinates.
 """
 
 __all__ = (
@@ -111,6 +113,18 @@ _MSG_AT_JET_REQUIRED = (
 _MSG_AT_JET_CONFLICT = (
     "act({op}, ...): jet slot {k} was given twice, once as {alias!r} and once "
     "in 'at_jet'. Pass it one way only."
+)
+_MSG_AT_JET_UNUSED = (
+    "act({op}, ...) on order-{m} tangent data anchors on jet slot 0 alone "
+    "(it is the frozen-tau pushforward here), so the supplied slot(s) "
+    "{unused} would be silently ignored. Use act_jet({op}, tau, {{0: q, 1: v, "
+    "...}}, chart) for the full kinematic prolongation, or drop the slot(s)."
+)
+_MSG_AT_JET_UNUSED_POINT = (
+    "act({op}, ...) on point data reads jet slot 0 alone (it is the base point "
+    "itself); there is no tangent data for the supplied slot(s) {unused} to "
+    "anchor, so they would be silently ignored. Drop the slot(s), or act on "
+    "tangent data if you meant to transform a jet."
 )
 _MSG_JET_SLOT_MISSING = (
     "act_jet({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
@@ -607,7 +621,16 @@ def act(
     **kw: Any,
 ) -> CDict:
     """Redispatch on the representation's geometry kind (generic funnel)."""
-    return cast("CDict", cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, **kw))
+    geom = rep.geom_kind
+    if isinstance(geom, cxr.PointGeometry):
+        # The tangent rule below guards inside itself, where the ladder order
+        # is known. Point geometry has no such shared rule to guard in -- the
+        # point action is the primitive, so every transform registers its own
+        # and the generic `PointGeometry` rule only ever raises. This funnel
+        # is the last shared floor a point action passes through, so the
+        # check lands here on the way past.
+        _reject_unusable_slots(op, cast("AnchorJet | None", kw.get("at_jet")), None)
+    return cast("CDict", cxfmapi.act(op, tau, x, chart, geom, rep, **kw))
 
 
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
@@ -655,7 +678,8 @@ def act(
     Supply those slots with ``at_jet``, a dict keyed by slot order. ``at`` is
     shorthand for slot 0, which it shares with ``pushforward``; every higher
     slot is ``at_jet``'s alone. Giving slot 0 both ways raises rather than
-    picking one.
+    picking one, and so does giving a slot $\geq 1$ on a pushforward path that
+    cannot read it — use `act_jet` for the full prolongation there.
 
     Examples
     --------
@@ -688,6 +712,7 @@ def act(
         # No prolongation here, just the frozen-tau pushforward -- but it still
         # needs the base point, and `at_jet` is the general anchor form, so
         # slot 0 must reach it as surely as `at=` does.
+        _reject_unusable_slots(op, at_jet, m)
         at = _merge_slot0(op, at, at_jet)
         return cast(
             "CDict", cxfmapi.pushforward(op, tau, x, chart, rep, at=at, usys=usys)
@@ -715,6 +740,31 @@ def _live_slots(at_jet: AnchorJet | None, /) -> JetDict:
     return {k: v for k, v in at_jet.items() if v is not None}
 
 
+def _reject_unusable_slots(
+    op: AbstractTransform, at_jet: AnchorJet | None, m: int | None, /
+) -> None:
+    r"""Refuse anchor slots >= 1 on a path ending in the frozen-tau pushforward.
+
+    The pushforward is first-order: $\partial_x \phi \cdot v$. It reads slot 0
+    and nothing else, so every higher slot the caller assembled is dead — and
+    at order $m \geq 2$ it is dead *and* load-bearing, because the term it
+    would have fed, $\partial_{xx}\phi(v, v)$, is then missing from the answer.
+    That term vanishes only where $\phi$ is affine in the chart's own
+    coordinates, so in any curvilinear chart the caller gets a quietly wrong
+    acceleration. Swallowing the slot made that invisible (gh#936); naming
+    `act_jet`, which uses every slot, makes it a one-line fix instead.
+
+    ``m is None`` is point geometry, which has no ladder order at all. The
+    slots are just as dead there, so the rejection stands -- but the tangent
+    wording does not, so the point case gets its own message rather than
+    claiming "order-None tangent data".
+    """
+    unused = sorted(k for k in _live_slots(at_jet) if k >= 1)
+    if unused:
+        tmpl = _MSG_AT_JET_UNUSED if m is not None else _MSG_AT_JET_UNUSED_POINT
+        raise TypeError(tmpl.format(op=type(op).__name__, m=m, unused=unused))
+
+
 def _merge_slot0(
     op: AbstractTransform, at: CDict | None, at_jet: AnchorJet | None, /
 ) -> CDict | None:
@@ -724,6 +774,10 @@ def _merge_slot0(
     ladder, a `Composed` fold's travelling anchor). Giving one slot twice
     raises rather than silently preferring one: a wrong anchor is a wrong
     answer, not a lesser convenience.
+
+    Higher slots are *not* rejected here: `add.py`'s fibre-offset ladder is an
+    exact law that simply has no use for them. `_reject_unusable_slots` is the
+    check for the paths where dropping them changes the answer.
     """
     slots = _live_slots(at_jet)
     if 0 not in slots:

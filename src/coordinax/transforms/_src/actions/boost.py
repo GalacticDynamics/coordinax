@@ -16,6 +16,7 @@ import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
 from .builders import UniformTranslation
 from .custom_types import CDict, OptUSys
+from .prolong import AnchorJet, _reject_unusable_slots
 from .timedep import TimeDep
 from .utils import is_componentwise_offset
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
@@ -173,6 +174,9 @@ def act(
     if rep == cxr.point:
         if tau is None:
             raise TypeError(_MSG_TAU_REQUIRED_POINT)
+        # `delegate()` would reject this too, but under the name of the
+        # `TimeDep(Translate)` it hands off to; the caller wrote `Boost`.
+        _reject_unusable_slots(op, cast("AnchorJet | None", kw.get("at_jet")), None)
         return delegate()
 
     # The closed forms below hold only when dv and the data live in the same

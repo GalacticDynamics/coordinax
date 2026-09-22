@@ -19,6 +19,7 @@ import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
 from .composed import Composed
 from .custom_types import CDict, OptUSys
+from .prolong import AnchorJet, _reject_unusable_slots
 from .utils import is_componentwise_offset
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -328,6 +329,9 @@ def act(
 
     # --- Point input: the curve position, shifted only by a k=0 translate.
     if rep == cxr.point:
+        # `Translate` registers its own CDict rule, so it never passes the
+        # generic funnel where every other point action is checked.
+        _reject_unusable_slots(op, cast("AnchorJet | None", kw.get("at_jet")), None)
         if k != 0:
             return x
         return _translate_point_cdict(op, tau, x, chart, usys=usys)
