@@ -37,11 +37,8 @@ jobs:
           # Can be removed if switching to hardcoded versions.
           fetch-depth: 0
           persist-credentials: false
-          # Pin to the exact commit that triggered this run, not the branch it sat
-          # on: `github.ref` is `refs/heads/main` for a main push, and a queued job
-          # resolves it to whatever main points at when checkout finally runs, which
-          # is a later commit whenever another PR lands in between. This workflow
-          # only runs on trusted `push` and `workflow_dispatch` events.
+          # Pin to the triggering commit: a queued job would re-resolve
+          # `github.ref` to main's tip. Only trusted `push`/`dispatch` run here.
           ref: ${{ github.sha }}
 
       - name: Validate git tag (for tagged releases)
