@@ -50,6 +50,17 @@ class TestGoingToTheNullFrameSaysSo:
         with pytest.raises(cxf.FrameTransformError, match="from the null frame"):
             cxf.frame_transition(cxf.noframe, cxf.alice)
 
+    def test_noframe_to_a_transformed_frame_says_from(self) -> None:
+        """The mirror of the case above, and the one branch left untested.
+
+        A transformed *target* matches the transformed-frame rule keyed on the
+        source as well as the "from the null frame" refusal, so this is the
+        other half of the ambiguity the precedences settle.
+        """
+        frame = cxf.TransformedReferenceFrame(cxf.alice, self.R)
+        with pytest.raises(cxf.FrameTransformError, match="from the null frame"):
+            cxf.frame_transition(cxf.noframe, frame)
+
     def test_null_to_null_is_still_the_identity(self) -> None:
         """The higher-precedence rule must keep winning over both refusals."""
         assert isinstance(cxf.frame_transition(cxf.noframe, cxf.noframe), cxfm.Identity)

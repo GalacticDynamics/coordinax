@@ -50,7 +50,6 @@ SHARED_BY_DESIGN: dict[str, str] = {
     "Internal custom types.": "per-package `custom_types.py`",
     "Manifolds in coordinax.": "the manifold sub-package `__init__` files",
     "Hypothesis strategies for coordinax.": "the strategy sub-package `__init__` files",
-    "Hypothesis strategies for Distance quantities.": "the distance strategy modules",
     "Hypothesis strategies for CDict objects.": (
         "chart and representation CDict strategies"
     ),

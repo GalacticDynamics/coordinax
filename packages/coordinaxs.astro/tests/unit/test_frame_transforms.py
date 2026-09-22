@@ -20,6 +20,7 @@ import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
+import coordinaxs.hypothesis.astro as cxastrost
 from coordinaxs.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
 
 # Astropy is imported once, not re-checked inside five helper bodies -- but the
@@ -335,6 +336,36 @@ def test_custom_galcen_v_sun_velocities_match_astropy() -> None:
     v = sc.transform_to(apy_frame).cartesian.differentials["s"]
     exp_v = np.array([v.d_x.to_value(kms), v.d_y.to_value(kms), v.d_z.to_value(kms)])
     np.testing.assert_allclose(got_v, exp_v, rtol=0, atol=1e-6)
+
+
+@requires_astropy
+@given(frame=cxastrost.galactocentric_frames())
+def test_arbitrary_galactocentric_frames_match_astropy(frame) -> None:
+    """ICRS->GCF matches Astropy for a frame with *all five* parameters drawn.
+
+    The comparisons above pin `galcen_v_sun` and read `roll`, `z_sun` and
+    `galcen` straight out of the default frame before mirroring them into
+    Astropy, so a bug in any non-default parameter is structurally invisible
+    to them. Here the whole frame is generated, and both the position and the
+    velocity are checked -- the velocity because `z_sun` and `roll` enter the
+    rotation while `galcen_v_sun` enters only the offset, so a position-only
+    comparison would miss half of what the frame does.
+
+    Agreement is ~1e-16 relative to the magnitude of the transformed vector;
+    the tolerances below leave two orders of magnitude of headroom, and the
+    `atol` is what covers a component that lands near zero while its
+    siblings are of order kpc.
+    """
+    xyz_pc, vxyz_kms = (150.0, -220.0, 310.0), (30.0, -15.0, 22.0)
+    op = cxf.frame_transition(cxastro.ICRS(), frame)
+
+    out = cxfm.act(op, None, _coordinate(xyz_pc, vxyz_kms))
+    got_q = np.array([_to_np(v, "pc") for v in out.point.data.values()])
+    got_v = np.array([_to_np(v, "km/s") for v in out["velocity"].data.values()])
+
+    exp_q, exp_v = _astropy_icrs_to_gcf_phase_space(xyz_pc, vxyz_kms, frame)
+    np.testing.assert_allclose(got_q, exp_q, rtol=1e-13, atol=1e-9)
+    np.testing.assert_allclose(got_v, exp_v, rtol=1e-13, atol=1e-9)
 
 
 # ===================================================================
