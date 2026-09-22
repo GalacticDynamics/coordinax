@@ -20,7 +20,7 @@ from .add import AbstractAdd
 from .composed import Composed
 from .custom_types import CDict, OptUSys
 from .prolong import AnchorJet, _reject_unusable_slots
-from .utils import is_componentwise_offset
+from .utils import act_array_via_cdict, act_quantity_via_cdict, is_componentwise_offset
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -182,11 +182,18 @@ def act(
     ...     print(str(e)[:44])
     A fibre offset (Translate with semantic_kind
 
-    """
-    del kw
+    An explicit tangent ``rep`` is not ambiguous, so it is served by the
+    `CDict` ladder: a position translate leaves velocities alone.
 
+    >>> cxfm.act(shift, None, x, cxc.cart3d, cxr.coord_vel, usys=usys)
+    Array([0., 0., 0.], dtype=float64)
+
+    """
+    # Not a point: the CDict path covers the whole ladder, so route, not refuse.
     if rep != cxr.point:
-        raise TypeError("Translate can only be applied to point representations")
+        return act_array_via_cdict(op, tau, x, chart, rep, usys=usys, **kw)
+
+    del kw
 
     # A bare, unitless array is ambiguous under a fibre kick: it could be a
     # position (kick is identity) or the kick's own tangent data (kick
@@ -260,9 +267,23 @@ def act(
     >>> cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point)
     Q([0., 0., 0.], 'm')
 
+    A Quantity's rep is inferred from its dimensions, so a velocity Quantity
+    arrives with a tangent rep — served by the `CDict` ladder (#942):
+
+    >>> v = u.Q([1.0, 0.0, 0.0], "km/s")
+    >>> cxfm.act(shift, None, v, cxc.cart3d, cxr.coord_vel)
+    Q([1., 0., 0.], 'km / s')
+
+    A velocity kick does move them:
+
+    >>> kick = replace(cxfm.Translate.from_([1, 2, 3], "km/s"), semantic_kind=cxr.vel)
+    >>> cxfm.act(kick, None, v, cxc.cart3d, cxr.coord_vel)
+    Q([2., 2., 3.], 'km / s')
+
     """
+    # Not a point: the CDict path covers the whole ladder, so route, not refuse.
     if rep != cxr.point:
-        raise TypeError("Translate can only be applied to point representations")
+        return act_quantity_via_cdict(op, tau, x, chart, rep, usys=usys, **kw)
 
     # A vel/acc-semantic translate does not move position points.
     if not isinstance(op.semantic_kind, cxr.Displacement):

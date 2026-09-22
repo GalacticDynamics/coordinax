@@ -4,6 +4,8 @@ This module defines helpers for operator implementations.
 """
 
 __all__: tuple[str, ...] = (
+    "act_array_via_cdict",
+    "act_quantity_via_cdict",
     "is_componentwise_offset",
     "is_flat_chart",
     "is_traced",
@@ -11,14 +13,22 @@ __all__: tuple[str, ...] = (
 )
 
 from collections.abc import Iterable
+from jaxtyping import Array
 from typing import Any
 
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 
+import unxt as u
+import unxts.linalg as ul
+
+import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.transforms as cxfmapi
 from coordinax._src.exceptions import NoGlobalCartesianChartError
+from coordinax.internal import pack_uniform_unit
 
 
 def is_flat_chart(chart: Any, /) -> bool:
@@ -93,6 +103,84 @@ def require_matching_keys(
             + (f"; unexpected {extra}" if extra else "")
             + "."
         )
+
+
+# ===================================================================
+# Coerce-act-repack funnels
+#
+# The CDict methods cover the full (representation, semantic kind) ladder, so
+# a Quantity or a bare array is served by coercing to a CDict, acting, and
+# repacking. Shared by `register_apply`'s fallbacks and by the typed fast
+# paths, so the two cannot disagree.
+
+
+def act_quantity_via_cdict(
+    op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, **kw: Any
+) -> u.Q:
+    """Act on a `unxt.AbstractQuantity` through its `CDict` in ``chart``.
+
+    The repack needs the components to share a unit. `cdict` already refuses a
+    single-unit Quantity for a dimensionally heterogeneous chart, so one that
+    would break it never arrives here -- Cartesian is not required.
+    """
+    v = cxc.cdict(x, chart)
+    nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
+    value, unit = pack_uniform_unit(nv, keys=chart.components)  # ty: ignore[no-matching-overload]
+    return u.Q(value, unit)
+
+
+def act_array_via_cdict(
+    op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, *, usys: Any = None, **kw: Any
+) -> Array:
+    """Act on a bare array through a `CDict`, taking its units from ``usys``.
+
+    A bare array carries no units, so ``usys`` supplies them: each component
+    is read in the unit that ``usys`` gives for that component's dimension
+    under ``rep`` (``chart.coord_dimensions`` differentiated ``rep``'s ladder
+    order). The result is written back in those same units, so an array in is
+    an array out.
+    """
+    if usys is None:
+        msg = (
+            f"{type(op).__name__} requires 'usys' to act on a bare array, "
+            "which carries no units. Pass usys=..., or a Quantity, "
+            "QuantityMatrix, component dict, or typed vector, which carry "
+            "their own."
+        )
+        raise TypeError(msg)
+
+    # The units below come from `coord_dimensions`, which answers for the
+    # *coordinate* basis -- so reading a bare array that way is only right when
+    # that is the basis in play. Refuse the others rather than mis-unit them.
+    if not isinstance(rep.basis, cxr.NoBasis | cxr.CoordinateBasis):
+        msg = (
+            f"{type(op).__name__} cannot act on a bare array in the "
+            f"{type(rep.basis).__name__}: units for a bare array are read from "
+            "the chart's coordinate dimensions, which describe the coordinate "
+            "basis. Pass a Quantity, a QuantityMatrix, a component dict, or a "
+            "typed vector, which carry their own per-component units."
+        )
+        raise TypeError(msg)
+
+    dims = rep.semantic_kind.coord_dimensions(chart)
+    units = tuple(u.unit("") if d is None else usys[d] for d in dims)
+
+    x_arr = jnp.asarray(x)
+    # Checked here so the message names the caller's array rather than
+    # `QuantityMatrix`'s unit structure. `shape`, not `shape[-1]`: a 0-D array
+    # has no last axis to index.
+    shape = jnp.shape(x_arr)
+    if not shape or shape[-1] != len(chart.components):
+        got = shape[-1] if shape else "no axes"
+        msg = (
+            f"act for {type(op).__name__}: last axis of x is {got}, but "
+            f"{type(chart).__name__} has {len(chart.components)} components."
+        )
+        raise ValueError(msg)
+
+    v = cxc.cdict(ul.QuantityMatrix(x_arr, unit=units), chart)
+    nv = cxfmapi.act(op, tau, v, chart, rep, usys=usys, **kw)
+    return cxcapi.carray(nv, chart.components, usys).value  # ty: ignore[unresolved-attribute]
 
 
 def _unnormalisable(norm: Any, /) -> Any:
