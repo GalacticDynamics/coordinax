@@ -375,3 +375,31 @@ class TestScaleContractsElementwise:
         pt = {k: u.Q(1.0, "m") for k in ("x", "y")}
         with pytest.raises(Exception, match="does not match"):
             cxfm.act(op, None, pt, cxc.cart2d, cxr.point)
+
+
+@pytest.mark.parametrize(
+    ("cls", "matrix"),
+    [
+        (cxfm.Rotate, [[1.0, 0.0], [0.0, 1.0]]),
+        (cxfm.Reflect, [[-1.0, 0.0], [0.0, 1.0]]),
+        (cxfm.Shear, [[1.0, 2.0], [0.0, 1.0]]),
+    ],
+    ids=["rotate", "reflect", "shear"],
+)
+def test_a_unitful_matrix_is_refused_and_says_why(cls, matrix) -> None:
+    """All three normalise units up front, not incidentally during validation.
+
+    Without it the refusal still happens, but only once the arithmetic trips:
+    `Reflect` at ``H @ H`` reports area, `Shear` at ``det H`` reports volume.
+    Neither message mentions that the matrix must be dimensionless.
+    """
+    m = jnp.asarray(matrix)
+    with pytest.raises(Exception) as excinfo:  # noqa: PT011
+        cls(u.Q(m, "m"))
+    note = " ".join(getattr(excinfo.value, "__notes__", []))
+    assert "dimensionless" in note
+
+    # A dimensionless Quantity is stripped, not refused.
+    op = cls(u.Q(m, ""))
+    stored = op.R if hasattr(op, "R") else op.H
+    assert not isinstance(stored, u.AbstractQuantity)

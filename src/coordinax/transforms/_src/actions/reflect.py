@@ -16,7 +16,7 @@ from unxt import AbstractQuantity as AbcQ
 
 from .base import AbstractTransform
 from .identity import identity
-from .linear import AbstractLinearTransform
+from .linear import AbstractLinearTransform, as_dimensionless_matrix
 from .utils import _unnormalisable, is_traced
 from coordinax.transforms._src import groups
 
@@ -122,7 +122,11 @@ class Reflect(AbstractLinearTransform):
         # Deferred so it survives jit (a plain `bool` on a traced value raises
         # `TracerBoolConversionError`), and threaded onto the stored array so
         # it is not dead-code-eliminated under trace.
-        H = jnp.asarray(H)
+        H = as_dimensionless_matrix(
+            H,
+            "Reflect `H` is a Householder matrix, whose entries are ratios "
+            "and so dimensionless.",
+        )
         # Shape first: `_not_involutive` declines on a non-square matrix, so
         # without this one would be stored and `.inverse` would still hand back
         # `self`, which is undefined for a non-square `H`.

@@ -16,8 +16,10 @@ from typing import Any, cast
 
 import equinox as eqx
 import plum
+from astropy.units import UnitConversionError
 
 import quaxed.numpy as jnp
+import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
 import coordinax.charts as cxc
@@ -36,6 +38,33 @@ def _matmul_cdict(
     """Apply ``matrix`` to a Cartesian cdict ``d``, packed into a shared unit."""
     v, unit = pack_uniform_unit(d, keys=comps)
     return cast("CDict", cxc.cdict(op._contract(matrix, v), unit, comps))
+
+
+def as_dimensionless_matrix(m: Any, note: str, /) -> Array:
+    """Normalise ``m`` to a bare array, requiring it to be dimensionless.
+
+    ``jnp`` here is `quaxed.numpy`, whose `asarray` is unit-aware and hands a
+    `~unxt.Quantity` back unchanged, so it cannot be used to coerce one.
+
+    Without this a unitful matrix is still refused, but only incidentally and
+    much later: `Reflect` reaches ``H @ H`` and reports "'m2' (area) and ''
+    (dimensionless) are not convertible", `Shear` reaches ``det H`` and says
+    the same of volume. ``note`` is appended to that error so the message says
+    what was actually wrong.
+
+    The return stays `Array`, not ``Shaped[Array, " N N"]`` -- jaxtyping
+    enforces annotations, and requiring squareness here would preempt
+    `_validate_square` and its clearer message.
+    """
+    if isinstance(m, u.AbstractQuantity):
+        try:
+            m = u.ustrip("", m)
+        except UnitConversionError as e:
+            # `UnitConversionError` is already a `ValueError`, so a bare
+            # `raise` loses no caller; its message already names the units.
+            e.add_note(note)
+            raise
+    return jnp.asarray(m)
 
 
 class AbstractLinearTransform(AbstractTransform):
