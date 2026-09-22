@@ -103,7 +103,8 @@ The triple is (geometry kind, basis, semantic kind), and the three are orthogona
 
 ## JIT and static discipline
 
-- **Charts, representations, and frames are static pytrees.** A change that puts one on the traced side of a boundary is a large, invisible slowdown.
+- **Charts and representations are static pytrees.** A change that puts one on the traced side of a boundary is a large, invisible slowdown.
+- **Frames and transforms are not static, and the advice inverts for them.** A parameterized frame carries its parameters as pytree leaves (`Galactocentric` flattens to eight array leaves and is unhashable), so it belongs on the _traced_ side: pass the frame or the operator to the jitted function as an **argument**. Closing one over makes it static and buys a fresh compile per parameter value — #962 measured two `Galactocentric` operators differing only in `z_sun` as 1 trace passed in, 2 closed over.
 - **Validation must survive tracing.** A Python `if` on array data works eagerly and breaks or silently no-ops under `jit`. #558 (non-negativity checks), #561 (`Scale`/`Reflect` constructors), and #564 all landed as this. `eqx.error_if` is the tool.
 - **Immutability**: methods return new objects; updates go through `dataclassish.replace()`.
 - **No `from __future__ import annotations`.** It breaks plum's runtime type introspection. This is not a style preference.
@@ -113,6 +114,7 @@ The triple is (geometry kind, basis, semantic kind), and the three are orthogona
 `tests/benchmark/` runs on CodSpeed. A change touching dispatch registration, `aval`, shape computation, chart equality/hashing, or the transform hot paths should say what happened to the benchmarks — a caching regression keeps every correctness test green and only shows up here (#540, #648, #654, #692).
 
 - **A closure rebuilt inside a loop or method is not the same object twice.** `jax.jit` caches on the Python identity of the function it wraps, not on argument equality, so `jax.jit(cx.pt_map(...))` (or any `pt_map`/`jit`/`vmap` stack) constructed fresh per call recompiles every call instead of hitting the cache — a ~1000x-class regression that every correctness test still passes. It should be built once, at module or `__init__` scope. See [`docs/guides/perf.md`](../../../docs/guides/perf.md).
+- **A frame transition built inside a jitted function** is pure-Python dispatch work on the traced side. `frame_transition(a, b)` should be hoisted out and the operator applied with `act`; `to_frame` rebuilds the transition on every call (~15 ms for ICRS to Galactocentric against ~100 us jitted), so it is the convenience form, not the hot-path one. See [`docs/guides/frames.md`](../../../docs/guides/frames.md).
 - **A new hot-path helper that repeatedly re-dispatches on statically-known argument types** should follow the `array_norm` / `_generic_tangent_act` idiom (`AGENTS.md`, "Conventions that bite"): `@ft.cache` around a `.invoke(...)` call, not a bare call to the dispatched function on every invocation. This is a narrow win (~1.1-1.2x) — flag it as a missed opportunity only on an actual hot path, not as a general style preference.
 - **`jacfwd`/`grad` over a batch must `vmap` the scalar function**, not be applied directly to a function that already takes a batch. The direct route does not error — it silently returns a dense, wrong-shaped Jacobian (every output point with respect to every input point, not just its own) and pays for the extra shape in both time and memory.
 
