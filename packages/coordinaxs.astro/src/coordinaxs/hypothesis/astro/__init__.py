@@ -1,4 +1,4 @@
-"""Hypothesis strategies for Distance quantities."""
+"""Hypothesis strategies for distance quantities and astronomical frames."""
 
 __all__ = ("distance_moduli", "galactocentric_frames", "parallaxes")
 
