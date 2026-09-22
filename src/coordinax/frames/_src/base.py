@@ -15,8 +15,20 @@ import coordinaxs.api.frames as cxfmapi
 from coordinax.transforms import AbstractTransform
 
 
-class AbstractReferenceFrame(eqx.Module):
-    """Base class for all reference frames."""
+class AbstractReferenceFrame(eqx.Module, is_abstract=True):
+    """Base class for all reference frames.
+
+    Abstract: a category for typing and dispatch, not a frame. Concrete
+    frames subclass it.
+
+    >>> import coordinax.frames as cxf
+    >>> try:
+    ...     cxf.AbstractReferenceFrame()
+    ... except TypeError as e:
+    ...     print(e)
+    Cannot instantiate abstract `equinox.Module`.
+
+    """
 
     # ---------------------------------------------------------------
     # Constructors
