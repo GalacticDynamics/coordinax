@@ -156,17 +156,20 @@ def jac_pt_map(
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    This is the last fallback: a pair with a closed form of its own is served
-    by that, and a pair whose two legs through the Cartesian chart have one
-    is chained instead. Only a pair reaching neither is differentiated here.
+    This is the fallback. A pair in `_CLOSED_FORM_PAIRS` is served by its own
+    closed form instead -- including the ones that reach their answer by
+    chaining two others, which is a choice each of those makes internally and
+    not something resolved here. Every other pair is differentiated.
 
-    >>> jac_fn = cxc.jac_pt_map(None, cxc.cyl3d, cxc.sph3d, usys=u.unitsystems.si)
+    `Cylindrical3D -> MathSpherical3D` has no closed form, so it comes here.
+
+    >>> jac_fn = cxc.jac_pt_map(None, cxc.cyl3d, cxc.math_sph3d, usys=u.unitsystems.si)
 
     >>> at = jnp.array([1.0, 0.0, 0.0])
     >>> jac_fn(at)
     Array([[ 1.,  0.,  0.],
-           [ 0.,  0., -1.],
-           [ 0.,  1.,  0.]], dtype=float64)
+           [ 0.,  1.,  0.],
+           [ 0.,  0., -1.]], dtype=float64)
 
     >>> import jax
     >>> J = jax.vmap(jac_fn)(at[None])
