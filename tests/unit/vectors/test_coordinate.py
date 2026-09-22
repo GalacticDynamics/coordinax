@@ -692,3 +692,116 @@ class TestManifoldProperty:
         base = cxv.Point.from_([1, 2, 3], "m")
         pv = Coordinate(point=base)
         assert pv.manifold == base.M
+
+
+# ---------------------------------------------------------------------------
+# gh#936: a chart change is second-order on an order >= 2 fibre
+# ---------------------------------------------------------------------------
+
+
+class TestCconvertCarriesTheWholeJet:
+    r"""Converting an acceleration between charts is not the Jacobian alone.
+
+    The law is $a' = \partial\psi \cdot a + \partial^2\psi(v, v)$, and the
+    second term is built from the *velocity* fibre. Converting fibre by fibre
+    never has it in hand, so it was dropped: a Cartesian acceleration of
+    exactly zero converted to exactly zero in spherical coordinates, where the
+    true coordinate acceleration is emphatically not zero.
+    """
+
+    # Straight line: x(t) = x0 + v0 t, so the Cartesian acceleration is
+    # exactly zero while r-double-dot and friends are not.
+    X0 = (1.0, 2.0, 3.0)
+    V0 = (0.3, -0.4, 0.2)
+
+    @staticmethod
+    def _cart_to_sph(p):
+        x, y, z = p
+        r = jnp.sqrt(x * x + y * y + z * z)
+        return jnp.asarray([r, jnp.arccos(z / r), jnp.arctan2(y, x)])
+
+    def _bundle(self, *, velocity=True, acc=(0.0, 0.0, 0.0), chart=cxc.cart3d):
+        def cd(vals, unit):
+            return dict(zip(("x", "y", "z"), (u.Q(v, unit) for v in vals), strict=True))
+
+        fibres = {
+            "acceleration": cxv.Tangent(
+                cd(acc, "kpc/Myr2"), chart, cxr.coord_basis, cxr.acc
+            )
+        }
+        if velocity:
+            fibres["velocity"] = cxv.Tangent(
+                cd(self.V0, "kpc/Myr"), chart, cxr.coord_basis, cxr.vel
+            )
+        return Coordinate(point=cxv.Point(cd(self.X0, "kpc"), chart), **fibres)
+
+    def test_a_straight_line_gains_the_coordinate_acceleration(self) -> None:
+        """Cartesian a = 0, but the spherical coordinate acceleration is not.
+
+        Checked against a central finite difference of the chart map along
+        the line, so the reference owes nothing to the code under test.
+        """
+        h = 1e-5
+        x0 = jnp.asarray(self.X0)
+        v0 = jnp.asarray(self.V0)
+        s_m = self._cart_to_sph(x0 - h * v0)
+        s_0 = self._cart_to_sph(x0)
+        s_p = self._cart_to_sph(x0 + h * v0)
+        fd_acc = (s_p - 2 * s_0 + s_m) / (h * h)
+
+        got = self._bundle().cconvert(cxc.sph3d)["acceleration"].data
+        for i, k in enumerate(("r", "theta", "phi")):
+            val = u.ustrip(u.unit_of(got[k]), got[k])
+            assert jnp.allclose(val, fd_acc[i], atol=1e-4)
+            # and emphatically not the dropped-term answer, which was zero
+            assert not jnp.allclose(val, 0.0, atol=1e-6)
+
+    def test_the_round_trip_is_the_identity(self) -> None:
+        """Cart -> sph -> cart must return the acceleration it started with."""
+        acc = (0.1, 0.2, 0.3)
+        there_and_back = self._bundle(acc=acc).cconvert(cxc.sph3d).cconvert(cxc.cart3d)
+        out = there_and_back["acceleration"].data
+        for k, want in zip(("x", "y", "z"), acc, strict=True):
+            assert jnp.allclose(u.ustrip("kpc/Myr2", out[k]), want, atol=1e-9)
+
+    def test_the_velocity_fibre_genuinely_feeds_the_acceleration(self) -> None:
+        """Discriminator: the dropped term is the only route from v to a."""
+        slow = self._bundle()
+        fast = Coordinate(
+            point=slow.point,
+            velocity=replace(
+                slow["velocity"],
+                data={k: 100 * v for k, v in slow["velocity"].data.items()},
+            ),
+            acceleration=slow["acceleration"],
+        )
+        base = slow.cconvert(cxc.sph3d)["acceleration"].data
+        other = fast.cconvert(cxc.sph3d)["acceleration"].data
+        assert not jnp.allclose(
+            u.ustrip("rad/Myr2", base["theta"]), u.ustrip("rad/Myr2", other["theta"])
+        )
+
+    def test_a_velocity_only_bundle_is_untouched(self) -> None:
+        """Order 1 is exactly the Jacobian, so it keeps the cheap path."""
+        vel = cxv.Tangent(
+            {
+                "x": u.Q(1.0, "kpc/Myr"),
+                "y": u.Q(0.0, "kpc/Myr"),
+                "z": u.Q(0.0, "kpc/Myr"),
+            },
+            cxc.cart3d,
+            cxr.coord_basis,
+            cxr.vel,
+        )
+        pv = Coordinate(point=cxv.Point.from_([1.0, 2.0, 3.0], "kpc"), velocity=vel)
+        assert pv.cconvert(cxc.sph3d)["velocity"].chart == cxc.sph3d
+
+    def test_an_acceleration_without_a_velocity_is_refused(self) -> None:
+        """The missing fibre is what the dropped term is built from."""
+        with pytest.raises(TypeError, match=r"without the lower ladder fibre"):
+            self._bundle(velocity=False, acc=(0.1, 0.2, 0.3)).cconvert(cxc.sph3d)
+
+    def test_a_flat_to_flat_conversion_keeps_the_cheap_path(self) -> None:
+        """An affine transition has no second-order term to carry."""
+        out = self._bundle(acc=(0.1, 0.2, 0.3)).cconvert(cxc.cart3d)
+        assert jnp.allclose(u.ustrip("kpc/Myr2", out["acceleration"].data["x"]), 0.1)

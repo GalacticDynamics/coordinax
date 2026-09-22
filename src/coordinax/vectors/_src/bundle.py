@@ -9,7 +9,7 @@ base point so the bundle is always internally consistent.
 __all__ = ("Coordinate",)
 
 
-from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
+from collections.abc import Callable, ItemsView, Iterator, KeysView, Mapping, ValuesView
 from typing import Any, cast, final, override
 from typing_extensions import TypeVar
 
@@ -25,6 +25,7 @@ import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinax.transforms._src.actions.utils as cxfm_utils
 from .base import (
     AbstractVector,
     broadcast_and_index_data,
@@ -35,6 +36,7 @@ from .base import (
 from .point import Point
 from .tangent import Tangent
 from coordinax.internal import OptUSys
+from coordinax.transforms._src.actions.prolong import prolong_point_map
 
 ChartT = TypeVar(
     "ChartT",
@@ -399,6 +401,9 @@ class Coordinate(AbstractVector):
         if field_charts is None:
             field_charts = {}
 
+        if _cconvert_needs_joint_jet(self, to_chart, field_charts):
+            return _cconvert_jointly(self, to_chart, field_charts, usys)
+
         # 1. Convert base point (pure point map — no Jacobian needed)
         new_point = cast("Point", cxr.cconvert(self.point, to_chart, usys=usys))
 
@@ -630,3 +635,192 @@ def from_(
         raise ValueError(msg)
 
     return cls(point=point, **data_dict)
+
+
+# ===================================================================
+# gh#936: a chart change is second-order on an order >= 2 fibre
+
+
+def _ladder_fibres(coord: "Coordinate", /) -> dict[str, int]:
+    """Ladder fibre name -> curve-derivative order, for orders >= 1.
+
+    Displacement fibres (order 0) are excluded: a displacement is a
+    same-parameter point difference, not a curve derivative, so it is not a
+    jet slot and the Jacobian pushforward is its whole transformation law.
+    """
+    out: dict[str, int] = {}
+    for name, vec in coord._data.items():
+        order = vec.rep.semantic_kind.order
+        if order is not None and order >= 1:
+            out[name] = order
+    return out
+
+
+def _chart_map_is_affine(
+    from_chart: cxc.AbstractChart, to_chart: cxc.AbstractChart, /
+) -> bool:
+    r"""Whether the chart transition ``from_chart -> to_chart`` is affine.
+
+    Exactly the condition under which $\partial^2\psi \equiv 0$, so the
+    Jacobian pushforward is the complete law at every order. A chart is its
+    own trivial case, and two Cartesian-type charts on the same manifold
+    differ by at most a linear relabelling. Anything curvilinear on either
+    side is not affine -- which is the whole of the interesting case.
+    """
+    if from_chart == to_chart:
+        return True
+    return cxfm_utils.is_flat_chart(from_chart) and cxfm_utils.is_flat_chart(to_chart)
+
+
+def _cconvert_needs_joint_jet(
+    coord: "Coordinate",
+    to_chart: cxc.AbstractChart,
+    field_charts: Mapping[str, cxc.AbstractChart],
+    /,
+) -> bool:
+    r"""Whether this conversion must carry the whole jet rather than each fibre.
+
+    Converting a fibre of order $m \geq 2$ between charts is not the Jacobian
+    pushforward: the law is $a' = \partial\psi \cdot a + \partial^2\psi(v,
+    v)$, and the second term is built from the *velocity* fibre. Walking the
+    fibres one at a time never has it in hand, so it was dropped -- a
+    Cartesian acceleration of exactly zero converted to exactly zero in
+    spherical coordinates, where the true coordinate acceleration is not zero
+    at all (gh#936).
+
+    Order <= 1 is unaffected: there the Jacobian *is* the law. So is any
+    conversion whose transition map is affine, which keeps flat-to-flat
+    bundles off the autodiff path entirely.
+    """
+    ladder = _ladder_fibres(coord)
+    if max(ladder.values(), default=0) < 2:
+        return False
+    from_chart = coord.point.chart
+    targets = {field_charts.get(name, to_chart) for name, m in ladder.items() if m >= 2}
+    return not all(_chart_map_is_affine(from_chart, t) for t in targets)
+
+
+def _cconvert_jointly(
+    coord: "Coordinate",
+    to_chart: cxc.AbstractChart,
+    field_charts: Mapping[str, cxc.AbstractChart],
+    usys: OptUSys,
+    /,
+) -> "Coordinate":
+    """Convert a bundle by prolonging its whole jet through the chart map.
+
+    The bundle is the one holder of the lower fibres, so unlike a lone
+    `Tangent` it can supply what the second-order law needs. The jet is
+    prolonged once per distinct target chart (``field_charts`` may send
+    fibres to different ones), and displacement fibres stay on the Jacobian
+    path, which is exact for them.
+    """
+    from_chart = coord.point.chart
+    ladder = _ladder_fibres(coord)
+
+    jet: dict[int, Any] = {0: coord.point.data}
+    name_of: dict[int, str] = {}
+    for name, order in ladder.items():
+        vec = coord._data[name]
+        _check_jet_fibre(coord, name, order, vec, from_chart)
+        if order in jet:
+            msg = (
+                f"Coordinate has two fibres at ladder order {order} "
+                f"({name_of[order]!r} and {name!r}); the joint chart "
+                "conversion is ambiguous."
+            )
+            raise ValueError(msg)
+        jet[order] = vec.data
+        name_of[order] = name
+
+    top = max(jet)
+    missing = [m for m in range(1, top) if m not in jet]
+    if missing:
+        msg = (
+            f"cconvert of a Coordinate cannot carry the order-{top} fibre "
+            f"{name_of[top]!r} to {to_chart!r} without the lower ladder "
+            f"fibre(s) of order {missing}: the chart change contributes "
+            "d2psi(v, v) at that order, which is built from them. An absent "
+            "fibre means 'not tracked', not 'zero', so this refuses rather "
+            "than returning the first-order answer. Add the missing fibre, "
+            "or convert between charts whose transition is affine."
+        )
+        raise TypeError(msg)
+
+    targets = {field_charts.get(name, to_chart) for name in ladder} | {to_chart}
+    out: dict[cxc.AbstractChart, dict[int, Any]] = {
+        t: prolong_point_map(_pt_map_to(from_chart, t, usys), jet) for t in targets
+    }
+
+    new_point = dataclassish.replace(coord.point, chart=to_chart, data=out[to_chart][0])
+    new_fields: dict[str, Tangent] = {}
+    for name, order in ladder.items():
+        target = field_charts.get(name, to_chart)
+        new_fields[name] = cast(
+            "Tangent",
+            dataclassish.replace(
+                coord._data[name], chart=target, data=out[target][order]
+            ),
+        )
+
+    # Displacement (and other non-ladder) fibres: the Jacobian pushforward at
+    # the base point is their complete law, so they keep the per-fibre path.
+    for name, vec in coord._data.items():
+        if name in ladder:
+            continue
+        at = cast("Point", cxr.cconvert(coord.point, vec.chart))
+        new_fields[name] = cast(
+            "Tangent",
+            cxr.cconvert(vec, field_charts.get(name, to_chart), at=at, usys=usys),
+        )
+
+    return Coordinate._create_unchecked(new_point, new_fields)
+
+
+def _pt_map_to(
+    from_chart: cxc.AbstractChart, to_chart: cxc.AbstractChart, usys: OptUSys, /
+) -> "Callable[[Any], Any]":
+    """Return the chart transition as a plain point map, for the jet engine."""
+
+    def psi(data: Any, /) -> Any:
+        return cxc.pt_map(data, from_chart, to_chart, usys=usys)
+
+    return psi
+
+
+def _check_jet_fibre(
+    coord: "Coordinate",
+    name: str,
+    order: int,
+    vec: Tangent,
+    from_chart: cxc.AbstractChart,
+    /,
+) -> None:
+    """Refuse a fibre the jet formulation cannot legitimately carry.
+
+    Two ways it cannot. A fibre stored in a chart other than the point's has
+    no jet of its own to be prolonged from -- converting it into the point's
+    chart first is the very second-order problem being solved, so it would
+    just move the error. And a fibre in a non-coordinate basis holds scaled
+    components, not the curve's coordinate derivatives, so they are not jet
+    slots at all.
+    """
+    del coord
+    if vec.chart != from_chart:
+        msg = (
+            f"cconvert of a Coordinate cannot carry the order-{order} fibre "
+            f"{name!r}, which is stored in {vec.chart!r} rather than the "
+            f"point's {from_chart!r}. Its own jet would be needed to convert "
+            "it, and the bundle only holds one. Put the fibre in the point's "
+            "chart first."
+        )
+        raise TypeError(msg)
+    if vec.basis != cxr.coord_basis:
+        msg = (
+            f"cconvert of a Coordinate cannot carry the order-{order} fibre "
+            f"{name!r} in basis {vec.basis!r}: the jet law is written on the "
+            "curve's coordinate derivatives, and a non-coordinate basis holds "
+            "rescaled components. Convert it to the coordinate basis first "
+            "with change_basis(..., at=point)."
+        )
+        raise TypeError(msg)

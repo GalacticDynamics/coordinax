@@ -38,6 +38,7 @@ __all__ = (
     "AnchorJet",
     "JetDict",
     "prolong_jet",
+    "prolong_point_map",
     "prolong_slot",
     "pushforward_generic",
     "tau_derivative",
@@ -561,6 +562,63 @@ def prolong_jet(
     ]
 
     slot_outs = _total_derivative_chain(f, tau_val, q0_vals, slot_vals)
+    return {
+        m: _attach_cdict(
+            ym, {k: _per_time(un, time_unit, m) for k, un in out_units.items()}
+        )
+        for m, ym in enumerate(slot_outs)
+    }
+
+
+def prolong_point_map(psi: Callable[[CDict], CDict], jet: JetDict, /) -> JetDict:
+    r"""Prolong a jet through a time-independent point map ``psi``.
+
+    The sibling of `prolong_jet` for a map that is not a transform's point
+    action: a **chart change**. Given a jet of a curve, $\{0: q, 1: v, 2: a,
+    \ldots\}$, return the jet of $\psi \circ x(t)$ --
+
+    $$
+    q' = \psi(q), \quad v' = \partial\psi \cdot v, \quad
+    a' = \partial\psi \cdot a + \partial^2\psi(v, v), \quad \ldots
+    $$
+
+    -- by the same nested-`jax.jvp` chain `prolong_jet` uses, with no $\tau$
+    slot in it. The second-order term is why this exists: pushing an
+    acceleration through `jac_pt_map` alone gives $\partial\psi \cdot a$ and
+    silently drops $\partial^2\psi(v, v)$, which vanishes only where $\psi$ is
+    affine -- never between a curvilinear chart and a Cartesian one.
+
+    ``psi`` must be JAX-traceable and map a `CDict` in one chart to a `CDict`
+    in another. All slots ``0..max(jet)`` must be present: slot $m$'s law
+    reads every slot below it.
+    """
+    q0 = jet[0]
+    max_order = max(jet)
+    if max_order == 0:
+        return {0: psi(q0)}
+
+    in_units = _cdict_units(q0)
+    out_units = _cdict_units(cast("CDict", _eval_shape_or_call(psi, q0)))
+    # The chain has no tau of its own, so T is fixed by the data alone:
+    # T**m = in_unit / slot_m_unit. Slot 1 sets it, and the higher slots must
+    # agree -- they are derivatives of the same curve by the same parameter.
+    time_unit = _common_time_unit(None, in_units, _cdict_units(jet[1]), 1)
+    comps = tuple(q0.keys())
+
+    def f(_tv: Any, xv: dict[str, Any], /) -> dict[str, Any]:
+        # `_total_derivative_chain` threads a leading tau slot through every
+        # level. A chart map has no time dependence, so ignoring it here
+        # makes that slot contribute exactly zero rather than fabricating an
+        # instant for psi to be evaluated at.
+        return _strip_cdict(psi(_attach_cdict(xv, in_units)), out_units)
+
+    q0_vals = _strip_cdict(q0, in_units)
+    slot_vals = [
+        {k: _strip_leaf(_per_time(in_units[k], time_unit, m), jet[m][k]) for k in comps}
+        for m in range(1, max_order + 1)
+    ]
+
+    slot_outs = _total_derivative_chain(f, jnp.zeros(()), q0_vals, slot_vals)
     return {
         m: _attach_cdict(
             ym, {k: _per_time(un, time_unit, m) for k, un in out_units.items()}
