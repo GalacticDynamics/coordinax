@@ -2592,9 +2592,9 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     |-----------|---------------------------|
     | the ladder skips an order (e.g. an acceleration with no velocity) | the missing fibre is what the second term is built from, and absent means "not tracked", not "zero" |
     | a ladder fibre is not in `coord_basis` | a physical basis holds rescaled components, which are not the curve's coordinate derivatives and so are not jet slots |
-    | a ladder fibre is stored in a chart other than the point's (`Coordinate.cconvert` only) | its own jet would be needed in that chart, and the bundle holds one |
+    | the ladder reaches order $\geq 3$ across a non-affine leg | assembling its jet would need the order-$(m-1)$ slot in that chart, which is the same conversion one level down |
 
-    The last is a restriction of `cconvert` alone. `act` on a `Coordinate` carries such a fibre correctly, by building its jet in its own chart — where the lower slots convert exactly — and prolonging that across.
+    A fibre stored in a chart other than the point's is **not** a restriction: both verbs carry it, by building that fibre's jet in its own chart — where the lower slots convert exactly, slot 0 by the point map and slot 1 by the Jacobian — and prolonging that across. The routing question is asked per fibre, from its own chart to its own target, since the point's chart says nothing about where a fibre is parked.
 
     **Fields:**
 

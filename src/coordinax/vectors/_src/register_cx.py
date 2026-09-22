@@ -19,7 +19,12 @@ import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.api.representations as cxrapi
 import coordinaxs.api.transforms as cxfmapi
-from .bundle import Coordinate, _chart_map_is_affine
+from .bundle import (
+    Coordinate,
+    _chart_map_is_affine,
+    _require_coordinate_basis,
+    carry_fibre_across,
+)
 from .point import Point
 from .tangent import Tangent
 from coordinax._src.custom_types import OptUSys
@@ -806,92 +811,6 @@ def _require_contiguous_ladder(
     raise TypeError(msg)
 
 
-def _carry_foreign_ladder_fibre(
-    x: Coordinate,
-    name: str,
-    order: int,
-    fibre: Tangent,
-    point_chart: Any,
-    point_data_in: "Callable[[Any], CDict]",
-    usys: OptUSys,
-    /,
-) -> Tangent:
-    r"""Carry an order >= 2 fibre from its own chart into the point's, exactly.
-
-    The jet is assembled in the point's chart, so a fibre stored elsewhere has
-    to be converted in. The plain Jacobian conversion is the complete law only
-    at order $\leq 1$ or across an affine transition; at order $\geq 2$ across
-    a curvilinear one it drops $D^2\psi(v, v)$ -- and it would drop it
-    *before* the jet exists, so the joint prolongation that follows could not
-    put it back.
-
-    The way out is to build the jet in the fibre's *own* chart first. Its
-    lower slots convert into that chart exactly -- slot 0 is a point map and
-    slot 1 is the Jacobian, which is the whole law at order 1 -- so the
-    recursion bottoms out immediately and the fibre can be prolonged across
-    like any other jet.
-    """
-    orig = fibre.chart
-    if order > 2:
-        msg = (
-            f"act on a Coordinate cannot carry the order-{order} fibre "
-            f"{name!r} from {orig!r} into the point's {point_chart!r}: "
-            f"assembling its jet there would need the order-{order - 1} slot "
-            "in that chart, which is the same conversion one level down. Put "
-            "the fibre in the point's chart first."
-        )
-        raise TypeError(msg)
-
-    lower = _ladder_orders(x)
-    if 1 not in lower:
-        msg = (
-            f"act on a Coordinate cannot carry the order-{order} fibre "
-            f"{name!r} from {orig!r} into the point's {point_chart!r} without "
-            "an order-1 fibre: the chart change contributes d2psi(v, v) at "
-            "that order, which is built from it. Add the velocity fibre, or "
-            "store the fibre in the point's chart."
-        )
-        raise TypeError(msg)
-
-    vel = x._data[lower[1]]
-    if vel.chart != orig:
-        vel = cast(
-            "Tangent",
-            cxrapi.cconvert(vel, orig, at=point_data_in(vel.chart), usys=usys),
-        )
-
-    def psi(data: CDict, /) -> CDict:
-        return cast("CDict", cxc.pt_map(data, orig, point_chart, usys=usys))
-
-    out = prolong_point_map(
-        psi, {0: point_data_in(orig), 1: vel.data, order: fibre.data}
-    )
-    return cast("Tangent", replace(fibre, chart=point_chart, data=out[order]))
-
-
-def _require_coordinate_basis(name: str, order: int, fibre: Tangent, /) -> None:
-    """Refuse a ladder fibre whose components are not curve derivatives.
-
-    The jet law is written on the curve's coordinate derivatives. A physical
-    (orthonormal) basis holds rescaled components, so they are not jet slots
-    and feeding them in would prolong the wrong numbers. The units usually
-    catch it downstream -- an angular slot meeting a length one -- but as a
-    `UnitConversionError` from deep inside the engine, which says nothing
-    about what the caller did. `Coordinate.cconvert` refuses this in its own
-    words; so should `act`.
-    """
-    if fibre.basis == cxr.coord_basis:
-        return
-    msg = (
-        f"act on a Coordinate cannot carry the order-{order} fibre {name!r} "
-        f"in basis {fibre.basis!r}: the jet law is written on the curve's "
-        "coordinate derivatives, and a non-coordinate basis holds rescaled "
-        "components. Convert it to the coordinate basis first with "
-        "change_basis(..., at=point)."
-    )
-    raise TypeError(msg)
-
-
 def _return_ladder_fibre(
     f: Tangent,
     order: int,
@@ -946,13 +865,15 @@ def _act_coordinate_jet(
         if order is None or order == 0:
             push_fibres[name] = fibre
             continue
-        _require_coordinate_basis(name, order, fibre)
+        _require_coordinate_basis(name, order, fibre, "act")
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
             if order >= 2 and not _chart_map_is_affine(orig_chart, point_chart):
-                f = _carry_foreign_ladder_fibre(
-                    x, name, order, fibre, point_chart, point_data_in, usys
+                # Same manoeuvre `cconvert` makes, and the same code: build
+                # the fibre's jet in its own chart and prolong it across.
+                f = carry_fibre_across(
+                    x, name, order, fibre, point_chart, usys, verb="act"
                 )
             else:
                 at_f = point_data_in(orig_chart)
