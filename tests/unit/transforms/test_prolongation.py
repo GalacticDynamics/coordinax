@@ -1779,3 +1779,61 @@ def test_act_jet_on_a_displacement_translate_in_a_curved_chart():
     assert set(out) == {0, 1}
     # the point genuinely moved, so this is not an identity dressed up
     assert not jnp.allclose(u.ustrip("kpc", out[0]["r"]), u.ustrip("kpc", q0["r"]))
+
+
+def test_the_lone_slot_kick_materializes_the_timedep_only_as_often_as_it_must():
+    r"""Reaching the engine through `act_jet` would re-materialize the operator.
+
+    That dispatch hop lands back in ``add.py`` and recovers ``op0`` and ``k``
+    by calling ``evaluate_at`` again -- a whole ODE solve for a curve-frame
+    builder, which the sibling branch in the same function already takes care
+    to avoid. Two calls are inherent here: one materialization, and one
+    derivative probe for $d^{m-k}\delta/d\tau^{m-k}$. A third means the hop is
+    back.
+    """
+    sph = cxc.sph3d
+    q0 = {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")}
+    v0 = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    a0 = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+    kick = cxfm.TimeDep.from_(
+        lambda t: cxfm.Translate(
+            {
+                "x": u.Q(0.2, "kpc/Myr2") * t,
+                "y": u.Q(-0.1, "kpc/Myr2") * t,
+                "z": u.Q(0.05, "kpc/Myr2") * t,
+            },
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+
+    cls = type(kick)
+    original = cls.evaluate_at
+    calls = []
+
+    def counting(self, t, *a, **kw):
+        calls.append(t)
+        return original(self, t, *a, **kw)
+
+    cls.evaluate_at = counting
+    try:
+        out = cxfm.act(
+            kick, u.Q(2.0, "Myr"), a0, sph, cxr.coord_acc, at=q0, at_jet={1: v0}
+        )
+    finally:
+        cls.evaluate_at = original
+
+    assert len(calls) <= 2, f"materialized {len(calls)}x; the act_jet hop is back"
+    # and the shortcut did not change the answer
+    ref = cxfm.act_jet(kick, u.Q(2.0, "Myr"), {0: q0, 1: v0, 2: a0}, sph)[2]
+    for k in ref:
+        unit = u.unit_of(ref[k])
+        assert jnp.allclose(u.ustrip(unit, out[k]), u.ustrip(unit, ref[k]))

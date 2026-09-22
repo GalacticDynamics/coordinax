@@ -618,8 +618,19 @@ def act(
         # Above its own rung the ladder is only exact where the offset is a
         # constant vector field; elsewhere the chart map couples slot m to the
         # ones below, so this needs the jet rather than the base point alone.
+        #
+        # Reached directly, not through `act_jet`, for the reason the `k is
+        # None` branch above gives: that dispatch hop lands back in this
+        # module and re-materializes `op` to recover `op0` and `k`, which are
+        # already in hand here -- a whole ODE solve again for a curve-frame
+        # builder. The route is not in doubt either: slot `m` sits above the
+        # rung and the offset is not parallel, which is exactly the pair of
+        # conditions `act_jet` would re-test to land here.
         jet = _slot_jet(op, tau, x, m, at=at, at_jet=at_jet)
-        return cast("dict", cxfmapi.act_jet(op, tau, jet, chart, usys=usys))[m]
+        offset = cast("AbstractAdd", op0)
+        return _kick_via_offset_chart(
+            op, tau, jet, chart, offset.chart, usys=usys, ladder=(offset, k)
+        )[m]
 
     # The ladder needs only the base point, but it has to accept it in either
     # spelling: `at_jet` is the general anchor form, so a caller who passes
