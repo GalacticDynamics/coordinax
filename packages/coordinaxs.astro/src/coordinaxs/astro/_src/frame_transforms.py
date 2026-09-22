@@ -3,8 +3,9 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import NoReturn, cast
+from typing import Any, NoReturn, cast
 
+import jax
 import plum
 
 import quaxed.numpy as jnp
@@ -17,6 +18,44 @@ from .base_frame import AbstractSpaceFrame
 from .galactic import GALACTIC_TO_ICRS_MATRIX, ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
+
+# ---------------------------------------------------------------
+# Operator cache
+#
+# Building the ICRS <-> Galactocentric operator costs ~9 ms -- three
+# `Rotate.from_euler` calls (each into `jax.scipy.spatial.transform`), an
+# `asin` for the z_sun tilt, and two `Translate`s. `to_frame` rebuilds it on
+# every call, which is 73% of its wall time, so a repeated transition pays for
+# the same operator over and over.
+#
+# The build is a pure function of the frame's parameters and frames are
+# immutable, so the result can be cached. Frames are not usable as dict keys --
+# `Galactocentric` is unhashable (`unhashable type: 'dict'`) and every
+# field-less frame shares one hash -- so the key is the pytree: the type, the
+# treedef, and the bytes of each leaf. That key costs ~0.08 ms against a ~9 ms
+# build, and two equal-but-distinct frames produce the same key.
+
+_TRANSITION_CACHE: dict[Any, cxfm.AbstractTransform] = {}
+
+#: Bounded so a parameter sweep cannot grow it without limit. Callers sweeping
+#: more frames than this simply stop hitting the cache; they are no worse off
+#: than before it existed.
+_TRANSITION_CACHE_MAX = 64
+
+
+def _frame_key(tag: str, frame: cxf.AbstractReferenceFrame, /) -> Any | None:
+    """Build a hashable key for ``frame``, or `None` if it cannot have one.
+
+    Returns `None` for a traced frame: a tracer's value is not known here, so
+    it can neither be compared against a cached entry nor safely stored.
+    """
+    leaves, treedef = jax.tree.flatten(frame)
+    try:
+        blobs = tuple(jnp.asarray(leaf).tobytes() for leaf in leaves)
+    except (AttributeError, TypeError, jax.errors.TracerArrayConversionError):
+        return None  # traced, or a leaf with no concrete bytes
+    return (tag, type(frame), treedef, blobs)
+
 
 # ---------------------------------------------------------------
 # Base Space-Frame Transformation
@@ -396,6 +435,10 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
         [-8112.898    21.798    29.015]>
 
     """
+    key = _frame_key("icrs->gcf", to_frame)
+    if key is not None and (hit := _TRANSITION_CACHE.get(key)) is not None:
+        return cast("cxfm.Composed", hit)
+
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
     galcen = to_frame.galcen
     rot_lat = cxfm.Rotate.from_euler("y", galcen["lat"])
@@ -422,7 +465,10 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     offset_v = cxfm.Translate(v_sun.data, chart=v_sun.chart, semantic_kind=cxr.vel)
 
     # Total Operator
-    return R | offset_q | H | offset_v
+    op = R | offset_q | H | offset_v
+    if key is not None and len(_TRANSITION_CACHE) < _TRANSITION_CACHE_MAX:
+        _TRANSITION_CACHE[key] = op
+    return op
 
 
 # ---------------------------------------------------------------
@@ -482,5 +528,12 @@ def frame_transition(from_frame: Galactocentric, to_frame: ICRS, /) -> cxfm.Comp
     automatically for computational efficiency.
 
     """  # noqa: E501
+    key = _frame_key("gcf->icrs", from_frame)
+    if key is not None and (hit := _TRANSITION_CACHE.get(key)) is not None:
+        return cast("cxfm.Composed", hit)
+
     icrs2gcf = cxf.frame_transition(to_frame, from_frame)  # pylint: disable=W1114
-    return icrs2gcf.inverse.simplify()  # ty: ignore[unresolved-attribute]
+    op = icrs2gcf.inverse.simplify()  # ty: ignore[unresolved-attribute]
+    if key is not None and len(_TRANSITION_CACHE) < _TRANSITION_CACHE_MAX:
+        _TRANSITION_CACHE[key] = op
+    return cast("cxfm.Composed", op)
