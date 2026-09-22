@@ -1431,3 +1431,24 @@ class TestUnusableAnchorSlotsAreRefused:
             at_jet={0: q3(0.0, 0.0, 0.0, "km"), 1: q3(1.0, 2.0, 3.0, "km/s")},
         )
         assert jnp.allclose(u.ustrip("km/s2", out["x"]), 7.0)
+
+    def test_a_point_action_refuses_the_slot_in_point_language(self):
+        """`Composed` on points refuses too, but not in the tangent language.
+
+        Point geometry has no ladder order (`None`, not 0), and it is the one
+        path that reaches the guard that way. The rejection is right -- a point
+        action reads slot 0 and nothing else, so a slot >= 1 is exactly as dead
+        as on the pushforward path -- but the tangent wording is not, so this
+        pins the point message instead of ``order-None tangent data``.
+        """
+        pipe = cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),))
+        with pytest.raises(TypeError, match=r"on point data reads jet slot 0 alone"):
+            cxfm.act(pipe, None, self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0})
+
+    def test_a_point_action_still_takes_slot_zero(self):
+        """Only slots >= 1 are refused on the point path as well."""
+        pipe = cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),))
+        q = q3(1.0, 2.0, 3.0, "kpc")
+        via_plain = cxfm.act(pipe, None, q, cxc.cart3d, cxr.point)
+        via_jet = cxfm.act(pipe, None, q, cxc.cart3d, cxr.point, at_jet={0: q})
+        assert allclose_cdict(via_plain, via_jet, "kpc")

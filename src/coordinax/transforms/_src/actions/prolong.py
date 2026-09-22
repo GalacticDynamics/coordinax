@@ -120,6 +120,12 @@ _MSG_AT_JET_UNUSED = (
     "{unused} would be silently ignored. Use act_jet({op}, tau, {{0: q, 1: v, "
     "...}}, chart) for the full kinematic prolongation, or drop the slot(s)."
 )
+_MSG_AT_JET_UNUSED_POINT = (
+    "act({op}, ...) on point data reads jet slot 0 alone (it is the base point "
+    "itself); there is no tangent data for the supplied slot(s) {unused} to "
+    "anchor, so they would be silently ignored. Drop the slot(s), or act on "
+    "tangent data if you meant to transform a jet."
+)
 _MSG_JET_SLOT_MISSING = (
     "act_jet({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
 )
@@ -738,12 +744,16 @@ def _reject_unusable_slots(
     coordinates, so in any curvilinear chart the caller gets a quietly wrong
     acceleration. Swallowing the slot made that invisible (gh#936); naming
     `act_jet`, which uses every slot, makes it a one-line fix instead.
+
+    ``m is None`` is point geometry, which has no ladder order at all (only
+    `Composed` reaches here that way). The slots are just as dead there, so the
+    rejection stands -- but the tangent wording does not, so the point case
+    gets its own message rather than claiming "order-None tangent data".
     """
     unused = sorted(k for k in _live_slots(at_jet) if k >= 1)
     if unused:
-        raise TypeError(
-            _MSG_AT_JET_UNUSED.format(op=type(op).__name__, m=m, unused=unused)
-        )
+        tmpl = _MSG_AT_JET_UNUSED if m is not None else _MSG_AT_JET_UNUSED_POINT
+        raise TypeError(tmpl.format(op=type(op).__name__, m=m, unused=unused))
 
 
 def _merge_slot0(
