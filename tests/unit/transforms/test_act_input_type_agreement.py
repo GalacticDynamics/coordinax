@@ -520,6 +520,11 @@ class TestTheCallerSuppliedChartIsHonoured:
                 usys=USYS,
             )
 
+    def test_a_scalar_is_named_too_not_an_index_error(self) -> None:
+        """A 0-D array has no last axis to index; asking is not indexing."""
+        with pytest.raises(ValueError, match="no axes"):
+            cxfm.act(self._OP, None, jnp.asarray(1.0), cxc.cart3d, cxr.point, usys=USYS)
+
 
 class TestLorentzBoostSharesTheLinearArrayPath:
     """The 4-D operator on the same `AbstractLinearTransform` path (#977).

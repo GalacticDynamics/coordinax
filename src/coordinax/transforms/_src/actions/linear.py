@@ -176,16 +176,21 @@ def act(
         msg = (
             f"act for {type(op).__name__} with ArrayLike x requires a Cartesian "
             f"chart; got {type(chart).__name__}. A bare array carries no units, "
-            "so it cannot be read in a curvilinear chart -- pass a Quantity, a "
-            "QuantityMatrix, or a Point."
+            "and a single-unit Quantity cannot describe a chart whose components "
+            "have different dimensions either -- pass per-component units: a "
+            "QuantityMatrix, a component dict, or a Point."
         )
         raise ValueError(msg)
     n_components = len(chart.components)
-    if jnp.shape(x_arr)[-1] != n_components:
+    shape = jnp.shape(x_arr)
+    # `shape[-1]` on a 0-D array is an `IndexError`, so ask about the axis
+    # rather than indexing for it: no last axis is as wrong a shape as a
+    # mismatched one, and the caller deserves the same named error.
+    if not shape or shape[-1] != n_components:
+        got = shape[-1] if shape else "no axes"
         msg = (
-            f"act for {type(op).__name__}: last axis of x is "
-            f"{jnp.shape(x_arr)[-1]}, but {type(chart).__name__} has "
-            f"{n_components} components."
+            f"act for {type(op).__name__}: last axis of x is {got}, but "
+            f"{type(chart).__name__} has {n_components} components."
         )
         raise ValueError(msg)
 
