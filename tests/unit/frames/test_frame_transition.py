@@ -151,6 +151,8 @@ def test_the_concrete_frames_still_build() -> None:
     assert isinstance(
         MyTransformedFrame(cxf.alice, cxfm.identity), cxf.AbstractReferenceFrame
     )
+
+
 def _rot_z90() -> cxfm.Rotate:
     """A fresh (never shared) 90-degree rotation about z."""
     return cxfm.Rotate(jnp.asarray([[0.0, -1, 0], [1, 0, 0], [0, 0, 1]]))
