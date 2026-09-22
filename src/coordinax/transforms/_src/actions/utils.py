@@ -10,6 +10,7 @@ __all__: tuple[str, ...] = (
     "is_componentwise_offset",
     "is_flat_chart",
     "is_traced",
+    "offset_is_parallel_in_chart",
     "require_matching_keys",
 )
 
@@ -85,7 +86,30 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     provably consistent with the generic prolongation.
     """
     k = getattr(op, "semantic_kind", cxr.dpl).order
-    return k != 0 or (chart == op.chart and is_flat_chart(chart))
+    return k != 0 or offset_is_parallel_in_chart(op, chart)
+
+
+def offset_is_parallel_in_chart(op: Any, chart: Any, /) -> bool:
+    r"""Whether ``op``'s offset is a *constant vector field* in ``chart``.
+
+    The stronger sibling of `is_componentwise_offset`, and the one the jet
+    ladder needs. That predicate asks whether the offset can be added
+    componentwise at its own rung $k$ -- true for any fibre offset, since a
+    kick is a tangent vector at the base point and pushes cross-chart through
+    the Jacobian there. This asks whether the offset is the *same* vector at
+    every point of ``chart``, which is what makes every slot *above* $k$
+    exact as well.
+
+    The distinction is invisible at slot $k$ and decisive above it. A
+    velocity kick $\Delta v$ stored in `cart3d` leaves the Cartesian
+    acceleration alone, but in a curvilinear chart it does not leave
+    $\ddot q$ alone: the chart map contributes $2 D^2\psi(\dot x, \Delta v) +
+    D^2\psi(\Delta v, \Delta v)$, because $\Delta v$ expressed in those
+    coordinates varies from point to point. Reading the weaker predicate as
+    though it licensed the whole ladder is what returned an unchanged
+    acceleration there.
+    """
+    return chart == op.chart and is_flat_chart(chart)
 
 
 def is_affine_in_chart(op: Any, chart: Any, /) -> bool:

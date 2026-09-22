@@ -37,6 +37,7 @@ Two related verbs are distinguished:
 __all__ = (
     "AnchorJet",
     "JetDict",
+    "assemble_slot_jet",
     "prolong_jet",
     "prolong_point_map",
     "prolong_slot",
@@ -866,7 +867,26 @@ def _slot_jet(
     """
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED.format(op=type(op).__name__))
+    return assemble_slot_jet(op, x, m, at=at, at_jet=at_jet)
 
+
+def assemble_slot_jet(
+    op: AbstractTransform,
+    x: CDict,
+    m: int,
+    /,
+    *,
+    at: CDict | None,
+    at_jet: AnchorJet | None = None,
+) -> JetDict:
+    """Validate the lower jet slots and assemble the jet, with no tau check.
+
+    `_slot_jet` is this plus "a time parameter is required", which holds for
+    its time-dependent callers and not for a *static* one -- a fibre offset
+    that is constant in tau still needs the lower slots when the chart makes
+    the orders couple, and refusing it for want of a tau it never uses would
+    be an error about the wrong thing.
+    """
     # `at` is sugar for slot 0; `at_jet` is the general form, and the only way
     # to reach slots >= 1. The missing-slot checks come *after* the merge, so
     # supplying slot 0 through `at_jet` alone is enough.
