@@ -2,6 +2,8 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import Any
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -10,6 +12,7 @@ import pytest
 import unxt as u
 
 import coordinax.transforms as cxfm
+from coordinax.transforms._src import groups
 from coordinax.transforms._src.actions.rotate import _not_orthogonal
 
 _RZ90 = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
@@ -115,6 +118,14 @@ class TestRotationMatrixIsOrthogonal:
         from the other side, so tightening it back breaks here rather than in
         a downstream package.
         """
+        # A float64-scale claim: `2e-8` is below float32 eps (~1.2e-7), so
+        # with x64 off the perturbation rounds away and the first assertion
+        # below would fail for a reason that has nothing to do with the
+        # tolerance. The suite sets `JAX_ENABLE_X64=1`; say so rather than
+        # letting a bare `pytest` fail confusingly.
+        if jnp.zeros(1).dtype != jnp.float64:  # pragma: no cover - x64 is on in CI
+            pytest.skip("the 1e-8 tolerance is a float64-scale claim; x64 is off")
+
         drifted = _RZ90 + 2e-8 * jnp.asarray(
             [[1.0, 1.0, 0.0], [0.0, 1.0, 1.0], [1.0, 0.0, 1.0]]
         )
@@ -130,3 +141,28 @@ class TestRotationMatrixIsOrthogonal:
         for op in (a, b, a @ b, -a, a.inverse):
             gram = op.R.T @ op.R
             assert bool(jnp.allclose(gram, jnp.eye(3), atol=1e-12))
+
+
+class TestGroupsIsTraceSafe:
+    """`groups()` must not branch in Python on a traced determinant (#974 review).
+
+    It is metadata, so dying with `TracerBoolConversionError` when a jitted
+    function happens to read it would be a surprising failure. Under trace the
+    sign is unknown, and a membership claim must never be stronger than what
+    can be shown -- `SO(n) < O(n)`, so the orthogonal group alone is true
+    either way.
+    """
+
+    @staticmethod
+    def _is_special(R) -> Any:
+        g = cxfm.Rotate(R).groups()
+        return jnp.asarray(float(groups.SpecialOrthogonalGroup in g))
+
+    def test_eager_still_distinguishes_by_determinant(self) -> None:
+        assert float(self._is_special(_RZ90)) == 1.0
+        improper = jnp.diag(jnp.asarray([-1.0, 1.0, 1.0]))
+        assert float(self._is_special(improper)) == 0.0
+
+    def test_under_jit_it_claims_only_the_orthogonal_group(self) -> None:
+        """Weaker, but true for both signs -- and it does not raise."""
+        assert float(jax.jit(self._is_special)(_RZ90)) == 0.0
