@@ -190,7 +190,9 @@ _MSG_TWO_ARGUMENT_NEEDS_STATION = (
 )
 
 
-class AbstractParallelTransportFrame(cxf.AbstractTransformedReferenceFrame[FrameT]):
+class AbstractParallelTransportFrame(
+    cxf.AbstractTransformedReferenceFrame[FrameT], is_abstract=True
+):
     r"""Abstract base class for curve-attached orthonormal frames in 3-D.
 
     A parallel-transport frame attaches an orthonormal triad to each point of a

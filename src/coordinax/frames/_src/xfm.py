@@ -15,7 +15,9 @@ from coordinax.transforms import AbstractTransform
 FrameT = TypeVar("FrameT", bound=AbstractReferenceFrame, default=AbstractReferenceFrame)
 
 
-class AbstractTransformedReferenceFrame(AbstractReferenceFrame, Generic[FrameT]):
+class AbstractTransformedReferenceFrame(
+    AbstractReferenceFrame, Generic[FrameT], is_abstract=True
+):
     r"""Transformations relative to a base reference frame.
 
     This class represents a reference frame that is defined relative to a base
@@ -124,7 +126,7 @@ class TransformedReferenceFrame(AbstractTransformedReferenceFrame[FrameT]):
 
 @plum.dispatch
 def frame_transition(
-    from_frame: AbstractReferenceFrame, to_frame: TransformedReferenceFrame
+    from_frame: AbstractReferenceFrame, to_frame: AbstractTransformedReferenceFrame
 ) -> AbstractTransform:
     """Return a frame transform operator to a transformed frame.
 
@@ -155,7 +157,7 @@ def frame_transition(
 
 @plum.dispatch
 def frame_transition(
-    from_frame: TransformedReferenceFrame, to_frame: AbstractReferenceFrame
+    from_frame: AbstractTransformedReferenceFrame, to_frame: AbstractReferenceFrame
 ) -> AbstractTransform:
     """Return a frame transform operator from a transformed frame.
 
@@ -188,7 +190,8 @@ def frame_transition(
 
 @plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
 def frame_transition(
-    from_frame: TransformedReferenceFrame, to_frame: TransformedReferenceFrame
+    from_frame: AbstractTransformedReferenceFrame,
+    to_frame: AbstractTransformedReferenceFrame,
 ) -> AbstractTransform:
     """Return a frame transform operator between two transformed frames.
 

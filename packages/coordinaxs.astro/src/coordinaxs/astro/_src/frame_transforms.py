@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import cast
+from typing import NoReturn, cast
 
 import plum
 
@@ -33,12 +33,19 @@ def frame_transition(
     >>> import coordinax.frames as cxf
     >>> import coordinaxs.astro as cxastro
 
+    Routing through ICRS needs *both* legs registered: one direction alone
+    leaves the other, and the frame's self-transition, unroutable.
+
     >>> class MySpaceFrame(cxastro.AbstractSpaceFrame):
     ...     pass
 
     >>> @plum.dispatch
     ... def frame_transition(from_frame: MySpaceFrame, to_frame: ICRS, /) -> cxfm.AbstractTransform:
     ...     return cxfm.Rotate.from_euler("z", u.Q(10, "deg"))
+
+    >>> @plum.dispatch
+    ... def frame_transition(from_frame: ICRS, to_frame: MySpaceFrame, /) -> cxfm.AbstractTransform:
+    ...     return cxfm.Rotate.from_euler("z", u.Q(-10, "deg"))
 
     We can transform from `MySpaceFrame` to a Galactocentric frame, even though
     we don't have a direct transformation defined:
@@ -66,11 +73,80 @@ def frame_transition(
     kernel; the velocity offset stays separate because it acts on the tangent
     fibre rather than on the point.
 
+    The return leg routes the same way, off the ``(ICRS, MySpaceFrame)``
+    registration:
+
+    >>> type(cxf.frame_transition(gcf_frame, my_frame)).__name__
+    'Composed'
+
     """  # noqa: E501
     fromframe_to_icrs = frame_transition(from_frame, icrs)
     icrs_to_toframe = frame_transition(icrs, to_frame)
     pipe = fromframe_to_icrs | icrs_to_toframe
     return cast("cxfm.Composed", cxfm.simplify(pipe))
+
+
+# ---------------------------------------------------------------
+# Base cases for the ICRS routing above.
+#
+# The fallback recurses into itself with `icrs` on one side, and `ICRS` is
+# itself an `AbstractSpaceFrame`, so without these two rules a frame with no
+# registered ICRS leg re-enters the fallback forever (`RecursionError`).
+# Registering only one direction is not enough: the fallback needs both legs,
+# and both self-recursive calls always have ICRS on one side, so these two
+# refusals catch every unroutable case.
+#
+# These are refusals in the spirit of the null-frame rules in
+# `coordinax.frames._src.register_pfxm`, but unlike those they need no
+# `precedence`: the pair where both would match, `(ICRS, ICRS)`, already has a
+# strictly more specific rule of its own, and the source-keyed transformed-frame
+# rules sit outside the `AbstractSpaceFrame` lattice entirely. Every real ICRS
+# leg -- `(Galactic, ICRS)`, `(ICRS, Galactocentric)`, ... -- is likewise more
+# specific, so nothing that worked is shadowed.
+
+
+@plum.dispatch
+def frame_transition(from_frame: AbstractSpaceFrame, to_frame: ICRS, /) -> NoReturn:
+    """No registered transformation to ICRS.
+
+    >>> import coordinax.frames as cxf
+    >>> import coordinaxs.astro as cxastro
+
+    >>> class UnregisteredFrame(cxastro.AbstractSpaceFrame):
+    ...     pass
+
+    >>> try:
+    ...     cxf.frame_transition(UnregisteredFrame(), cxastro.icrs)
+    ... except cxf.FrameTransformError as e:
+    ...     print(e)
+    No `frame_transition` registered from UnregisteredFrame to ICRS.
+
+    """
+    del to_frame
+    msg = f"No `frame_transition` registered from {type(from_frame).__name__} to ICRS."
+    raise cxf.FrameTransformError(msg)
+
+
+@plum.dispatch
+def frame_transition(from_frame: ICRS, to_frame: AbstractSpaceFrame, /) -> NoReturn:
+    """No registered transformation from ICRS.
+
+    >>> import coordinax.frames as cxf
+    >>> import coordinaxs.astro as cxastro
+
+    >>> class UnregisteredFrame(cxastro.AbstractSpaceFrame):
+    ...     pass
+
+    >>> try:
+    ...     cxf.frame_transition(cxastro.icrs, UnregisteredFrame())
+    ... except cxf.FrameTransformError as e:
+    ...     print(e)
+    No `frame_transition` registered from ICRS to UnregisteredFrame.
+
+    """
+    del from_frame
+    msg = f"No `frame_transition` registered from ICRS to {type(to_frame).__name__}."
+    raise cxf.FrameTransformError(msg)
 
 
 # ---------------------------------------------------------------

@@ -5,6 +5,7 @@ __all__: tuple[str, ...] = ()
 from collections.abc import Iterable
 
 import numpy as np
+import plum
 import pytest
 from hypothesis import given
 
@@ -496,3 +497,112 @@ def test_galactocentric_spherical_velocity_fibre():
         a = u.ustrip("km/s", out_v.data[k])
         b = u.ustrip("km/s", out_ref._data["vel"].data[k])
         assert jnp.allclose(a, b, rtol=1e-5)
+
+
+# ============================================================================
+# The ICRS routing fallback needs base cases (#944)
+#
+# Frames declared at module scope, not inside tests: each class object is a
+# fresh plum type, and rebuilding one per test would churn the dispatch cache.
+
+
+class UnroutedFrame(cxastro.AbstractSpaceFrame):
+    """An `AbstractSpaceFrame` with neither ICRS leg registered."""
+
+
+class OneLegFrame(cxastro.AbstractSpaceFrame):
+    """An `AbstractSpaceFrame` with only the *to*-ICRS leg registered."""
+
+
+@plum.dispatch
+def frame_transition(
+    from_frame: OneLegFrame, to_frame: cxastro.ICRS, /
+) -> cxfm.AbstractTransform:
+    """Register the one leg `OneLegFrame` has."""
+    del from_frame, to_frame
+    return cxfm.Rotate.from_euler("z", u.Q(10, "deg"))
+
+
+class TestAnUnroutedSpaceFrameSaysSoInsteadOfRecursing:
+    """The `(AbstractSpaceFrame, AbstractSpaceFrame)` fallback routes via ICRS.
+
+    `ICRS` is itself an `AbstractSpaceFrame`, so with no rule keyed on ICRS to
+    stop the descent the fallback re-entered itself forever: `RecursionError`,
+    reached without even writing a subclass because the abstract base was
+    constructible. Both self-recursive calls always have ICRS on one side, so
+    two base cases cover every route.
+    """
+
+    @pytest.mark.parametrize(
+        ("frm", "to"),
+        [
+            (UnroutedFrame(), cxastro.icrs),
+            (cxastro.icrs, UnroutedFrame()),
+            (UnroutedFrame(), UnroutedFrame()),
+            (UnroutedFrame(), cxastro.galactic),
+            (cxastro.galactic, UnroutedFrame()),
+            (UnroutedFrame(), cxastro.Galactocentric()),
+        ],
+        ids=["to-icrs", "from-icrs", "self", "to-galactic", "from-galactic", "to-gcf"],
+    )
+    def test_no_legs_registered(self, frm, to) -> None:
+        with pytest.raises(cxf.FrameTransformError, match="No `frame_transition`"):
+            cxf.frame_transition(frm, to)
+
+    def test_one_leg_registered_still_goes_to_icrs(self) -> None:
+        """The registered direction keeps working."""
+        op = cxf.frame_transition(OneLegFrame(), cxastro.icrs)
+        assert isinstance(op, cxfm.Rotate)
+
+    @pytest.mark.parametrize(
+        ("frm", "to"),
+        [
+            (cxastro.icrs, OneLegFrame()),
+            (OneLegFrame(), OneLegFrame()),
+            (cxastro.galactic, OneLegFrame()),
+            (cxastro.Galactocentric(), OneLegFrame()),
+        ],
+        ids=["from-icrs", "self", "from-galactic", "from-gcf"],
+    )
+    def test_one_leg_registered_is_not_enough(self, frm, to) -> None:
+        """Registering a single direction leaves the return leg blowing up."""
+        with pytest.raises(cxf.FrameTransformError, match="registered from ICRS"):
+            cxf.frame_transition(frm, to)
+
+    def test_the_base_cases_do_not_shadow_the_working_paths(self) -> None:
+        """The control: real ICRS legs are strictly more specific."""
+        assert isinstance(
+            cxf.frame_transition(cxastro.icrs, cxastro.icrs), cxfm.Identity
+        )
+        assert isinstance(
+            cxf.frame_transition(cxastro.icrs, cxastro.galactic), cxfm.Rotate
+        )
+        assert isinstance(
+            cxf.frame_transition(cxastro.galactic, cxastro.icrs), cxfm.Rotate
+        )
+        assert isinstance(
+            cxf.frame_transition(cxastro.icrs, cxastro.Galactocentric()),
+            cxfm.AbstractTransform,
+        )
+        assert isinstance(
+            cxf.frame_transition(cxastro.galactic, cxastro.Galactocentric()),
+            cxfm.AbstractTransform,
+        )
+
+
+def test_the_abstract_space_frame_cannot_be_built() -> None:
+    """`AbstractSpaceFrame` is a dispatch category, not a frame (#954).
+
+    It used to construct, which was the cheapest route into the ICRS-routing
+    recursion above.
+    """
+    with pytest.raises(TypeError, match="Cannot instantiate abstract"):
+        cxastro.AbstractSpaceFrame()
+
+
+def test_the_concrete_space_frames_still_build() -> None:
+    """The control: abstractness must not reach the subclasses."""
+    assert isinstance(cxastro.ICRS(), cxastro.AbstractSpaceFrame)
+    assert isinstance(cxastro.Galactic(), cxastro.AbstractSpaceFrame)
+    assert isinstance(cxastro.Galactocentric(), cxastro.AbstractSpaceFrame)
+    assert isinstance(UnroutedFrame(), cxastro.AbstractSpaceFrame)
