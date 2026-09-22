@@ -21,7 +21,7 @@ A `coordinaxs.*` name that is not yet registered, and has no **pending publisher
 400 Non-user identities cannot create new projects.
 ```
 
-The OIDC exchange succeeds — the trusted publisher on the `coordinax` project covers this workflow, so a token is minted — but the resulting identity is not a user account, and non-user identities may only create a project when a pending publisher is already registered for that exact name. Watch the name: the pending publisher must match the `name` in the package's `pyproject.toml`, or the upload fails with the same 400. This is a registry-side setting; no repository change can work around it.
+The OIDC exchange succeeds — the trusted publisher on the `coordinax` project covers this workflow, so a token is minted — but the resulting identity is not a user account, and non-user identities may only create a project when a pending publisher is already registered for that name. The pending publisher must be for that package, or the upload fails with the same 400 — but the match is on the [normalized](https://packaging.python.org/en/latest/specifications/name-normalization/) name, lowercased with each run of `.`, `-` or `_` collapsed to `-`. So `coordinaxs.interop.astropy`, `coordinaxs-interop-astropy` and `coordinaxs_interop_astropy` all name the same project, and it does not matter which you type into the form. That is why `pyproject.toml` and this section spell the packages with dots while registry URLs, build logs and the release tags below use hyphens. This is a registry-side setting; no repository change can work around it.
 
 Add a **pending publisher** for each unregistered name on <https://test.pypi.org/manage/account/publishing/> and <https://pypi.org/manage/account/publishing/>:
 
