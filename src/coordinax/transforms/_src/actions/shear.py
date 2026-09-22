@@ -25,8 +25,8 @@ from coordinax.transforms._src import groups
 HMatrix: TypeAlias = Shaped[Array, " N N"]
 
 _MSG_SINGULAR: Final = (
-    "Shear matrix must be invertible: det H finite, non-zero. That is the "
-    "invariant `inverse` relies on -- it inverts `H`."
+    "Shear matrix must be invertible: every entry finite, and det H finite "
+    "and non-zero. That is the invariant `inverse` relies on -- it inverts `H`."
 )
 
 
@@ -95,7 +95,13 @@ class Shear(AbstractLinearTransform):
         # singularity check below declines on one and `inverse` would surface
         # a raw `jnp.linalg.inv` error instead of naming the shape.
         H = self._validate_square(H)
-        bad = _singular(jnp.linalg.det(H))
+        # Entry-wise finiteness as well as the determinant. `det` does happen to
+        # propagate a non-finite entry to `nan` -- searched exhaustively over
+        # single non-finite entries in 2x2/3x3/4x4 and over 4000 random
+        # multi-entry matrices without finding one that stays finite -- but that
+        # is LU's behaviour, not a promise. Checking `H` directly makes the
+        # invariant independent of how `jnp.linalg.det` handles `inf`/`nan`.
+        bad = ~jnp.all(jnp.isfinite(H)) | _singular(jnp.linalg.det(H))
         object.__setattr__(self, "H", eqx.error_if(H, bad, _MSG_SINGULAR))
 
     @property
