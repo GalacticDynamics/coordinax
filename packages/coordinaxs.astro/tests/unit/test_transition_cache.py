@@ -19,7 +19,12 @@ Q = u.Q([1.0, 2.0, 3.0], "kpc")
 
 @pytest.fixture(autouse=True)
 def _empty_cache():
-    """Each test starts from an empty cache and leaves one behind."""
+    """Each test starts and ends with an empty cache.
+
+    Cleared on the way in because anything earlier in the session may have
+    populated it, and on the way out so these tests -- which count entries --
+    do not leave any for the rest of the suite.
+    """
     ft._TRANSITION_CACHE.clear()
     yield
     ft._TRANSITION_CACHE.clear()
