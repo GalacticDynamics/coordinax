@@ -9,7 +9,6 @@ import pytest
 
 import unxt as u
 
-import coordinax as cx
 import coordinax.transforms as cxfm
 from coordinax.transforms._src.actions.rotate import _not_orthogonal
 
@@ -89,14 +88,14 @@ class TestRotationMatrixIsOrthogonal:
         the problem -- not a confusing "not orthogonal".
         """
         rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+        # The orthogonality predicate declines on a non-square matrix -- it has
+        # no `R^T R` to compare -- so the shape check is what must catch it,
+        # and it now does so in the constructor rather than at first use.
         assert _not_orthogonal(rect) is False
-        # Constructing is allowed; the shape is caught where it is used, by
-        # `_get_R`, with a message that names the shape.
-        op = cxfm.Rotate(rect)
         with pytest.raises(
             eqx.EquinoxTracetimeError, match=r"square matrix; got shape"
         ):
-            cx.act(op, None, cx.Point.from_(u.Q(jnp.asarray([1.0, 2.0, 3.0]), "kpc")))
+            cxfm.Rotate(rect)
 
     def test_a_valid_rotation_round_trips(self):
         """What the bad matrix broke: `inverse` really does undo the map."""

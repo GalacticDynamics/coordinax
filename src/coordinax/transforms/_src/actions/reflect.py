@@ -116,6 +116,10 @@ class Reflect(AbstractLinearTransform):
         # `TracerBoolConversionError`), and threaded onto the stored array so
         # it is not dead-code-eliminated under trace.
         H = jnp.asarray(H)
+        # Shape first: `_not_involutive` declines on a non-square matrix, so
+        # without this one would be stored and `.inverse` would still hand back
+        # `self`, which is undefined for a non-square `H`.
+        H = self._validate_square(H)
         object.__setattr__(
             self, "H", eqx.error_if(H, _not_involutive(H), _MSG_NOT_INVOLUTIVE)
         )

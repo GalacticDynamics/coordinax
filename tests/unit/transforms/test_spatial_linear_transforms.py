@@ -315,11 +315,17 @@ def test_scale_matrix_is_rebuilt_from_its_factors() -> None:
     assert np.array_equal(np.asarray(op.matrix), np.diag([2.0, 3.0, 4.0]))
 
 
-def test_matrix_rejects_a_non_square_field() -> None:
-    """The accessor validates, so a malformed operator cannot hand one out."""
-    op = cxfm.Rotate(jnp.zeros((2, 3)))
+def test_a_non_square_matrix_cannot_be_constructed() -> None:
+    """The constructor validates, so a malformed operator never exists.
+
+    This previously asserted the *accessor* rejected it, because a non-square
+    `Rotate` could be built and only failed at `.matrix`. The constructor now
+    validates the shape alongside the other invariants it checks, so there is
+    no malformed operator left to hand one out. `matrix` keeps its own guard
+    for the callable-`R` case, where the shape is not known until evaluation.
+    """
     with pytest.raises(eqx.EquinoxTracetimeError, match="requires a square matrix"):
-        _ = op.matrix
+        cxfm.Rotate(jnp.zeros((2, 3)))
 
 
 class TestScaleContractsElementwise:
