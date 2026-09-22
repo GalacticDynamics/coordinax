@@ -908,6 +908,18 @@ class TestAffineChartTransitions:
             assert self._jacobian_is_constant(a, b)
             assert _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b))
 
+    def test_two_distinct_cartesian_charts_are_affine(self) -> None:
+        """The flat-to-flat branch, which needs two *different* flat charts.
+
+        `cart3d` is the only Cartesian 3-D chart, so the same-chart branch
+        answers every 3-D case first; the 4-D spacetime pair is what actually
+        exercises this one.
+        """
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        assert cxc.galileanct != cxc.minkowskict
+        assert _chart_map_is_affine(cxc.galileanct, cxc.minkowskict)
+
     def test_loncoslat_is_not_a_relabelling(self) -> None:
         """Its `lon_coslat` carries a cos(lat), so the Jacobian moves."""
         from coordinax.vectors._src.bundle import _chart_map_is_affine
@@ -984,3 +996,47 @@ class TestCconvertRoutesOnTheFibresOwnChart:
         flat = self._straight_line_bundle()
         # everything flat, but the acceleration is sent somewhere curvilinear
         assert _cconvert_needs_joint_jet(flat, cxc.cart3d, {"acceleration": cxc.sph3d})
+
+
+class TestCarryFibreAcrossEdges:
+    """The refusals `carry_fibre_across` makes when the jet is not well posed."""
+
+    def _cd(self, vals, unit, keys=("x", "y", "z")):
+        return dict(zip(keys, (u.Q(v, unit) for v in vals), strict=True))
+
+    def test_two_order_one_fibres_are_ambiguous(self) -> None:
+        """Which velocity anchors the acceleration is then a coin toss.
+
+        The curvature term is built from *the* velocity; with two on the
+        bundle there is no such thing, and picking one silently would make the
+        answer depend on dict order.
+        """
+        point = cxv.Point(self._cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d)
+        v1 = cxv.Tangent(
+            self._cd((0.3, -0.4, 0.2), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        v2 = cxv.Tangent(
+            self._cd((0.1, 0.1, 0.1), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        flat = Coordinate(
+            point=point,
+            velocity=v1,
+            acceleration=cxv.Tangent(
+                self._cd((0.0, 0.0, 0.0), "kpc/Myr2"),
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxr.acc,
+            ),
+        )
+        # park the acceleration in sph3d so the leg is non-affine, then add a
+        # second order-1 fibre
+        two_vels = Coordinate._create_unchecked(
+            point,
+            {
+                "velocity": v1,
+                "velocity2": v2,
+                "acceleration": flat.cconvert(cxc.sph3d)["acceleration"],
+            },
+        )
+        with pytest.raises(ValueError, match=r"more than one order-1 fibre"):
+            two_vels.cconvert(cxc.cart3d)

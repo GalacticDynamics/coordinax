@@ -800,7 +800,10 @@ def carry_fibre_across(
     _require_coordinate_basis(name, order, fibre, verb)
     src = fibre.chart
 
-    if order > 2:
+    if order > 2:  # pragma: no cover - the named ladder stops at `acc`
+        # Defensive, and reachable only through a custom semantic kind: the
+        # library's own ladder is dpl/vel/acc, so no fibre of order 3 can be
+        # built from the public API to exercise it.
         msg = (
             f"{verb} of a Coordinate cannot carry the order-{order} fibre "
             f"{name!r} from {src!r} to {to_chart!r}: assembling its jet there "

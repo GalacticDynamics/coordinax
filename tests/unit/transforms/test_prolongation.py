@@ -1704,3 +1704,78 @@ class TestProlongPointMapValidatesItsJet:
 
         with pytest.raises(TypeError, match=r"^prolong_point_map"):
             prolong_point_map(self._psi, {0: self.Q0, 2: self.A0})
+
+
+def test_prolong_point_map_on_a_base_point_alone():
+    """A jet of just slot 0 is the plain point map, with no chain to build."""
+    from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+    q = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+    out = prolong_point_map(lambda d: cxc.pt_map(d, cxc.cart3d, cxc.sph3d), {0: q})
+    assert set(out) == {0}
+    direct = cxc.pt_map(q, cxc.cart3d, cxc.sph3d)
+    for k in direct:
+        unit = u.unit_of(direct[k])
+        assert jnp.allclose(u.ustrip(unit, out[0][k]), u.ustrip(unit, direct[k]))
+
+
+def test_a_time_dependent_kick_on_a_lone_slot_uses_the_supplied_jet():
+    """The `TimeDep` twin of the static lone-slot path.
+
+    Above its rung the ladder is exact only where the offset is parallel, so
+    a cross-chart `TimeDep` kick on a lone acceleration needs the jet -- and
+    must use `at_jet` rather than discard it.
+    """
+    sph = cxc.sph3d
+    q0 = {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")}
+    v0 = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    a0 = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+    tau = u.Q(2.0, "Myr")
+    kick = cxfm.TimeDep.from_(
+        lambda t: cxfm.Translate(
+            {
+                "x": u.Q(0.2, "kpc/Myr2") * t,
+                "y": u.Q(-0.1, "kpc/Myr2") * t,
+                "z": u.Q(0.05, "kpc/Myr2") * t,
+            },
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+    got = cxfm.act(kick, tau, a0, sph, cxr.coord_acc, at=q0, at_jet={1: v0})
+    ref = cxfm.act_jet(kick, tau, {0: q0, 1: v0, 2: a0}, sph)[2]
+    for k in ref:
+        unit = u.unit_of(ref[k])
+        assert jnp.allclose(u.ustrip(unit, got[k]), u.ustrip(unit, ref[k]))
+    # and without the velocity it asks rather than answers
+    with pytest.raises(TypeError, match=r"requires jet slots"):
+        cxfm.act(kick, tau, a0, sph, cxr.coord_acc, at=q0)
+
+
+def test_act_jet_on_a_displacement_translate_in_a_curved_chart():
+    """A ladder-order-0 offset outside the flat matching case is the point action.
+
+    Its point action is a real translation, so the generic prolongation
+    captures it entirely -- unlike a fibre offset, which that prolongation
+    cannot see at all.
+    """
+    sph = cxc.sph3d
+    q0 = {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")}
+    v0 = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    shift = cxfm.Translate.from_([0.5, -0.3, 0.2], "kpc")  # cart3d, k=0
+    out = cxfm.act_jet(shift, None, {0: q0, 1: v0}, sph)
+    assert set(out) == {0, 1}
+    # the point genuinely moved, so this is not an identity dressed up
+    assert not jnp.allclose(u.ustrip("kpc", out[0]["r"]), u.ustrip("kpc", q0["r"]))
