@@ -40,6 +40,14 @@ _TRANSITION_CACHE: dict[Any, cxfm.AbstractTransform] = {}
 #: Bounded so a parameter sweep cannot grow it without limit. Callers sweeping
 #: more frames than this simply stop hitting the cache; they are no worse off
 #: than before it existed.
+#:
+#: The check-then-insert below is not atomic, so concurrent writers can carry
+#: it a little past this number -- by at most one entry per racing thread, and
+#: only while they race. That is deliberate: a lock would serialise a read-most
+#: cache to remove an overshoot with no consequence, since every entry is the
+#: same pure function of its key and `dict` operations are individually atomic,
+#: so no entry can be torn or wrong. The number is a ceiling on growth, not an
+#: invariant anything depends on.
 _TRANSITION_CACHE_MAX = 64
 
 
