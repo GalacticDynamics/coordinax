@@ -25,7 +25,7 @@ from .icrs import ICRS, icrs
 @plum.dispatch
 def frame_transition(
     from_frame: AbstractSpaceFrame, to_frame: AbstractSpaceFrame, /
-) -> cxfm.Composed:
+) -> cxfm.AbstractTransform:
     """Compute frame transformations with ICRS as the intermediary.
 
     >>> import plum
@@ -83,7 +83,7 @@ def frame_transition(
     fromframe_to_icrs = frame_transition(from_frame, icrs)
     icrs_to_toframe = frame_transition(icrs, to_frame)
     pipe = fromframe_to_icrs | icrs_to_toframe
-    return cast("cxfm.Composed", cxfm.simplify(pipe))
+    return cast("cxfm.AbstractTransform", cxfm.simplify(pipe))
 
 
 # ---------------------------------------------------------------
@@ -256,8 +256,8 @@ def frame_transition(from_frame: Galactic, to_frame: ICRS, /) -> cxfm.Rotate:
 @plum.dispatch
 def frame_transition(
     from_frame: Galactocentric, to_frame: Galactocentric, /
-) -> cxfm.Composed:
-    """Return a sequence of operators for the Galactocentric frame self transformation.
+) -> cxfm.AbstractTransform:
+    """Return the operator for the Galactocentric frame self transformation.
 
     >>> import unxt as u
     >>> import coordinax.frames as cxf
@@ -300,8 +300,11 @@ def frame_transition(
         return cxfm.Composed((cxfm.identity,))
 
     # TODO: not go through ICRS for the self-transformation
-    return cxfm.simplify(  # ty: ignore[invalid-return-type]
-        frame_transition(from_frame, icrs) | frame_transition(icrs, to_frame)
+    return cast(
+        "cxfm.AbstractTransform",
+        cxfm.simplify(
+            frame_transition(from_frame, icrs) | frame_transition(icrs, to_frame)
+        ),
     )
 
 
@@ -429,7 +432,9 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
 
 
 @plum.dispatch
-def frame_transition(from_frame: Galactocentric, to_frame: ICRS, /) -> cxfm.Composed:
+def frame_transition(
+    from_frame: Galactocentric, to_frame: ICRS, /
+) -> cxfm.AbstractTransform:
     r"""Return a Galactocentric to ICRS frame transformation operator.
 
     This transformation inverts the ICRS→Galactocentric transformation,

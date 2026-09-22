@@ -688,3 +688,48 @@ class TestFrameTransitionUnderJit:
 
         got = jax.jit(f)(a, b)
         assert jnp.allclose(u.ustrip("kpc", got), jnp.asarray(self.EXPECT_KPC))
+
+
+# ===================================================================
+# Generic AbstractSpaceFrame fall-through (issue #975)
+#
+# The class and its two ICRS legs live at module scope, not inside the test:
+# plum registers dispatches globally, so a test-local subclass would leak a
+# method keyed to a dead class into every other test in the session.
+
+
+class _CancellingFrame(cxastro.AbstractSpaceFrame):
+    """A frame whose two ICRS legs are equal-and-opposite rotations."""
+
+
+@plum.dispatch
+def frame_transition(
+    from_frame: _CancellingFrame, to_frame: cxastro.ICRS, /
+) -> cxfm.AbstractTransform:
+    del from_frame, to_frame
+    return cxfm.Rotate.from_euler("z", u.Q(10, "deg"))
+
+
+@plum.dispatch
+def frame_transition(
+    from_frame: cxastro.ICRS, to_frame: _CancellingFrame, /
+) -> cxfm.AbstractTransform:
+    del from_frame, to_frame
+    return cxfm.Rotate.from_euler("z", u.Q(-10, "deg"))
+
+
+def test_generic_fallthrough_may_simplify_below_composed() -> None:
+    """The generic fall-through returns whatever `simplify` collapses to.
+
+    Both ICRS legs cancel, so the pipeline simplifies to an `Identity` -- not
+    a `Composed`. Annotating the fall-through with a concrete operator class
+    made this raise a `TypeCheckError` under runtime typechecking (#975).
+    """
+    op = cxf.frame_transition(_CancellingFrame(), _CancellingFrame())
+
+    assert isinstance(op, cxfm.AbstractTransform)
+
+    q = u.Q([1.0, 2.0, 3.0], "kpc")
+    np.testing.assert_allclose(
+        cxfm.act(op, None, q).ustrip("kpc"), q.ustrip("kpc"), rtol=0, atol=1e-12
+    )
