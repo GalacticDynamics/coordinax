@@ -135,8 +135,11 @@ nitpick_ignore = [
     # `equinox.EquinoxRuntimeError` is raised by the deferred `eqx.error_if`
     # guards on `Rotate`/`Reflect`/`Shear`, so it belongs in their `Raises`
     # sections -- but equinox's inventory does not document the class, so
-    # there is no target to resolve against.
+    # there is no target to resolve against. `EquinoxTracetimeError` is the
+    # same story for the *static* half of those guards: `_validate_square`
+    # decides a shape while tracing, so it raises the trace-time class.
     ("py:exc", "equinox.EquinoxRuntimeError"),
+    ("py:exc", "equinox.EquinoxTracetimeError"),
     ("py:class", "coordinax.distances._src.base.AbstractDistance"),
     # Private internal helper class from unxt with no public docs
     ("py:class", "unxt._src.quantity.base._QuantityIndexUpdateHelper"),
