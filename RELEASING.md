@@ -15,7 +15,7 @@ All releases are automated via GitHub Actions.
 
 ## One-time registry setup (required for the `coordinaxs.*` packages)
 
-Only `coordinax` is registered on PyPI and TestPyPI. No `coordinaxs.*` name exists on either registry, and none has a **pending publisher** standing by to create it on first upload, so `cd-publish.yml` fails with:
+A `coordinaxs.*` name that is not yet registered, and has no **pending publisher** standing by to create it on first upload, makes `cd-publish.yml` fail with:
 
 ```text
 400 Non-user identities cannot create new projects.
@@ -23,7 +23,7 @@ Only `coordinax` is registered on PyPI and TestPyPI. No `coordinaxs.*` name exis
 
 The OIDC exchange succeeds — the trusted publisher on the `coordinax` project covers this workflow, so a token is minted — but the resulting identity is not a user account, and non-user identities may only create a project when a pending publisher is already registered for that exact name. Watch the name: the pending publisher must match the `name` in the package's `pyproject.toml`, or the upload fails with the same 400. This is a registry-side setting; no repository change can work around it.
 
-Before the first release of each of `coordinaxs.api`, `coordinaxs.astro`, `coordinaxs.curveframes`, `coordinaxs.hypothesis`, and `coordinaxs.interop.astropy`, add a **pending publisher** on both <https://test.pypi.org/manage/account/publishing/> and <https://pypi.org/manage/account/publishing/>:
+Add a **pending publisher** for each unregistered name on <https://test.pypi.org/manage/account/publishing/> and <https://pypi.org/manage/account/publishing/>:
 
 | Field           | Value                                          |
 | --------------- | ---------------------------------------------- |
@@ -33,7 +33,9 @@ Before the first release of each of `coordinaxs.api`, `coordinaxs.astro`, `coord
 | Workflow name   | `cd-publish.yml`                               |
 | Environment     | `testpypi` on TestPyPI, `pypi` on PyPI         |
 
-The pending publisher becomes a normal trusted publisher on the first successful upload. Until then, every push to `main` that touches one of these packages will red-X `CD Publish`.
+**The workflow is `cd-publish.yml`, not the package's own `cd-coordinaxs-*.yml`.** Releasing is two-stage: the per-package Stage-A workflow builds and uploads an artifact with `contents: read` and no `id-token`, and `cd-publish.yml` is the only workflow that mints an OIDC token and uploads to a registry. A pending publisher registered against a Stage-A workflow never matches the token's claim, so the upload fails with the same 400 as if no publisher existed at all.
+
+The pending publisher becomes a normal trusted publisher on the first successful upload — that is how `coordinaxs.astro` and `coordinaxs.curveframes` reached TestPyPI. Until then, every push to `main` that touches one of the outstanding packages will red-X `CD Publish`.
 
 ---
 
