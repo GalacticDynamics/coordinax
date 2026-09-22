@@ -381,7 +381,7 @@ def simplify(op: Rotate, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     Identity()
 
     """
-    if approx and jnp.allclose(op.R, jnp.eye(3), **kw):
+    if approx and jnp.allclose(op.R, jnp.eye(op.R.shape[-1], dtype=op.R.dtype), **kw):
         return identity
     return op
 
