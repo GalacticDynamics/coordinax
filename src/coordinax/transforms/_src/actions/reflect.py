@@ -25,8 +25,11 @@ HMatrix: TypeAlias = Shaped[Array, " N N"]
 _MSG_ZERO_NORMAL: Final = "Reflect.from_normal needs a finite, nonzero normal."
 _MSG_NOT_INVOLUTIVE: Final = (
     "Reflect requires an involutive matrix: H @ H = I. That is the invariant "
-    "`inverse` relies on -- it returns the operator itself. For a general "
-    "orthogonal map use `Rotate`, for a general invertible one `Linear`."
+    "`inverse` relies on -- it returns the operator itself. For an orthogonal "
+    "map with det = +1 use `Rotate`; for any other invertible map use "
+    "`Linear`. Note `Rotate` is SO(n), so an orthogonal matrix with "
+    "det = -1 that is not an involution -- a rotoreflection -- belongs in "
+    "`Linear`, not `Rotate`."
 )
 
 _ATOL: Final = 1e-6
