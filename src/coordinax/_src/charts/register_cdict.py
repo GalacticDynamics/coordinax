@@ -17,6 +17,26 @@ from .containers import canonical_containers
 from coordinax._src.base import AbstractChart
 from coordinaxs.api.custom_types import CDict, CKeys
 
+
+def _check_homogeneous(obj: u.AbstractQuantity, chart: AbstractChart, /) -> None:
+    """Refuse to spread one unit over components that do not share a dimension.
+
+    Splitting a single-unit `~unxt.Quantity` hands every component the same
+    unit, which is only meaningful when the chart's components share one
+    physical dimension. `None` entries are unconstrained and so never conflict.
+    """
+    dims = chart.coord_dimensions
+    if len({d for d in dims if d is not None}) > 1:
+        msg = (
+            f"Cannot split a Quantity in {str(obj.unit)!r} across "
+            f"{type(chart).__name__}, whose components have different dimensions "
+            f"{tuple(str(d) for d in dims)}: every component would take that unit. "
+            "Pass per-component values instead -- a QuantityMatrix, a component "
+            "dict, or a Point."
+        )
+        raise ValueError(msg)
+
+
 # ===================================================================
 # CDict
 
@@ -169,7 +189,20 @@ def cdict(obj: u.AbstractQuantity, chart: AbstractChart, /) -> CDict:
     >>> cxc.cdict(q, cxc.cart3d)
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
+    A chart whose components have different dimensions cannot be filled from a
+    single unit -- every component would take that one unit:
+
+    >>> try:
+    ...     cxc.cdict(q, cxc.sph3d)
+    ... except ValueError as e:
+    ...     print(e)
+    Cannot split a Quantity in 'm' across Spherical3D, whose components have
+    different dimensions ('length', 'angle', 'angle'): every component would take
+    that unit. Pass per-component values instead -- a QuantityMatrix, a component
+    dict, or a Point.
+
     """
+    _check_homogeneous(obj, chart)
     return cxcapi.cdict(obj, chart.components)  # ty: ignore[invalid-return-type]
 
 

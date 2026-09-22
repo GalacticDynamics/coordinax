@@ -298,6 +298,7 @@ Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so
 | --- | --- |
 | `KeyError: 'y'` from `pt_map` | The dict does not have the source chart's components. `pt_map` trusts the chart you pass; check it matches the keys. |
 | `NoGlobalCartesianChartError` | The chart's manifold has no global Cartesian cover ($S^2$, ...). Use an `EmbeddedChart`, not a workaround. |
+| `ValueError: Cannot split a Quantity in '...' across <Chart>` | One unit cannot describe components of different dimensions, so `cdict(q, chart)` refuses a chart whose `coord_dimensions` differ (`sph3d`, `lonlat_sph3d`, `cyl3d`). Pass per-component units: a `QuantityMatrix`, a component dict, or a `Point`. |
 | `TypeError: Tangent requires a TangentGeometry representation` | `Tangent.from_(x, "m")` guessed `point_geom` from the length dimension. Pass a rate unit, or pass the representation explicitly. |
 | `NotFoundLookupError` naming a chart/metric/rep | No dispatch for that type combination. Read the "closest candidates" list — usually an argument-order or a chart-vs-dict mismatch. |
 | `AmbiguousLookupError` | Two dispatches match equally. Usually a downstream method annotated on a coordinax abstract base; narrow it to your own type. |
