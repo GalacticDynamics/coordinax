@@ -23,6 +23,7 @@ import coordinax.frames as cxf
 import coordinax.transforms as cxfm
 
 import coordinax.charts as cxc
+import coordinax.frames as cxf
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 import jax.tree_util as jtu
@@ -454,6 +455,27 @@ def test_unregistered_frame_raises_typeerror() -> None:
         {"lon": u.Q(90.0, "deg"), "lat": u.Q(45.0, "deg"), "distance": u.Q(1.0, "kpc")},
         chart=cxc.lonlat_sph3d,
         frame=UnregisteredFrame(),
+    )
+    with pytest.raises(TypeError, match=match):
+        convert(point, apyc.BaseCoordinateFrame)
+
+
+def test_non_space_frame_raises_typeerror() -> None:
+    """A frame that is not an `AbstractSpaceFrame` at all also raises `TypeError`.
+
+    `Point.frame` is any `coordinax.frames.AbstractReferenceFrame`, so the
+    fallback has to be wide enough to catch frames outside the astro hierarchy;
+    otherwise they escape as plum's `NotFoundLookupError`.
+    """
+    match = "Cannot convert `Alice` to an Astropy frame"
+    with pytest.raises(TypeError, match=match):
+        to_astropy_frame(cxf.alice)
+
+    # ... and the same through the `Point`-with-data conversion path.
+    point = cxv.Point(
+        {"lon": u.Q(90.0, "deg"), "lat": u.Q(45.0, "deg"), "distance": u.Q(1.0, "kpc")},
+        chart=cxc.lonlat_sph3d,
+        frame=cxf.alice,
     )
     with pytest.raises(TypeError, match=match):
         convert(point, apyc.BaseCoordinateFrame)
