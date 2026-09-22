@@ -6,13 +6,16 @@ This module defines helpers for operator implementations.
 __all__: tuple[str, ...] = (
     "is_componentwise_offset",
     "is_flat_chart",
+    "is_traced",
     "require_matching_keys",
 )
 
 from collections.abc import Iterable
 from typing import Any
 
+import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 
 import coordinax.representations as cxr
 from coordinax._src.exceptions import NoGlobalCartesianChartError
@@ -35,6 +38,25 @@ def is_flat_chart(chart: Any, /) -> bool:
     except NoGlobalCartesianChartError:
         return False
     return isinstance(chart, type(cart))
+
+
+def is_traced(*args: Any) -> bool:
+    """Whether any leaf of ``args`` is a JAX tracer.
+
+    A value-inspecting `~coordinax.transforms.simplify` rule can only answer
+    from concrete values. Under `jax.jit` the values are not known, so the rule
+    must decline to simplify rather than raise: ``jnp.allclose(...)`` on a
+    tracer is itself a tracer, and putting that in an ``if`` raises
+    `jax.errors.TracerBoolConversionError`.
+
+    Pytree leaves, not the arguments themselves, because the operand may be a
+    `unxt.Quantity` (or a dict of them) wrapping a traced array -- the wrapper
+    is not a `jax.core.Tracer` even when its contents are.
+    """
+    return any(
+        isinstance(leaf, jax.core.Tracer)  # ty: ignore[possibly-missing-submodule]
+        for leaf in jtu.tree_leaves(args)
+    )
 
 
 def is_componentwise_offset(op: Any, chart: Any, /) -> bool:

@@ -35,7 +35,7 @@ from .prolong import (
     tau_derivative,
 )
 from .timedep import TimeDep
-from .utils import is_componentwise_offset
+from .utils import is_componentwise_offset, is_traced
 from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 _MSG_CALLABLE_DELTA = (
@@ -641,7 +641,9 @@ def simplify(
     """Simplify a AbstractAdd operator.
 
     A translation with zero delta simplifies to Identity. This is a
-    value-inspecting rule, so it is skipped when ``approx=False``.
+    value-inspecting rule, so it is skipped when ``approx=False``, and when
+    any leaf of ``delta`` is traced -- under `jax.jit` the values are not
+    known, which is exactly when the answer is "do not simplify".
 
     >>> import coordinax.transforms as cxfm
 
@@ -654,7 +656,7 @@ def simplify(
     Identity()
 
     """
-    if not approx:
+    if not approx or is_traced(op.delta):
         return op
     is_zero = jtu.all(
         jtu.map(lambda v: jnp.allclose(u.ustrip(AllowValue, v), 0, **kw), op.delta)

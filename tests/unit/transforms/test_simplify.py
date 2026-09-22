@@ -193,9 +193,70 @@ def test_approx_false_works_under_jit() -> None:
     assert isinstance(out, cxfm.Rotate)
 
 
-def test_default_simplify_is_not_jit_safe() -> None:
-    with pytest.raises(jax.errors.TracerBoolConversionError):
-        jax.jit(lambda op: cxfm.simplify(op))(cxfm.Rotate(jnp.eye(3)))
+class TestSimplifyDeclinesUnderTrace:
+    """Regression for #963: a traced operand means "do not simplify".
+
+    Every value-inspecting rule used to put a possibly-traced `jnp.allclose`
+    straight into an ``if``, so ``simplify`` under `jax.jit` raised
+    `jax.errors.TracerBoolConversionError` instead of declining. ``approx=False``
+    traced fine, but it is not reachable from the internal callers --
+    ``frame_transition`` calls ``simplify()`` with the default.
+
+    Each case is built from the jit argument so its operand is genuinely traced,
+    and each is identity-valued, so an unfixed site could not pass by accident.
+    """
+
+    #: name -> (build from one array, identity-valued operand, operator type)
+    CASES: ClassVar = {
+        "Rotate": (cxfm.Rotate, lambda: jnp.eye(3), cxfm.Rotate),
+        "Reflect": (cxfm.Reflect, lambda: jnp.eye(3), cxfm.Reflect),
+        "Shear": (cxfm.Shear, lambda: jnp.eye(3), cxfm.Shear),
+        "Scale": (cxfm.Scale, lambda: jnp.eye(3), cxfm.Scale),
+        "Linear": (cxfm.Linear, lambda: jnp.eye(3), cxfm.Linear),
+        "LorentzBoost": (cxfm.LorentzBoost, lambda: jnp.zeros(3), cxfm.LorentzBoost),
+        "Translate": (
+            lambda d: cxfm.Translate.from_(u.Q(d, "km")),
+            lambda: jnp.zeros(3),
+            cxfm.Translate,
+        ),
+        # `Affine` is not in #963's table but has the same rule, and it is what
+        # a `Rotate | Translate` chain fuses into -- so the Composed path lands
+        # here rather than on the per-operator rules.
+        "Affine": (
+            lambda A: cxfm.Affine(A, _point(0.0, 0.0, 0.0), chart=cxc.cart3d),
+            lambda: jnp.eye(3),
+            cxfm.Affine,
+        ),
+    }
+
+    @pytest.mark.parametrize("name", list(CASES))
+    def test_jit_declines_instead_of_raising(self, name) -> None:
+        build, operand, op_type = self.CASES[name]
+        got = jax.jit(lambda x: cxfm.simplify(build(x)))(operand())
+        assert isinstance(got, op_type)
+
+    @pytest.mark.parametrize("name", list(CASES))
+    def test_eager_still_collapses_to_identity(self, name) -> None:
+        """The whole point: nothing about the eager answer changes."""
+        build, operand, _ = self.CASES[name]
+        assert cxfm.simplify(build(operand())) is cxfm.identity
+
+    @pytest.mark.parametrize("name", list(CASES))
+    def test_approx_false_still_declines_and_traces(self, name) -> None:
+        build, operand, op_type = self.CASES[name]
+        got = jax.jit(lambda x: cxfm.simplify(build(x), approx=False))(operand())
+        assert isinstance(got, op_type)
+
+    def test_composed_follows_from_its_members(self) -> None:
+        """`Composed` recurses (#539), so trace-safe members make it safe."""
+        pipe = cxfm.Composed(
+            (cxfm.Rotate(jnp.eye(3)), cxfm.Translate.from_(u.Q(jnp.zeros(3), "km")))
+        )
+        got = jax.jit(cxfm.simplify)(pipe)
+        # The pair still fuses -- structural merging is value-free -- but the
+        # fused operator is not collapsed to `Identity` under trace.
+        assert isinstance(got, cxfm.Affine)
+        assert cxfm.simplify(pipe) is cxfm.identity
 
 
 class TestLorentzBoostSimplify:
