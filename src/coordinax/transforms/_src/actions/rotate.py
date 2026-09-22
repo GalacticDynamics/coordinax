@@ -33,9 +33,11 @@ _ATOL: Final = 1e-6
 
 _MSG_NOT_A_ROTATION: Final = (
     "Rotate requires a rotation matrix: R^T R = I with det R = +1, i.e. SO(n). "
-    "Orthogonality is what `inverse` relies on -- it transposes. For an "
-    "orientation-reversing orthogonal map use `Reflect`; for any other "
-    "invertible linear map use `Linear`."
+    "Orthogonality is what `inverse` relies on -- it transposes. For a "
+    "hyperplane reflection -- orthogonal, det = -1 *and* an involution -- use "
+    "`Reflect`; for any other invertible linear map use `Linear`. Note a "
+    "rotoreflection is orthogonal with det = -1 and is not an involution, so "
+    "it belongs in `Linear`, not `Reflect`."
 )
 
 

@@ -19,9 +19,9 @@ def test_concrete_transform_groups_match_spec() -> None:
     assert cxfm.Translate.groups() == frozenset(
         (cxfm.groups.EuclideanGroup, cxfm.groups.DiffeomorphismGroup)
     )
-    # `Rotate.groups` is an instance method: the group depends on `sign(det R)`,
-    # not on the type. See `test_rotate_groups_follow_the_determinant_sign`.
-    assert cxfm.Rotate(jnp.eye(3)).groups() == frozenset(
+    # `Rotate.groups` is a plain classmethod: the constructor admits only
+    # `det R = +1`, so SO(n) holds by construction with no determinant to read.
+    assert cxfm.Rotate.groups() == frozenset(
         (cxfm.groups.SpecialOrthogonalGroup, cxfm.groups.DiffeomorphismGroup)
     )
     assert cxfm.Reflect.groups() == frozenset(
