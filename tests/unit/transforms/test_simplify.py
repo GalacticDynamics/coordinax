@@ -500,17 +500,23 @@ class TestMalformedMatricesReportTheSharedMessage:
     def _nonsquare(self):
         return jnp.ones(self.NONSQUARE)
 
-    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    @pytest.mark.parametrize(
+        "op_type", [cxfm.Scale, cxfm.Linear, cxfm.Rotate, cxfm.Reflect]
+    )
     def test_matrix_reports_square(self, op_type):
         with pytest.raises(Exception, match="square"):
             _ = op_type(self._nonsquare()).matrix
 
-    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    @pytest.mark.parametrize(
+        "op_type", [cxfm.Scale, cxfm.Linear, cxfm.Rotate, cxfm.Reflect]
+    )
     def test_inverse_reports_square(self, op_type):
         with pytest.raises(Exception, match="square"):
             _ = op_type(self._nonsquare()).inverse.matrix
 
-    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    @pytest.mark.parametrize(
+        "op_type", [cxfm.Scale, cxfm.Linear, cxfm.Rotate, cxfm.Reflect]
+    )
     def test_simplify_reports_square(self, op_type):
         with pytest.raises(Exception, match="square"):
             cxfm.simplify(op_type(self._nonsquare()))

@@ -15,6 +15,7 @@ import unxt as u
 import coordinax as cx
 import coordinax.transforms as cxfm
 from .conftest import EXPECTED_IDENTITY, EXPECTED_REFLECT
+from coordinax.transforms._src.actions.reflect import _not_involutive
 
 
 @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
@@ -135,3 +136,16 @@ class TestReflectionMatrixIsInvolutive:
     def test_a_valid_reflection_constructs_under_jit(self) -> None:
         op = eqx.filter_jit(cxfm.Reflect)(jnp.diag(jnp.asarray([-1.0, 1.0, 1.0])))
         assert bool(jnp.allclose(op.H, jnp.diag(jnp.asarray([-1.0, 1.0, 1.0]))))
+
+
+def test_a_non_square_matrix_is_named_by_the_shape_check() -> None:
+    """The involutivity check defers to `_validate_square` on shape.
+
+    Mirrors `test_rotate.py`. A non-square matrix has no ``H @ H`` to compare,
+    so `_not_involutive` declines and the error names the shape rather than
+    claiming the matrix is not an involution.
+    """
+    rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    assert _not_involutive(rect) is False
+    with pytest.raises(Exception, match=r"square matrix; got shape"):
+        cxfm.Reflect(rect)
