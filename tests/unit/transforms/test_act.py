@@ -768,3 +768,67 @@ class TestJointProlongationPreconditions:
         op = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg"))
         with pytest.raises(TypeError, match=r"non-coordinate basis holds rescaled"):
             cxfm.act(op, None, crd)
+
+
+class TestTwoFibresAtOneLadderOrder:
+    """Routing must see every fibre, not one per ladder order.
+
+    A map keyed by order keeps whichever fibre came last. With a curved
+    order-2 fibre hidden behind a flat one, the routing question was asked of
+    the flat one, the cheap path was taken, and the curved fibre was quietly
+    flattened -- the very thing this PR exists to stop, reintroduced through
+    the lookup rather than the law.
+    """
+
+    ROT = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg"))
+
+    @staticmethod
+    def _cd(vals, unit):
+        return dict(zip(("x", "y", "z"), (u.Q(v, unit) for v in vals), strict=True))
+
+    def _two_accelerations(self):
+        point = cx.Point(self._cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d)
+        vel = cx.Tangent(
+            self._cd((0.3, -0.4, 0.2), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        acc_flat = cx.Tangent(
+            self._cd((0.0, 0.0, 0.0), "kpc/Myr2"), cxc.cart3d, cxr.coord_basis, cxr.acc
+        )
+        flat = cx.Coordinate(point=point, velocity=vel, acceleration=acc_flat)
+        # the curved one first, the flat one last -- an order-keyed map would
+        # keep the flat one and never ask about the curved
+        return cx.Coordinate._create_unchecked(
+            point,
+            {
+                "velocity": vel,
+                "acc_curved": flat.cconvert(cxc.sph3d)["acceleration"],
+                "acc_flat": acc_flat,
+            },
+        )
+
+    def test_both_order_two_fibres_are_seen_by_the_router(self):
+        from coordinax.vectors._src.register_cx import _needs_joint_prolongation
+
+        assert _needs_joint_prolongation(self.ROT, self._two_accelerations())
+
+    def test_the_ambiguity_is_refused_rather_than_silently_resolved(self):
+        """One jet slot per order, so two fibres for it is not answerable.
+
+        Reaching this error at all is the fix: before, the router sent the
+        bundle down the cheap path and this check never ran.
+        """
+        with pytest.raises(ValueError, match=r"multiple fibres at ladder order 2"):
+            cxfm.act(self.ROT, None, self._two_accelerations())
+
+    def test_two_order_one_fibres_remain_fine(self):
+        """Order 1 is the Jacobian per fibre, so duplicates there are harmless."""
+        point = cx.Point(self._cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d)
+        v1 = cx.Tangent(
+            self._cd((0.3, -0.4, 0.2), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        v2 = cx.Tangent(
+            self._cd((0.1, 0.1, 0.1), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        both = cx.Coordinate._create_unchecked(point, {"velocity": v1, "velocity2": v2})
+        out = cxfm.act(self.ROT, None, both)
+        assert set(out._data) == {"velocity", "velocity2"}

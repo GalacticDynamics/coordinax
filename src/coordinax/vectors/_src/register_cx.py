@@ -22,6 +22,7 @@ import coordinaxs.api.transforms as cxfmapi
 from .bundle import (
     Coordinate,
     _chart_map_is_affine,
+    _ladder_fibres,
     _require_coordinate_basis,
     carry_fibre_across,
 )
@@ -715,21 +716,6 @@ def _cached_point_data_in(point: Point, /) -> Callable[[Any], CDict]:
     return point_data_in
 
 
-def _ladder_orders(x: Coordinate, /) -> dict[int, str]:
-    r"""Curve-derivative order -> fibre name, for the bundle's ladder fibres.
-
-    Displacement fibres (order 0) and non-ladder ones are not jet slots -- a
-    displacement is a same-$\tau$ point difference, not a curve derivative --
-    so they are left out, exactly as `_act_coordinate_jet` leaves them out.
-    """
-    out: dict[int, str] = {}
-    for name, fibre in x._data.items():
-        order = fibre.rep.semantic_kind.order
-        if order is not None and order >= 1:
-            out[order] = name
-    return out
-
-
 def _needs_joint_prolongation(op: cxfm.AbstractTransform, x: Coordinate, /) -> bool:
     r"""Whether the bundle must be prolonged jointly rather than fibre by fibre.
 
@@ -750,10 +736,16 @@ def _needs_joint_prolongation(op: cxfm.AbstractTransform, x: Coordinate, /) -> b
     fibre elsewhere, and it is the chart the acceleration is written in that
     decides whether its curvature term vanishes -- a point in `cart3d` does
     not make an `sph3d` acceleration safe.
+
+    Keyed by fibre name rather than by ladder order, which matters when two
+    fibres share one: an order-keyed map keeps whichever came last, so a
+    curved fibre hidden behind a flat one of the same order would be routed
+    to the cheap path and quietly flattened. The ambiguity itself is caught
+    downstream, but only once the joint path has been taken.
     """
     return any(
         not is_affine_in_chart(op, x._data[name].chart)
-        for order, name in _ladder_orders(x).items()
+        for name, order in _ladder_fibres(x).items()
         if order >= 2
     )
 
@@ -881,8 +873,8 @@ def _act_coordinate_jet(
         if order in jet:
             msg = (
                 f"Coordinate has multiple fibres at ladder order {order}; "
-                "the joint prolongation under a time-dependent transform is "
-                "ambiguous."
+                "the joint prolongation is ambiguous -- the jet has one slot "
+                "per order, and which fibre fills it would decide the answer."
             )
             raise ValueError(msg)
         jet[order] = cast("CDict", f.data)
