@@ -101,3 +101,22 @@ def test_cdict_refuses_a_two_dimensional_quantity_matrix() -> None:
 
     with pytest.raises(ValueError, match="must be 1D"):
         cxc.cdict(qm, cxc.cart3d)
+
+
+@pytest.mark.parametrize("chart", [cxc.sph3d, cxc.lonlat_sph3d, cxc.cyl3d])
+def test_cdict_refuses_one_unit_for_a_heterogeneous_chart(chart) -> None:
+    """One unit cannot describe components of different dimensions (#949)."""
+    with pytest.raises(ValueError, match="every component would take that unit"):
+        cxc.cdict(u.Q([1.0, 2.0, 3.0], "kpc"), chart)
+
+
+@pytest.mark.parametrize("unit", ["kpc", "km/s", "km/s2"])
+def test_cdict_accepts_one_unit_for_a_homogeneous_chart(unit: str) -> None:
+    """A Cartesian chart shares one dimension, so any single unit is fine (#949).
+
+    In particular a tangent's units must keep working: the chart's coordinate
+    dimensions are lengths, but the values are speeds or accelerations.
+    """
+    got = cxc.cdict(u.Q([1.0, 2.0, 3.0], unit), cxc.cart3d)
+    assert set(got.keys()) == set(cxc.cart3d.components)
+    assert all(u.unit_of(v) == u.unit(unit) for v in got.values())
