@@ -656,20 +656,45 @@ def _ladder_fibres(coord: "Coordinate", /) -> dict[str, int]:
     return out
 
 
+#: Groups of chart types that are affine relabellings of one another -- same
+#: parameterisation, coordinates differing by a permutation, a sign and a
+#: shift, so the transition Jacobian is constant and $\partial^2\psi \equiv 0$.
+#: `LonCosLatSpherical3D` is deliberately absent: its ``lon_coslat`` carries a
+#: $\cos(\mathrm{lat})$ factor, which makes the Jacobian base-point dependent
+#: like any other curvilinear map. Membership is pinned by a test that probes
+#: `jac_pt_map` at two separated points and asserts it is constant.
+_AFFINE_RELABELLINGS: tuple[frozenset[type], ...] = (
+    frozenset({cxc.Spherical3D, cxc.MathSpherical3D, cxc.LonLatSpherical3D}),
+)
+
+
 def _chart_map_is_affine(
     from_chart: cxc.AbstractChart, to_chart: cxc.AbstractChart, /
 ) -> bool:
     r"""Whether the chart transition ``from_chart -> to_chart`` is affine.
 
     Exactly the condition under which $\partial^2\psi \equiv 0$, so the
-    Jacobian pushforward is the complete law at every order. A chart is its
-    own trivial case, and two Cartesian-type charts on the same manifold
-    differ by at most a linear relabelling. Anything curvilinear on either
-    side is not affine -- which is the whole of the interesting case.
+    Jacobian pushforward is the complete law at every order and the cheap
+    per-fibre path stays correct.
+
+    Three ways to qualify: a chart with itself, two Cartesian-type charts
+    (which differ by at most a linear relabelling of flat space), and two
+    members of the same relabelling family -- `sph3d`, `math_sph3d` and
+    `lonlat_sph3d` are the same parameterisation written three ways, with
+    $\mathrm{lat} = \pi/2 - \theta$ and friends.
+
+    Conservative where it is unsure: an unrecognised pair reports `False` and
+    takes the joint-jet path, which is always correct and merely costlier.
+    The price of a false negative is a needless prolongation -- and, for a
+    bundle whose ladder has a hole, a needless refusal -- so the family list
+    is worth keeping current.
     """
     if from_chart == to_chart:
         return True
-    return cxfm_utils.is_flat_chart(from_chart) and cxfm_utils.is_flat_chart(to_chart)
+    if cxfm_utils.is_flat_chart(from_chart) and cxfm_utils.is_flat_chart(to_chart):
+        return True
+    pair = {type(from_chart), type(to_chart)}
+    return any(pair <= family for family in _AFFINE_RELABELLINGS)
 
 
 def _cconvert_needs_joint_jet(

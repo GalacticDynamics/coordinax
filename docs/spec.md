@@ -2578,6 +2578,14 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     Coordinate conversion (chart change) propagates consistently: the base point converts via the chart transition map, and each fibre vector converts via the **Jacobian pushforward at the base point** expressed in the fibre's current chart.
 
+    That pushforward is the complete law only up to ladder order 1. A fibre of order $m \geq 2$ picks up a second term from the curvature of the transition map,
+
+    $$ \tilde{a}^k = J^k{}_i a^i + \partial_{ij}\tilde{q}^k\, v^i v^j, $$
+
+    which is built from the *lower* fibre and so is invisible to a pass that converts one fibre at a time. The bundle is the one holder of that lower fibre, so `Coordinate.cconvert` carries the **whole jet** $\{0: q, 1: v, 2: a, \ldots\}$ through the transition instead, and each fibre is read back out of the prolonged jet. A lone `Tangent` cannot do this and is unchanged: `tangent_map` and `cconvert` on a single fibre remain the Jacobian pushforward at `at`.
+
+    The second term vanishes identically where the transition is **affine** — a chart with itself, two Cartesian-type charts, or two members of one relabelling family such as `sph3d`/`math_sph3d`/`lonlat_sph3d` — and there the per-fibre path is kept, being both exact and cheaper. Where it does not vanish and the bundle's ladder has a hole, the conversion **raises** rather than returning the first-order answer: an absent fibre means "not tracked", not "zero". See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
+
     **Fields:**
 
     | Field   | Type                 | Notes                             |
