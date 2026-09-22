@@ -372,17 +372,22 @@ class TestBishopSolveConfiguration:
 
     @pytest.mark.parametrize("tau_val", [0.0, 1.0, -1.5, 7.0])
     def test_default_accuracy_oracle(self, tau_val: float):
-        """Pinned values: the default solve is orthonormal to ~1e-11.
+        """Pinned values: R is orthonormal to machine precision.
 
-        Measured at ``float64`` on the 0.3-pitch helix; the same solve is
-        accurate to 9.403e-12 out at ``|tau| = 60``, where it also stays
-        inside the 16384-step budget (~20 steps per unit of ``|dtau|``).
+        Measured at ``float64`` on the 0.3-pitch helix, either side of
+        ``tau_0`` and at ``tau_0`` itself. This is *not* a tolerance
+        observable: since #952 the solved U1 is re-orthonormalised against the
+        tangent, so the bar is machine precision at any tolerance the solve is
+        given -- see `test_loose_tolerances_are_measurably_worse`, which is
+        what still pins the tolerances themselves. The step budget is the
+        separate claim: ~20 steps per unit of ``|dtau|``, so 16384 carries
+        ``|tau|`` well past the values here.
         """
         R = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(
             u.Q(tau_val, "s")
         )
-        assert _orthonormality_error(R) < 1e-11
-        np.testing.assert_allclose(jnp.linalg.det(R), 1.0, atol=1e-11)
+        assert _orthonormality_error(R) < 1e-14
+        np.testing.assert_allclose(jnp.linalg.det(R), 1.0, rtol=0, atol=1e-14)
 
     def test_partial_override_preserves_the_direct_adjoint(self):
         """`dataclasses.replace` keeps every knob it is not told to change.
@@ -435,11 +440,14 @@ class TestBishopSolveConfiguration:
         assert doubled.diffeqsolver.stepsize_controller.rtol == 1e-3
 
     def test_loose_tolerances_are_measurably_worse(self):
-        """A deliberately loose controller degrades orthonormality by ~1e9.
+        """A deliberately loose controller transports measurably worse.
 
-        The assertion is two-sided: the loose solve must be *far* worse than
-        the default, which is what proves the field is read rather than
-        merely accepted.
+        The observable is the *frame*, not its orthonormality: since #952 both
+        solves are orthonormal to machine precision, because the residual the
+        tolerances control is projected out rather than carried into R. What
+        the tolerances still control is where U1 ends up, and a loose solve
+        puts it somewhere visibly different -- which is what proves the field
+        is read rather than merely accepted.
         """
         tau = u.Q(7.0, "s")
         default = cxfc.BishopBuilder(helix, "s", normal_0="auto").rotation_matrix(tau)
@@ -447,10 +455,10 @@ class TestBishopSolveConfiguration:
             stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-3)
         ).rotation_matrix(tau)
 
-        assert _orthonormality_error(default) < 1e-11
-        assert _orthonormality_error(loose) > 1e-5
-        # ...and the frames genuinely differ, not just their error estimates.
         assert float(jnp.max(jnp.abs(loose - default))) > 1e-4
+        # Both are still rotations. A loose solve is inaccurate, not invalid.
+        assert _orthonormality_error(default) < 1e-14
+        assert _orthonormality_error(loose) < 1e-14
 
     def test_alternative_solver_agrees_with_the_default(self):
         """A different solver is a different integrator, not a different answer."""
@@ -603,8 +611,9 @@ class TestBishopSolveConfiguration:
 
         `BishopFrame.from_curve` forwards every other builder field, so a
         ``diffeqsolver`` it dropped would leave the documented entry point
-        silently stuck on the default. Asserted by *effect*: the same loose
-        controller that degrades accuracy on the builder must degrade it here.
+        silently stuck on the default. Asserted by *effect*, on the same
+        observable as `test_loose_tolerances_are_measurably_worse`: the loose
+        controller must move the frame here too.
         """
         tau = u.Q(7.0, "s")
         loose = dataclasses.replace(
@@ -614,10 +623,12 @@ class TestBishopSolveConfiguration:
             cxf.Alice(), helix, "s", diffeqsolver=loose, normal_0="auto"
         )
 
-        assert frame.xop.builder.diffeqsolver is loose
-        assert _orthonormality_error(frame.xop.builder.rotation_matrix(tau)) > 1e-5
-
         # The default path is untouched.
         default = cxfc.BishopFrame.from_curve(cxf.Alice(), helix, "s", normal_0="auto")
         assert default.xop.builder.diffeqsolver == _DEFAULT_SOLVE
-        assert _orthonormality_error(default.xop.builder.rotation_matrix(tau)) < 1e-11
+
+        assert frame.xop.builder.diffeqsolver is loose
+        R_loose = frame.xop.builder.rotation_matrix(tau)
+        R_default = default.xop.builder.rotation_matrix(tau)
+        assert float(jnp.max(jnp.abs(R_loose - R_default))) > 1e-4
+        assert _orthonormality_error(R_default) < 1e-14
