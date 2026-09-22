@@ -487,3 +487,66 @@ def test_fibre_kick_ambiguity_survives_the_linear_fix():
     op, _ = OPS["icrs_to_gc"]
     with pytest.raises(TypeError, match=r"ambiguous|representation"):
         cxfm.act(op, None, jnp.asarray([1.0, 2.0, 3.0]), usys=USYS)
+
+
+class TestTheCallerSuppliedChartIsHonoured:
+    """A bare array is read in the chart the caller named, or refused (#977).
+
+    The array path used to overwrite `chart` with `guess_chart(x)`, which
+    always answers Cartesian for a bare array -- so the Cartesian check below
+    it could never fire, and `act(op, tau, x, sph3d, point)` silently treated
+    the data as Cartesian.
+    """
+
+    _OP = cxfm.Rotate.from_euler("z", u.Q(90.0, "deg"))
+    _X = jnp.asarray([1.0, 0.0, 0.0])
+
+    def test_a_curvilinear_chart_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="requires a Cartesian chart"):
+            cxfm.act(self._OP, None, self._X, cxc.sph3d, cxr.point, usys=USYS)
+
+    def test_a_cartesian_chart_still_acts(self) -> None:
+        got = cxfm.act(self._OP, None, self._X, cxc.cart3d, cxr.point, usys=USYS)
+        np.testing.assert_allclose(np.asarray(got), [0.0, 1.0, 0.0], atol=1e-12)
+
+    def test_a_component_count_mismatch_is_named(self) -> None:
+        with pytest.raises(ValueError, match="last axis of x is 2"):
+            cxfm.act(
+                self._OP,
+                None,
+                jnp.asarray([1.0, 0.0]),
+                cxc.cart3d,
+                cxr.point,
+                usys=USYS,
+            )
+
+
+class TestLorentzBoostSharesTheLinearArrayPath:
+    """The 4-D operator on the same `AbstractLinearTransform` path (#977).
+
+    The fix is on the shared base, so `LorentzBoost` inherits it; the 3-D
+    operators above cannot show that the 4-D Minkowski case also works.
+    """
+
+    _OP = cxfm.LorentzBoost.from_(u.Q([0.1, 0.0, 0.0], ""))
+    _CHART = cxc.minkowskict
+    _X = jnp.asarray([1.0, 0.5, 0.0, 0.0])
+
+    def _cdict(self):
+        return {
+            k: u.Q(float(v), "km")
+            for k, v in zip(self._CHART.components, self._X, strict=True)
+        }
+
+    @pytest.mark.parametrize(
+        "rep", [cxr.coord_disp, cxr.coord_vel], ids=["disp", "vel"]
+    )
+    def test_a_tangent_rep_array_matches_the_cdict_spelling(self, rep) -> None:
+        got = cxfm.act(self._OP, None, self._X, self._CHART, rep, usys=USYS)
+        ref = cxfm.act(self._OP, None, self._cdict(), self._CHART, rep, usys=USYS)
+        np.testing.assert_allclose(
+            np.asarray(got),
+            [float(u.ustrip("km", ref[k])) for k in self._CHART.components],
+            rtol=0,
+            atol=1e-12,
+        )

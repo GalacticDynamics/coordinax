@@ -167,10 +167,24 @@ def act(
     del kw  # Does not require an anchoring base-point.
 
     x_arr = jnp.asarray(x)
-    chart = cxc.guess_chart(x_arr)  # ty: ignore[invalid-assignment]
+    # Honour the chart the caller passed rather than re-guessing one from the
+    # array. Guessing always answers Cartesian for a bare array, which made the
+    # check below vacuous and silently reinterpreted `act(op, tau, x, sph3d,
+    # point)` as Cartesian.
     if chart != chart.cartesian:
         msg = (
-            f"act for {type(op).__name__} with ArrayLike x requires a Cartesian chart."
+            f"act for {type(op).__name__} with ArrayLike x requires a Cartesian "
+            f"chart; got {type(chart).__name__}. A bare array carries no units, "
+            "so it cannot be read in a curvilinear chart -- pass a Quantity, a "
+            "QuantityMatrix, or a Point."
+        )
+        raise ValueError(msg)
+    n_components = len(chart.components)
+    if jnp.shape(x_arr)[-1] != n_components:
+        msg = (
+            f"act for {type(op).__name__}: last axis of x is "
+            f"{jnp.shape(x_arr)[-1]}, but {type(chart).__name__} has "
+            f"{n_components} components."
         )
         raise ValueError(msg)
 
