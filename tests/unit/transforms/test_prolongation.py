@@ -1283,12 +1283,19 @@ class TestRobustness:
 # the dispatch table -- a new transform that registers its own CDict `act`
 # rule leaves the generic funnel and belongs here.
 POINT_ACTION_PATHS = [
-    (cxfm.Rotate.from_euler("z", u.Q(37.0, "deg")), None),  # generic funnel
-    (cxfm.Translate.from_([1, 2, 3], "kpc"), None),  # translate.py
-    (cxfm.Boost.from_([1.0, 0.0, 0.0], "kpc/Myr"), u.Q(1.0, "Myr")),  # boost.py
-    (cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),)), None),  # composed.py
+    pytest.param(
+        cxfm.Rotate.from_euler("z", u.Q(37.0, "deg")), None, id="funnel"
+    ),  # generic funnel
+    pytest.param(
+        cxfm.Translate.from_([1, 2, 3], "kpc"), None, id="translate"
+    ),  # translate.py
+    pytest.param(
+        cxfm.Boost.from_([1.0, 0.0, 0.0], "kpc/Myr"), u.Q(1.0, "Myr"), id="boost"
+    ),  # boost.py
+    pytest.param(
+        cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),)), None, id="composed"
+    ),  # composed.py
 ]
-POINT_PATH_IDS = ["funnel", "translate", "boost", "composed"]
 
 
 class TestUnusableAnchorSlotsAreRefused:
@@ -1359,15 +1366,14 @@ class TestUnusableAnchorSlotsAreRefused:
         full = cxfm.act_jet(
             self.ROT, None, {0: self.Q0, 1: self.V0, 2: self.A0}, cxc.sph3d
         )[2]
-        rel = {
-            k: abs(
-                float(
-                    u.ustrip("rad/Myr2", pushed[k] - full[k])
-                    / u.ustrip("rad/Myr2", full[k])
-                )
-            )
-            for k in ("theta", "phi")
-        }
+        rel = {}
+        for k in ("theta", "phi"):
+            ref = float(u.ustrip("rad/Myr2", full[k]))
+            # The gap is stated relative to `full`, so a `full` near zero would
+            # make the ratio meaningless (0/0 -> nan, which fails the assert
+            # below for the wrong reason). Fail on the premise instead.
+            assert abs(ref) > 1e-12, f"{k}: reference acceleration is ~0"
+            rel[k] = abs(float(u.ustrip("rad/Myr2", pushed[k] - full[k])) / ref)
         assert rel["theta"] > 0.5
         assert rel["phi"] > 0.5
 
@@ -1445,7 +1451,7 @@ class TestUnusableAnchorSlotsAreRefused:
         )
         assert jnp.allclose(u.ustrip("km/s2", out["x"]), 7.0)
 
-    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS, ids=POINT_PATH_IDS)
+    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS)
     def test_a_point_action_refuses_the_slot_in_point_language(self, op, tau):
         """Every point action refuses, and not in the tangent language.
 
@@ -1463,7 +1469,7 @@ class TestUnusableAnchorSlotsAreRefused:
         with pytest.raises(TypeError, match=r"on point data reads jet slot 0 alone"):
             cxfm.act(op, tau, self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0})
 
-    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS, ids=POINT_PATH_IDS)
+    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS)
     def test_a_point_action_still_takes_slot_zero(self, op, tau):
         """Only slots >= 1 are refused on the point path as well."""
         q = q3(1.0, 2.0, 3.0, "kpc")
