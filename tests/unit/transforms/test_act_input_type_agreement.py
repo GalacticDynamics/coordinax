@@ -24,6 +24,8 @@ loudly rather than guessed at.
 
 __all__: tuple[str, ...] = ()
 
+from typing import ClassVar
+
 import jax.numpy as jnp
 import numpy as np
 import pytest
@@ -37,6 +39,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from coordinax.frames import frame_transition
+from coordinax.transforms._src.actions.utils import act_array_via_cdict
 
 USYS = u.unitsystem("km", "s", "kg", "rad")
 
@@ -257,3 +260,47 @@ def test_heterogeneous_quantitymatrix_rep_is_an_error_not_a_guess():
     assert isinstance(
         cxfm.act(kick, None, qm, cxc.cart3d, cxr.point, usys=USYS), ul.QuantityMatrix
     )
+
+
+class TestABareArrayIsRefusedInAPhysicalBasis:
+    """Units for a bare array come from the coordinate basis (#970 review).
+
+    `rep.semantic_kind.coord_dimensions(chart)` describes the *coordinate*
+    basis: in `sph3d` it reports angular speed for the angular components. A
+    physical (orthonormal) basis has every velocity component a speed, so
+    reading a bare array that way would silently mis-unit two of its three
+    components. Both bases used to return the same numbers, which was the tell.
+    """
+
+    _OP = cxfm.Translate.from_([1.0, 2.0, 3.0], "kpc")
+    _AT: ClassVar = {
+        "r": u.Q(2.0, "kpc"),
+        "theta": u.Q(1.0, "rad"),
+        "phi": u.Q(0.5, "rad"),
+    }
+    _X = jnp.asarray([0.1, 0.2, 0.3])
+    _USYS = u.unitsystem("kpc", "Myr", "Msun", "rad")
+
+    def test_the_coordinate_basis_still_acts(self) -> None:
+        got = act_array_via_cdict(
+            self._OP,
+            None,
+            self._X,
+            cxc.sph3d,
+            cxr.coord_vel,
+            at=self._AT,
+            usys=self._USYS,
+        )
+        assert np.asarray(got).shape == (3,)
+
+    def test_a_physical_basis_is_refused(self) -> None:
+        with pytest.raises(TypeError, match="PhysicalBasis"):
+            act_array_via_cdict(
+                self._OP,
+                None,
+                self._X,
+                cxc.sph3d,
+                cxr.phys_vel,
+                at=self._AT,
+                usys=self._USYS,
+            )

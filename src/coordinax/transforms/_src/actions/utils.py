@@ -130,6 +130,22 @@ def act_array_via_cdict(
         )
         raise TypeError(msg)
 
+    # `coord_dimensions` answers for the *coordinate* basis, so it is only a
+    # correct reading of a bare array when that is the basis in play. In a
+    # physical (orthonormal) basis every component of a velocity is a speed,
+    # while `coord_dimensions` still reports angular speed for the angular
+    # components of a curvilinear chart -- which would silently mis-unit the
+    # array. Refuse rather than guess; a unit-carrying container says it.
+    if not isinstance(rep.basis, cxr.NoBasis | cxr.CoordinateBasis):
+        msg = (
+            f"{type(op).__name__} cannot act on a bare array in the "
+            f"{type(rep.basis).__name__}: units for a bare array are read from "
+            "the chart's coordinate dimensions, which describe the coordinate "
+            "basis. Pass a Quantity, a QuantityMatrix, or a typed vector, which "
+            "carry their own per-component units."
+        )
+        raise TypeError(msg)
+
     dims = rep.semantic_kind.coord_dimensions(chart)
     units = tuple(DMLS if d is None else usys[d] for d in dims)
     v = cxc.cdict(ul.QuantityMatrix(jnp.asarray(x), unit=units), chart)
