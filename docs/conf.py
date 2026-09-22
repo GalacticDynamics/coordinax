@@ -132,6 +132,11 @@ nitpick_ignore = [
     ("py:class", "ArrayLike"),
     ("py:class", "jax.typing.ArrayLike"),
     ("py:class", "unxt.Angle"),
+    # `equinox.EquinoxRuntimeError` is raised by the deferred `eqx.error_if`
+    # guards on `Rotate`/`Reflect`/`Shear`, so it belongs in their `Raises`
+    # sections -- but equinox's inventory does not document the class, so
+    # there is no target to resolve against.
+    ("py:exc", "equinox.EquinoxRuntimeError"),
     ("py:class", "coordinax.distances._src.base.AbstractDistance"),
     # Private internal helper class from unxt with no public docs
     ("py:class", "unxt._src.quantity.base._QuantityIndexUpdateHelper"),
