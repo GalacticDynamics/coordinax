@@ -6,6 +6,7 @@ This module defines helpers for operator implementations.
 __all__: tuple[str, ...] = (
     "act_array_via_cdict",
     "act_quantity_via_cdict",
+    "is_affine_in_chart",
     "is_componentwise_offset",
     "is_flat_chart",
     "is_traced",
@@ -29,6 +30,7 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax.internal import pack_uniform_unit
+from coordinax.transforms._src import groups
 
 
 def is_flat_chart(chart: Any, /) -> bool:
@@ -84,6 +86,32 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     """
     k = getattr(op, "semantic_kind", cxr.dpl).order
     return k != 0 or (chart == op.chart and is_flat_chart(chart))
+
+
+def is_affine_in_chart(op: Any, chart: Any, /) -> bool:
+    r"""Whether ``op``'s point action is affine in ``chart``'s own coordinates.
+
+    This is the condition under which the second-order prolongation term
+    $\partial_{xx}\phi(v, v)$ vanishes *identically*, so the frozen-$\tau$
+    pushforward $\partial_x\phi \cdot v$ is the exact law at every order and
+    not just at order 1. Where it does not vanish, transforming an
+    acceleration needs the velocity as well -- the orders stop being
+    separable, and anything that walks them one at a time drops the term
+    (gh#936).
+
+    Both halves are load-bearing, and neither implies the other. A `Rotate`
+    is affine in `cart3d` and emphatically not in `sph3d`: same operator, and
+    the chart decides. Conversely a flat chart does not save a nonlinear map.
+
+    Membership is read off the declared lattice via `groups.is_subgroup`, not
+    `issubclass` -- see its docstring for why a `LorentzBoost` is not affine
+    despite subclassing `OrthogonalGroup`.
+    """
+    if not is_flat_chart(chart):
+        return False
+    return groups.is_subgroup(
+        groups.most_specific_group(op.groups()), groups.AffineGroup
+    )
 
 
 def require_matching_keys(

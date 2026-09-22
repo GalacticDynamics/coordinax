@@ -23,6 +23,7 @@ from .bundle import Coordinate
 from .point import Point
 from .tangent import Tangent
 from coordinax._src.custom_types import OptUSys
+from coordinax.transforms._src.actions.utils import is_affine_in_chart
 from coordinaxs.api.custom_types import CDict
 
 CHART_MSMTCH = "from_chart {0} does not match the point's chart {1.chart}"
@@ -648,17 +649,19 @@ def act(
     (Q(7., 'm'), Q(4., 'm / s'))
 
     """
-    if cxfm.is_time_dependent(op):
+    if cxfm.is_time_dependent(op) or _needs_joint_prolongation(op, x):
         # The jet anchors are structurally the bundle's own point and fibres;
         # caller-supplied anchor overrides are meaningless here — reject them
-        # loudly rather than silently ignoring them (the static path below
+        # loudly rather than silently ignoring them (the per-fibre path below
         # honors an 'at' override, so silence would diverge invisibly).
         unsupported = set(kw) - {"usys"}
         if unsupported:
             msg = (
-                "act on a Coordinate under a time-dependent transform "
-                f"does not accept keyword overrides {sorted(unsupported)}: "
-                "the bundle itself supplies the jet anchors."
+                "act on a Coordinate prolonged jointly (a time-dependent "
+                "transform, or a fibre of order >= 2 whose curvature term does "
+                "not vanish) does not accept keyword overrides "
+                f"{sorted(unsupported)}: the bundle itself supplies the jet "
+                "anchors."
             )
             raise TypeError(msg)
         return _act_coordinate_jet(op, tau, x, usys=kw.get("usys"))
@@ -706,6 +709,80 @@ def _cached_point_data_in(point: Point, /) -> Callable[[Any], CDict]:
     return point_data_in
 
 
+def _ladder_orders(x: Coordinate, /) -> dict[int, str]:
+    r"""Curve-derivative order -> fibre name, for the bundle's ladder fibres.
+
+    Displacement fibres (order 0) and non-ladder ones are not jet slots -- a
+    displacement is a same-$\tau$ point difference, not a curve derivative --
+    so they are left out, exactly as `_act_coordinate_jet` leaves them out.
+    """
+    out: dict[int, str] = {}
+    for name, fibre in x._data.items():
+        order = fibre.rep.semantic_kind.order
+        if order is not None and order >= 1:
+            out[order] = name
+    return out
+
+
+def _needs_joint_prolongation(op: cxfm.AbstractTransform, x: Coordinate, /) -> bool:
+    r"""Whether the bundle must be prolonged jointly rather than fibre by fibre.
+
+    Fibre by fibre is exact up to order 1: under a static map the order-1
+    prolongation *is* the frozen-$\tau$ pushforward. From order 2 the law
+    gains $\partial_{xx}\phi(v, v)$ -- a term built from a *lower* fibre,
+    which a pass that visits one fibre at a time has no way to reach, so it
+    drops it and returns a quietly first-order acceleration (gh#936). The
+    bundle is the one caller that always holds those lower fibres, so it can
+    simply hand the whole jet over instead.
+
+    That term vanishes exactly where $\phi$ is affine in the chart's own
+    coordinates, and there the per-fibre path stays both correct and cheaper
+    -- so this keeps flat-chart affine bundles (the common case, and the one
+    that needs no anchors at all) off the autodiff path entirely.
+    """
+    return max(_ladder_orders(x), default=0) >= 2 and not is_affine_in_chart(
+        op, x.point.chart
+    )
+
+
+def _require_contiguous_ladder(
+    op: cxfm.AbstractTransform,
+    x: Coordinate,
+    jet: "dict[int, CDict]",
+    ladder: "dict[str, tuple[int, Any, Any]]",
+    point_chart: Any,
+    /,
+) -> None:
+    r"""Refuse a bundle whose ladder skips an order, in the bundle's own terms.
+
+    `act_jet` already refuses a jet with a hole, but it says it in engine
+    language -- "slot 1 is missing" -- to a caller who passed a `Coordinate`
+    and never named a slot in their life. Say which *fibre* is absent, and
+    why the order above it cannot be answered without it.
+
+    The gap is a genuine dead end, not a routing choice: $\partial_{xx}\phi(v,
+    v)$ is built from the missing fibre, and an absent fibre is "not tracked",
+    not "zero". Answering anyway is exactly the quietly-first-order result
+    gh#936 is about.
+    """
+    top = max(jet)
+    missing = [m for m in range(1, top) if m not in jet]
+    if not missing:
+        return
+    by_order = {order: name for name, (order, _, _) in ladder.items()}
+    msg = (
+        f"act on a Coordinate cannot transform the order-{top} fibre "
+        f"{by_order[top]!r} without the lower ladder fibre(s) of order "
+        f"{missing}: the order-{top} law carries the curvature term "
+        f"d2phi(v, v), which is built from them. {type(op).__name__} is not "
+        f"affine in {point_chart!r}, so that term does not vanish, and an "
+        "absent fibre means 'not tracked', not 'zero' -- answering without it "
+        "is the silently first-order result this refuses to return. Add the "
+        "missing fibre, or work in a chart where the action is affine."
+    )
+    raise TypeError(msg)
+
+
 def _act_coordinate_jet(
     op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, *, usys: OptUSys = None
 ) -> Coordinate:
@@ -744,6 +821,8 @@ def _act_coordinate_jet(
             raise ValueError(msg)
         jet[order] = cast("CDict", f.data)
         ladder[name] = (order, f, orig_chart)
+
+    _require_contiguous_ladder(op, x, jet, ladder, point_chart)
 
     out_jet = cast(
         "dict[int, CDict]", cxfmapi.act_jet(op, tau, jet, point_chart, usys=usys)

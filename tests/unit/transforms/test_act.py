@@ -16,6 +16,8 @@ tests.
 
 __all__: tuple[str, ...] = ()
 
+from typing import ClassVar
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -450,3 +452,148 @@ class TestCoordinateToFrameNonCartesianTangent:
         assert abs(float(result.point.data["phi"].to_value("rad")) - jnp.pi / 2) < ATOL
         # Velocity should be purely radial (ṙ≈1, θ̇≈0, φ̇≈0)
         assert abs(float(result["velocity"].data["r"].to_value("m/s")) - 1) < ATOL
+
+
+# ===================================================================
+# gh#936: a bundle carrying an order >= 2 fibre must prolong jointly
+# ===================================================================
+
+
+class TestCoordinateBundleJointProlongation:
+    r"""A `Coordinate` with an acceleration fibre must not go fibre-by-fibre.
+
+    Walking the fibres one at a time transforms each by the frozen-$\tau$
+    pushforward. That is exact at order 1, but the order-2 law carries
+    $\partial_{xx}\phi(v, v)$ -- a term built from the *velocity* fibre, which
+    a per-fibre pass never has in hand. So it was silently dropped, and the
+    bundle returned a first-order acceleration with no indication (gh#936).
+
+    The bundle is the one caller that always holds the lower fibres, so it
+    hands the whole jet to `act_jet` instead. The reference here is `act_jet`,
+    not a hardcoded number.
+    """
+
+    ROT = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg")) | cxfm.Rotate.from_euler(
+        "x", u.Q(20.0, "deg")
+    )
+    CH = cxc.lonlat_sph3d
+    Q0: ClassVar = {
+        "lon": u.Q(25.0, "deg"),
+        "lat": u.Q(40.0, "deg"),
+        "distance": u.Q(2.0, "kpc"),
+    }
+    V0: ClassVar = {
+        "lon": u.Q(0.7, "rad/Myr"),
+        "lat": u.Q(0.3, "rad/Myr"),
+        "distance": u.Q(1.0, "kpc/Myr"),
+    }
+    A0: ClassVar = {
+        "lon": u.Q(-0.02, "rad/Myr2"),
+        "lat": u.Q(0.05, "rad/Myr2"),
+        "distance": u.Q(0.1, "kpc/Myr2"),
+    }
+
+    @staticmethod
+    def _tangent(data, chart, kind):
+        return cx.Tangent(data, chart, cxr.coord_basis, kind)
+
+    def _bundle(self, *, velocity=True, chart=None, q=None, v=None, a=None):
+        chart = self.CH if chart is None else chart
+        fibres = {"acceleration": self._tangent(a or self.A0, chart, cxr.acc)}
+        if velocity:
+            fibres["velocity"] = self._tangent(v or self.V0, chart, cxr.vel)
+        return cx.Coordinate(point=cx.Point(q or self.Q0, chart), **fibres)
+
+    def test_acceleration_in_a_curved_chart_matches_act_jet(self):
+        """The reported defect: was ~114% and ~155% off on lon/lat."""
+        out = cxfm.act(self.ROT, None, self._bundle())["acceleration"].data
+        ref = cxfm.act_jet(
+            self.ROT, None, {0: self.Q0, 1: self.V0, 2: self.A0}, self.CH
+        )[2]
+        for k in ref:
+            unit = u.unit_of(ref[k])
+            assert jnp.allclose(u.ustrip(unit, out[k]), u.ustrip(unit, ref[k]))
+
+    def test_the_velocity_fibre_genuinely_feeds_the_acceleration(self):
+        """Discriminator: the old path was bit-identical under a 100x velocity.
+
+        Without this, a fix that still ignored the velocity fibre would pass
+        the test above whenever the reference happened to agree.
+        """
+        scaled = {k: 100 * v for k, v in self.V0.items()}
+        base = cxfm.act(self.ROT, None, self._bundle())["acceleration"].data
+        other = cxfm.act(self.ROT, None, self._bundle(v=scaled))["acceleration"].data
+        assert not jnp.allclose(
+            u.ustrip("rad/Myr2", base["lon"]), u.ustrip("rad/Myr2", other["lon"])
+        )
+
+    def test_a_velocity_only_bundle_still_goes_fibre_by_fibre(self):
+        """Order 1 needs no joint jet: there the pushforward IS the law."""
+        crd = cx.Coordinate(
+            point=cx.Point(self.Q0, self.CH),
+            velocity=self._tangent(self.V0, self.CH, cxr.vel),
+        )
+        out = cxfm.act(self.ROT, None, crd)["velocity"].data
+        ref = cxfm.act_jet(
+            self.ROT, None, {0: self.Q0, 1: self.V0, 2: self.A0}, self.CH
+        )[1]
+        for k in ref:
+            unit = u.unit_of(ref[k])
+            assert jnp.allclose(u.ustrip(unit, out[k]), u.ustrip(unit, ref[k]))
+
+    def test_a_flat_chart_affine_bundle_keeps_the_cheap_path_and_stays_exact(self):
+        r"""Where $\phi$ is affine in the chart's own coordinates the term is 0.
+
+        This is the case that broke the first attempt at the numerically
+        complete fix: routing it through the jet engine turns exact,
+        anchor-free calls into missing-anchor errors. It must stay off that
+        path *and* agree with it.
+        """
+        q = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+        v = {
+            "x": u.Q(1.0, "kpc/Myr"),
+            "y": u.Q(0.5, "kpc/Myr"),
+            "z": u.Q(0.0, "kpc/Myr"),
+        }
+        a = {
+            "x": u.Q(0.1, "kpc/Myr2"),
+            "y": u.Q(0.2, "kpc/Myr2"),
+            "z": u.Q(0.3, "kpc/Myr2"),
+        }
+        crd = self._bundle(chart=cxc.cart3d, q=q, v=v, a=a)
+        out = cxfm.act(self.ROT, None, crd)["acceleration"].data
+        ref = cxfm.act_jet(self.ROT, None, {0: q, 1: v, 2: a}, cxc.cart3d)[2]
+        for k in ref:
+            assert jnp.allclose(
+                u.ustrip("kpc/Myr2", out[k]), u.ustrip("kpc/Myr2", ref[k])
+            )
+
+    def test_an_acceleration_without_a_velocity_is_refused_in_a_curved_chart(self):
+        r"""The gap is a dead end, not a routing choice.
+
+        $\partial_{xx}\phi(v, v)$ is built from the absent fibre, and absent
+        means "not tracked", not "zero" -- so the honest answer is to refuse
+        rather than return the first-order one.
+        """
+        with pytest.raises(TypeError, match=r"without the lower ladder fibre"):
+            cxfm.act(self.ROT, None, self._bundle(velocity=False))
+
+    def test_that_same_gap_is_fine_where_the_action_is_affine(self):
+        """Flat chart, affine op: the missing fibre multiplies a zero term."""
+        q = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+        a = {
+            "x": u.Q(0.1, "kpc/Myr2"),
+            "y": u.Q(0.2, "kpc/Myr2"),
+            "z": u.Q(0.3, "kpc/Myr2"),
+        }
+        crd = cx.Coordinate(
+            point=cx.Point(q, cxc.cart3d),
+            acceleration=self._tangent(a, cxc.cart3d, cxr.acc),
+        )
+        out = cxfm.act(self.ROT, None, crd)["acceleration"].data
+        assert set(out) == {"x", "y", "z"}
+
+    def test_an_anchor_override_is_refused_rather_than_ignored(self):
+        """The bundle supplies the anchors; a caller `at=` would be dropped."""
+        with pytest.raises(TypeError, match=r"does not accept keyword overrides"):
+            cxfm.act(self.ROT, None, self._bundle(), at=self.Q0)
