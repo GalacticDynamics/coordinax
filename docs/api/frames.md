@@ -66,7 +66,7 @@ Transformation-group marker classes are in [`coordinax.transforms.groups`](#tran
 
 ## Design & Integration
 
-For reference frame models, custom frame design, and active transformation semantics, see [Working With Frames](../guides/frames.md). For JAX integration patterns (vmap, jit), see [Working With Frames](../guides/frames.md#jax-integration-patterns).
+For reference frame models, custom frame design, and active transformation semantics, see [Working With Frames](../guides/frames.md). For JAX integration patterns (vmap, jit), see [Working With Frames](../guides/frames.md#jax-integration-build-the-operator-outside-jit).
 
 ```{eval-rst}
 
