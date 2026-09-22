@@ -9,7 +9,6 @@ from jaxtyping import Array, Shaped
 from typing import Any, Final, final
 
 import equinox as eqx
-import jax
 import jax.scipy.spatial.transform as jtransform
 import plum
 from astropy.units import UnitConversionError
@@ -30,17 +29,18 @@ from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
 _ATOL: Final = 1e-6
-"""Absolute tolerance on ``R^T R = I``. See `_not_orthogonal`."""
+"""Absolute tolerance on ``R^T R = I``. See `_not_a_rotation`."""
 
-_MSG_NOT_ORTHOGONAL: Final = (
-    "Rotate requires an orthogonal matrix: R^T R = I. That is the invariant "
-    "`inverse` relies on -- it transposes -- and `groups` reports. For a "
-    "general invertible linear map use `Linear`."
+_MSG_NOT_A_ROTATION: Final = (
+    "Rotate requires a rotation matrix: R^T R = I with det R = +1, i.e. SO(n). "
+    "Orthogonality is what `inverse` relies on -- it transposes. For an "
+    "orientation-reversing orthogonal map use `Reflect`; for any other "
+    "invertible linear map use `Linear`."
 )
 
 
-def _not_orthogonal(R: Any, /) -> Any:
-    """Whether ``R`` fails ``R^T R = I``.
+def _not_a_rotation(R: Any, /) -> Any:
+    """Whether ``R`` fails ``R^T R = I`` with ``det R = +1``.
 
     A non-square ``R`` answers `False`: it has no transpose product to compare,
     and `_validate_square` is the one that names a bad shape. The shape is
@@ -58,7 +58,11 @@ def _not_orthogonal(R: Any, /) -> Any:
     if R.ndim != 2 or R.shape[0] != R.shape[1]:
         return False
     gram = jnp.matmul(jnp.swapaxes(R, -2, -1), R)
-    return ~jnp.allclose(gram, jnp.eye(R.shape[0], dtype=gram.dtype), atol=_ATOL)
+    orthogonal = jnp.allclose(gram, jnp.eye(R.shape[0], dtype=gram.dtype), atol=_ATOL)
+    # `det R = -1` is orthogonal but orientation-reversing: a reflection or a
+    # rotoreflection, not a rotation. `Reflect` and `Linear` are those homes.
+    proper = jnp.allclose(jnp.linalg.det(R), 1.0, atol=_ATOL)
+    return ~(orthogonal & proper)
 
 
 def _as_rotation_matrix(R: Any, /) -> Array:
@@ -196,18 +200,13 @@ class Rotate(AbstractLinearTransform):
     R: Shaped[Array, " N N"] = eqx.field(converter=_as_rotation_matrix)
     """The rotation matrix."""
 
-    def groups(self) -> frozenset[type]:
+    @classmethod
+    def groups(cls) -> frozenset[type]:
         """Return the groups to which this map belongs.
 
-        An instance method, not a classmethod: ``R`` is orthogonal, but only
-        ``det R = +1`` preserves orientation. A class-level answer of
-        `SpecialOrthogonalGroup` made every ``det = -1`` matrix claim an
-        orientation it does not keep, and that claim propagates through
-        `~coordinax.transforms.Composed.groups` and
-        `~coordinax.transforms.groups.least_common_supergroup`.
-
-        The sign is read eagerly, as `simplify` and ``_merge`` -- the callers --
-        already do with their own value checks.
+        `~coordinax.transforms.groups.SpecialOrthogonalGroup` unconditionally:
+        the constructor admits only ``R^T R = I`` with ``det R = +1``, so there
+        is no determinant to read and nothing to decide per instance.
 
         Examples
         --------
@@ -218,21 +217,8 @@ class Rotate(AbstractLinearTransform):
         >>> sorted(g.__name__ for g in cxfm.Rotate(Rz).groups())
         ['DiffeomorphismGroup', 'SpecialOrthogonalGroup']
 
-        >>> D = jnp.asarray([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        >>> sorted(g.__name__ for g in cxfm.Rotate(D).groups())
-        ['DiffeomorphismGroup', 'OrthogonalGroup']
-
         """
-        det = jnp.linalg.det(self.R)
-        # Under trace the sign is not known here, and a membership claim must
-        # never be stronger than what can be shown: `SO(n) < O(n)`, so the
-        # orthogonal group alone is true either way. Answering conservatively
-        # beats raising -- `groups()` is metadata, and a `TracerBoolConversion`
-        # from reading it would be a surprising way for a jitted function to
-        # die.
-        proper = not isinstance(det, jax.core.Tracer) and bool(det > 0)  # ty: ignore[possibly-missing-submodule]
-        grp = groups.SpecialOrthogonalGroup if proper else groups.OrthogonalGroup
-        return frozenset((grp, groups.DiffeomorphismGroup))
+        return frozenset((groups.SpecialOrthogonalGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, R: Any) -> None:
         # Through the field converter, not `quaxed.numpy.asarray`: the
@@ -245,12 +231,12 @@ class Rotate(AbstractLinearTransform):
         # `TracerBoolConversionError`), and threaded onto the stored array so
         # it is not dead-code-eliminated: `inverse` transposes instead of
         # inverting, which is the inverse only for an orthogonal `R`.
-        # Shape first: `_not_orthogonal` declines on a non-square matrix (it
+        # Shape first: `_not_a_rotation` declines on a non-square matrix (it
         # has no `R^T R` to compare), so without this a non-square `R` would be
         # stored and `.inverse` would hand back a meaningless transpose.
         R = self._validate_square(R)
         object.__setattr__(
-            self, "R", eqx.error_if(R, _not_orthogonal(R), _MSG_NOT_ORTHOGONAL)
+            self, "R", eqx.error_if(R, _not_a_rotation(R), _MSG_NOT_A_ROTATION)
         )
 
     # -----------------------------------------------------
@@ -313,24 +299,6 @@ class Rotate(AbstractLinearTransform):
 
     # -----------------------------------------------------
     # Arithmetic operations
-
-    def __neg__(self: "Rotate") -> "Rotate":
-        """Negate the rotation.
-
-        Examples
-        --------
-        >>> import quaxed.numpy as jnp
-        >>> import coordinax as cx
-
-        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cxfm.Rotate(Rz)
-        >>> print((-op).R)
-        [[ 0  1  0]
-         [-1  0  0]
-         [ 0  0 -1]]
-
-        """
-        return replace(self, R=-self.R)
 
     def __matmul__(self: "Rotate", other: Any, /) -> Any:
         """Combine two Rotations.
