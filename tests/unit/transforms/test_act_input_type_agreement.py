@@ -304,3 +304,35 @@ class TestABareArrayIsRefusedInAPhysicalBasis:
                 at=self._AT,
                 usys=self._USYS,
             )
+
+
+class TestTheArrayFunnelNamesABadShape:
+    """A wrong-shaped array is described in the caller's terms (#970 review).
+
+    `QuantityMatrix` would reject these anyway, but in its own vocabulary --
+    "value trailing shape (2,) does not match the unit structure" names a type
+    the caller never mentioned. A 0-D array has no last axis at all, so the
+    check asks whether there is one instead of indexing for it.
+    """
+
+    _OP = cxfm.Translate.from_([1.0, 2.0, 3.0], "km")
+
+    @pytest.mark.parametrize(
+        ("x", "expected"),
+        [(jnp.asarray(1.0), "no axes"), (jnp.asarray([1.0, 0.0]), "is 2")],
+        ids=["scalar", "too-few"],
+    )
+    def test_a_bad_shape_is_named(self, x, expected: str) -> None:
+        with pytest.raises(ValueError, match=expected):
+            act_array_via_cdict(self._OP, None, x, cxc.cart3d, cxr.coord_vel, usys=USYS)
+
+    def test_a_good_shape_still_acts(self) -> None:
+        got = act_array_via_cdict(
+            self._OP,
+            None,
+            jnp.asarray([1.0, 0.0, 0.0]),
+            cxc.cart3d,
+            cxr.coord_vel,
+            usys=USYS,
+        )
+        assert np.asarray(got).shape == (3,)

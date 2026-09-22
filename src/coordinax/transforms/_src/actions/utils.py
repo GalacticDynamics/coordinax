@@ -148,7 +148,23 @@ def act_array_via_cdict(
 
     dims = rep.semantic_kind.coord_dimensions(chart)
     units = tuple(DMLS if d is None else usys[d] for d in dims)
-    v = cxc.cdict(ul.QuantityMatrix(jnp.asarray(x), unit=units), chart)
+
+    x_arr = jnp.asarray(x)
+    # Check the shape here rather than letting `QuantityMatrix` reject it: it
+    # would, but in its own vocabulary ("value trailing shape (2,) does not
+    # match the unit structure"), which describes a type the caller never
+    # named. Ask about the last axis rather than indexing for it -- a 0-D
+    # array has none, and that is as wrong a shape as a mismatched one.
+    shape = jnp.shape(x_arr)
+    if not shape or shape[-1] != len(chart.components):
+        got = shape[-1] if shape else "no axes"
+        msg = (
+            f"act for {type(op).__name__}: last axis of x is {got}, but "
+            f"{type(chart).__name__} has {len(chart.components)} components."
+        )
+        raise ValueError(msg)
+
+    v = cxc.cdict(ul.QuantityMatrix(x_arr, unit=units), chart)
     nv = cxfmapi.act(op, tau, v, chart, rep, usys=usys, **kw)
     return cxcapi.carray(nv, chart.components, usys).value  # ty: ignore[unresolved-attribute]
 
