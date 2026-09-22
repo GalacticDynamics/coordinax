@@ -1670,24 +1670,34 @@ class TestAChainedFormKeepsItsLegsWellConditioned:
         assert_allclose(back @ fwd, np.eye(3), rtol=0, atol=1e-12)
 
 
-def test_charts_on_different_manifolds_are_refused_not_chained() -> None:
-    """A chained form refuses a pair that straddles two manifolds.
+@pytest.mark.parametrize(
+    ("frm", "to"),
+    [
+        pytest.param("Cylindrical3D", "LonLatSpherical3D", id="chained"),
+        pytest.param("Spherical3D", "LonLatSpherical3D", id="relabel"),
+        pytest.param("Cart3D", "Spherical3D", id="written-out"),
+    ],
+)
+def test_charts_on_different_manifolds_are_refused(frm: str, to: str) -> None:
+    """A closed form refuses a pair that straddles two manifolds.
 
-    `_CLOSED_FORM_PAIRS` keys on chart *types*, which say nothing about the
-    manifold, so a pair of chainable types can sit on different ones -- a
-    transition `pt_map` refuses. Without the guard the pivot belongs to
-    neither side and the chain recurses instead of refusing.
+    `_CLOSED_FORM_PAIRS` keys on chart *types*, which say nothing about
+    `chart.M`, so a registered pair can sit on two manifolds -- a transition
+    `pt_map` refuses. A closed form only ever sees coordinates, so it would
+    answer anyway; all three kinds are checked because each reaches its
+    Jacobian differently and only the chained one is guarded on its way.
     """
-    at = {"rho": u.Q(2.0, "m"), "phi": u.Q(0.7, "rad"), "z": u.Q(3.0, "m")}
-    frm = cxc.Cylindrical3D(M=cxm.Sn(3))
-    to = cxc.LonLatSpherical3D(M=cxm.Rn(3))
+    at = {"a": u.Q(3.0, "m"), "b": u.Q(0.6, "rad"), "c": u.Q(1.1, "rad")}
+    from_chart = getattr(cxc, frm)(M=cxm.Sn(3))
+    to_chart = getattr(cxc, to)(M=cxm.Rn(3))
+    point = dict(zip(from_chart.components, at.values(), strict=True))
 
     with pytest.raises(cxc.ManifoldMismatchError):
-        cxc.jac_pt_map(at, frm, to)
+        cxc.jac_pt_map(point, from_chart, to_chart)
 
     # The same refusal `pt_map` gives for the same pair.
     with pytest.raises(cxc.ManifoldMismatchError):
-        cxc.pt_map(at, frm, to)
+        cxc.pt_map(point, from_chart, to_chart)
 
 
 def test_the_loncoslat_pivot_follows_the_chart_manifold() -> None:

@@ -440,6 +440,22 @@ def _closed_form(from_cls: type, to_cls: type, /) -> Callable[[Any], Any]:
     return register
 
 
+def _check_one_manifold(from_chart: AbstractChart, to_chart: AbstractChart, /) -> None:
+    """Refuse a pair whose charts are not on the same manifold.
+
+    `_CLOSED_FORM_PAIRS` keys on chart *types*, which say nothing about
+    `chart.M`, so a registered pair can still straddle two manifolds -- a
+    transition `pt_map` refuses. The closed form would answer anyway, since
+    it only ever sees coordinates.
+    """
+    if from_chart.M != to_chart.M:
+        msg = (
+            f"no transition from {from_chart} to {to_chart}: "
+            f"{from_chart.M} is not {to_chart.M}"
+        )
+        raise ManifoldMismatchError(msg)
+
+
 def _jac_chained(
     at: Array,
     from_chart: AbstractChart,
@@ -460,16 +476,8 @@ def _jac_chained(
     unit scale and with no correct digits left by `r = 1e17`. Which chart
     keeps both legs O(1) is a fact about the pair, so the pair states it.
     """
-    # The registry keys on chart types, which say nothing about the manifold,
-    # so a pair of chainable types can still straddle two -- a transition
-    # `pt_map` refuses. Refuse it the same way, rather than recursing through
-    # a pivot that belongs to neither side.
-    if from_chart.M != to_chart.M:
-        msg = (
-            f"no transition from {from_chart} to {to_chart}: "
-            f"{from_chart.M} is not {to_chart.M}"
-        )
-        raise ManifoldMismatchError(msg)
+    # Refused rather than chained: the pivot would belong to neither side.
+    _check_one_manifold(from_chart, to_chart)
 
     keys = from_chart.components
     point = {k: at[..., i] for i, k in enumerate(keys)}
@@ -499,6 +507,8 @@ def _jac_from_dict_via_closed_form(
     a trace per primitive there -- the whole reason these bodies compute on raw
     arrays.
     """
+    _check_one_manifold(from_chart, to_chart)
+
     keys = from_chart.components
     units = tuple(u.unit_of(at[k]) for k in keys)
 
