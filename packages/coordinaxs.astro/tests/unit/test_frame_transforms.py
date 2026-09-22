@@ -22,7 +22,6 @@ import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 import coordinaxs.hypothesis.astro as cxastrost
-from coordinax.frames._src.base import is_same_frame
 from coordinaxs.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
 
 # Astropy is imported once, not re-checked inside five helper bodies -- but the
@@ -724,7 +723,7 @@ class TestGalactocentricSelfTransition:
         """
         a = cxastro.Galactocentric()
         b = a if same else cxastro.Galactocentric(roll=u.Q(10, "deg"))
-        out = jit(lambda x, y: jnp.asarray(is_same_frame(x, y)))(a, b)
+        out = jit(lambda x, y: jnp.asarray(cxf.is_same_frame(x, y)))(a, b)
         assert not bool(out)
 
     def test_different_frames_are_numerically_unchanged(self) -> None:

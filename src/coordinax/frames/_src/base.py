@@ -1,6 +1,6 @@
 """Base implementation of coordinate frames."""
 
-__all__ = ("AbstractReferenceFrame",)
+__all__ = ("AbstractReferenceFrame", "is_same_frame")
 
 from collections.abc import Mapping
 from typing import Any, cast
@@ -35,28 +35,28 @@ def is_same_frame(
     >>> import quaxed.numpy as jnp
     >>> import unxt as u
     >>> import coordinaxs.astro as cxastro
-    >>> from coordinax.frames._src.base import is_same_frame
+    >>> import coordinax.frames as cxf
 
     Equal-but-distinct frames are the same frame:
 
-    >>> is_same_frame(cxastro.Galactocentric(), cxastro.Galactocentric())
+    >>> cxf.is_same_frame(cxastro.Galactocentric(), cxastro.Galactocentric())
     True
 
-    >>> is_same_frame(
+    >>> cxf.is_same_frame(
     ...     cxastro.Galactocentric(), cxastro.Galactocentric(roll=u.Q(10, "deg"))
     ... )
     False
 
     Frames of different types never are, even when their fields agree:
 
-    >>> is_same_frame(cxastro.ICRS(), cxastro.Galactic())
+    >>> cxf.is_same_frame(cxastro.ICRS(), cxastro.Galactic())
     False
 
     Under tracing sameness is not statically knowable, so the answer is `False`
     and the caller builds the general transform:
 
     >>> gc = cxastro.Galactocentric()
-    >>> jax.jit(lambda a, b: jnp.asarray(is_same_frame(a, b)))(gc, gc)
+    >>> jax.jit(lambda a, b: jnp.asarray(cxf.is_same_frame(a, b)))(gc, gc)
     Array(False, dtype=bool)
 
     """
