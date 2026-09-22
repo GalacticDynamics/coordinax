@@ -68,20 +68,8 @@ from .custom_types import CDict
 def to_astropy_frame(frame: cxf.AbstractReferenceFrame, /) -> apyc.BaseCoordinateFrame:
     """Return the Astropy frame that corresponds to a coordinax frame.
 
-    `plum.convert` cannot do this job: its ``type[...]`` targets match
-    covariantly, so a conversion registered on
-    `astropy.coordinates.BaseCoordinateFrame` would claim every Astropy frame
-    class and silently answer the wrong one. This has one method per supported
-    frame instead, so there is no target class to get wrong.
-
-    This signature is the least specific one, so it is also the fallback: it
-    catches every frame the registered pairs miss -- a user-defined
-    `AbstractSpaceFrame` subclass, or a frame that is not a space frame at all
-    such as `coordinax.frames.alice`. Without it those fail with plum's
-    `NotFoundLookupError`, a `LookupError` rather than the `TypeError`
-    `plum.convert` raises for an unsupported target, and that leaks through
-    ``plum.convert(point, apyc.BaseCoordinateFrame)``. Raising here answers
-    with the same exception type and names the offending frame.
+    One method per supported frame, so the target class is never guessed.
+    This is the least specific signature, so an unregistered frame raises here.
 
     >>> import astropy.coordinates as apyc
     >>> import coordinax.frames as cxf
@@ -133,8 +121,7 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     >>> plum.convert(cx_frame, apyc.ICRS)
     <ICRS Frame>
 
-    Only the exact Astropy frame class is registered; any other target
-    raises rather than silently returning an ICRS frame:
+    Only the exact class is registered:
 
     >>> plum.convert(cx_frame, apyc.FK5)
     Traceback (most recent call last):
@@ -212,8 +199,7 @@ def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.G
     >>> plum.convert(cx_frame, apyc.Galactic)
     <Galactic Frame>
 
-    Only the exact Astropy frame class is registered; any other target
-    raises rather than silently returning a Galactic frame:
+    Only the exact class is registered:
 
     >>> plum.convert(cx_frame, apyc.FK5)
     Traceback (most recent call last):
@@ -318,8 +304,7 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     >>> isinstance(apy_frame, apyc.Galactocentric)
     True
 
-    Only the exact Astropy frame class is registered; any other target
-    raises rather than silently returning a Galactocentric frame:
+    Only the exact class is registered:
 
     >>> plum.convert(cxastro.Galactocentric(), apyc.FK5)
     Traceback (most recent call last):
