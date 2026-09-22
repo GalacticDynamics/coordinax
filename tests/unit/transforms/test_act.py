@@ -597,3 +597,81 @@ class TestCoordinateBundleJointProlongation:
         """The bundle supplies the anchors; a caller `at=` would be dropped."""
         with pytest.raises(TypeError, match=r"does not accept keyword overrides"):
             cxfm.act(self.ROT, None, self._bundle(), at=self.Q0)
+
+
+class TestBundleFibreInAnotherChart:
+    r"""A bundle may store a fibre in a chart other than the point's.
+
+    The routing decision and both legs of the conversion have to ask about
+    *that* fibre's chart, not the point's. A point in `cart3d` does not make
+    an `sph3d` acceleration safe: the acceleration's own chart is where its
+    curvature term lives. Getting this wrong returned the fibre completely
+    untransformed.
+    """
+
+    ROT = cxfm.Rotate.from_euler("z", u.Q(37.0, "deg")) | cxfm.Rotate.from_euler(
+        "x", u.Q(20.0, "deg")
+    )
+    CQ: ClassVar = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+    CV: ClassVar = {
+        "x": u.Q(0.3, "kpc/Myr"),
+        "y": u.Q(-0.4, "kpc/Myr"),
+        "z": u.Q(0.2, "kpc/Myr"),
+    }
+    CA: ClassVar = {
+        "x": u.Q(0.1, "kpc/Myr2"),
+        "y": u.Q(0.2, "kpc/Myr2"),
+        "z": u.Q(0.3, "kpc/Myr2"),
+    }
+
+    def _all_cart(self):
+        return cx.Coordinate(
+            point=cx.Point(self.CQ, cxc.cart3d),
+            velocity=cx.Tangent(self.CV, cxc.cart3d, cxr.coord_basis, cxr.vel),
+            acceleration=cx.Tangent(self.CA, cxc.cart3d, cxr.coord_basis, cxr.acc),
+        )
+
+    def _mixed(self):
+        """Same physics, but the acceleration fibre lives in `sph3d`."""
+        allcart = self._all_cart()
+        return cx.Coordinate._create_unchecked(
+            allcart.point,
+            {
+                "velocity": allcart["velocity"],
+                "acceleration": allcart.cconvert(cxc.sph3d)["acceleration"],
+            },
+        )
+
+    def test_a_foreign_acceleration_matches_the_all_cartesian_route(self):
+        """Where the fibre is *stored* must not change the physics.
+
+        Both legs are second-order here -- the fibre is carried into the
+        point's chart to build the jet, and back out afterwards -- and
+        either one left as a bare Jacobian push loses the term.
+        """
+        got = cxfm.act(self.ROT, None, self._mixed())["acceleration"]
+        ref = cxfm.act(self.ROT, None, self._all_cart()).cconvert(cxc.sph3d)
+        ref_data = ref["acceleration"].data
+        assert got.chart == cxc.sph3d
+        for k in ref_data:
+            unit = u.unit_of(ref_data[k])
+            assert jnp.allclose(
+                u.ustrip(unit, got.data[k]), u.ustrip(unit, ref_data[k])
+            )
+
+    def test_the_fibre_is_not_returned_untransformed(self):
+        """Guard the guard: the defect returned the input verbatim."""
+        before = self._mixed()["acceleration"].data
+        after = cxfm.act(self.ROT, None, self._mixed())["acceleration"].data
+        assert not jnp.allclose(
+            u.ustrip("rad/Myr2", after["theta"]), u.ustrip("rad/Myr2", before["theta"])
+        )
+
+    def test_a_foreign_acceleration_without_a_velocity_is_refused(self):
+        """Its jet cannot be assembled in its own chart without the slot below."""
+        allcart = self._all_cart()
+        lone = cx.Coordinate._create_unchecked(
+            allcart.point, {"acceleration": allcart.cconvert(cxc.sph3d)["acceleration"]}
+        )
+        with pytest.raises(TypeError, match=r"without an order-1 fibre"):
+            cxfm.act(self.ROT, None, lone)

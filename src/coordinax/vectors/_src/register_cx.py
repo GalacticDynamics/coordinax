@@ -19,10 +19,11 @@ import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.api.representations as cxrapi
 import coordinaxs.api.transforms as cxfmapi
-from .bundle import Coordinate
+from .bundle import Coordinate, _chart_map_is_affine
 from .point import Point
 from .tangent import Tangent
 from coordinax._src.custom_types import OptUSys
+from coordinax.transforms._src.actions.prolong import prolong_point_map
 from coordinax.transforms._src.actions.utils import is_affine_in_chart
 from coordinaxs.api.custom_types import CDict
 
@@ -739,9 +740,16 @@ def _needs_joint_prolongation(op: cxfm.AbstractTransform, x: Coordinate, /) -> b
     coordinates, and there the per-fibre path stays both correct and cheaper
     -- so this keeps flat-chart affine bundles (the common case, and the one
     that needs no anchors at all) off the autodiff path entirely.
+
+    Asked of each fibre's *own* chart, not the point's. A bundle may store a
+    fibre elsewhere, and it is the chart the acceleration is written in that
+    decides whether its curvature term vanishes -- a point in `cart3d` does
+    not make an `sph3d` acceleration safe.
     """
-    return max(_ladder_orders(x), default=0) >= 2 and not is_affine_in_chart(
-        op, x.point.chart
+    return any(
+        not is_affine_in_chart(op, x._data[name].chart)
+        for order, name in _ladder_orders(x).items()
+        if order >= 2
     )
 
 
@@ -783,6 +791,99 @@ def _require_contiguous_ladder(
     raise TypeError(msg)
 
 
+def _carry_foreign_ladder_fibre(
+    x: Coordinate,
+    name: str,
+    order: int,
+    fibre: Tangent,
+    point_chart: Any,
+    point_data_in: "Callable[[Any], CDict]",
+    usys: OptUSys,
+    /,
+) -> Tangent:
+    r"""Carry an order >= 2 fibre from its own chart into the point's, exactly.
+
+    The jet is assembled in the point's chart, so a fibre stored elsewhere has
+    to be converted in. The plain Jacobian conversion is the complete law only
+    at order $\leq 1$ or across an affine transition; at order $\geq 2$ across
+    a curvilinear one it drops $D^2\psi(v, v)$ -- and it would drop it
+    *before* the jet exists, so the joint prolongation that follows could not
+    put it back.
+
+    The way out is to build the jet in the fibre's *own* chart first. Its
+    lower slots convert into that chart exactly -- slot 0 is a point map and
+    slot 1 is the Jacobian, which is the whole law at order 1 -- so the
+    recursion bottoms out immediately and the fibre can be prolonged across
+    like any other jet.
+    """
+    orig = fibre.chart
+    if order > 2:
+        msg = (
+            f"act on a Coordinate cannot carry the order-{order} fibre "
+            f"{name!r} from {orig!r} into the point's {point_chart!r}: "
+            f"assembling its jet there would need the order-{order - 1} slot "
+            "in that chart, which is the same conversion one level down. Put "
+            "the fibre in the point's chart first."
+        )
+        raise TypeError(msg)
+
+    lower = _ladder_orders(x)
+    if 1 not in lower:
+        msg = (
+            f"act on a Coordinate cannot carry the order-{order} fibre "
+            f"{name!r} from {orig!r} into the point's {point_chart!r} without "
+            "an order-1 fibre: the chart change contributes d2psi(v, v) at "
+            "that order, which is built from it. Add the velocity fibre, or "
+            "store the fibre in the point's chart."
+        )
+        raise TypeError(msg)
+
+    vel = x._data[lower[1]]
+    if vel.chart != orig:
+        vel = cast(
+            "Tangent",
+            cxrapi.cconvert(vel, orig, at=point_data_in(vel.chart), usys=usys),
+        )
+
+    def psi(data: CDict, /) -> CDict:
+        return cast("CDict", cxc.pt_map(data, orig, point_chart, usys=usys))
+
+    out = prolong_point_map(
+        psi, {0: point_data_in(orig), 1: vel.data, order: fibre.data}
+    )
+    return cast("Tangent", replace(fibre, chart=point_chart, data=out[order]))
+
+
+def _return_ladder_fibre(
+    f: Tangent,
+    order: int,
+    orig_chart: Any,
+    point_chart: Any,
+    out_jet: "dict[int, CDict]",
+    usys: OptUSys,
+    /,
+) -> Tangent:
+    """Put a transformed ladder slot back in the chart its fibre came from.
+
+    The mirror of `_carry_foreign_ladder_fibre`, second-order for the same
+    reason -- but far cheaper, because the return leg already has the whole
+    transformed jet to prolong instead of having to rebuild one.
+    """
+    if orig_chart == point_chart:
+        return cast("Tangent", replace(f, data=out_jet[order]))
+
+    if order >= 2 and not _chart_map_is_affine(point_chart, orig_chart):
+
+        def back(data: CDict, /) -> CDict:
+            return cast("CDict", cxc.pt_map(data, point_chart, orig_chart, usys=usys))
+
+        out = prolong_point_map(back, {k: out_jet[k] for k in range(order + 1)})
+        return cast("Tangent", replace(f, chart=orig_chart, data=out[order]))
+
+    nf = replace(f, data=out_jet[order])
+    return cast("Tangent", cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys))
+
+
 def _act_coordinate_jet(
     op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, *, usys: OptUSys = None
 ) -> Coordinate:
@@ -810,8 +911,13 @@ def _act_coordinate_jet(
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
-            at_f = point_data_in(orig_chart)
-            f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
+            if order >= 2 and not _chart_map_is_affine(orig_chart, point_chart):
+                f = _carry_foreign_ladder_fibre(
+                    x, name, order, fibre, point_chart, point_data_in, usys
+                )
+            else:
+                at_f = point_data_in(orig_chart)
+                f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
         if order in jet:
             msg = (
                 f"Coordinate has multiple fibres at ladder order {order}; "
@@ -831,12 +937,9 @@ def _act_coordinate_jet(
 
     new_fields: dict[str, Any] = {}
     for name, (order, f, orig_chart) in ladder.items():
-        nf = replace(f, data=out_jet[order])
-        if orig_chart != point_chart:
-            nf = cast(
-                "Tangent", cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys)
-            )
-        new_fields[name] = nf
+        new_fields[name] = _return_ladder_fibre(
+            f, order, orig_chart, point_chart, out_jet, usys
+        )
 
     # Displacement (and other non-ladder) fibres: frozen-tau pushforward
     # anchored at the pre-transform base point.

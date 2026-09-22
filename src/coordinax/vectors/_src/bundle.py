@@ -768,7 +768,7 @@ def _cconvert_jointly(
     for name, vec in coord._data.items():
         if name in ladder:
             continue
-        at = cast("Point", cxr.cconvert(coord.point, vec.chart))
+        at = cast("Point", cxr.cconvert(coord.point, vec.chart, usys=usys))
         new_fields[name] = cast(
             "Tangent",
             cxr.cconvert(vec, field_charts.get(name, to_chart), at=at, usys=usys),

@@ -1659,3 +1659,48 @@ class TestFibreKickAboveItsRung:
         for k in ref:
             unit = u.unit_of(ref[k])
             assert jnp.allclose(u.ustrip(unit, got[k]), u.ustrip(unit, ref[k]))
+
+
+class TestProlongPointMapValidatesItsJet:
+    """The point-map engine must refuse a bad jet as clearly as `prolong_jet`.
+
+    Both current callers validate before calling, so this is the guarantee for
+    anyone reaching the engine directly: a hole used to surface as a bare
+    `KeyError` from the first missing index rather than saying what was wrong.
+    """
+
+    Q0: ClassVar = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+    A0: ClassVar = {
+        "x": u.Q(0.1, "kpc/Myr2"),
+        "y": u.Q(0.2, "kpc/Myr2"),
+        "z": u.Q(0.3, "kpc/Myr2"),
+    }
+
+    @staticmethod
+    def _psi(data):
+        return cxc.pt_map(data, cxc.cart3d, cxc.sph3d)
+
+    def test_a_hole_raises_rather_than_keyerror(self):
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"requires all jet slots 1\.\.2"):
+            prolong_point_map(self._psi, {0: self.Q0, 2: self.A0})
+
+    def test_a_missing_base_point_raises(self):
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"base point at jet slot 0"):
+            prolong_point_map(self._psi, {1: self.A0})
+
+    def test_mismatched_components_raise(self):
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"do not match slot 0"):
+            prolong_point_map(self._psi, {0: self.Q0, 1: {"x": u.Q(1.0, "kpc/Myr")}})
+
+    def test_the_message_names_the_point_map_not_act_jet(self):
+        """It is not `act_jet`, and saying so sends the reader to the wrong verb."""
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"^prolong_point_map"):
+            prolong_point_map(self._psi, {0: self.Q0, 2: self.A0})

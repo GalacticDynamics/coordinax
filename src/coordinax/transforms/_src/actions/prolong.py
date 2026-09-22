@@ -40,6 +40,7 @@ __all__ = (
     "assemble_slot_jet",
     "prolong_jet",
     "prolong_point_map",
+    "require_contiguous_jet",
     "prolong_slot",
     "pushforward_generic",
     "tau_derivative",
@@ -128,10 +129,8 @@ _MSG_AT_JET_UNUSED_POINT = (
     "anchor, so they would be silently ignored. Drop the slot(s), or act on "
     "tangent data if you meant to transform a jet."
 )
-_MSG_JET_SLOT_MISSING = (
-    "act_jet({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
-)
-_MSG_JET_SLOT0_MISSING = "act_jet requires the base point at jet slot 0."
+_MSG_JET_SLOT_MISSING = "{call} requires all jet slots 1..{m}; slot {k} is missing."
+_MSG_JET_SLOT0_MISSING = "{call} requires the base point at jet slot 0."
 
 
 # =============================================================================
@@ -516,20 +515,9 @@ def prolong_jet(
     (Q(7., 'km'), Q(3., 'km / s'))
 
     """
-    if 0 not in jet:
-        raise TypeError(_MSG_JET_SLOT0_MISSING)
+    require_contiguous_jet(jet, f"act_jet({type(op).__name__}, ...)")
     q0 = jet[0]
     max_order = max(jet)
-    for m in range(1, max_order + 1):
-        if m not in jet:
-            msg = _MSG_JET_SLOT_MISSING.format(op=type(op).__name__, m=max_order, k=m)
-            raise TypeError(msg)
-        require_matching_keys(
-            jet[m],
-            q0,
-            f"act_jet({type(op).__name__}, ...): jet slot {m} components "
-            f"do not match slot 0's {sorted(q0)}",
-        )
 
     if is_time_dependent(op) and tau is None and max_order >= 1:
         msg = _MSG_TAU_REQUIRED.format(op=type(op).__name__)
@@ -571,6 +559,29 @@ def prolong_jet(
     }
 
 
+def require_contiguous_jet(jet: JetDict, call: str, /) -> None:
+    """Refuse a jet with a missing slot or a slot whose components differ.
+
+    Slot $m$'s law reads every slot below it, so a hole is not a jet with a
+    gap -- it is a jet that cannot be prolonged at all. Shared by
+    `prolong_jet` and `prolong_point_map` so the engine answers the same way
+    whether the map being prolonged is a transform's point action or a chart
+    change, rather than one raising `TypeError` and the other a bare
+    `KeyError` from the first missing index.
+    """
+    if 0 not in jet:
+        raise TypeError(_MSG_JET_SLOT0_MISSING.format(call=call))
+    q0 = jet[0]
+    for m in range(1, max(jet) + 1):
+        if m not in jet:
+            raise TypeError(_MSG_JET_SLOT_MISSING.format(call=call, m=max(jet), k=m))
+        require_matching_keys(
+            jet[m],
+            q0,
+            f"{call}: jet slot {m} components do not match slot 0's {sorted(q0)}",
+        )
+
+
 def prolong_point_map(psi: Callable[[CDict], CDict], jet: JetDict, /) -> JetDict:
     r"""Prolong a jet through a time-independent point map ``psi``.
 
@@ -593,6 +604,7 @@ def prolong_point_map(psi: Callable[[CDict], CDict], jet: JetDict, /) -> JetDict
     in another. All slots ``0..max(jet)`` must be present: slot $m$'s law
     reads every slot below it.
     """
+    require_contiguous_jet(jet, "prolong_point_map(psi, jet)")
     q0 = jet[0]
     max_order = max(jet)
     if max_order == 0:

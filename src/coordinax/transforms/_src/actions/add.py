@@ -377,7 +377,7 @@ def _prolong_slotwise(
     # Any tangent slot indexes jet[0], so require it explicitly here — a
     # bare KeyError would otherwise mask the same guard prolong_jet gives.
     if jet and 0 not in jet:
-        raise TypeError(_MSG_JET_SLOT0_MISSING)
+        raise TypeError(_MSG_JET_SLOT0_MISSING.format(call="act_jet"))
 
     out: dict = {}
     for m, slot in jet.items():
