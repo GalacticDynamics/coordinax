@@ -17,7 +17,7 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .custom_types import CDict
-from coordinax.internal import pack_uniform_unit
+from .utils import act_array_via_cdict, act_quantity_via_cdict
 
 # A "point-like" input the entry funnel accepts. Faithful (each member and the
 # union), so the normalizer methods below stay in plum's method cache.
@@ -32,10 +32,9 @@ PointLike: TypeAlias = ArrayLike | AbcQ | ul.QuantityMatrix | CDict
 #
 # When ``rep`` is omitted the default depends only on the INPUT TYPE, not the
 # operator: a bare array carries no unit information to infer a role from, so it
-# defaults to ``point``; a ``QuantityMatrix`` (a raw metric/Jacobian container,
-# even though it stores per-element units) has no semantic role to infer, so it
-# also defaults to ``point``; a Quantity / CDict carries units, so the role is
-# guessed from them.
+# defaults to ``point``; every other accepted input carries units, so the role
+# is guessed from them (#955 -- a ``QuantityMatrix`` used to default to
+# ``point``, which made a fibre-only operator a silent no-op on velocity data).
 
 
 # NB: the return type is ``Any`` on purpose. plum performs runtime return-type
@@ -47,22 +46,35 @@ PointLike: TypeAlias = ArrayLike | AbcQ | ul.QuantityMatrix | CDict
 
 
 @plum.dispatch
-def _default_rep(x: ArrayLike, /) -> Any:
+def _default_rep(x: ArrayLike, chart: cxc.AbstractChart, /) -> Any:
     return cxr.point
 
 
 @plum.dispatch
-def _default_rep(x: ul.QuantityMatrix, /) -> Any:
-    return cxr.point
+def _default_rep(x: ul.QuantityMatrix, chart: cxc.AbstractChart, /) -> Any:
+    # A QuantityMatrix stores one unit per component, so its role CAN be read
+    # off the data -- via the CDict guess, since ``dimension_of`` on the
+    # matrix itself is `None`. Heterogeneous components (the whole point of
+    # the type) have no single role: say so rather than guess one.
+    v = cast("CDict", cxc.cdict(x, chart))
+    try:
+        return cxr.guess_rep(v)
+    except ValueError as e:
+        msg = (
+            f"Cannot infer the representation of a QuantityMatrix with "
+            f"components {tuple(str(u.unit_of(q)) for q in v.values())}: its "
+            "component dimensions do not agree. Pass 'rep' explicitly."
+        )
+        raise ValueError(msg) from e
 
 
 @plum.dispatch
-def _default_rep(x: AbcQ, /) -> Any:
+def _default_rep(x: AbcQ, chart: cxc.AbstractChart, /) -> Any:
     return cxr.guess_rep(x)
 
 
 @plum.dispatch
-def _default_rep(x: CDict, /) -> Any:
+def _default_rep(x: CDict, chart: cxc.AbstractChart, /) -> Any:
     return cxr.guess_rep(x)
 
 
@@ -116,7 +128,7 @@ def act(op: AbstractTransform, tau: Any, x: PointLike, /, **kw: Any) -> Any:
 
     """
     chart = cxc.guess_chart(x)
-    return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
+    return cxfmapi.act(op, tau, x, chart, _default_rep(x, chart), **kw)
 
 
 @plum.dispatch
@@ -141,7 +153,7 @@ def act(
     Q([0., 1., 0.], 'km')
 
     """
-    return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
+    return cxfmapi.act(op, tau, x, chart, _default_rep(x, chart), **kw)
 
 
 # ===================================================================
@@ -164,7 +176,9 @@ def act(
 ) -> Array:
     """Apply an operator to an Array(like) object.
 
-    The Array is interpreted as Cartesian point coordinates.
+    The Array is interpreted as coordinates in ``chart``, in the units that
+    ``usys`` gives for ``rep`` — an array carries none of its own — and the
+    result is written back in those same units.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -175,8 +189,19 @@ def act(
     >>> cx.act(op, None, x, cx.cart3d, cx.point).round(3)
     Array([0., 1., 0.], dtype=float64)
 
+    Operators with no typed Array fast path land here, and are served by
+    coercion to a `CDict` rather than by re-dispatch (#948 — every arity-6
+    ``act`` takes a `CDict`, so re-dispatching an array found no method):
+
+    >>> import coordinax.transforms as cxfm
+    >>> import coordinax.charts as cxc
+    >>> rate = {k: u.Q(v, "kpc/Myr") for k, v in [("x", 1.0), ("y", 0.0), ("z", 0.0)]}
+    >>> boost = cxfm.Boost(rate, chart=cxc.cart3d)
+    >>> cxfm.act(boost, u.Q(1.0, "Myr"), x, usys=u.unitsystems.galactic).round(3)
+    Array([2., 0., 0.], dtype=float64)
+
     """
-    out = cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, **kw)
+    out = act_array_via_cdict(op, tau, x, chart, rep, **kw)
     return cast("Array", out)
 
 
@@ -212,13 +237,7 @@ def act(
     Q([0., 1., 0.], 'km')
 
     """
-    # Get the Cartesian CDict of the input Quantity
-    v = cxc.cdict(x, chart)
-    # Act on the CDict representation
-    nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
-    # Restack to a Quantity (homogeneous unit since Cartesian)
-    v, unit = pack_uniform_unit(nv, keys=chart.components)  # ty: ignore[no-matching-overload]
-    return u.Q(v, unit)
+    return cast("AbcQ", act_quantity_via_cdict(op, tau, x, chart, rep, **kw))
 
 
 # ===================================================================

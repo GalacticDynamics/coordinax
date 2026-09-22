@@ -4,18 +4,29 @@ This module defines helpers for operator implementations.
 """
 
 __all__: tuple[str, ...] = (
+    "act_array_via_cdict",
+    "act_quantity_via_cdict",
     "is_componentwise_offset",
     "is_flat_chart",
     "require_matching_keys",
 )
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Final
 
 import jax.numpy as jnp
 
+import unxt as u
+import unxts.linalg as ul
+
+import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.api.charts as cxcapi
+import coordinaxs.api.transforms as cxfmapi
 from coordinax._src.exceptions import NoGlobalCartesianChartError
+from coordinax.internal import pack_uniform_unit
+
+DMLS: Final = u.unit("")
 
 
 def is_flat_chart(chart: Any, /) -> bool:
@@ -71,6 +82,59 @@ def require_matching_keys(
             + (f"; unexpected {extra}" if extra else "")
             + "."
         )
+
+
+# ===================================================================
+# Coerce-act-repack funnels
+#
+# The CDict methods are the reference implementation of every operator: they
+# cover the full (representation, semantic kind) ladder. A Quantity or a bare
+# array is therefore best served by converting to a CDict, acting there, and
+# repacking — which is what these two helpers do. They are shared by the
+# generic arity-5 fallbacks in `register_apply` and by the typed fast paths
+# (e.g. `Translate`) for the cells their fast path does not cover, so the two
+# can never disagree.
+
+
+def act_quantity_via_cdict(
+    op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, **kw: Any
+) -> Any:
+    """Act on a `unxt.AbstractQuantity` through its Cartesian `CDict`.
+
+    The result is repacked into a Quantity, which requires the acted-on
+    components to share a unit (they do in a Cartesian chart).
+    """
+    v = cxc.cdict(x, chart)
+    nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
+    value, unit = pack_uniform_unit(nv, keys=chart.components)  # ty: ignore[no-matching-overload]
+    return u.Q(value, unit)
+
+
+def act_array_via_cdict(
+    op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, *, usys: Any = None, **kw: Any
+) -> Any:
+    """Act on a bare array through a `CDict`, taking its units from ``usys``.
+
+    A bare array carries no units, so ``usys`` supplies them: each component
+    is read in the unit that ``usys`` gives for that component's dimension
+    under ``rep`` (``chart.coord_dimensions`` differentiated ``rep``'s ladder
+    order). The result is written back in those same units, so an array in is
+    an array out.
+    """
+    if usys is None:
+        msg = (
+            f"{type(op).__name__} requires 'usys' to act on a bare array: the "
+            "array carries no units, so they are read from the unit system. "
+            "Pass usys=..., or use a Quantity / component dict / typed vector, "
+            "which carry their own units."
+        )
+        raise TypeError(msg)
+
+    dims = rep.semantic_kind.coord_dimensions(chart)
+    units = tuple(DMLS if d is None else usys[d] for d in dims)
+    v = cxc.cdict(ul.QuantityMatrix(jnp.asarray(x), unit=units), chart)
+    nv = cxfmapi.act(op, tau, v, chart, rep, usys=usys, **kw)
+    return cxcapi.carray(nv, chart.components, usys).value  # ty: ignore[unresolved-attribute]
 
 
 def _unnormalisable(norm: Any, /) -> Any:
