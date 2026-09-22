@@ -155,3 +155,36 @@ def from_(
         raise TypeError(msg)
 
     return obj
+
+
+@AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(cls: type[AbstractReferenceFrame], obj: Any, /) -> AbstractReferenceFrame:
+    """Reject an unsupported input, naming the class and the argument.
+
+    This catch-all is deliberately the least specific method, so any concrete
+    registration wins over it. It exists so that an unsupported argument gets a
+    domain error that says *what* was unsupported, instead of plum's generic
+    ``NotFoundLookupError`` -- which, for this function, cannot even be built:
+    the first implementation registered here is a jaxtyping wrapper when
+    ``COORDINAX_ENABLE_RUNTIME_TYPECHECKING`` is set, so
+    ``plum.Function.owner`` looks the owning class up in jaxtyping's module
+    namespace and dies with ``KeyError('AbstractReferenceFrame')``.
+
+    Examples
+    --------
+    >>> import coordinax.frames as cxf
+
+    >>> try:
+    ...     cxf.Alice.from_(1)
+    ... except TypeError as e:
+    ...     print(e)
+    Cannot construct 'Alice' from 1, of type 'int'.
+    Supported input types are listed by `Alice.from_.methods`.
+
+    """
+    msg = (
+        f"Cannot construct {cls.__qualname__!r} from {obj}, of type "
+        f"{type(obj).__qualname__!r}. Supported input types are listed by "
+        f"`{cls.__qualname__}.from_.methods`."
+    )
+    raise TypeError(msg)
