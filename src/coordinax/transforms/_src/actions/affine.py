@@ -25,7 +25,6 @@ from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 from coordinax.transforms._src.groups import AbstractTransformGroup
 from coordinaxs.api.custom_types import CDict
-import coordinaxs.api.transforms as cxfmapi
 
 AMatrix: TypeAlias = Shaped[Array, " N N"]
 
@@ -107,23 +106,6 @@ class Affine(AbstractTransform):
             self.chart,
             self.group,
         )
-
-
-@plum.dispatch
-def act(
-    op: Affine,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    *,
-    usys: OptUSys = None,
-    **kw: Any,
-) -> CDict:
-    """Redispatch a CDict to the geometry-specific implementation."""
-    out = cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, usys=usys, **kw)
-    return cast("CDict", out)
 
 
 @plum.dispatch

@@ -621,7 +621,16 @@ def act(
     **kw: Any,
 ) -> CDict:
     """Redispatch on the representation's geometry kind (generic funnel)."""
-    return cast("CDict", cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, **kw))
+    geom = rep.geom_kind
+    if isinstance(geom, cxr.PointGeometry):
+        # The tangent rule below guards inside itself, where the ladder order
+        # is known. Point geometry has no such shared rule to guard in -- the
+        # point action is the primitive, so every transform registers its own
+        # and the generic `PointGeometry` rule only ever raises. This funnel
+        # is the last shared floor a point action passes through, so the
+        # check lands here on the way past.
+        _reject_unusable_slots(op, cast("AnchorJet | None", kw.get("at_jet")), None)
+    return cast("CDict", cxfmapi.act(op, tau, x, chart, geom, rep, **kw))
 
 
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
@@ -745,10 +754,10 @@ def _reject_unusable_slots(
     acceleration. Swallowing the slot made that invisible (gh#936); naming
     `act_jet`, which uses every slot, makes it a one-line fix instead.
 
-    ``m is None`` is point geometry, which has no ladder order at all (only
-    `Composed` reaches here that way). The slots are just as dead there, so the
-    rejection stands -- but the tangent wording does not, so the point case
-    gets its own message rather than claiming "order-None tangent data".
+    ``m is None`` is point geometry, which has no ladder order at all. The
+    slots are just as dead there, so the rejection stands -- but the tangent
+    wording does not, so the point case gets its own message rather than
+    claiming "order-None tangent data".
     """
     unused = sorted(k for k in _live_slots(at_jet) if k >= 1)
     if unused:

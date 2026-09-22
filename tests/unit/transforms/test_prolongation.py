@@ -1278,6 +1278,19 @@ class TestRobustness:
 # gh#936: an anchor slot `act` cannot use must never be swallowed
 
 
+# `act` on point CDict data resolves to one of exactly four methods; each is
+# a separate registration, so each needs its own guard. Keep this in step with
+# the dispatch table -- a new transform that registers its own CDict `act`
+# rule leaves the generic funnel and belongs here.
+POINT_ACTION_PATHS = [
+    (cxfm.Rotate.from_euler("z", u.Q(37.0, "deg")), None),  # generic funnel
+    (cxfm.Translate.from_([1, 2, 3], "kpc"), None),  # translate.py
+    (cxfm.Boost.from_([1.0, 0.0, 0.0], "kpc/Myr"), u.Q(1.0, "Myr")),  # boost.py
+    (cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),)), None),  # composed.py
+]
+POINT_PATH_IDS = ["funnel", "translate", "boost", "composed"]
+
+
 class TestUnusableAnchorSlotsAreRefused:
     r"""`act` anchors on slot 0; a higher slot it cannot read must raise.
 
@@ -1432,23 +1445,81 @@ class TestUnusableAnchorSlotsAreRefused:
         )
         assert jnp.allclose(u.ustrip("km/s2", out["x"]), 7.0)
 
-    def test_a_point_action_refuses_the_slot_in_point_language(self):
-        """`Composed` on points refuses too, but not in the tangent language.
+    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS, ids=POINT_PATH_IDS)
+    def test_a_point_action_refuses_the_slot_in_point_language(self, op, tau):
+        """Every point action refuses, and not in the tangent language.
 
-        Point geometry has no ladder order (`None`, not 0), and it is the one
-        path that reaches the guard that way. The rejection is right -- a point
-        action reads slot 0 and nothing else, so a slot >= 1 is exactly as dead
-        as on the pushforward path -- but the tangent wording is not, so this
-        pins the point message instead of ``order-None tangent data``.
+        Point geometry has no ladder order (`None`, not 0), so the rejection
+        needs its own wording: this pins the point message rather than a
+        message claiming "order-None tangent data".
+
+        The parameters are the *dispatch* map, not a sample of operators.
+        `act` on point CDict data resolves to one of exactly four methods --
+        the generic geometry funnel, `Translate`, `Boost` and `Composed` --
+        and a guard on one of them says nothing about the other three. That
+        is how gh#936 survived in the first place: `Composed` checked, and
+        every primitive beside it swallowed the slot.
         """
-        pipe = cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),))
         with pytest.raises(TypeError, match=r"on point data reads jet slot 0 alone"):
-            cxfm.act(pipe, None, self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0})
+            cxfm.act(op, tau, self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0})
 
-    def test_a_point_action_still_takes_slot_zero(self):
+    @pytest.mark.parametrize(("op", "tau"), POINT_ACTION_PATHS, ids=POINT_PATH_IDS)
+    def test_a_point_action_still_takes_slot_zero(self, op, tau):
         """Only slots >= 1 are refused on the point path as well."""
-        pipe = cxfm.Composed((cxfm.Translate.from_([1, 2, 3], "kpc"),))
         q = q3(1.0, 2.0, 3.0, "kpc")
-        via_plain = cxfm.act(pipe, None, q, cxc.cart3d, cxr.point)
-        via_jet = cxfm.act(pipe, None, q, cxc.cart3d, cxr.point, at_jet={0: q})
+        via_plain = cxfm.act(op, tau, q, cxc.cart3d, cxr.point)
+        via_jet = cxfm.act(op, tau, q, cxc.cart3d, cxr.point, at_jet={0: q})
         assert allclose_cdict(via_plain, via_jet, "kpc")
+
+    def test_the_guard_covers_the_whole_point_dispatch_table(self):
+        """The guard must cover the dispatch table, not a sample of it.
+
+        This is the shape of gh#936's recurrence: `Composed` checked and
+        every primitive beside it did not, because a transform that
+        registers its own CDict `act` rule leaves the generic funnel --
+        and the guard with it -- without anything saying so. So pin the set
+        of methods `act` resolves to for point data. Growing that set is
+        exactly the moment to add a guard, and this fails *then*, rather
+        than on a quietly first-order answer much later.
+
+        `identity` is the one deliberate omission: its rule is a total
+        catch-all over every input shape (arrays, `Point`s, CDicts, with or
+        without a chart), so it has no `rep` to tell a point call from a
+        tangent one -- and it returns its input, so no slot it ignores can
+        make the answer wrong.
+        """
+        act = cxfm.act
+        act._resolve_pending_registrations()
+
+        def subclasses(cls):
+            for sub in cls.__subclasses__():
+                yield sub
+                yield from subclasses(sub)
+
+        modules = set()
+        for cls in subclasses(cxfm.AbstractTransform):
+            try:
+                # Only the *type* reaches dispatch, so an uninitialized
+                # instance resolves the same method a real one would -- and
+                # spares this a constructor call per transform.
+                impl, _ = act.resolve_method(
+                    (object.__new__(cls), None, self.Q0, cxc.sph3d, cxr.point)
+                )
+            except TypeError:  # abstract class
+                continue
+            modules.add(impl.__module__.rsplit(".", maxsplit=1)[-1])
+
+        assert modules == {"prolong", "translate", "boost", "composed", "identity"}
+
+    def test_the_error_names_the_operator_the_caller_wrote(self):
+        """`Boost` delegates its point action; the message must not leak that.
+
+        `Boost` reaches the ladder through the equivalent
+        ``TimeDep(Translate)``, which would refuse the slot under *its* name.
+        The caller wrote `Boost`.
+        """
+        op = cxfm.Boost.from_([1.0, 0.0, 0.0], "kpc/Myr")
+        with pytest.raises(TypeError, match=r"^act\(Boost, "):
+            cxfm.act(
+                op, u.Q(1.0, "Myr"), self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0}
+            )
