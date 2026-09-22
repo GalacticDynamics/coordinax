@@ -5515,7 +5515,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Rotate`
 
-    A **Rotate** is a transformation that applies a linear orthogonal map to position components while leaving other representations unchanged.
+    A **Rotate** is a transformation that applies a linear orthogonal map to position components. Tangent data is not left alone: a linear map acts on a tangent by the pushforward with the same matrix, $v \mapsto R v$ (through the chart Jacobian where the chart is not flat). Only the bare-`ArrayLike` fast path for *points* is Cartesian-only; every other spelling goes through the `CDict` ladder, which carries the semantic kind.
 
     **Mathematical definition**:
 
@@ -5551,7 +5551,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Reflect`
 
-    A **Reflect** is a transformation that applies a linear orthogonal map with determinant -1 to position components while leaving other representations unchanged.
+    A **Reflect** is a transformation that applies a linear orthogonal map with determinant -1 to position components. As with `Rotate`, tangent data is carried by the pushforward with the same matrix, $v \mapsto H v$, rather than left unchanged.
 
     **Mathematical definition**:
 
@@ -5600,7 +5600,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Scale`
 
-    A **Scale** is a transformation that applies a linear scaling to position components while leaving other representations unchanged.
+    A **Scale** is a transformation that applies a linear scaling to position components. Tangent data is carried by the pushforward with the same matrix, $v \mapsto S v$, rather than left unchanged.
 
     **Mathematical definition**:
 
@@ -5642,7 +5642,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Shear`
 
-    A **Shear** is a transformation that applies a linear shear map to position components while leaving other representations unchanged.
+    A **Shear** is a transformation that applies a linear shear map to position components. Tangent data is carried by the pushforward with the same matrix, $v \mapsto L v$, rather than left unchanged.
 
     **Mathematical definition**:
 
@@ -5676,7 +5676,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Linear`
 
-    A **Linear** is a transformation that applies a general invertible linear map to position components while leaving other representations unchanged.
+    A **Linear** is a transformation that applies a general invertible linear map to position components. Tangent data is carried by the pushforward with the same matrix, $v \mapsto M v$, rather than left unchanged.
 
     **Mathematical definition**:
 
