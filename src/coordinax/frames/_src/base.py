@@ -199,7 +199,14 @@ def from_(cls: type[AbstractReferenceFrame], obj: Any, /) -> AbstractReferenceFr
     # But either can run to thousands of characters over dozens of lines for an
     # array or a coordinate dict, so flatten and cap it -- a one-line error is
     # worth more here than the tail of a 1000-element array.
-    shown = " ".join(repr(obj).split())
+    try:
+        shown = " ".join(repr(obj).split())
+    except Exception:  # noqa: BLE001
+        # A broken `__repr__` must not replace the error we are here to raise.
+        # Blanket, deliberately: a third-party `__repr__` may raise anything,
+        # and whatever it is, the caller still needs to be told their input was
+        # unsupported. `object.__repr__` cannot reach user code.
+        shown = object.__repr__(obj)
     if len(shown) > _MAX_SHOWN_CHARS:
         shown = shown[: _MAX_SHOWN_CHARS - 3] + "..."
     msg = (

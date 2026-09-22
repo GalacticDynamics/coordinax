@@ -187,3 +187,22 @@ class TestAstropyInteropUnshadowed:
         frame = apyc.ICRS(ra=1 * apyu.deg, dec=2 * apyu.deg)
         with pytest.raises(ValueError, match="must not have data"):
             cxastro.ICRS.from_(frame)
+
+
+class _HostileRepr:
+    """An object whose `__repr__` raises, at module scope so plum never sees it."""
+
+    def __repr__(self) -> str:
+        msg = "this __repr__ is broken"
+        raise RuntimeError(msg)
+
+
+def test_a_broken_repr_does_not_replace_the_error() -> None:
+    """The point of this guard is that an error path never dies (#968 review).
+
+    Formatting the offending value must not be able to raise over the top of
+    the `TypeError` the caller needs to see -- that is the same failure mode
+    this whole change exists to remove, one level down.
+    """
+    with pytest.raises(TypeError, match="Cannot construct"):
+        cxf.Alice.from_(_HostileRepr())
