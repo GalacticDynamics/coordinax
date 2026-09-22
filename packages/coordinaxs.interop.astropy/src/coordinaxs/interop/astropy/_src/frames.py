@@ -115,6 +115,7 @@ def to_astropy_frame(frame: cxf.AbstractReferenceFrame, /) -> apyc.BaseCoordinat
 # ICRS
 
 
+@to_astropy_frame.dispatch  # ty: ignore[unresolved-attribute]
 @plum.conversion_method(cxastro.ICRS, apyc.ICRS)
 def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     """Convert coordinax ICRS frame to Astropy ICRS frame.
@@ -142,9 +143,6 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
 
     """
     return apyc.ICRS()
-
-
-to_astropy_frame.dispatch(coordinax_icrs_to_astropy_icrs)  # ty: ignore[unresolved-attribute]
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -198,6 +196,7 @@ def astropy_icrs_to_coordinax_icrs(frame: apyc.ICRS, /) -> cxastro.ICRS:
 # Galactic
 
 
+@to_astropy_frame.dispatch  # ty: ignore[unresolved-attribute]
 @plum.conversion_method(cxastro.Galactic, apyc.Galactic)
 def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.Galactic:
     """Convert coordinax Galactic frame to Astropy Galactic frame.
@@ -223,9 +222,6 @@ def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.G
 
     """
     return apyc.Galactic()
-
-
-to_astropy_frame.dispatch(coordinax_galactic_to_astropy_galactic)  # ty: ignore[unresolved-attribute]
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -270,6 +266,7 @@ def astropy_galactic_to_coordinax_galactic(frame: apyc.Galactic, /) -> cxastro.G
 # Galactocentric
 
 
+@to_astropy_frame.dispatch  # ty: ignore[unresolved-attribute]
 @plum.conversion_method(cxastro.Galactocentric, apyc.Galactocentric)
 def coordinax_galactocentric_to_astropy_galactocentric(
     frame: cxastro.Galactocentric, /
@@ -352,9 +349,6 @@ def coordinax_galactocentric_to_astropy_galactocentric(
         z_sun=plum.convert(frame.z_sun, apyu.Quantity),
         roll=plum.convert(frame.roll, apyu.Quantity),
     )
-
-
-to_astropy_frame.dispatch(coordinax_galactocentric_to_astropy_galactocentric)  # ty: ignore[unresolved-attribute]
 
 
 @cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
