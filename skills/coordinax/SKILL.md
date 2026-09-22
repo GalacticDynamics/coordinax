@@ -190,7 +190,7 @@ If a downstream function annotates `Distance` and you feed it the result of a su
 
 ## Performance
 
-Two rules, and they account for nearly all of the difference.
+A few rules, and they account for nearly all of the difference.
 
 **1. Charts and representations are static.** They are `register_static` pytrees. Close over them; never pass one as a traced argument or route it through `static_argnums` in a hot loop. `pt_map` has a curried form for exactly this:
 
@@ -210,6 +210,8 @@ Closed over this way, the coordinax version costs the same as hand-written `jnp`
 **2. Keep pytrees off the jit boundary.** `Point`/`Coordinate` are pytrees; flattening and unflattening them is paid per call, not per element. Structure hot code as raw arrays in, raw arrays out, and build the objects _inside_.
 
 **3. Write scalar, batch with `vmap`.** The library is scalar-first by design: functions are written for a single point and you batch them yourself. Reaching for a reshape because a function "should take an (N, 3) array" is the wrong move — `vmap` it.
+
+**4. Frame operators are data, not static objects.** `frame_transition(a, b)` is pure Python — a dispatch walk, a composition, a simplify — so build it once _outside_ `jit` and hand it to the jitted function as an **argument**. Unlike charts (rule 1), operators are ordinary pytrees whose parameters are leaves, so an argument reuses one compile across every operator of the same structure, while closing one over makes it static and buys a fresh compile per operator. See [Frames](#frames).
 
 ## Frames
 
@@ -232,6 +234,27 @@ Alice()
 ```
 p.to_frame(bar_frame, t=u.Q(500.0, "Myr"))
 ```
+
+On a hot path build the operator once and apply it with `act`. `to_frame` is the convenience form and rebuilds the transition on every call, so its construction cost cannot be lifted out of a loop:
+
+```pycon
+>>> import equinox as eqx
+>>> import coordinax.transforms as cxfm
+
+>>> op = cxf.frame_transition(cxf.alice, cxf.alex)  # once, outside
+
+>>> @eqx.filter_jit
+... def to_alex(op, p):
+...     return cxfm.act(op, None, p)
+...
+
+>>> print(to_alex(op, p_alice))
+<Point: chart=Cart3D (x, y, z) [km]
+    [-2.    1.01  3.  ]>
+
+```
+
+ICRS to Galactocentric on a single `Point`, as orders of magnitude: `to_frame` ~15 ms, eager `act` with the operator precomputed ~3 ms, the same jitted ~100 us. Eager cost is a few ms of fixed Python plus tens of ns per element, so below roughly `1e5` elements you are paying for Python rather than arithmetic — `jit` is the intended mode here, not an optimisation. [`docs/guides/frames.md`](../../docs/guides/frames.md) has the measurements.
 
 ## Manifolds and metrics
 
@@ -310,6 +333,7 @@ Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so
 | A tangent conversion returns `NaN` where the point converts fine | The base point is on a chart singularity — the origin or the z-axis in `sph3d`, where `d(phi)/dx = -y/(x^2+y^2)` is `0/0`. The velocity vector is fine; what is undefined is its _representation_ in that chart — the spherical coordinate basis degenerates there, so the components `NaN` out while the point's own coordinates are still well-defined. Convert the tangent in a chart that is regular at that point, or keep the base point off the axis. |
 | `jax.jacfwd`/`grad` over a batch returns a dense `(N, k, N, k)` array | Applied directly to a function that already takes a batch — this does not error, it silently computes every output point's derivative with respect to every input point. Write the function scalar (single point) and use `jax.vmap(jax.jacfwd(fn))`; `jac_pt_map` does exactly this. |
 | `jnp.<f>` returns a bare `Array`, stripping the coordinax type | The quaxed fallback, not a coordinax defect. See the quaxed skill. |
+| `to_frame` in a loop is slow, or each operator triggers a fresh compile | `to_frame` rebuilds the transition every call. Build it once with `frame_transition` and pass the operator into the jitted function as an argument — not as a closure, which makes it static. |
 | Astro frames missing (`cxf.ICRS` absent) | `coordinaxs.astro` not installed. `pip install "coordinax[astro]"`. |
 
 ## Version notes
