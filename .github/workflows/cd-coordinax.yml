@@ -39,8 +39,9 @@ jobs:
           # Can be removed if switching to hardcoded versions.
           fetch-depth: 0
           persist-credentials: false
-          # This workflow only runs on trusted `push` and `workflow_dispatch` events.
-          ref: ${{ github.ref }}
+          # Pin to the triggering commit: a queued job would re-resolve
+          # `github.ref` to main's tip. Only trusted `push`/`dispatch` run here.
+          ref: ${{ github.sha }}
 
       - name: Validate git tag (for tagged releases)
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
