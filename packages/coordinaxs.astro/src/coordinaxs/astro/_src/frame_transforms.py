@@ -17,6 +17,7 @@ from .base_frame import AbstractSpaceFrame
 from .galactic import GALACTIC_TO_ICRS_MATRIX, ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
+from coordinax.frames._src.base import is_same_frame
 
 # ---------------------------------------------------------------
 # Base Space-Frame Transformation
@@ -256,7 +257,7 @@ def frame_transition(from_frame: Galactic, to_frame: ICRS, /) -> cxfm.Rotate:
 @plum.dispatch
 def frame_transition(
     from_frame: Galactocentric, to_frame: Galactocentric, /
-) -> cxfm.Composed:
+) -> cxfm.AbstractTransform:
     """Return a sequence of operators for the Galactocentric frame self transformation.
 
     >>> import unxt as u
@@ -266,7 +267,12 @@ def frame_transition(
     >>> gcf_frame = cxastro.Galactocentric()
     >>> frame_op = cxf.frame_transition(gcf_frame, gcf_frame)
     >>> frame_op
-    Composed(Identity())
+    Identity()
+
+    An equal-but-distinct frame is the same frame too:
+
+    >>> cxf.frame_transition(gcf_frame, cxastro.Galactocentric())
+    Identity()
 
     >>> gcf_frame2 = cxastro.Galactocentric(roll=u.Q(10, "deg"))
     >>> frame_op2 = cxf.frame_transition(gcf_frame, gcf_frame2)
@@ -296,8 +302,8 @@ def frame_transition(
     on the tangent fibre rather than the point.
 
     """
-    if from_frame == to_frame:
-        return cxfm.Composed((cxfm.identity,))
+    if is_same_frame(from_frame, to_frame):
+        return cxfm.identity
 
     # TODO: not go through ICRS for the self-transformation
     return cxfm.simplify(  # ty: ignore[invalid-return-type]

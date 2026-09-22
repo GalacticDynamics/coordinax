@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 from collections.abc import Iterable
 
+import equinox as eqx
 import jax
 import numpy as np
 import plum
@@ -21,6 +22,7 @@ import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 import coordinaxs.hypothesis.astro as cxastrost
+from coordinax.frames._src.base import is_same_frame
 from coordinaxs.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
 
 # Astropy is imported once, not re-checked inside five helper bodies -- but the
@@ -687,4 +689,63 @@ class TestFrameTransitionUnderJit:
             return cxfm.simplify(bridge)(self.Q)
 
         got = jax.jit(f)(a, b)
+class TestGalactocentricSelfTransition:
+    """Regression for #940.
+
+    ``from_frame == to_frame`` on a `Galactocentric` pair is a 0-d `jax.Array`,
+    not a `bool`: fine eagerly, `TracerBoolConversionError` under `jit`. The
+    check now goes through `is_same_frame`, which is concrete-only and
+    structural.
+    """
+
+    #: gc -> gc(roll=10 deg) applied to Q([1, 2, 3], "kpc"), from before the fix.
+    EXPECT_KPC = (1.00077259, 1.44822798, 3.30167987)
+
+    def test_a_self_transition_is_the_identity(self) -> None:
+        gcf = cxastro.Galactocentric()
+        assert isinstance(cxf.frame_transition(gcf, gcf), cxfm.Identity)
+
+    def test_equal_but_distinct_frames_are_the_identity(self) -> None:
+        """A frame rebuilt from the same parameters is the same frame."""
+        a, b = cxastro.Galactocentric(), cxastro.Galactocentric()
+        assert a is not b
+        assert isinstance(cxf.frame_transition(a, b), cxfm.Identity)
+
+    @pytest.mark.parametrize(
+        "jit", [jax.jit, eqx.filter_jit], ids=["jax.jit", "eqx.filter_jit"]
+    )
+    @pytest.mark.parametrize("same", [True, False], ids=["equal", "different"])
+    def test_the_check_survives_tracing(self, jit, same) -> None:
+        """Frames are pytrees, so they get passed as `jit` arguments.
+
+        Under trace the answer is not statically knowable, so `is_same_frame` is
+        `False` and the caller falls through to the general transform -- what it
+        must never do is raise.
+        """
+        a = cxastro.Galactocentric()
+        b = a if same else cxastro.Galactocentric(roll=u.Q(10, "deg"))
+        out = jit(lambda x, y: jnp.asarray(is_same_frame(x, y)))(a, b)
+        assert not bool(out)
+
+    def test_different_frames_are_numerically_unchanged(self) -> None:
+        """The non-equal case must not be touched by the fast-path change."""
+        op = cxf.frame_transition(
+            cxastro.Galactocentric(), cxastro.Galactocentric(roll=u.Q(10, "deg"))
+        )
+        got = op(u.Q([1.0, 2.0, 3.0], "kpc"))
+        assert jnp.allclose(u.ustrip("kpc", got), jnp.asarray(self.EXPECT_KPC))
+
+    @pytest.mark.xfail(
+        raises=jax.errors.TracerBoolConversionError,
+        strict=True,
+        reason=(
+            "the fast path is trace-safe now, but the fall-through still hits "
+            "`simplify(Rotate)`'s `jnp.allclose` under trace (out of scope for "
+            "#940); flip this to a plain test once that is fixed"
+        ),
+    )
+    def test_the_whole_transition_under_jit(self) -> None:
+        a, b = cxastro.Galactocentric(), cxastro.Galactocentric(roll=u.Q(10, "deg"))
+        q = u.Q([1.0, 2.0, 3.0], "kpc")
+        got = jax.jit(lambda x, y: cxf.frame_transition(x, y)(q))(a, b)
         assert jnp.allclose(u.ustrip("kpc", got), jnp.asarray(self.EXPECT_KPC))
