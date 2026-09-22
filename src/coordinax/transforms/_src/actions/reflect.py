@@ -67,10 +67,13 @@ class Reflect(AbstractLinearTransform):
 
     Raises
     ------
+    equinox.EquinoxTracetimeError
+        If ``H`` is not square. A shape is static, so this is decided while
+        tracing and raises there -- not when the traced graph runs.
     equinox.EquinoxRuntimeError
-        If ``H`` is not an involution. The check is deferred onto the stored
-        ``H`` so it survives `jax.jit`: eagerly it raises from the
-        constructor, under `jit` when the traced graph runs.
+        If ``H`` is not an involution. This one depends on the values, so it
+        is deferred onto the stored ``H`` to survive `jax.jit`: eagerly it
+        raises from the constructor, under `jit` when the traced graph runs.
 
     Examples
     --------

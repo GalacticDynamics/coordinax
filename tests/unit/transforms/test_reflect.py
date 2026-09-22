@@ -147,5 +147,5 @@ def test_a_non_square_matrix_is_named_by_the_shape_check() -> None:
     """
     rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
     assert _not_involutive(rect) is False
-    with pytest.raises(Exception, match=r"square matrix; got shape"):
+    with pytest.raises(eqx.EquinoxTracetimeError, match=r"square matrix; got shape"):
         cxfm.Reflect(rect)
