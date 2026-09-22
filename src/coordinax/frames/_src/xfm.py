@@ -9,7 +9,7 @@ import plum
 
 import coordinax.transforms as cxfm
 import coordinaxs.api.frames as cxfapi
-from .base import AbstractReferenceFrame
+from .base import AbstractReferenceFrame, is_same_frame
 from coordinax.transforms import AbstractTransform
 
 FrameT = TypeVar("FrameT", bound=AbstractReferenceFrame, default=AbstractReferenceFrame)
@@ -195,8 +195,9 @@ def frame_transition(
 ) -> AbstractTransform:
     """Return a frame transform operator between two transformed frames.
 
-    When ``from_frame`` and ``to_frame`` are the same object the result is
-    the identity transform.
+    When ``from_frame`` and ``to_frame`` are the same frame -- the same object,
+    or equal-but-distinct with concrete leaves -- the result is the identity
+    transform.
 
     >>> import quaxed.numpy as jnp
     >>> import coordinax.vectors as cxv
@@ -212,6 +213,15 @@ def frame_transition(
     >>> cxf.frame_transition(frame1, frame1)
     Identity()
 
+    An equal-but-distinct frame is the same frame, so it too is the identity
+    rather than a ``Rotate | Identity | Rotate`` chain:
+
+    >>> frame1b = cxf.TransformedReferenceFrame(
+    ...     ICRS(), cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
+    ... )
+    >>> cxf.frame_transition(frame1, frame1b)
+    Identity()
+
     >>> shift = cxfm.Translate.from_([1, 0, 0], "kpc")
     >>> frame2 = cxf.TransformedReferenceFrame(frame1, shift)
 
@@ -224,7 +234,7 @@ def frame_transition(
         [ 1. -1.  0.]>
 
     """
-    if from_frame is to_frame:
+    if is_same_frame(from_frame, to_frame):
         return cxfm.identity
     return (
         from_frame.xop.inverse  # ty: ignore[unsupported-operator]
