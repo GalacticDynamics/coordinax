@@ -7,6 +7,7 @@ import jax
 import numpy as np
 import pytest
 
+import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.frames as cxf
@@ -69,3 +70,27 @@ def test_the_cache_is_bounded() -> None:
     for i in range(ft._TRANSITION_CACHE_MAX + 5):
         cxf.frame_transition(cxastro.icrs, cxastro.Galactocentric(roll=u.Q(i, "deg")))
     assert len(ft._TRANSITION_CACHE) <= ft._TRANSITION_CACHE_MAX
+
+
+class _ArrayFrame(cxf.AbstractReferenceFrame):
+    """A frame with an array parameter, for keying tests only.
+
+    Defined at module scope: plum registers globally, so a class defined inside
+    a test would leak methods keyed to a dead class into the session.
+    """
+
+    param: jnp.ndarray
+
+
+def test_the_key_separates_leaves_that_share_bytes() -> None:
+    """Shape and dtype are part of the key, not just the buffer.
+
+    ``(2,) float32`` and ``(1,) float64`` zeros have identical `tobytes()` and
+    an identical treedef, so a bytes-only key would serve one frame's operator
+    for the other.
+    """
+    small = _ArrayFrame(jnp.zeros((2,), dtype=jnp.float32))
+    wide = _ArrayFrame(jnp.zeros((1,), dtype=jnp.float64))
+
+    assert small.param.tobytes() == wide.param.tobytes()  # the collision
+    assert ft._frame_key("t", small) != ft._frame_key("t", wide)

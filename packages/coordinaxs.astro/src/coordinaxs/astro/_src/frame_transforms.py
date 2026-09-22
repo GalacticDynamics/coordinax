@@ -51,7 +51,13 @@ def _frame_key(tag: str, frame: cxf.AbstractReferenceFrame, /) -> Any | None:
     """
     leaves, treedef = jax.tree.flatten(frame)
     try:
-        blobs = tuple(jnp.asarray(leaf).tobytes() for leaf in leaves)
+        # Shape and dtype as well as the bytes: `tobytes()` alone is just a
+        # buffer, so a (2,) float32 leaf and a (1,) float64 leaf holding the
+        # same eight bytes would key alike and serve each other's operator.
+        blobs = tuple(
+            (arr.shape, str(arr.dtype), arr.tobytes())
+            for arr in (jnp.asarray(leaf) for leaf in leaves)
+        )
     except (AttributeError, TypeError, jax.errors.TracerArrayConversionError):
         return None  # traced, or a leaf with no concrete bytes
     return (tag, type(frame), treedef, blobs)
