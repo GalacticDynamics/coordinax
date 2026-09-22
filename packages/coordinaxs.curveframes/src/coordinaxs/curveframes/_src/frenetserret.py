@@ -73,8 +73,8 @@ def _normalize(v: Any) -> Any:
     Parameters
     ----------
     v : array-like or Quantity
-        A single vector (1-D).  The norm is taken over *all* axes, so batched
-        input is NOT supported; every caller here passes one 3-vector.
+        A vector, shape ``(..., 3)``.  The norm is per row, over the last
+        axis.
 
     Returns
     -------
@@ -97,8 +97,14 @@ def _normalize(v: Any) -> Any:
     >>> _normalize(u.Q([0.0, 0.0, 5.0], "m/s"))
     Q([0., 0., 1.], '')
 
+    Row-wise on a stack:
+
+    >>> _normalize(jnp.array([[3.0, 4.0, 0.0], [0.0, 0.0, 5.0]]))
+    Array([[0.6, 0.8, 0. ],
+           [0. , 0. , 1. ]], dtype=float64)
+
     """
-    norm = qnp.sqrt(qnp.sum(v**2))
+    norm = qnp.sqrt(qnp.sum(v**2, axis=-1, keepdims=True))
     return v / norm
 
 
@@ -233,14 +239,17 @@ class FrenetSerretBuilder(AbstractCurveFrameBuilder):
 
         # Normal via Gram-Schmidt: remove component of gamma'' along T,
         # then normalise the remainder.
-        proj = qnp.sum(d2p * t_vec) * t_vec
+        # Per-vector dot product, hence `axis=-1`.
+        proj = qnp.sum(d2p * t_vec, axis=-1, keepdims=True) * t_vec
         n_unnorm = d2p - proj
         # Relative to |gamma''|, as `bishop._orthonormalize` guards its own
         # rejection: a vanishing rejection only means something against the size
         # of what was rejected. As a ratio it is dimensionless, which `error_if`
         # needs. `~(x > tol)`, not `x <= tol`: NaN is False for both, and a
         # straight segment gives `0/0 = nan`.
-        ratio = qnp.sqrt(qnp.sum(n_unnorm**2)) / qnp.sqrt(qnp.sum(d2p**2))
+        ratio = qnp.sqrt(qnp.sum(n_unnorm**2, axis=-1)) / qnp.sqrt(
+            qnp.sum(d2p**2, axis=-1)
+        )
         n_unnorm = eqx.error_if(
             n_unnorm,
             ~(cast("Array", u.ustrip(AllowValue, "", ratio)) > 1e-12),

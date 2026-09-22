@@ -63,11 +63,13 @@ from .base import (
 #: jet machinery does; `BacksolveAdjoint` is unusable here in *either* mode,
 #: because the reparametrised right-hand side closes over ``dtau`` /
 #: ``tau_0_val`` and its backwards solve cannot carry them; and `ForwardMode`
-#: gives up reverse mode.  At these tolerances orthonormality of the resulting
-#: R holds to ~9e-12 over ``|tau| <= 60`` on a helix, against ~9e-9 for the
-#: `odeint` solve this replaces.  ``max_steps`` is raised from `diffrax`'s 4096,
-#: which is tight: a unit-radius helix at these tolerances takes ~20 steps per
-#: unit of ``|tau - tau_0|``, so the default caps transport at ``|dtau| ~ 200``.
+#: gives up reverse mode.  The tolerances set how accurately U1 is
+#: *transported* -- a quadrature error, so it grows with the interval: ~1e-12 at
+#: ``|tau| = 1``, ~6e-10 at ``|tau| = 100``.  They do not set orthonormality of
+#: R, which `_solve_U1` restores exactly.  ``max_steps`` is raised from
+#: `diffrax`'s 4096, which is tight: a unit-radius helix at these tolerances
+#: takes ~20 steps per unit of ``|tau - tau_0|``, so the default caps transport
+#: at ``|dtau| ~ 200``.
 #: Measured to cost nothing in either compile or run time; a longer transport
 #: raises rather than silently truncating.
 #:
@@ -522,7 +524,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
 
         return ode_rhs
 
-    def _solve_U1(self, g: Any, tau_unit: Any, /) -> Array:
+    def _solve_U1(self, g: Any, tau_unit: Any, T_val: Any, /) -> Array:
         r"""Compute $\mathbf{U}_1$ via ODE integration from $\tau_0$.
 
         Solves the parallel-transport ODE $d\mathbf{U}_1/d\tau = -(\mathbf{U}_1
@@ -540,15 +542,19 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         unit-length and $\tau$ enters through the vector field instead, so its
         derivative survives.  Both signs of $\Delta$ are handled by the same
         expression -- no forward-only workaround is needed.
+
+        ``T_val`` is the unit tangent at ``g``, which the solved
+        $\mathbf{U}_1$ is re-orthonormalised against.
         """
         _, tau_0_val, U1_0_val, dTangent_fn = self._transport_start(tau_unit)
         dtau = _float(g.ustrip(tau_unit)) - tau_0_val
         ode_rhs = self._transport_rhs(tau_0_val, dtau, tau_unit, dTangent_fn)
 
         sol = self.diffeqsolver(dfx.ODETerm(ode_rhs), 0.0, 1.0, None, U1_0_val)
-        U1_val = sol.ys[-1]
-        # Re-normalise for numerical safety.
-        return U1_val / jnp.linalg.norm(U1_val)
+        # |U1| = 1 and U1 . T = 0 are independent, and the solve breaks both.
+        # Normalising alone leaves U2 = T x U1 carrying the second residual, so
+        # R is only a rotation to solver tolerance.
+        return _orthonormalize(sol.ys[-1], T_val)
 
     def rotation_matrix(self, tau: Any, /) -> Array:
         r"""Compute the rotation $R = [T;\,U_1;\,U_2]$.
@@ -586,7 +592,7 @@ class BishopBuilder(AbstractCurveFrameBuilder):
         b, p = self._resolve(tau)
         g, tau_unit = b._param(p)
         T_val = b._tangent_at(g).value
-        U1_val = b._solve_U1(g, tau_unit)
+        U1_val = b._solve_U1(g, tau_unit, T_val)
         U2_val = jnp.cross(T_val, U1_val)
         return jnp.stack([T_val, U1_val, U2_val])
 
@@ -706,10 +712,12 @@ class BishopBuilder(AbstractCurveFrameBuilder):
             U1_0_val,
             saveat=dfx.SaveAt(ts=ss[order]),
         )
-        U1_sorted = sol.ys / jnp.linalg.norm(sol.ys, axis=-1, keepdims=True)
-        U1s = U1_sorted[jnp.argsort(order)]
+        U1s = sol.ys[jnp.argsort(order)]
 
         Ts = jax.vmap(lambda tv: self._tangent_at(u.Q(tv, tau_unit)).value)(taus_val)
+        # Each U1 is orthonormalised against its own tangent, so the tangents
+        # are resolved before the triad.
+        U1s = jax.vmap(_orthonormalize)(U1s, Ts)
         U2s = jnp.cross(Ts, U1s)
         return jnp.stack([Ts, U1s, U2s], axis=-2)
 
