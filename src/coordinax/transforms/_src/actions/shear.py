@@ -4,8 +4,9 @@
 __all__ = ("Shear",)
 
 
-from typing import Any, TypeAlias, final
+from typing import Any, Final, TypeAlias, final
 
+import equinox as eqx
 import plum
 from jax.typing import ArrayLike
 from jaxtyping import Array, Shaped
@@ -17,10 +18,16 @@ from unxt import AbstractQuantity as AbcQ
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .scale import _singular
 from .utils import is_traced
 from coordinax.transforms._src import groups
 
 HMatrix: TypeAlias = Shaped[Array, " N N"]
+
+_MSG_SINGULAR: Final = (
+    "Shear matrix must be invertible: det H finite, non-zero. That is the "
+    "invariant `inverse` relies on -- it inverts `H`."
+)
 
 
 @final
@@ -35,6 +42,31 @@ class Shear(AbstractLinearTransform):
 
     where ``H`` is an invertible shear matrix.
 
+    Raises
+    ------
+    equinox.EquinoxRuntimeError
+        If ``H`` is singular. The check is deferred onto the stored ``H`` so
+        it survives `jax.jit`: eagerly it raises from the constructor, under
+        `jit` when the traced graph runs.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Shear(jnp.asarray([[1.0, 0.5], [0.0, 1.0]]))
+    >>> op.inverse.H
+    Array([[ 1. , -0.5],
+           [ 0. ,  1. ]], dtype=float64)
+
+    A singular matrix is refused, rather than inverting to ``inf``/``nan``:
+
+    >>> try:
+    ...     cxfm.Shear(jnp.asarray([[1.0, 1.0], [1.0, 1.0]]))
+    ... except Exception as e:
+    ...     print("must be invertible" in str(e))
+    True
+
     """
 
     H: HMatrix
@@ -47,11 +79,32 @@ class Shear(AbstractLinearTransform):
         return frozenset((groups.AffineGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, H: Any) -> None:
-        object.__setattr__(self, "H", jnp.asarray(H))
+        # `Scale` had this same hole, fixed in #805; this is that guard on a
+        # general matrix, so the predicate is reused with the determinant in
+        # place of the diagonal factors.
+        #
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # `TracerBoolConversionError`), and threaded onto the stored array so
+        # it is not dead-code-eliminated under trace. Without it a singular
+        # `H` reached `inverse` and came back all `inf`/`nan`.
+        H = jnp.asarray(H)
+        # A non-square `H` has no determinant to take: `_validate_square` is
+        # the one that names a bad shape, and the shape is static under trace.
+        bad = (
+            _singular(jnp.linalg.det(H))
+            if H.ndim == 2 and H.shape[0] == H.shape[1]
+            else False
+        )
+        object.__setattr__(self, "H", eqx.error_if(H, bad, _MSG_SINGULAR))
 
     @property
     def inverse(self) -> "Shear":
-        """Return the inverse shear transform."""
+        """Return the inverse shear transform.
+
+        `__init__` has already established that ``H`` is invertible, so the
+        solve below is well posed; the new operator re-checks its own matrix
+        on the way in, as any other construction would.
+        """
         return type(self)(jnp.linalg.inv(self.H))
 
     @property

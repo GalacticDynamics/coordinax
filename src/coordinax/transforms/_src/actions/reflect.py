@@ -23,6 +23,31 @@ from coordinax.transforms._src import groups
 HMatrix: TypeAlias = Shaped[Array, " N N"]
 
 _MSG_ZERO_NORMAL: Final = "Reflect.from_normal needs a finite, nonzero normal."
+_MSG_NOT_INVOLUTIVE: Final = (
+    "Reflect requires an involutive matrix: H @ H = I. That is the invariant "
+    "`inverse` relies on -- it returns the operator itself. For a general "
+    "orthogonal map use `Rotate`, for a general invertible one `Linear`."
+)
+
+_ATOL: Final = 1e-6
+"""Absolute tolerance on ``H @ H = I``. See `_not_involutive`."""
+
+
+def _not_involutive(H: Any, /) -> Any:
+    """Whether ``H`` fails ``H @ H = I``.
+
+    A non-square ``H`` answers `False`: it has no square to compare, and
+    `_validate_square` is the one that names a bad shape. The shape is static
+    under tracing, so this branch traces.
+
+    ``atol`` is explicit for the same reason as `Rotate`'s: the off-diagonal
+    entries are compared against zero, so `jnp.allclose`'s ``1e-8`` is the
+    whole budget and that is below the round-off of a numerically derived
+    matrix.
+    """
+    if H.ndim != 2 or H.shape[0] != H.shape[1]:
+        return False
+    return ~jnp.allclose(jnp.matmul(H, H), jnp.eye(H.shape[0]), atol=_ATOL)
 
 
 @final
@@ -35,6 +60,13 @@ class Reflect(AbstractLinearTransform):
     $$ H_n = I - 2\hat{n}\hat{n}^T, $$
 
     where $ \hat{n} = n / \lVert n \rVert $.
+
+    Raises
+    ------
+    equinox.EquinoxRuntimeError
+        If ``H`` is not an involution. The check is deferred onto the stored
+        ``H`` so it survives `jax.jit`: eagerly it raises from the
+        constructor, under `jit` when the traced graph runs.
 
     Examples
     --------
@@ -52,6 +84,16 @@ class Reflect(AbstractLinearTransform):
     >>> cxfm.act(op, None, q)
     Q([-1.,  2.,  3.], 'km')
 
+    A matrix that is not an involution is refused, and points at the types
+    that fit:
+
+    >>> P = jnp.asarray([[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]])
+    >>> try:
+    ...     cxfm.Reflect(P)
+    ... except Exception as e:
+    ...     print("H @ H = I" in str(e))
+    True
+
     """
 
     H: HMatrix
@@ -64,7 +106,19 @@ class Reflect(AbstractLinearTransform):
         return frozenset((groups.OrthogonalGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, H: Any) -> None:
-        object.__setattr__(self, "H", jnp.asarray(H))
+        # Involutivity, not orthogonality: `inverse` returns `self`, which is
+        # right exactly when `H @ H = I`. (A *symmetric* involution is
+        # orthogonal too, so for a Householder matrix this covers both; an
+        # orthogonal matrix on its own does not imply it -- a permutation
+        # matrix is orthogonal with `det = +1` and is not an involution.)
+        #
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # `TracerBoolConversionError`), and threaded onto the stored array so
+        # it is not dead-code-eliminated under trace.
+        H = jnp.asarray(H)
+        object.__setattr__(
+            self, "H", eqx.error_if(H, _not_involutive(H), _MSG_NOT_INVOLUTIVE)
+        )
 
     @classmethod
     def from_normal(cls: type["Reflect"], normal: Any, /) -> "Reflect":
@@ -87,7 +141,11 @@ class Reflect(AbstractLinearTransform):
 
     @property
     def inverse(self) -> "Reflect":
-        """The inverse of a reflection is the reflection itself."""
+        """The inverse of a reflection is the reflection itself.
+
+        Nothing is checked here: `__init__` validates ``H @ H = I``, so an
+        ``H`` that exists has already passed and this identity holds.
+        """
         return self
 
     @property
