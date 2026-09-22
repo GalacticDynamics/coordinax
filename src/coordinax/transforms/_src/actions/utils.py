@@ -99,10 +99,14 @@ def require_matching_keys(
 def act_quantity_via_cdict(
     op: Any, tau: Any, x: Any, chart: Any, rep: Any, /, **kw: Any
 ) -> Any:
-    """Act on a `unxt.AbstractQuantity` through its Cartesian `CDict`.
+    """Act on a `unxt.AbstractQuantity` through its `CDict` in ``chart``.
 
-    The result is repacked into a Quantity, which requires the acted-on
-    components to share a unit (they do in a Cartesian chart).
+    ``chart`` is whatever the caller passed; nothing here requires it to be
+    Cartesian. What the repack requires is that the acted-on components share
+    a unit, which is a property of the chart being dimensionally homogeneous
+    rather than of it being Cartesian -- and `cdict` already refuses a
+    single-unit Quantity for a chart whose components differ, so a chart that
+    would break the repack does not reach this function.
     """
     v = cxc.cdict(x, chart)
     nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
