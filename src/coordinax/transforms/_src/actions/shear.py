@@ -17,7 +17,7 @@ from unxt import AbstractQuantity as AbcQ
 
 from .base import AbstractTransform
 from .identity import identity
-from .linear import AbstractLinearTransform
+from .linear import AbstractLinearTransform, as_dimensionless_matrix
 from .scale import _singular
 from .utils import is_traced
 from coordinax.transforms._src import groups
@@ -90,7 +90,11 @@ class Shear(AbstractLinearTransform):
         # `TracerBoolConversionError`), and threaded onto the stored array so
         # it is not dead-code-eliminated under trace. Without it a singular
         # `H` reached `inverse` and came back all `inf`/`nan`.
-        H = jnp.asarray(H)
+        H = as_dimensionless_matrix(
+            H,
+            "Shear `H` maps lengths to lengths, so its entries are ratios "
+            "and dimensionless.",
+        )
         # Shape first: a non-square `H` has no determinant to take, so the
         # singularity check below declines on one and `inverse` would surface
         # a raw `jnp.linalg.inv` error instead of naming the shape.
