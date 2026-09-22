@@ -120,3 +120,65 @@ def test_cdict_accepts_one_unit_for_a_homogeneous_chart(unit: str) -> None:
     got = cxc.cdict(u.Q([1.0, 2.0, 3.0], unit), cxc.cart3d)
     assert set(got.keys()) == set(cxc.cart3d.components)
     assert all(u.unit_of(v) == u.unit(unit) for v in got.values())
+
+
+@pytest.mark.parametrize(
+    ("chart", "units"),
+    [
+        (cxc.sph3d, ("kpc", "rad", "rad")),
+        (cxc.lonlat_sph3d, ("deg", "deg", "kpc")),
+        (cxc.cyl3d, ("kpc", "rad", "kpc")),
+    ],
+)
+def test_cdict_units_matrix_gives_each_component_its_own_unit(chart, units) -> None:
+    """cdict(array, UnitsMatrix, chart) distributes one unit per component.
+
+    Regression for #973: the whole units tuple was handed to every component,
+    so each one carried a composite "(kpc, rad, rad)" that is not a unit.
+    """
+    import unxts.linalg as ul
+
+    arr = jnp.asarray([1.0, 0.5, 0.2])
+
+    got = cxc.cdict(arr, ul.UnitsMatrix(units), chart)
+
+    assert set(got.keys()) == set(chart.components)
+    for i, k in enumerate(chart.components):
+        assert got[k].unit == u.unit(units[i])
+        assert float(got[k].value) == float(arr[i])
+
+
+def test_cdict_units_matrix_with_keys_and_alone_also_distribute() -> None:
+    """The sibling `keys` and unit-only overloads distribute too (#973)."""
+    import unxts.linalg as ul
+
+    arr = jnp.asarray([1.0, 0.5, 0.2])
+    units = ul.UnitsMatrix(("kpc", "rad", "rad"))
+
+    by_keys = cxc.cdict(arr, units, ("r", "theta", "phi"))
+    assert [v.unit for v in by_keys.values()] == [u.unit(x) for x in units]
+
+    alone = cxc.cdict(arr, units)  # guesses cart3d from the last dimension
+    assert [v.unit for v in alone.values()] == [u.unit(x) for x in units]
+
+
+@pytest.mark.parametrize("units", [("kpc", "rad"), ("kpc", "rad", "rad", "rad")])
+def test_cdict_units_matrix_wrong_length_errors(units) -> None:
+    """A units tuple that is not one-per-component is refused."""
+    import unxts.linalg as ul
+
+    with pytest.raises(ValueError, match="does not match provided keys 3"):
+        cxc.cdict(jnp.asarray([1.0, 0.5, 0.2]), ul.UnitsMatrix(units), cxc.sph3d)
+
+
+def test_cdict_homogeneous_units_matrix_still_works() -> None:
+    """The Cartesian all-same-unit case keeps working (#973)."""
+    import unxts.linalg as ul
+
+    got = cxc.cdict(
+        jnp.asarray([1.0, 2.0, 3.0]), ul.UnitsMatrix(("m", "m", "m")), cxc.cart3d
+    )
+
+    assert set(got.keys()) == set(cxc.cart3d.components)
+    assert all(v.unit == u.unit("m") for v in got.values())
+    assert float(u.ustrip("m", got["z"])) == 3.0
