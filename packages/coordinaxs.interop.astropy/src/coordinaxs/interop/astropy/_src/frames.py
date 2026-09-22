@@ -136,7 +136,7 @@ def astropy_icrs_to_coordinax_icrs(frame: apyc.ICRS, /) -> cxastro.ICRS:
     ICRS()
 
     """
-    return cxastro.icrs
+    return cxastro.ICRS.from_(frame)  # ty: ignore[invalid-return-type]
 
 
 # =============================================================================
@@ -201,7 +201,7 @@ def astropy_galactic_to_coordinax_galactic(frame: apyc.Galactic, /) -> cxastro.G
     Galactic()
 
     """
-    return cxastro.galactic
+    return cxastro.Galactic.from_(frame)  # ty: ignore[invalid-return-type]
 
 
 # =============================================================================
@@ -242,8 +242,8 @@ def coordinax_galactocentric_to_astropy_galactocentric(
 
     >>> cx_frame = cxastro.Galactocentric()
     >>> plum.convert(cx_frame, apyc.Galactocentric)
-    <Galactocentric Frame (galcen_coord=<ICRS Coordinate: (ra, dec, distance) in (deg, deg, kpc)
-        (266.4051, -28.936175, 8.122)>, galcen_distance=8.122 kpc, galcen_v_sun=(12.9, 245.6, 7.78) km / s, z_sun=20.8 pc, roll=0.0 deg)>
+    <Galactocentric Frame (galcen_coord=<ICRS Coordinate: (ra, dec) in deg
+        (266.4051, -28.936175)>, galcen_distance=8.122 kpc, galcen_v_sun=(12.9, 245.6, 7.78) km / s, z_sun=20.8 pc, roll=0.0 deg)>
 
     Convert with custom parameters:
 
@@ -266,7 +266,14 @@ def coordinax_galactocentric_to_astropy_galactocentric(
 
     """  # noqa: E501
     # Convert the galcen position
-    galcen_coord = apyc.ICRS(plum.convert(frame.galcen, apyc.SphericalRepresentation))
+    # Astropy's own `galcen_coord` default is a `UnitSphericalRepresentation`; the
+    # distance goes in `galcen_distance` below, and a frame whose `galcen_coord`
+    # carries one cannot be compared or transformed by astropy itself.
+    galcen_coord = apyc.ICRS(
+        plum.convert(frame.galcen, apyc.SphericalRepresentation).represent_as(
+            apyc.UnitSphericalRepresentation
+        )
+    )
 
     # Convert the galcen velocity
     galcen_v_sun: apyc.CartesianDifferential = plum.convert(
