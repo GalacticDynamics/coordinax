@@ -659,12 +659,20 @@ def _ladder_fibres(coord: "Coordinate", /) -> dict[str, int]:
 #: Groups of chart types that are affine relabellings of one another -- same
 #: parameterisation, coordinates differing by a permutation, a sign and a
 #: shift, so the transition Jacobian is constant and $\partial^2\psi \equiv 0$.
-#: `LonCosLatSpherical3D` is deliberately absent: its ``lon_coslat`` carries a
+#: The 2-sphere family is the same relabelling one dimension down.
+#: `LonCosLat...` is deliberately absent from both: its ``lon_coslat`` carries a
 #: $\cos(\mathrm{lat})$ factor, which makes the Jacobian base-point dependent
-#: like any other curvilinear map. Membership is pinned by a test that probes
-#: `jac_pt_map` at two separated points and asserts it is constant.
+#: like any other curvilinear map. Membership is pinned by a test that measures
+#: $\partial^2\psi(v, v)$ itself, over several velocity directions.
 _AFFINE_RELABELLINGS: tuple[frozenset[type], ...] = (
     frozenset({cxc.Spherical3D, cxc.MathSpherical3D, cxc.LonLatSpherical3D}),
+    frozenset(
+        {
+            cxc.SphericalTwoSphere,
+            cxc.MathSphericalTwoSphere,
+            cxc.LonLatSphericalTwoSphere,
+        }
+    ),
 )
 
 
@@ -681,7 +689,8 @@ def _chart_map_is_affine(
     (which differ by at most a linear relabelling of flat space), and two
     members of the same relabelling family -- `sph3d`, `math_sph3d` and
     `lonlat_sph3d` are the same parameterisation written three ways, with
-    $\mathrm{lat} = \pi/2 - \theta$ and friends.
+    $\mathrm{lat} = \pi/2 - \theta$ and friends, and the 2-sphere charts
+    repeat that a dimension down.
 
     Conservative where it is unsure: an unrecognised pair reports `False` and
     takes the joint-jet path, which is always correct and merely costlier.

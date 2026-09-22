@@ -814,69 +814,77 @@ class TestCconvertCarriesTheWholeJet:
 
 
 class TestAffineChartTransitions:
-    r"""`_chart_map_is_affine` must agree with the actual Jacobian.
+    r"""`_chart_map_is_affine` must agree with the curvature it claims is zero.
 
-    A transition is affine exactly when $\partial^2\psi \equiv 0$, which shows
-    up as a Jacobian that does not depend on the base point. The predicate is
-    a hand-kept list, so pin it against that measurable property rather than
-    against itself -- otherwise the list rots the moment a chart is added.
+    A transition is affine exactly when $\partial^2\psi \equiv 0$, and that is
+    measurable: push a jet whose acceleration is zero through the transition
+    and read the acceleration that comes out. Whatever is there is
+    $\partial^2\psi(v, v)$ and nothing else.
+
+    Measured this way rather than by asking whether `jac_pt_map` is constant,
+    which was the first attempt and had a blind spot: it is not registered for
+    the 2-sphere pairs, so an exception there read as "not affine" and let a
+    whole missing family through. This probe only needs `pt_map`.
+
+    Several velocity directions per pair, because one is not enough: a
+    velocity parallel to the position is purely radial, and $D^2\psi(v, v)$
+    vanishes along it even for `cart3d` -> `sph3d`.
     """
 
-    USYS = u.unitsystems.galactic
-    # two well-separated interior points per chart
+    T: ClassVar = u.unit("Myr")
     SAMPLES: ClassVar = {
-        "sph3d": (
-            {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")},
-            {"r": u.Q(5.0, "kpc"), "theta": u.Q(2.0, "rad"), "phi": u.Q(-1.1, "rad")},
-        ),
-        "math_sph3d": (
-            {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.4, "rad"), "phi": u.Q(0.9, "rad")},
-            {"r": u.Q(5.0, "kpc"), "theta": u.Q(-1.1, "rad"), "phi": u.Q(2.0, "rad")},
-        ),
-        "lonlat_sph3d": (
-            {
-                "lon": u.Q(25.0, "deg"),
-                "lat": u.Q(40.0, "deg"),
-                "distance": u.Q(2.0, "kpc"),
-            },
-            {
-                "lon": u.Q(-70.0, "deg"),
-                "lat": u.Q(-15.0, "deg"),
-                "distance": u.Q(6.0, "kpc"),
-            },
-        ),
-        "loncoslat_sph3d": (
-            {
-                "lon_coslat": u.Q(20.0, "deg"),
-                "lat": u.Q(40.0, "deg"),
-                "distance": u.Q(2.0, "kpc"),
-            },
-            {
-                "lon_coslat": u.Q(-50.0, "deg"),
-                "lat": u.Q(-15.0, "deg"),
-                "distance": u.Q(6.0, "kpc"),
-            },
-        ),
-        "cyl3d": (
-            {"rho": u.Q(2.0, "kpc"), "phi": u.Q(0.4, "rad"), "z": u.Q(1.0, "kpc")},
-            {"rho": u.Q(5.0, "kpc"), "phi": u.Q(-1.2, "rad"), "z": u.Q(-3.0, "kpc")},
-        ),
-        "cart3d": (
-            {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
-            {"x": u.Q(-2.0, "kpc"), "y": u.Q(0.7, "kpc"), "z": u.Q(1.5, "kpc")},
-        ),
+        "cart2d": {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc")},
+        "polar2d": {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.7, "rad")},
+        "sph2": {"theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")},
+        "math_sph2": {"theta": u.Q(0.4, "rad"), "phi": u.Q(0.9, "rad")},
+        "lonlat_sph2": {"lon": u.Q(25.0, "deg"), "lat": u.Q(40.0, "deg")},
+        "loncoslat_sph2": {"lon_coslat": u.Q(20.0, "deg"), "lat": u.Q(40.0, "deg")},
+        "cart3d": {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+        "sph3d": {
+            "r": u.Q(2.0, "kpc"),
+            "theta": u.Q(0.9, "rad"),
+            "phi": u.Q(0.4, "rad"),
+        },
+        "math_sph3d": {
+            "r": u.Q(2.0, "kpc"),
+            "theta": u.Q(0.4, "rad"),
+            "phi": u.Q(0.9, "rad"),
+        },
+        "lonlat_sph3d": {
+            "lon": u.Q(25.0, "deg"),
+            "lat": u.Q(40.0, "deg"),
+            "distance": u.Q(2.0, "kpc"),
+        },
+        "loncoslat_sph3d": {
+            "lon_coslat": u.Q(20.0, "deg"),
+            "lat": u.Q(40.0, "deg"),
+            "distance": u.Q(2.0, "kpc"),
+        },
+        "cyl3d": {"rho": u.Q(2.0, "kpc"), "phi": u.Q(0.4, "rad"), "z": u.Q(1.0, "kpc")},
     }
+    # deliberately not parallel to any sample position
+    DIRECTIONS: ClassVar = ((0.31, -0.74, 0.52), (-0.83, 0.19, -0.46))
 
-    def _jacobian_is_constant(self, a: str, b: str) -> bool:
+    def _curvature(self, a: str, b: str) -> float:
+        """Max |D2psi(v, v)| over the probe directions, in the target's units."""
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
         ca, cb = getattr(cxc, a), getattr(cxc, b)
-        lo, hi = self.SAMPLES[a]
-
-        def raw(at):
-            j = cxc.jac_pt_map(at, ca, cb, usys=self.USYS)
-            unit = u.unit_of(j)
-            return jnp.asarray(u.ustrip(unit, j) if unit is not None else j)
-
-        return bool(jnp.allclose(raw(lo), raw(hi), atol=1e-12))
+        q = self.SAMPLES[a]
+        zero = {k: u.Q(0.0, u.unit_of(x) / self.T**2) for k, x in q.items()}
+        worst = 0.0
+        for draw in self.DIRECTIONS:
+            v = {
+                k: u.Q(float(d), u.unit_of(x) / self.T)
+                for d, (k, x) in zip(draw, q.items(), strict=False)
+            }
+            out = prolong_point_map(
+                lambda d, _f=ca, _t=cb: cxc.pt_map(d, _f, _t), {0: q, 1: v, 2: zero}
+            )
+            worst = max(
+                worst, *(abs(float(u.ustrip(u.unit_of(x), x))) for x in out[2].values())
+            )
+        return worst
 
     @pytest.mark.parametrize("a", list(SAMPLES))
     @pytest.mark.parametrize("b", list(SAMPLES))
@@ -884,29 +892,57 @@ class TestAffineChartTransitions:
         """The unsafe direction. A false positive means a silently wrong answer.
 
         A false *negative* only costs a needless prolongation, so it is not an
-        error -- but claiming affine when the Jacobian moves would send an
-        order-2 fibre down the cheap path and drop its curvature term.
+        error -- but claiming affine where the curvature is non-zero sends an
+        order-2 fibre down the cheap path and drops exactly that term.
         """
         from coordinax.vectors._src.bundle import _chart_map_is_affine
 
-        if a == b:
+        if a == b or len(getattr(cxc, a).components) != len(getattr(cxc, b).components):
             return
-        if _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b)):
-            assert self._jacobian_is_constant(a, b), (
-                f"{a} -> {b} is claimed affine but its Jacobian is base-point dependent"
-            )
+        if not _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b)):
+            return
+        assert self._curvature(a, b) < 1e-12, (
+            f"{a} -> {b} is claimed affine but carries a curvature term"
+        )
 
-    def test_the_spherical_relabellings_are_recognised(self) -> None:
-        """The case the flat-only predicate missed: same parameterisation."""
-        from coordinax.vectors._src.bundle import _chart_map_is_affine
-
-        for a, b in (
+    @pytest.mark.parametrize(
+        ("a", "b"),
+        [
             ("sph3d", "lonlat_sph3d"),
             ("lonlat_sph3d", "math_sph3d"),
             ("math_sph3d", "sph3d"),
-        ):
-            assert self._jacobian_is_constant(a, b)
-            assert _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b))
+            ("sph2", "lonlat_sph2"),
+            ("lonlat_sph2", "math_sph2"),
+            ("math_sph2", "sph2"),
+        ],
+    )
+    def test_the_relabelling_families_are_recognised(self, a, b) -> None:
+        """Same parameterisation, different spelling -- in 3-D and on the 2-sphere."""
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        assert self._curvature(a, b) < 1e-12
+        assert _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b))
+
+    @pytest.mark.parametrize(
+        ("a", "b"),
+        [
+            ("sph3d", "loncoslat_sph3d"),
+            ("sph2", "loncoslat_sph2"),
+            ("cart2d", "polar2d"),
+            ("cart3d", "sph3d"),
+        ],
+    )
+    def test_the_near_misses_are_not_families(self, a, b) -> None:
+        """`lon_coslat` carries a cos(lat), so it curves like any other chart.
+
+        `cart2d -> polar2d` is here because the probe must bite: a test that
+        only ever sees affine pairs would pass on a predicate that returned
+        `True` unconditionally.
+        """
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        assert self._curvature(a, b) > 1e-6
+        assert not _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b))
 
     def test_two_distinct_cartesian_charts_are_affine(self) -> None:
         """The flat-to-flat branch, which needs two *different* flat charts.
@@ -919,13 +955,6 @@ class TestAffineChartTransitions:
 
         assert cxc.galileanct != cxc.minkowskict
         assert _chart_map_is_affine(cxc.galileanct, cxc.minkowskict)
-
-    def test_loncoslat_is_not_a_relabelling(self) -> None:
-        """Its `lon_coslat` carries a cos(lat), so the Jacobian moves."""
-        from coordinax.vectors._src.bundle import _chart_map_is_affine
-
-        assert not self._jacobian_is_constant("sph3d", "loncoslat_sph3d")
-        assert not _chart_map_is_affine(cxc.sph3d, cxc.loncoslat_sph3d)
 
 
 class TestCconvertRoutesOnTheFibresOwnChart:
