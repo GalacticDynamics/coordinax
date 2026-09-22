@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 from collections.abc import Iterable
 
+import jax
 import numpy as np
 import plum
 import pytest
@@ -606,3 +607,53 @@ def test_the_concrete_space_frames_still_build() -> None:
     assert isinstance(cxastro.Galactic(), cxastro.AbstractSpaceFrame)
     assert isinstance(cxastro.Galactocentric(), cxastro.AbstractSpaceFrame)
     assert isinstance(UnroutedFrame(), cxastro.AbstractSpaceFrame)
+
+
+class TestFrameTransitionUnderJit:
+    """Regression for #963: a traced frame transition must not raise.
+
+    ``frame_transition`` calls ``cxfm.simplify()`` internally with the default
+    ``approx=True`` (fusing the ICRS bridge into one `Affine`), so a user who
+    traces a frame transition could not opt out of the value checks -- they
+    raised `jax.errors.TracerBoolConversionError` one layer below the public
+    call. Now they decline to simplify, and the transition traces.
+    """
+
+    Q = u.Q([1.0, 2.0, 3.0], "kpc")
+
+    #: gc -> gc(roll=10 deg), the #940 fall-through, computed eagerly.
+    EXPECT_KPC = (1.00077259, 1.44822798, 3.30167987)
+
+    @pytest.mark.parametrize(
+        ("to_frame_type"),
+        [cxastro.Galactocentric, cxastro.Galactic],
+        ids=["ICRS->Galactocentric", "ICRS->Galactic"],
+    )
+    def test_the_transition_traces_and_agrees_with_eager(self, to_frame_type) -> None:
+        a, b = cxastro.ICRS(), to_frame_type()
+
+        def f(x, y):
+            return cxf.frame_transition(x, y)(self.Q)
+
+        got = jax.jit(f)(a, b)
+        assert jnp.allclose(u.ustrip("kpc", got), u.ustrip("kpc", f(a, b)))
+
+    def test_the_icrs_bridge_fall_through_traces(self) -> None:
+        """The path #961's xfail exercises, reached without its fast-path fix.
+
+        ``frame_transition(Galactocentric, Galactocentric)`` still raises in
+        this tree, but at its own ``from_frame == to_frame`` check (#940/#961),
+        not here -- so this drives the body that check falls through to. Once
+        #961 lands, its ``test_the_whole_transition_under_jit`` xfail must lose
+        its marker.
+        """
+        a = cxastro.Galactocentric()
+        b = cxastro.Galactocentric(roll=u.Q(10, "deg"))
+        icrs = cxastro.ICRS()
+
+        def f(x, y):
+            bridge = cxf.frame_transition(x, icrs) | cxf.frame_transition(icrs, y)
+            return cxfm.simplify(bridge)(self.Q)
+
+        got = jax.jit(f)(a, b)
+        assert jnp.allclose(u.ustrip("kpc", got), jnp.asarray(self.EXPECT_KPC))

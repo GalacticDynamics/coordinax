@@ -24,6 +24,7 @@ from .base import AbstractTransform
 from .custom_types import CDict, OptUSys
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import is_traced
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -380,8 +381,16 @@ def simplify(op: Rotate, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     >>> cxfm.simplify(op)
     Identity()
 
+    The identity check inspects values, so it is skipped when ``approx=False``,
+    and when the matrix is traced -- under `jax.jit` the values are not known,
+    which is exactly when the answer is "do not simplify" rather than an error.
+
     """
-    if approx and jnp.allclose(op.R, jnp.eye(op.R.shape[-1], dtype=op.R.dtype), **kw):
+    if (
+        approx
+        and not is_traced(op.R)
+        and jnp.allclose(op.R, jnp.eye(op.R.shape[-1], dtype=op.R.dtype), **kw)
+    ):
         return identity
     return op
 

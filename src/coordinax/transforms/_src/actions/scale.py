@@ -18,6 +18,7 @@ from unxt import AbstractQuantity as AbcQ
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import is_traced
 from coordinax.transforms._src import groups
 
 SMatrix: TypeAlias = Shaped[Array, " N N"]
@@ -215,9 +216,11 @@ def simplify(op: Scale, /, *, approx: bool = True, **kw: Any) -> AbstractTransfo
     """Simplify a scaling transform to identity when matrix is identity.
 
     The identity-matrix check inspects values, so it is skipped when
-    ``approx=False``.
+    ``approx=False``, and when the factor is traced -- under `jax.jit` the
+    values are not known, which is exactly when the answer is "do not
+    simplify" rather than an error.
     """
-    if approx and jnp.allclose(op.s, 1.0, **kw):
+    if approx and not is_traced(op.s) and jnp.allclose(op.s, 1.0, **kw):
         return identity
     return op
 

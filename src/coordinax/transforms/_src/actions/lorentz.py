@@ -17,7 +17,7 @@ import unxt as u
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
-from .utils import _unnormalisable
+from .utils import _unnormalisable, is_traced
 from coordinax.transforms._src import groups
 
 #: Speed of light, used only to convert a velocity into a dimensionless beta.
@@ -371,8 +371,8 @@ def simplify(
     operator unchanged.
 
     The zero-velocity check inspects values, so it is skipped when
-    ``approx=False``; the point of the rule is that the ``approx=False`` path
-    now returns ``op`` instead of raising.
+    ``approx=False``, and when ``beta`` is traced; the point of the rule is
+    that those paths return ``op`` instead of raising.
 
     Examples
     --------
@@ -389,6 +389,10 @@ def simplify(
     Identity()
 
     """
-    if approx and jnp.allclose(op.beta, jnp.zeros_like(op.beta), **kw):
+    if (
+        approx
+        and not is_traced(op.beta)
+        and jnp.allclose(op.beta, jnp.zeros_like(op.beta), **kw)
+    ):
         return identity
     return op

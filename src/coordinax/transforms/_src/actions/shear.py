@@ -17,6 +17,7 @@ from unxt import AbstractQuantity as AbcQ
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import is_traced
 from coordinax.transforms._src import groups
 
 HMatrix: TypeAlias = Shaped[Array, " N N"]
@@ -81,8 +82,14 @@ def simplify(op: Shear, /, *, approx: bool = True, **kw: Any) -> AbstractTransfo
     """Simplify a shear transform to identity when matrix is identity.
 
     The identity-matrix check inspects values, so it is skipped when
-    ``approx=False``.
+    ``approx=False``, and when the matrix is traced -- under `jax.jit` the
+    values are not known, which is exactly when the answer is "do not
+    simplify" rather than an error.
     """
-    if approx and jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw):
+    if (
+        approx
+        and not is_traced(op.H)
+        and jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw)
+    ):
         return identity
     return op

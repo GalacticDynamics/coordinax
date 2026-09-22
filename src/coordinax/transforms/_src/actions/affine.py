@@ -19,7 +19,7 @@ from .base import AbstractTransform
 from .identity import identity
 from .composed import _merge, simplify
 from .linear import AbstractLinearTransform
-from .utils import is_flat_chart
+from .utils import is_flat_chart, is_traced
 from coordinax._src.custom_types import OptUSys
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -353,10 +353,11 @@ def _merge(a: AbstractTransform, b: AbstractTransform, /) -> AbstractTransform |
 def simplify(op: Affine, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
     """Collapse to `Identity` when the map is one; otherwise keep the fusion.
 
-    Both checks inspect values, so both are skipped when ``approx=False`` --
-    the same trace-safety contract the sibling operators honour.
+    Both checks inspect values, so both are skipped when ``approx=False``, and
+    when ``A`` or ``b`` is traced -- the same trace-safety contract the
+    sibling operators honour.
     """
-    if not approx:
+    if not approx or is_traced(op.A, op.b):
         return op
 
     n = op.A.shape[-1]

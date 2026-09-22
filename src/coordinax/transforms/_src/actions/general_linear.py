@@ -16,6 +16,7 @@ import quaxed.numpy as jnp
 from .base import AbstractTransform
 from .identity import identity
 from .linear import AbstractLinearTransform
+from .utils import is_traced
 from coordinax.transforms._src import groups
 from coordinax.transforms._src.groups import AbstractTransformGroup
 
@@ -148,10 +149,16 @@ def simplify(op: Linear, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     """Simplify a general linear transform to identity when its matrix is one.
 
     The identity-matrix check inspects values, so it is skipped when
-    ``approx=False``.
+    ``approx=False``, and when the matrix is traced -- under `jax.jit` the
+    values are not known, which is exactly when the answer is "do not
+    simplify" rather than an error.
     """
     m = op.matrix
-    if approx and jnp.allclose(m, jnp.eye(m.shape[0], dtype=m.dtype), **kw):
+    if (
+        approx
+        and not is_traced(m)
+        and jnp.allclose(m, jnp.eye(m.shape[0], dtype=m.dtype), **kw)
+    ):
         return identity
     return op
 
