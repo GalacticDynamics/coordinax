@@ -27,6 +27,7 @@ from .base import AbstractTransform
 from .custom_types import CDict, HasShape, OptUSys
 from .utils import is_flat_chart, require_matching_keys
 from coordinax.internal import pack_uniform_unit
+from coordinax.transforms._src import groups
 
 
 def _matmul_cdict(
@@ -84,6 +85,50 @@ class AbstractLinearTransform(AbstractTransform):
 
         """
         return self._validate_square(self._raw_matrix)
+
+    def __neg__(self) -> "AbstractLinearTransform":
+        r"""Negate the map: $-M$, acting as $(-I) \, M$.
+
+        Returns a `~coordinax.transforms.Linear` rather than the operator's own
+        type, because most of these types are not closed under negation:
+        $\det(-M) = (-1)^n \det M$, so in odd dimensions negation reverses
+        orientation. A negated `Rotate` is then orthogonal but generically
+        neither a rotation nor an involution -- a rotoreflection, which only
+        `Linear` can hold.
+
+        Annotated with the base type, not `Linear`, so a subclass whose
+        negation *is* closed can narrow it: `LorentzBoost.__neg__` returns a
+        boost, because there negation means inverting the velocity rather than
+        negating a matrix.
+
+        The group tag is the most specific one that survives negation. Every
+        group here is closed under it except $SO(n)$, which is closed only in
+        even dimensions; that one widens to $O(n)$ rather than becoming
+        dimension-dependent, so the claim is never stronger than what holds.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        >>> H = cxfm.Reflect.from_normal(jnp.asarray([0.0, 0.0, 1.0]))
+        >>> neg = -H
+        >>> type(neg).__name__
+        'Linear'
+
+        `Linear` *is* closed under negation, so negating twice returns the
+        original matrix -- by value, though not by type:
+
+        >>> bool(jnp.allclose((-neg).matrix, H.matrix))
+        True
+
+        """
+        from .general_linear import Linear  # noqa: PLC0415  (circular at module scope)
+
+        grp = groups.most_specific_group(self.groups())
+        if issubclass(grp, groups.SpecialOrthogonalGroup):
+            grp = groups.OrthogonalGroup
+        return Linear(-self.matrix, grp)
 
     def _validate_square(self, matrix: HasShape, /) -> Array:
         """Check the matrix is square (N x N)."""

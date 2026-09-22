@@ -13,7 +13,7 @@ import unxt as u
 
 import coordinax.transforms as cxfm
 from coordinax.transforms._src import groups
-from coordinax.transforms._src.actions.rotate import _not_orthogonal
+from coordinax.transforms._src.actions.rotate import _not_a_rotation
 
 _RZ90 = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
 
@@ -71,11 +71,7 @@ class TestRotationMatrixIsOrthogonal:
         with pytest.raises(eqx.EquinoxRuntimeError, match="orthogonal"):
             jax.block_until_ready(build(self._BAD))
 
-    @pytest.mark.parametrize(
-        "R",
-        [_RZ90, jnp.eye(3), jnp.diag(jnp.asarray([-1.0, 1.0, 1.0]))],
-        ids=["rz90", "identity", "improper"],
-    )
+    @pytest.mark.parametrize("R", [_RZ90, jnp.eye(3)], ids=["rz90", "identity"])
     def test_orthogonal_still_constructs(self, R):
         assert bool(jnp.allclose(cxfm.Rotate(R).matrix, R))
 
@@ -86,7 +82,7 @@ class TestRotationMatrixIsOrthogonal:
     def test_a_non_square_matrix_is_named_by_the_shape_check(self):
         """The orthogonality check defers to `_validate_square` on shape.
 
-        A non-square matrix has no ``R^T R`` to compare, so `_not_orthogonal`
+        A non-square matrix has no ``R^T R`` to compare, so `_not_a_rotation`
         declines and the error the caller sees is the one that actually names
         the problem -- not a confusing "not orthogonal".
         """
@@ -94,7 +90,7 @@ class TestRotationMatrixIsOrthogonal:
         # The orthogonality predicate declines on a non-square matrix -- it has
         # no `R^T R` to compare -- so the shape check is what must catch it,
         # and it now does so in the constructor rather than at first use.
-        assert _not_orthogonal(rect) is False
+        assert _not_a_rotation(rect) is False
         with pytest.raises(
             eqx.EquinoxTracetimeError, match=r"square matrix; got shape"
         ):
@@ -135,34 +131,39 @@ class TestRotationMatrixIsOrthogonal:
         assert bool(jnp.allclose(cxfm.Rotate(drifted).matrix, drifted))
 
     def test_the_named_constructors_and_algebra_still_pass(self):
-        """`from_euler`, `__matmul__` and `__neg__` all route through `__init__`."""
+        """`from_euler`, `__matmul__`, `inverse` and `__neg__` all stay orthogonal.
+
+        `-a` is a `Linear`, not a `Rotate` -- negation leaves SO(n) in odd
+        dimensions -- so this reads the shared `matrix` spelling rather than
+        `R`.
+        """
         a = cxfm.Rotate.from_euler("z", u.Q(45, "deg"))
         b = cxfm.Rotate.from_euler("x", u.Q(30, "deg"))
         for op in (a, b, a @ b, -a, a.inverse):
-            gram = op.R.T @ op.R
+            gram = op.matrix.T @ op.matrix
             assert bool(jnp.allclose(gram, jnp.eye(3), atol=1e-12))
 
 
-class TestGroupsIsTraceSafe:
-    """`groups()` must not branch in Python on a traced determinant (#974 review).
+class TestGroupsNeedsNoDeterminant:
+    """`groups()` is a constant, because SO(n) is a constructor invariant.
 
-    It is metadata, so dying with `TracerBoolConversionError` when a jitted
-    function happens to read it would be a surprising failure. Under trace the
-    sign is unknown, and a membership claim must never be stronger than what
-    can be shown -- `SO(n) < O(n)`, so the orthogonal group alone is true
-    either way.
+    It briefly read ``det R`` per instance, to avoid claiming an orientation an
+    improper matrix does not keep. With `Rotate` admitting only ``det R = +1``
+    there is nothing left to read, so the answer is fixed and trivially safe
+    under trace -- no `TracerBoolConversionError` from reading metadata.
     """
 
     @staticmethod
     def _is_special(R) -> Any:
-        g = cxfm.Rotate(R).groups()
-        return jnp.asarray(float(groups.SpecialOrthogonalGroup in g))
+        return jnp.asarray(
+            float(groups.SpecialOrthogonalGroup in cxfm.Rotate(R).groups())
+        )
 
-    def test_eager_still_distinguishes_by_determinant(self) -> None:
+    def test_it_is_always_special_orthogonal(self) -> None:
         assert float(self._is_special(_RZ90)) == 1.0
-        improper = jnp.diag(jnp.asarray([-1.0, 1.0, 1.0]))
-        assert float(self._is_special(improper)) == 0.0
 
-    def test_under_jit_it_claims_only_the_orthogonal_group(self) -> None:
-        """Weaker, but true for both signs -- and it does not raise."""
-        assert float(jax.jit(self._is_special)(_RZ90)) == 0.0
+    def test_it_is_a_classmethod_needing_no_instance(self) -> None:
+        assert cxfm.Rotate.groups() == cxfm.Rotate(_RZ90).groups()
+
+    def test_reading_it_under_jit_does_not_raise(self) -> None:
+        assert float(jax.jit(self._is_special)(_RZ90)) == 1.0
