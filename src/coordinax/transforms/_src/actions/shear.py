@@ -88,13 +88,11 @@ class Shear(AbstractLinearTransform):
         # it is not dead-code-eliminated under trace. Without it a singular
         # `H` reached `inverse` and came back all `inf`/`nan`.
         H = jnp.asarray(H)
-        # A non-square `H` has no determinant to take: `_validate_square` is
-        # the one that names a bad shape, and the shape is static under trace.
-        bad = (
-            _singular(jnp.linalg.det(H))
-            if H.ndim == 2 and H.shape[0] == H.shape[1]
-            else False
-        )
+        # Shape first: a non-square `H` has no determinant to take, so the
+        # singularity check below declines on one and `inverse` would surface
+        # a raw `jnp.linalg.inv` error instead of naming the shape.
+        H = self._validate_square(H)
+        bad = _singular(jnp.linalg.det(H))
         object.__setattr__(self, "H", eqx.error_if(H, bad, _MSG_SINGULAR))
 
     @property

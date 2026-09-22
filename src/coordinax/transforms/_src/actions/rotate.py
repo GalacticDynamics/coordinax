@@ -240,6 +240,10 @@ class Rotate(AbstractLinearTransform):
         # `TracerBoolConversionError`), and threaded onto the stored array so
         # it is not dead-code-eliminated: `inverse` transposes instead of
         # inverting, which is the inverse only for an orthogonal `R`.
+        # Shape first: `_not_orthogonal` declines on a non-square matrix (it
+        # has no `R^T R` to compare), so without this a non-square `R` would be
+        # stored and `.inverse` would hand back a meaningless transpose.
+        R = self._validate_square(R)
         object.__setattr__(
             self, "R", eqx.error_if(R, _not_orthogonal(R), _MSG_NOT_ORTHOGONAL)
         )
