@@ -48,6 +48,7 @@ See [Working With Frames](../guides/frames.md#building-transformations) for comp
 ### Frame Operations
 
 - `frame_transition(frame1, frame2)`: construct a transformation operator from one frame to another
+- `is_same_frame(frame1, frame2)`: whether two frames are _statically known_ to be the same frame (trace-safe; `False` under `jit`)
 - `AbstractReferenceFrame`: base class for defining reference frames
 
 ### Transform Operations

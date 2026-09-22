@@ -14,7 +14,6 @@ import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
-from coordinax.frames._src.base import is_same_frame
 
 
 def test_frame_transition_returns_transform_objects() -> None:
@@ -177,12 +176,12 @@ class TestTheSelfTransitionCheckIsStructuralAndTraceSafe:
         assert isinstance(cxf.frame_transition(a, a), cxfm.Identity)
 
     def test_frames_of_different_types_are_never_the_same(self) -> None:
-        assert not is_same_frame(cxf.alice, cxf.alex)
+        assert not cxf.is_same_frame(cxf.alice, cxf.alex)
 
     def test_a_traced_comparison_is_false_rather_than_an_error(self) -> None:
         """`is_same_frame` must never put a tracer in an ``if``."""
         a = cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
-        out = jax.jit(lambda x, y: jnp.asarray(is_same_frame(x, y)))(a, a)
+        out = jax.jit(lambda x, y: jnp.asarray(cxf.is_same_frame(x, y)))(a, a)
         assert not bool(out)
 
     @pytest.mark.parametrize(
