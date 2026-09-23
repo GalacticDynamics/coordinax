@@ -43,6 +43,7 @@ import dataclassish
 import unxt as u
 
 from .manifold import AbstractManifold
+from .utils import is_abstract_class
 from coordinax._src.custom_types import CDictT, Ds, Ks
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
@@ -387,11 +388,6 @@ def cartesian_chart(chart: AbstractChart, /) -> AbstractChart:
     return chart.cartesian
 
 
-def is_abstract_class(cls: type, /) -> bool:
-    """Determine if a class is abstract."""
-    return inspect.isabstract(cls) or cls.__name__.startswith("Abstract")
-
-
 def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
     """Check if cls is a non-abstract non-subclass of AbstractChart."""
     return not is_abstract_class(cls) and not issubclass(cls, AbstractChart)
@@ -399,8 +395,6 @@ def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
 
 ##############################################################################
 # The two branches of the chart hierarchy.
-# NOTE: these must be defined after `is_abstract_class`, which
-# `__init_subclass__` calls while the class body is being created.
 
 
 class AbstractStaticChart(AbstractChart[MT, Ks, Ds]):
