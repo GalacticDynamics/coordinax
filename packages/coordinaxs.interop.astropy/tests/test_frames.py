@@ -12,17 +12,22 @@ __all__: tuple[str, ...] = ()
 import astropy.coordinates as apyc
 import astropy.units as apyu
 import jax
+import jax.tree_util as jtu
 import numpy as np
 import plum
 import pytest
+from plum import convert
 
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.transforms as cxfm
+import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 import coordinaxs.interop.astropy  # noqa: F401
+from coordinaxs.interop.astropy._src.frames import to_astropy_frame
 
 
 @pytest.mark.parametrize(
@@ -147,12 +152,17 @@ def test_parameterless_frames_round_trip(apy, cls) -> None:
 
     `plum.convert` short-circuits these to the module singletons and never
     reaches the `from_` bodies, so the constructor is called directly.
+
+    The last assertion used to ask `plum.convert` for the abstract
+    `BaseCoordinateFrame`. That is the covariant-target bug this PR removes --
+    it matched every astropy frame class and could answer the wrong one -- so
+    the class-free direction now goes through `to_astropy_frame`.
     """
     frame = cls.from_(apy)
     assert isinstance(frame, cls)
     assert isinstance(plum.convert(apy, cls), cls)
     assert type(plum.convert(frame, type(apy))) is type(apy)
-    assert type(plum.convert(frame, apyc.BaseCoordinateFrame)) is type(apy)
+    assert type(to_astropy_frame(frame)) is type(apy)
 
 
 def test_astropy_galactocentric_round_trip() -> None:
@@ -379,3 +389,80 @@ def test_float32_z_sun_is_not_promoted() -> None:
 
     frame = plum.convert(apy, cxastro.Galactocentric)
     assert frame.z_sun.dtype == np.float32
+
+
+# Each coordinax frame paired with its one supported Astropy frame class.
+FRAME_PAIRS = [
+    (cxastro.ICRS(), apyc.ICRS),
+    (cxastro.Galactic(), apyc.Galactic),
+    (cxastro.Galactocentric(), apyc.Galactocentric),
+]
+
+# Targets to reject; the per-pair skip drops the supported combination.
+# Distinct from `UNSUPPORTED` above, which is the astropy -> coordinax side.
+UNSUPPORTED_TARGETS = [apyc.FK5, apyc.FK4, apyc.Galactic, apyc.AltAz]
+
+
+@pytest.mark.parametrize(("cx_frame", "apy_cls"), FRAME_PAIRS)
+def test_roundtrip_exact_class(
+    cx_frame: cxastro.AbstractSpaceFrame, apy_cls: type[apyc.BaseCoordinateFrame]
+) -> None:
+    """Conversion to the exact Astropy class round-trips."""
+    apy_frame = convert(cx_frame, apy_cls)
+    assert isinstance(apy_frame, apy_cls)
+    assert type(apy_frame) is apy_cls
+
+    back = convert(apy_frame, type(cx_frame))
+    assert isinstance(back, type(cx_frame))
+    # Compare leaves, not the frames: Galactocentric's round trip promotes
+    # `roll` from a weak int to a float, so the pytrees are not `==`.
+    assert jtu.tree_leaves(back) == pytest.approx(jtu.tree_leaves(cx_frame))
+
+
+@pytest.mark.parametrize(("cx_frame", "apy_cls"), FRAME_PAIRS)
+@pytest.mark.parametrize("target", UNSUPPORTED_TARGETS)
+def test_unsupported_target_raises(
+    cx_frame: cxastro.AbstractSpaceFrame,
+    apy_cls: type[apyc.BaseCoordinateFrame],
+    target: type[apyc.BaseCoordinateFrame],
+) -> None:
+    """Unsupported Astropy targets raise instead of silently mis-converting."""
+    if target is apy_cls:  # this one is genuinely supported
+        pytest.skip(f"{target.__name__} is the supported target")
+
+    with pytest.raises(TypeError, match="Cannot convert"):
+        convert(cx_frame, target)
+
+
+class UnregisteredFrame(cxastro.AbstractSpaceFrame):
+    """A frame with no Astropy equivalent.
+
+    Defined at module scope, never inside a test: plum registers dispatch
+    methods globally, so a test-local class leaks a method keyed to a class
+    that dies with the test.
+    """
+
+
+@pytest.mark.parametrize(
+    "frame",
+    [UnregisteredFrame(), cxf.alice],
+    ids=["unregistered-space-frame", "not-a-space-frame"],
+)
+def test_a_frame_with_no_astropy_equivalent_raises_typeerror(frame) -> None:
+    """Both directly and through the `Point`-with-data path.
+
+    `Point.frame` is any `AbstractReferenceFrame`, so the fallback is wide
+    enough to catch frames outside the astro hierarchy too.
+    """
+    match = f"Cannot convert `{type(frame).__name__}` to an Astropy frame"
+
+    with pytest.raises(TypeError, match=match):
+        to_astropy_frame(frame)
+
+    point = cxv.Point(
+        {"lon": u.Q(90.0, "deg"), "lat": u.Q(45.0, "deg"), "distance": u.Q(1.0, "kpc")},
+        chart=cxc.lonlat_sph3d,
+        frame=frame,
+    )
+    with pytest.raises(TypeError, match=match):
+        convert(point, apyc.BaseCoordinateFrame)

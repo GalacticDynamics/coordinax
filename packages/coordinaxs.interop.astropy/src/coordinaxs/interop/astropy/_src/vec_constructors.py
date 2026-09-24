@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import Any
+from typing import Any, cast
 
 import astropy.coordinates as apyc
 import plum
@@ -12,6 +12,7 @@ import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
+from .frames import to_astropy_frame
 
 ##############################################################################
 # Representation -> Point
@@ -277,7 +278,8 @@ def convert_cx_point_to_astropy_frame_with_data(
         )
         raise ValueError(msg)
 
-    apy_frame = plum.convert(obj.frame, apyc.BaseCoordinateFrame)
+    # `cast` because ty cannot see through plum's dispatch.
+    apy_frame = cast("apyc.BaseCoordinateFrame", to_astropy_frame(obj.frame))
     representation = plum.convert(obj, apyc.BaseRepresentation)
     return apy_frame.realize_frame(representation)
 
