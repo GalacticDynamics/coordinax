@@ -728,6 +728,12 @@ def test_generic_fallthrough_may_simplify_below_composed() -> None:
     op = cxf.frame_transition(_CancellingFrame(), _CancellingFrame())
 
     assert isinstance(op, cxfm.AbstractTransform)
+    # The premise, asserted rather than assumed: if `simplify` ever stopped
+    # collapsing this pipeline, `op` would be a `Composed` and every other
+    # assertion here would still pass -- the test would quietly stop
+    # exercising the #975 failure mode, which only arises *below* `Composed`.
+    assert not isinstance(op, cxfm.Composed)
+    assert isinstance(op, cxfm.Identity)
 
     q = u.Q([1.0, 2.0, 3.0], "kpc")
     np.testing.assert_allclose(
