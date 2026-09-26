@@ -3,6 +3,8 @@
 __all__: tuple[str, ...] = ()
 
 
+import equinox as eqx
+import jax
 import pytest
 
 import quaxed.numpy as jnp
@@ -149,3 +151,56 @@ def test_the_concrete_frames_still_build() -> None:
     assert isinstance(
         MyTransformedFrame(cxf.alice, cxfm.identity), cxf.AbstractReferenceFrame
     )
+
+
+def _rot_z90() -> cxfm.Rotate:
+    """A fresh (never shared) 90-degree rotation about z."""
+    return cxfm.Rotate(jnp.asarray([[0.0, -1, 0], [1, 0, 0], [0, 0, 1]]))
+
+
+class TestTheSelfTransitionCheckIsStructuralAndTraceSafe:
+    """Regression for #940.
+
+    The two self-transition fast paths disagreed: ``==`` (astro) is structural
+    but not traceable, ``is`` (here) is traceable but misses two
+    equal-but-distinct frames. Both now go through `is_same_frame`.
+    """
+
+    def test_equal_but_distinct_frames_give_the_identity(self) -> None:
+        """``is`` built a three-operator chain here; the answer is `Identity`."""
+        a = cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
+        b = cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
+        assert a is not b
+        assert isinstance(cxf.frame_transition(a, b), cxfm.Identity)
+
+    def test_the_same_object_still_gives_the_identity(self) -> None:
+        a = cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
+        assert isinstance(cxf.frame_transition(a, a), cxfm.Identity)
+
+    def test_frames_of_different_types_are_never_the_same(self) -> None:
+        assert not cxf.is_same_frame(cxf.alice, cxf.alex)
+
+    def test_a_traced_comparison_is_false_rather_than_an_error(self) -> None:
+        """`is_same_frame` must never put a tracer in an ``if``."""
+        a = cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
+        out = jax.jit(lambda x, y: jnp.asarray(cxf.is_same_frame(x, y)))(a, a)
+        assert not bool(out)
+
+    @pytest.mark.parametrize(
+        "jit", [jax.jit, eqx.filter_jit], ids=["jax.jit", "eqx.filter_jit"]
+    )
+    @pytest.mark.parametrize("same", [True, False], ids=["equal", "different"])
+    def test_the_transition_traces_with_frames_as_arguments(self, jit, same) -> None:
+        """Frames are pytrees, so they are passed as `jit` arguments."""
+        a = cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
+        b = (
+            cxf.TransformedReferenceFrame(cxf.alice, _rot_z90())
+            if same
+            else cxf.TransformedReferenceFrame(
+                cxf.alice, cxfm.Rotate.from_euler("z", u.Q(30, "deg"))
+            )
+        )
+        q = u.Q([1.0, 2.0, 3.0], "kpc")
+        got = jit(lambda x, y: cxf.frame_transition(x, y)(q))(a, b)
+        expect = cxf.frame_transition(a, b)(q)
+        assert jnp.allclose(u.ustrip("kpc", got), u.ustrip("kpc", expect), atol=1e-12)
