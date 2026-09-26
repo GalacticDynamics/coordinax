@@ -25,7 +25,7 @@ import coordinax.representations as cxr
 import coordinaxs.api.transforms as cxfmapi
 from .base import AbstractTransform
 from .custom_types import CDict, HasShape, OptUSys
-from .utils import is_flat_chart, require_matching_keys
+from .utils import act_array_via_cdict, is_flat_chart, require_matching_keys
 from coordinax.internal import pack_uniform_unit
 
 
@@ -132,22 +132,67 @@ def act(
     /,
     **kw: Any,
 ) -> Array:
-    """Apply a linear transform to an Array(like) object."""
+    """Apply a linear transform to an Array(like) object.
+
+    A bare array with no explicit ``rep`` defaults to `~coordinax.point`, which
+    this fast path serves directly: a linear map on Cartesian point coordinates
+    is just ``M x``, with no units to track.
+
+    An explicit non-point ``rep`` says what the data is, so it is not ambiguous
+    and is served by the `CDict` ladder (#972). Unlike a `Translate` -- where a
+    position shift is the identity on a velocity -- a linear map genuinely acts
+    on a tangent, and the `CDict` path already knows the rule (its `pushforward`
+    is ``M v``, through the chart Jacobian when the chart is not flat):
+
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    >>> v = jnp.asarray([1.0, 0.0, 0.0])
+    >>> cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel,
+    ...          usys=u.unitsystems.galactic).round(3)
+    Array([0., 1., 0.], dtype=float64)
+
+    """
+    # A non-point rep routes to the CDict path, the reference implementation of
+    # the (representation, semantic kind) ladder, so the array spelling can
+    # never disagree with it. It is also the more permissive of the two on
+    # charts: given an `at` anchor it handles a non-Cartesian one, which the
+    # point path below refuses.
+    if rep != cxr.point:
+        return cast("Array", act_array_via_cdict(op, tau, x, chart, rep, **kw))
+
     del kw  # Does not require an anchoring base-point.
 
     x_arr = jnp.asarray(x)
-    chart = cxc.guess_chart(x_arr)  # ty: ignore[invalid-assignment]
+    # Honour the chart the caller passed rather than re-guessing one from the
+    # array. Guessing always answers Cartesian for a bare array, which made the
+    # check below vacuous and silently reinterpreted `act(op, tau, x, sph3d,
+    # point)` as Cartesian.
     if chart != chart.cartesian:
         msg = (
-            f"act for {type(op).__name__} with ArrayLike x requires a Cartesian chart."
+            f"act for {type(op).__name__} with ArrayLike x requires a Cartesian "
+            f"chart; got {type(chart).__name__}. A bare array carries no units, "
+            "and a single-unit Quantity cannot describe a chart whose components "
+            "have different dimensions either -- pass per-component units: a "
+            "QuantityMatrix, a component dict, or a Point."
         )
         raise ValueError(msg)
-    if rep != cxr.point:
+    n_components = len(chart.components)
+    shape = jnp.shape(x_arr)
+    # `shape[-1]` on a 0-D array is an `IndexError`, so ask about the axis
+    # rather than indexing for it: no last axis is as wrong a shape as a
+    # mismatched one, and the caller deserves the same named error.
+    if not shape or shape[-1] != n_components:
+        got = shape[-1] if shape else "no axes"
         msg = (
-            f"act for {type(op).__name__} with ArrayLike x requires a "
-            "point representation."
+            f"act for {type(op).__name__}: last axis of x is {got}, but "
+            f"{type(chart).__name__} has {n_components} components."
         )
-        raise TypeError(msg)
+        raise ValueError(msg)
 
     matrix = op._matrix(chart, tau)
     return op._contract(matrix, x_arr)
