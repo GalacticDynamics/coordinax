@@ -15,6 +15,7 @@ import quaxed.numpy as jnp
 import unxt.quantity as uq
 
 import coordinax.charts as cxc
+import coordinax.frames as cxf
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.api.representations as cxrapi
@@ -569,7 +570,25 @@ def act(
             k: _unwrap_anchor(v, x.chart, f"at_jet[{k}]") for k, v in at_jet.items()
         }
     data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
-    return replace(x, data=data)
+    return _acted(x, data, op)
+
+
+def _acted(x: Any, data: CDict, op: cxfm.AbstractTransform, /) -> Any:
+    """Return ``x`` with new ``data``, dropping a frame label the data outgrew.
+
+    A frame transition moves the data out of ``x.frame``, but the operator it
+    returns does not know which frame it moved the data *into* -- so the only
+    honest label for the result is "none". Keeping ``x.frame`` would mark the
+    result as still being in the source frame, and a later ``to_frame`` would
+    then transform it a second time.
+    `~coordinax.vectors.AbstractVector.to_frame` rebinds the target itself, so
+    it is unaffected.
+
+    An `~coordinax.transforms.Identity` moves nothing, so the label survives it.
+    """
+    if isinstance(op, cxfm.Identity) or isinstance(x.frame, cxf.NoFrame):
+        return replace(x, data=data)
+    return replace(x, data=data, frame=cxf.noframe)
 
 
 def _unwrap_anchor(anchor: Any, chart: Any, name: str, /) -> CDict | None:
@@ -610,7 +629,7 @@ def act(op: cxfm.AbstractTransform, tau: Any, x: Point, /, **kw: Any) -> Point:
 
     """
     data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
-    return replace(x, data=data)
+    return _acted(x, data, op)
 
 
 @plum.dispatch
