@@ -2,12 +2,18 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import Any
+
+import equinox as eqx
+import jax
 import jax.numpy as jnp
 import pytest
 
 import unxt as u
 
 import coordinax.transforms as cxfm
+from coordinax.transforms._src import groups
+from coordinax.transforms._src.actions.rotate import _not_a_rotation
 
 _RZ90 = jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
 
@@ -42,3 +48,122 @@ class TestRotationMatrixIsDimensionless:
     def test_dimensionful_matrix_is_refused(self, unit):
         with pytest.raises(ValueError, match="dimensionless"):
             cxfm.Rotate(u.Q(_RZ90, unit))
+
+
+class TestRotationMatrixIsOrthogonal:
+    """``R`` must satisfy ``R^T R = I``, the invariant the class relies on.
+
+    Regression for #938: the docstring promised the check, nothing performed
+    it, and `inverse` *transposes* -- the inverse only for an orthogonal
+    matrix. ``Rotate([[1,2,3],[4,5,6],[7,8,10]])`` built fine and
+    ``op.inverse(op(Point([1,2,3] kpc)))`` came back ``[513, 612, 764] kpc``.
+    """
+
+    _BAD = jnp.asarray([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 10.0]])
+
+    def test_non_orthogonal_is_refused(self):
+        with pytest.raises(eqx.EquinoxRuntimeError, match="orthogonal"):
+            cxfm.Rotate(self._BAD)
+
+    def test_non_orthogonal_is_refused_under_jit(self):
+        """Deferred `error_if`, so the guard traces instead of dying on a bool."""
+        build = eqx.filter_jit(lambda m: cxfm.Rotate(m).R)
+        with pytest.raises(eqx.EquinoxRuntimeError, match="orthogonal"):
+            jax.block_until_ready(build(self._BAD))
+
+    @pytest.mark.parametrize("R", [_RZ90, jnp.eye(3)], ids=["rz90", "identity"])
+    def test_orthogonal_still_constructs(self, R):
+        assert bool(jnp.allclose(cxfm.Rotate(R).matrix, R))
+
+    def test_orthogonal_still_constructs_under_jit(self):
+        op = eqx.filter_jit(cxfm.Rotate)(_RZ90)
+        assert bool(jnp.allclose(op.R, _RZ90))
+
+    def test_a_non_square_matrix_is_named_by_the_shape_check(self):
+        """The orthogonality check defers to `_validate_square` on shape.
+
+        A non-square matrix has no ``R^T R`` to compare, so `_not_a_rotation`
+        declines and the error the caller sees is the one that actually names
+        the problem -- not a confusing "not orthogonal".
+        """
+        rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+        # The orthogonality predicate declines on a non-square matrix -- it has
+        # no `R^T R` to compare -- so the shape check is what must catch it,
+        # and it now does so in the constructor rather than at first use.
+        assert _not_a_rotation(rect) is False
+        with pytest.raises(
+            eqx.EquinoxTracetimeError, match=r"square matrix; got shape"
+        ):
+            cxfm.Rotate(rect)
+
+    def test_a_valid_rotation_round_trips(self):
+        """What the bad matrix broke: `inverse` really does undo the map."""
+        op = cxfm.Rotate(_RZ90)
+        q = u.Q(jnp.asarray([1.0, 2.0, 3.0]), "kpc")
+        back = op.inverse(None, op(None, q))
+        assert bool(jnp.allclose(u.ustrip("kpc", back), jnp.asarray([1.0, 2.0, 3.0])))
+
+    def test_a_numerically_drifted_frame_is_accepted(self):
+        """Round-off must not be mistaken for a non-orthogonal matrix.
+
+        `jnp.allclose`'s default ``atol=1e-8`` is the whole budget for the
+        off-diagonal entries (they are compared against zero, where ``rtol``
+        contributes nothing), and a parallel-transported Bishop triad
+        (`coordinaxs.curveframes`) drifts further than that -- its own
+        doctests assert orthogonality at ``1e-6``. This pins the tolerance
+        from the other side, so tightening it back breaks here rather than in
+        a downstream package.
+        """
+        # A float64-scale claim: `2e-8` is below float32 eps (~1.2e-7), so
+        # with x64 off the perturbation rounds away and the first assertion
+        # below would fail for a reason that has nothing to do with the
+        # tolerance. The suite sets `JAX_ENABLE_X64=1`; say so rather than
+        # letting a bare `pytest` fail confusingly.
+        if jnp.zeros(1).dtype != jnp.float64:  # pragma: no cover - x64 is on in CI
+            pytest.skip("the 1e-8 tolerance is a float64-scale claim; x64 is off")
+
+        drifted = _RZ90 + 2e-8 * jnp.asarray(
+            [[1.0, 1.0, 0.0], [0.0, 1.0, 1.0], [1.0, 0.0, 1.0]]
+        )
+        gram = drifted.T @ drifted
+        assert not bool(jnp.allclose(gram, jnp.eye(3)))  # default atol refuses it
+        assert bool(jnp.allclose(gram, jnp.eye(3), atol=1e-6))
+        assert bool(jnp.allclose(cxfm.Rotate(drifted).matrix, drifted))
+
+    def test_the_named_constructors_and_algebra_still_pass(self):
+        """`from_euler`, `__matmul__`, `inverse` and `__neg__` all stay orthogonal.
+
+        `-a` is a `Linear`, not a `Rotate` -- negation leaves SO(n) in odd
+        dimensions -- so this reads the shared `matrix` spelling rather than
+        `R`.
+        """
+        a = cxfm.Rotate.from_euler("z", u.Q(45, "deg"))
+        b = cxfm.Rotate.from_euler("x", u.Q(30, "deg"))
+        for op in (a, b, a @ b, -a, a.inverse):
+            gram = op.matrix.T @ op.matrix
+            assert bool(jnp.allclose(gram, jnp.eye(3), atol=1e-12))
+
+
+class TestGroupsNeedsNoDeterminant:
+    """`groups()` is a constant, because SO(n) is a constructor invariant.
+
+    It briefly read ``det R`` per instance, to avoid claiming an orientation an
+    improper matrix does not keep. With `Rotate` admitting only ``det R = +1``
+    there is nothing left to read, so the answer is fixed and trivially safe
+    under trace -- no `TracerBoolConversionError` from reading metadata.
+    """
+
+    @staticmethod
+    def _is_special(R) -> Any:
+        return jnp.asarray(
+            float(groups.SpecialOrthogonalGroup in cxfm.Rotate(R).groups())
+        )
+
+    def test_it_is_always_special_orthogonal(self) -> None:
+        assert float(self._is_special(_RZ90)) == 1.0
+
+    def test_it_is_a_classmethod_needing_no_instance(self) -> None:
+        assert cxfm.Rotate.groups() == cxfm.Rotate(_RZ90).groups()
+
+    def test_reading_it_under_jit_does_not_raise(self) -> None:
+        assert float(jax.jit(self._is_special)(_RZ90)) == 1.0

@@ -6,12 +6,11 @@ __all__ = ("Rotate",)
 from dataclasses import replace
 
 from jaxtyping import Array, Shaped
-from typing import Any, final
+from typing import Any, Final, final
 
 import equinox as eqx
 import jax.scipy.spatial.transform as jtransform
 import plum
-from astropy.units import UnitConversionError
 from jax.typing import ArrayLike
 
 import quaxed.numpy as jnp
@@ -23,37 +22,62 @@ import coordinax.representations as cxr
 from .base import AbstractTransform
 from .custom_types import CDict, OptUSys
 from .identity import identity
-from .linear import AbstractLinearTransform
+from .linear import AbstractLinearTransform, as_dimensionless_matrix
 from .utils import is_traced
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
+
+_ATOL: Final = 1e-6
+"""Absolute tolerance on ``R^T R = I``. See `_not_a_rotation`."""
+
+_MSG_NOT_A_ROTATION: Final = (
+    "Rotate requires a rotation matrix: R^T R = I with det R = +1, i.e. SO(n). "
+    "Orthogonality is what `inverse` relies on -- it transposes. For a "
+    "hyperplane reflection -- orthogonal, det = -1 *and* an involution -- use "
+    "`Reflect`; for any other invertible linear map use `Linear`. Note a "
+    "rotoreflection is orthogonal with det = -1 and is not an involution, so "
+    "it belongs in `Linear`, not `Reflect`."
+)
+
+
+def _not_a_rotation(R: Any, /) -> Any:
+    """Whether ``R`` fails ``R^T R = I`` with ``det R = +1``.
+
+    A non-square ``R`` answers `False`: it has no transpose product to compare,
+    and `_validate_square` is the one that names a bad shape. The shape is
+    static under tracing, so this branch traces.
+
+    ``atol`` is explicit rather than `jnp.allclose`'s ``1e-8``, which is below
+    the round-off of an honest rotation matrix. The off-diagonal entries are
+    compared against zero, where ``rtol`` contributes nothing, so ``1e-8`` is
+    the whole budget -- and a parallel-transported Bishop triad
+    (`coordinaxs.curveframes`) drifts to ~``5e-8`` off orthogonal, which is
+    why that package's own doctests assert orthogonality at ``1e-6``. The same
+    number here. It is many orders away from catching less: the matrix in #938
+    has ``R^T R`` entries in the tens.
+    """
+    if R.ndim != 2 or R.shape[0] != R.shape[1]:
+        return False
+    gram = jnp.matmul(jnp.swapaxes(R, -2, -1), R)
+    orthogonal = jnp.allclose(gram, jnp.eye(R.shape[0], dtype=gram.dtype), atol=_ATOL)
+    # `det R = -1` is orthogonal but orientation-reversing: a reflection or a
+    # rotoreflection, not a rotation. `Reflect` and `Linear` are those homes.
+    proper = jnp.allclose(jnp.linalg.det(R), 1.0, atol=_ATOL)
+    return ~(orthogonal & proper)
 
 
 def _as_rotation_matrix(R: Any, /) -> Array:
     """Normalise ``R`` to a bare array, requiring it to be dimensionless.
 
-    ``jnp`` here is `quaxed.numpy`, whose `asarray` is unit-aware and hands a
-    `~unxt.Quantity` back unchanged, so it cannot be used to coerce one.
-
     A rotation matrix preserves lengths, so its entries are ratios: a
-    dimensionless quantity is stripped and anything else refused.
-
-    The return stays `Array`, not ``Shaped[Array, " N N"]`` -- jaxtyping
-    enforces annotations, and requiring squareness here would preempt
-    `_validate_square` and its clearer message.
+    dimensionless quantity is stripped and anything else refused. Shares
+    `as_dimensionless_matrix` with `Reflect` and `Shear`.
     """
-    if isinstance(R, u.AbstractQuantity):
-        try:
-            R = u.ustrip("", R)
-        except UnitConversionError as e:
-            # `UnitConversionError` is already a `ValueError`, so a bare
-            # `raise` loses no caller; its message already names the units.
-            e.add_note(
-                "Rotate `R` is a rotation matrix, whose entries are ratios and "
-                "so dimensionless."
-            )
-            raise
-    return jnp.asarray(R)
+    return as_dimensionless_matrix(
+        R,
+        "Rotate `R` is a rotation matrix, whose entries are ratios and "
+        "so dimensionless.",
+    )
 
 
 @final
@@ -71,13 +95,21 @@ class Rotate(AbstractLinearTransform):
 
     Parameters
     ----------
-    rotation : Array[float, (3, 3)]
+    R : Array[float, (N, N)]
         The rotation matrix.
 
     Raises
     ------
-    ValueError
-        If the rotation matrix is not orthogonal.
+    equinox.EquinoxTracetimeError
+        If ``R`` is not square. A shape is static, so this is decided while
+        tracing and raises there -- not when the traced graph runs.
+    equinox.EquinoxRuntimeError
+        If ``R`` is not a rotation -- ``R^T R = I`` *and* ``det R = +1``, i.e.
+        SO(N). Orthogonality alone is not enough: an improper orthogonal
+        matrix reverses orientation, and `Reflect` or `Linear` is its home.
+        This one depends on the values, so it is deferred onto the stored
+        ``R`` to survive `jax.jit`: eagerly it raises from the constructor,
+        under `jit` when the traced graph runs.
 
     Notes
     -----
@@ -164,12 +196,42 @@ class Rotate(AbstractLinearTransform):
 
     @classmethod
     def groups(cls) -> frozenset[type]:
-        """Return the groups to which this map belongs."""
-        del cls
+        """Return the groups to which this map belongs.
+
+        `~coordinax.transforms.groups.SpecialOrthogonalGroup` unconditionally:
+        the constructor admits only ``R^T R = I`` with ``det R = +1``, so there
+        is no determinant to read and nothing to decide per instance.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+        >>> sorted(g.__name__ for g in cxfm.Rotate(Rz).groups())
+        ['DiffeomorphismGroup', 'SpecialOrthogonalGroup']
+
+        """
         return frozenset((groups.SpecialOrthogonalGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, R: Any) -> None:
-        object.__setattr__(self, "R", jnp.asarray(R))
+        # Through the field converter, not `quaxed.numpy.asarray`: the
+        # converter is what strips (or refuses) units, and `jnp.asarray` hands
+        # a `~unxt.Quantity` straight back. Equinox re-applies the converter
+        # after this returns, so the only thing that changed is *when* -- and
+        # the orthogonality check below needs a bare array to test.
+        R = _as_rotation_matrix(R)
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # `TracerBoolConversionError`), and threaded onto the stored array so
+        # it is not dead-code-eliminated: `inverse` transposes instead of
+        # inverting, which is the inverse only for an orthogonal `R`.
+        # Shape first: `_not_a_rotation` declines on a non-square matrix (it
+        # has no `R^T R` to compare), so without this a non-square `R` would be
+        # stored and `.inverse` would hand back a meaningless transpose.
+        R = self._validate_square(R)
+        object.__setattr__(
+            self, "R", eqx.error_if(R, _not_a_rotation(R), _MSG_NOT_A_ROTATION)
+        )
 
     # -----------------------------------------------------
     # Constructors
@@ -231,24 +293,6 @@ class Rotate(AbstractLinearTransform):
 
     # -----------------------------------------------------
     # Arithmetic operations
-
-    def __neg__(self: "Rotate") -> "Rotate":
-        """Negate the rotation.
-
-        Examples
-        --------
-        >>> import quaxed.numpy as jnp
-        >>> import coordinax as cx
-
-        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cxfm.Rotate(Rz)
-        >>> print((-op).R)
-        [[ 0  1  0]
-         [-1  0  0]
-         [ 0  0 -1]]
-
-        """
-        return replace(self, R=-self.R)
 
     def __matmul__(self: "Rotate", other: Any, /) -> Any:
         """Combine two Rotations.

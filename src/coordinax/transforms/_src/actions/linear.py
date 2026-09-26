@@ -16,8 +16,10 @@ from typing import Any, cast
 
 import equinox as eqx
 import plum
+from astropy.units import UnitConversionError
 
 import quaxed.numpy as jnp
+import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
 import coordinax.charts as cxc
@@ -27,6 +29,7 @@ from .base import AbstractTransform
 from .custom_types import CDict, HasShape, OptUSys
 from .utils import act_array_via_cdict, is_flat_chart, require_matching_keys
 from coordinax.internal import pack_uniform_unit
+from coordinax.transforms._src import groups
 
 
 def _matmul_cdict(
@@ -35,6 +38,33 @@ def _matmul_cdict(
     """Apply ``matrix`` to a Cartesian cdict ``d``, packed into a shared unit."""
     v, unit = pack_uniform_unit(d, keys=comps)
     return cast("CDict", cxc.cdict(op._contract(matrix, v), unit, comps))
+
+
+def as_dimensionless_matrix(m: Any, note: str, /) -> Array:
+    """Normalise ``m`` to a bare array, requiring it to be dimensionless.
+
+    ``jnp`` here is `quaxed.numpy`, whose `asarray` is unit-aware and hands a
+    `~unxt.Quantity` back unchanged, so it cannot be used to coerce one.
+
+    Without this a unitful matrix is still refused, but only incidentally and
+    much later: `Reflect` reaches ``H @ H`` and reports "'m2' (area) and ''
+    (dimensionless) are not convertible", `Shear` reaches ``det H`` and says
+    the same of volume. ``note`` is appended to that error so the message says
+    what was actually wrong.
+
+    The return stays `Array`, not ``Shaped[Array, " N N"]`` -- jaxtyping
+    enforces annotations, and requiring squareness here would preempt
+    `_validate_square` and its clearer message.
+    """
+    if isinstance(m, u.AbstractQuantity):
+        try:
+            m = u.ustrip("", m)
+        except UnitConversionError as e:
+            # `UnitConversionError` is already a `ValueError`, so a bare
+            # `raise` loses no caller; its message already names the units.
+            e.add_note(note)
+            raise
+    return jnp.asarray(m)
 
 
 class AbstractLinearTransform(AbstractTransform):
@@ -84,6 +114,50 @@ class AbstractLinearTransform(AbstractTransform):
 
         """
         return self._validate_square(self._raw_matrix)
+
+    def __neg__(self) -> "AbstractLinearTransform":
+        r"""Negate the map: $-M$, acting as $(-I) \, M$.
+
+        Returns a `~coordinax.transforms.Linear` rather than the operator's own
+        type, because most of these types are not closed under negation:
+        $\det(-M) = (-1)^n \det M$, so in odd dimensions negation reverses
+        orientation. A negated `Rotate` is then orthogonal but generically
+        neither a rotation nor an involution -- a rotoreflection, which only
+        `Linear` can hold.
+
+        Annotated with the base type, not `Linear`, so a subclass whose
+        negation *is* closed can narrow it: `LorentzBoost.__neg__` returns a
+        boost, because there negation means inverting the velocity rather than
+        negating a matrix.
+
+        The group tag is the most specific one that survives negation. Every
+        group here is closed under it except $SO(n)$, which is closed only in
+        even dimensions; that one widens to $O(n)$ rather than becoming
+        dimension-dependent, so the claim is never stronger than what holds.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.transforms as cxfm
+
+        >>> H = cxfm.Reflect.from_normal(jnp.asarray([0.0, 0.0, 1.0]))
+        >>> neg = -H
+        >>> type(neg).__name__
+        'Linear'
+
+        `Linear` *is* closed under negation, so negating twice returns the
+        original matrix -- by value, though not by type:
+
+        >>> bool(jnp.allclose((-neg).matrix, H.matrix))
+        True
+
+        """
+        from .general_linear import Linear  # noqa: PLC0415  (circular at module scope)
+
+        grp = groups.most_specific_group(self.groups())
+        if issubclass(grp, groups.SpecialOrthogonalGroup):
+            grp = groups.OrthogonalGroup
+        return Linear(-self.matrix, grp)
 
     def _validate_square(self, matrix: HasShape, /) -> Array:
         """Check the matrix is square (N x N)."""

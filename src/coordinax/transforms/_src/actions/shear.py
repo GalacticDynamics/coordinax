@@ -4,8 +4,9 @@
 __all__ = ("Shear",)
 
 
-from typing import Any, TypeAlias, final
+from typing import Any, Final, TypeAlias, final
 
+import equinox as eqx
 import plum
 from jax.typing import ArrayLike
 from jaxtyping import Array, Shaped
@@ -16,11 +17,17 @@ from unxt import AbstractQuantity as AbcQ
 
 from .base import AbstractTransform
 from .identity import identity
-from .linear import AbstractLinearTransform
+from .linear import AbstractLinearTransform, as_dimensionless_matrix
+from .scale import _singular
 from .utils import is_traced
 from coordinax.transforms._src import groups
 
 HMatrix: TypeAlias = Shaped[Array, " N N"]
+
+_MSG_SINGULAR: Final = (
+    "Shear matrix must be invertible: every entry finite, and det H finite "
+    "and non-zero. That is the invariant `inverse` relies on -- it inverts `H`."
+)
 
 
 @final
@@ -35,6 +42,34 @@ class Shear(AbstractLinearTransform):
 
     where ``H`` is an invertible shear matrix.
 
+    Raises
+    ------
+    equinox.EquinoxTracetimeError
+        If ``H`` is not square. A shape is static, so this is decided while
+        tracing and raises there -- not when the traced graph runs.
+    equinox.EquinoxRuntimeError
+        If ``H`` is singular. This one depends on the values, so it is
+        deferred onto the stored ``H`` to survive `jax.jit`: eagerly it raises
+        from the constructor, under `jit` when the traced graph runs.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Shear(jnp.asarray([[1.0, 0.5], [0.0, 1.0]]))
+    >>> op.inverse.H
+    Array([[ 1. , -0.5],
+           [ 0. ,  1. ]], dtype=float64)
+
+    A singular matrix is refused, rather than inverting to ``inf``/``nan``:
+
+    >>> try:
+    ...     cxfm.Shear(jnp.asarray([[1.0, 1.0], [1.0, 1.0]]))
+    ... except Exception as e:
+    ...     print("must be invertible" in str(e))
+    True
+
     """
 
     H: HMatrix
@@ -47,11 +82,40 @@ class Shear(AbstractLinearTransform):
         return frozenset((groups.AffineGroup, groups.DiffeomorphismGroup))
 
     def __init__(self, H: Any) -> None:
-        object.__setattr__(self, "H", jnp.asarray(H))
+        # `Scale` had this same hole, fixed in #805; this is that guard on a
+        # general matrix, so the predicate is reused with the determinant in
+        # place of the diagonal factors.
+        #
+        # Deferred so it survives jit (a plain `bool` on a traced value raises
+        # `TracerBoolConversionError`), and threaded onto the stored array so
+        # it is not dead-code-eliminated under trace. Without it a singular
+        # `H` reached `inverse` and came back all `inf`/`nan`.
+        H = as_dimensionless_matrix(
+            H,
+            "Shear `H` maps lengths to lengths, so its entries are ratios "
+            "and dimensionless.",
+        )
+        # Shape first: a non-square `H` has no determinant to take, so the
+        # singularity check below declines on one and `inverse` would surface
+        # a raw `jnp.linalg.inv` error instead of naming the shape.
+        H = self._validate_square(H)
+        # Entry-wise finiteness as well as the determinant. `det` does happen to
+        # propagate a non-finite entry to `nan` -- searched exhaustively over
+        # single non-finite entries in 2x2/3x3/4x4 and over 4000 random
+        # multi-entry matrices without finding one that stays finite -- but that
+        # is LU's behaviour, not a promise. Checking `H` directly makes the
+        # invariant independent of how `jnp.linalg.det` handles `inf`/`nan`.
+        bad = ~jnp.all(jnp.isfinite(H)) | _singular(jnp.linalg.det(H))
+        object.__setattr__(self, "H", eqx.error_if(H, bad, _MSG_SINGULAR))
 
     @property
     def inverse(self) -> "Shear":
-        """Return the inverse shear transform."""
+        """Return the inverse shear transform.
+
+        `__init__` has already established that ``H`` is invertible, so the
+        inversion below is well posed; the new operator re-checks its own matrix
+        on the way in, as any other construction would.
+        """
         return type(self)(jnp.linalg.inv(self.H))
 
     @property

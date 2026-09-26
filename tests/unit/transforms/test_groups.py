@@ -2,6 +2,10 @@
 
 __all__: tuple[str, ...] = ()
 
+import equinox as eqx
+import pytest
+
+import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.transforms as cxfm
@@ -15,6 +19,8 @@ def test_concrete_transform_groups_match_spec() -> None:
     assert cxfm.Translate.groups() == frozenset(
         (cxfm.groups.EuclideanGroup, cxfm.groups.DiffeomorphismGroup)
     )
+    # `Rotate.groups` is a plain classmethod: the constructor admits only
+    # `det R = +1`, so SO(n) holds by construction with no determinant to read.
     assert cxfm.Rotate.groups() == frozenset(
         (cxfm.groups.SpecialOrthogonalGroup, cxfm.groups.DiffeomorphismGroup)
     )
@@ -63,3 +69,41 @@ def test_composed_identity_is_neutral_for_group_inference() -> None:
     assert op.groups() == frozenset(
         (cxfm.groups.SpecialOrthogonalGroup, cxfm.groups.DiffeomorphismGroup)
     )
+
+
+def test_rotate_is_always_special_orthogonal() -> None:
+    """`Rotate` is SO(n) by construction, so `groups` needs no determinant.
+
+    Regression for #938: `groups` once answered `SpecialOrthogonalGroup`
+    unconditionally while the constructor accepted improper matrices, so a
+    `det = -1` matrix claimed an orientation it flips -- and the claim
+    propagated through `Composed.groups` and `least_common_supergroup`. The
+    constructor now rejects those, which makes the constant answer true.
+    """
+    proper = cxfm.Rotate(
+        jnp.asarray([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    )
+    assert proper.groups() == frozenset(
+        (cxfm.groups.SpecialOrthogonalGroup, cxfm.groups.DiffeomorphismGroup)
+    )
+
+    with pytest.raises(eqx.EquinoxRuntimeError, match="det R"):
+        cxfm.Rotate(jnp.diag(jnp.asarray([-1.0, 1.0, 1.0])))
+
+
+def test_negating_a_rotation_leaves_so_n_in_odd_dimensions() -> None:
+    """``-R`` flips the determinant in 3D, so it is a `Linear` in O(n).
+
+    `Rotate` is not closed under negation, which is why `__neg__` returns the
+    wider type carrying the group that does survive.
+    """
+    R = cxfm.Rotate(jnp.eye(3))
+    assert cxfm.groups.SpecialOrthogonalGroup in R.groups()
+
+    neg = -R
+    assert isinstance(neg, cxfm.Linear)
+    assert cxfm.groups.OrthogonalGroup in neg.groups()
+    assert cxfm.groups.SpecialOrthogonalGroup not in neg.groups()
+
+    # `Linear` *is* closed under negation: the matrix round-trips.
+    assert bool(jnp.allclose((-neg).matrix, R.matrix))
