@@ -37,7 +37,10 @@ Two related verbs are distinguished:
 __all__ = (
     "AnchorJet",
     "JetDict",
+    "assemble_slot_jet",
     "prolong_jet",
+    "prolong_point_map",
+    "require_contiguous_jet",
     "prolong_slot",
     "pushforward_generic",
     "tau_derivative",
@@ -126,10 +129,8 @@ _MSG_AT_JET_UNUSED_POINT = (
     "anchor, so they would be silently ignored. Drop the slot(s), or act on "
     "tangent data if you meant to transform a jet."
 )
-_MSG_JET_SLOT_MISSING = (
-    "act_jet({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
-)
-_MSG_JET_SLOT0_MISSING = "act_jet requires the base point at jet slot 0."
+_MSG_JET_SLOT_MISSING = "{call} requires all jet slots 1..{m}; slot {k} is missing."
+_MSG_JET_SLOT0_MISSING = "{call} requires the base point at jet slot 0."
 
 
 # =============================================================================
@@ -514,20 +515,9 @@ def prolong_jet(
     (Q(7., 'km'), Q(3., 'km / s'))
 
     """
-    if 0 not in jet:
-        raise TypeError(_MSG_JET_SLOT0_MISSING)
+    require_contiguous_jet(jet, f"act_jet({type(op).__name__}, ...)")
     q0 = jet[0]
     max_order = max(jet)
-    for m in range(1, max_order + 1):
-        if m not in jet:
-            msg = _MSG_JET_SLOT_MISSING.format(op=type(op).__name__, m=max_order, k=m)
-            raise TypeError(msg)
-        require_matching_keys(
-            jet[m],
-            q0,
-            f"act_jet({type(op).__name__}, ...): jet slot {m} components "
-            f"do not match slot 0's {sorted(q0)}",
-        )
 
     if is_time_dependent(op) and tau is None and max_order >= 1:
         msg = _MSG_TAU_REQUIRED.format(op=type(op).__name__)
@@ -561,6 +551,87 @@ def prolong_jet(
     ]
 
     slot_outs = _total_derivative_chain(f, tau_val, q0_vals, slot_vals)
+    return {
+        m: _attach_cdict(
+            ym, {k: _per_time(un, time_unit, m) for k, un in out_units.items()}
+        )
+        for m, ym in enumerate(slot_outs)
+    }
+
+
+def require_contiguous_jet(jet: JetDict, call: str, /) -> None:
+    """Refuse a jet with a missing slot or a slot whose components differ.
+
+    Slot $m$'s law reads every slot below it, so a hole is not a jet with a
+    gap -- it is a jet that cannot be prolonged at all. Shared by
+    `prolong_jet` and `prolong_point_map` so the engine answers the same way
+    whether the map being prolonged is a transform's point action or a chart
+    change, rather than one raising `TypeError` and the other a bare
+    `KeyError` from the first missing index.
+    """
+    if 0 not in jet:
+        raise TypeError(_MSG_JET_SLOT0_MISSING.format(call=call))
+    q0 = jet[0]
+    for m in range(1, max(jet) + 1):
+        if m not in jet:
+            raise TypeError(_MSG_JET_SLOT_MISSING.format(call=call, m=max(jet), k=m))
+        require_matching_keys(
+            jet[m],
+            q0,
+            f"{call}: jet slot {m} components do not match slot 0's {sorted(q0)}",
+        )
+
+
+def prolong_point_map(psi: Callable[[CDict], CDict], jet: JetDict, /) -> JetDict:
+    r"""Prolong a jet through a time-independent point map ``psi``.
+
+    The sibling of `prolong_jet` for a map that is not a transform's point
+    action: a **chart change**. Given a jet of a curve, $\{0: q, 1: v, 2: a,
+    \ldots\}$, return the jet of $\psi \circ x(t)$ --
+
+    $$
+    q' = \psi(q), \quad v' = \partial\psi \cdot v, \quad
+    a' = \partial\psi \cdot a + \partial^2\psi(v, v), \quad \ldots
+    $$
+
+    -- by the same nested-`jax.jvp` chain `prolong_jet` uses, with no $\tau$
+    slot in it. The second-order term is why this exists: pushing an
+    acceleration through `jac_pt_map` alone gives $\partial\psi \cdot a$ and
+    silently drops $\partial^2\psi(v, v)$, which vanishes only where $\psi$ is
+    affine -- never between a curvilinear chart and a Cartesian one.
+
+    ``psi`` must be JAX-traceable and map a `CDict` in one chart to a `CDict`
+    in another. All slots ``0..max(jet)`` must be present: slot $m$'s law
+    reads every slot below it.
+    """
+    require_contiguous_jet(jet, "prolong_point_map(psi, jet)")
+    q0 = jet[0]
+    max_order = max(jet)
+    if max_order == 0:
+        return {0: psi(q0)}
+
+    in_units = _cdict_units(q0)
+    out_units = _cdict_units(cast("CDict", _eval_shape_or_call(psi, q0)))
+    # The chain has no tau of its own, so T is fixed by the data alone:
+    # T**m = in_unit / slot_m_unit. Slot 1 sets it, and the higher slots must
+    # agree -- they are derivatives of the same curve by the same parameter.
+    time_unit = _common_time_unit(None, in_units, _cdict_units(jet[1]), 1)
+    comps = tuple(q0.keys())
+
+    def f(_tv: Any, xv: dict[str, Any], /) -> dict[str, Any]:
+        # `_total_derivative_chain` threads a leading tau slot through every
+        # level. A chart map has no time dependence, so ignoring it here
+        # makes that slot contribute exactly zero rather than fabricating an
+        # instant for psi to be evaluated at.
+        return _strip_cdict(psi(_attach_cdict(xv, in_units)), out_units)
+
+    q0_vals = _strip_cdict(q0, in_units)
+    slot_vals = [
+        {k: _strip_leaf(_per_time(in_units[k], time_unit, m), jet[m][k]) for k in comps}
+        for m in range(1, max_order + 1)
+    ]
+
+    slot_outs = _total_derivative_chain(f, jnp.zeros(()), q0_vals, slot_vals)
     return {
         m: _attach_cdict(
             ym, {k: _per_time(un, time_unit, m) for k, un in out_units.items()}
@@ -808,7 +879,26 @@ def _slot_jet(
     """
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED.format(op=type(op).__name__))
+    return assemble_slot_jet(op, x, m, at=at, at_jet=at_jet)
 
+
+def assemble_slot_jet(
+    op: AbstractTransform,
+    x: CDict,
+    m: int,
+    /,
+    *,
+    at: CDict | None,
+    at_jet: AnchorJet | None = None,
+) -> JetDict:
+    """Validate the lower jet slots and assemble the jet, with no tau check.
+
+    `_slot_jet` is this plus "a time parameter is required", which holds for
+    its time-dependent callers and not for a *static* one -- a fibre offset
+    that is constant in tau still needs the lower slots when the chart makes
+    the orders couple, and refusing it for want of a tau it never uses would
+    be an error about the wrong thing.
+    """
     # `at` is sugar for slot 0; `at_jet` is the general form, and the only way
     # to reach slots >= 1. The missing-slot checks come *after* the merge, so
     # supplying slot 0 through `at_jet` alone is enough.

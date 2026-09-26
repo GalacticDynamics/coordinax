@@ -19,10 +19,18 @@ import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.api.representations as cxrapi
 import coordinaxs.api.transforms as cxfmapi
-from .bundle import Coordinate
+from .bundle import (
+    Coordinate,
+    _chart_map_is_affine,
+    _ladder_fibres,
+    _require_coordinate_basis,
+    carry_fibre_across,
+)
 from .point import Point
 from .tangent import Tangent
 from coordinax._src.custom_types import OptUSys
+from coordinax.transforms._src.actions.prolong import prolong_point_map
+from coordinax.transforms._src.actions.utils import is_affine_in_chart
 from coordinaxs.api.custom_types import CDict
 
 CHART_MSMTCH = "from_chart {0} does not match the point's chart {1.chart}"
@@ -648,17 +656,19 @@ def act(
     (Q(7., 'm'), Q(4., 'm / s'))
 
     """
-    if cxfm.is_time_dependent(op):
+    if cxfm.is_time_dependent(op) or _needs_joint_prolongation(op, x):
         # The jet anchors are structurally the bundle's own point and fibres;
         # caller-supplied anchor overrides are meaningless here — reject them
-        # loudly rather than silently ignoring them (the static path below
+        # loudly rather than silently ignoring them (the per-fibre path below
         # honors an 'at' override, so silence would diverge invisibly).
         unsupported = set(kw) - {"usys"}
         if unsupported:
             msg = (
-                "act on a Coordinate under a time-dependent transform "
-                f"does not accept keyword overrides {sorted(unsupported)}: "
-                "the bundle itself supplies the jet anchors."
+                "act on a Coordinate prolonged jointly (a time-dependent "
+                "transform, or a fibre of order >= 2 whose curvature term does "
+                "not vanish) does not accept keyword overrides "
+                f"{sorted(unsupported)}: the bundle itself supplies the jet "
+                "anchors."
             )
             raise TypeError(msg)
         return _act_coordinate_jet(op, tau, x, usys=kw.get("usys"))
@@ -706,6 +716,123 @@ def _cached_point_data_in(point: Point, /) -> Callable[[Any], CDict]:
     return point_data_in
 
 
+def _needs_joint_prolongation(op: cxfm.AbstractTransform, x: Coordinate, /) -> bool:
+    r"""Whether the bundle must be prolonged jointly rather than fibre by fibre.
+
+    Fibre by fibre is exact up to order 1: under a static map the order-1
+    prolongation *is* the frozen-$\tau$ pushforward. From order 2 the law
+    gains $\partial_{xx}\phi(v, v)$ -- a term built from a *lower* fibre,
+    which a pass that visits one fibre at a time has no way to reach, so it
+    drops it and returns a quietly first-order acceleration (gh#936). The
+    bundle is the one caller that always holds those lower fibres, so it can
+    simply hand the whole jet over instead.
+
+    That term vanishes exactly where $\phi$ is affine in the chart's own
+    coordinates, and there the per-fibre path stays both correct and cheaper
+    -- so this keeps flat-chart affine bundles (the common case, and the one
+    that needs no anchors at all) off the autodiff path entirely.
+
+    Asked of each fibre's *own* chart, not the point's. A bundle may store a
+    fibre elsewhere, and it is the chart the acceleration is written in that
+    decides whether its curvature term vanishes -- a point in `cart3d` does
+    not make an `sph3d` acceleration safe.
+
+    Keyed by fibre name rather than by ladder order, which matters when two
+    fibres share one: an order-keyed map keeps whichever came last, so a
+    curved fibre hidden behind a flat one of the same order would be routed
+    to the cheap path and quietly flattened. The ambiguity itself is caught
+    downstream, but only once the joint path has been taken.
+    """
+    return any(
+        not is_affine_in_chart(op, x._data[name].chart)
+        for name, order in _ladder_fibres(x).items()
+        if order >= 2
+    )
+
+
+def _require_contiguous_ladder(
+    op: cxfm.AbstractTransform,
+    x: Coordinate,
+    jet: "dict[int, CDict]",
+    ladder: "dict[str, tuple[int, Any, Any]]",
+    point_chart: Any,
+    /,
+) -> None:
+    r"""Refuse a bundle whose ladder skips an order, in the bundle's own terms.
+
+    `act_jet` already refuses a jet with a hole, but it says it in engine
+    language -- "slot 1 is missing" -- to a caller who passed a `Coordinate`
+    and never named a slot in their life. Say which *fibre* is absent, and
+    why the order above it cannot be answered without it.
+
+    The gap is a genuine dead end, not a routing choice: $\partial_{xx}\phi(v,
+    v)$ is built from the missing fibre, and an absent fibre is "not tracked",
+    not "zero". Answering anyway is exactly the quietly-first-order result
+    gh#936 is about.
+    """
+    top = max(jet)
+    missing = [m for m in range(1, top) if m not in jet]
+    if not missing:
+        return
+    by_order = {order: name for name, (order, _, _) in ladder.items()}
+    # Mirror the routing order in `act`: time dependence is tested first, so
+    # it is the reason whenever it holds. Asking about affinity first would
+    # misreport every `TimeDep`, which reports as non-affine in any chart.
+    if cxfm.is_time_dependent(op):
+        why = (
+            f"{type(op).__name__} is time-dependent, so slot {top} gains the "
+            "time-derivative terms of the slots below it. Add the missing "
+            "fibre."
+        )
+    elif not is_affine_in_chart(op, point_chart):
+        why = (
+            f"the order-{top} law carries the curvature term d2phi(v, v), "
+            f"which is built from them -- {type(op).__name__} is not affine "
+            f"in {point_chart!r}, so that term does not vanish. Add the "
+            "missing fibre, or work in a chart where the action is affine."
+        )
+    else:  # pragma: no cover - the joint path is taken for one of the two
+        why = "the joint prolongation was required. Add the missing fibre."
+    msg = (
+        f"act on a Coordinate cannot transform the order-{top} fibre "
+        f"{by_order[top]!r} without the lower ladder fibre(s) of order "
+        f"{missing}: the joint prolongation reads every slot below the one it "
+        f"is producing, and {why} An absent fibre means 'not tracked', not "
+        "'zero', so this refuses rather than returning a first-order answer."
+    )
+    raise TypeError(msg)
+
+
+def _return_ladder_fibre(
+    f: Tangent,
+    order: int,
+    orig_chart: Any,
+    point_chart: Any,
+    out_jet: "dict[int, CDict]",
+    usys: OptUSys,
+    /,
+) -> Tangent:
+    """Put a transformed ladder slot back in the chart its fibre came from.
+
+    The mirror of `_carry_foreign_ladder_fibre`, second-order for the same
+    reason -- but far cheaper, because the return leg already has the whole
+    transformed jet to prolong instead of having to rebuild one.
+    """
+    if orig_chart == point_chart:
+        return cast("Tangent", replace(f, data=out_jet[order]))
+
+    if order >= 2 and not _chart_map_is_affine(point_chart, orig_chart):
+
+        def back(data: CDict, /) -> CDict:
+            return cast("CDict", cxc.pt_map(data, point_chart, orig_chart, usys=usys))
+
+        out = prolong_point_map(back, {k: out_jet[k] for k in range(order + 1)})
+        return cast("Tangent", replace(f, chart=orig_chart, data=out[order]))
+
+    nf = replace(f, data=out_jet[order])
+    return cast("Tangent", cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys))
+
+
 def _act_coordinate_jet(
     op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, *, usys: OptUSys = None
 ) -> Coordinate:
@@ -730,20 +857,30 @@ def _act_coordinate_jet(
         if order is None or order == 0:
             push_fibres[name] = fibre
             continue
+        _require_coordinate_basis(name, order, fibre, "act")
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
-            at_f = point_data_in(orig_chart)
-            f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
+            if order >= 2 and not _chart_map_is_affine(orig_chart, point_chart):
+                # Same manoeuvre `cconvert` makes, and the same code: build
+                # the fibre's jet in its own chart and prolong it across.
+                f = carry_fibre_across(
+                    x, name, order, fibre, point_chart, usys, verb="act"
+                )
+            else:
+                at_f = point_data_in(orig_chart)
+                f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
         if order in jet:
             msg = (
                 f"Coordinate has multiple fibres at ladder order {order}; "
-                "the joint prolongation under a time-dependent transform is "
-                "ambiguous."
+                "the joint prolongation is ambiguous -- the jet has one slot "
+                "per order, and which fibre fills it would decide the answer."
             )
             raise ValueError(msg)
         jet[order] = cast("CDict", f.data)
         ladder[name] = (order, f, orig_chart)
+
+    _require_contiguous_ladder(op, x, jet, ladder, point_chart)
 
     out_jet = cast(
         "dict[int, CDict]", cxfmapi.act_jet(op, tau, jet, point_chart, usys=usys)
@@ -752,12 +889,9 @@ def _act_coordinate_jet(
 
     new_fields: dict[str, Any] = {}
     for name, (order, f, orig_chart) in ladder.items():
-        nf = replace(f, data=out_jet[order])
-        if orig_chart != point_chart:
-            nf = cast(
-                "Tangent", cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys)
-            )
-        new_fields[name] = nf
+        new_fields[name] = _return_ladder_fibre(
+            f, order, orig_chart, point_chart, out_jet, usys
+        )
 
     # Displacement (and other non-ladder) fibres: frozen-tau pushforward
     # anchored at the pre-transform base point.

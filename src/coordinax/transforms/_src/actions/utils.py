@@ -6,9 +6,11 @@ This module defines helpers for operator implementations.
 __all__: tuple[str, ...] = (
     "act_array_via_cdict",
     "act_quantity_via_cdict",
+    "is_affine_in_chart",
     "is_componentwise_offset",
     "is_flat_chart",
     "is_traced",
+    "offset_is_parallel_in_chart",
     "require_matching_keys",
 )
 
@@ -29,6 +31,7 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax.internal import pack_uniform_unit
+from coordinax.transforms._src import groups
 
 
 def is_flat_chart(chart: Any, /) -> bool:
@@ -83,7 +86,56 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     provably consistent with the generic prolongation.
     """
     k = getattr(op, "semantic_kind", cxr.dpl).order
-    return k != 0 or (chart == op.chart and is_flat_chart(chart))
+    return k != 0 or offset_is_parallel_in_chart(op, chart)
+
+
+def offset_is_parallel_in_chart(op: Any, chart: Any, /) -> bool:
+    r"""Whether ``op``'s offset is a *constant vector field* in ``chart``.
+
+    The stronger sibling of `is_componentwise_offset`, and the one the jet
+    ladder needs. That predicate asks whether the offset can be added
+    componentwise at its own rung $k$ -- true for any fibre offset, since a
+    kick is a tangent vector at the base point and pushes cross-chart through
+    the Jacobian there. This asks whether the offset is the *same* vector at
+    every point of ``chart``, which is what makes every slot *above* $k$
+    exact as well.
+
+    The distinction is invisible at slot $k$ and decisive above it. A
+    velocity kick $\Delta v$ stored in `cart3d` leaves the Cartesian
+    acceleration alone, but in a curvilinear chart it does not leave
+    $\ddot q$ alone: the chart map contributes $2 D^2\psi(\dot x, \Delta v) +
+    D^2\psi(\Delta v, \Delta v)$, because $\Delta v$ expressed in those
+    coordinates varies from point to point. Reading the weaker predicate as
+    though it licensed the whole ladder is what returned an unchanged
+    acceleration there.
+    """
+    return chart == op.chart and is_flat_chart(chart)
+
+
+def is_affine_in_chart(op: Any, chart: Any, /) -> bool:
+    r"""Whether ``op``'s point action is affine in ``chart``'s own coordinates.
+
+    This is the condition under which the second-order prolongation term
+    $\partial_{xx}\phi(v, v)$ vanishes *identically*, so the frozen-$\tau$
+    pushforward $\partial_x\phi \cdot v$ is the exact law at every order and
+    not just at order 1. Where it does not vanish, transforming an
+    acceleration needs the velocity as well -- the orders stop being
+    separable, and anything that walks them one at a time drops the term
+    (gh#936).
+
+    Both halves are load-bearing, and neither implies the other. A `Rotate`
+    is affine in `cart3d` and emphatically not in `sph3d`: same operator, and
+    the chart decides. Conversely a flat chart does not save a nonlinear map.
+
+    Membership is read off the declared lattice via `groups.is_subgroup`, not
+    `issubclass` -- see its docstring for why a `LorentzBoost` is not affine
+    despite subclassing `OrthogonalGroup`.
+    """
+    if not is_flat_chart(chart):
+        return False
+    return groups.is_subgroup(
+        groups.most_specific_group(op.groups()), groups.AffineGroup
+    )
 
 
 def require_matching_keys(

@@ -1529,3 +1529,311 @@ class TestUnusableAnchorSlotsAreRefused:
             cxfm.act(
                 op, u.Q(1.0, "Myr"), self.Q0, cxc.sph3d, cxr.point, at_jet={1: self.V0}
             )
+
+
+# ============================================================================
+# gh#936: a fibre kick couples the slots above its rung through the chart map
+
+
+class TestFibreKickAboveItsRung:
+    r"""A velocity kick does not leave the *coordinate* acceleration alone.
+
+    The ladder rule says order-$m$ data gains $d^{m-k}\delta/d\tau^{m-k}$, so
+    a constant velocity kick ($k=1$) leaves order 2 untouched. That is exact
+    in the chart the offset's components are constant in, and wrong in any
+    other: pushing the kick through a chart map $\psi$ gives
+
+    $$\ddot q' = \ddot q + 2 D^2\psi(\dot x, \Delta v) + D^2\psi(\Delta v, \Delta v)$$
+
+    and both new terms were missing. The reference throughout is that a chart
+    change and the kick must commute -- an identity the code cannot satisfy by
+    accident, and which owes nothing to either implementation.
+    """
+
+    CH: ClassVar = cxc.sph3d
+    Q0: ClassVar = {
+        "r": u.Q(2.0, "kpc"),
+        "theta": u.Q(0.9, "rad"),
+        "phi": u.Q(0.4, "rad"),
+    }
+    V0: ClassVar = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    A0: ClassVar = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+    KICK: ClassVar = cxfm.Translate(
+        {
+            "x": u.Q(0.2, "kpc/Myr"),
+            "y": u.Q(-0.1, "kpc/Myr"),
+            "z": u.Q(0.05, "kpc/Myr"),
+        },
+        chart=cxc.cart3d,
+        semantic_kind=cxr.vel,
+    )
+
+    def _jet(self):
+        return {0: self.Q0, 1: self.V0, 2: self.A0}
+
+    @staticmethod
+    def _to_cart(data):
+        return cxc.pt_map(data, cxc.sph3d, cxc.cart3d)
+
+    def _both_routes(self, op, tau=None):
+        """(act_jet in sph then convert, convert then act_jet in cart)."""
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        here = prolong_point_map(
+            self._to_cart, cxfm.act_jet(op, tau, self._jet(), self.CH)
+        )
+        there = cxfm.act_jet(
+            op, tau, prolong_point_map(self._to_cart, self._jet()), cxc.cart3d
+        )
+        return here, there
+
+    def test_the_kick_commutes_with_the_chart_change(self):
+        """Was 29.9% adrift on the acceleration slot; velocity was always fine."""
+        here, there = self._both_routes(self.KICK)
+        for slot, unit in ((1, "kpc/Myr"), (2, "kpc/Myr2")):
+            for k in ("x", "y", "z"):
+                assert jnp.allclose(
+                    u.ustrip(unit, here[slot][k]), u.ustrip(unit, there[slot][k])
+                )
+
+    def test_a_time_dependent_kick_commutes_too(self):
+        """The `TimeDep` ladder took the same shortcut, so it needs the same check."""
+        td = cxfm.TimeDep.from_(
+            lambda t: cxfm.Translate(
+                {
+                    "x": u.Q(0.2, "kpc/Myr2") * t,
+                    "y": u.Q(-0.1, "kpc/Myr2") * t,
+                    "z": u.Q(0.05, "kpc/Myr2") * t,
+                },
+                chart=cxc.cart3d,
+                semantic_kind=cxr.vel,
+            )
+        )
+        here, there = self._both_routes(td, tau=u.Q(2.0, "Myr"))
+        for k in ("x", "y", "z"):
+            assert jnp.allclose(
+                u.ustrip("kpc/Myr2", here[2][k]), u.ustrip("kpc/Myr2", there[2][k])
+            )
+
+    def test_the_acceleration_actually_moves(self):
+        """Guard the guard: the old answer returned the input unchanged."""
+        out = cxfm.act_jet(self.KICK, None, self._jet(), self.CH)[2]
+        assert not jnp.allclose(
+            u.ustrip("rad/Myr2", out["theta"]), u.ustrip("rad/Myr2", self.A0["theta"])
+        )
+
+    def test_in_the_offsets_own_chart_nothing_changes(self):
+        """There the offset IS a constant field, so the cheap ladder is exact."""
+        q = q3(1.0, 2.0, 3.0, "kpc")
+        v = q3(0.3, -0.4, 0.2, "kpc/Myr")
+        a = q3(0.1, 0.2, 0.3, "kpc/Myr2")
+        out = cxfm.act_jet(self.KICK, None, {0: q, 1: v, 2: a}, cxc.cart3d)
+        assert allclose_cdict(out[2], a, "kpc/Myr2")
+        assert jnp.allclose(u.ustrip("kpc/Myr", out[1]["x"]), 0.3 + 0.2)
+
+    def test_a_lone_acceleration_slot_needs_the_velocity_and_says_so(self):
+        """It used to return the input, 350% adrift, and discard a given slot."""
+        with pytest.raises(TypeError, match=r"requires jet slots"):
+            cxfm.act(self.KICK, None, self.A0, self.CH, cxr.coord_acc, at=self.Q0)
+
+    def test_a_lone_acceleration_slot_is_exact_once_given_the_velocity(self):
+        """With `at_jet={1: v}` it matches the full jet exactly."""
+        got = cxfm.act(
+            self.KICK,
+            None,
+            self.A0,
+            self.CH,
+            cxr.coord_acc,
+            at=self.Q0,
+            at_jet={1: self.V0},
+        )
+        ref = cxfm.act_jet(self.KICK, None, self._jet(), self.CH)[2]
+        for k in ref:
+            unit = u.unit_of(ref[k])
+            assert jnp.allclose(u.ustrip(unit, got[k]), u.ustrip(unit, ref[k]))
+
+
+class TestProlongPointMapValidatesItsJet:
+    """The point-map engine must refuse a bad jet as clearly as `prolong_jet`.
+
+    Both current callers validate before calling, so this is the guarantee for
+    anyone reaching the engine directly: a hole used to surface as a bare
+    `KeyError` from the first missing index rather than saying what was wrong.
+    """
+
+    Q0: ClassVar = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+    A0: ClassVar = {
+        "x": u.Q(0.1, "kpc/Myr2"),
+        "y": u.Q(0.2, "kpc/Myr2"),
+        "z": u.Q(0.3, "kpc/Myr2"),
+    }
+
+    @staticmethod
+    def _psi(data):
+        return cxc.pt_map(data, cxc.cart3d, cxc.sph3d)
+
+    def test_a_hole_raises_rather_than_keyerror(self):
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"requires all jet slots 1\.\.2"):
+            prolong_point_map(self._psi, {0: self.Q0, 2: self.A0})
+
+    def test_a_missing_base_point_raises(self):
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"base point at jet slot 0"):
+            prolong_point_map(self._psi, {1: self.A0})
+
+    def test_mismatched_components_raise(self):
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"do not match slot 0"):
+            prolong_point_map(self._psi, {0: self.Q0, 1: {"x": u.Q(1.0, "kpc/Myr")}})
+
+    def test_the_message_names_the_point_map_not_act_jet(self):
+        """It is not `act_jet`, and saying so sends the reader to the wrong verb."""
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        with pytest.raises(TypeError, match=r"^prolong_point_map"):
+            prolong_point_map(self._psi, {0: self.Q0, 2: self.A0})
+
+
+def test_prolong_point_map_on_a_base_point_alone():
+    """A jet of just slot 0 is the plain point map, with no chain to build."""
+    from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+    q = {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")}
+    out = prolong_point_map(lambda d: cxc.pt_map(d, cxc.cart3d, cxc.sph3d), {0: q})
+    assert set(out) == {0}
+    direct = cxc.pt_map(q, cxc.cart3d, cxc.sph3d)
+    for k in direct:
+        unit = u.unit_of(direct[k])
+        assert jnp.allclose(u.ustrip(unit, out[0][k]), u.ustrip(unit, direct[k]))
+
+
+def test_a_time_dependent_kick_on_a_lone_slot_uses_the_supplied_jet():
+    """The `TimeDep` twin of the static lone-slot path.
+
+    Above its rung the ladder is exact only where the offset is parallel, so
+    a cross-chart `TimeDep` kick on a lone acceleration needs the jet -- and
+    must use `at_jet` rather than discard it.
+    """
+    sph = cxc.sph3d
+    q0 = {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")}
+    v0 = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    a0 = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+    tau = u.Q(2.0, "Myr")
+    kick = cxfm.TimeDep.from_(
+        lambda t: cxfm.Translate(
+            {
+                "x": u.Q(0.2, "kpc/Myr2") * t,
+                "y": u.Q(-0.1, "kpc/Myr2") * t,
+                "z": u.Q(0.05, "kpc/Myr2") * t,
+            },
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+    got = cxfm.act(kick, tau, a0, sph, cxr.coord_acc, at=q0, at_jet={1: v0})
+    ref = cxfm.act_jet(kick, tau, {0: q0, 1: v0, 2: a0}, sph)[2]
+    for k in ref:
+        unit = u.unit_of(ref[k])
+        assert jnp.allclose(u.ustrip(unit, got[k]), u.ustrip(unit, ref[k]))
+    # and without the velocity it asks rather than answers
+    with pytest.raises(TypeError, match=r"requires jet slots"):
+        cxfm.act(kick, tau, a0, sph, cxr.coord_acc, at=q0)
+
+
+def test_act_jet_on_a_displacement_translate_in_a_curved_chart():
+    """A ladder-order-0 offset outside the flat matching case is the point action.
+
+    Its point action is a real translation, so the generic prolongation
+    captures it entirely -- unlike a fibre offset, which that prolongation
+    cannot see at all.
+    """
+    sph = cxc.sph3d
+    q0 = {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")}
+    v0 = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    shift = cxfm.Translate.from_([0.5, -0.3, 0.2], "kpc")  # cart3d, k=0
+    out = cxfm.act_jet(shift, None, {0: q0, 1: v0}, sph)
+    assert set(out) == {0, 1}
+    # the point genuinely moved, so this is not an identity dressed up
+    assert not jnp.allclose(u.ustrip("kpc", out[0]["r"]), u.ustrip("kpc", q0["r"]))
+
+
+def test_the_lone_slot_kick_materializes_the_timedep_only_as_often_as_it_must():
+    r"""Reaching the engine through `act_jet` would re-materialize the operator.
+
+    That dispatch hop lands back in ``add.py`` and recovers ``op0`` and ``k``
+    by calling ``evaluate_at`` again -- a whole ODE solve for a curve-frame
+    builder, which the sibling branch in the same function already takes care
+    to avoid. Two calls are inherent here: one materialization, and one
+    derivative probe for $d^{m-k}\delta/d\tau^{m-k}$. A third means the hop is
+    back.
+    """
+    sph = cxc.sph3d
+    q0 = {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")}
+    v0 = {
+        "r": u.Q(1.0, "kpc/Myr"),
+        "theta": u.Q(0.3, "rad/Myr"),
+        "phi": u.Q(0.7, "rad/Myr"),
+    }
+    a0 = {
+        "r": u.Q(0.1, "kpc/Myr2"),
+        "theta": u.Q(0.05, "rad/Myr2"),
+        "phi": u.Q(-0.02, "rad/Myr2"),
+    }
+    kick = cxfm.TimeDep.from_(
+        lambda t: cxfm.Translate(
+            {
+                "x": u.Q(0.2, "kpc/Myr2") * t,
+                "y": u.Q(-0.1, "kpc/Myr2") * t,
+                "z": u.Q(0.05, "kpc/Myr2") * t,
+            },
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+    )
+
+    cls = type(kick)
+    original = cls.evaluate_at
+    calls = []
+
+    def counting(self, t, *a, **kw):
+        calls.append(t)
+        return original(self, t, *a, **kw)
+
+    cls.evaluate_at = counting
+    try:
+        out = cxfm.act(
+            kick, u.Q(2.0, "Myr"), a0, sph, cxr.coord_acc, at=q0, at_jet={1: v0}
+        )
+    finally:
+        cls.evaluate_at = original
+
+    assert len(calls) <= 2, f"materialized {len(calls)}x; the act_jet hop is back"
+    # and the shortcut did not change the answer
+    ref = cxfm.act_jet(kick, u.Q(2.0, "Myr"), {0: q0, 1: v0, 2: a0}, sph)[2]
+    for k in ref:
+        unit = u.unit_of(ref[k])
+        assert jnp.allclose(u.ustrip(unit, out[k]), u.ustrip(unit, ref[k]))

@@ -11,6 +11,8 @@ __all__: tuple[str, ...] = ()
 
 from dataclasses import replace
 
+from typing import ClassVar
+
 import jax
 import jax.numpy as jnp
 import pytest
@@ -233,22 +235,26 @@ class TestChartAlignment:
         pv = Coordinate(point=base, velocity=vel_sph, acceleration=acc_sph)
         pv_cart = pv.cconvert(cxc.cart3d)
 
-        # Each fibre converted alone (single-fibre Coordinate) must agree with
-        # the shared-cache multi-fibre conversion above.
+        # Order 1 is the Jacobian pushforward and nothing else, so a velocity
+        # converted alone must still agree with the multi-fibre conversion --
+        # which is what pins the shared base-point conversion.
         vel_alone = Coordinate(point=base, velocity=vel_sph).cconvert(cxc.cart3d)
-        acc_alone = Coordinate(point=base, acceleration=acc_sph).cconvert(cxc.cart3d)
-
         for comp in ("x", "y", "z"):
             assert jnp.allclose(
                 pv_cart["velocity"][comp].value,
                 vel_alone["velocity"][comp].value,
                 atol=1e-10,
             )
-            assert jnp.allclose(
-                pv_cart["acceleration"][comp].value,
-                acc_alone["acceleration"][comp].value,
-                atol=1e-10,
-            )
+
+        # The acceleration deliberately no longer obeys that symmetry, and
+        # cannot: sph3d -> cart3d is not affine, so the order-2 law carries
+        # d2psi(v, v), which is built from the velocity fibre. Converted
+        # inside the bundle it picks that term up; converted alone there is no
+        # velocity to pick it up from, and assuming zero is exactly the silent
+        # first-order answer gh#936 is about. So the lone case refuses.
+        assert jnp.isfinite(pv_cart["acceleration"]["x"].value)
+        with pytest.raises(TypeError, match=r"without an order-1 fibre"):
+            Coordinate(point=base, acceleration=acc_sph).cconvert(cxc.cart3d)
 
 
 # ---------------------------------------------------------------------------
@@ -692,3 +698,374 @@ class TestManifoldProperty:
         base = cxv.Point.from_([1, 2, 3], "m")
         pv = Coordinate(point=base)
         assert pv.manifold == base.M
+
+
+# ---------------------------------------------------------------------------
+# gh#936: a chart change is second-order on an order >= 2 fibre
+# ---------------------------------------------------------------------------
+
+
+class TestCconvertCarriesTheWholeJet:
+    r"""Converting an acceleration between charts is not the Jacobian alone.
+
+    The law is $a' = \partial\psi \cdot a + \partial^2\psi(v, v)$, and the
+    second term is built from the *velocity* fibre. Converting fibre by fibre
+    never has it in hand, so it was dropped: a Cartesian acceleration of
+    exactly zero converted to exactly zero in spherical coordinates, where the
+    true coordinate acceleration is emphatically not zero.
+    """
+
+    # Straight line: x(t) = x0 + v0 t, so the Cartesian acceleration is
+    # exactly zero while r-double-dot and friends are not.
+    X0 = (1.0, 2.0, 3.0)
+    V0 = (0.3, -0.4, 0.2)
+
+    @staticmethod
+    def _cart_to_sph(p):
+        x, y, z = p
+        r = jnp.sqrt(x * x + y * y + z * z)
+        return jnp.asarray([r, jnp.arccos(z / r), jnp.arctan2(y, x)])
+
+    def _bundle(self, *, velocity=True, acc=(0.0, 0.0, 0.0), chart=cxc.cart3d):
+        def cd(vals, unit):
+            return dict(zip(("x", "y", "z"), (u.Q(v, unit) for v in vals), strict=True))
+
+        fibres = {
+            "acceleration": cxv.Tangent(
+                cd(acc, "kpc/Myr2"), chart, cxr.coord_basis, cxr.acc
+            )
+        }
+        if velocity:
+            fibres["velocity"] = cxv.Tangent(
+                cd(self.V0, "kpc/Myr"), chart, cxr.coord_basis, cxr.vel
+            )
+        return Coordinate(point=cxv.Point(cd(self.X0, "kpc"), chart), **fibres)
+
+    def test_a_straight_line_gains_the_coordinate_acceleration(self) -> None:
+        """Cartesian a = 0, but the spherical coordinate acceleration is not.
+
+        Checked against a central finite difference of the chart map along
+        the line, so the reference owes nothing to the code under test.
+        """
+        h = 1e-5
+        x0 = jnp.asarray(self.X0)
+        v0 = jnp.asarray(self.V0)
+        s_m = self._cart_to_sph(x0 - h * v0)
+        s_0 = self._cart_to_sph(x0)
+        s_p = self._cart_to_sph(x0 + h * v0)
+        fd_acc = (s_p - 2 * s_0 + s_m) / (h * h)
+
+        got = self._bundle().cconvert(cxc.sph3d)["acceleration"].data
+        for i, k in enumerate(("r", "theta", "phi")):
+            val = u.ustrip(u.unit_of(got[k]), got[k])
+            assert jnp.allclose(val, fd_acc[i], atol=1e-4)
+            # and emphatically not the dropped-term answer, which was zero
+            assert not jnp.allclose(val, 0.0, atol=1e-6)
+
+    def test_the_round_trip_is_the_identity(self) -> None:
+        """Cart -> sph -> cart must return the acceleration it started with."""
+        acc = (0.1, 0.2, 0.3)
+        there_and_back = self._bundle(acc=acc).cconvert(cxc.sph3d).cconvert(cxc.cart3d)
+        out = there_and_back["acceleration"].data
+        for k, want in zip(("x", "y", "z"), acc, strict=True):
+            assert jnp.allclose(u.ustrip("kpc/Myr2", out[k]), want, atol=1e-9)
+
+    def test_the_velocity_fibre_genuinely_feeds_the_acceleration(self) -> None:
+        """Discriminator: the dropped term is the only route from v to a."""
+        slow = self._bundle()
+        fast = Coordinate(
+            point=slow.point,
+            velocity=replace(
+                slow["velocity"],
+                data={k: 100 * v for k, v in slow["velocity"].data.items()},
+            ),
+            acceleration=slow["acceleration"],
+        )
+        base = slow.cconvert(cxc.sph3d)["acceleration"].data
+        other = fast.cconvert(cxc.sph3d)["acceleration"].data
+        assert not jnp.allclose(
+            u.ustrip("rad/Myr2", base["theta"]), u.ustrip("rad/Myr2", other["theta"])
+        )
+
+    def test_a_velocity_only_bundle_is_untouched(self) -> None:
+        """Order 1 is exactly the Jacobian, so it keeps the cheap path."""
+        vel = cxv.Tangent(
+            {
+                "x": u.Q(1.0, "kpc/Myr"),
+                "y": u.Q(0.0, "kpc/Myr"),
+                "z": u.Q(0.0, "kpc/Myr"),
+            },
+            cxc.cart3d,
+            cxr.coord_basis,
+            cxr.vel,
+        )
+        pv = Coordinate(point=cxv.Point.from_([1.0, 2.0, 3.0], "kpc"), velocity=vel)
+        assert pv.cconvert(cxc.sph3d)["velocity"].chart == cxc.sph3d
+
+    def test_an_acceleration_without_a_velocity_is_refused(self) -> None:
+        """The missing fibre is what the dropped term is built from."""
+        with pytest.raises(TypeError, match=r"without an order-1 fibre"):
+            self._bundle(velocity=False, acc=(0.1, 0.2, 0.3)).cconvert(cxc.sph3d)
+
+    def test_a_flat_to_flat_conversion_keeps_the_cheap_path(self) -> None:
+        """An affine transition has no second-order term to carry."""
+        out = self._bundle(acc=(0.1, 0.2, 0.3)).cconvert(cxc.cart3d)
+        assert jnp.allclose(u.ustrip("kpc/Myr2", out["acceleration"].data["x"]), 0.1)
+
+
+class TestAffineChartTransitions:
+    r"""`_chart_map_is_affine` must agree with the curvature it claims is zero.
+
+    A transition is affine exactly when $\partial^2\psi \equiv 0$, and that is
+    measurable: push a jet whose acceleration is zero through the transition
+    and read the acceleration that comes out. Whatever is there is
+    $\partial^2\psi(v, v)$ and nothing else.
+
+    Measured this way rather than by asking whether `jac_pt_map` is constant,
+    which was the first attempt and had a blind spot: it is not registered for
+    the 2-sphere pairs, so an exception there read as "not affine" and let a
+    whole missing family through. This probe only needs `pt_map`.
+
+    Several velocity directions per pair, because one is not enough: a
+    velocity parallel to the position is purely radial, and $D^2\psi(v, v)$
+    vanishes along it even for `cart3d` -> `sph3d`.
+    """
+
+    T: ClassVar = u.unit("Myr")
+    SAMPLES: ClassVar = {
+        "cart2d": {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc")},
+        "polar2d": {"r": u.Q(2.0, "kpc"), "theta": u.Q(0.7, "rad")},
+        "sph2": {"theta": u.Q(0.9, "rad"), "phi": u.Q(0.4, "rad")},
+        "math_sph2": {"theta": u.Q(0.4, "rad"), "phi": u.Q(0.9, "rad")},
+        "lonlat_sph2": {"lon": u.Q(25.0, "deg"), "lat": u.Q(40.0, "deg")},
+        "loncoslat_sph2": {"lon_coslat": u.Q(20.0, "deg"), "lat": u.Q(40.0, "deg")},
+        "cart3d": {"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+        "sph3d": {
+            "r": u.Q(2.0, "kpc"),
+            "theta": u.Q(0.9, "rad"),
+            "phi": u.Q(0.4, "rad"),
+        },
+        "math_sph3d": {
+            "r": u.Q(2.0, "kpc"),
+            "theta": u.Q(0.4, "rad"),
+            "phi": u.Q(0.9, "rad"),
+        },
+        "lonlat_sph3d": {
+            "lon": u.Q(25.0, "deg"),
+            "lat": u.Q(40.0, "deg"),
+            "distance": u.Q(2.0, "kpc"),
+        },
+        "loncoslat_sph3d": {
+            "lon_coslat": u.Q(20.0, "deg"),
+            "lat": u.Q(40.0, "deg"),
+            "distance": u.Q(2.0, "kpc"),
+        },
+        "cyl3d": {"rho": u.Q(2.0, "kpc"), "phi": u.Q(0.4, "rad"), "z": u.Q(1.0, "kpc")},
+    }
+    # deliberately not parallel to any sample position
+    DIRECTIONS: ClassVar = ((0.31, -0.74, 0.52), (-0.83, 0.19, -0.46))
+
+    def _curvature(self, a: str, b: str) -> float:
+        """Max |D2psi(v, v)| over the probe directions, in the target's units."""
+        from coordinax.transforms._src.actions.prolong import prolong_point_map
+
+        ca, cb = getattr(cxc, a), getattr(cxc, b)
+        q = self.SAMPLES[a]
+        zero = {k: u.Q(0.0, u.unit_of(x) / self.T**2) for k, x in q.items()}
+        worst = 0.0
+        for draw in self.DIRECTIONS:
+            v = {
+                k: u.Q(float(d), u.unit_of(x) / self.T)
+                for d, (k, x) in zip(draw, q.items(), strict=False)
+            }
+            out = prolong_point_map(
+                lambda d, _f=ca, _t=cb: cxc.pt_map(d, _f, _t), {0: q, 1: v, 2: zero}
+            )
+            worst = max(
+                worst, *(abs(float(u.ustrip(u.unit_of(x), x))) for x in out[2].values())
+            )
+        return worst
+
+    @pytest.mark.parametrize("a", list(SAMPLES))
+    @pytest.mark.parametrize("b", list(SAMPLES))
+    def test_the_predicate_never_claims_affine_when_it_is_not(self, a, b) -> None:
+        """The unsafe direction. A false positive means a silently wrong answer.
+
+        A false *negative* only costs a needless prolongation, so it is not an
+        error -- but claiming affine where the curvature is non-zero sends an
+        order-2 fibre down the cheap path and drops exactly that term.
+        """
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        if a == b or len(getattr(cxc, a).components) != len(getattr(cxc, b).components):
+            return
+        if not _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b)):
+            return
+        assert self._curvature(a, b) < 1e-12, (
+            f"{a} -> {b} is claimed affine but carries a curvature term"
+        )
+
+    @pytest.mark.parametrize(
+        ("a", "b"),
+        [
+            ("sph3d", "lonlat_sph3d"),
+            ("lonlat_sph3d", "math_sph3d"),
+            ("math_sph3d", "sph3d"),
+            ("sph2", "lonlat_sph2"),
+            ("lonlat_sph2", "math_sph2"),
+            ("math_sph2", "sph2"),
+        ],
+    )
+    def test_the_relabelling_families_are_recognised(self, a, b) -> None:
+        """Same parameterisation, different spelling -- in 3-D and on the 2-sphere."""
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        assert self._curvature(a, b) < 1e-12
+        assert _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b))
+
+    @pytest.mark.parametrize(
+        ("a", "b"),
+        [
+            ("sph3d", "loncoslat_sph3d"),
+            ("sph2", "loncoslat_sph2"),
+            ("cart2d", "polar2d"),
+            ("cart3d", "sph3d"),
+        ],
+    )
+    def test_the_near_misses_are_not_families(self, a, b) -> None:
+        """`lon_coslat` carries a cos(lat), so it curves like any other chart.
+
+        `cart2d -> polar2d` is here because the probe must bite: a test that
+        only ever sees affine pairs would pass on a predicate that returned
+        `True` unconditionally.
+        """
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        assert self._curvature(a, b) > 1e-6
+        assert not _chart_map_is_affine(getattr(cxc, a), getattr(cxc, b))
+
+    def test_two_distinct_cartesian_charts_are_affine(self) -> None:
+        """The flat-to-flat branch, which needs two *different* flat charts.
+
+        `cart3d` is the only Cartesian 3-D chart, so the same-chart branch
+        answers every 3-D case first; the 4-D spacetime pair is what actually
+        exercises this one.
+        """
+        from coordinax.vectors._src.bundle import _chart_map_is_affine
+
+        assert cxc.galileanct != cxc.minkowskict
+        assert _chart_map_is_affine(cxc.galileanct, cxc.minkowskict)
+
+
+class TestCconvertRoutesOnTheFibresOwnChart:
+    r"""The routing question is per fibre, from *its* chart to *its* target.
+
+    A bundle may keep its acceleration somewhere other than the point. Asking
+    about the point's chart then answers the wrong question entirely: a point
+    sitting in `cart3d` says nothing about an `sph3d` fibre being carried to
+    `cart3d` beside it, and the curvature term was dropped in silence.
+    """
+
+    X0: ClassVar = (1.0, 2.0, 3.0)
+    V0: ClassVar = (0.3, -0.4, 0.2)
+
+    def _straight_line_bundle(self):
+        """Cartesian acceleration exactly zero, so any non-zero result is spurious."""
+
+        def cd(vals, unit):
+            return dict(zip(("x", "y", "z"), (u.Q(v, unit) for v in vals), strict=True))
+
+        return Coordinate(
+            point=cxv.Point(cd(self.X0, "kpc"), cxc.cart3d),
+            velocity=cxv.Tangent(
+                cd(self.V0, "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+            ),
+            acceleration=cxv.Tangent(
+                cd((0.0, 0.0, 0.0), "kpc/Myr2"), cxc.cart3d, cxr.coord_basis, cxr.acc
+            ),
+        )
+
+    def _point_cart_acc_sph(self):
+        """Point in `cart3d`, acceleration parked in `sph3d`."""
+        flat = self._straight_line_bundle()
+        return Coordinate._create_unchecked(
+            flat.point,
+            {
+                "velocity": flat["velocity"],
+                "acceleration": flat.cconvert(cxc.sph3d)["acceleration"],
+            },
+        )
+
+    def test_a_foreign_fibre_converted_home_recovers_the_straight_line(self) -> None:
+        """sph3d -> cart3d on the fibre, while the point's own leg is trivial.
+
+        The point is already in `cart3d`, so a predicate reading the point's
+        chart sees an identity transition and takes the cheap path. The fibre
+        is the one actually crossing, and its leg is not affine.
+        """
+        out = self._point_cart_acc_sph().cconvert(cxc.cart3d)
+        for k in ("x", "y", "z"):
+            assert jnp.allclose(
+                u.ustrip("kpc/Myr2", out["acceleration"].data[k]), 0.0, atol=1e-9
+            )
+
+    def test_the_routing_predicate_asks_the_fibre(self) -> None:
+        from coordinax.vectors._src.bundle import _cconvert_needs_joint_jet
+
+        assert _cconvert_needs_joint_jet(self._point_cart_acc_sph(), cxc.cart3d, {})
+        # all-Cartesian: nothing crosses a curvilinear transition
+        assert not _cconvert_needs_joint_jet(
+            self._straight_line_bundle(), cxc.cart3d, {}
+        )
+
+    def test_field_charts_targets_are_asked_per_fibre_too(self) -> None:
+        """A per-fibre target is just as much the fibre's own leg."""
+        from coordinax.vectors._src.bundle import _cconvert_needs_joint_jet
+
+        flat = self._straight_line_bundle()
+        # everything flat, but the acceleration is sent somewhere curvilinear
+        assert _cconvert_needs_joint_jet(flat, cxc.cart3d, {"acceleration": cxc.sph3d})
+
+
+class TestCarryFibreAcrossEdges:
+    """The refusals `carry_fibre_across` makes when the jet is not well posed."""
+
+    def _cd(self, vals, unit, keys=("x", "y", "z")):
+        return dict(zip(keys, (u.Q(v, unit) for v in vals), strict=True))
+
+    def test_two_order_one_fibres_are_ambiguous(self) -> None:
+        """Which velocity anchors the acceleration is then a coin toss.
+
+        The curvature term is built from *the* velocity; with two on the
+        bundle there is no such thing, and picking one silently would make the
+        answer depend on dict order.
+        """
+        point = cxv.Point(self._cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d)
+        v1 = cxv.Tangent(
+            self._cd((0.3, -0.4, 0.2), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        v2 = cxv.Tangent(
+            self._cd((0.1, 0.1, 0.1), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        flat = Coordinate(
+            point=point,
+            velocity=v1,
+            acceleration=cxv.Tangent(
+                self._cd((0.0, 0.0, 0.0), "kpc/Myr2"),
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxr.acc,
+            ),
+        )
+        # park the acceleration in sph3d so the leg is non-affine, then add a
+        # second order-1 fibre
+        two_vels = Coordinate._create_unchecked(
+            point,
+            {
+                "velocity": v1,
+                "velocity2": v2,
+                "acceleration": flat.cconvert(cxc.sph3d)["acceleration"],
+            },
+        )
+        with pytest.raises(ValueError, match=r"more than one order-1 fibre"):
+            two_vels.cconvert(cxc.cart3d)

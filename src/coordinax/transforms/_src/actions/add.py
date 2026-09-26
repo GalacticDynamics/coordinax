@@ -31,11 +31,12 @@ from .prolong import (
     _merge_slot0,
     _slot_jet,
     prolong_jet,
+    prolong_point_map,
     pushforward_generic,
     tau_derivative,
 )
 from .timedep import TimeDep
-from .utils import is_componentwise_offset, is_traced
+from .utils import is_componentwise_offset, is_traced, offset_is_parallel_in_chart
 from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 _MSG_CALLABLE_DELTA = (
@@ -282,12 +283,72 @@ def act_jet(
     (Q(1., 'm'), Q(101., 'm / s'))
 
     """
-    if is_componentwise_offset(op, chart):
+    k = _ladder_order(op)
+    if _slotwise_is_exact(op, k, jet, chart):
         return _prolong_slotwise(op, tau, jet, chart, usys=usys)
+
+    if k is not None:
+        # A fibre offset is invisible to the point action (that action is the
+        # identity), so the generic prolongation below would return the jet
+        # untouched. Take it to the chart the offset is constant in instead.
+        return _kick_via_offset_chart(op, tau, jet, chart, op.chart, usys=usys)
 
     # A point-active offset (ladder order 0) outside the flat matching case
     # is fully captured by the point action — use the generic prolongation.
     return prolong_jet(op, tau, jet, chart, usys=usys)
+
+
+def _slotwise_is_exact(offset_op: Any, k: int | None, jet: dict, chart: Any, /) -> bool:
+    r"""Whether the slot-wise ladder is exact for *every* slot of ``jet``.
+
+    Two ways it is. The offset may be a constant vector field in ``chart``
+    (`offset_is_parallel_in_chart`), so no slot picks up a derivative of it.
+    Or the jet may simply stop at the offset's own rung $k$: the rule is only
+    ever wrong *above* $k$, so with nothing up there it has nothing to get
+    wrong -- which keeps the ordinary velocity kick on the cheap path even in
+    a curvilinear chart.
+
+    `is_componentwise_offset` is the weaker question and cannot be used here;
+    see `offset_is_parallel_in_chart` for what separates them.
+    """
+    if offset_is_parallel_in_chart(offset_op, chart):
+        return True
+    return k is not None and max(jet, default=0) <= k
+
+
+def _kick_via_offset_chart(
+    op: AbstractTransform,
+    tau: Any,
+    jet: dict,
+    chart: Any,
+    op_chart: Any,
+    /,
+    *,
+    usys: Any = None,
+    ladder: "tuple[AbstractAdd, int] | None" = None,
+) -> dict:
+    r"""Apply a fibre offset in the chart its components are constant in.
+
+    The ladder rule is exact exactly where the offset is a constant vector
+    field, and the offset's own chart is that place by construction. So carry
+    the whole jet there, add the kick with the same slot-wise rule as always,
+    and carry the jet back. Both legs are full jet prolongations of the chart
+    map, so the $D^2\psi$ coupling the per-slot rule was missing is picked up
+    on the way out and back rather than being written out by hand.
+
+    This needs the jet, and only the jet: the coupling term is
+    $2 D^2\psi(\dot x, \Delta v)$, which reads the slot below.
+    """
+
+    def to_op(data: CDict, /) -> CDict:
+        return cast("CDict", cxc.pt_map(data, chart, op_chart, usys=usys))
+
+    def to_data(data: CDict, /) -> CDict:
+        return cast("CDict", cxc.pt_map(data, op_chart, chart, usys=usys))
+
+    there = prolong_point_map(to_op, jet)
+    kicked = _prolong_slotwise(op, tau, there, op_chart, usys=usys, ladder=ladder)
+    return prolong_point_map(to_data, kicked)
 
 
 def _prolong_slotwise(
@@ -316,7 +377,7 @@ def _prolong_slotwise(
     # Any tangent slot indexes jet[0], so require it explicitly here — a
     # bare KeyError would otherwise mask the same guard prolong_jet gives.
     if jet and 0 not in jet:
-        raise TypeError(_MSG_JET_SLOT0_MISSING)
+        raise TypeError(_MSG_JET_SLOT0_MISSING.format(call="act_jet"))
 
     out: dict = {}
     for m, slot in jet.items():
@@ -553,6 +614,24 @@ def act(
         jet = _slot_jet(op, tau, x, m, at=at, at_jet=at_jet)
         return prolong_jet(op, tau, jet, chart, usys=usys)[m]
 
+    if m > k and not offset_is_parallel_in_chart(op0, chart):
+        # Above its own rung the ladder is only exact where the offset is a
+        # constant vector field; elsewhere the chart map couples slot m to the
+        # ones below, so this needs the jet rather than the base point alone.
+        #
+        # Reached directly, not through `act_jet`, for the reason the `k is
+        # None` branch above gives: that dispatch hop lands back in this
+        # module and re-materializes `op` to recover `op0` and `k`, which are
+        # already in hand here -- a whole ODE solve again for a curve-frame
+        # builder. The route is not in doubt either: slot `m` sits above the
+        # rung and the offset is not parallel, which is exactly the pair of
+        # conditions `act_jet` would re-test to land here.
+        jet = _slot_jet(op, tau, x, m, at=at, at_jet=at_jet)
+        offset = cast("AbstractAdd", op0)
+        return _kick_via_offset_chart(
+            op, tau, jet, chart, offset.chart, usys=usys, ladder=(offset, k)
+        )[m]
+
     # The ladder needs only the base point, but it has to accept it in either
     # spelling: `at_jet` is the general anchor form, so a caller who passes
     # `at_jet={0: at}` and omits `at=` must not hit a downstream "pass 'at'".
@@ -576,8 +655,13 @@ def act_jet(
     k = None if op0 is None else _ladder_order(op0)
     if k is None:
         return prolong_jet(op, tau, jet, chart, usys=usys)
-    return _prolong_slotwise(
-        op, tau, jet, chart, usys=usys, ladder=(cast("AbstractAdd", op0), k)
+    op0 = cast("AbstractAdd", op0)
+    if _slotwise_is_exact(op0, k, jet, chart):
+        return _prolong_slotwise(op, tau, jet, chart, usys=usys, ladder=(op0, k))
+    # Same carve-out as the static case: a kick that is not constant in the
+    # data's chart couples the slots above its own rung through the chart map.
+    return _kick_via_offset_chart(
+        op, tau, jet, chart, op0.chart, usys=usys, ladder=(op0, k)
     )
 
 
