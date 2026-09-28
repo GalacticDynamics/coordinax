@@ -95,16 +95,28 @@ def strategy_for_annotation(
     return strategy
 
 
+#: equinox's trace-time error, as a tuple so `except` works when it is absent.
+#: `EquinoxTracetimeError` is public in equinox v0.13.8 but removed on equinox
+#: `main` (850f45fd), where a statically-true `error_if` predicate surfaces as
+#: `EquinoxRuntimeError` at runtime instead of raising eagerly. Naming it
+#: directly would make this `except` clause an `AttributeError` on that
+#: equinox; an empty tuple simply falls through to `ValueError`.
+#: See gh#994 and patrick-kidger/equinox#1265.
+_EQX_TRACETIME_ERRORS: tuple[type[BaseException], ...] = tuple(
+    e for e in (getattr(eqx, "EquinoxTracetimeError", None),) if e is not None
+)
+
+
 @plum.dispatch
 def strategy_for_annotation(
     ann: type[u.AbstractQuantity], /, *, meta: Metadata
 ) -> st.SearchStrategy:
     # Get the units/dimensions for the quantity. Determining the dimension from a
     # bare (non-parametrized) quantity type can raise ``ValueError`` (or, under
-    # tracing, ``EquinoxTracetimeError``); fall back to arbitrary units.
+    # tracing, equinox's trace-time error); fall back to arbitrary units.
     try:
         dim = u.dimension_of(ann)
-    except (eqx.EquinoxTracetimeError, ValueError):
+    except (*_EQX_TRACETIME_ERRORS, ValueError):
         dim = ANY_UNITS
 
     # Which concrete quantity type(s) to draw, as (class, static_value) pairs.
