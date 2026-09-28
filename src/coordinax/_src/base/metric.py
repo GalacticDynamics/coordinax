@@ -71,18 +71,14 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     def norm(
-        self,
-        v: Any,
-        chart: Any,
-        /,
-        *args: Any,
-        at: Any,
-        usys: OptUSys = None,
-        **kwargs: Any,
+        self, v: Any, *args: Any, at: Any, usys: OptUSys = None, **kwargs: Any
     ) -> Any:
         r"""Compute the norm $\|v\|_g = \sqrt{g(v, v)}$.
 
-        Convenience wrapper over ``cxmapi.norm``, supplying this metric.
+        Convenience wrapper that calls
+        ``cxmapi.norm(v, self, chart, at=at, usys=usys)`` directly.  The
+        ``chart`` must be passed as the second positional argument (after
+        ``v``).
 
         Examples
         --------
@@ -107,7 +103,7 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
         Array(5., dtype=float64)
 
         """
-        return cxmapi.norm(v, self, chart, *args, at=at, usys=usys, **kwargs)
+        return cxmapi.norm(v, self, *args, at=at, usys=usys, **kwargs)
 
 
 class AbstractLorentzianMetricField(AbstractMetricField):

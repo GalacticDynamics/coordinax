@@ -225,19 +225,14 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     # =====================================================
 
     def norm(
-        self,
-        v: Any,
-        chart: Any,
-        /,
-        *args: Any,
-        at: Any,
-        usys: OptUSys = None,
-        **kwargs: Any,
+        self, v: Any, *args: Any, at: Any, usys: OptUSys = None, **kwargs: Any
     ) -> Any:
         r"""Compute the norm $\|v\|_g = \sqrt{g(v, v)}$.
 
-        Convenience wrapper over ``cxmapi.norm``, supplying this manifold's
-        metric.
+        Convenience wrapper that calls
+        ``cxmapi.norm(v, self.metric, chart, at=at, usys=usys)`` directly.
+        The ``chart`` must be passed as the second positional argument (after
+        ``v``).
 
         Examples
         --------
@@ -264,7 +259,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         Q(5., 'm / s')
 
         """
-        return cxmapi.norm(v, self.metric, chart, *args, at=at, usys=usys, **kwargs)
+        return cxmapi.norm(v, self.metric, *args, at=at, usys=usys, **kwargs)
 
     def angle_between(
         self,
