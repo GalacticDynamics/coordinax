@@ -2578,6 +2578,27 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     Coordinate conversion (chart change) propagates consistently: the base point converts via the chart transition map, and each fibre vector converts via the **Jacobian pushforward at the base point** expressed in the fibre's current chart.
 
+    That pushforward is the complete law only up to ladder order 1. A fibre of order $m \geq 2$ picks up a second term from the curvature of the transition map,
+
+    $$ \tilde{a}^k = J^k{}_i a^i + \partial_{ij}\tilde{q}^k\, v^i v^j, $$
+
+    which is built from the *lower* fibre and so is invisible to a pass that converts one fibre at a time. The bundle is the one holder of that lower fibre, so `Coordinate.cconvert` carries the **whole jet** $\{0: q, 1: v, 2: a, \ldots\}$ through the transition instead, and each fibre is read back out of the prolonged jet. A lone `Tangent` cannot do this: holding no lower fibre, it has nothing to build the second term from. The rule applied to it is therefore the one it always had — `tangent_map` and `cconvert` on a single fibre are the Jacobian pushforward at `at`, first order and no more. Its components do of course change; what this leaves alone is the law, not the data.
+
+    The second term vanishes identically where the transition is **affine** — a chart with itself, two Cartesian-type charts, or two members of one relabelling family such as `sph3d`/`math_sph3d`/`lonlat_sph3d` — and there the per-fibre path is kept, being both exact and cheaper. See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
+
+    **Preconditions of the joint path.** A bundle that never needs a jet is unaffected by all of this: an order $\leq 1$ fibre alone, or any fibre whose leg is affine, keeps the Jacobian path, and mixed-chart and mixed-basis bundles remain valid there.
+
+    Once a jet *is* assembled — because a conversion is not affine and an order $\geq 2$ fibre is present, or because the transform is time-dependent — the bundle must actually be the jet of one curve, and four things that are otherwise allowed become errors rather than first-order answers:
+
+    | Condition | Why it cannot be answered |
+    |-----------|---------------------------|
+    | the ladder skips an order (e.g. an acceleration with no velocity) | the missing fibre is what the second term is built from, and absent means "not tracked", not "zero" |
+    | **any** ladder fibre entering the jet is not in `coord_basis`, order 1 included | a physical basis holds rescaled components, which are not the curve's coordinate derivatives and so are not jet slots. In a curvilinear chart they are not even dimensionally the same thing: a `coord_basis` velocity in `sph3d` is $(\mathrm{kpc/Myr}, \mathrm{rad/Myr}, \mathrm{rad/Myr})$ and its `phys_basis` counterpart is all speeds |
+    | two or more fibres share one ladder order | a jet has one slot per order. Two velocities are two tangent vectors at a point, not one curve, and nothing in the bundle says which of them the acceleration is the derivative *along* |
+    | the ladder reaches order $\geq 3$ across a non-affine leg | assembling its jet would need the order-$(m-1)$ slot in that chart, which is the same conversion one level down |
+
+    A fibre stored in a chart other than the point's is **not** a restriction: both verbs carry it, by building that fibre's jet in its own chart — where the lower slots convert exactly, slot 0 by the point map and slot 1 by the Jacobian — and prolonging that across. The routing question is asked per fibre, from its own chart to its own target, since the point's chart says nothing about where a fibre is parked.
+
     **Fields:**
 
     | Field   | Type                 | Notes                             |

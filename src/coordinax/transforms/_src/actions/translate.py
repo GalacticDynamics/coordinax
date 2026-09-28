@@ -19,8 +19,13 @@ import coordinaxs.api.transforms as cxfmapi
 from .add import AbstractAdd
 from .composed import Composed
 from .custom_types import CDict, OptUSys
-from .prolong import AnchorJet, _reject_unusable_slots
-from .utils import act_array_via_cdict, act_quantity_via_cdict, is_componentwise_offset
+from .prolong import AnchorJet, _merge_slot0, _reject_unusable_slots, assemble_slot_jet
+from .utils import (
+    act_array_via_cdict,
+    act_quantity_via_cdict,
+    is_componentwise_offset,
+    offset_is_parallel_in_chart,
+)
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -387,15 +392,31 @@ def act(
     # anything. (A time-dependent offset is a `TimeDep` family, whose
     # higher-order terms come from the generic tangent funnel.)
     if m != k:
-        return x
+        if offset_is_parallel_in_chart(op, chart):
+            return x
+        # Above the offset's own rung the ladder holds only where the offset
+        # is a constant vector field. In any other chart the kick changes the
+        # lower slot, and through the chart map that changes this one too --
+        # so slot m needs the whole jet, not just the base point.
+        jet = assemble_slot_jet(op, x, m, at=kw.get("at"), at_jet=kw.get("at_jet"))
+        out = cast("dict[int, CDict]", cxfmapi.act_jet(op, tau, jet, chart, usys=usys))
+        return out[m]
     delta = op.delta
 
     # Only k >= 1 fibre kicks reach here cross-chart (k=0 routed to the
     # generic engine above). A kick is a tangent vector at the point, so it
     # has a well-defined cross-chart rule: push its components through the
-    # chart Jacobian AT the base point (requires the anchor `at`).
+    # chart Jacobian AT the base point (requires the anchor).
+    #
+    # Resolved from either spelling. `at_jet` is the general anchor form and
+    # `at` is shorthand for its slot 0, so a caller who writes the general
+    # one must not be told the shorthand is missing -- the branch above and
+    # `add.py`'s ladder both already read it that way.
     if op.chart != chart:
-        delta = _kick_delta_in_chart(op, delta, chart, kw.get("at"), usys)
+        anchor = _merge_slot0(
+            op, kw.get("at"), cast("AnchorJet | None", kw.get("at_jet"))
+        )
+        delta = _kick_delta_in_chart(op, delta, chart, anchor, usys)
 
     return cast(
         "CDict",

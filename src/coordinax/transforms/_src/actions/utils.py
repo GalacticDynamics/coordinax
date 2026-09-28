@@ -6,9 +6,11 @@ This module defines helpers for operator implementations.
 __all__: tuple[str, ...] = (
     "act_array_via_cdict",
     "act_quantity_via_cdict",
+    "is_affine_in_chart",
     "is_componentwise_offset",
     "is_flat_chart",
     "is_traced",
+    "offset_is_parallel_in_chart",
     "require_matching_keys",
 )
 
@@ -29,6 +31,7 @@ import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax.internal import pack_uniform_unit
+from coordinax.transforms._src import groups
 
 
 def is_flat_chart(chart: Any, /) -> bool:
@@ -84,6 +87,100 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     """
     k = getattr(op, "semantic_kind", cxr.dpl).order
     return k != 0 or (chart == op.chart and is_flat_chart(chart))
+
+
+def offset_is_parallel_in_chart(op: Any, chart: Any, /) -> bool:
+    r"""Whether ``op``'s offset is a *constant vector field* in ``chart``.
+
+    The stronger sibling of `is_componentwise_offset`, and the one the jet
+    ladder needs. That predicate asks whether the offset can be added
+    componentwise at its own rung $k$ -- true for any fibre offset, since a
+    kick is a tangent vector at the base point and pushes cross-chart through
+    the Jacobian there. This asks whether the offset is the *same* vector at
+    every point of ``chart``, which is what makes every slot *above* $k$
+    exact as well.
+
+    The distinction is invisible at slot $k$ and decisive above it. A
+    velocity kick $\Delta v$ stored in `cart3d` leaves the Cartesian
+    acceleration alone, but in a curvilinear chart it does not leave
+    $\ddot q$ alone: the chart map contributes $2 D^2\psi(\dot x, \Delta v) +
+    D^2\psi(\Delta v, \Delta v)$, because $\Delta v$ expressed in those
+    coordinates varies from point to point. Reading the weaker predicate as
+    though it licensed the whole ladder is what returned an unchanged
+    acceleration there.
+
+    Flatness is a $k = 0$ concern only, and the two orders must not share one
+    answer. A $k = 0$ offset *moves the point*, so in a curvilinear chart the
+    map it induces is base-point dependent however the offset is written --
+    `test_static_velocity_not_identity` pins exactly that. A fibre offset
+    moves no point: written in its own chart its components are constant by
+    construction, curvilinear or not, so every slot above its rung gains
+    nothing and the ladder is exact. Gating both on flatness sent a fibre
+    offset in a curvilinear chart down a path that then demanded a jet it had
+    not been given.
+    """
+    k = getattr(op, "semantic_kind", cxr.dpl).order
+    if k == 0:
+        return chart == op.chart and is_flat_chart(chart)
+    return chart == op.chart
+
+
+def is_affine_in_chart(op: Any, chart: Any, /) -> bool:
+    r"""Whether ``op``'s point action is affine in ``chart``'s own coordinates.
+
+    This is the condition under which the second-order prolongation term
+    $\partial_{xx}\phi(v, v)$ vanishes *identically*, so the frozen-$\tau$
+    pushforward $\partial_x\phi \cdot v$ is the exact law at every order and
+    not just at order 1. Where it does not vanish, transforming an
+    acceleration needs the velocity as well -- the orders stop being
+    separable, and anything that walks them one at a time drops the term
+    (gh#936).
+
+    Both halves are load-bearing, and neither implies the other. A `Rotate`
+    is affine in `cart3d` and emphatically not in `sph3d`: same operator, and
+    the chart decides. Conversely a flat chart does not save a nonlinear map.
+
+    Membership is read off the declared lattice via `groups.is_subgroup`, not
+    `issubclass` -- see its docstring for why a `LorentzBoost` is not affine
+    despite subclassing `OrthogonalGroup`.
+    """
+    if _has_identity_point_action(op):
+        # The identity is affine in every coordinate system there is, so the
+        # chart cannot make it curve. Answering `False` here for want of a
+        # flat chart refuses a conversion that is trivially exact.
+        return True
+    if not is_flat_chart(chart):
+        return False
+    return groups.is_subgroup(
+        groups.most_specific_group(op.groups()), groups.AffineGroup
+    )
+
+
+def _has_identity_point_action(op: Any, /) -> bool:
+    r"""Whether ``op`` leaves every *point* exactly where it found it.
+
+    Two ways, and neither depends on the chart. A fibre offset of ladder
+    order $k \geq 1$ moves fibres and not points, by definition. And the
+    identity transform moves nothing at all.
+
+    This is about $\phi$ only. Such an operator may still be far from a no-op
+    on the fibres -- a velocity kick is the case in point -- so it says
+    nothing about whether the *offset* is constant in a given chart, which is
+    `offset_is_parallel_in_chart`'s separate question.
+    """
+    subs = getattr(op, "transforms", None)
+    if subs is not None:
+        # A pipeline moves no point exactly when none of its steps does. The
+        # group lattice cannot answer this: `Composed` reports the least
+        # common supergroup of its children, so two velocity kicks come back
+        # as `EuclideanGroup` -- the group of the offsets, which says nothing
+        # about a point action that is the identity twice over.
+        return all(_has_identity_point_action(sub) for sub in subs)
+    if getattr(getattr(op, "semantic_kind", None), "order", 0) >= 1:
+        return True
+    return groups.is_subgroup(
+        groups.most_specific_group(op.groups()), groups.IdentityGroup
+    )
 
 
 def require_matching_keys(
