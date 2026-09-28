@@ -35,8 +35,16 @@ def frames_statically_equal(
         library writing its own ``frame_transition`` dispatch needs exactly
         this guard, so keeping it private means each of them reinvents it.
         Against: a public predicate whose answer depends on trace context is
-        easy to misuse, and the name has to carry that caveat forever. Decide
-        before a second out-of-tree caller appears.
+        easy to misuse, and the name has to carry that caveat forever.
+
+        For now it stays private, and `coordinaxs.astro.frame_transition`
+        imports it from here despite the ``_src`` rule in ``AGENTS.md``. That
+        is a deliberate, bounded exception: astro ships from this workspace
+        and moves with it, so the import cannot rot out of sync the way a
+        genuinely external one could. Revisit when a caller outside the
+        workspace needs it -- that is the point at which the exception stops
+        being bounded and the predicate has to be public or move to
+        `coordinaxs.api`.
 
     Frames are `equinox.Module` pytrees, so ``from_frame == to_frame`` over
     array-valued fields yields a 0-d `jax.Array`, not a `bool`. Putting that in

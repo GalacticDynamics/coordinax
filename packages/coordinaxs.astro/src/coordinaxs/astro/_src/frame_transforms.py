@@ -17,6 +17,12 @@ from .base_frame import AbstractSpaceFrame
 from .galactic import GALACTIC_TO_ICRS_MATRIX, ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
+
+# Deliberate `_src` import, against the rule in `AGENTS.md`: this is the only
+# trace-safe frame comparison, and every `frame_transition` dispatch on a
+# *parameterized* frame needs it -- type-based dispatch cannot separate
+# `Galactocentric()` from `Galactocentric(roll=...)`. Bounded because astro
+# ships from the same workspace. See the todo on `frames_statically_equal`.
 from coordinax.frames._src.base import frames_statically_equal
 
 # ---------------------------------------------------------------
