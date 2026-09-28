@@ -107,3 +107,23 @@ def test_negating_a_rotation_leaves_so_n_in_odd_dimensions() -> None:
 
     # `Linear` *is* closed under negation: the matrix round-trips.
     assert bool(jnp.allclose((-neg).matrix, R.matrix))
+
+
+def test_negating_an_identity_group_linear_widens_to_o_n() -> None:
+    """The negation widening consults the lattice, not Python inheritance.
+
+    `IdentityGroup` is a subgroup of SO(n) in the lattice while `issubclass`
+    says otherwise, so an `issubclass` test let a negated operator keep the
+    `IdentityGroup` tag -- but `-I` is not the identity, and in odd dimensions
+    has ``det = -1`` so is not even in SO(n).
+    """
+    # The two notions disagree here; that disagreement is the whole point.
+    assert cxfm.groups.is_subgroup(
+        cxfm.groups.IdentityGroup, cxfm.groups.SpecialOrthogonalGroup
+    )
+    assert not issubclass(cxfm.groups.IdentityGroup, cxfm.groups.SpecialOrthogonalGroup)
+
+    op = cxfm.Linear(jnp.eye(3), cxfm.groups.IdentityGroup)
+    neg = -op
+    assert neg.group is cxfm.groups.OrthogonalGroup
+    assert bool(jnp.allclose(neg.matrix, -jnp.eye(3)))

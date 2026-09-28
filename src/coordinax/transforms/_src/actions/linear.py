@@ -155,7 +155,12 @@ class AbstractLinearTransform(AbstractTransform):
         from .general_linear import Linear  # noqa: PLC0415  (circular at module scope)
 
         grp = groups.most_specific_group(self.groups())
-        if issubclass(grp, groups.SpecialOrthogonalGroup):
+        # `is_subgroup`, not `issubclass`: the group lattice is not Python
+        # inheritance. `IdentityGroup` is a subgroup of `SpecialOrthogonalGroup`
+        # in the lattice while `issubclass` says `False`, so an operator tagged
+        # `IdentityGroup` kept that tag through negation -- but `-I` is not the
+        # identity, and in odd dimensions has `det = -1` so is not even in SO(n).
+        if groups.is_subgroup(grp, groups.SpecialOrthogonalGroup):
             grp = groups.OrthogonalGroup
         return Linear(-self.matrix, grp)
 
