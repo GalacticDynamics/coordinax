@@ -93,9 +93,13 @@ class Reflect(AbstractLinearTransform):
         If ``H`` is not square. A shape is static, so this is decided while
         tracing and raises there -- not when the traced graph runs.
     equinox.EquinoxRuntimeError
-        If ``H`` is not an involution. This one depends on the values, so it
-        is deferred onto the stored ``H`` to survive `jax.jit`: eagerly it
-        raises from the constructor, under `jit` when the traced graph runs.
+        If ``H`` is not a hyperplane reflection -- symmetric, ``H @ H = I``,
+        and ``trace H = n - 2``. An involution alone is not enough: the
+        identity, a rotation by pi about an axis, and the point inversion
+        ``-I`` are all involutions and all refused. These depend on the
+        values, so the check is deferred onto the stored ``H`` to survive
+        `jax.jit`: eagerly it raises from the constructor, under `jit` when
+        the traced graph runs.
 
     Examples
     --------
@@ -113,7 +117,7 @@ class Reflect(AbstractLinearTransform):
     >>> cxfm.act(op, None, q)
     Q([-1.,  2.,  3.], 'km')
 
-    A matrix that is not an involution is refused, and points at the types
+    A matrix that is not a hyperplane reflection is refused, and points at
     that fit:
 
     >>> P = jnp.asarray([[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]])

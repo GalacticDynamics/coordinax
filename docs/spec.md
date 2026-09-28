@@ -5572,7 +5572,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Reflect`
 
-    A **Reflect** is a transformation that applies a linear orthogonal map with determinant -1 to position components. As with `Rotate`, tangent data is carried by the pushforward with the same matrix, $v \mapsto H v$, rather than left unchanged.
+    A **Reflect** is a transformation that applies a *hyperplane reflection* to position components. That is a symmetric involution with exactly one eigenvalue $-1$; it is therefore orthogonal with determinant $-1$, but determinant $-1$ alone does not characterise it (see below). As with `Rotate`, tangent data is carried by the pushforward with the same matrix, $v \mapsto H v$, rather than left unchanged.
 
     **Mathematical definition**:
 
