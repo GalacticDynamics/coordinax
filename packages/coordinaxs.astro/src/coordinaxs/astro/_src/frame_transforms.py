@@ -17,6 +17,7 @@ from .base_frame import AbstractSpaceFrame
 from .galactic import GALACTIC_TO_ICRS_MATRIX, ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
+from coordinax.frames._src.base import frames_statically_equal
 
 # ---------------------------------------------------------------
 # Base Space-Frame Transformation
@@ -304,7 +305,7 @@ def frame_transition(
     on the tangent fibre rather than the point.
 
     """
-    if cxf.is_same_frame(from_frame, to_frame):
+    if frames_statically_equal(from_frame, to_frame):
         return cxfm.identity
 
     # TODO: not go through ICRS for the self-transformation

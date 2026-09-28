@@ -22,6 +22,7 @@ import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 import coordinaxs.hypothesis.astro as cxastrost
+from coordinax.frames._src.base import frames_statically_equal
 from coordinaxs.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
 
 # Astropy is imported once, not re-checked inside five helper bodies -- but the
@@ -696,7 +697,7 @@ class TestGalactocentricSelfTransition:
 
     ``from_frame == to_frame`` on a `Galactocentric` pair is a 0-d `jax.Array`,
     not a `bool`: fine eagerly, `TracerBoolConversionError` under `jit`. The
-    check now goes through `is_same_frame`, which is concrete-only and
+    check now goes through `frames_statically_equal`, which is concrete-only and
     structural.
     """
 
@@ -720,13 +721,13 @@ class TestGalactocentricSelfTransition:
     def test_the_check_survives_tracing(self, jit, same) -> None:
         """Frames are pytrees, so they get passed as `jit` arguments.
 
-        Under trace the answer is not statically knowable, so `is_same_frame` is
-        `False` and the caller falls through to the general transform -- what it
-        must never do is raise.
+        Under trace the answer is not statically knowable, so
+        `frames_statically_equal` returns `False` and the caller falls through
+        to the general transform -- what it must never do is raise.
         """
         a = cxastro.Galactocentric()
         b = a if same else cxastro.Galactocentric(roll=u.Q(10, "deg"))
-        out = jit(lambda x, y: jnp.asarray(cxf.is_same_frame(x, y)))(a, b)
+        out = jit(lambda x, y: jnp.asarray(frames_statically_equal(x, y)))(a, b)
         assert not bool(out)
 
     def test_different_frames_are_numerically_unchanged(self) -> None:

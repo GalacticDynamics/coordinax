@@ -1,6 +1,6 @@
 """Base implementation of coordinate frames."""
 
-__all__ = ("AbstractReferenceFrame", "is_same_frame")
+__all__ = ("AbstractReferenceFrame",)
 
 from collections.abc import Mapping
 from typing import Any, cast
@@ -16,10 +16,27 @@ import coordinaxs.api.frames as cxfmapi
 from coordinax.transforms import AbstractTransform
 
 
-def is_same_frame(
+def frames_statically_equal(
     from_frame: "AbstractReferenceFrame", to_frame: "AbstractReferenceFrame", /
 ) -> bool:
-    """Whether two frames are *statically known* to be the same frame.
+    """Whether two frames are *statically known* to be equal.
+
+    Named for what it delivers rather than what is asked: a `False` means
+    "not known to be equal here", which under tracing includes two frames that
+    genuinely are equal. A predicate called ``is_same_frame`` would be stating
+    something it cannot: the answer depends on whether the leaves are concrete,
+    not only on the frames.
+
+    .. todo::
+
+        Consider exporting this as public API. Two things argue for it: it is
+        the only trace-safe way to compare frames -- ``==`` yields a 0-d array
+        and ``is`` misses equal-but-distinct frames -- and any downstream
+        library writing its own ``frame_transition`` dispatch needs exactly
+        this guard, so keeping it private means each of them reinvents it.
+        Against: a public predicate whose answer depends on trace context is
+        easy to misuse, and the name has to carry that caveat forever. Decide
+        before a second out-of-tree caller appears.
 
     Frames are `equinox.Module` pytrees, so ``from_frame == to_frame`` over
     array-valued fields yields a 0-d `jax.Array`, not a `bool`. Putting that in
@@ -39,24 +56,24 @@ def is_same_frame(
 
     Equal-but-distinct frames are the same frame:
 
-    >>> cxf.is_same_frame(cxastro.Galactocentric(), cxastro.Galactocentric())
+    >>> frames_statically_equal(cxastro.Galactocentric(), cxastro.Galactocentric())
     True
 
-    >>> cxf.is_same_frame(
+    >>> frames_statically_equal(
     ...     cxastro.Galactocentric(), cxastro.Galactocentric(roll=u.Q(10, "deg"))
     ... )
     False
 
     Frames of different types never are, even when their fields agree:
 
-    >>> cxf.is_same_frame(cxastro.ICRS(), cxastro.Galactic())
+    >>> frames_statically_equal(cxastro.ICRS(), cxastro.Galactic())
     False
 
     Under tracing sameness is not statically knowable, so the answer is `False`
     and the caller builds the general transform:
 
     >>> gc = cxastro.Galactocentric()
-    >>> jax.jit(lambda a, b: jnp.asarray(cxf.is_same_frame(a, b)))(gc, gc)
+    >>> jax.jit(lambda a, b: jnp.asarray(frames_statically_equal(a, b)))(gc, gc)
     Array(False, dtype=bool)
 
     """

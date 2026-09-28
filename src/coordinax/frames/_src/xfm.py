@@ -9,7 +9,7 @@ import plum
 
 import coordinax.transforms as cxfm
 import coordinaxs.api.frames as cxfapi
-from .base import AbstractReferenceFrame, is_same_frame
+from .base import AbstractReferenceFrame, frames_statically_equal
 from coordinax.transforms import AbstractTransform
 
 FrameT = TypeVar("FrameT", bound=AbstractReferenceFrame, default=AbstractReferenceFrame)
@@ -234,7 +234,7 @@ def frame_transition(
         [ 1. -1.  0.]>
 
     """
-    if is_same_frame(from_frame, to_frame):
+    if frames_statically_equal(from_frame, to_frame):
         return cxfm.identity
     return (
         from_frame.xop.inverse  # ty: ignore[unsupported-operator]

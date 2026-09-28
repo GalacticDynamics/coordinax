@@ -58,7 +58,6 @@ from coordinax._src.setup_package import install_import_hook
 __all__: tuple[str, ...] = (
     # API
     "frame_transition",
-    "is_same_frame",
     # Reference Frames
     "AbstractReferenceFrame",
     "FrameTransformError",
@@ -92,7 +91,6 @@ with install_import_hook("coordinax.frames"):
         alice,
         bob,
         carol,
-        is_same_frame,
         noframe,
     )
     from coordinaxs.api.frames import frame_transition
