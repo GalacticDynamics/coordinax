@@ -301,8 +301,6 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     def __repr__(self) -> str:
         """Return the string representation.
 
-        `__str__` is not defined: it would be this, and Python falls back here
-        for `str` and for f-strings anyway. `AbstractChart` does define both,
-        because there the two differ.
+        No `__str__`: it would be identical, and `str` falls back here.
         """
         return wl.pformat(self, width=88)

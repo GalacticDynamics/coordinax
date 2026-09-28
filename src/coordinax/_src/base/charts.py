@@ -479,9 +479,21 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
     _coord_dimensions: Ds
 
     def __init_subclass__(cls, **kw: Any) -> None:
-        # Extract Ks and Ds from AbstractFixedComponentsChart in the inheritance
+        # Read `Ks` and `Ds` off the parametrized base, so a concrete chart
+        # declares its components once, in the subscript, and gets them as
+        # class attributes. Only concrete charts: an abstract intermediate
+        # passes the type variables straight through and has nothing to record.
         if not is_abstract_class(cls):
+            # `__orig_bases__`, not `__bases__`: the subscript survives only
+            # there. `Cart3D`'s two entries are
+            # `AbstractStaticFixedComponentsChart[MT, tuple[...], tuple[...]]`
+            # and the bare `Abstract3D` flag.
             for base in getattr(cls, "__orig_bases__", ()):
+                # A parametrized base has `__origin__`; a plain one does not,
+                # which is how the flag above is skipped. The `issubclass` is
+                # what lets an *intermediate* count -- `Spherical3D` arrives
+                # through `AbstractSpherical3D[...]`, never through this class
+                # directly.
                 origin = getattr(base, "__origin__", None)
                 if inspect.isclass(origin) and issubclass(
                     origin, AbstractFixedComponentsChart
@@ -504,6 +516,9 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
                         raise TypeError(msg) from e
                     cls._components = components
                     cls._coord_dimensions = coord_dimensions
+                    # First parametrized base in declaration order wins. A
+                    # concrete chart should only have one; two would be a
+                    # contradiction rather than something to merge.
                     break
 
             # Check the component count matches the declared dimension flag,
