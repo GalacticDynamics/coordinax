@@ -8,12 +8,15 @@ __all__ = (
 
 import abc
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jax
 
 import coordinaxs.api.manifolds as cxmapi
 from coordinax._src.custom_types import OptUSys
+
+if TYPE_CHECKING:
+    import coordinax.charts  # noqa: ICN001
 
 
 @jax.tree_util.register_static
@@ -71,14 +74,17 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     def norm(
-        self, v: Any, *args: Any, at: Any, usys: OptUSys = None, **kwargs: Any
+        self,
+        v: Any,
+        chart: "coordinax.charts.AbstractChart[Any, Any, Any]",
+        /,
+        *,
+        at: Any,
+        usys: OptUSys = None,
     ) -> Any:
         r"""Compute the norm $\|v\|_g = \sqrt{g(v, v)}$.
 
-        Convenience wrapper that calls
-        ``cxmapi.norm(v, self, chart, at=at, usys=usys)`` directly.  The
-        ``chart`` must be passed as the second positional argument (after
-        ``v``).
+        Convenience wrapper over ``cxmapi.norm``, supplying this metric.
 
         Examples
         --------
@@ -103,7 +109,7 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
         Array(5., dtype=float64)
 
         """
-        return cxmapi.norm(v, self, *args, at=at, usys=usys, **kwargs)
+        return cxmapi.norm(v, self, chart, at=at, usys=usys)
 
 
 class AbstractLorentzianMetricField(AbstractMetricField):
