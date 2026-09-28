@@ -66,7 +66,11 @@ def test_dynamic_chart_is_hashable_on_static_identity() -> None:
 
 
 def test_equality_is_safe_under_jit() -> None:
-    """The case that raises `TracerBoolConversionError` today."""
+    """The case `AbstractChart.__eq__`'s dynamic-field check guards against.
+
+    Without it, comparing two traced parameters would raise
+    `TracerBoolConversionError` instead of declining to compare.
+    """
 
     @jax.jit
     def f(scale_value: Any) -> Any:
