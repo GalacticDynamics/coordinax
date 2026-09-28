@@ -1091,6 +1091,86 @@ def test_the_one_dimensional_radial_relabelling_is_affine() -> None:
     assert jnp.allclose(u.ustrip("kpc/Myr2", out["x"]), 0.08)
 
 
+class TestJointCconvertDoesNotPayTwice:
+    r"""A prolongation returns every slot below the one asked for.
+
+    Those lower slots *are* the base point and the order-1 fibre carried
+    across the same leg, so converting them separately beforehand computes
+    them twice. The second copy is not cheap: the velocity's own conversion
+    is a Jacobian pushforward, the most expensive single step in a bundle
+    conversion.
+
+    Asserted structurally rather than by a timing, which would be flaky: on
+    a bundle whose point and fibres all cross the same leg, the separate
+    Jacobian evaluations should not happen at all.
+    """
+
+    @staticmethod
+    def _cd(vals, unit):
+        return dict(zip(("x", "y", "z"), (u.Q(v, unit) for v in vals), strict=True))
+
+    def _bundle(self):
+        return Coordinate(
+            point=cxv.Point(self._cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d),
+            velocity=cxv.Tangent(
+                self._cd((0.3, -0.4, 0.2), "kpc/Myr"),
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxr.vel,
+            ),
+            acceleration=cxv.Tangent(
+                self._cd((0.1, 0.2, 0.3), "kpc/Myr2"),
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxr.acc,
+            ),
+        )
+
+    def test_the_lower_slots_are_read_not_recomputed(self, monkeypatch) -> None:
+        """Two `jac_pt_map` evaluations before; none once the slots are reused."""
+        import coordinaxs.api.charts as cxcapi
+
+        calls = []
+        original = cxcapi.jac_pt_map
+
+        def counting(*args, **kwargs):
+            calls.append(1)
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(cxcapi, "jac_pt_map", counting)
+        monkeypatch.setattr(cxc, "jac_pt_map", counting)
+        self._bundle().cconvert(cxc.sph3d)
+        assert not calls, (
+            f"{len(calls)} Jacobian evaluations on a leg the jet already crossed"
+        )
+
+    def test_reuse_does_not_change_the_answer(self) -> None:
+        """Every slot must equal what its own conversion would have produced."""
+        b = self._bundle()
+        out = b.cconvert(cxc.sph3d)
+
+        point_alone = cxr.cconvert(b.point, cxc.sph3d)
+        vel_alone = cxr.cconvert(b["velocity"], cxc.sph3d, at=b.point)
+        for k in ("r", "theta", "phi"):
+            unit = u.unit_of(point_alone.data[k])
+            assert jnp.allclose(
+                u.ustrip(unit, out.point.data[k]), u.ustrip(unit, point_alone.data[k])
+            )
+            unit = u.unit_of(vel_alone.data[k])
+            assert jnp.allclose(
+                u.ustrip(unit, out["velocity"].data[k]),
+                u.ustrip(unit, vel_alone.data[k]),
+                atol=1e-14,
+            )
+
+    def test_a_fibre_on_a_different_leg_still_makes_its_own_journey(self) -> None:
+        """Reuse is per leg; `field_charts` sends the velocity somewhere else."""
+        out = self._bundle().cconvert(cxc.sph3d, field_charts={"velocity": cxc.cyl3d})
+        assert out.point.chart == cxc.sph3d
+        assert out["velocity"].chart == cxc.cyl3d
+        assert out["acceleration"].chart == cxc.sph3d
+
+
 class TestTwoVelocitiesArePreconditionNotBug:
     r"""A jet has one slot per order, so two velocities are not one curve.
 
@@ -1196,3 +1276,107 @@ def test_an_order_one_fibre_entering_a_jet_must_be_in_the_coordinate_basis() -> 
     )
     with pytest.raises(TypeError, match=r"non-coordinate basis holds rescaled"):
         b.cconvert(cxc.cart3d)
+
+
+class TestLegReuseServesOnlySharedSlots:
+    r"""Reuse is keyed by leg, but not everything on a leg is shared.
+
+    Slots 0 and 1 are the base point and the single order-1 fibre: the same
+    for everyone crossing, and the whole point of the optimisation. The top
+    slot is the cargo of the one fibre that built the leg. And a fibre that
+    is not on the ladder at all -- a displacement -- is not a slot in any
+    sense.
+
+    Getting that wrong is silent: the wrong fibre comes back holding
+    somebody else's numbers, in the right chart and the right units, with
+    nothing to trip over.
+    """
+
+    @staticmethod
+    def _cd(vals, unit):
+        return dict(zip(("x", "y", "z"), (u.Q(v, unit) for v in vals), strict=True))
+
+    def _parts(self):
+        return (
+            cxv.Point(self._cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d),
+            cxv.Tangent(
+                self._cd((0.3, -0.4, 0.2), "kpc/Myr"),
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxr.vel,
+            ),
+            cxv.Tangent(
+                self._cd((0.1, 0.2, 0.3), "kpc/Myr2"),
+                cxc.cart3d,
+                cxr.coord_basis,
+                cxr.acc,
+            ),
+        )
+
+    def test_a_displacement_fibre_is_not_slot_zero(self) -> None:
+        """It shares the leg, and shares nothing else. It is not a jet slot."""
+        pt, vel, acc = self._parts()
+        offset = cxv.Tangent(
+            self._cd((7.0, 8.0, 9.0), "kpc"), cxc.cart3d, cxr.coord_basis, cxr.dpl
+        )
+        b = Coordinate._create_unchecked(
+            pt, {"velocity": vel, "acceleration": acc, "offset": offset}
+        )
+        out = b.cconvert(cxc.sph3d)
+        # it must NOT have been handed the transformed base point
+        same_as_point = all(
+            jnp.allclose(
+                u.ustrip(u.unit_of(out.point.data[k]), out["offset"].data[k]),
+                u.ustrip(u.unit_of(out.point.data[k]), out.point.data[k]),
+            )
+            for k in out.point.data
+        )
+        assert not same_as_point
+        # and it must equal its own Jacobian pushforward
+        alone = cxr.cconvert(offset, cxc.sph3d, at=pt)
+        for k in alone.data:
+            unit = u.unit_of(alone.data[k])
+            assert jnp.allclose(
+                u.ustrip(unit, out["offset"].data[k]), u.ustrip(unit, alone.data[k])
+            )
+
+    def test_a_second_order_two_fibre_gets_its_own_answer(self) -> None:
+        """The top slot belongs to the fibre that built the leg, not the leg."""
+        pt, vel, a1 = self._parts()
+        a2 = cxv.Tangent(
+            self._cd((9.0, 9.0, 9.0), "kpc/Myr2"), cxc.cart3d, cxr.coord_basis, cxr.acc
+        )
+        b = Coordinate._create_unchecked(pt, {"velocity": vel, "acc1": a1, "acc2": a2})
+        out = b.cconvert(cxc.sph3d)
+
+        ref = Coordinate(point=pt, velocity=vel, acceleration=a2).cconvert(cxc.sph3d)
+        for k in ref["acceleration"].data:
+            unit = u.unit_of(ref["acceleration"].data[k])
+            assert jnp.allclose(
+                u.ustrip(unit, out["acc2"].data[k]),
+                u.ustrip(unit, ref["acceleration"].data[k]),
+            )
+        # and the two accelerations must not have collapsed onto one answer
+        assert not jnp.allclose(
+            u.ustrip("kpc/Myr2", out["acc1"].data["r"]),
+            u.ustrip("kpc/Myr2", out["acc2"].data["r"]),
+        )
+
+    def test_the_shared_slots_are_still_reused(self, monkeypatch) -> None:
+        """Guard the guard: tightening reuse must not switch it off."""
+        import coordinaxs.api.charts as cxcapi
+
+        pt, vel, acc = self._parts()
+        b = Coordinate(point=pt, velocity=vel, acceleration=acc)
+
+        calls = []
+        original = cxcapi.jac_pt_map
+
+        def counting(*args, **kwargs):
+            calls.append(1)
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(cxcapi, "jac_pt_map", counting)
+        monkeypatch.setattr(cxc, "jac_pt_map", counting)
+        b.cconvert(cxc.sph3d)
+        assert not calls
