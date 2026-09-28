@@ -227,11 +227,12 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     def norm(
         self,
         v: Any,
-        chart: "coordinax.charts.AbstractChart[Any, Any, Any]",
+        chart: Any,
         /,
-        *,
+        *args: Any,
         at: Any,
         usys: OptUSys = None,
+        **kwargs: Any,
     ) -> Any:
         r"""Compute the norm $\|v\|_g = \sqrt{g(v, v)}$.
 
@@ -263,7 +264,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         Q(5., 'm / s')
 
         """
-        return cxmapi.norm(v, self.metric, chart, at=at, usys=usys)
+        return cxmapi.norm(v, self.metric, chart, *args, at=at, usys=usys, **kwargs)
 
     def angle_between(
         self,
