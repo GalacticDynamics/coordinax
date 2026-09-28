@@ -480,6 +480,40 @@ Eager application costs a few milliseconds of fixed Python plus tens of nanoseco
 
 `to_frame` is the convenience form and builds the operator inside itself, so the construction cost cannot be lifted out of a loop as written. Use it for one-off work; on a hot path reach for `frame_transition` plus `act`.
 
+:::{warning} **`act` does not update `.frame`.** It applies the operator to the data and leaves the label pointing at the frame the data just left, so a later `to_frame` transforms it a _second_ time:
+
+```{code-block} python
+>>> op = cxf.frame_transition(cxf.alice, cxf.alex)
+>>> p = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
+
+>>> moved = cxfm.act(op, None, p)
+>>> moved.frame                      # the data is Alex, the label is not
+Alice()
+
+>>> print(moved.to_frame(cxf.alex))  # rotated again -- wrong
+<Point: chart=Cart3D (x, y, z) [kpc]
+    [-1. -2.  3.]>
+
+>>> print(p.to_frame(cxf.alex))      # the correct answer
+<Point: chart=Cart3D (x, y, z) [kpc]
+    [-2.  1.  3.]>
+```
+
+Nothing in `__repr__` or `__str__` shows the frame, so this is silent. The same applies to `Tangent` and `Coordinate`.
+
+`act` cannot fix this on its own: a frame transition `alice -> alex` _is_ a `Rotate`, indistinguishable from a rotation within a single frame, so clearing the label would destroy a correct one in that case. See [gh#993](https://github.com/GalacticDynamics/coordinax/issues/993).
+
+Until the operator carries its frame intent, treat the output of `act` as frame-agnostic data and set the label yourself:
+
+```{code-block} python
+>>> from dataclassish import replace
+>>> moved = replace(cxfm.act(op, None, p), frame=cxf.alex)
+>>> moved.frame
+Alex()
+```
+
+`to_frame` is unaffected -- it updates the frame correctly. Prefer it unless the rebuild cost above actually matters. :::
+
 ## Common Pitfalls
 
 ### 1. Composition Order
