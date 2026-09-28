@@ -15,43 +15,65 @@ import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
 from .base import AbstractTransform
-from .identity import identity
 from .linear import AbstractLinearTransform, as_dimensionless_matrix
-from .utils import _unnormalisable, is_traced
+from .utils import _unnormalisable
 from coordinax.transforms._src import groups
 
 HMatrix: TypeAlias = Shaped[Array, " N N"]
 
 _MSG_ZERO_NORMAL: Final = "Reflect.from_normal needs a finite, nonzero normal."
-_MSG_NOT_INVOLUTIVE: Final = (
-    "Reflect requires an involutive matrix: H @ H = I. That is the invariant "
-    "`inverse` relies on -- it returns the operator itself. For an orthogonal "
-    "map with det = +1 use `Rotate`; for any other invertible map use "
-    "`Linear`. Note `Rotate` is SO(n), so an orthogonal matrix with "
-    "det = -1 that is not an involution -- a rotoreflection -- belongs in "
-    "`Linear`, not `Rotate`."
+_MSG_NOT_A_REFLECTION: Final = (
+    "Reflect requires a hyperplane reflection: H symmetric, H @ H = I, and "
+    "trace H = n - 2. The first two give an involution that `inverse` can "
+    "return unchanged; the trace pins exactly one -1 eigenvalue, i.e. "
+    "H = I - 2 n n^T for a unit normal n. Matrices that satisfy only the "
+    "first two are involutions but not reflections -- the identity "
+    "(trace n), a rotation by pi about an axis such as diag(-1, -1, 1) "
+    "(trace n - 4), the point inversion -I (trace -n) -- and det H = -1 "
+    "does not separate them either, since -I has det -1 in odd dimensions. "
+    "For an orthogonal map with det = +1 use `Rotate`; for any other "
+    "invertible map use `Linear`, including a rotoreflection, which is "
+    "orthogonal with det = -1 but not an involution."
 )
 
 _ATOL: Final = 1e-6
-"""Absolute tolerance on ``H @ H = I``. See `_not_involutive`."""
+"""Absolute tolerance on the reflection invariants. See `_not_a_reflection`."""
 
 
-def _not_involutive(H: Any, /) -> Any:
-    """Whether ``H`` fails ``H @ H = I``.
+def _not_a_reflection(H: Any, /) -> Any:
+    r"""Whether ``H`` fails to be a hyperplane reflection.
+
+    The exact characterisation is **symmetric, involutive, and
+    ``trace H == n - 2``**. Symmetric-and-involutive makes ``H`` orthogonal
+    with eigenvalues in :math:`\{+1, -1\}`; the trace is then :math:`n - 2k`
+    for :math:`k` eigenvalues equal to :math:`-1`, so ``trace H == n - 2`` is
+    exactly :math:`k = 1` -- one reflected direction, i.e.
+    :math:`H = I - 2 \hat n \hat n^T`.
+
+    Both extra clauses are load-bearing. ``det H == -1`` alone does not
+    suffice: the point inversion :math:`-I` has ``det -1`` in odd dimensions
+    and reflects every direction. Symmetry is not implied either:
+    ``[[1, 1], [0, -1]]`` is involutive with ``det -1`` *and*
+    ``trace == n - 2``, yet is neither symmetric nor orthogonal.
 
     A non-square ``H`` answers `False`: it has no square to compare, and
     `_validate_square` is the one that names a bad shape. The shape is static
     under tracing, so this branch traces.
 
-    ``atol`` is explicit for the same reason as `Rotate`'s: the off-diagonal
-    entries are compared against zero, so `jnp.allclose`'s ``1e-8`` is the
-    whole budget and that is below the round-off of a numerically derived
-    matrix.
+    ``atol`` is explicit for the same reason as `Rotate`'s: entries are
+    compared against zero, where ``rtol`` contributes nothing, so
+    `jnp.allclose`'s ``1e-8`` would be the whole budget and that is below the
+    round-off of a numerically derived matrix.
     """
     if H.ndim != 2 or H.shape[0] != H.shape[1]:
         return False
+    n = H.shape[0]
     sq = jnp.matmul(H, H)
-    return ~jnp.allclose(sq, jnp.eye(H.shape[0], dtype=sq.dtype), atol=_ATOL)
+    return (
+        ~jnp.allclose(H, H.T, atol=_ATOL)
+        | ~jnp.allclose(sq, jnp.eye(n, dtype=sq.dtype), atol=_ATOL)
+        | ~jnp.isclose(jnp.trace(H), n - 2, atol=_ATOL)
+    )
 
 
 @final
@@ -127,12 +149,12 @@ class Reflect(AbstractLinearTransform):
             "Reflect `H` is a Householder matrix, whose entries are ratios "
             "and so dimensionless.",
         )
-        # Shape first: `_not_involutive` declines on a non-square matrix, so
+        # Shape first: `_not_a_reflection` declines on a non-square matrix, so
         # without this one would be stored and `.inverse` would still hand back
         # `self`, which is undefined for a non-square `H`.
         H = self._validate_square(H)
         object.__setattr__(
-            self, "H", eqx.error_if(H, _not_involutive(H), _MSG_NOT_INVOLUTIVE)
+            self, "H", eqx.error_if(H, _not_a_reflection(H), _MSG_NOT_A_REFLECTION)
         )
 
     @classmethod
@@ -188,17 +210,15 @@ def from_(cls: type[Reflect], obj: ArrayLike, /) -> Reflect:
 
 @plum.dispatch
 def simplify(op: Reflect, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
-    """Simplify a reflection, collapsing the identity matrix when present.
+    """Return the reflection unchanged: there is nothing to collapse.
 
-    The identity-matrix check inspects values, so it is skipped when
-    ``approx=False``, and when the matrix is traced -- under `jax.jit` the
-    values are not known, which is exactly when the answer is "do not
-    simplify" rather than an error.
+    This used to collapse an identity-valued ``H`` to `Identity`. A `Reflect`
+    can no longer *be* the identity: the constructor requires
+    ``trace H == n - 2`` (exactly one reflected direction) and the identity has
+    ``trace n``, so that branch became unreachable when the type was narrowed
+    to hyperplane reflections. Dropping it also removes the only value
+    inspection here, so this rule is trace-safe by construction rather than by
+    an `is_traced` guard.
     """
-    if (
-        approx
-        and not is_traced(op.H)
-        and jnp.allclose(op.H, jnp.eye(op.H.shape[0], dtype=op.H.dtype), **kw)
-    ):
-        return identity
+    del approx, kw  # no value inspection left to switch off
     return op

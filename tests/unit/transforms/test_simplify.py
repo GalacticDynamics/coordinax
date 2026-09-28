@@ -209,7 +209,11 @@ class TestSimplifyDeclinesUnderTrace:
     #: name -> (build from one array, identity-valued operand, operator type)
     CASES: ClassVar = {
         "Rotate": (cxfm.Rotate, lambda: jnp.eye(3), cxfm.Rotate),
-        "Reflect": (cxfm.Reflect, lambda: jnp.eye(3), cxfm.Reflect),
+        # `Reflect` is absent deliberately: every case here is built from an
+        # identity-valued operand so an unfixed site cannot pass by accident,
+        # and a `Reflect` can no longer be identity-valued (the constructor
+        # requires `trace H == n - 2`). Its `simplify` rule lost its value
+        # inspection with that narrowing, so it is trace-safe by construction.
         "Shear": (cxfm.Shear, lambda: jnp.eye(3), cxfm.Shear),
         "Scale": (cxfm.Scale, lambda: jnp.eye(3), cxfm.Scale),
         "Linear": (cxfm.Linear, lambda: jnp.eye(3), cxfm.Linear),

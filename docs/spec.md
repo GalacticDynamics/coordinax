@@ -5576,7 +5576,7 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Mathematical definition**:
 
-    A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1.
+    A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1. Note that `det H = -1` does not *characterise* a reflection: the point inversion $-I$ has `det -1` in odd dimensions and reverses every direction. The exact condition is symmetric, involutive, and $\mathrm{tr}\,H = n - 2$, i.e. exactly one eigenvalue $-1$, which is what the constructor enforces.
 
     In Euclidean space, reflection across the hyperplane orthogonal to a nonzero normal vector $n$ is represented by the Householder matrix
 

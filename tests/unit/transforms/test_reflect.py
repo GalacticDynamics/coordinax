@@ -15,7 +15,7 @@ import unxt as u
 import coordinax as cx
 import coordinax.transforms as cxfm
 from .conftest import EXPECTED_IDENTITY, EXPECTED_REFLECT
-from coordinax.transforms._src.actions.reflect import _not_involutive
+from coordinax.transforms._src.actions.reflect import _not_a_reflection
 
 
 @pytest.mark.parametrize("bad", [0.0, jnp.nan, jnp.inf], ids=["zero", "nan", "inf"])
@@ -98,26 +98,47 @@ class TestReflectionMatrixIsInvolutive:
     def test_the_permutation_matrix_is_orthogonal_and_still_refused(self) -> None:
         assert bool(jnp.allclose(self._PERM.T @ self._PERM, jnp.eye(3)))
         assert float(jnp.linalg.det(self._PERM)) == pytest.approx(1.0)
-        with pytest.raises(eqx.EquinoxRuntimeError, match="H @ H = I"):
+        with pytest.raises(eqx.EquinoxRuntimeError, match="hyperplane reflection"):
             cxfm.Reflect(self._PERM)
 
     def test_non_involutive_is_refused_under_jit(self) -> None:
         """Deferred `error_if`, so the guard traces instead of dying on a bool."""
         build = eqx.filter_jit(lambda m: cxfm.Reflect(m).H)
-        with pytest.raises(eqx.EquinoxRuntimeError, match="H @ H = I"):
+        with pytest.raises(eqx.EquinoxRuntimeError, match="hyperplane reflection"):
             jax.block_until_ready(build(self._PERM))
+
+    def test_a_single_reflected_axis_constructs(self) -> None:
+        """One -1 eigenvalue is a hyperplane reflection, so it is accepted."""
+        H = jnp.diag(jnp.asarray([-1.0, 1.0, 1.0]))
+        assert bool(jnp.allclose(cxfm.Reflect(H).matrix, H))
 
     @pytest.mark.parametrize(
         "H",
         [
             jnp.eye(3),
-            jnp.diag(jnp.asarray([-1.0, 1.0, 1.0])),
             jnp.diag(jnp.asarray([-1.0, -1.0, 1.0])),
+            -jnp.eye(3),
+            jnp.asarray([[1.0, 1.0], [0.0, -1.0]]),
         ],
-        ids=["identity", "one-axis", "two-axes"],
+        ids=["identity", "pi-rotation", "point-inversion", "not-symmetric"],
     )
-    def test_involutions_still_construct(self, H) -> None:
-        assert bool(jnp.allclose(cxfm.Reflect(H).matrix, H))
+    def test_involutions_that_are_not_reflections_are_refused(self, H) -> None:
+        """An involution is necessary but not sufficient.
+
+        `Reflect` denotes *exactly* a hyperplane reflection (spec 5577), so the
+        guard is symmetric + involutive + ``trace H == n - 2``. Each case here
+        is an involution that fails one of those:
+
+        - ``identity`` and ``pi-rotation`` have ``det = +1`` and are in SO(n);
+          the second is itself a composition of two reflections, which the
+          spec says has no closed `Reflect @ Reflect`.
+        - ``point-inversion`` has ``det = -1`` -- so a determinant check alone
+          would admit it -- but reflects every direction, not one.
+        - ``not-symmetric`` satisfies involutivity, ``det = -1`` *and*
+          ``trace == n - 2``, and is still neither symmetric nor orthogonal.
+        """
+        with pytest.raises(eqx.EquinoxRuntimeError, match="hyperplane reflection"):
+            cxfm.Reflect(H)
 
     def test_from_normal_still_passes_its_own_output(self) -> None:
         """A Householder matrix is an involution, so the guard is transparent."""
@@ -142,10 +163,10 @@ def test_a_non_square_matrix_is_named_by_the_shape_check() -> None:
     """The involutivity check defers to `_validate_square` on shape.
 
     Mirrors `test_rotate.py`. A non-square matrix has no ``H @ H`` to compare,
-    so `_not_involutive` declines and the error names the shape rather than
+    so `_not_a_reflection` declines and the error names the shape rather than
     claiming the matrix is not an involution.
     """
     rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
-    assert _not_involutive(rect) is False
+    assert _not_a_reflection(rect) is False
     with pytest.raises(eqx.EquinoxTracetimeError, match=r"square matrix; got shape"):
         cxfm.Reflect(rect)
