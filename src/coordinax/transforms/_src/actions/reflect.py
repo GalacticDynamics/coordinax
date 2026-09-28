@@ -60,19 +60,20 @@ def _not_a_reflection(H: Any, /) -> Any:
     `_validate_square` is the one that names a bad shape. The shape is static
     under tracing, so this branch traces.
 
-    ``atol`` is explicit for the same reason as `Rotate`'s: entries are
-    compared against zero, where ``rtol`` contributes nothing, so
-    `jnp.allclose`'s ``1e-8`` would be the whole budget and that is below the
-    round-off of a numerically derived matrix.
+    ``atol`` and ``rtol`` are both explicit, for the reasons spelled out on
+    `Rotate`'s predicate. ``rtol=0`` matters more here: ``trace H`` is
+    compared against ``n - 2``, so the default ``rtol=1e-5`` would scale the
+    budget with the dimension -- ``8.1e-5`` at ``n=10``, ``9.8e-4`` at
+    ``n=100`` -- rather than holding the stated ``1e-6``.
     """
     if H.ndim != 2 or H.shape[0] != H.shape[1]:
         return False
     n = H.shape[0]
     sq = jnp.matmul(H, H)
     return (
-        ~jnp.allclose(H, H.T, atol=_ATOL)
-        | ~jnp.allclose(sq, jnp.eye(n, dtype=sq.dtype), atol=_ATOL)
-        | ~jnp.isclose(jnp.trace(H), n - 2, atol=_ATOL)
+        ~jnp.allclose(H, H.T, atol=_ATOL, rtol=0.0)
+        | ~jnp.allclose(sq, jnp.eye(n, dtype=sq.dtype), atol=_ATOL, rtol=0.0)
+        | ~jnp.isclose(jnp.trace(H), n - 2, atol=_ATOL, rtol=0.0)
     )
 
 

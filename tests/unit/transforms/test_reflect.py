@@ -84,6 +84,35 @@ def test_reflect_simplify_keeps_nontrivial_reflection(reflect_op) -> None:
     assert isinstance(simplified, cxfm.Reflect)
 
 
+def test_a_near_reflection_is_not_admitted_by_a_relative_tolerance() -> None:
+    """The budget is ``1e-6`` absolute, and must not scale with ``n``.
+
+    ``trace H`` is compared against ``n - 2``, so `jnp.isclose`'s default
+    ``rtol=1e-5`` made the effective tolerance grow with the dimension --
+    ``8.1e-5`` at ``n = 10``, ``9.8e-4`` at ``n = 100``. A matrix that is not
+    a reflection then passes every clause.
+
+    Perturbing one diagonal entry of a Householder matrix by ``5e-6`` is
+    comfortably inside that dimension-scaled budget and comfortably outside
+    the stated one.
+    """
+    n = 10
+    v = np.zeros(n)
+    v[0] = 1.0
+    H = np.eye(n) - 2 * np.outer(v, v)
+    H[1, 1] -= 5e-6
+    H = jnp.asarray(H)
+
+    assert abs(float(jnp.trace(H)) - (n - 2)) == pytest.approx(5e-6, rel=1e-3)
+    # Inside `atol + rtol*(n-2)` = 8.1e-6 at n=10, outside the stated 1e-6.
+    assert bool(jnp.isclose(jnp.trace(H), n - 2, atol=1e-6))
+    assert not bool(jnp.isclose(jnp.trace(H), n - 2, atol=1e-6, rtol=0.0))
+
+    assert _not_a_reflection(H)
+    with pytest.raises(eqx.EquinoxRuntimeError):
+        cxfm.Reflect(H)
+
+
 class TestReflectionMatrixIsInvolutive:
     """``H`` must satisfy ``H @ H = I``, which is what makes `inverse` `self`.
 

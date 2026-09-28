@@ -47,22 +47,36 @@ def _not_a_rotation(R: Any, /) -> Any:
     and `_validate_square` is the one that names a bad shape. The shape is
     static under tracing, so this branch traces.
 
-    ``atol`` is explicit rather than `jnp.allclose`'s ``1e-8``, which is below
-    the round-off of an honest rotation matrix. The off-diagonal entries are
-    compared against zero, where ``rtol`` contributes nothing, so ``1e-8`` is
-    the whole budget -- and a parallel-transported Bishop triad
-    (`coordinaxs.curveframes`) drifts to ~``5e-8`` off orthogonal, which is
-    why that package's own doctests assert orthogonality at ``1e-6``. The same
-    number here. It is many orders away from catching less: the matrix in #938
-    has ``R^T R`` entries in the tens.
+    Both tolerances are explicit. ``atol`` is raised from `jnp.allclose`'s
+    ``1e-8``, which is below the round-off of an honest rotation matrix: a
+    parallel-transported Bishop triad (`coordinaxs.curveframes`) drifts to
+    ~``5e-8`` off orthogonal, which is why that package's own doctests assert
+    orthogonality at ``1e-6``. The same number here.
+
+    ``rtol`` is pinned to zero because these comparisons have mixed
+    references: the off-diagonal entries of ``R^T R`` are compared against
+    zero, where a relative term contributes nothing, but the diagonal and
+    ``det R`` are compared against one, where `jnp.allclose`'s default
+    ``rtol=1e-5`` would dominate and quietly make the real budget ``1.1e-5``.
+    A uniform scaling ``(1 + 5e-6) I`` is not a rotation and is admitted at
+    that looser figure.
+
+    At the dimensions this library builds -- 3x3 spatial, 4x4 Lorentz -- an
+    honest `float32` rotation lands within ~``1.8e-7``, so ``1e-6`` keeps
+    roughly 6x headroom. That headroom thins with ``n``: by ``n=50`` a
+    legitimate `float32` ``det R`` can drift past ``1e-6``, so a caller
+    working in single precision at high dimension would need a looser budget
+    than this constant. `float64` has ~1e8x margin throughout.
     """
     if R.ndim != 2 or R.shape[0] != R.shape[1]:
         return False
     gram = jnp.matmul(jnp.swapaxes(R, -2, -1), R)
-    orthogonal = jnp.allclose(gram, jnp.eye(R.shape[0], dtype=gram.dtype), atol=_ATOL)
+    orthogonal = jnp.allclose(
+        gram, jnp.eye(R.shape[0], dtype=gram.dtype), atol=_ATOL, rtol=0.0
+    )
     # `det R = -1` is orthogonal but orientation-reversing: a reflection or a
     # rotoreflection, not a rotation. `Reflect` and `Linear` are those homes.
-    proper = jnp.allclose(jnp.linalg.det(R), 1.0, atol=_ATOL)
+    proper = jnp.allclose(jnp.linalg.det(R), 1.0, atol=_ATOL, rtol=0.0)
     return ~(orthogonal & proper)
 
 

@@ -96,6 +96,36 @@ class TestRotationMatrixIsOrthogonal:
         ):
             cxfm.Rotate(rect)
 
+    def test_a_near_miss_is_not_admitted_by_a_relative_tolerance(self):
+        """The budget is ``1e-6`` absolute, not ``1.1e-5``.
+
+        `jnp.allclose`'s default ``rtol=1e-5`` applies to the *diagonal* of
+        ``R^T R``, compared against one, so leaving it at the default made the
+        real tolerance there ``atol + rtol = 1.1e-5``.
+
+        Stretching one axis and squeezing another isolates that: the
+        determinant stays ``1`` to within ``2.5e-11``, so the ``det R`` clause
+        passes either way and only the orthogonality clause can catch it.
+        """
+        near = jnp.diag(jnp.asarray([1 + 5e-6, 1 - 5e-6, 1.0]))
+        gram = near.T @ near
+        off = float(jnp.max(jnp.abs(gram - jnp.eye(3))))
+        # Inside the accidental `atol + rtol*1` budget, outside the stated one.
+        assert 1e-6 < off < 1.1e-5
+        # The determinant clause is not what rejects this.
+        assert bool(jnp.allclose(jnp.linalg.det(near), 1.0, atol=1e-6, rtol=0.0))
+
+        assert _not_a_rotation(near)
+        with pytest.raises(eqx.EquinoxRuntimeError, match="orthogonal"):
+            cxfm.Rotate(near)
+
+    def test_an_honest_rotation_keeps_headroom_at_the_tightened_budget(self):
+        """Pinning ``rtol=0`` must not start rejecting real rotations."""
+        for R in (_RZ90, jnp.eye(3)):
+            gram = R.T @ R
+            assert float(jnp.max(jnp.abs(gram - jnp.eye(3)))) < 1e-7
+            assert _not_a_rotation(R) is False or not bool(_not_a_rotation(R))
+
     def test_a_valid_rotation_round_trips(self):
         """What the bad matrix broke: `inverse` really does undo the map."""
         op = cxfm.Rotate(_RZ90)
