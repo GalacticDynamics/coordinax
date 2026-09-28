@@ -1380,3 +1380,45 @@ class TestLegReuseServesOnlySharedSlots:
         monkeypatch.setattr(cxc, "jac_pt_map", counting)
         b.cconvert(cxc.sph3d)
         assert not calls
+
+
+def test_a_bundle_may_have_one_affine_leg_and_one_not() -> None:
+    r"""Legs are decided per fibre, so one bundle can need both paths.
+
+    The joint path is entered because *some* order-2 fibre crosses a
+    curvilinear transition. Another order-2 fibre in the same bundle may
+    still be travelling an affine leg, and it must keep the cheap Jacobian
+    route rather than being prolonged along for the ride -- the two decisions
+    are independent, and only this shape exercises that.
+    """
+    cd = lambda v, un: dict(zip(("x", "y", "z"), (u.Q(x, un) for x in v), strict=True))
+    pt = cxv.Point(cd((1.0, 2.0, 3.0), "kpc"), cxc.cart3d)
+    vel = cxv.Tangent(
+        cd((0.3, -0.4, 0.2), "kpc/Myr"), cxc.cart3d, cxr.coord_basis, cxr.vel
+    )
+    curved = cxv.Tangent(
+        cd((0.1, 0.2, 0.3), "kpc/Myr2"), cxc.cart3d, cxr.coord_basis, cxr.acc
+    )
+    flat = cxv.Tangent(
+        cd((9.0, 8.0, 7.0), "kpc/Myr2"), cxc.cart3d, cxr.coord_basis, cxr.acc
+    )
+    b = Coordinate._create_unchecked(
+        pt, {"velocity": vel, "curved": curved, "flat": flat}
+    )
+    # `curved` crosses to sph3d and needs the jet; `flat` stays in cart3d,
+    # an identity leg, and must not be dragged onto the prolonged path
+    out = b.cconvert(cxc.sph3d, field_charts={"flat": cxc.cart3d})
+
+    assert out["curved"].chart == cxc.sph3d
+    assert out["flat"].chart == cxc.cart3d
+    # the affine leg is the identity here, so its fibre is untouched
+    for k, want in zip(("x", "y", "z"), (9.0, 8.0, 7.0), strict=True):
+        assert jnp.allclose(u.ustrip("kpc/Myr2", out["flat"].data[k]), want)
+    # and the curved one still agrees with converting it on its own
+    ref = Coordinate(point=pt, velocity=vel, acceleration=curved).cconvert(cxc.sph3d)
+    for k in ref["acceleration"].data:
+        unit = u.unit_of(ref["acceleration"].data[k])
+        assert jnp.allclose(
+            u.ustrip(unit, out["curved"].data[k]),
+            u.ustrip(unit, ref["acceleration"].data[k]),
+        )
