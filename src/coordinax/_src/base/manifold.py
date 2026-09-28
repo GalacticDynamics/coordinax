@@ -299,9 +299,8 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         )
 
     def __repr__(self) -> str:
-        """Return the string representation."""
-        return wl.pformat(self, width=88)
+        """Return the string representation.
 
-    def __str__(self) -> str:
-        """Return the string representation."""
+        No `__str__`: it would be identical, and `str` falls back here.
+        """
         return wl.pformat(self, width=88)

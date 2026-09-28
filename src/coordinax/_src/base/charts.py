@@ -50,11 +50,9 @@ GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 MT = TypeVar("MT", bound=AbstractManifold)
 V = TypeVar("V")
 
-# Charts are registered in CHART_CLASSES when they are defined, via
-# AbstractChart.__init_subclass__. This allows us to find all chart classes for
-# dispatch and other purposes. We use a weak set to avoid keeping classes alive
-# unnecessarily, and a mapping proxy to prevent modification of the set from
-# outside this module.
+# Registered by AbstractChart.__init_subclass__, so anything can find every
+# chart class. Weak, so a chart defined and dropped does not stay registered.
+# Writable: nothing stops a caller adding to it.
 CHART_CLASSES: weakref.WeakSet[type["AbstractChart[AbstractManifold, Any, Any]"]] = (
     weakref.WeakSet()
 )
@@ -133,10 +131,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """
 
     def __init_subclass__(cls, **kw: Any) -> None:
-        # This allows multiple inheritance with other ABCs that might or might
-        # not define an `__init_subclass__`
-        if hasattr(cls, "__init_subclass__"):
-            super().__init_subclass__(**kw)
+        super().__init_subclass__(**kw)
 
         # Register the representation/chart
         # dataclass(slots=True) triggers __init_subclass__ twice:
@@ -477,18 +472,34 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
     _coord_dimensions: Ds
 
     def __init_subclass__(cls, **kw: Any) -> None:
-        # Extract Ks and Ds from AbstractFixedComponentsChart in the inheritance
+        # Read Ks and Ds off the parametrized base. Abstract intermediates
+        # only pass the type variables through, so they have nothing to record.
         if not is_abstract_class(cls):
+            # `__orig_bases__`, not `__bases__`: only it keeps the subscript.
             for base in getattr(cls, "__orig_bases__", ()):
+                # No `__origin__` means an unparametrized base (a flag), skip.
+                # `issubclass` admits intermediates: `Spherical3D` arrives via
+                # `AbstractSpherical3D[...]`, not through this class directly.
                 origin = getattr(base, "__origin__", None)
                 if inspect.isclass(origin) and issubclass(
                     origin, AbstractFixedComponentsChart
                 ):
                     args = get_args(base)
-                    if len(args) != 3:
-                        raise TypeError
-                    cls._components = _get_tuple(args[1])
-                    cls._coord_dimensions = _get_tuple(args[2])
+                    # Forget the `tuple[...]` wrapper and `_get_tuple` raises
+                    # `'str' object has no attribute '__args__'`.
+                    try:
+                        components = _get_tuple(args[1])
+                        coord_dimensions = _get_tuple(args[2])
+                    except (AttributeError, IndexError) as e:
+                        msg = (
+                            f"{cls.__name__} must parametrize "
+                            f"{origin.__name__} as [manifold, "
+                            "tuple[Literal[...], ...], tuple[Literal[...], "
+                            f"...]]; got {args[1:]!r}"
+                        )
+                        raise TypeError(msg) from e
+                    cls._components = components
+                    cls._coord_dimensions = coord_dimensions
                     break
 
             # Check the component count matches the declared dimension flag,
@@ -554,9 +565,7 @@ class AbstractDimensionalFlag:
             msg = f"{cls.__name__} must be a subclass of AbstractChart"
             raise TypeError(msg)
 
-        # Call super() if it defines __init_subclass__
-        if callable(super_init_subclass := getattr(super(), "__init_subclass__", None)):
-            super_init_subclass(**kw)
+        super().__init_subclass__(**kw)
 
 
 DIMENSIONAL_FLAGS: Final[dict[int | L["N"], type[AbstractDimensionalFlag]]] = {}
