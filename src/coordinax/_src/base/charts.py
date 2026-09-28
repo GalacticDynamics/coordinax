@@ -50,12 +50,9 @@ GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 MT = TypeVar("MT", bound=AbstractManifold)
 V = TypeVar("V")
 
-# Charts are registered in CHART_CLASSES when they are defined, via
-# AbstractChart.__init_subclass__. This allows us to find all chart classes for
-# dispatch and other purposes. A weak set, so a chart class defined and dropped
-# -- one built inside a test, say -- does not stay registered and reachable by
-# anything that walks this. The set itself is writable: nothing stops a caller
-# adding to it.
+# Registered by AbstractChart.__init_subclass__, so anything can find every
+# chart class. Weak, so a chart defined and dropped does not stay registered.
+# Writable: nothing stops a caller adding to it.
 CHART_CLASSES: weakref.WeakSet[type["AbstractChart[AbstractManifold, Any, Any]"]] = (
     weakref.WeakSet()
 )
@@ -479,30 +476,21 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
     _coord_dimensions: Ds
 
     def __init_subclass__(cls, **kw: Any) -> None:
-        # Read `Ks` and `Ds` off the parametrized base, so a concrete chart
-        # declares its components once, in the subscript, and gets them as
-        # class attributes. Only concrete charts: an abstract intermediate
-        # passes the type variables straight through and has nothing to record.
+        # Read Ks and Ds off the parametrized base. Abstract intermediates
+        # only pass the type variables through, so they have nothing to record.
         if not is_abstract_class(cls):
-            # `__orig_bases__`, not `__bases__`: the subscript survives only
-            # there. `Cart3D`'s two entries are
-            # `AbstractStaticFixedComponentsChart[MT, tuple[...], tuple[...]]`
-            # and the bare `Abstract3D` flag.
+            # `__orig_bases__`, not `__bases__`: only it keeps the subscript.
             for base in getattr(cls, "__orig_bases__", ()):
-                # A parametrized base has `__origin__`; a plain one does not,
-                # which is how the flag above is skipped. The `issubclass` is
-                # what lets an *intermediate* count -- `Spherical3D` arrives
-                # through `AbstractSpherical3D[...]`, never through this class
-                # directly.
+                # No `__origin__` means an unparametrized base (a flag), skip.
+                # `issubclass` admits intermediates: `Spherical3D` arrives via
+                # `AbstractSpherical3D[...]`, not through this class directly.
                 origin = getattr(base, "__origin__", None)
                 if inspect.isclass(origin) and issubclass(
                     origin, AbstractFixedComponentsChart
                 ):
                     args = get_args(base)
-                    # Both halves of the parametrization must be `tuple`s of
-                    # `Literal`s. Getting that wrong is the likely mistake, and
-                    # `_get_tuple` reports it as `'str' object has no attribute
-                    # '__args__'`, which names neither the class nor the shape.
+                    # Forget the `tuple[...]` wrapper and `_get_tuple` raises
+                    # `'str' object has no attribute '__args__'`.
                     try:
                         components = _get_tuple(args[1])
                         coord_dimensions = _get_tuple(args[2])
@@ -516,9 +504,6 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
                         raise TypeError(msg) from e
                     cls._components = components
                     cls._coord_dimensions = coord_dimensions
-                    # First parametrized base in declaration order wins. A
-                    # concrete chart should only have one; two would be a
-                    # contradiction rather than something to merge.
                     break
 
             # Check the component count matches the declared dimension flag,
