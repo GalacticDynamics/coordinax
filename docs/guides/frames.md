@@ -512,7 +512,9 @@ Until the operator carries its frame intent, treat the output of `act` as frame-
 Alex()
 ```
 
-`to_frame` is unaffected -- it updates the frame correctly. Prefer it unless the rebuild cost above actually matters. :::
+`to_frame` is unaffected -- it updates the frame correctly. Prefer it unless the rebuild cost above actually matters.
+
+:::
 
 ## Common Pitfalls
 
