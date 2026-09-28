@@ -195,9 +195,12 @@ def frame_transition(
 ) -> AbstractTransform:
     """Return a frame transform operator between two transformed frames.
 
-    When ``from_frame`` and ``to_frame`` are the same frame -- the same object,
-    or equal-but-distinct with concrete leaves -- the result is the identity
-    transform.
+    When sameness is *statically* knowable -- the same object, or
+    equal-but-distinct with concrete leaves -- the result is the identity
+    transform. Frames arriving as `jax.jit` arguments are neither: tracing
+    hands this function two distinct tracer-backed frames, so the shortcut is
+    skipped and the general transform is built instead. That transform is
+    correct either way; only the shortcut is lost.
 
     >>> import quaxed.numpy as jnp
     >>> import coordinax.vectors as cxv
