@@ -52,9 +52,10 @@ V = TypeVar("V")
 
 # Charts are registered in CHART_CLASSES when they are defined, via
 # AbstractChart.__init_subclass__. This allows us to find all chart classes for
-# dispatch and other purposes. We use a weak set to avoid keeping classes alive
-# unnecessarily, and a mapping proxy to prevent modification of the set from
-# outside this module.
+# dispatch and other purposes. A weak set, so a chart class defined and dropped
+# -- one built inside a test, say -- does not stay registered and reachable by
+# anything that walks this. The set itself is writable: nothing stops a caller
+# adding to it.
 CHART_CLASSES: weakref.WeakSet[type["AbstractChart[AbstractManifold, Any, Any]"]] = (
     weakref.WeakSet()
 )
@@ -134,10 +135,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """
 
     def __init_subclass__(cls, **kw: Any) -> None:
-        # This allows multiple inheritance with other ABCs that might or might
-        # not define an `__init_subclass__`
-        if hasattr(cls, "__init_subclass__"):
-            super().__init_subclass__(**kw)
+        super().__init_subclass__(**kw)
 
         # Register the representation/chart
         # dataclass(slots=True) triggers __init_subclass__ twice:
@@ -489,10 +487,23 @@ class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
                     origin, AbstractFixedComponentsChart
                 ):
                     args = get_args(base)
-                    if len(args) != 3:
-                        raise TypeError
-                    cls._components = _get_tuple(args[1])
-                    cls._coord_dimensions = _get_tuple(args[2])
+                    # Both halves of the parametrization must be `tuple`s of
+                    # `Literal`s. Getting that wrong is the likely mistake, and
+                    # `_get_tuple` reports it as `'str' object has no attribute
+                    # '__args__'`, which names neither the class nor the shape.
+                    try:
+                        components = _get_tuple(args[1])
+                        coord_dimensions = _get_tuple(args[2])
+                    except (AttributeError, IndexError) as e:
+                        msg = (
+                            f"{cls.__name__} must parametrize "
+                            f"{origin.__name__} as [manifold, "
+                            "tuple[Literal[...], ...], tuple[Literal[...], "
+                            f"...]]; got {args[1:]!r}"
+                        )
+                        raise TypeError(msg) from e
+                    cls._components = components
+                    cls._coord_dimensions = coord_dimensions
                     break
 
             # Check the component count matches the declared dimension flag,
@@ -558,9 +569,7 @@ class AbstractDimensionalFlag:
             msg = f"{cls.__name__} must be a subclass of AbstractChart"
             raise TypeError(msg)
 
-        # Call super() if it defines __init_subclass__
-        if callable(super_init_subclass := getattr(super(), "__init_subclass__", None)):
-            super_init_subclass(**kw)
+        super().__init_subclass__(**kw)
 
 
 DIMENSIONAL_FLAGS: Final[dict[int | L["N"], type[AbstractDimensionalFlag]]] = {}
