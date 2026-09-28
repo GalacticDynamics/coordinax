@@ -103,13 +103,12 @@ def _check_on_exactly_one_branch(cls: type, /) -> None:
     one opaque pytree leaf; a chart on both is a contradiction. Neither fails
     loudly on its own, so fail here, at class creation.
 
-    The branch classes are resolved from module globals because they are defined
-    *below* `AbstractChart`. Only they themselves are created before the names
-    exist, and they are `Abstract`-prefixed, so this never runs for them.
+    `AbstractStaticChart`/`AbstractParameterizedChart` are defined *below* this
+    function, but that's fine: a function body only resolves names when it
+    runs, and this one never runs before both classes exist.
     """
-    static = globals()["AbstractStaticChart"]
-    param = globals()["AbstractParameterizedChart"]
-    on_static, on_param = issubclass(cls, static), issubclass(cls, param)
+    on_static = issubclass(cls, AbstractStaticChart)
+    on_param = issubclass(cls, AbstractParameterizedChart)
     if on_static == on_param:
         msg = (
             f"{cls.__name__} is on {'both' if on_static else 'neither'} chart "
@@ -353,10 +352,7 @@ class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
         )
 
     def __hash__(self) -> int:
-        """Hash a chart based on its type and static field values.
-
-        Dynamic (traced/array) parameters are excluded: they are unhashable,
-        and `__eq__` never uses them either, so equal charts still hash equal.
+        """Hash a chart by its type and static field values (see `__eq__`).
 
         Examples
         --------
