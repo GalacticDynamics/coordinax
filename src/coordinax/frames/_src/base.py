@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 import equinox as eqx
+import jax
 import plum
 import wadler_lindig as wl
 
@@ -13,6 +14,89 @@ from dataclassish import field_items
 
 import coordinaxs.api.frames as cxfmapi
 from coordinax.transforms import AbstractTransform
+
+
+def frames_statically_equal(
+    from_frame: "AbstractReferenceFrame", to_frame: "AbstractReferenceFrame", /
+) -> bool:
+    """Whether two frames are *statically known* to be equal.
+
+    Named for what it delivers rather than what is asked: a `False` means
+    "not known to be equal here", which under tracing includes two frames that
+    genuinely are equal. A predicate called ``is_same_frame`` would be stating
+    something it cannot: the answer depends on whether the leaves are concrete,
+    not only on the frames.
+
+    .. todo::
+
+        Consider exporting this as public API. Two things argue for it: it is
+        the only trace-safe way to compare frames -- ``==`` yields a 0-d array
+        and ``is`` misses equal-but-distinct frames -- and any downstream
+        library writing its own ``frame_transition`` dispatch needs exactly
+        this guard, so keeping it private means each of them reinvents it.
+        Against: a public predicate whose answer depends on trace context is
+        easy to misuse, and the name has to carry that caveat forever.
+
+        For now it stays private, and `coordinaxs.astro.frame_transition`
+        imports it from here despite the ``_src`` rule in ``AGENTS.md``. That
+        is a deliberate, bounded exception: astro ships from this workspace
+        and moves with it, so the import cannot rot out of sync the way a
+        genuinely external one could. Revisit when a caller outside the
+        workspace needs it -- that is the point at which the exception stops
+        being bounded and the predicate has to be public or move to
+        `coordinaxs.api`.
+
+    Frames are `equinox.Module` pytrees, so ``from_frame == to_frame`` over
+    array-valued fields yields a 0-d `jax.Array`, not a `bool`. Putting that in
+    an ``if`` works eagerly but raises ``TracerBoolConversionError`` under
+    `jax.jit`; plain ``from_frame is to_frame`` is trace-safe but misses two
+    equal-but-distinct frames. This predicate is both: structural when the
+    leaves are concrete, and `False` -- fall through to the general, always
+    correct transform -- when any leaf is traced.
+
+    Examples
+    --------
+    >>> import jax
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinaxs.astro as cxastro
+    >>> import coordinax.frames as cxf
+
+    Equal-but-distinct frames are the same frame:
+
+    >>> frames_statically_equal(cxastro.Galactocentric(), cxastro.Galactocentric())
+    True
+
+    >>> frames_statically_equal(
+    ...     cxastro.Galactocentric(), cxastro.Galactocentric(roll=u.Q(10, "deg"))
+    ... )
+    False
+
+    Frames of different types never are, even when their fields agree:
+
+    >>> frames_statically_equal(cxastro.ICRS(), cxastro.Galactic())
+    False
+
+    Under tracing sameness is not statically knowable, so the answer is `False`
+    and the caller builds the general transform:
+
+    >>> gc = cxastro.Galactocentric()
+    >>> jax.jit(lambda a, b: jnp.asarray(frames_statically_equal(a, b)))(gc, gc)
+    Array(False, dtype=bool)
+
+    """
+    if from_frame is to_frame:
+        return True
+    if type(from_frame) is not type(to_frame):
+        return False
+    eq = eqx.tree_equal(from_frame, to_frame)
+    # `tree_equal` is `True`/`False` only when every leaf is a non-array; with
+    # array leaves it is a 0-d array, concrete or traced. A traced one cannot be
+    # decided at trace time, so report "not the same" and let the caller build
+    # the general transform.
+    if isinstance(eq, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
+        return False
+    return bool(eq)
 
 
 class AbstractReferenceFrame(eqx.Module, is_abstract=True):

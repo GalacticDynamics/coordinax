@@ -18,6 +18,13 @@ from .galactic import GALACTIC_TO_ICRS_MATRIX, ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
 
+# Deliberate `_src` import, against the rule in `AGENTS.md`: this is the only
+# trace-safe frame comparison, and every `frame_transition` dispatch on a
+# *parameterized* frame needs it -- type-based dispatch cannot separate
+# `Galactocentric()` from `Galactocentric(roll=...)`. Bounded because astro
+# ships from the same workspace. See the todo on `frames_statically_equal`.
+from coordinax.frames._src.base import frames_statically_equal
+
 # ---------------------------------------------------------------
 # Base Space-Frame Transformation
 
@@ -257,7 +264,10 @@ def frame_transition(from_frame: Galactic, to_frame: ICRS, /) -> cxfm.Rotate:
 def frame_transition(
     from_frame: Galactocentric, to_frame: Galactocentric, /
 ) -> cxfm.AbstractTransform:
-    """Return the operator for the Galactocentric frame self transformation.
+    """Return the transform between two Galactocentric frames.
+
+    The identity when the two are the same frame; otherwise the simplified
+    composition of the routes through ICRS.
 
     >>> import unxt as u
     >>> import coordinax.frames as cxf
@@ -266,7 +276,12 @@ def frame_transition(
     >>> gcf_frame = cxastro.Galactocentric()
     >>> frame_op = cxf.frame_transition(gcf_frame, gcf_frame)
     >>> frame_op
-    Composed(Identity())
+    Identity()
+
+    An equal-but-distinct frame is the same frame too:
+
+    >>> cxf.frame_transition(gcf_frame, cxastro.Galactocentric())
+    Identity()
 
     >>> gcf_frame2 = cxastro.Galactocentric(roll=u.Q(10, "deg"))
     >>> frame_op2 = cxf.frame_transition(gcf_frame, gcf_frame2)
@@ -296,8 +311,8 @@ def frame_transition(
     on the tangent fibre rather than the point.
 
     """
-    if from_frame == to_frame:
-        return cxfm.Composed((cxfm.identity,))
+    if frames_statically_equal(from_frame, to_frame):
+        return cxfm.identity
 
     # TODO: not go through ICRS for the self-transformation
     return cast(
