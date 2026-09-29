@@ -1,6 +1,5 @@
 """Tests for predefined chart instances in coordinax.charts."""
 
-import equinox as eqx
 import pytest
 
 import unxt as u
@@ -355,7 +354,9 @@ def test_predef_chart_check_data_dimensions_true_wrong_unit_raises(chart) -> Non
     target_dim = chart.coord_dimensions[chart.components.index(target_component)]
     data[target_component] = _mismatched_quantity_for_dimension(target_dim)
 
-    with pytest.raises((ValueError, eqx.EquinoxTracetimeError), match=r".+"):
+    # `RuntimeError` covers equinox's trace-time error under both spellings;
+    # `EquinoxTracetimeError` is absent on equinox main (gh#994).
+    with pytest.raises((ValueError, RuntimeError), match=r".+"):
         chart.check_data(data, values=True)
 
 
