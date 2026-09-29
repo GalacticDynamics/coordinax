@@ -7,6 +7,7 @@ submodules (e.g. ``.euclidean``).
 
 """
 
+from .affinity import *
 from .d0 import *
 from .d1 import *
 from .d2 import *
@@ -16,6 +17,7 @@ from .d6 import *
 from .dn import *
 from .domains import *
 from .jacobian import *
+from .register_affinity import *
 from .register_carray import *
 from .register_cdict import *
 from .register_domains import *

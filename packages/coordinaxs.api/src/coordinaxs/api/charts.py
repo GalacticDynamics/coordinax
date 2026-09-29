@@ -4,6 +4,7 @@ __all__ = (
     "cartesian_chart",
     "pt_map",
     "jac_pt_map",
+    "is_affine_transition",
     # Data
     "cdict",
     "carray",
@@ -386,6 +387,53 @@ def carray(p: Any, /, *args: Any) -> "unxts.linalg.QuantityMatrix":
 
     >>> cx.carray({"x": 1.0, "y": 2.0}, cx.cart2d)
     QM([1., 2.], '(, )')
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def is_affine_transition(from_chart: Any, to_chart: Any, /) -> bool:
+    r"""Whether the chart transition ``from_chart -> to_chart`` is affine.
+
+    A transition $\psi$ is affine exactly when $\partial^2\psi \equiv 0$, so
+    the Jacobian pushforward is the complete transformation law at every
+    order rather than only at order 1.
+
+    That is what decides whether an order-$m$ fibre ($m \geq 2$) can be
+    carried between charts on its own. Where the transition curves, the law
+    is
+
+    $$ a' = \partial\psi \cdot a + \partial^2\psi(v, v), $$
+
+    and the second term is built from the *velocity*, so the fibre cannot be
+    converted without it. Where the transition is affine that term vanishes
+    identically and the cheap path is exact. See
+    [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
+
+    Answering `True` wrongly is silent -- a fibre takes the cheap path and
+    quietly loses the term. Answering `False` wrongly only costs a
+    prolongation that was not needed. The default is therefore `False` for
+    any pair that has not said otherwise, and a chart family declares its own
+    relabellings by registering a more specific dispatch -- see the
+    `is_affine_transition` section of `docs/spec.md`.
+
+    A pair qualifies when the two charts are the same parameterisation
+    written differently -- coordinates related by a permutation, a sign and a
+    shift -- so that the transition Jacobian does not depend on the base
+    point. It does **not** qualify merely for being in the same family by
+    name: `Spherical3D` and `LonCosLatSpherical3D` share a base class, and
+    the latter's $\cos(\mathrm{lat})$ factor makes its Jacobian
+    base-point dependent like any other curvilinear map.
+
+    Examples
+    --------
+    >>> import coordinax.charts as cxc
+    >>> cxc.is_affine_transition(cxc.sph3d, cxc.lonlat_sph3d)
+    True
+
+    >>> cxc.is_affine_transition(cxc.cart3d, cxc.sph3d)
+    False
 
     """
     raise NotImplementedError  # pragma: no cover

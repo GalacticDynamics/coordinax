@@ -29,28 +29,9 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.transforms as cxfmapi
-from coordinax._src.exceptions import NoGlobalCartesianChartError
+from coordinax._src.charts.affinity import is_flat_chart
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
-
-
-def is_flat_chart(chart: Any, /) -> bool:
-    """Whether ``chart`` is a Cartesian-type chart (its own canonical Cartesian).
-
-    In such charts a componentwise offset IS a translation of the flat
-    ambient space (Jacobian = identity, no base-point dependence). In any
-    other chart an offset must be pushed through the chart Jacobian at the
-    point, so additive fast paths do not apply.
-
-    A chart with no global Cartesian chart (e.g. ``PoincarePolar6D``) is not
-    flat: this predicate returns `False` rather than propagating
-    `~coordinax.charts.NoGlobalCartesianChartError`.
-    """
-    try:
-        cart = chart.cartesian
-    except NoGlobalCartesianChartError:
-        return False
-    return isinstance(chart, type(cart))
 
 
 def is_traced(*args: Any) -> bool:

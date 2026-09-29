@@ -9,7 +9,12 @@ import plum
 
 import coordinaxs.api.charts as cxcapi
 import coordinaxs.api.manifolds as cxmapi
-from .chart import AbstractSphericalTwoSphere
+from .chart import (
+    AbstractSphericalTwoSphere,
+    LonLatSphericalTwoSphere,
+    MathSphericalTwoSphere,
+    SphericalTwoSphere,
+)
 from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold
 from coordinax._src.base import AbstractChart
@@ -84,3 +89,34 @@ def pt_map(
     # Delegate to the projection map, which handles the intermediate Spherical3D
     p_s2 = cxmapi.pt_project(p, from_chart, to_chart, _twospherefrom3d, usys=usys)
     return cast("CDict", p_s2)
+
+
+# ===================================================================
+# Affine relabellings
+
+
+@plum.dispatch.multi(
+    *[
+        (a, b)
+        for a in (SphericalTwoSphere, MathSphericalTwoSphere, LonLatSphericalTwoSphere)
+        for b in (SphericalTwoSphere, MathSphericalTwoSphere, LonLatSphericalTwoSphere)
+        if a is not b
+    ]
+)
+def is_affine_transition(from_chart: Any, to_chart: Any, /) -> bool:
+    r"""Report the 2-sphere relabellings as affine.
+
+    One parameterisation, three spellings.
+
+    $\mathrm{lat} = \pi/2 - \theta$ and a coordinate swap -- linear in both
+    cases, so the transition Jacobian is constant and there is no curvature
+    term for an order-2 fibre to lose.
+
+    `LonCosLatSphericalTwoSphere` is deliberately absent despite sharing the
+    same base: its ``lon_coslat`` carries a $\cos(\mathrm{lat})$ factor.
+
+    Declared here rather than in `_src/charts` because these charts are
+    defined here -- the same way a downstream package declares its own.
+    """
+    del from_chart, to_chart
+    return True

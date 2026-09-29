@@ -21,7 +21,6 @@ import coordinaxs.api.representations as cxrapi
 import coordinaxs.api.transforms as cxfmapi
 from .bundle import (
     Coordinate,
-    _chart_map_is_affine,
     _ladder_fibres,
     _require_coordinate_basis,
     carry_fibre_across,
@@ -863,7 +862,7 @@ def _return_ladder_fibre(
     if orig_chart == point_chart:
         return cast("Tangent", replace(f, data=out_jet[order]))
 
-    if order >= 2 and not _chart_map_is_affine(point_chart, orig_chart):
+    if order >= 2 and not cxc.is_affine_transition(point_chart, orig_chart):
 
         def back(data: CDict, /) -> CDict:
             return cast("CDict", cxc.pt_map(data, point_chart, orig_chart, usys=usys))
@@ -903,7 +902,7 @@ def _act_coordinate_jet(
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
-            if order >= 2 and not _chart_map_is_affine(orig_chart, point_chart):
+            if order >= 2 and not cxc.is_affine_transition(orig_chart, point_chart):
                 # Same manoeuvre `cconvert` makes, and the same code: build
                 # the fibre's jet in its own chart and prolong it across.
                 f = carry_fibre_across(

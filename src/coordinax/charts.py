@@ -95,6 +95,7 @@ __all__ = (
     "guess_chart",
     "cdict",
     "carray",
+    "is_affine_transition",
     "jac_pt_map",
     "pt_map",
     # ===========================================
@@ -257,6 +258,7 @@ with install_import_hook("coordinax.charts"):
         cartesian_chart,
         cdict,
         guess_chart,
+        is_affine_transition,
         pt_map,
     )
 
