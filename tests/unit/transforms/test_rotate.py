@@ -91,9 +91,8 @@ class TestRotationMatrixIsOrthogonal:
         # no `R^T R` to compare -- so the shape check is what must catch it,
         # and it now does so in the constructor rather than at first use.
         assert _not_a_rotation(rect) is False
-        with pytest.raises(
-            eqx.EquinoxTracetimeError, match=r"square matrix; got shape"
-        ):
+        # `RuntimeError`: see the note in `test_checks.py` (gh#994).
+        with pytest.raises(RuntimeError, match=r"square matrix; got shape"):
             cxfm.Rotate(rect)
 
     def test_a_near_miss_is_not_admitted_by_a_relative_tolerance(self):

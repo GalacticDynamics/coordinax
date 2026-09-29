@@ -197,5 +197,6 @@ def test_a_non_square_matrix_is_named_by_the_shape_check() -> None:
     """
     rect = jnp.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
     assert _not_a_reflection(rect) is False
-    with pytest.raises(eqx.EquinoxTracetimeError, match=r"square matrix; got shape"):
+    # `RuntimeError`: see the note in `test_checks.py` (gh#994).
+    with pytest.raises(RuntimeError, match=r"square matrix; got shape"):
         cxfm.Reflect(rect)
