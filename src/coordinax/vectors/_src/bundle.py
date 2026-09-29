@@ -755,15 +755,43 @@ def _cconvert_jointly(
     fibre has its own source chart and may have its own target. A fibre whose
     leg is affine, or whose order is at most 1, keeps the cheap Jacobian
     path; only the rest are prolonged.
+
+    A prolongation returns every slot below the one asked for, and those
+    lower slots are the base point and the order-1 fibre carried across the
+    same leg. So the legs are computed first and the cheap conversions read
+    out of them where they coincide, rather than being paid for twice -- the
+    Jacobian pushforward of the velocity is the single most expensive step in
+    a bundle conversion, and it was being done once here and again inside the
+    chain.
     """
-    new_point = cast("Point", cxr.cconvert(coord.point, to_chart, usys=usys))
     ladder = _ladder_fibres(coord)
+    legs = _prolonged_legs(coord, to_chart, field_charts, usys, ladder)
+
+    slot0 = _leg_slot(legs, (coord.point.chart, to_chart), 0, None)
+    new_point = (
+        cast("Point", cxr.cconvert(coord.point, to_chart, usys=usys))
+        if slot0 is None
+        else cast(
+            "Point", dataclassish.replace(coord.point, chart=to_chart, data=slot0)
+        )
+    )
 
     new_fields: dict[str, Tangent] = {}
     for name, vec in coord._data.items():
         target = field_charts.get(name, to_chart)
-        order = ladder.get(name, 0)
-        if order < 2 or _chart_map_is_affine(vec.chart, target):
+        # `None` for a displacement or any other non-ladder fibre. Such a
+        # fibre is not a jet slot at all, so it must never be served from
+        # one -- reading "slot 0" for an order-0 fibre hands it the base
+        # point.
+        order = ladder.get(name)
+        reused = (
+            None if order is None else _leg_slot(legs, (vec.chart, target), order, name)
+        )
+        if reused is not None:
+            new_fields[name] = cast(
+                "Tangent", dataclassish.replace(vec, chart=target, data=reused)
+            )
+        elif order is None or order < 2 or _chart_map_is_affine(vec.chart, target):
             at = _point_in(coord, vec.chart, usys)
             new_fields[name] = cast(
                 "Tangent", cxr.cconvert(vec, target, at=at, usys=usys)
@@ -776,6 +804,68 @@ def _cconvert_jointly(
     return Coordinate._create_unchecked(new_point, new_fields)
 
 
+def _prolonged_legs(
+    coord: "Coordinate",
+    to_chart: cxc.AbstractChart,
+    field_charts: Mapping[str, cxc.AbstractChart],
+    usys: OptUSys,
+    ladder: Mapping[str, int],
+    /,
+) -> "dict[tuple[Any, Any], tuple[str, dict[int, Any]]]":
+    """Prolong once per (source chart, target chart) an order >= 2 fibre needs.
+
+    Keyed by the leg rather than by the fibre, so two fibres crossing the
+    same way share one chain.
+    """
+    legs: dict[tuple[Any, Any], tuple[str, dict[int, Any]]] = {}
+    for name, order in ladder.items():
+        if order < 2:
+            continue
+        vec = coord._data[name]
+        target = field_charts.get(name, to_chart)
+        if _chart_map_is_affine(vec.chart, target):
+            continue
+        key = (vec.chart, target)
+        if key not in legs:
+            legs[key] = (
+                name,
+                fibre_jet_across(
+                    coord, name, order, vec, target, usys, verb="cconvert"
+                ),
+            )
+    return legs
+
+
+def _leg_slot(
+    legs: "Mapping[tuple[Any, Any], tuple[str, dict[int, Any]]]",
+    leg: "tuple[Any, Any]",
+    order: int,
+    name: str | None,
+    /,
+) -> Any:
+    """Return the already-computed slot for this leg, or `None` if there is none.
+
+    Two things make a slot reusable, and both matter.
+
+    The traveller must cross the *same* leg -- same source chart, same
+    target. One parked elsewhere, or sent somewhere else by ``field_charts``,
+    has its own journey and must make it.
+
+    And the slot must be shared structure rather than the leg owner's own
+    cargo. Slots 0 and 1 are the base point and the single order-1 fibre, the
+    same for everyone crossing. The top slot is the data of the one fibre
+    that built the leg, so handing it to a second fibre of that order would
+    give the second one the first one's answer.
+    """
+    entry = legs.get(leg)
+    if entry is None:
+        return None
+    owner, out = entry
+    if order >= 2 and name != owner:
+        return None
+    return out.get(order)
+
+
 def _point_in(coord: "Coordinate", chart: cxc.AbstractChart, usys: OptUSys, /) -> Point:
     """Return the base point expressed in ``chart`` (a no-op if it matches)."""
     if coord.point.chart == chart:
@@ -783,7 +873,7 @@ def _point_in(coord: "Coordinate", chart: cxc.AbstractChart, usys: OptUSys, /) -
     return cast("Point", cxr.cconvert(coord.point, chart, usys=usys))
 
 
-def carry_fibre_across(
+def fibre_jet_across(
     coord: "Coordinate",
     name: str,
     order: int,
@@ -793,8 +883,15 @@ def carry_fibre_across(
     /,
     *,
     verb: str,
-) -> Tangent:
+) -> "dict[int, Any]":
     r"""Carry an order >= 2 fibre to ``to_chart``, second-order exact.
+
+    Returns the *whole* prolonged jet, slots 0..order, not just the slot the
+    fibre occupies. The chain computes them all on the way, and the lower
+    ones are the base point and the order-1 fibre carried across the very
+    same leg -- so a caller converting a bundle can read them out instead of
+    recomputing a point map and a Jacobian pushforward it has already paid
+    for.
 
     The fibre's jet is assembled in the fibre's **own** chart -- slot 0 is a
     point map and slot 1 is the Jacobian, which is the whole law at order 1,
@@ -860,7 +957,22 @@ def carry_fibre_across(
         )
 
     jet = {0: _point_in(coord, src, usys).data, 1: vel.data, order: fibre.data}
-    out = prolong_point_map(_pt_map_to(src, to_chart, usys), jet)
+    return prolong_point_map(_pt_map_to(src, to_chart, usys), jet)
+
+
+def carry_fibre_across(
+    coord: "Coordinate",
+    name: str,
+    order: int,
+    fibre: Tangent,
+    to_chart: cxc.AbstractChart,
+    usys: OptUSys,
+    /,
+    *,
+    verb: str,
+) -> Tangent:
+    """`fibre_jet_across` reduced to the one slot the caller asked for."""
+    out = fibre_jet_across(coord, name, order, fibre, to_chart, usys, verb=verb)
     return cast("Tangent", dataclassish.replace(fibre, chart=to_chart, data=out[order]))
 
 
