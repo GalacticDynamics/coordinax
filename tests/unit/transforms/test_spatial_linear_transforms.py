@@ -272,7 +272,8 @@ def test_scale_matrix_is_rebuilt_from_its_factors() -> None:
 def test_matrix_rejects_a_non_square_field() -> None:
     """The accessor validates, so a malformed operator cannot hand one out."""
     op = cxfm.Rotate(jnp.zeros((2, 3)))
-    with pytest.raises(eqx.EquinoxTracetimeError, match="requires a square matrix"):
+    # `RuntimeError`: see the note in `test_checks.py` (gh#994).
+    with pytest.raises(RuntimeError, match="requires a square matrix"):
         _ = op.matrix
 
 

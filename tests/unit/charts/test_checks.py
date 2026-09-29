@@ -53,7 +53,10 @@ class TestPolarRange:
     @given(ust.quantities("m", elements=float32s(min_value=0, max_value=PI_F32)))
     def test_non_angular_units_raises(self, x: u.AbstractQuantity) -> None:
         """Non-angular quantities always raise, regardless of value."""
-        with pytest.raises(eqx.EquinoxTracetimeError, match="must be in angular units"):
+        # `RuntimeError`, not the equinox class: `EquinoxTracetimeError` is gone
+        # on equinox main, where this surfaces as `EquinoxRuntimeError`. Both
+        # subclass `RuntimeError`, and the message is what matters. See gh#994.
+        with pytest.raises(RuntimeError, match="must be in angular units"):
             checks.polar_range(x)
 
     @given(data=st.data())
