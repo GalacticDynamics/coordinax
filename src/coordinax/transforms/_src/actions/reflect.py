@@ -28,8 +28,8 @@ _MSG_NOT_A_REFLECTION: Final = (
     "return unchanged; the trace pins exactly one -1 eigenvalue, i.e. "
     "H = I - 2 n n^T for a unit normal n. Matrices that satisfy only the "
     "first two are involutions but not reflections -- the identity "
-    "(trace n), a rotation by pi about an axis such as diag(-1, -1, 1) "
-    "(trace n - 4), the point inversion -I (trace -n) -- and det H = -1 "
+    "(trace H = n), a rotation by pi about an axis such as diag(-1, -1, 1) "
+    "(trace H = n - 4), the point inversion -I (trace H = -n) -- and det H = -1 "
     "does not separate them either, since -I has det -1 in odd dimensions. "
     "For an orthogonal map with det = +1 use `Rotate`; for any other "
     "invertible map use `Linear`, including a rotoreflection, which is "
@@ -220,7 +220,7 @@ def simplify(op: Reflect, /, *, approx: bool = True, **kw: Any) -> AbstractTrans
     This used to collapse an identity-valued ``H`` to `Identity`. A `Reflect`
     can no longer *be* the identity: the constructor requires
     ``trace H == n - 2`` (exactly one reflected direction) and the identity has
-    ``trace n``, so that branch became unreachable when the type was narrowed
+    ``trace H == n``, so that branch became unreachable when the type was narrowed
     to hyperplane reflections. Dropping it also removes the only value
     inspection here, so this rule is trace-safe by construction rather than by
     an `is_traced` guard.
