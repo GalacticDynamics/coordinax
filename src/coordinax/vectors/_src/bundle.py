@@ -25,7 +25,6 @@ import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
-import coordinax.transforms._src.actions.utils as cxfm_utils
 from .base import (
     AbstractVector,
     broadcast_and_index_data,
@@ -656,58 +655,6 @@ def _ladder_fibres(coord: "Coordinate", /) -> dict[str, int]:
     return out
 
 
-#: Groups of chart types that are affine relabellings of one another -- same
-#: parameterisation, coordinates differing by a permutation, a sign and a
-#: shift, so the transition Jacobian is constant and $\partial^2\psi \equiv 0$.
-#: The 2-sphere family is the same relabelling one dimension down.
-#: `LonCosLat...` is deliberately absent from both: its ``lon_coslat`` carries a
-#: $\cos(\mathrm{lat})$ factor, which makes the Jacobian base-point dependent
-#: like any other curvilinear map. Membership is pinned by a test that measures
-#: $\partial^2\psi(v, v)$ itself, over several velocity directions.
-_AFFINE_RELABELLINGS: tuple[frozenset[type], ...] = (
-    frozenset({cxc.Spherical3D, cxc.MathSpherical3D, cxc.LonLatSpherical3D}),
-    frozenset(
-        {
-            cxc.SphericalTwoSphere,
-            cxc.MathSphericalTwoSphere,
-            cxc.LonLatSphericalTwoSphere,
-        }
-    ),
-    # In one dimension the radius IS the coordinate, so x = r exactly.
-    frozenset({cxc.Cart1D, cxc.Radial1D}),
-)
-
-
-def _chart_map_is_affine(
-    from_chart: cxc.AbstractChart, to_chart: cxc.AbstractChart, /
-) -> bool:
-    r"""Whether the chart transition ``from_chart -> to_chart`` is affine.
-
-    Exactly the condition under which $\partial^2\psi \equiv 0$, so the
-    Jacobian pushforward is the complete law at every order and the cheap
-    per-fibre path stays correct.
-
-    Three ways to qualify: a chart with itself, two Cartesian-type charts
-    (which differ by at most a linear relabelling of flat space), and two
-    members of the same relabelling family -- `sph3d`, `math_sph3d` and
-    `lonlat_sph3d` are the same parameterisation written three ways, with
-    $\mathrm{lat} = \pi/2 - \theta$ and friends, and the 2-sphere charts
-    repeat that a dimension down.
-
-    Conservative where it is unsure: an unrecognised pair reports `False` and
-    takes the joint-jet path, which is always correct and merely costlier.
-    The price of a false negative is a needless prolongation -- and, for a
-    bundle whose ladder has a hole, a needless refusal -- so the family list
-    is worth keeping current.
-    """
-    if from_chart == to_chart:
-        return True
-    if cxfm_utils.is_flat_chart(from_chart) and cxfm_utils.is_flat_chart(to_chart):
-        return True
-    pair = {type(from_chart), type(to_chart)}
-    return any(pair <= family for family in _AFFINE_RELABELLINGS)
-
-
 def _cconvert_needs_joint_jet(
     coord: "Coordinate",
     to_chart: cxc.AbstractChart,
@@ -734,7 +681,7 @@ def _cconvert_needs_joint_jet(
     autodiff path.
     """
     return any(
-        not _chart_map_is_affine(
+        not cxc.is_affine_transition(
             coord._data[name].chart, field_charts.get(name, to_chart)
         )
         for name, order in _ladder_fibres(coord).items()
@@ -791,7 +738,7 @@ def _cconvert_jointly(
             new_fields[name] = cast(
                 "Tangent", dataclassish.replace(vec, chart=target, data=reused)
             )
-        elif order is None or order < 2 or _chart_map_is_affine(vec.chart, target):
+        elif order is None or order < 2 or cxc.is_affine_transition(vec.chart, target):
             at = _point_in(coord, vec.chart, usys)
             new_fields[name] = cast(
                 "Tangent", cxr.cconvert(vec, target, at=at, usys=usys)
@@ -823,7 +770,7 @@ def _prolonged_legs(
             continue
         vec = coord._data[name]
         target = field_charts.get(name, to_chart)
-        if _chart_map_is_affine(vec.chart, target):
+        if cxc.is_affine_transition(vec.chart, target):
             continue
         key = (vec.chart, target)
         if key not in legs:

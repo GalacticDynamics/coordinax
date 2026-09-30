@@ -309,6 +309,8 @@ That is the point of the type: $S^2$ is not $\mathbb{R}^2$. Use an `EmbeddedChar
 Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so downstream packages have a stable surface to register against; nothing should import from `coordinax._src`.
 
 - **A new chart**: subclass the right abstract chart, then register transition maps. In practice you register to and from an existing chart and let composition route the rest — but check the route does not cycle.
+- **Two of your charts are the same parameterisation respelled** (coordinates related by a permutation, a sign and a shift): say so with `is_affine_transition`, in both directions. It is `False` by default, which is safe but means every order-2 conversion between them prolongs a jet it did not need — and a bundle holding an acceleration with no velocity is refused where it could have been answered. Do not claim it for a pair whose Jacobian depends on the base point; the wrong `True` silently drops the $\partial^2\psi(v,v)$ term.
+
 - **A new frame**: register it through the entry point mechanism so import order stays irrelevant (`coordinaxs.astro` is the reference implementation).
 - **A new array-ish type**: that is a `quax` question — see the quax skill.
 - **Register on your own types.** A dispatch annotated with a coordinax abstract base competes with coordinax's own methods and will be ambiguous rather than additive.

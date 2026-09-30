@@ -986,7 +986,7 @@ A non-exhaustive table of exported objects are:
 | --- | --- |
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
-| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `minkowskict`, `galileanct` |
+| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, `is_affine_transition`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `minkowskict`, `galileanct` |
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
@@ -1263,6 +1263,37 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - The partial-application dispatch (returning a callable) is useful for currying: `transform_func = pt_map(cart3d, sph3d); result = transform_func(p)`.
     - Product charts transform by independently transforming each factor's coordinates.
     - Same-atlas chart transitions and cross-manifold realization maps are unified under one function; dispatch resolution selects the appropriate implementation based on the chart types.
+
+(software-spec-is-affine-transition)=
+
+!!! info `is_affine_transition`
+
+    Report whether the chart transition `from_chart -> to_chart` is affine, meaning $\partial^2\psi \equiv 0$, so that the Jacobian pushforward is the complete transformation law at every order rather than only at order 1.
+
+    **Dispatches:**
+
+    - `(from_chart: AbstractChart, to_chart: AbstractChart, /)` -> `bool`. The default. `True` for a chart with itself and for two Cartesian-type charts, which differ by at most a linear relabelling of flat space; `False` otherwise.
+
+    - Any more specific pair registered by the package that defines those charts. The built-in declarations are `sph3d`/`math_sph3d`/`lonlat_sph3d`, the same three spellings on the 2-sphere, and `cart1d`/`radial1d`.
+
+    This is the predicate that decides whether an order $m \geq 2$ fibre may be carried between charts on its own, or whether the whole jet must be prolonged; see [`Coordinate`](#software-spec-coordinate).
+
+    The asymmetry matters: a wrong `True` is silent, sending a fibre down the cheap path and dropping its $\partial^2\psi(v, v)$ term, while a wrong `False` only costs a prolongation that was not needed. The default is therefore `False` for any pair that has not said otherwise.
+
+    **Extension.** Affinity is a property of a chart *pair*, so the package defining the pair is what knows the answer, and declares it by dispatch:
+
+    ```
+    @plum.dispatch
+    def is_affine_transition(a: MyChartA, b: MyChartB, /) -> bool:
+        return True
+    ```
+
+    A pair qualifies when the two charts are the same parameterisation written differently — coordinates related by a permutation, a sign and a shift — so the transition Jacobian does not depend on the base point. Sharing a base class is not sufficient and not necessary: `Spherical3D` and `LonCosLatSpherical3D` share `AbstractSpherical3D`, and the latter's $\cos(\mathrm{lat})$ factor makes its Jacobian base-point dependent like any other curvilinear map.
+
+    Notes:
+
+    - The relation is symmetric in principle, but dispatch is not: register both orders, or the reverse direction falls back to the default.
+    - A downstream family that declares nothing is not wrong, only slower — and, for a bundle whose ladder has a hole, refused where it could have been answered.
 
 (software-spec-tangent-map)=
 
@@ -2584,7 +2615,7 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     which is built from the *lower* fibre and so is invisible to a pass that converts one fibre at a time. The bundle is the one holder of that lower fibre, so `Coordinate.cconvert` carries the **whole jet** $\{0: q, 1: v, 2: a, \ldots\}$ through the transition instead, and each fibre is read back out of the prolonged jet. A lone `Tangent` cannot do this: holding no lower fibre, it has nothing to build the second term from. The rule applied to it is therefore the one it always had — `tangent_map` and `cconvert` on a single fibre are the Jacobian pushforward at `at`, first order and no more. Its components do of course change; what this leaves alone is the law, not the data.
 
-    The second term vanishes identically where the transition is **affine** — a chart with itself, two Cartesian-type charts, or two members of one relabelling family such as `sph3d`/`math_sph3d`/`lonlat_sph3d` — and there the per-fibre path is kept, being both exact and cheaper. See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
+    The second term vanishes identically where the transition is **affine**, and there the per-fibre path is kept, being both exact and cheaper. Which pairs those are is answered by [`is_affine_transition`](#software-spec-is-affine-transition), not decided here. See [gh#936](https://github.com/GalacticDynamics/coordinax/issues/936).
 
     **Preconditions of the joint path.** A bundle that never needs a jet is unaffected by all of this: an order $\leq 1$ fibre alone, or any fibre whose leg is affine, keeps the Jacobian path, and mixed-chart and mixed-basis bundles remain valid there.
 
