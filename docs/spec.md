@@ -5603,11 +5603,11 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Reflect`
 
-    A **Reflect** is a transformation that applies a linear orthogonal map with determinant -1 to position components. As with `Rotate`, tangent data is carried by the pushforward with the same matrix, $v \mapsto H v$, rather than left unchanged.
+    A **Reflect** is a transformation that applies a *hyperplane reflection* to position components. That is a symmetric involution with exactly one eigenvalue $-1$; it is therefore orthogonal with determinant $-1$, but determinant $-1$ alone does not characterise it (see below). As with `Rotate`, tangent data is carried by the pushforward with the same matrix, $v \mapsto H v$, rather than left unchanged.
 
     **Mathematical definition**:
 
-    A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1.
+    A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1. Note that `det H = -1` does not *characterise* a reflection: the point inversion $-I$ has `det -1` in odd dimensions and reverses every direction. The exact condition is symmetric, involutive, and $\mathrm{tr}\,H = n - 2$, i.e. exactly one eigenvalue $-1$, which is what the constructor enforces.
 
     In Euclidean space, reflection across the hyperplane orthogonal to a nonzero normal vector $n$ is represented by the Householder matrix
 
