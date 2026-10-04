@@ -238,7 +238,7 @@ norecursedirs = [
   "__pycache__",
   "docs/_build",
 ]
-testpaths = ["README", "src/", "docs/", "tests/"]
+testpaths = ["README.md", "src/", "docs/", "tests/"]
 xfail_strict = true
 
 [tool.pytest_env]
