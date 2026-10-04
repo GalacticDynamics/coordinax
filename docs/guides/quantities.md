@@ -84,9 +84,9 @@ A key feature of {class}`~coordinax.angle.Angle` is the ability to wrap values
 to a specified range, which is useful for keeping angles within a branch cut:
 
 ```{code-block} python
->>> from unxt import Quantity
+>>> import unxt as u
 >>> a = cxa.Angle(370, "deg")
->>> a.wrap_to(Quantity(0, "deg"), Quantity(360, "deg"))
+>>> a.wrap_to(u.Q(0, "deg"), u.Q(360, "deg"))
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
