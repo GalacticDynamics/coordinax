@@ -45,7 +45,8 @@ class TestCartesianPos3D(AbstractPos3DTest):
     """Test `coordinax.CartesianPos3D`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         return cx.CartesianPos3D(
             x=u.Q([1, 2, 3, 4], "kpc"),
@@ -54,7 +55,8 @@ class TestCartesianPos3D(AbstractPos3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.vecs.AbstractPos) -> apyc.CartesianRepresentation:
+    @staticmethod
+    def apyvector(vector: cx.vecs.AbstractPos) -> apyc.CartesianRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.CartesianRepresentation)
 
@@ -170,7 +172,8 @@ class TestCylindricalPos(AbstractPos3DTest):
     """Test `coordinax.CylindricalPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         return cx.vecs.CylindricalPos(
             rho=u.Q([1, 2, 3, 4], "kpc"),
@@ -179,7 +182,8 @@ class TestCylindricalPos(AbstractPos3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.vecs.AbstractPos):
+    @staticmethod
+    def apyvector(vector: cx.vecs.AbstractPos):
         """Return an Astropy vector."""
         return convert(vector, apyc.CylindricalRepresentation)
 
@@ -291,7 +295,8 @@ class TestSphericalPos(AbstractPos3DTest):
     """Test `coordinax.SphericalPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.SphericalPos:
+    @staticmethod
+    def vector() -> cx.SphericalPos:
         """Return a vector."""
         return cx.SphericalPos(
             r=u.Q([1, 2, 3, 4], "kpc"),
@@ -300,7 +305,8 @@ class TestSphericalPos(AbstractPos3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.vecs.AbstractPos):
+    @staticmethod
+    def apyvector(vector: cx.vecs.AbstractPos):
         """Return an Astropy vector."""
         return convert(vector, apyc.PhysicsSphericalRepresentation)
 
@@ -457,7 +463,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
     """Test `coordinax.ProlateSpheroidalPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         return cx.vecs.ProlateSpheroidalPos(
             mu=u.Q([1, 2, 3, 4], "kpc2"),
@@ -609,7 +616,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
     """Test `coordinax.CartesianVel3D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.CartesianVel3D:
+    @staticmethod
+    def difntl() -> cx.CartesianVel3D:
         """Return a differential."""
         return cx.CartesianVel3D(
             x=u.Q([5, 6, 7, 8], "km/s"),
@@ -618,7 +626,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.CartesianPos3D:
+    @staticmethod
+    def vector() -> cx.CartesianPos3D:
         """Return a vector."""
         return cx.CartesianPos3D(
             x=u.Q([1, 2, 3, 4], "kpc"),
@@ -627,12 +636,14 @@ class TestCartesianVel3D(AbstractVel3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(self, difntl: cx.CartesianVel3D):
+    @staticmethod
+    def apydifntl(difntl: cx.CartesianVel3D):
         """Return an Astropy differential."""
         return convert(difntl, apyc.CartesianDifferential)
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.CartesianPos3D):
+    @staticmethod
+    def apyvector(vector: cx.CartesianPos3D):
         """Return an Astropy vector."""
         return convert(vector, apyc.CartesianRepresentation)
 
@@ -769,7 +780,8 @@ class TestCylindricalVel(AbstractVel3DTest):
     """Test `coordinax.CylindricalVel`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.CylindricalVel:
+    @staticmethod
+    def difntl() -> cx.vecs.CylindricalVel:
         """Return a differential."""
         return cx.vecs.CylindricalVel(
             rho=u.Q([5, 6, 7, 8], "km/s"),
@@ -778,7 +790,8 @@ class TestCylindricalVel(AbstractVel3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.CylindricalPos:
+    @staticmethod
+    def vector() -> cx.vecs.CylindricalPos:
         """Return a vector."""
         return cx.vecs.CylindricalPos(
             rho=u.Q([1, 2, 3, 4], "kpc"),
@@ -787,14 +800,14 @@ class TestCylindricalVel(AbstractVel3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(self, difntl: cx.vecs.CylindricalVel):
+    @staticmethod
+    def apydifntl(difntl: cx.vecs.CylindricalVel):
         """Return an Astropy differential."""
         return convert(difntl, apyc.CylindricalDifferential)
 
     @pytest.fixture(scope="class")
-    def apyvector(
-        self, vector: cx.vecs.CylindricalPos
-    ) -> apyc.CylindricalRepresentation:
+    @staticmethod
+    def apyvector(vector: cx.vecs.CylindricalPos) -> apyc.CylindricalRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.CylindricalRepresentation)
 
@@ -903,7 +916,8 @@ class TestSphericalVel(AbstractVel3DTest):
     """Test `coordinax.SphericalVel`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.SphericalVel:
+    @staticmethod
+    def difntl() -> cx.SphericalVel:
         """Return a differential."""
         return cx.SphericalVel(
             r=u.Q([5, 6, 7, 8], "km/s"),
@@ -912,7 +926,8 @@ class TestSphericalVel(AbstractVel3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.SphericalPos:
+    @staticmethod
+    def vector() -> cx.SphericalPos:
         """Return a vector."""
         return cx.SphericalPos(
             r=u.Q([1, 2, 3, 4], "kpc"),
@@ -921,12 +936,14 @@ class TestSphericalVel(AbstractVel3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(self, difntl: cx.SphericalVel) -> apyc.PhysicsSphericalDifferential:
+    @staticmethod
+    def apydifntl(difntl: cx.SphericalVel) -> apyc.PhysicsSphericalDifferential:
         """Return an Astropy differential."""
         return convert(difntl, apyc.PhysicsSphericalDifferential)
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.SphericalPos) -> apyc.PhysicsSphericalRepresentation:
+    @staticmethod
+    def apyvector(vector: cx.SphericalPos) -> apyc.PhysicsSphericalRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.PhysicsSphericalRepresentation)
 

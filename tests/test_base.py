@@ -164,7 +164,8 @@ class AbstractPosTest(AbstractVectorTest):
     """Test `coordinax.AbstractPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
@@ -187,12 +188,14 @@ class AbstractVelTest(AbstractVectorTest):
     """Test `coordinax.AbstractVel`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.AbstractVel:
+    @staticmethod
+    def difntl() -> cx.vecs.AbstractVel:
         """Return a vector."""
         raise NotImplementedError
 
