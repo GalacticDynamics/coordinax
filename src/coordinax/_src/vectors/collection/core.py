@@ -71,8 +71,8 @@ class KinematicSpace(
     (brodcastable) batch shapes:
 
     >>> w = cx.KinematicSpace(
-    ...     length=u.Quantity([[8.5, 0, 0], [10, 0, 0]], "kpc"),
-    ...     speed=u.Quantity([0, 200, 0], "km/s"))
+    ...     length=u.Q([[8.5, 0, 0], [10, 0, 0]], "kpc"),
+    ...     speed=u.Q([0, 200, 0], "km/s"))
     >>> print(w)
     KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [kpc]
@@ -126,8 +126,8 @@ class KinematicSpace(
 
     There are convenience ways to initialize the vectors in the space:
 
-    >>> space = cx.KinematicSpace.from_({"length": u.Quantity([1, 2, 3], "km"),
-    ...                         "speed": u.Quantity([4, 5, 6], "km/s")})
+    >>> space = cx.KinematicSpace.from_({"length": u.Q([1, 2, 3], "km"),
+    ...                         "speed": u.Q([4, 5, 6], "km/s")})
     >>> print(space)
     KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [km]

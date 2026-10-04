@@ -53,7 +53,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     >>> vec = cx.CartesianPos3D.from_([0.0, 0.0, 0.0], "m")
 
-    >>> delta_t = u.Quantity(1.0, "s")
+    >>> delta_t = u.Q(1.0, "s")
     >>> _, newvec = op(delta_t, vec)
     >>> print(newvec)
     <CartesianPos3D: (x, y, z) [m]
@@ -169,9 +169,9 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> q = u.Q([1, 0, 0], "m")
     >>> op = cx.ops.GalileanBoost.from_([1, -1, 3], "m/s")
-    >>> delta_t = u.Quantity(1, "s")
+    >>> delta_t = u.Q(1, "s")
 
     The position is updated by the boost velocity times the time interval:
 
@@ -180,7 +180,7 @@ def call(
     Quantity(Array([ 2, -1,  3], dtype=int32), unit='m')
 
     """
-    vel = convert(self.velocity, u.Quantity)
+    vel = convert(self.velocity, u.Q)
     return delta_t, q + vel * delta_t
 
 
@@ -202,7 +202,7 @@ def call(
     Define a boost operator and the time interval to apply it:
 
     >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
-    >>> dt = u.Quantity(1, "s")
+    >>> dt = u.Q(1, "s")
 
     >>> _, newq = op(dt, q)
 
@@ -264,7 +264,7 @@ def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> GalileanBoost | Identity
 
     """
     # Check if the velocity is zero.
-    if jnp.allclose(convert(op.velocity, u.Quantity).value, jnp.zeros((3,)), **kwargs):
+    if jnp.allclose(convert(op.velocity, u.Q).value, jnp.zeros((3,)), **kwargs):
         return Identity()
     return op
 

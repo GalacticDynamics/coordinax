@@ -545,7 +545,7 @@ def vector(obj: apyu.Quantity, /) -> cx.vecs.AbstractVector:
         [1. 2. 3.]>
 
     """
-    return vector(convert(obj, u.Quantity))
+    return vector(convert(obj, u.Q))
 
 
 @dispatch
@@ -599,4 +599,4 @@ def vector(
          [3.336e-05 4.000e+00 5.000e+00 6.000e+00]]>
 
     """
-    return vector(cls, convert(obj, u.Quantity))
+    return vector(cls, convert(obj, u.Q))

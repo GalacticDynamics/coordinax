@@ -19,11 +19,11 @@ if TYPE_CHECKING:
     from unxt import Quantity as DimQuantity
 else:
 
-    class _DimQuantityMeta(type(u.Quantity)):
+    class _DimQuantityMeta(type(u.Q)):
         """Metaclass of `DimQuantity`: instance checks by physical dimension."""
 
         def __instancecheck__(cls, obj: Any, /) -> bool:
-            return isinstance(obj, u.Quantity) and (
+            return isinstance(obj, u.Q) and (
                 cls.dimension is None or u.dimension_of(obj) == cls.dimension
             )
 
@@ -36,7 +36,7 @@ else:
                 {"dimension": dim, "__module__": __name__},
             )
 
-    class DimQuantity(u.Quantity, metaclass=_DimQuantityMeta):
+    class DimQuantity(u.Q, metaclass=_DimQuantityMeta):
         """A `unxt.Quantity` annotation that carries a physical dimension.
 
         A stop-gap for the unxt v2 port: ``u.Quantity["length"]`` is a no-op in
@@ -51,9 +51,9 @@ else:
         as narrower.
 
         >>> import unxt as u
-        >>> isinstance(u.Quantity(1, "km"), DimQuantity["length"])
+        >>> isinstance(u.Q(1, "km"), DimQuantity["length"])
         True
-        >>> isinstance(u.Quantity(1, "s"), DimQuantity["length"])
+        >>> isinstance(u.Q(1, "s"), DimQuantity["length"])
         False
         >>> u.dimension_of(DimQuantity["speed"])
         PhysicalType({'speed', 'velocity'})

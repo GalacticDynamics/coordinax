@@ -93,7 +93,7 @@ Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 The {meth}`~coordinax.angle.Angle.wrap_to` method has a function counterpart
 
 ```{code-block} python
->>> cxa.wrap_to(a, u.Quantity(0, "deg"), u.Quantity(360, "deg"))
+>>> cxa.wrap_to(a, u.Q(0, "deg"), u.Q(360, "deg"))
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 

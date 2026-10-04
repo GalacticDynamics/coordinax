@@ -24,9 +24,7 @@ mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 
 @register(jax.lax.mul_p)
-def mul_p_acc_q(
-    lhs: AbstractAcc, rhs: u.Quantity, /, **kw: Any
-) -> AbstractVel | AbstractPos:
+def mul_p_acc_q(lhs: AbstractAcc, rhs: u.Q, /, **kw: Any) -> AbstractVel | AbstractPos:
     """Multiply an acceleration by a time or time-squared `unxt.Quantity`.
 
     Examples
@@ -35,22 +33,22 @@ def mul_p_acc_q(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> print(lax.mul(d2r, u.Quantity(2, "s")))
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
+    >>> print(lax.mul(d2r, u.Q(2, "s")))
     <RadialVel: (r) [m / s]
         [2]>
 
-    >>> print(lax.mul(d2r, u.Quantity(2, "s2")))
+    >>> print(lax.mul(d2r, u.Q(2, "s2")))
     <RadialPos: (r) [m]
         [2]>
 
-    >>> print(d2r * u.Quantity(2, "s2"))
+    >>> print(d2r * u.Q(2, "s2"))
     <RadialPos: (r) [m]
         [2]>
 
     Any other unit is an error:
 
-    >>> try: d2r * u.Quantity(2, "m")
+    >>> try: d2r * u.Q(2, "m")
     ... except ValueError as e: print(e)
     Cannot multiply RadialAcc by a quantity in m.
 
@@ -71,9 +69,7 @@ def mul_p_acc_q(
 
 
 @register(jax.lax.mul_p)
-def mul_p_q_acc(
-    lhs: u.Quantity, rhs: AbstractAcc, /, **kw: Any
-) -> AbstractVel | AbstractPos:
+def mul_p_q_acc(lhs: u.Q, rhs: AbstractAcc, /, **kw: Any) -> AbstractVel | AbstractPos:
     """Multiply a time or time-squared `unxt.Quantity` by an acceleration.
 
     Examples
@@ -82,12 +78,12 @@ def mul_p_q_acc(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> print(lax.mul(u.Quantity(2, "s"), d2r))
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
+    >>> print(lax.mul(u.Q(2, "s"), d2r))
     <RadialVel: (r) [m / s]
         [2]>
 
-    >>> print(lax.mul(u.Quantity(2, "s2"), d2r))
+    >>> print(lax.mul(u.Q(2, "s2"), d2r))
     <RadialPos: (r) [m]
         [2]>
 
@@ -108,7 +104,7 @@ def neg_p_acc(vec: AbstractAcc, /) -> AbstractAcc:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
     >>> vec = lax.neg(d2r)
     >>> print(vec)
     <RadialAcc: (r) [m / s2]

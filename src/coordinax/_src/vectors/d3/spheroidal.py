@@ -51,10 +51,10 @@ class ProlateSpheroidalPos(AbstractPos3D):
     >>> import coordinax.vecs as cxv
 
     >>> vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(3.0, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(1.5, "km"),
+    ...     mu=u.Q(3.0, "km2"),
+    ...     nu=u.Q(0.5, "km2"),
+    ...     phi=u.Q(0.25, "rad"),
+    ...     Delta=u.Q(1.5, "km"),
     ... )
     >>> print(vec)
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
@@ -64,20 +64,20 @@ class ProlateSpheroidalPos(AbstractPos3D):
     This fails with a zero or negative Delta:
 
     >>> try: vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(3.0, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(0.0, "km"),
+    ...     mu=u.Q(3.0, "km2"),
+    ...     nu=u.Q(0.5, "km2"),
+    ...     phi=u.Q(0.25, "rad"),
+    ...     Delta=u.Q(0.0, "km"),
     ... )
     ... except Exception as e: pass
 
     Or with invalid mu and nu:
 
     >>> try: vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(0.5, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(1.5, "km"),
+    ...     mu=u.Q(0.5, "km2"),
+    ...     nu=u.Q(0.5, "km2"),
+    ...     phi=u.Q(0.25, "rad"),
+    ...     Delta=u.Q(1.5, "km"),
     ... )
     ... except Exception as e: pass
 
@@ -92,7 +92,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     parameter `Delta` is not retained through the conversion. To convert back to
     prolate spheroidal coordinates, we need to provide the focal length again:
 
-    >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "km"))
+    >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(1.5, "km"))
     >>> print(vec2.round(3))
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
      Delta=Quantity(1.5, unit='km')
@@ -151,17 +151,17 @@ class ProlateSpheroidalVel(AbstractVel3D):
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> v = cxv.CartesianVel3D.from_(u.Quantity([4, 5, 6], "km/s"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> v = cxv.CartesianVel3D.from_(u.Q([4, 5, 6], "km/s"))
 
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(4, "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(4, "kpc"))
     >>> pv = v.vconvert(cxv.ProlateSpheroidalVel, px)
 
     >>> print(pv.vconvert(cxv.CartesianVel3D, px))
     <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
-    >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Quantity(4, "kpc")))
+    >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Q(4, "kpc")))
     <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
@@ -195,18 +195,18 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> v = cxv.CartesianVel3D.from_(u.Quantity([4, 5, 6], "km/s"))
-    >>> a = cxv.CartesianAcc3D.from_(u.Quantity([4, 5, 6], "km/s2"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> v = cxv.CartesianVel3D.from_(u.Q([4, 5, 6], "km/s"))
+    >>> a = cxv.CartesianAcc3D.from_(u.Q([4, 5, 6], "km/s2"))
 
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(4, "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(4, "kpc"))
     >>> pa = a.vconvert(cxv.ProlateSpheroidalAcc, v, px)
 
     >>> print(pa.vconvert(cxv.CartesianAcc3D, v, px))
     <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
-    >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Quantity(4, "kpc")))
+    >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Q(4, "kpc")))
     <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 

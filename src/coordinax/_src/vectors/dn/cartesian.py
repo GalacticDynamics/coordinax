@@ -44,7 +44,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2], "km"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km')
     >>> q.shape
@@ -52,7 +52,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km')
     >>> q.shape
@@ -60,7 +60,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4], "km"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km')
     >>> q.shape
@@ -68,7 +68,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4, 5], "km"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
     >>> q.shape
@@ -93,7 +93,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))._dimensionality()
+        >>> cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))._dimensionality()
         3
 
         """
@@ -121,7 +121,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
         A 3D vector:
 
-        >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
+        >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
         >>> q.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km')
 
@@ -144,7 +144,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 1D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([[1]], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([[1]], "km/s"))
     >>> q.q
     Quantity(Array([[1]], dtype=int32), unit='km / s')
     >>> q.shape
@@ -152,7 +152,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2], "km/s"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km / s')
     >>> q.shape
@@ -160,7 +160,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
     >>> q.shape
@@ -168,7 +168,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s')
     >>> q.shape
@@ -176,7 +176,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4, 5], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4, 5], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
     >>> q.shape
@@ -201,7 +201,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))._dimensionality()
+        >>> cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))._dimensionality()
         3
 
         """
@@ -219,7 +219,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
         A 3D vector:
 
-        >>> c = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))
+        >>> c = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))
         >>> c.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km / s')
 
@@ -242,7 +242,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 1D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([[1]], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([[1]], "km/s2"))
     >>> q.q
     Quantity(Array([[1]], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -250,7 +250,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -258,7 +258,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -266,7 +266,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -274,7 +274,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4, 5], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4, 5], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -299,7 +299,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))._dimensionality()
+        >>> cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))._dimensionality()
         3
 
         """
@@ -322,7 +322,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
         A 3D vector:
 
-        >>> c = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))
+        >>> c = cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))
         >>> c.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km / s2')
 

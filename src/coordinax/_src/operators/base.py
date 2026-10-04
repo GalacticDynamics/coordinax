@@ -98,7 +98,7 @@ class AbstractOperator(eqx.Module):
         >>> op.simplify()
         Identity()
 
-        >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+        >>> op = cxo.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"))
         >>> op.simplify()
         GalileanTranslation(
             delta_t=Quantity(f32[], unit='s'),
@@ -154,8 +154,8 @@ class AbstractOperator(eqx.Module):
                           [0 0 1]])
 
         >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Quantity([0., 2, 3, 4], "km"),
-        ...     velocity=u.Quantity([1., 2, 3], "km/s"),
+        ...     translation=u.Q([0., 2, 3, 4], "km"),
+        ...     velocity=u.Q([1., 2, 3], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
         >>> print(op)
@@ -268,7 +268,7 @@ def from_(
         [1 1 1]>)
 
     """
-    return cls.from_(u.Quantity(x, unit))
+    return cls.from_(u.Q(x, unit))
 
 
 @AbstractOperator.from_.dispatch

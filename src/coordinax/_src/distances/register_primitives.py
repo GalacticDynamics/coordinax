@@ -22,7 +22,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quantity:
+def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Q:
     """Cube root of a distance.
 
     Examples
@@ -35,14 +35,14 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quant
 
     """
     value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
-    return u.Quantity(value, unit=x.unit ** (1 / 3))
+    return u.Q(value, unit=x.unit ** (1 / 3))
 
 
 # ==============================================================================
 
 
 @register(lax.div_p)
-def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Quantity:
+def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
     """Division of two Distances.
 
     Examples
@@ -56,7 +56,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Qu
     Quantity(Array(0.5, dtype=float32, ...), unit='')
 
     """
-    return u.Quantity(lax.div(x.value, y.value), unit=x.unit / y.unit)
+    return u.Q(lax.div(x.value, y.value), unit=x.unit / y.unit)
 
 
 # ==============================================================================
@@ -65,7 +65,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Qu
 @register(lax.dot_general_p)
 def dot_general_p_abstractdistances(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
-) -> u.Quantity:
+) -> u.Q:
     """Dot product of two Distances.
 
     Examples
@@ -86,7 +86,7 @@ def dot_general_p_abstractdistances(
     This rule is also used by `jnp.matmul` for quantities.
 
     >>> Rz = jnp.asarray([[0, -1,  0], [1,  0,  0], [0,  0,  1]])
-    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> q = u.Q([1, 0, 0], "m")
     >>> Rz @ q
     Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
@@ -97,14 +97,14 @@ def dot_general_p_abstractdistances(
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
-    return u.Quantity(value, unit=lhs.unit * rhs.unit)
+    return u.Q(value, unit=lhs.unit * rhs.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.integer_pow_p)
-def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> u.Quantity:
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> u.Q:
     """Integer power of a Distance.
 
     Examples
@@ -115,14 +115,14 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> u.Quant
     Quantity(Array(8, dtype=int32, ...), unit='m3')
 
     """
-    return u.Quantity(lax.integer_pow(x.value, y), unit=x.unit**y)
+    return u.Q(lax.integer_pow(x.value, y), unit=x.unit**y)
 
 
 # ==============================================================================
 
 
 @register(lax.neg_p)
-def neg_p_distance(x: Distance, /) -> u.Quantity:
+def neg_p_distance(x: Distance, /) -> u.Q:
     """Negation of a Distance degrades to a Quantity.
 
     Examples
@@ -133,16 +133,14 @@ def neg_p_distance(x: Distance, /) -> u.Quantity:
     Quantity(Array(-10, dtype=int32, ...), unit='m')
 
     """
-    return u.Quantity(-x.value, x.unit)
+    return u.Q(-x.value, x.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.pow_p)
-def pow_p_abstractdistance_arraylike(
-    x: AbstractDistance, y: ArrayLike, /
-) -> u.Quantity:
+def pow_p_abstractdistance_arraylike(x: AbstractDistance, y: ArrayLike, /) -> u.Q:
     """Power of a Distance by redispatching to Quantity.
 
     Examples
@@ -156,14 +154,14 @@ def pow_p_abstractdistance_arraylike(
     Quantity(Array(1000., dtype=float32, ...), unit='m3')
 
     """
-    return u.Quantity(x.value, x.unit) ** y  # TODO: better call to power
+    return u.Q(x.value, x.unit) ** y  # TODO: better call to power
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Q:
     """Square root of a quantity.
 
     Examples
@@ -183,7 +181,7 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quant
     """
     # Promote to something that supports sqrt units.
     value = lax.sqrt_p.bind(x.value, accuracy=accuracy)
-    return u.Quantity(value, unit=x.unit ** (1 / 2))
+    return u.Q(value, unit=x.unit ** (1 / 2))
 
 
 # ==============================================================================
@@ -195,6 +193,6 @@ def to_value_rad_or_one(q: u.AbstractQuantity, /) -> ArrayLike:
 
 # TODO: figure out a promotion alternative that works in general
 @register(lax.tan_p)
-def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quantity:
+def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Q:
     value = lax.tan_p.bind(to_value_rad_or_one(x), accuracy=accuracy)
-    return u.Quantity(value, unit=one)
+    return u.Q(value, unit=one)

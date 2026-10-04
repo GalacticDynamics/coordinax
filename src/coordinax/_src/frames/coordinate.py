@@ -43,7 +43,7 @@ class AbstractCoordinate(AbstractVector):
     # Coordinate API
 
     def to_frame(
-        self, toframe: AbstractReferenceFrame, /, t: u.Quantity | None = None
+        self, toframe: AbstractReferenceFrame, /, t: u.Q | None = None
     ) -> "AbstractCoordinate":
         """Transform the coordinate to a specified frame.
 

@@ -42,8 +42,8 @@ class PolarPos(AbstractPos2D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"),
-        ...                        phi=u.Quantity(90, "deg"))
+        >>> vec = cx.vecs.PolarPos(r=u.Q(1, "m"),
+        ...                        phi=u.Q(90, "deg"))
         >>> vec.norm()
         Distance(Array(1, dtype=int32, ...), unit='m')
 
@@ -60,7 +60,7 @@ class PolarVel(AbstractVel2D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vev = cx.vecs.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(90, "deg/s"))
+    >>> vev = cx.vecs.PolarVel(r=u.Q(1, "m/s"), phi=u.Q(90, "deg/s"))
     >>> print(vev)
     <PolarVel: (r[m / s], phi[deg / s])
         [ 1 90]>
@@ -86,8 +86,8 @@ class PolarAcc(AbstractAcc2D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> acc = cx.vecs.PolarAcc(r=u.Quantity(1, "m/s2"),
-    ...                        phi=u.Quantity(3, "deg/s2"))
+    >>> acc = cx.vecs.PolarAcc(r=u.Q(1, "m/s2"),
+    ...                        phi=u.Q(3, "deg/s2"))
     >>> print(acc)
     <PolarAcc: (r[m / s2], phi[deg / s2])
         [1 3]>

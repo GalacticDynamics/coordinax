@@ -10,8 +10,8 @@ from .base import AbstractDistance
 from .funcs import distance, distance_modulus, parallax
 from .measures import Distance, DistanceModulus, Parallax
 
-parallax_base_length = u.Quantity(1, "AU")
-distance_modulus_base_distance = u.Quantity(10, "pc")
+parallax_base_length = u.Q(1, "AU")
+distance_modulus_base_distance = u.Q(10, "pc")
 
 
 @u.AbstractQuantity.from_.dispatch

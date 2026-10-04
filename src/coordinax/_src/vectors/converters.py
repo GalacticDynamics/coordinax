@@ -17,7 +17,7 @@ def converter_azimuth_to_range(phi: u.AbstractQuantity, /) -> u.AbstractQuantity
     Examples
     --------
     >>> import unxt as u
-    >>> x = u.Quantity(370, "deg")
+    >>> x = u.Q(370, "deg")
     >>> converter_azimuth_to_range(x)
     Quantity(Array(10, dtype=int32, ...), unit='deg')
 

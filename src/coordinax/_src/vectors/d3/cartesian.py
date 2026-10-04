@@ -30,7 +30,7 @@ class CartesianPos3D(AbstractCartesian, AbstractPos3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianPos3D.from_(u.Q([1, 2, 3], "m"))
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>

@@ -23,7 +23,7 @@ class RadialPos(AbstractPos1D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.RadialPos(u.Quantity([2], "m"))
+    >>> vec = cx.vecs.RadialPos(u.Q([2], "m"))
     >>> print(vec)
     <RadialPos: (r) [m]
         [[2]]>
@@ -43,7 +43,7 @@ class RadialVel(AbstractVel1D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.RadialVel(u.Quantity([2], "m/s"))
+    >>> vec = cx.vecs.RadialVel(u.Q([2], "m/s"))
     >>> print(vec)
     <RadialVel: (r) [m / s]
         [[2]]>
@@ -63,7 +63,7 @@ class RadialAcc(AbstractAcc1D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.RadialAcc(u.Quantity([2], "m/s2"))
+    >>> vec = cx.vecs.RadialAcc(u.Q([2], "m/s2"))
     >>> print(vec)
     <RadialAcc: (r) [m / s2]
         [[2]]>

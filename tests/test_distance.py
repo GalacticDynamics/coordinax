@@ -12,16 +12,16 @@ def test_promotion_rule():
     """Test the promotion rule for distance."""
     # Quantities
     d = cx.distance.Distance(90.0, "pc")
-    q = u.Quantity(1.0, "kpc")
+    q = u.Q(1.0, "kpc")
 
     # Explicit promotion test
     d_p, q_p = promote(d, q)
-    assert isinstance(d_p, u.Quantity)
-    assert isinstance(q_p, u.Quantity)
+    assert isinstance(d_p, u.Q)
+    assert isinstance(q_p, u.Q)
 
     # Implicit promotion test
-    assert isinstance(d * q, u.Quantity)
-    assert isinstance(q * d, u.Quantity)
+    assert isinstance(d * q, u.Q)
+    assert isinstance(q * d, u.Q)
 
 
 @pytest.mark.parametrize(
@@ -33,8 +33,8 @@ def test_convert_distance_to_quantity(d):
     These conversions should be covered under rules defined in `unxt`.
 
     """
-    q = convert(d, u.Quantity)
+    q = convert(d, u.Q)
 
-    assert isinstance(q, u.Quantity)
+    assert isinstance(q, u.Q)
     assert q.unit is d.unit
     assert q.value is d.value

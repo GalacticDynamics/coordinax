@@ -40,7 +40,7 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> convert(pos, Distance)
     Distance(Array([1, 2], dtype=int32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(u.Quantity(1, "km"), u.Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(u.Q(1, "km"), u.Q(0, "deg"))
     >>> convert(pos, Distance)
     Distance(Array([1., 0.], dtype=float32, ...), unit='km')
 
@@ -48,15 +48,15 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> convert(pos, Distance)
     Distance(Array([1., 2., 3.], dtype=float32), unit='km')
 
-    >>> pos = cx.SphericalPos(u.Quantity(1.0, "km"), u.Quantity(0, "deg"), u.Quantity(0, "deg"))
+    >>> pos = cx.SphericalPos(u.Q(1.0, "km"), u.Q(0, "deg"), u.Q(0, "deg"))
     >>> convert(pos, Distance)
     Distance(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(u.Quantity(1, "km"), u.Quantity(0, "deg"), u.Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(u.Q(1, "km"), u.Q(0, "deg"), u.Q(0, "km"))
     >>> convert(pos, Distance)
     Distance(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
-    """  # noqa: E501
+    """
     return convert(convert(obj, u.AbstractQuantity), Distance)
 
 
@@ -85,7 +85,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> u.AbstractQuantity:
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(u.Quantity(1, "km"), u.Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(u.Q(1, "km"), u.Q(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 0.], dtype=float32, ...), unit='km')
 
@@ -93,20 +93,20 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> u.AbstractQuantity:
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
-    >>> pos = cx.SphericalPos(u.Quantity(1.0, "km"), u.Quantity(0, "deg"), u.Quantity(0, "deg"))
+    >>> pos = cx.SphericalPos(u.Q(1.0, "km"), u.Q(0, "deg"), u.Q(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(u.Quantity(1, "km"), u.Quantity(0, "deg"), u.Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(u.Q(1, "km"), u.Q(0, "deg"), u.Q(0, "km"))
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
-    """  # noqa: E501
+    """
     cart = full_shaped(obj.vconvert(obj.cartesian_type))
     return jnp.stack(tuple(field_values(cart)), axis=-1)
 
 
-@conversion_method(type_from=AbstractPos, type_to=u.Quantity)  # type: ignore[arg-type,type-abstract]
+@conversion_method(type_from=AbstractPos, type_to=u.Q)  # type: ignore[arg-type,type-abstract]
 def convert_pos_to_q(obj: AbstractPos, /) -> u.Q:
     """`coordinax.AbstractPos` -> `unxt.Quantity`.
 
@@ -127,7 +127,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> u.Q:
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1, 2], dtype=int32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(u.Quantity(1, "km"), u.Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(u.Q(1, "km"), u.Q(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 0.], dtype=float32, ...), unit='km')
 
@@ -135,13 +135,13 @@ def convert_pos_to_q(obj: AbstractPos, /) -> u.Q:
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
-    >>> pos = cx.SphericalPos(u.Quantity(1.0, "km"), u.Quantity(0, "deg"), u.Quantity(0, "deg"))
+    >>> pos = cx.SphericalPos(u.Q(1.0, "km"), u.Q(0, "deg"), u.Q(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(u.Quantity(1, "km"), u.Quantity(0, "deg"), u.Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(u.Q(1, "km"), u.Q(0, "deg"), u.Q(0, "km"))
     >>> convert(pos, u.AbstractQuantity)
     Quantity(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
-    """  # noqa: E501
-    return convert(convert(obj, u.AbstractQuantity), u.Quantity)
+    """
+    return convert(convert(obj, u.AbstractQuantity), u.Q)

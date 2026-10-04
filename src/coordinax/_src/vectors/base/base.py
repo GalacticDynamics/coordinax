@@ -78,11 +78,11 @@ class AbstractVectorLike(
 
     Vectors with certain lengths:
 
-    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1], "m"))
+    >>> vec = cx.vecs.CartesianPos1D(u.Q([1], "m"))
     >>> len(vec)
     1
 
-    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
     >>> len(vec)
     2
 
@@ -162,7 +162,7 @@ class AbstractVectorLike(
         <SphericalPos: (r[m], theta[rad], phi[rad])
             [3.742 0.641 1.107]>
 
-        >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
+        >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(1.5, "m"))
         >>> print(q_ps)
         <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
          Delta=Quantity(1.5, unit='m')
@@ -259,11 +259,11 @@ class AbstractVectorLike(
 
         We can get the shape of a vector:
 
-        >>> vec = cx.vecs.CartesianPos1D(x=u.Quantity([1, 2], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(x=u.Q([1, 2], "m"))
         >>> vec.shape
         (2,)
 
-        >>> vec = cx.vecs.CartesianPos1D(x=u.Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(x=u.Q([[1, 2], [3, 4]], "m"))
         >>> vec.shape
         (2, 2)
 
@@ -271,8 +271,8 @@ class AbstractVectorLike(
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Q(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -323,15 +323,15 @@ class AbstractVectorLike(
 
         We can compare non-vector objects:
 
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
         >>> vec == 2
         False
 
         And positions.
 
-        >>> q = cx.vecs.CylindricalPos(rho=u.Quantity([1.0, 2.0], "kpc"),
-        ...                            phi=u.Quantity([0.0, 0.2], "rad"),
-        ...                            z=u.Quantity(0.0, "kpc"))
+        >>> q = cx.vecs.CylindricalPos(rho=u.Q([1.0, 2.0], "kpc"),
+        ...                            phi=u.Q([0.0, 0.2], "rad"),
+        ...                            z=u.Q(0.0, "kpc"))
         >>> q == q
         Array([ True,  True], dtype=bool)
 
@@ -358,35 +358,35 @@ class AbstractVectorLike(
         Array(True, dtype=bool)
 
         >>> vec1 = cx.vecs.CartesianPos2D.from_([2, 0], "m")
-        >>> vec2 = cx.vecs.PolarPos(r=u.Quantity(2, "m"), phi=u.Quantity(0, "rad"))
+        >>> vec2 = cx.vecs.PolarPos(r=u.Q(2, "m"), phi=u.Q(0, "rad"))
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
         Now we show velocities and accelerations:
 
-        >>> vel1 = cx.vecs.CartesianVel1D(u.Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.vecs.CartesianVel1D(u.Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.vecs.CartesianVel1D(u.Q([1, 2, 3], "km/s"))
+        >>> vel2 = cx.vecs.CartesianVel1D(u.Q([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.vecs.CartesianAcc1D(u.Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.vecs.CartesianAcc1D(u.Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.vecs.CartesianAcc1D(u.Q([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.vecs.CartesianAcc1D(u.Q([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.vecs.RadialVel(u.Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.vecs.RadialVel(u.Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.vecs.RadialVel(u.Q([1, 2, 3], "km/s"))
+        >>> vel2 = cx.vecs.RadialVel(u.Q([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.vecs.RadialAcc(u.Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.vecs.RadialAcc(u.Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.vecs.RadialAcc(u.Q([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.vecs.RadialAcc(u.Q([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
@@ -455,8 +455,8 @@ class AbstractVectorLike(
 
         We can slice a vector:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Q(0, "m"))
         >>> vec[0].x
         Quantity(Array([1, 2], dtype=int32), unit='m')
 
@@ -483,7 +483,7 @@ class AbstractVectorLike(
         We can't set an item in a vector:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
-        >>> try: vec[0] = u.Quantity(1, "m")
+        >>> try: vec[0] = u.Q(1, "m")
         ... except TypeError as e: print(e)
         CartesianPos2D is immutable.
 
@@ -527,8 +527,8 @@ class AbstractVectorLike(
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Q(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -548,8 +548,8 @@ class AbstractVectorLike(
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Q(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -578,8 +578,8 @@ class AbstractVectorLike(
 
         We can reshape a vector:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Q(0, "m"))
 
         >>> vec.reshape(4)
         CartesianPos2D(x=Quantity([1, 2, 3, 4], unit='m'),
@@ -627,7 +627,7 @@ class AbstractVectorLike(
 
         We can move a vector to a new device:
 
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
         >>> vec.to_device(devices()[0])
         CartesianPos1D(x=Quantity([1, 2], unit='m'))
 
@@ -724,7 +724,7 @@ def vconvert(
     <SphericalPos: (r[m], theta[rad], phi[rad])
         [3.742 0.641 1.107]>
 
-    >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
+    >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(1.5, "m"))
     >>> print(q_ps)
     <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
         Delta=Quantity(1.5, unit='m')
@@ -769,7 +769,7 @@ def astype(self: AbstractVectorLike, dtype: Any, /, **kw: Any) -> AbstractVector
 
     We can cast a vector to a new dtype:
 
-    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
     >>> vec.astype(jnp.float32)
     CartesianPos1D(x=Quantity([1., 2.], unit='m'))
 
@@ -793,7 +793,7 @@ def astype(
 
     We can cast a vector to a new dtype:
 
-    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
     >>> vec
     CartesianPos1D(x=Quantity([1, 2], unit='m'))
 

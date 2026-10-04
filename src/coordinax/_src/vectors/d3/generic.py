@@ -37,11 +37,11 @@ class Cartesian3D(AvalMixin, AbstractVector):
 
     """
 
-    x: ct.BBtScalarQ = eqx.field(converter=u.Quantity.from_)
+    x: ct.BBtScalarQ = eqx.field(converter=u.Q.from_)
 
-    y: ct.BBtScalarQ = eqx.field(converter=u.Quantity.from_)
+    y: ct.BBtScalarQ = eqx.field(converter=u.Q.from_)
 
-    z: ct.BBtScalarQ = eqx.field(converter=u.Quantity.from_)
+    z: ct.BBtScalarQ = eqx.field(converter=u.Q.from_)
 
     @classmethod
     def _dimensionality(cls) -> int:

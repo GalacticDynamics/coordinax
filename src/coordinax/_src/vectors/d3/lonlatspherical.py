@@ -49,9 +49,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                  lat=u.Quantity(0, "deg"),
-    ...                                  distance=u.Quantity(3, "km"))
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"),
+    ...                                  lat=u.Q(0, "deg"),
+    ...                                  distance=u.Q(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [0 0 3]>
@@ -60,9 +60,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
-    ...                                  lat=u.Quantity(90, "deg"),
-    ...                                  distance=u.Quantity(3, "km"))
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(365, "deg"),
+    ...                                  lat=u.Q(90, "deg"),
+    ...                                  distance=u.Q(3, "km"))
     >>> vec.lon
     Angle(Array(5, dtype=int32, ...), unit='deg')
 
@@ -71,9 +71,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import jax
     >>> with jax.disable_jit():
     ...     try:
-    ...         cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                    lat=u.Quantity(100, "deg"),
-    ...                                    distance=u.Quantity(3, "km"))
+    ...         cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"),
+    ...                                    lat=u.Q(100, "deg"),
+    ...                                    distance=u.Q(3, "km"))
     ...     except Exception as e:
     ...         print(e)
     The inclination angle must be in the range [0, pi]...
@@ -82,9 +82,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     >>> with jax.disable_jit():
     ...     try:
-    ...         cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                    lat=u.Quantity(0, "deg"),
-    ...                                    distance=u.Quantity(-3, "km"))
+    ...         cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"),
+    ...                                    lat=u.Q(0, "deg"),
+    ...                                    distance=u.Q(-3, "km"))
     ...     except Exception as e:
     ...         print(e)
     Distance must be non-negative.
@@ -119,9 +119,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-        ...                                lat=u.Quantity(90, "deg"),
-        ...                                distance=u.Quantity(3, "km"))
+        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"),
+        ...                                lat=u.Q(90, "deg"),
+        ...                                distance=u.Q(3, "km"))
         >>> s.norm()
         Distance(Array(3, dtype=int32, ...), unit='km')
 

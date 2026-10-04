@@ -142,9 +142,9 @@ def vconvert(
     ...                       params, units=usys)
     ({'x': Array(0.9848077, dtype=float32, ...)}, {})
 
-    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1.0, "km"),
-    ...                            phi=u.Quantity(10.0, "deg"),
-    ...                            z=u.Quantity(14, "km"))
+    >>> x = cx.vecs.CylindricalPos(rho=u.Q(1.0, "km"),
+    ...                            phi=u.Q(10.0, "deg"),
+    ...                            z=u.Q(14, "km"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
@@ -183,9 +183,9 @@ def vconvert(
     ...     cxv.vconvert(cxv.RadialPos, cxv.CylindricalPos, params, units=usys)
     ({'r': Array(1, dtype=int32, ...)}, {})
 
-    >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
-    ...                        phi=u.Quantity(10, "deg"),
-    ...                        z=u.Quantity(14, "km"))
+    >>> x = cxv.CylindricalPos(rho=u.Q(1, "km"),
+    ...                        phi=u.Q(10, "deg"),
+    ...                        z=u.Q(14, "km"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cxv.RadialPos, x)
     >>> print(y)
@@ -231,9 +231,9 @@ def vconvert(
       'y': Array(0.17364818, dtype=float32, ...)},
      {})
 
-    >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
-    ...                        phi=u.Quantity(10, "deg"),
-    ...                        z=u.Quantity(14, "km"))
+    >>> x = cxv.CylindricalPos(rho=u.Q(1, "km"),
+    ...                        phi=u.Q(10, "deg"),
+    ...                        z=u.Q(14, "km"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(y)
@@ -276,9 +276,9 @@ def vconvert(
     ({'r': Array(1, dtype=int32, ...),
       'phi': Array(10., dtype=float32, ...)}, {})
 
-    >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
-    ...                        phi=u.Quantity(10, "deg"),
-    ...                        z=u.Quantity(14, "km"))
+    >>> x = cxv.CylindricalPos(rho=u.Q(1, "km"),
+    ...                        phi=u.Q(10, "deg"),
+    ...                        z=u.Q(14, "km"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
@@ -326,9 +326,9 @@ def vconvert(
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...)}, {})
 
-    >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
-    ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10, "deg"))
+    >>> x = cxv.SphericalPos(r=u.Q(1, "km"),
+    ...                     theta=u.Q(14, "deg"),
+    ...                     phi=u.Q(10, "deg"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.CartesianPos1D, x)
     >>> print(y)
@@ -375,9 +375,9 @@ def vconvert(
       'y': Array(0.0420093, dtype=float32, ...)},
      {})
 
-    >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
-    ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10, "deg"))
+    >>> x = cxv.SphericalPos(r=u.Q(1, "km"),
+    ...                     theta=u.Q(14, "deg"),
+    ...                     phi=u.Q(10, "deg"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(y)
@@ -421,9 +421,9 @@ def vconvert(
      'phi': Array(10., dtype=float32, ...)},
      {})
 
-    >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
-    ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10, "deg"))
+    >>> x = cxv.SphericalPos(r=u.Q(1, "km"),
+    ...                     theta=u.Q(14, "deg"),
+    ...                     phi=u.Q(10, "deg"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
@@ -472,9 +472,9 @@ def vconvert(
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...)}, {})
 
-    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                              theta=u.Quantity(10, "deg"),
-    ...                              phi=u.Quantity(14, "deg"))
+    >>> x = cx.vecs.MathSphericalPos(r=u.Q(1, "km"),
+    ...                              theta=u.Q(10, "deg"),
+    ...                              phi=u.Q(14, "deg"))
 
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
@@ -522,9 +522,9 @@ def vconvert(
       'y': Array(0.0420093, dtype=float32, ...)},
      {})
 
-    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                              theta=u.Quantity(10, "deg"),
-    ...                              phi=u.Quantity(14, "deg"))
+    >>> x = cx.vecs.MathSphericalPos(r=u.Q(1, "km"),
+    ...                              theta=u.Q(10, "deg"),
+    ...                              phi=u.Q(14, "deg"))
 
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos2D, x)
@@ -569,9 +569,9 @@ def vconvert(
       'phi': Array(10., dtype=float32, ...)},
      {})
 
-    >>> x = cxv.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                          theta=u.Quantity(10, "deg"),
-    ...                          phi=u.Quantity(14, "deg"))
+    >>> x = cxv.MathSphericalPos(r=u.Q(1, "km"),
+    ...                          theta=u.Q(10, "deg"),
+    ...                          phi=u.Q(14, "deg"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
@@ -617,10 +617,10 @@ def vconvert(
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(2, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.5, "rad"),
-    ...     Delta=u.Quantity(1, "km"),
+    ...     mu=u.Q(2, "km2"),
+    ...     nu=u.Q(0.5, "km2"),
+    ...     phi=u.Q(0.5, "rad"),
+    ...     Delta=u.Q(1, "km"),
     ... )
 
     >>> with warnings.catch_warnings(action="ignore"):

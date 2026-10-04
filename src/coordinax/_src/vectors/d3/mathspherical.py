@@ -71,9 +71,9 @@ class MathSphericalPos(AbstractSphericalPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.vecs.MathSphericalPos(r=u.Quantity(3, "km"),
-        ...                              theta=u.Quantity(90, "deg"),
-        ...                              phi=u.Quantity(0, "deg"))
+        >>> s = cx.vecs.MathSphericalPos(r=u.Q(3, "km"),
+        ...                              theta=u.Q(90, "deg"),
+        ...                              phi=u.Q(0, "deg"))
         >>> s.norm()
         Distance(Array(3, dtype=int32, ...), unit='km')
 

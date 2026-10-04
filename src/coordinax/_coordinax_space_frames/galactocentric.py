@@ -56,12 +56,12 @@ class Galactocentric(AbstractSpaceFrame):
     #: Rotation angle of the Galactic center from the ICRS x-axis.
     roll: ScalarAngle = eqx.field(
         converter=Unless(u.Angle, u.Q.from_),
-        default=u.Quantity(0, "deg"),
+        default=u.Q(0, "deg"),
     )
 
     #: Distance from the Sun to the Galactic center.
     #: https://ui.adsabs.harvard.edu/abs/2019MNRAS.482.1417B
-    z_sun: u.Q = eqx.field(converter=u.Q.from_, default=u.Quantity(20.8, "pc"))
+    z_sun: u.Q = eqx.field(converter=u.Q.from_, default=u.Q(20.8, "pc"))
 
     #: Velocity of the Sun in the Galactic center frame.
     #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
@@ -76,6 +76,6 @@ class Galactocentric(AbstractSpaceFrame):
 
     #: The angle between the Galactic center and the ICRS x-axis.
     roll0: ClassVar[ScalarAngle] = eqx.field(
-        default=u.Quantity(58.5986320306, "degree"),
+        default=u.Q(58.5986320306, "degree"),
         converter=Unless(u.Angle, u.Q.from_),
     )
