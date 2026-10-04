@@ -576,6 +576,7 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         )
         # unxt 2.0.4: `jnp.allclose(Angle, Angle)` raises (`isfinite` rebuilds an
         # Angle with a dimensionless unit), so compare as plain quantities.
+        # https://github.com/GalacticDynamics/unxt/issues/945
         assert jnp.allclose(
             u.Quantity.from_(spherical.phi),
             u.Quantity.from_(vector.phi),

@@ -51,6 +51,7 @@ def mul_p_acc_q(
     """
     # One rule branching on the unit, not one rule per dimension: quax caches
     # the rule by argument *type*, and every dimension is `unxt.Quantity`.
+    # https://github.com/nstarman/quax/issues/257
     out_cls: type[AbstractVector]
     if u.is_unit_convertible("s", rhs):
         out_cls = lhs.time_antiderivative_cls
