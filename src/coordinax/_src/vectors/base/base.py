@@ -178,7 +178,7 @@ class AbstractVectorLike(
         >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
         >>> print(v_sph)
         <SphericalVel: (r[m / s], theta[rad / s], phi[rad / s])
-            [ 3.742e+00 -8.941e-08  0.000e+00]>
+            [ 3.742e+00 ...  0.000e+00]>
 
         Transforming an Acceleration:
 
@@ -740,7 +740,7 @@ def vconvert(
     >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
     >>> print(v_sph)
     <SphericalVel: (r[m / s], theta[rad / s], phi[rad / s])
-        [ 3.742e+00 -8.941e-08  0.000e+00]>
+        [ 3.742e+00 ...  0.000e+00]>
 
     Transforming an Acceleration:
 
