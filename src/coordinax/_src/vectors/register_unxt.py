@@ -249,65 +249,6 @@ def _vec_diff_to_q(obj: AbstractVector, /) -> u.AbstractQuantity:
 @conversion_method(type_from=CartesianVel2D, type_to=u.Quantity)
 @conversion_method(type_from=CartesianAcc3D, type_to=u.Quantity)
 @conversion_method(type_from=CartesianVel3D, type_to=u.Quantity)
-def vec_diff_to_uncheckedq(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
-    """Differentials -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> from unxt import Quantity
-    >>> import coordinax as cx
-
-    ## 1D
-
-    >>> cart_vel = cx.vecs.CartesianVel1D.from_([1], "km/s")
-    >>> convert(cart_vel, Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s')
-
-    >>> cart_acc = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
-    >>> convert(cart_acc, Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s2')
-
-    >>> rad_vel = cx.vecs.RadialVel.from_([1], "km/s")
-    >>> convert(rad_vel, Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s')
-
-    >>> rad_acc = cx.vecs.RadialAcc.from_([1], "km/s2")
-    >>> convert(rad_acc, Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s2')
-
-    ## 2D
-
-    >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
-    >>> convert(vel, Quantity)
-    Quantity(Array([1, 2], dtype=int32), unit='km / s')
-
-    >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
-    >>> convert(acc, Quantity)
-    Quantity(Array([1, 2], dtype=int32), unit='km / s2')
-
-    # 3D
-
-    >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> convert(vel, Quantity)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
-
-    >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> convert(acc, Quantity)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
-
-    """
-    return convert(_vec_diff_to_q(obj), u.Quantity)
-
-
-@conversion_method(type_from=RadialAcc, type_to=u.Quantity)
-@conversion_method(type_from=RadialVel, type_to=u.Quantity)
-@conversion_method(type_from=CartesianAcc1D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel1D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianAcc2D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel2D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianAcc3D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel3D, type_to=u.Quantity)
 def vec_diff_to_q(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
     """1D Differentials -> `unxt.Quantity`.
 

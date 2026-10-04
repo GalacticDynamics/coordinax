@@ -48,6 +48,12 @@ def mul_p_acc_q(
     <RadialPos: (r) [m]
         [2]>
 
+    Any other unit is an error:
+
+    >>> try: d2r * u.Quantity(2, "m")
+    ... except ValueError as e: print(e)
+    Cannot multiply RadialAcc by a quantity in m.
+
     """
     # One rule branching on the unit, not one rule per dimension: quax caches
     # the rule by argument *type*, and every dimension is `unxt.Quantity`.

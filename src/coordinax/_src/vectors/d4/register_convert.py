@@ -20,36 +20,7 @@ from coordinax._src.vectors.d3 import (
 )
 
 
-@conversion_method(type_from=FourVector, type_to=u.Quantity)
-def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity, "*batch 4"]:
-    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
-
-    Convert the 4-vector to a Quantity array with the components as the last
-    dimension.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.vecs.FourVector (t=u.Quantity([1, 2], "yr"),
-    ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
-
-    >>> convert(w, u.Quantity).uconvert("pc")
-    Quantity(
-        Array([[0.3066014, 1.       , 2.       , 3.       ],
-               [0.6132028, 4.       , 4.9999995, 6.       ]],      dtype=float32, ...),
-        unit='pc'
-    )
-
-    """
-    cart = convert(obj.q, u.Quantity)
-    ct = convert(obj.c * obj.t[..., None], u.Quantity)
-    return jnp.concat([ct, cart], axis=-1)
-
-
-@conversion_method(type_from=FourVector, type_to=u.Quantity)
+@conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[arg-type]
 def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Q, "*batch 4"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
