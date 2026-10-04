@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 import equinox as eqx
 
-from coordinax._src.custom_types import DimQuantity
+import unxt as u
+
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector
@@ -62,7 +63,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @ft.partial(eqx.filter_jit)
-    def norm(self, q: AbstractPos, /) -> DimQuantity["speed"]:  # type: ignore[misc]
+    def norm(self, q: AbstractPos, /) -> u.Q:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples

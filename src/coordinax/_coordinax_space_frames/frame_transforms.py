@@ -14,7 +14,6 @@ import unxt as u
 from .base import AbstractSpaceFrame
 from .galactocentric import Galactocentric
 from .icrs import ICRS
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import Distance
 from coordinax._src.operators import (
     GalileanRotation,
@@ -25,10 +24,10 @@ from coordinax._src.operators import (
     simplify_op,
 )
 
-ScalarAngle: TypeAlias = Shaped[DimQuantity["angle"] | u.Angle, ""]
+ScalarAngle: TypeAlias = Shaped[u.Q | u.Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
-LengthVector: TypeAlias = Shaped[DimQuantity["length"], "3"] | Shaped[Distance, "3"]
-VelocityVector: TypeAlias = Shaped[DimQuantity["speed"], "3"]
+LengthVector: TypeAlias = Shaped[u.Q, "3"] | Shaped[Distance, "3"]
+VelocityVector: TypeAlias = Shaped[u.Q, "3"]
 
 
 # ---------------------------------------------------------------

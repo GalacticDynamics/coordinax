@@ -16,7 +16,6 @@ from .base_spherical import (
     AbstractSphericalVel,
 )
 from coordinax._src.angles import BatchableAngle
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -67,13 +66,13 @@ class SphericalPos(AbstractSphericalPos):
 class SphericalVel(AbstractSphericalVel):
     """Spherical velocity."""
 
-    r: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
+    r: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
-    theta: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
+    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
 
@@ -81,15 +80,11 @@ class SphericalVel(AbstractSphericalVel):
 class SphericalAcc(AbstractSphericalAcc):
     """Spherical differential representation."""
 
-    r: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
+    r: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
 
-    theta: ct.BBtAngularAcc = eqx.field(
-        converter=DimQuantity["angular acceleration"].from_
-    )
+    theta: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=DimQuantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""

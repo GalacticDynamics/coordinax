@@ -11,7 +11,6 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .spacetime import FourVector
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.vectors.d3 import (
     CartesianPos3D,
     CylindricalPos,
@@ -51,9 +50,7 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity, "*batch 4"]:
 
 
 @conversion_method(type_from=FourVector, type_to=u.Quantity)
-def fourvec_to_quantity(
-    obj: FourVector, /
-) -> Shaped[DimQuantity["length"], "*batch 4"]:
+def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Q, "*batch 4"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Convert the 4-vector to a Quantity array with the components as the last

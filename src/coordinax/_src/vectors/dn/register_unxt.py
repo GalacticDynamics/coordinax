@@ -9,11 +9,10 @@ from plum import conversion_method
 import unxt as u
 
 from .cartesian import CartesianPosND
-from coordinax._src.custom_types import DimQuantity
 
 
 @conversion_method(CartesianPosND, u.Quantity)  # type: ignore[arg-type]
-def vec_to_q(obj: CartesianPosND, /) -> Shaped[DimQuantity["length"], "*batch N"]:
+def vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Q, "*batch N"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Examples

@@ -9,7 +9,6 @@ import unxt as u
 from .base import AbstractDistance
 from .funcs import distance, distance_modulus, parallax
 from .measures import Distance, DistanceModulus, Parallax
-from coordinax._src.custom_types import DimQuantity
 
 parallax_base_length = u.Quantity(1, "AU")
 distance_modulus_base_distance = u.Quantity(10, "pc")
@@ -18,10 +17,7 @@ distance_modulus_base_distance = u.Quantity(10, "pc")
 @u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[Distance],
-    obj: AbstractDistance
-    | DimQuantity["length"]
-    | DimQuantity["angle"]
-    | DimQuantity["mag"],
+    obj: AbstractDistance | u.Q,
     /,
     **kw: Any,
 ) -> Distance:
@@ -32,10 +28,7 @@ def from_(
 @u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[DistanceModulus],
-    dm: AbstractDistance
-    | DimQuantity["mag"]
-    | DimQuantity["length"]
-    | DimQuantity["angle"],
+    dm: AbstractDistance | u.Q,
     /,
     **kwargs: Any,
 ) -> DistanceModulus:
@@ -46,10 +39,7 @@ def from_(
 @u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[Parallax],
-    obj: AbstractDistance
-    | DimQuantity["angle"]
-    | DimQuantity["length"]
-    | DimQuantity["mag"],
+    obj: AbstractDistance | u.Q,
     /,
     **kwargs: Any,
 ) -> Parallax:

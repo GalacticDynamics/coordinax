@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 import jax
 
-from coordinax._src.custom_types import DimQuantity
+import unxt as u
+
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector
@@ -61,9 +62,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @ft.partial(jax.jit)
-    def norm(
-        self: "AbstractAcc", p: AbstractVel, q: AbstractPos, /
-    ) -> DimQuantity["acceleration"]:
+    def norm(self: "AbstractAcc", p: AbstractVel, q: AbstractPos, /) -> u.Q:
         """Return the norm of the vector.
 
         Examples

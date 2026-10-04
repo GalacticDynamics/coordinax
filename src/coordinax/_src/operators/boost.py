@@ -190,10 +190,9 @@ def call(
     return q, newp.vconvert(type(p), q)
 
 
+# `DimQuantity`, not `u.Q`: dimension alone tells `op(q, p)` from `op(t, x)`.
 @AbstractOperator.__call__.dispatch
-def call(
-    self: VelocityBoost, q: DimQuantity["length"], p: DimQuantity["speed"], /
-) -> tuple[DimQuantity["length"], DimQuantity["speed"]]:
+def call(self: VelocityBoost, q: u.Q, p: DimQuantity["speed"], /) -> tuple[u.Q, u.Q]:
     r"""Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.
@@ -238,9 +237,7 @@ def call(self: VelocityBoost, q: AbstractPos, /) -> AbstractPos:
 
 
 @AbstractOperator.__call__.dispatch
-def call(
-    self: VelocityBoost, t: DimQuantity["time"], q: AbstractPos, /
-) -> tuple[DimQuantity["time"], AbstractPos]:
+def call(self: VelocityBoost, t: u.Q, q: AbstractPos, /) -> tuple[u.Q, AbstractPos]:
     """Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.

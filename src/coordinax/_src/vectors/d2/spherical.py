@@ -12,7 +12,6 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import BatchableAngle
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.vectors.checks import check_polar_range
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -123,10 +122,10 @@ class TwoSphereVel(AbstractVel2D):
 
     """
 
-    theta: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
+    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
 
@@ -174,12 +173,8 @@ class TwoSphereAcc(AbstractAcc2D):
 
     """
 
-    theta: ct.BBtAngularAcc = eqx.field(
-        converter=DimQuantity["angular acceleration"].from_
-    )
+    theta: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=DimQuantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""

@@ -8,10 +8,10 @@ from typing import final, override
 import equinox as eqx
 
 import quaxed.numpy as jnp
+import unxt as u
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
@@ -41,7 +41,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 
     """
 
-    x: BBtLength = eqx.field(converter=DimQuantity["length"].from_)
+    x: BBtLength = eqx.field(converter=u.Q.from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
 
@@ -49,7 +49,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     """Cartesian differential representation."""
 
-    x: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
@@ -72,7 +72,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
-    x: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @override

@@ -12,7 +12,6 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import BatchableAngle
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -68,10 +67,10 @@ class PolarVel(AbstractVel2D):
 
     """
 
-    r: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
+    r: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
 
@@ -95,10 +94,8 @@ class PolarAcc(AbstractAcc2D):
 
     """
 
-    r: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
+    r: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty,+\infty]`."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=DimQuantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""

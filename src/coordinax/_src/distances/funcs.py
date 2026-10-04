@@ -16,9 +16,26 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .measures import Distance, DistanceModulus, Parallax
-from coordinax._src.custom_types import DimQuantity
 
 parallax_base_length = u.Quantity(1, "AU")
+
+
+def _as_measure(q: u.Q, /) -> Distance | Parallax | DistanceModulus:
+    """Read a plain quantity as the distance measure its unit implies.
+
+    unxt 2 quantities do not carry their dimension in their type, so plum
+    cannot pick the length / angle / magnitude overload; the unit can. No
+    negativity check is added: the target constructor still runs its own.
+    """
+    if u.is_unit_convertible("m", q):
+        return Distance(q.value, q.unit, check_negative=False)
+    if u.is_unit_convertible("rad", q):
+        return Parallax(q.value, q.unit, check_negative=False)
+    if u.is_unit_convertible("mag", q):
+        return DistanceModulus(q.ustrip("mag"), "mag")
+    msg = f"Cannot read a quantity in {q.unit} as a distance, parallax or modulus."
+    raise ValueError(msg)
+
 
 #####################################################################
 # Distance constructor
@@ -63,7 +80,7 @@ def distance(d: Distance, /, **kw: Any) -> Distance:
 
 
 @dispatch
-def distance(d: DimQuantity["length"], /, **kw: Any) -> Distance:
+def distance(d: u.Q, /, **kw: Any) -> Distance:
     """Compute distance from distance.
 
     Examples
@@ -76,12 +93,14 @@ def distance(d: DimQuantity["length"], /, **kw: Any) -> Distance:
     Distance(Array(1., dtype=float32), unit='kpc')
 
     """
+    if not u.is_unit_convertible("m", d):
+        return distance(_as_measure(d), **kw)
     unit = u.unit_of(d)
     return Distance(jnp.asarray(d.ustrip(unit), **kw), unit)
 
 
 @dispatch
-def distance(p: Parallax | DimQuantity["angle"], /, **kw: Any) -> Distance:
+def distance(p: Parallax, /, **kw: Any) -> Distance:
     """Compute distance from parallax.
 
     Examples
@@ -104,7 +123,7 @@ def distance(p: Parallax | DimQuantity["angle"], /, **kw: Any) -> Distance:
 
 
 @dispatch
-def distance(dm: DistanceModulus | DimQuantity["mag"], /, **kw: Any) -> Distance:
+def distance(dm: DistanceModulus, /, **kw: Any) -> Distance:
     """Compute distance from distance modulus.
 
     Examples
@@ -168,7 +187,7 @@ def parallax(p: Parallax, /, **kw: Any) -> Parallax:
 
 
 @dispatch
-def parallax(p: DimQuantity["angle"], /, **kw: Any) -> Parallax:
+def parallax(p: u.Q, /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
     Examples
@@ -181,12 +200,14 @@ def parallax(p: DimQuantity["angle"], /, **kw: Any) -> Parallax:
     Parallax(Array(1., dtype=float32), unit='mas')
 
     """
+    if not u.is_unit_convertible("rad", p):
+        return parallax(_as_measure(p), **kw)
     unit = u.unit_of(p)
     return Parallax(jnp.asarray(p.ustrip(unit), **kw), unit)
 
 
 @dispatch
-def parallax(d: Distance | DimQuantity["length"], /, **kw: Any) -> Parallax:
+def parallax(d: Distance, /, **kw: Any) -> Parallax:
     """Compute parallax from distance.
 
     Examples
@@ -208,7 +229,7 @@ def parallax(d: Distance | DimQuantity["length"], /, **kw: Any) -> Parallax:
 
 
 @dispatch
-def parallax(dm: DistanceModulus | DimQuantity["mag"], /, **kw: Any) -> Parallax:
+def parallax(dm: DistanceModulus, /, **kw: Any) -> Parallax:
     """Convert distance modulus to parallax.
 
     Examples
@@ -270,7 +291,7 @@ def distance_modulus(dm: DistanceModulus, /, **kw: Any) -> DistanceModulus:
 
 
 @dispatch
-def distance_modulus(dm: DimQuantity["mag"], /, **kw: Any) -> DistanceModulus:
+def distance_modulus(dm: u.Q, /, **kw: Any) -> DistanceModulus:
     """Compute parallax from parallax.
 
     Examples
@@ -283,14 +304,14 @@ def distance_modulus(dm: DimQuantity["mag"], /, **kw: Any) -> DistanceModulus:
     DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
 
     """
+    if not u.is_unit_convertible("mag", dm):
+        return distance_modulus(_as_measure(dm), **kw)
     unit = u.unit_of(dm)
     return DistanceModulus(jnp.asarray(u.ustrip(unit, dm), **kw), unit)
 
 
 @dispatch
-def distance_modulus(
-    d: Distance | DimQuantity["length"], /, **kw: Any
-) -> DistanceModulus:
+def distance_modulus(d: Distance, /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from distance.
 
     Examples
@@ -312,9 +333,7 @@ def distance_modulus(
 
 
 @dispatch
-def distance_modulus(
-    p: Parallax | DimQuantity["angle"], /, **kw: Any
-) -> DistanceModulus:
+def distance_modulus(p: Parallax, /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from parallax.
 
     Examples

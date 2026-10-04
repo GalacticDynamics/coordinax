@@ -16,7 +16,6 @@ import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -161,8 +160,8 @@ class GalileanBoost(AbstractGalileanOperator):
 # Higher precedence than the compat.py:: (Op, t, Q3) dispatch.
 @AbstractOperator.__call__.dispatch(precedence=1)
 def call(
-    self: GalileanBoost, delta_t: DimQuantity["time"], q: u.AbstractQuantity, /
-) -> tuple[DimQuantity["time"], u.AbstractQuantity]:
+    self: GalileanBoost, delta_t: u.Q, q: u.AbstractQuantity, /
+) -> tuple[u.Q, u.AbstractQuantity]:
     """Apply the boost to the quantities.
 
     Examples
@@ -187,8 +186,8 @@ def call(
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanBoost, delta_t: DimQuantity["time"], q: AbstractPos, /
-) -> tuple[DimQuantity["time"], AbstractPos]:
+    self: GalileanBoost, delta_t: u.Q, q: AbstractPos, /
+) -> tuple[u.Q, AbstractPos]:
     """Apply the boost to the coordinates.
 
     Examples

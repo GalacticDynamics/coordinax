@@ -29,12 +29,7 @@ else:
 
         @cache  # noqa: B019  # pylint: disable=method-cache-max-size-none
         def __getitem__(cls, dim: Any, /) -> "type[DimQuantity]":
-            try:
-                dim = u.dimension(dim)
-            except ValueError:  # e.g. "mag": not a physical type, but a unit
-                # ponytail: "mag" -> 'unknown', so it admits any unknown-dimension
-                # quantity; check unit convertibility if that ever matters.
-                dim = u.dimension_of(u.unit(dim))
+            dim = u.dimension(dim)
             return _DimQuantityMeta(
                 f"DimQuantity[{dim}]",
                 (cls,),
@@ -42,16 +37,18 @@ else:
             )
 
     class DimQuantity(u.Quantity, metaclass=_DimQuantityMeta):
-        """Annotation for a quantity of a given physical dimension.
+        """A `unxt.Quantity` annotation that carries a physical dimension.
 
-        In unxt v2 ``u.Quantity["length"]`` is a no-op alias of `unxt.Quantity`.
-        This restores what coordinax relies on from the v1 parametric class:
-        `isinstance` (so plum dispatch and runtime type-checking) by dimension,
-        `unxt.dimension_of` on the annotation, and a dimension-checking ``from_``.
-        As in v1, other quantity types (e.g. `unxt.Angle`, `coordinax.Distance`)
-        are not instances. Values are plain `unxt.Quantity`; this class is never
-        instantiated, and subclasses `unxt.Quantity` only so plum ranks it as
-        narrower.
+        A stop-gap for the unxt v2 port: ``u.Quantity["length"]`` is a no-op in
+        v2. Prefer `u.Q`. Use this only where the dimension is load-bearing:
+
+        - vector field annotations, which `AbstractVector.dimensions` reads; and
+        - overloads that differ only by dimension, e.g. ``op(q, p)`` vs
+          ``op(t, x)``. Its `isinstance` checks the dimension.
+
+        As in v1, other quantity types (e.g. `unxt.Angle`) are not instances.
+        Never instantiated; it subclasses `unxt.Quantity` only so plum ranks it
+        as narrower.
 
         >>> import unxt as u
         >>> isinstance(u.Quantity(1, "km"), DimQuantity["length"])
@@ -60,27 +57,11 @@ else:
         False
         >>> u.dimension_of(DimQuantity["speed"])
         PhysicalType({'speed', 'velocity'})
-        >>> DimQuantity["length"].from_([1, 2], "km")
-        Quantity(Array([1, 2], dtype=int32), unit='km')
-        >>> try: DimQuantity["length"].from_(1, "s")
-        ... except ValueError as e: print(e)
-        Expected a quantity of dimension 'length', got 'time'.
 
         """
 
         dimension: ClassVar[Any] = None
         __faithful__: ClassVar[bool] = False  # plum: `isinstance` depends on the unit
-
-        @classmethod
-        def from_(cls, *args: Any, **kwargs: Any) -> u.Quantity:
-            q = u.Quantity.from_(*args, **kwargs)
-            if cls.dimension is not None and u.dimension_of(q) != cls.dimension:
-                msg = (
-                    f"Expected a quantity of dimension '{cls.dimension}', "
-                    f"got '{u.dimension_of(q)}'."
-                )
-                raise ValueError(msg)
-            return q
 
     @u.dimension_of.dispatch
     def dimension_of(obj: _DimQuantityMeta, /) -> u.dims.AbstractDimension:

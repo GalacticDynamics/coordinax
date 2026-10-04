@@ -11,7 +11,6 @@ import unxt as u
 from dataclassish import field_values
 
 from .core import AbstractPos
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import Distance
 from coordinax._src.vectors.utils import full_shaped
 
@@ -108,7 +107,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> u.AbstractQuantity:
 
 
 @conversion_method(type_from=AbstractPos, type_to=u.Quantity)  # type: ignore[arg-type,type-abstract]
-def convert_pos_to_q(obj: AbstractPos, /) -> DimQuantity["length"]:
+def convert_pos_to_q(obj: AbstractPos, /) -> u.Q:
     """`coordinax.AbstractPos` -> `unxt.Quantity`.
 
     Examples

@@ -12,14 +12,13 @@ import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractSpaceFrame
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import Distance
 from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
 
-ScalarAngle: TypeAlias = Shaped[DimQuantity["angle"] | u.Angle, ""]
+ScalarAngle: TypeAlias = Shaped[u.Q | u.Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
-LengthVector: TypeAlias = Shaped[DimQuantity["length"], "3"] | Shaped[Distance, "3"]
-VelocityVector: TypeAlias = Shaped[DimQuantity["speed"], "3"]
+LengthVector: TypeAlias = Shaped[u.Q, "3"] | Shaped[Distance, "3"]
+VelocityVector: TypeAlias = Shaped[u.Q, "3"]
 
 
 @final
@@ -56,15 +55,13 @@ class Galactocentric(AbstractSpaceFrame):
 
     #: Rotation angle of the Galactic center from the ICRS x-axis.
     roll: ScalarAngle = eqx.field(
-        converter=Unless(u.Angle, DimQuantity["angle"].from_),
+        converter=Unless(u.Angle, u.Q.from_),
         default=u.Quantity(0, "deg"),
     )
 
     #: Distance from the Sun to the Galactic center.
     #: https://ui.adsabs.harvard.edu/abs/2019MNRAS.482.1417B
-    z_sun: DimQuantity["length"] = eqx.field(
-        converter=DimQuantity["length"].from_, default=u.Quantity(20.8, "pc")
-    )
+    z_sun: u.Q = eqx.field(converter=u.Q.from_, default=u.Quantity(20.8, "pc"))
 
     #: Velocity of the Sun in the Galactic center frame.
     #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
@@ -80,5 +77,5 @@ class Galactocentric(AbstractSpaceFrame):
     #: The angle between the Galactic center and the ICRS x-axis.
     roll0: ClassVar[ScalarAngle] = eqx.field(
         default=u.Quantity(58.5986320306, "degree"),
-        converter=Unless(u.Angle, DimQuantity["angle"].from_),
+        converter=Unless(u.Angle, u.Q.from_),
     )

@@ -410,6 +410,7 @@ def call(
 def call(
     self: GalileanSpatialTranslation,
     q: u.AbstractQuantity,
+    # `DimQuantity`, not `u.Q`: dimension alone tells `op(q, p)` from `op(t, x)`.
     p: DimQuantity["speed"],
     /,
     **__: Any,

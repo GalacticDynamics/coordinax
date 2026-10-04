@@ -14,10 +14,10 @@ import jax
 import quax_blocks
 
 import quaxed.numpy as jnp
+import unxt as u
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
-from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
@@ -76,7 +76,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     """
 
-    q: BBtLength = eqx.field(converter=DimQuantity["length"].from_)
+    q: BBtLength = eqx.field(converter=u.Q.from_)
     r"""N-D coordinate :math:`\vec{x} \in (-\infty,+\infty)`.
 
     Should have shape (*batch, F) where F is the number of features /
@@ -184,7 +184,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     """
 
-    q: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
+    q: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""N-D speed :math:`d\vec{x}/dt \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -282,7 +282,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     """
 
-    q: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
+    q: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""N-D acceleration :math:`d\vec{x}/dt^2 \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /

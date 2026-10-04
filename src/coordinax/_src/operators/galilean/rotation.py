@@ -144,7 +144,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def from_euler(
         cls: "type[GalileanRotation]",
         seq: str,
-        angles: DimQuantity["angle"] | u.Angle,
+        angles: u.Q | u.Angle,
         /,
     ) -> "GalileanRotation":
         """Initialize from Euler angles.
@@ -259,10 +259,10 @@ def from_(cls: type[GalileanRotation], obj: Rotation, /) -> GalileanRotation:
 @AbstractOperator.__call__.dispatch(precedence=1)
 def call(
     self: GalileanRotation,
-    q: Shaped[DimQuantity["length"], "*batch 3"],
+    q: Shaped[u.Q, "*batch 3"],
     /,
     **__: Any,
-) -> Shaped[DimQuantity["length"], "*batch 3"]:
+) -> Shaped[u.Q, "*batch 3"]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -317,8 +317,8 @@ def call(self: GalileanRotation, q: AbstractPos3D, /, **__: Any) -> AbstractPos3
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation, t: DimQuantity["time"], q: AbstractPos3D, /
-) -> tuple[DimQuantity["time"], AbstractPos3D]:
+    self: GalileanRotation, t: u.Q, q: AbstractPos3D, /
+) -> tuple[u.Q, AbstractPos3D]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -387,11 +387,12 @@ def call(
 @AbstractOperator.__call__.dispatch
 def call(
     self: GalileanRotation,
-    q: DimQuantity["length"],
+    q: u.Q,
+    # `DimQuantity`, not `u.Q`: dimension alone tells `op(q, p)` from `op(t, x)`.
     p: DimQuantity["speed"],
     /,
     **__: Any,
-) -> tuple[DimQuantity["length"], DimQuantity["speed"]]:
+) -> tuple[u.Q, u.Q]:
     r"""Apply the rotation to the coordinates and velocities.
 
     Examples
