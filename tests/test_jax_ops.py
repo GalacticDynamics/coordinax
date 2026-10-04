@@ -25,7 +25,7 @@ def q(request) -> cx.vecs.AbstractPos:
     kwargs = (
         {}
         if request.param is not cx.vecs.ProlateSpheroidalPos
-        else {"Delta": u.Quantity(1.0, "kpc")}
+        else {"Delta": u.Q(1.0, "kpc")}
     )
 
     assert isinstance(q, cx.vecs.AbstractPos)
@@ -45,9 +45,7 @@ def func(
     # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
     # coordinate system
     kwargs = (
-        {}
-        if target is not cx.vecs.ProlateSpheroidalPos
-        else {"Delta": u.Quantity(1.0, "kpc")}
+        {} if target is not cx.vecs.ProlateSpheroidalPos else {"Delta": u.Q(1.0, "kpc")}
     )
 
     return cx.vconvert(target, q, **kwargs)

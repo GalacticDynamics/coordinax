@@ -29,18 +29,18 @@ def check_polar_range(
 
     Pass through the input if it's in the range.
 
-    >>> x = u.Quantity([0., 1, 2], "deg")
+    >>> x = u.Q([0., 1, 2], "deg")
     >>> check_polar_range(x)
     Quantity(Array([0., 1., 2.], dtype=float32), unit='deg')
 
     Raise an error if anything is outside the range.
 
-    >>> x = u.Quantity([0., 1, 2], "m")
+    >>> x = u.Q([0., 1, 2], "m")
     >>> try: check_polar_range(x)
     ... except Exception as e: print("wrong units")
     wrong units
 
-    >>> x = u.Quantity([-1., 1, 2], "deg")
+    >>> x = u.Q([-1., 1, 2], "deg")
     >>> try: check_polar_range(x)
     ... except Exception: pass
 
@@ -52,7 +52,7 @@ def check_polar_range(
     )
     return eqx.error_if(
         polar,
-        jnp.any(jnp.logical_or((polar < _l), (polar > _u))),
+        u.ustrip("", jnp.any(jnp.logical_or((polar < _l), (polar > _u)))),
         "The inclination angle must be in the range [0, pi].",
     )
 
@@ -68,19 +68,21 @@ def check_non_negative(
 
     Pass through the input if the value is non-negative.
 
-    >>> x = u.Quantity([0, 1, 2], "m")
+    >>> x = u.Q([0, 1, 2], "m")
     >>> check_non_negative(x)
     Quantity(Array([0, 1, 2], dtype=int32), unit='m')
 
     Raise an error if any value is negative.
 
-    >>> x = u.Quantity([-1, 1, 2], "m")
+    >>> x = u.Q([-1, 1, 2], "m")
     >>> try: check_non_negative(x)
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
-    return eqx.error_if(x, jnp.any(x < 0), f"The input{name} must be non-negative.")
+    return eqx.error_if(
+        x, u.ustrip("", jnp.any(x < 0)), f"The input{name} must be non-negative."
+    )
 
 
 def check_non_negative_non_zero(
@@ -94,24 +96,26 @@ def check_non_negative_non_zero(
 
     Pass through the input if the value is non-negative.
 
-    >>> x = u.Quantity([1, 2, 3], "m")
+    >>> x = u.Q([1, 2, 3], "m")
     >>> check_non_negative_non_zero(x)
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if any value is negative or zero.
 
-    >>> x = u.Quantity([-1, 1, 2], "m")
+    >>> x = u.Q([-1, 1, 2], "m")
     >>> try: check_non_negative_non_zero(x)
     ... except Exception: pass
 
-    >>> x = u.Quantity([0, 1, 2], "m")
+    >>> x = u.Q([0, 1, 2], "m")
     >>> try: check_non_negative_non_zero(x)
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
     return eqx.error_if(
-        x, jnp.any(x <= 0), f"The input{name} must be non-negative and non-zero."
+        x,
+        u.ustrip("", jnp.any(x <= 0)),
+        f"The input{name} must be non-negative and non-zero.",
     )
 
 
@@ -131,19 +135,19 @@ def check_less_than_equal(
 
     Pass through the input if the value is less than or equal to the max value:
 
-    >>> x = u.Quantity([1, 2, 3], "m")
-    >>> check_less_than_equal(x, u.Quantity(3, "m"))
+    >>> x = u.Q([1, 2, 3], "m")
+    >>> check_less_than_equal(x, u.Q(3, "m"))
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
-    >>> try: check_less_than_equal(x, u.Quantity(2, "m"))
+    >>> try: check_less_than_equal(x, u.Q(2, "m"))
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be less than or equal to {comparison_name}."
-    return eqx.error_if(x, jnp.any(x > max_val), msg)
+    return eqx.error_if(x, u.ustrip("", jnp.any(x > max_val)), msg)
 
 
 def check_greater_than_equal(
@@ -162,16 +166,16 @@ def check_greater_than_equal(
 
     Pass through the input if the value is greater than or equal to the min value:
 
-    >>> x = u.Quantity([1, 2, 3], "m")
-    >>> check_greater_than_equal(x, u.Quantity(1, "m"))
+    >>> x = u.Q([1, 2, 3], "m")
+    >>> check_greater_than_equal(x, u.Q(1, "m"))
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 
-    >>> try: check_greater_than_equal(x, u.Quantity(2, "m"))
+    >>> try: check_greater_than_equal(x, u.Q(2, "m"))
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be greater than or equal to {comparison_name}."
-    return eqx.error_if(x, jnp.any(x < min_val), msg)
+    return eqx.error_if(x, u.ustrip("", jnp.any(x < min_val)), msg)

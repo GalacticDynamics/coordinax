@@ -2,31 +2,22 @@
 
 __all__ = ("AbstractCompositeOperator",)
 
-import sys
 from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
 
 import equinox as eqx
+from optype.dataclasses import HasDataclassFields as _DataclassBase
 
 from .base import AbstractOperator
 from coordinax._src.vectors.base import AbstractVectorLike
-
-if sys.version_info >= (3, 12):
-    import optype as op
-
-    _DataclassBase = op.dataclasses.HasDataclassFields
-else:
-    from dataclassish import (
-        DataclassInstance as _DataclassBase,  # ty: ignore[unresolved-import]
-    )
 
 if TYPE_CHECKING:
     import coordinax.ops  # noqa: ICN001
 
 
 @runtime_checkable
-class HasOperatorsAttr(_DataclassBase, Protocol):  # type: ignore[misc]
+class HasOperatorsAttr(_DataclassBase, Protocol):
     """Protocol for classes with an `operators` attribute."""
 
     operators: tuple[AbstractOperator, ...]

@@ -131,7 +131,7 @@ KinematicSpace({
            [ 8.552  0.383 -0.6  ]>,
        'acceleration':
        <SphericalAcc: (r[kpc / Myr2], theta[rad / Myr2], phi[rad / Myr2])
-           [ 3.742e-01 -9.355e-09  1.639e-09]>
+           [ 3.742e-01 ...  1.639e-09]>
     })
 ```
 

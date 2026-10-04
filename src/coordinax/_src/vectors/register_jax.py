@@ -58,7 +58,7 @@ def vec_diff_to_array(obj: AbstractVector, /) -> Shaped[Array, "*batch N"]:
     >>> convert(acc, Array)
     Array([1, 2], dtype=int32)
 
-    >>> pos = cx.vecs.PolarPos(u.Quantity(1, "km"), u.Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(u.Q(1, "km"), u.Q(0, "deg"))
     >>> convert(pos, Array)
     Array([1., 0.], dtype=float32, ...)
 
@@ -74,11 +74,11 @@ def vec_diff_to_array(obj: AbstractVector, /) -> Shaped[Array, "*batch N"]:
     >>> convert(acc, Array)
     Array([1., 2., 3.], dtype=float32)
 
-    >>> pos = cx.SphericalPos(u.Quantity(1.0, "km"), u.Quantity(0, "deg"), u.Quantity(0, "deg"))
+    >>> pos = cx.SphericalPos(u.Q(1.0, "km"), u.Q(0, "deg"), u.Q(0, "deg"))
     >>> convert(pos, Array)
     Array([0., 0., 1.], dtype=float32, ...)
 
-    >>> pos = cx.vecs.CylindricalPos(u.Quantity(1, "km"), u.Quantity(0, "deg"), u.Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(u.Q(1, "km"), u.Q(0, "deg"), u.Q(0, "km"))
     >>> convert(pos, Array)
     Array([1., 0., 0.], dtype=float32, ...)
 
@@ -94,7 +94,7 @@ def vec_diff_to_array(obj: AbstractVector, /) -> Shaped[Array, "*batch N"]:
            [2.],
            [3.]], dtype=float32)
 
-    """  # noqa: E501
+    """
     cart = obj.vconvert(cartesian_vector_type(obj))  # convert vector to Cartesian
     cart = full_shaped(cart)  # ensure full shape
     comp_qs = field_values(cart)

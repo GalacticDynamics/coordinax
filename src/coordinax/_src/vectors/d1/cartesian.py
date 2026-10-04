@@ -3,8 +3,7 @@
 __all__ = ("CartesianAcc1D", "CartesianPos1D", "CartesianVel1D")
 
 import functools as ft
-from typing import final
-from typing_extensions import override
+from typing import final, override
 
 import equinox as eqx
 
@@ -42,7 +41,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 
     """
 
-    x: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    x: BBtLength = eqx.field(converter=u.Q.from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
 
@@ -50,7 +49,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     """Cartesian differential representation."""
 
-    x: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
@@ -73,7 +72,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
-    x: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @override

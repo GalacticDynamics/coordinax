@@ -15,7 +15,6 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
-from unxt.quantity import BareQuantity
 
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
@@ -34,8 +33,8 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(2.0, "kpc"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(2.0, "kpc"))
 
     >>> px2 = px + px
     >>> print(px2)
@@ -58,7 +57,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
         f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
-    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)  # type: ignore[operator]
+    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)
     return cast("AbstractPos", add.vconvert(type(lhs), **lhs._auxiliary_data))
 
 
@@ -80,17 +79,15 @@ def dot_p_general_poss(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.SphericalPos(
-    ...     r=u.Quantity([1, 2, 3], "m"),
-    ...     theta=u.Quantity([0, 0, 0], "rad"),
-    ...     phi=u.Quantity([0, 0, 0], "rad"))
+    >>> vec = cx.vecs.SphericalPos(r=u.Q([1, 2, 3], "m"), theta=u.Q([0, 0, 0], "rad"),
+    ...     phi=u.Q([0, 0, 0], "rad"))
 
     >>> jnp.dot(vec, vec)
     Quantity(Array([1., 4., 9.], dtype=float32), unit='m2')
 
     """
     cart_cls = lhs.cartesian_type
-    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)  # type: ignore[arg-type]
+    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)
 
 
 # ------------------------------------------------
@@ -161,9 +158,9 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /, **kw: Any) -> Abstr
 
     >>> from typing import ClassVar
     >>> class MyCartesian(cx.vecs.AbstractPos):
-    ...     x: u.Quantity
-    ...     y: u.Quantity
-    ...     z: u.Quantity
+    ...     x: u.Q
+    ...     y: u.Q
+    ...     z: u.Q
     ...     _dimensionality: ClassVar[int] = 3
     ...
     >>> @dispatch
@@ -172,8 +169,8 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /, **kw: Any) -> Abstr
     Add conversion to Quantity:
 
     >>> from plum import conversion_method
-    >>> @conversion_method(MyCartesian, u.Quantity)
-    ... def to_quantity(x: MyCartesian, /) -> u.Quantity:
+    >>> @conversion_method(MyCartesian, u.Q)
+    ... def to_quantity(x: MyCartesian, /) -> u.Q:
     ...     return jnp.stack((x.x, x.y, x.z), axis=-1)
 
     Add representation transformation
@@ -183,9 +180,7 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /, **kw: Any) -> Abstr
     ... def vconvert(target: type[MyCartesian], current: MyCartesian, /) -> MyCartesian:
     ...     return current
 
-    >>> vec = MyCartesian(x=u.Quantity([1], "m"),
-    ...                   y=u.Quantity([2], "m"),
-    ...                   z=u.Quantity([3], "m"))
+    >>> vec = MyCartesian(x=u.Q([1], "m"), y=u.Q([2], "m"), z=u.Q([3], "m"))
 
     First hit the non-scalar error:
 
@@ -255,7 +250,7 @@ def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /, **kw: Any) -> Abstr
 
 
 @register(jax.lax.mul_p)
-def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> BareQuantity:
+def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> u.Q:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -266,22 +261,20 @@ def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> BareQuantity
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos3D(
-    ...     x=u.Quantity([1, 2, 3], "m"),
-    ...     y=u.Quantity([4, 5, 6], "m"),
-    ...     z=u.Quantity([7, 8, 9], "m"))
+    >>> vec = cx.CartesianPos3D(x=u.Q([1, 2, 3], "m"), y=u.Q([4, 5, 6], "m"),
+    ...     z=u.Q([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
-    BareQuantity(Array([[ 1, 16, 49],
+    Quantity(Array([[ 1, 16, 49],
                         [ 4, 25, 64],
                         [ 9, 36, 81]], dtype=int32), unit='m2')
 
     >>> jnp.linalg.vector_norm(vec, axis=-1)
-    BareQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
+    Quantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """
-    lq: BareQuantity = convert(lhs.vconvert(lhs.cartesian_type), BareQuantity)
-    rq: BareQuantity = convert(rhs.vconvert(rhs.cartesian_type), BareQuantity)
+    lq: u.Q = convert(lhs.vconvert(lhs.cartesian_type), u.Q)
+    rq: u.Q = convert(rhs.vconvert(rhs.cartesian_type), u.Q)
     return mul_p_qbind(lq, rq, **kw)  # re-dispatch to Quantities
 
 
@@ -323,9 +316,8 @@ def reshape_p_pos(
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPos3D(x=u.Quantity([1, 2, 3], "m"),
-    ...                         y=u.Quantity([4, 5, 6], "m"),
-    ...                         z=u.Quantity([7, 8, 9], "m"))
+    >>> vec = cx.CartesianPos3D(x=u.Q([1, 2, 3], "m"), y=u.Q([4, 5, 6], "m"),
+    ...                         z=u.Q([7, 8, 9], "m"))
     >>> vec = jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
@@ -359,8 +351,8 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(2.0, "kpc"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(2.0, "kpc"))
 
     >>> px2 = px - px
     >>> print(px2)
@@ -378,5 +370,5 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # singularities, ranges, or auxiliary data that need to be handled, so this
     # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
-    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)  # type: ignore[operator]
+    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)
     return cast("AbstractPos", diff.vconvert(type(lhs), **lhs._auxiliary_data))

@@ -36,7 +36,7 @@ def add_p_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D
     >>> import coordinax as cx
 
     >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
-    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
+    >>> polr = cx.vecs.PolarPos(r=u.Q(3, "km"), phi=u.Q(90, "deg"))
     >>> print(cart + polr)
     <CartesianPos2D: (x, y) [km]
         [1. 5.]>
@@ -222,13 +222,13 @@ def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /, **kw: Any) -> PolarPos:
     >>> import coordinax as cx
     >>> import quaxed
 
-    >>> v = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
+    >>> v = cx.vecs.PolarPos(r=u.Q(1, "m"), phi=u.Q(90, "deg"))
     >>> print(v)
     <PolarPos: (r[m], phi[deg])
         [ 1 90]>
 
     >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
-    BareQuantity(Array(1., dtype=float32), unit='m')
+    Quantity(Array(1., dtype=float32), unit='m')
 
     >>> nv = quaxed.lax.mul(2, v)
     >>> print(nv)
@@ -274,7 +274,7 @@ def sub_p_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos
     >>> import unxt as u
     >>> import coordinax as cx
     >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
-    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
+    >>> polr = cx.vecs.PolarPos(r=u.Q(3, "km"), phi=u.Q(90, "deg"))
 
     >>> print(cart - polr)
     <CartesianPos2D: (x, y) [km]

@@ -14,11 +14,28 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import BareQuantity
 
 from .measures import Distance, DistanceModulus, Parallax
 
-parallax_base_length = u.Quantity(1, "AU")
+parallax_base_length = u.Q(1, "AU")
+
+
+def _as_measure(q: u.Q, /) -> Distance | Parallax | DistanceModulus:
+    """Read a plain quantity as the distance measure its unit implies.
+
+    unxt 2 quantities do not carry their dimension in their type, so plum
+    cannot pick the length / angle / magnitude overload; the unit can. No
+    negativity check is added: the target constructor still runs its own.
+    """
+    if u.is_unit_convertible("m", q):
+        return Distance(q.value, q.unit, check_negative=False)
+    if u.is_unit_convertible("rad", q):
+        return Parallax(q.value, q.unit, check_negative=False)
+    if u.is_unit_convertible("mag", q):
+        return DistanceModulus(q.ustrip("mag"), "mag")
+    msg = f"Cannot read a quantity in {q.unit} as a distance, parallax or modulus."
+    raise ValueError(msg)
+
 
 #####################################################################
 # Distance constructor
@@ -63,7 +80,7 @@ def distance(d: Distance, /, **kw: Any) -> Distance:
 
 
 @dispatch
-def distance(d: u.Quantity["length"], /, **kw: Any) -> Distance:
+def distance(d: u.Q, /, **kw: Any) -> Distance:
     """Compute distance from distance.
 
     Examples
@@ -71,17 +88,19 @@ def distance(d: u.Quantity["length"], /, **kw: Any) -> Distance:
     >>> import unxt as u
     >>> import coordinax.distance as cxd
 
-    >>> q = u.Quantity(1, "kpc")
+    >>> q = u.Q(1, "kpc")
     >>> cxd.distance(q, dtype=float)
     Distance(Array(1., dtype=float32), unit='kpc')
 
     """
+    if not u.is_unit_convertible("m", d):
+        return distance(_as_measure(d), **kw)
     unit = u.unit_of(d)
     return Distance(jnp.asarray(d.ustrip(unit), **kw), unit)
 
 
 @dispatch
-def distance(p: Parallax | u.Quantity["angle"], /, **kw: Any) -> Distance:
+def distance(p: Parallax, /, **kw: Any) -> Distance:
     """Compute distance from parallax.
 
     Examples
@@ -93,7 +112,7 @@ def distance(p: Parallax | u.Quantity["angle"], /, **kw: Any) -> Distance:
     >>> cxd.distance(p).uconvert("pc").round(2)
     Distance(Array(1000., dtype=float32, ...), unit='pc')
 
-    >>> q = u.Quantity(1, "mas")
+    >>> q = u.Q(1, "mas")
     >>> cxd.distance(q).uconvert("pc").round(2)
     Distance(Array(1000., dtype=float32, ...), unit='pc')
 
@@ -104,7 +123,7 @@ def distance(p: Parallax | u.Quantity["angle"], /, **kw: Any) -> Distance:
 
 
 @dispatch
-def distance(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Distance:
+def distance(dm: DistanceModulus, /, **kw: Any) -> Distance:
     """Compute distance from distance modulus.
 
     Examples
@@ -116,7 +135,7 @@ def distance(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Distance:
     >>> cxd.distance(dm).uconvert("pc").round(2)
     Distance(Array(1000., dtype=float32, ...), unit='pc')
 
-    >>> q = u.Quantity(10, "mag")
+    >>> q = u.Q(10, "mag")
     >>> cxd.distance(q).uconvert("pc").round(2)
     Distance(Array(1000., dtype=float32, ...), unit='pc')
 
@@ -168,7 +187,7 @@ def parallax(p: Parallax, /, **kw: Any) -> Parallax:
 
 
 @dispatch
-def parallax(p: u.Quantity["angle"], /, **kw: Any) -> Parallax:
+def parallax(p: u.Q, /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
     Examples
@@ -176,17 +195,19 @@ def parallax(p: u.Quantity["angle"], /, **kw: Any) -> Parallax:
     >>> import unxt as u
     >>> import coordinax.distance as cxd
 
-    >>> q = u.Quantity(1, "mas")
+    >>> q = u.Q(1, "mas")
     >>> cxd.parallax(q, dtype=float)
     Parallax(Array(1., dtype=float32), unit='mas')
 
     """
+    if not u.is_unit_convertible("rad", p):
+        return parallax(_as_measure(p), **kw)
     unit = u.unit_of(p)
     return Parallax(jnp.asarray(p.ustrip(unit), **kw), unit)
 
 
 @dispatch
-def parallax(d: Distance | u.Quantity["length"], /, **kw: Any) -> Parallax:
+def parallax(d: Distance, /, **kw: Any) -> Parallax:
     """Compute parallax from distance.
 
     Examples
@@ -198,7 +219,7 @@ def parallax(d: Distance | u.Quantity["length"], /, **kw: Any) -> Parallax:
     >>> cxd.parallax(d).uconvert("mas").round(2)
     Parallax(Array(100., dtype=float32, ...), unit='mas')
 
-    >>> q = u.Quantity(10, "pc")
+    >>> q = u.Q(10, "pc")
     >>> cxd.parallax(q).uconvert("mas").round(2)
     Parallax(Array(100., dtype=float32, ...), unit='mas')
 
@@ -208,7 +229,7 @@ def parallax(d: Distance | u.Quantity["length"], /, **kw: Any) -> Parallax:
 
 
 @dispatch
-def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Parallax:
+def parallax(dm: DistanceModulus, /, **kw: Any) -> Parallax:
     """Convert distance modulus to parallax.
 
     Examples
@@ -221,7 +242,7 @@ def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Parallax:
     Parallax(Array(1., dtype=float32, ...), unit='mas')
 
     """
-    d = BareQuantity(10 ** (1 + dm.ustrip("mag") / 5), "pc")
+    d = u.Q(10 ** (1 + dm.ustrip("mag") / 5), "pc")
     p = jnp.atan2(parallax_base_length, d)
     unit = u.unit_of(p)
     return Parallax(jnp.asarray(p.ustrip(unit), **kw), unit)
@@ -270,7 +291,7 @@ def distance_modulus(dm: DistanceModulus, /, **kw: Any) -> DistanceModulus:
 
 
 @dispatch
-def distance_modulus(dm: u.Quantity["mag"], /, **kw: Any) -> DistanceModulus:
+def distance_modulus(dm: u.Q, /, **kw: Any) -> DistanceModulus:
     """Compute parallax from parallax.
 
     Examples
@@ -278,19 +299,19 @@ def distance_modulus(dm: u.Quantity["mag"], /, **kw: Any) -> DistanceModulus:
     >>> import unxt as u
     >>> import coordinax.distance as cxd
 
-    >>> q = u.Quantity(1, "mag")
+    >>> q = u.Q(1, "mag")
     >>> cxd.distance_modulus(q)
     DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
 
     """
+    if not u.is_unit_convertible("mag", dm):
+        return distance_modulus(_as_measure(dm), **kw)
     unit = u.unit_of(dm)
     return DistanceModulus(jnp.asarray(u.ustrip(unit, dm), **kw), unit)
 
 
 @dispatch
-def distance_modulus(
-    d: Distance | u.Quantity["length"], /, **kw: Any
-) -> DistanceModulus:
+def distance_modulus(d: Distance, /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from distance.
 
     Examples
@@ -302,7 +323,7 @@ def distance_modulus(
     >>> cxd.distance_modulus(d)
     DistanceModulus(Array(-5., dtype=float32), unit='mag')
 
-    >>> q = u.Quantity(1, "pc")
+    >>> q = u.Q(1, "pc")
     >>> cxd.distance_modulus(q)
     DistanceModulus(Array(-5., dtype=float32), unit='mag')
 
@@ -312,9 +333,7 @@ def distance_modulus(
 
 
 @dispatch
-def distance_modulus(
-    p: Parallax | u.Quantity["angle"], /, **kw: Any
-) -> DistanceModulus:
+def distance_modulus(p: Parallax, /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from parallax.
 
     Examples
@@ -326,7 +345,7 @@ def distance_modulus(
     >>> cxd.distance_modulus(p)
     DistanceModulus(Array(10., dtype=float32), unit='mag')
 
-    >>> q = u.Quantity(1, "mas")
+    >>> q = u.Q(1, "mas")
     >>> cxd.distance_modulus(q)
     DistanceModulus(Array(10., dtype=float32), unit='mag')
 

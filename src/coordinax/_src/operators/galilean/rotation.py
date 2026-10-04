@@ -18,6 +18,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import ToUnitsOptions
@@ -34,7 +35,7 @@ def converter(x: Any) -> Array:
     """Convert the input to a rotation matrix."""
     if isinstance(x, GalileanRotation):
         out = x.rotation
-    elif isinstance(x, u.Quantity):
+    elif isinstance(x, u.Q):
         out = u.ustrip("", x)
     else:
         out = x
@@ -86,8 +87,8 @@ class GalileanRotation(AbstractGalileanOperator):
 
     Translation operators can be applied to a Quantity[float, (N, 3), "...]:
 
-    >>> q = u.Quantity([1, 0, 0], "m")
-    >>> t = u.Quantity(1, "s")
+    >>> q = u.Q([1, 0, 0], "m")
+    >>> t = u.Q(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq
     Quantity(Array([0, 1, 0], dtype=int32), unit='m')
@@ -99,8 +100,8 @@ class GalileanRotation(AbstractGalileanOperator):
 
     This also works for a batch of vectors:
 
-    >>> q = u.Quantity([[1, 0, 0], [0, 1, 0]], "m")
-    >>> t = u.Quantity(0, "s")
+    >>> q = u.Q([[1, 0, 0], [0, 1, 0]], "m")
+    >>> t = u.Q(0, "s")
 
     >>> newt, newq = op(t, q)
     >>> newq
@@ -143,7 +144,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def from_euler(
         cls: "type[GalileanRotation]",
         seq: str,
-        angles: u.Quantity["angle"] | u.Angle,
+        angles: u.Q | u.Angle,
         /,
     ) -> "GalileanRotation":
         """Initialize from Euler angles.
@@ -156,7 +157,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+        >>> op = cx.ops.GalileanRotation.from_euler("z", u.Q(90, "deg"))
         >>> op.rotation.round(2)
         Array([[ 0., -1.,  0.],
                [ 1.,  0.,  0.],
@@ -231,7 +232,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
+@AbstractOperator.from_.dispatch
 def from_(cls: type[GalileanRotation], obj: Rotation, /) -> GalileanRotation:
     """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 
@@ -258,10 +259,10 @@ def from_(cls: type[GalileanRotation], obj: Rotation, /) -> GalileanRotation:
 @AbstractOperator.__call__.dispatch(precedence=1)
 def call(
     self: GalileanRotation,
-    q: Shaped[u.Quantity["length"], "*batch 3"],
+    q: Shaped[u.Q, "*batch 3"],
     /,
     **__: Any,
-) -> Shaped[u.Quantity["length"], "*batch 3"]:
+) -> Shaped[u.Q, "*batch 3"]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -273,13 +274,13 @@ def call(
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
     >>> op = cx.ops.GalileanRotation(Rz)
 
-    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> q = u.Q([1, 0, 0], "m")
     >>> op(q)
     Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
     THere's a related dispatch that also takes a time argument:
 
-    >>> t = u.Quantity(1, "s")
+    >>> t = u.Q(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq
     Quantity(Array([0, 1, 0], dtype=int32), unit='m')
@@ -316,8 +317,8 @@ def call(self: GalileanRotation, q: AbstractPos3D, /, **__: Any) -> AbstractPos3
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation, t: u.Quantity["time"], q: AbstractPos3D, /
-) -> tuple[u.Quantity["time"], AbstractPos3D]:
+    self: GalileanRotation, t: u.Q, q: AbstractPos3D, /
+) -> tuple[u.Q, AbstractPos3D]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -329,7 +330,7 @@ def call(
     >>> op = cx.ops.GalileanRotation(Rz)
 
     >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
-    >>> t = u.Quantity(1, "s")
+    >>> t = u.Q(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq.x
     Quantity(Array(0, dtype=int32), unit='m')
@@ -355,7 +356,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> R_z = cx.ops.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+    >>> R_z = cx.ops.GalileanRotation.from_euler("z", u.Q(90, "deg"))
 
     >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
     >>> p = cx.CartesianVel3D.from_([1, 0, 0], "m/s")
@@ -375,7 +376,7 @@ def call(
     # XVel -> CartVel -> Q -> R@Q -> CartVel -> XVel
     cart_cls = pvec.cartesian_type
     pcvec = pvec.vconvert(cart_cls, qvec)
-    p = convert(pcvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
+    p = convert(pcvec.uconvert(ToUnitsOptions.consistent), u.Q)
     newp = vec_matmul(self.rotation, p)
     newpcvec = cart_cls.from_(newp)
     newpvec = newpcvec.vconvert(type(pvec), newqvec)
@@ -386,11 +387,12 @@ def call(
 @AbstractOperator.__call__.dispatch
 def call(
     self: GalileanRotation,
-    q: u.Quantity["length"],
-    p: u.Quantity["speed"],
+    q: u.Q,
+    # `DimQuantity`, not `u.Q`: dimension alone tells `op(q, p)` from `op(t, x)`.
+    p: DimQuantity["speed"],
     /,
     **__: Any,
-) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+) -> tuple[u.Q, u.Q]:
     r"""Apply the rotation to the coordinates and velocities.
 
     Examples
@@ -401,8 +403,8 @@ def call(
 
     >>> R_z = cx.ops.GalileanRotation(jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]]))
 
-    >>> q = u.Quantity([1., 0, 0], "m")
-    >>> p = u.Quantity([1., 0, 0], "m/s")
+    >>> q = u.Q([1., 0, 0], "m")
+    >>> p = u.Q([1., 0, 0], "m/s")
 
     >>> newq, newp = R_z(q, p)
     >>> newq, newp
@@ -448,7 +450,7 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     return op
 
 
-@GalileanRotation.__matmul__.dispatch  # type: ignore[union-attr,untyped-decorator]
+@GalileanRotation.__matmul__.dispatch
 def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
     """Combine two Galilean rotations.
 
@@ -460,13 +462,13 @@ def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
 
     Two rotations can be combined:
 
-    >>> theta1 = u.Quantity(45, "deg")
+    >>> theta1 = u.Q(45, "deg")
     >>> Rz1 = jnp.asarray([[jnp.cos(theta1), -jnp.sin(theta1), 0],
     ...                   [jnp.sin(theta1), jnp.cos(theta1),  0],
     ...                   [0,             0,              1]])
     >>> op1 = cx.ops.GalileanRotation(Rz1)
 
-    >>> theta2 = u.Quantity(90, "deg")
+    >>> theta2 = u.Q(90, "deg")
     >>> Rz2 = jnp.asarray([[jnp.cos(theta2), -jnp.sin(theta2), 0],
     ...                   [jnp.sin(theta2), jnp.cos(theta2),  0],
     ...                   [0,             0,              1]])
@@ -495,13 +497,13 @@ def simplify_op(op1: GalileanRotation, op2: GalileanRotation) -> GalileanRotatio
 
     Two rotations can be combined:
 
-    >>> theta1 = u.Quantity(45, "deg")
+    >>> theta1 = u.Q(45, "deg")
     >>> Rz1 = jnp.asarray([[jnp.cos(theta1), -jnp.sin(theta1), 0],
     ...                   [jnp.sin(theta1), jnp.cos(theta1),  0],
     ...                   [0,             0,              1]])
     >>> op1 = cx.ops.GalileanRotation(Rz1)
 
-    >>> theta2 = u.Quantity(60, "deg")
+    >>> theta2 = u.Q(60, "deg")
     >>> Rz2 = jnp.asarray([[jnp.cos(theta2), -jnp.sin(theta2), 0],
     ...                   [jnp.sin(theta2), jnp.cos(theta2),  0],
     ...                   [0,             0,              1]])

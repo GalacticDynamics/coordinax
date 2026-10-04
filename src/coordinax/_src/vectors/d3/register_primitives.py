@@ -35,8 +35,7 @@ def add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     >>> import unxt as u
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> s = cx.SphericalPos(r=u.Quantity(1, "km"), theta=u.Quantity(90, "deg"),
-    ...                     phi=u.Quantity(0, "deg"))
+    >>> s = cx.SphericalPos(r=u.Q(1, "km"), theta=u.Q(90, "deg"), phi=u.Q(0, "deg"))
     >>> print(q + s)
     <CartesianPos3D: (x, y, z) [km]
         [2. 2. 3.]>
@@ -125,12 +124,11 @@ def mul_p_vmsph(
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.vecs.MathSphericalPos(r=u.Quantity(3, "km"),
-    ...                              theta=u.Quantity(90, "deg"),
-    ...                              phi=u.Quantity(0, "deg"))
+    >>> v = cx.vecs.MathSphericalPos(r=u.Q(3, "km"), theta=u.Q(90, "deg"),
+    ...                              phi=u.Q(0, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
-    BareQuantity(Array(3., dtype=float32), unit='km')
+    Quantity(Array(3., dtype=float32), unit='km')
 
     >>> nv = jnp.multiply(2, v)
     >>> print(nv)
@@ -229,8 +227,7 @@ def sub_p_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D
     >>> import unxt as u
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> s = cx.SphericalPos(r=u.Quantity(1, "km"), theta=u.Quantity(90, "deg"),
-    ...                     phi=u.Quantity(0, "deg"))
+    >>> s = cx.SphericalPos(r=u.Q(1, "km"), theta=u.Q(90, "deg"), phi=u.Q(0, "deg"))
     >>> print(q - s)
     <CartesianPos3D: (x, y, z) [km]
         [0. 2. 3.]>

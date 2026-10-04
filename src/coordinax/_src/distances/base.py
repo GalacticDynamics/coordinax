@@ -94,5 +94,4 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 # distance degrades to a Quantity. This is necessary for many operations, e.g.
 # division of a distance by non-dimensionless quantity where the resulting units
 # are not those of a distance.
-add_promotion_rule(AbstractDistance, u.Quantity, u.Quantity)
-add_promotion_rule(AbstractDistance, u.quantity.BareQuantity, u.quantity.BareQuantity)
+add_promotion_rule(AbstractDistance, u.Q, u.Q)

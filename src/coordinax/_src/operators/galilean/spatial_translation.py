@@ -15,6 +15,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -90,9 +91,8 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     constructed from a 1D array, using `coordinax.vecs.CartesianPos3D.from_`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> shift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
-    ...                         theta=u.Quantity(jnp.pi/2, "rad"),
-    ...                         phi=u.Quantity(0, "rad"))
+    >>> shift = cx.SphericalPos(r=u.Q(1.0, "km"), theta=u.Q(jnp.pi/2, "rad"),
+    ...                         phi=u.Q(0, "rad"))
     >>> op = cx.ops.GalileanSpatialTranslation(shift)
     >>> op
     GalileanSpatialTranslation(SphericalPos( ... ))
@@ -108,7 +108,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     - `unxt.Quantity`:
 
-    >>> q = u.Quantity([0, 0, 0], "km")
+    >>> q = u.Q([0, 0, 0], "km")
     >>> op(q).value.round(2)
     Array([ 1.,  0., -0.], dtype=float32)
 
@@ -118,7 +118,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     - 1D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
-    >>> q = u.Quantity([0], "km")
+    >>> q = u.Q([0], "km")
     >>> op(q)
     Quantity(Array([1], dtype=int32), unit='km')
 
@@ -129,7 +129,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     - 2D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "km")
-    >>> q = u.Quantity([0, 0], "km")
+    >>> q = u.Q([0, 0], "km")
     >>> op(q)
     Quantity(Array([1, 2], dtype=int32), unit='km')
 
@@ -140,7 +140,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     - 3D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-    >>> q = u.Quantity([0, 0, 0], "km")
+    >>> q = u.Q([0, 0, 0], "km")
     >>> op(q)
     Quantity(Array([1, 2, 3], dtype=int32), unit='km')
 
@@ -155,7 +155,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     Many operators are time dependent and require a time argument. This operator
     is time independent and will pass through the time argument:
 
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> op(t, q)[0] is t
     True
 
@@ -267,7 +267,7 @@ def call(self: GalileanSpatialTranslation, q: AbstractPos, /, **__: Any) -> Abst
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> newq = op(q)
     >>> print(newq)
     <CartesianPos3D: (x, y, z) [km]
@@ -295,7 +295,7 @@ def call(
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> newt, newq = op(t, q)
     >>> print(newq)
     <CartesianPos3D: (x, y, z) [km]
@@ -303,9 +303,9 @@ def call(
 
     This spatial translation is time independent.
 
-    >>> t = u.Quantity(1, "Gyr")
+    >>> t = u.Q(1, "Gyr")
     >>> op(t, q)[1].x == newq.x
-    Array(True, dtype=bool)
+    Quantity(Array(True, dtype=bool), unit='')
 
     """
     return t, q + self.delta_q
@@ -385,8 +385,8 @@ def call(
 
     qcart_cls = qvec.cartesian_type
     pcart_cls = pvec.cartesian_type
-    q = convert(qvec.vconvert(qcart_cls), u.Quantity)
-    p = convert(pvec.vconvert(pcart_cls, qvec), u.Quantity)
+    q = convert(qvec.vconvert(qcart_cls), u.Q)
+    p = convert(pvec.vconvert(pcart_cls, qvec), u.Q)
     # 1.5 flatten all but the last axis  # TODO: not need to flatten
     batch = jnp.broadcast_shapes(q.shape[:-1], p.shape[:-1])
     q, p = jnp.reshape(q, (-1, q.shape[-1])), jnp.reshape(p, (-1, q.shape[-1]))
@@ -409,7 +409,8 @@ def call(
 def call(
     self: GalileanSpatialTranslation,
     q: u.AbstractQuantity,
-    p: u.Quantity["speed"],
+    # `DimQuantity`, not `u.Q`: dimension alone tells `op(q, p)` from `op(t, x)`.
+    p: DimQuantity["speed"],
     /,
     **__: Any,
 ) -> tuple[u.AbstractQuantity, u.AbstractQuantity]:
@@ -475,7 +476,7 @@ def simplify_op(
 
     """
     # Check if the translation is zero.
-    if jnp.allclose(convert(op.delta_q, u.Quantity).value, 0, **kwargs):
+    if jnp.allclose(convert(op.delta_q, u.Q).value, 0, **kwargs):
         return Identity()
     return op
 

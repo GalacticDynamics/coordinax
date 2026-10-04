@@ -62,9 +62,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @ft.partial(jax.jit)
-    def norm(
-        self: "AbstractAcc", p: AbstractVel, q: AbstractPos, /
-    ) -> u.Quantity["acceleration"]:
+    def norm(self: "AbstractAcc", p: AbstractVel, q: AbstractPos, /) -> u.Q:
         """Return the norm of the vector.
 
         Examples

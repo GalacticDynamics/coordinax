@@ -7,8 +7,7 @@ __all__ = (
 )
 
 import functools as ft
-from typing import final
-from typing_extensions import override
+from typing import final, override
 
 import equinox as eqx
 
@@ -72,9 +71,8 @@ class MathSphericalPos(AbstractSphericalPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.vecs.MathSphericalPos(r=u.Quantity(3, "km"),
-        ...                              theta=u.Quantity(90, "deg"),
-        ...                              phi=u.Quantity(0, "deg"))
+        >>> s = cx.vecs.MathSphericalPos(r=u.Q(3, "km"), theta=u.Q(90, "deg"),
+        ...                              phi=u.Q(0, "deg"))
         >>> s.norm()
         Distance(Array(3, dtype=int32, ...), unit='km')
 
@@ -86,13 +84,13 @@ class MathSphericalPos(AbstractSphericalPos):
 class MathSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
-    r: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    r: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
-    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Azimuthal speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q.from_)
     r"""Inclination speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
 
@@ -100,15 +98,11 @@ class MathSphericalVel(AbstractSphericalVel):
 class MathSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
-    r: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    r: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
 
-    theta: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    theta: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Azimuthal acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q.from_)
     r"""Inclination acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""

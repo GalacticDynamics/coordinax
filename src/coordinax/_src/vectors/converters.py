@@ -17,10 +17,12 @@ def converter_azimuth_to_range(phi: u.AbstractQuantity, /) -> u.AbstractQuantity
     Examples
     --------
     >>> import unxt as u
-    >>> x = u.Quantity(370, "deg")
+    >>> x = u.Q(370, "deg")
     >>> converter_azimuth_to_range(x)
     Quantity(Array(10, dtype=int32, ...), unit='deg')
 
     """
     # TODO: have an integer-preserving version of this
-    return phi % _2pid
+    # Same unit first: int % across units fails in unxt 2.0.4.
+    # https://github.com/GalacticDynamics/unxt/issues/946
+    return phi % u.uconvert(phi.unit, _2pid)

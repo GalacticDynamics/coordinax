@@ -7,8 +7,7 @@ __all__ = (
 )
 
 import functools as ft
-from typing import final
-from typing_extensions import override
+from typing import final, override
 
 import equinox as eqx
 import jax
@@ -45,7 +44,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2], "km"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km')
     >>> q.shape
@@ -53,7 +52,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km')
     >>> q.shape
@@ -61,7 +60,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4], "km"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km')
     >>> q.shape
@@ -69,7 +68,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "km"))
+    >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4, 5], "km"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
     >>> q.shape
@@ -77,7 +76,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     """
 
-    q: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    q: BBtLength = eqx.field(converter=u.Q.from_)
     r"""N-D coordinate :math:`\vec{x} \in (-\infty,+\infty)`.
 
     Should have shape (*batch, F) where F is the number of features /
@@ -94,7 +93,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))._dimensionality()
+        >>> cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))._dimensionality()
         3
 
         """
@@ -122,7 +121,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
         A 3D vector:
 
-        >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
+        >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
         >>> q.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km')
 
@@ -145,7 +144,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 1D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([[1]], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([[1]], "km/s"))
     >>> q.q
     Quantity(Array([[1]], dtype=int32), unit='km / s')
     >>> q.shape
@@ -153,7 +152,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2], "km/s"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km / s')
     >>> q.shape
@@ -161,7 +160,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
     >>> q.shape
@@ -169,7 +168,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s')
     >>> q.shape
@@ -177,7 +176,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4, 5], "km/s"))
+    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4, 5], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
     >>> q.shape
@@ -185,7 +184,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     """
 
-    q: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    q: ct.BBtSpeed = eqx.field(converter=u.Q.from_)
     r"""N-D speed :math:`d\vec{x}/dt \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -202,7 +201,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))._dimensionality()
+        >>> cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))._dimensionality()
         3
 
         """
@@ -220,7 +219,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
         A 3D vector:
 
-        >>> c = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))
+        >>> c = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))
         >>> c.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km / s')
 
@@ -243,7 +242,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 1D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([[1]], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([[1]], "km/s2"))
     >>> q.q
     Quantity(Array([[1]], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -251,7 +250,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -259,7 +258,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -267,7 +266,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -275,7 +274,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4, 5], "km/s2"))
+    >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4, 5], "km/s2"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
     >>> q.shape
@@ -283,7 +282,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     """
 
-    q: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    q: ct.BBtAcc = eqx.field(converter=u.Q.from_)
     r"""N-D acceleration :math:`d\vec{x}/dt^2 \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -300,7 +299,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))._dimensionality()
+        >>> cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))._dimensionality()
         3
 
         """
@@ -323,7 +322,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
         A 3D vector:
 
-        >>> c = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))
+        >>> c = cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))
         >>> c.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km / s2')
 

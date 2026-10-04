@@ -10,4 +10,4 @@ from .distances import AbstractDistance
 # distance degrades to a Quantity. This is necessary for many operations, e.g.
 # division of a distance by non-dimensionless quantity where the resulting units
 # are not those of a distance.
-add_promotion_rule(AbstractDistance, u.quantity.AbstractAngle, u.Quantity)
+add_promotion_rule(AbstractDistance, u.quantity.AbstractAngle, u.Q)

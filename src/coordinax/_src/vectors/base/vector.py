@@ -59,11 +59,11 @@ class AbstractVector(
 
     Vectors with certain lengths:
 
-    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1], "m"))
+    >>> vec = cx.vecs.CartesianPos1D(u.Q([1], "m"))
     >>> len(vec)
     1
 
-    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
     >>> len(vec)
     2
 
@@ -78,7 +78,7 @@ class AbstractVector(
 
     - a vector with additional attributes
 
-    >>> vec2 = vec1.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=u.Quantity(1, "m"))
+    >>> vec2 = vec1.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=u.Q(1, "m"))
     >>> print(str(vec2))
     <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
         Delta=Quantity(1, unit='m')
@@ -144,9 +144,8 @@ class AbstractVector(
         >>> vec._auxiliary_data
         {}
 
-        >>> vec = cx.vecs.ProlateSpheroidalPos(
-        ...     mu=u.Quantity(3, "m2"), nu=u.Quantity(2, "m2"),
-        ...     phi=u.Quantity(4, "rad"), Delta=u.Quantity(1.5, "m"))
+        >>> vec = cx.vecs.ProlateSpheroidalPos(mu=u.Q(3, "m2"), nu=u.Q(2, "m2"),
+        ...     phi=u.Q(4, "rad"), Delta=u.Q(1.5, "m"))
         >>> vec._auxiliary_data
         {'Delta': Quantity(Array(1.5, dtype=float32, ...), unit='m')}
 
@@ -175,9 +174,9 @@ class AbstractVector(
 
         We can transpose a vector:
 
-        >>> vec = cx.CartesianPos3D(x=u.Quantity([[0, 1], [2, 3]], "m"),
-        ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
-        ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec = cx.CartesianPos3D(x=u.Q([[0, 1], [2, 3]], "m"),
+        ...                         y=u.Q([[0, 1], [2, 3]], "m"),
+        ...                         z=u.Q([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
         Quantity(Array([[0, 2],
                                   [1, 3]], dtype=int32), unit='m')
@@ -210,8 +209,7 @@ class AbstractVector(
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.ndim
         2
 
@@ -231,9 +229,9 @@ class AbstractVector(
 
         We can transpose a vector:
 
-        >>> vec = cx.CartesianPos3D(x=u.Quantity([[0, 1], [2, 3]], "m"),
-        ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
-        ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec = cx.CartesianPos3D(x=u.Q([[0, 1], [2, 3]], "m"),
+        ...                         y=u.Q([[0, 1], [2, 3]], "m"),
+        ...                         z=u.Q([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
         Quantity(Array([[0, 2],
                                   [1, 3]], dtype=int32), unit='m')
@@ -273,8 +271,7 @@ class AbstractVector(
 
         We can get the vector as a mapping:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.asdict()
         {'x': Quantity(Array([[1, 2], [3, 4]], dtype=int32), unit='m'),
          'y': Quantity(Array(0, dtype=int32, ...), unit='m')}
@@ -602,7 +599,7 @@ class AbstractVector(
 # Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[untyped-decorator, union-attr]
+@AbstractVector.from_.dispatch
 def from_(cls: type[AbstractVector], *args: Any, **kwargs: Any) -> AbstractVector:
     """Create a vector from arguments.
 

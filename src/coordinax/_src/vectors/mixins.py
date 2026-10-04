@@ -62,7 +62,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
+        >>> vec = cx.vecs.PolarPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"))
         >>> vec.aval()
         ShapedArray(float32[2])
 
@@ -70,7 +70,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(0, "rad/s"))
+        >>> vec = cx.vecs.PolarVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
@@ -78,7 +78,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarAcc(r=u.Quantity(1, "m/s2"), phi=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.PolarAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
@@ -92,7 +92,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2,3])
 
-        >>> vec = cx.SphericalPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"), theta=u.Quantity(0, "rad"))
+        >>> vec = cx.SphericalPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"), theta=u.Q(0, "rad"))
         >>> vec.aval()
         ShapedArray(float32[3])
 
@@ -100,7 +100,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.SphericalVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(0, "rad/s"), theta=u.Quantity(0, "rad/s"))
+        >>> vec = cx.SphericalVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"), theta=u.Q(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[3])
 
@@ -108,7 +108,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.vecs.SphericalAcc(r=u.Quantity(1, "m/s2"), phi=u.Quantity(0, "rad/s2"), theta=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.SphericalAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"), theta=u.Q(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[3])
 

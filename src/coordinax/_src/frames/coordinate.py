@@ -3,8 +3,7 @@
 __all__ = ("AbstractCoordinate", "Coordinate")
 
 
-from typing import Any, ClassVar, Literal, assert_never, cast, final
-from typing_extensions import override
+from typing import Any, ClassVar, Literal, assert_never, cast, final, override
 
 import equinox as eqx
 import jax
@@ -44,7 +43,7 @@ class AbstractCoordinate(AbstractVector):
     # Coordinate API
 
     def to_frame(
-        self, toframe: AbstractReferenceFrame, /, t: u.Quantity | None = None
+        self, toframe: AbstractReferenceFrame, /, t: u.Q | None = None
     ) -> "AbstractCoordinate":
         """Transform the coordinate to a specified frame.
 
@@ -73,7 +72,7 @@ class AbstractCoordinate(AbstractVector):
             return self
 
         # Otherwise, apply the transformation and return a new coordinate
-        new_data = op(self.data) if t is None else op(t, self.data)[1]  # type: ignore[index]
+        new_data = op(self.data) if t is None else op(t, self.data)[1]
         out = self.__class__.from_(new_data, toframe)
         return cast("AbstractCoordinate", out)
 
@@ -267,17 +266,12 @@ class Coordinate(AbstractCoordinate):
 
     Showing Frame Transformation:
 
-    >>> space = cx.KinematicSpace(
-    ...     length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
+    >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
     ...     speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
 
-    >>> w=cx.Coordinate(
-    ...     data=space,
-    ...     frame=cx.frames.TransformedReferenceFrame(
+    >>> w=cx.Coordinate(data=space, frame=cx.frames.TransformedReferenceFrame(
     ...         cx.frames.Galactocentric(),
-    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc"),
-    ...     ),
-    ... )
+    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc")))
 
     >>> w.to_frame(cx.frames.ICRS())
     Coordinate(

@@ -21,9 +21,7 @@ mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 
 @register(jax.lax.mul_p)
-def _mul_vel_q(
-    self: AbstractVel, other: u.Quantity["time"], /, **kw: Any
-) -> AbstractPos:
+def _mul_vel_q(self: AbstractVel, other: u.Q, /, **kw: Any) -> AbstractPos:
     """Multiply the vector by a time `unxt.Quantity` to get a position.
 
     Examples
@@ -32,13 +30,13 @@ def _mul_vel_q(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> dr = cx.vecs.RadialVel(u.Quantity(1, "m/s"))
-    >>> vec = dr * u.Quantity(2, "s")
+    >>> dr = cx.vecs.RadialVel(u.Q(1, "m/s"))
+    >>> vec = dr * u.Q(2, "s")
     >>> print(vec)
     <RadialPos: (r) [m]
         [2]>
 
-    >>> print(qlax.mul(dr, u.Quantity(2, "s")))
+    >>> print(qlax.mul(dr, u.Q(2, "s")))
     <RadialPos: (r) [m]
         [2]>
 
@@ -68,7 +66,7 @@ def neg_vel(vec: AbstractVel, /) -> AbstractVel:
     >>> -dr
     RadialVel(r=Quantity(-1, unit='m / s'))
 
-    >>> dp = cx.vecs.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
+    >>> dp = cx.vecs.PolarVel(u.Q(1, "m/s"), u.Q(1, "mas/yr"))
     >>> neg_dp = -dp
     >>> print(neg_dp)
     <PolarVel: (r[m / s], phi[mas / yr])
