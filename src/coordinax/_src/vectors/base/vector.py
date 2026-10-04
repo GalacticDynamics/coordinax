@@ -2,6 +2,7 @@
 
 __all__ = ("AbstractVector", "is_vector")
 
+import functools as ft
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
@@ -107,6 +108,30 @@ class AbstractVector(
             if isinstance(cls.__dict__.get(k), VectorAttribute)
         ]
         cls._AUX_FIELDS = tuple(aux)
+
+    def __check_init__(self) -> None:
+        """Check each component has the dimension its field declares.
+
+        Field converters are plain `u.Q.from_` (unxt 2's ``u.Quantity["length"]``
+        no longer checks), so the declared dimensions are checked here.
+
+        >>> import unxt as u
+        >>> import coordinax as cx
+        >>> try: cx.CartesianPos3D(x=u.Q(1, "s"), y=u.Q(2, "m"), z=u.Q(3, "m"))
+        ... except ValueError as e: print(e)
+        CartesianPos3D.x must have dimension 'length', got 'time' (s).
+
+        """
+        for k, dim in _declared_dimensions(type(self)).items():
+            v = getattr(self, k)
+            if dim is None or not u.quantity.is_any_quantity(v):
+                continue
+            if (got := _unit_dimension(v.unit)) != dim:
+                msg = (
+                    f"{type(self).__name__}.{k} must have dimension '{dim}', "
+                    f"got '{got}' ({v.unit})."
+                )
+                raise ValueError(msg)
 
     # ===============================================================
     # Vector API
@@ -610,6 +635,24 @@ def from_(cls: type[AbstractVector], *args: Any, **kwargs: Any) -> AbstractVecto
 
 
 # ================================================================
+
+
+@ft.cache
+def _declared_dimensions(cls: type[AbstractVector], /) -> dict[str, Any]:
+    """Each component's declared dimension, or `None` if it declares none."""
+
+    def dim(f: Any) -> Any:
+        try:
+            return u.dimension_of(f.type)
+        except Exception:  # noqa: BLE001  # e.g. a vector-valued field
+            return None
+
+    return {f.name: dim(f) for f in fields(AttrFilter, cls)}
+
+
+@ft.cache
+def _unit_dimension(unit: Any, /) -> Any:
+    return u.dimension_of(unit)
 
 
 def is_vector(obj: Any, /) -> TypeGuard[AbstractVector]:
