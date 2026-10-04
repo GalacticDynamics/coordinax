@@ -44,8 +44,7 @@ class AbstractPosND(AbstractPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianPosND(u.Q([[[1, 2, 3]],
-        ...                                          [[4, 5, 6]]], "m"))
+        >>> vec = cx.vecs.CartesianPosND(u.Q([[[1, 2, 3]], [[4, 5, 6]]], "m"))
         >>> vec.shape
         (2, 1)
 
@@ -273,8 +272,7 @@ class AbstractAccND(AbstractAcc):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianAccND(u.Q([[[1, 2, 3]],
-        ...                                          [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.vecs.CartesianAccND(u.Q([[[1, 2, 3]], [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
 
@@ -302,8 +300,7 @@ class AbstractAccND(AbstractAcc):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianAccND(u.Q([[[1, 2, 3]],
-        ...                                          [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.vecs.CartesianAccND(u.Q([[[1, 2, 3]], [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
 

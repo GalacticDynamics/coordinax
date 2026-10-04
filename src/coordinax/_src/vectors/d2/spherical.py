@@ -50,8 +50,7 @@ class TwoSpherePos(AbstractPos2D):
 
     We can construct a 2-spherical coordinate:
 
-    >>> s2 = cx.vecs.TwoSpherePos(theta=u.Q(0, "deg"),
-    ...                           phi=u.Q(180, "deg"))
+    >>> s2 = cx.vecs.TwoSpherePos(theta=u.Q(0, "deg"), phi=u.Q(180, "deg"))
 
     This coordinate has corresponding velocity class:
 
@@ -109,8 +108,7 @@ class TwoSphereVel(AbstractVel2D):
 
     We can construct a 2-spherical velocity:
 
-    >>> s2 = cx.vecs.TwoSphereVel(theta=u.Q(0, "deg/s"),
-    ...                           phi=u.Q(2, "deg/s"))
+    >>> s2 = cx.vecs.TwoSphereVel(theta=u.Q(0, "deg/s"), phi=u.Q(2, "deg/s"))
 
     This coordinate has corresponding position and acceleration class:
 
@@ -163,8 +161,7 @@ class TwoSphereAcc(AbstractAcc2D):
 
     We can construct a 2-spherical acceleration:
 
-    >>> s2 = cx.vecs.TwoSphereAcc(theta=u.Q(0, "deg/s2"),
-    ...                           phi=u.Q(2, "deg/s2"))
+    >>> s2 = cx.vecs.TwoSphereAcc(theta=u.Q(0, "deg/s2"), phi=u.Q(2, "deg/s2"))
 
     This coordinate has corresponding velocity class:
 

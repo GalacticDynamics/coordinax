@@ -29,8 +29,7 @@ def convert_pos3d_to_cart3d(pos: AbstractPos3D) -> CartesianPos3D:
     <CartesianPos3D: (x, y, z) [kpc]
         [1 2 3]>
 
-    >>> q = cx.vecs.CylindricalPos(rho=u.Q(1, "kpc"),
-    ...                            phi=u.Q(0, "deg"),
+    >>> q = cx.vecs.CylindricalPos(rho=u.Q(1, "kpc"), phi=u.Q(0, "deg"),
     ...                            z=u.Q(3, "kpc"))
     >>> print(convert(q, cx.vecs.CartesianPos3D))
     <CartesianPos3D: (x, y, z) [kpc]
@@ -55,8 +54,7 @@ def convert_cart3d_to_cylindrical(pos: AbstractPos3D) -> CylindricalPos:
     <CylindricalPos: (rho[kpc], phi[rad], z[kpc])
         [2.236 1.107 3.   ]>
 
-    >>> q = cx.vecs.SphericalPos(r=u.Q(1, "kpc"),
-    ...                          theta=u.Q(0, "deg"),
+    >>> q = cx.vecs.SphericalPos(r=u.Q(1, "kpc"), theta=u.Q(0, "deg"),
     ...                          phi=u.Q(0, "deg"))
     >>> print(convert(q, cx.vecs.CylindricalPos))
     <CylindricalPos: (rho[kpc], phi[deg], z[kpc])
@@ -81,8 +79,7 @@ def convert_cylindrical_to_spherical(pos: AbstractPos3D) -> SphericalPos:
     <SphericalPos: (r[kpc], theta[rad], phi[rad])
         [3.742 0.641 1.107]>
 
-    >>> q = cx.vecs.CylindricalPos(rho=u.Q(1, "kpc"),
-    ...                            phi=u.Q(0, "deg"),
+    >>> q = cx.vecs.CylindricalPos(rho=u.Q(1, "kpc"), phi=u.Q(0, "deg"),
     ...                            z=u.Q(3, "kpc"))
     >>> print(convert(q, cx.vecs.SphericalPos))
     <SphericalPos: (r[kpc], theta[rad], phi[deg])
@@ -107,8 +104,7 @@ def convert_spherical_to_math_spherical(pos: AbstractPos3D) -> MathSphericalPos:
     <MathSphericalPos: (r[kpc], theta[rad], phi[rad])
         [3.742 1.107 0.641]>
 
-    >>> q = cx.vecs.SphericalPos(r=u.Q(1, "kpc"),
-    ...                          theta=u.Q(0, "deg"),
+    >>> q = cx.vecs.SphericalPos(r=u.Q(1, "kpc"), theta=u.Q(0, "deg"),
     ...                          phi=u.Q(0, "deg"))
     >>> print(convert(q, cx.vecs.MathSphericalPos))
     <MathSphericalPos: (r[kpc], theta[deg], phi[deg])
@@ -135,8 +131,7 @@ def convert_math_spherical_to_lonlat_spherical(
     <LonLatSphericalPos: (lon[rad], lat[deg], distance[kpc])
         [ 1.107 53.301  3.742]>
 
-    >>> q = cx.vecs.MathSphericalPos(r=u.Q(1, "kpc"),
-    ...                              theta=u.Q(0, "deg"),
+    >>> q = cx.vecs.MathSphericalPos(r=u.Q(1, "kpc"), theta=u.Q(0, "deg"),
     ...                              phi=u.Q(0, "deg"))
     >>> print(convert(q, cx.vecs.LonLatSphericalPos))
     <LonLatSphericalPos: (lon[rad], lat[deg], distance[kpc])

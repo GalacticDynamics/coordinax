@@ -79,9 +79,7 @@ def dot_p_general_poss(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.SphericalPos(
-    ...     r=u.Q([1, 2, 3], "m"),
-    ...     theta=u.Q([0, 0, 0], "rad"),
+    >>> vec = cx.vecs.SphericalPos(r=u.Q([1, 2, 3], "m"), theta=u.Q([0, 0, 0], "rad"),
     ...     phi=u.Q([0, 0, 0], "rad"))
 
     >>> jnp.dot(vec, vec)
@@ -182,9 +180,7 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /, **kw: Any) -> Abstr
     ... def vconvert(target: type[MyCartesian], current: MyCartesian, /) -> MyCartesian:
     ...     return current
 
-    >>> vec = MyCartesian(x=u.Q([1], "m"),
-    ...                   y=u.Q([2], "m"),
-    ...                   z=u.Q([3], "m"))
+    >>> vec = MyCartesian(x=u.Q([1], "m"), y=u.Q([2], "m"), z=u.Q([3], "m"))
 
     First hit the non-scalar error:
 
@@ -265,9 +261,7 @@ def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> u.Q:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos3D(
-    ...     x=u.Q([1, 2, 3], "m"),
-    ...     y=u.Q([4, 5, 6], "m"),
+    >>> vec = cx.CartesianPos3D(x=u.Q([1, 2, 3], "m"), y=u.Q([4, 5, 6], "m"),
     ...     z=u.Q([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
@@ -322,8 +316,7 @@ def reshape_p_pos(
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPos3D(x=u.Q([1, 2, 3], "m"),
-    ...                         y=u.Q([4, 5, 6], "m"),
+    >>> vec = cx.CartesianPos3D(x=u.Q([1, 2, 3], "m"), y=u.Q([4, 5, 6], "m"),
     ...                         z=u.Q([7, 8, 9], "m"))
     >>> vec = jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
     >>> print(vec)

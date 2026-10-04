@@ -91,8 +91,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     constructed from a 1D array, using `coordinax.vecs.CartesianPos3D.from_`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> shift = cx.SphericalPos(r=u.Q(1.0, "km"),
-    ...                         theta=u.Q(jnp.pi/2, "rad"),
+    >>> shift = cx.SphericalPos(r=u.Q(1.0, "km"), theta=u.Q(jnp.pi/2, "rad"),
     ...                         phi=u.Q(0, "rad"))
     >>> op = cx.ops.GalileanSpatialTranslation(shift)
     >>> op

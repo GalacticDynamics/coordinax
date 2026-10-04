@@ -50,12 +50,8 @@ class ProlateSpheroidalPos(AbstractPos3D):
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Q(3.0, "km2"),
-    ...     nu=u.Q(0.5, "km2"),
-    ...     phi=u.Q(0.25, "rad"),
-    ...     Delta=u.Q(1.5, "km"),
-    ... )
+    >>> vec = cxv.ProlateSpheroidalPos(mu=u.Q(3.0, "km2"), nu=u.Q(0.5, "km2"),
+    ...     phi=u.Q(0.25, "rad"), Delta=u.Q(1.5, "km"))
     >>> print(vec)
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
      Delta=Quantity(1.5, unit='km')

@@ -27,8 +27,7 @@ def vconvert(target: type[KinematicSpace], w: PoincarePolarVector, /) -> Kinemat
 
     >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-    ... )
+    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
     >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(

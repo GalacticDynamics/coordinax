@@ -61,8 +61,7 @@ class GalileanTranslation(AbstractGalileanOperator):
     :meth:`coordinax.vecs.AbstractPos.from_`.  We can also construct it
     directly, which allows for other vector types.
 
-    >>> qshift = cx.SphericalPos(r=u.Q(1.0, "km"),
-    ...                          theta=u.Q(jnp.pi/2, "rad"),
+    >>> qshift = cx.SphericalPos(r=u.Q(1.0, "km"), theta=u.Q(jnp.pi/2, "rad"),
     ...                          phi=u.Q(0, "rad"))
     >>> op = cx.ops.GalileanTranslation(u.Q(1.0, "Gyr"), qshift)
     >>> op

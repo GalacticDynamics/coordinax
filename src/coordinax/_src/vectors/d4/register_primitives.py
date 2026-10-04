@@ -62,8 +62,7 @@ def _eq_4v_4v(lhs: FourVector, rhs: FourVector, /) -> Bool[Array, "..."]:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w1 = cx.FourVector (t=u.Q([1, 2], "s"),
-    ...                    q=u.Q([[1, 2, 3], [4, 5, 6]], "m"))
+    >>> w1 = cx.FourVector (t=u.Q([1, 2], "s"), q=u.Q([[1, 2, 3], [4, 5, 6]], "m"))
     >>> w2 = cx.FourVector (t=u.Q(1, "s"), q=u.Q([1, 3, 3], "m"))
 
     >>> w1 == w2

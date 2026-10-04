@@ -70,8 +70,7 @@ class KinematicSpace(
     The vectors can initialized from `unxt.Quantity` objects and can have
     (brodcastable) batch shapes:
 
-    >>> w = cx.KinematicSpace(
-    ...     length=u.Q([[8.5, 0, 0], [10, 0, 0]], "kpc"),
+    >>> w = cx.KinematicSpace(length=u.Q([[8.5, 0, 0], [10, 0, 0]], "kpc"),
     ...     speed=u.Q([0, 200, 0], "km/s"))
     >>> print(w)
     KinematicSpace({
@@ -109,8 +108,7 @@ class KinematicSpace(
 
     >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-    ... )
+    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
     >>> w.ndim
     2
@@ -333,8 +331,7 @@ class KinematicSpace(
         >>> import coordinax as cx
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s"))
         >>> w.aval()
         ShapedArray(int32[1,2,6])
 
@@ -379,8 +376,7 @@ class KinematicSpace(
 
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s"))
 
         >>> w.ndim
         2
@@ -421,8 +417,7 @@ class KinematicSpace(
 
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         >>> w.T.shapes
         mappingproxy({'length': (2, 1), 'speed': (2, 1)})
@@ -531,8 +526,7 @@ class KinematicSpace(
 
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         >>> w.dtypes
         mappingproxy({'length': mappingproxy({'x': dtype('int32'), 'y': dtype('int32'), 'z': dtype('int32')}),
@@ -551,8 +545,7 @@ class KinematicSpace(
 
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         >>> w.devices
         mappingproxy({'length': mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0), 'z': CpuDevice(id=0)}),
@@ -571,8 +564,7 @@ class KinematicSpace(
 
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         >>> w.shapes
         mappingproxy({'length': (1, 2), 'speed': (1, 2)})
@@ -590,8 +582,7 @@ class KinematicSpace(
 
         >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         >>> w.sizes
         mappingproxy({'length': 6, 'speed': 6})

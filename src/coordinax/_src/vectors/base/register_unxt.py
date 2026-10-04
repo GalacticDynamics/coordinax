@@ -71,8 +71,7 @@ def uconvert(
 
     This also works for vectors with different units:
 
-    >>> sph = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(45, "deg"),
-    ...                       phi=u.Q(3, "rad"))
+    >>> sph = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(45, "deg"), phi=u.Q(3, "rad"))
     >>> sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"})
     SphericalPos(
       r=Distance(0.001, unit='km'),
@@ -115,8 +114,7 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
 
     This also works for vectors with different units:
 
-    >>> sph = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(45, "deg"),
-    ...                       phi=u.Q(3, "rad"))
+    >>> sph = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(45, "deg"), phi=u.Q(3, "rad"))
     >>> sph.uconvert({"r": "km", "theta": "rad"})
     SphericalPos(
       r=Distance(0.001, unit='km'),

@@ -271,8 +271,7 @@ class AbstractVectorLike(
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -330,8 +329,7 @@ class AbstractVectorLike(
         And positions.
 
         >>> q = cx.vecs.CylindricalPos(rho=u.Q([1.0, 2.0], "kpc"),
-        ...                            phi=u.Q([0.0, 0.2], "rad"),
-        ...                            z=u.Q(0.0, "kpc"))
+        ...                            phi=u.Q([0.0, 0.2], "rad"), z=u.Q(0.0, "kpc"))
         >>> q == q
         Array([ True,  True], dtype=bool)
 
@@ -455,8 +453,7 @@ class AbstractVectorLike(
 
         We can slice a vector:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec[0].x
         Quantity(Array([1, 2], dtype=int32), unit='m')
 
@@ -527,8 +524,7 @@ class AbstractVectorLike(
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -548,8 +544,7 @@ class AbstractVectorLike(
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -578,8 +573,7 @@ class AbstractVectorLike(
 
         We can reshape a vector:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
 
         >>> vec.reshape(4)
         CartesianPos2D(x=Quantity([1, 2, 3, 4], unit='m'),

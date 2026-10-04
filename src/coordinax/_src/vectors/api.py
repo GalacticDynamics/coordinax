@@ -121,8 +121,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     - Quantity-valued:
 
-    >>> params = {"x": u.Q([1.0, 2.0], "m"),
-    ...           "y": u.Q([3.0, 4.0], "m"),
+    >>> params = {"x": u.Q([1.0, 2.0], "m"), "y": u.Q([3.0, 4.0], "m"),
     ...           "z": u.Q([5.0, 6.0], "m")}
     >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, params)
     >>> jax.tree.map(lambda x: jnp.round(x, 4), params)

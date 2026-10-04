@@ -266,17 +266,12 @@ class Coordinate(AbstractCoordinate):
 
     Showing Frame Transformation:
 
-    >>> space = cx.KinematicSpace(
-    ...     length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
+    >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
     ...     speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
 
-    >>> w=cx.Coordinate(
-    ...     data=space,
-    ...     frame=cx.frames.TransformedReferenceFrame(
+    >>> w=cx.Coordinate(data=space, frame=cx.frames.TransformedReferenceFrame(
     ...         cx.frames.Galactocentric(),
-    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc"),
-    ...     ),
-    ... )
+    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc")))
 
     >>> w.to_frame(cx.frames.ICRS())
     Coordinate(

@@ -39,8 +39,7 @@ def neg_p_space(space: KinematicSpace, /) -> KinematicSpace:
 
     >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-    ... )
+    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
     >>> print(-w)
     KinematicSpace({

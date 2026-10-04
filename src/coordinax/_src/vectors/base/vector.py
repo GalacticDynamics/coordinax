@@ -144,8 +144,7 @@ class AbstractVector(
         >>> vec._auxiliary_data
         {}
 
-        >>> vec = cx.vecs.ProlateSpheroidalPos(
-        ...     mu=u.Q(3, "m2"), nu=u.Q(2, "m2"),
+        >>> vec = cx.vecs.ProlateSpheroidalPos(mu=u.Q(3, "m2"), nu=u.Q(2, "m2"),
         ...     phi=u.Q(4, "rad"), Delta=u.Q(1.5, "m"))
         >>> vec._auxiliary_data
         {'Delta': Quantity(Array(1.5, dtype=float32, ...), unit='m')}
@@ -210,8 +209,7 @@ class AbstractVector(
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.ndim
         2
 
@@ -273,8 +271,7 @@ class AbstractVector(
 
         We can get the vector as a mapping:
 
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Q(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"), y=u.Q(0, "m"))
         >>> vec.asdict()
         {'x': Quantity(Array([[1, 2], [3, 4]], dtype=int32), unit='m'),
          'y': Quantity(Array(0, dtype=int32, ...), unit='m')}

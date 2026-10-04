@@ -153,11 +153,8 @@ class AbstractOperator(eqx.Module):
                           [0 1 0]
                           [0 0 1]])
 
-        >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Q([0., 2, 3, 4], "km"),
-        ...     velocity=u.Q([1., 2, 3], "km/s"),
-        ...     rotation=jnp.eye(3).at[0, 2].set(1),
-        ... )
+        >>> op = cx.ops.GalileanOperator(translation=u.Q([0., 2, 3, 4], "km"),
+        ...     velocity=u.Q([1., 2, 3], "km/s"), rotation=jnp.eye(3).at[0, 2].set(1))
         >>> print(op)
         GalileanOperator(
             rotation=GalileanRotation([[1. 0. 1.]

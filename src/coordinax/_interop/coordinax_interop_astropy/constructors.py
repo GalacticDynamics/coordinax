@@ -48,8 +48,7 @@ def vector(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.CylindricalPos:
     >>> import coordinax as cx
     >>> from astropy.coordinates import CylindricalRepresentation
 
-    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
-    ...                                 z=30 * u.m)
+    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> vec = cx.vector(cyl)
     >>> print(vec)
     <CylindricalPos: (rho[km], phi[deg], z[m])
@@ -71,8 +70,7 @@ def vector(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
     >>> import coordinax as cx
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
 
-    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
-    ...                                      phi=3 * u.deg)
+    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg, phi=3 * u.deg)
     >>> vec = cx.vector(sph)
     >>> print(vec)
     <SphericalPos: (r[km], theta[deg], phi[deg])
@@ -94,8 +92,7 @@ def vector(obj: apyc.SphericalRepresentation, /) -> cx.vecs.LonLatSphericalPos:
     >>> import coordinax as cx
     >>> from astropy.coordinates import SphericalRepresentation
 
-    >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
-    ...                               distance=1 * u.km)
+    >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg, distance=1 * u.km)
     >>> vec = cx.vector(sph)
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
@@ -207,8 +204,7 @@ def vector(obj: apyc.SphericalDifferential, /) -> cx.vecs.LonLatSphericalVel:
     >>> import coordinax as cx
     >>> from astropy.coordinates import SphericalDifferential
 
-    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
-    ...                              d_lon=2 * u.mas/u.yr,
+    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s, d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
     >>> dif = cx.vector(dsph)
     >>> print(vec)
@@ -303,8 +299,7 @@ def vector(
     >>> import coordinax as cx
     >>> from astropy.coordinates import CylindricalRepresentation
 
-    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
-    ...                                 z=30 * u.m)
+    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> vec = cx.vecs.CylindricalPos.from_(cyl)
     >>> print(vec)
     <CylindricalPos: (rho[km], phi[deg], z[m])
@@ -327,8 +322,7 @@ def vector(
     >>> import coordinax as cx
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
 
-    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
-    ...                                      phi=3 * u.deg)
+    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg, phi=3 * u.deg)
     >>> vec = cx.SphericalPos.from_(sph)
     >>> print(vec)
     <SphericalPos: (r[km], theta[deg], phi[deg])
@@ -351,8 +345,7 @@ def vector(
     >>> import coordinax as cx
     >>> from astropy.coordinates import SphericalRepresentation
 
-    >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
-    ...                               distance=1 * u.km)
+    >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg, distance=1 * u.km)
     >>> vec = cx.vecs.LonLatSphericalPos.from_(sph)
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
@@ -466,8 +459,7 @@ def vector(
     >>> import coordinax as cx
     >>> from astropy.coordinates import SphericalDifferential
 
-    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
-    ...                              d_lon=2 * u.mas/u.yr,
+    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s, d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
     >>> vec = cx.vecs.LonLatSphericalVel.from_(dsph)
     >>> print(vec)

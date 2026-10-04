@@ -84,8 +84,7 @@ class AbstractPos(
         >>> import quaxed.numpy as jnp
         >>> import coordinax as cx
 
-        >>> q = cx.CartesianPos3D.from_([[1., 0, 0 ],
-        ...                              [0 , 1, 0 ],
+        >>> q = cx.CartesianPos3D.from_([[1., 0, 0 ], [0 , 1, 0 ],
         ...                              [0 , 0, 1 ]], "kpc")[None]
         >>> q.shape
         (1, 3)

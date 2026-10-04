@@ -138,8 +138,7 @@ def vector(
 
     Let's start with a valid input:
 
-    >>> vec = cxv.SphericalPos.from_(r=u.Q(3, "km"),
-    ...                              theta=u.Q(90, "deg"),
+    >>> vec = cxv.SphericalPos.from_(r=u.Q(3, "km"), theta=u.Q(90, "deg"),
     ...                              phi=u.Q(0, "deg"))
     >>> print(vec)
     <SphericalPos: (r[km], theta[deg], phi[deg])
@@ -148,8 +147,7 @@ def vector(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cxv.SphericalPos.from_(r=u.Q(-3, "km"),
-    ...                              theta=u.Q(45, "deg"),
+    >>> vec = cxv.SphericalPos.from_(r=u.Q(-3, "km"), theta=u.Q(45, "deg"),
     ...                              phi=u.Q(0, "deg"))
     >>> print(vec)
     <SphericalPos: (r[km], theta[deg], phi[deg])
@@ -158,8 +156,7 @@ def vector(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cxv.SphericalPos.from_(r=u.Q(3, "km"),
-    ...                              theta=u.Q(190, "deg"),
+    >>> vec = cxv.SphericalPos.from_(r=u.Q(3, "km"), theta=u.Q(190, "deg"),
     ...                              phi=u.Q(0, "deg"))
     >>> print(vec)
     <SphericalPos: (r[km], theta[deg], phi[deg])
@@ -168,8 +165,7 @@ def vector(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base from_ does this):
 
-    >>> vec = cxv.SphericalPos.from_(r=u.Q(3, "km"),
-    ...                              theta=u.Q(90, "deg"),
+    >>> vec = cxv.SphericalPos.from_(r=u.Q(3, "km"), theta=u.Q(90, "deg"),
     ...                              phi=u.Q(365, "deg"))
     >>> vec.phi
     Angle(Array(5, dtype=int32, ...), unit='deg')
@@ -217,8 +213,7 @@ def vector(
 
     Let's start with a valid input:
 
-    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"),
-    ...                                    lat=u.Q(0, "deg"),
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"), lat=u.Q(0, "deg"),
     ...                                    distance=u.Q(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
@@ -227,8 +222,7 @@ def vector(
     The distance can be negative, which wraps the longitude by 180 degrees and
     flips the latitude:
 
-    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"),
-    ...                                    lat=u.Q(45, "deg"),
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"), lat=u.Q(45, "deg"),
     ...                                    distance=u.Q(-3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
@@ -237,15 +231,13 @@ def vector(
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
 
-    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"),
-    ...                                    lat=u.Q(-100, "deg"),
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"), lat=u.Q(-100, "deg"),
     ...                                    distance=u.Q(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [180 -80   3]>
 
-    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"),
-    ...                                    lat=u.Q(100, "deg"),
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(0, "deg"), lat=u.Q(100, "deg"),
     ...                                    distance=u.Q(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
@@ -254,8 +246,7 @@ def vector(
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(365, "deg"),
-    ...                                    lat=u.Q(0, "deg"),
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Q(365, "deg"), lat=u.Q(0, "deg"),
     ...                                    distance=u.Q(3, "km"))
     >>> vec.lon
     Angle(Array(5, dtype=int32, ...), unit='deg')
@@ -307,8 +298,7 @@ def vector(
 
     Let's start with a valid input:
 
-    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(3, "km"),
-    ...                                  theta=u.Q(90, "deg"),
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(3, "km"), theta=u.Q(90, "deg"),
     ...                                  phi=u.Q(0, "deg"))
     >>> print(vec)
     <MathSphericalPos: (r[km], theta[deg], phi[deg])
@@ -317,8 +307,7 @@ def vector(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(-3, "km"),
-    ...                                  theta=u.Q(100, "deg"),
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(-3, "km"), theta=u.Q(100, "deg"),
     ...                                  phi=u.Q(45, "deg"))
     >>> print(vec)
     <MathSphericalPos: (r[km], theta[deg], phi[deg])
@@ -327,8 +316,7 @@ def vector(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(3, "km"),
-    ...                                  theta=u.Q(0, "deg"),
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(3, "km"), theta=u.Q(0, "deg"),
     ...                                  phi=u.Q(190, "deg"))
     >>> print(vec)
     <MathSphericalPos: (r[km], theta[deg], phi[deg])
@@ -337,8 +325,7 @@ def vector(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(3, "km"),
-    ...                                  theta=u.Q(365, "deg"),
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Q(3, "km"), theta=u.Q(365, "deg"),
     ...                                  phi=u.Q(90, "deg"))
     >>> vec.theta
     Angle(Array(5, dtype=int32, ...), unit='deg')
@@ -421,8 +408,7 @@ def vconvert(
       'z': Array(3, dtype=int32, ...)},
      {})
 
-    >>> cart = {"x": u.Q(1, "km"), "y": u.Q(2, "km"),
-    ...         "z": u.Q(3, "km")}
+    >>> cart = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
     >>> cxv.vconvert(cxv.CylindricalPos, cxv.CartesianPos3D, cart)
     ({'phi': Quantity(Array(1.1071488, dtype=float32, ...), unit='rad'),
       'rho': Quantity(Array(2.236068, dtype=float32, ...), unit='km'),
@@ -501,15 +487,13 @@ def vconvert(
     >>> params = {"x": 1, "y": 2, "z": 3}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> cxv.vconvert(cxv.LonLatSphericalPos, cxv.CartesianPos3D,
-    ...              params, units=usys)
+    >>> cxv.vconvert(cxv.LonLatSphericalPos, cxv.CartesianPos3D, params, units=usys)
     ({'distance': Array(3.7416575, dtype=float32, ...),
       'lat': Array(53.300774, dtype=float32),
       'lon': Array(63.43495, dtype=float32, ...)},
      {})
 
-    >>> cxv.vconvert(cxv.MathSphericalPos, cxv.CartesianPos3D,
-    ...              params, units=usys)
+    >>> cxv.vconvert(cxv.MathSphericalPos, cxv.CartesianPos3D, params, units=usys)
     ({'phi': Array(36.69923, dtype=float32),
       'r': Array(3.7416575, dtype=float32, ...),
       'theta': Array(63.43495, dtype=float32, ...)},
@@ -774,9 +758,7 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> p = {"r": u.Q(1, "km/s"),
-    ...      "theta": u.Q(10, "deg/s"),
-    ...      "phi": u.Q(20, "deg/s")}
+    >>> p = {"r": u.Q(1, "km/s"), "theta": u.Q(10, "deg/s"), "phi": u.Q(20, "deg/s")}
 
     >>> cxv.vconvert(cxv.LonLatSphericalVel, cxv.SphericalVel, p)
     ({'distance': Quantity(Array(1, dtype=int32, ...), unit='km / s'),
@@ -790,9 +772,7 @@ def vconvert(
     <LonLatSphericalVel: (lon[deg / s], lat[deg / s], distance[km / s])
         [ 20 -10   1]>
 
-    >>> p = {"r": u.Q(1, "km/s2"),
-    ...      "theta": u.Q(10, "deg/s2"),
-    ...      "phi": u.Q(20, "deg/s2")}
+    >>> p = {"r": u.Q(1, "km/s2"), "theta": u.Q(10, "deg/s2"), "phi": u.Q(20, "deg/s2")}
 
     >>> cxv.vconvert(cxv.LonLatSphericalAcc, cxv.SphericalAcc, p)
     ({'distance': Quantity(Array(1, dtype=int32, ...), unit='km / s2'),
@@ -858,9 +838,7 @@ def vconvert(
 
     Velocity:
 
-    >>> p = {"r": u.Q(1, "km/s"),
-    ...      "theta": u.Q(10, "deg/s"),
-    ...      "phi": u.Q(20, "deg/s")}
+    >>> p = {"r": u.Q(1, "km/s"), "theta": u.Q(10, "deg/s"), "phi": u.Q(20, "deg/s")}
 
     >>> p, aux = cxv.vconvert(cxv.MathSphericalVel, cxv.SphericalVel, p)
     >>> p, aux
@@ -874,8 +852,7 @@ def vconvert(
       'theta': Quantity(Array(10, dtype=int32, ...), unit='deg / s')},
      {})
 
-    >>> x = cxv.SphericalVel(r=u.Q(1, "km/s"),
-    ...                      theta=u.Q(10, "deg/s"),
+    >>> x = cxv.SphericalVel(r=u.Q(1, "km/s"), theta=u.Q(10, "deg/s"),
     ...                      phi=u.Q(20, "deg/s"))
     >>> y = cxv.vconvert(cxv.MathSphericalVel, x)
     >>> print(y)
@@ -889,9 +866,7 @@ def vconvert(
 
     Acceleration:
 
-    >>> p = {"r": u.Q(1, "km/s2"),
-    ...      "theta": u.Q(10, "deg/s2"),
-    ...      "phi": u.Q(20, "deg/s2")}
+    >>> p = {"r": u.Q(1, "km/s2"), "theta": u.Q(10, "deg/s2"), "phi": u.Q(20, "deg/s2")}
 
     >>> p, aux = cxv.vconvert(cxv.MathSphericalAcc, cxv.SphericalAcc, p)
     >>> p, aux
@@ -906,8 +881,7 @@ def vconvert(
       'theta': Quantity(Array(10, dtype=int32, ...), unit='deg / s2')},
      {})
 
-    >>> x = cxv.SphericalAcc(r=u.Q(1, "km/s2"),
-    ...                      theta=u.Q(10, "deg/s2"),
+    >>> x = cxv.SphericalAcc(r=u.Q(1, "km/s2"), theta=u.Q(10, "deg/s2"),
     ...                      phi=u.Q(20, "deg/s2"))
     >>> y = cxv.vconvert(cxv.MathSphericalAcc, x)
     >>> print(y)
@@ -1055,8 +1029,7 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> p = {"lon": u.Q(90, "deg/s"),
-    ...      "lat": u.Q(0, "deg/s"),
+    >>> p = {"lon": u.Q(90, "deg/s"), "lat": u.Q(0, "deg/s"),
     ...      "distance": u.Q(1, "km/s")}
     >>> cxv.vconvert(cxv.SphericalVel, cxv.LonLatSphericalVel, p)
     ({'r': Quantity(Array(1, dtype=int32, ...), unit='km / s'),
@@ -1070,8 +1043,7 @@ def vconvert(
     <SphericalVel: (r[km / s], theta[deg / s], phi[deg / s])
         [ 1  0 90]>
 
-    >>> p = {"lon": u.Q(90, "deg/s2"),
-    ...      "lat": u.Q(0, "deg/s2"),
+    >>> p = {"lon": u.Q(90, "deg/s2"), "lat": u.Q(0, "deg/s2"),
     ...      "distance": u.Q(1, "km/s2")}
     >>> cxv.vconvert(cxv.SphericalAcc, cxv.LonLatSphericalAcc, p)
     ({'r': Quantity(Array(1, dtype=int32, ...), unit='km / s2'),
@@ -1391,11 +1363,9 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> q = cxv.LonLatSphericalPos(lon=u.Q(15, "deg"),
-    ...                            lat=u.Q(10, "deg"),
+    >>> q = cxv.LonLatSphericalPos(lon=u.Q(15, "deg"), lat=u.Q(10, "deg"),
     ...                            distance=u.Q(1.5, "km"))
-    >>> p = cxv.LonLatSphericalVel(lon=u.Q(7, "mas/yr"),
-    ...                            lat=u.Q(0, "deg/Gyr"),
+    >>> p = cxv.LonLatSphericalVel(lon=u.Q(7, "mas/yr"), lat=u.Q(0, "deg/Gyr"),
     ...                            distance=u.Q(-5, "km/s"))
     >>> newp = cxv.vconvert(cxv.LonCosLatSphericalVel, p, q)
     >>> print(newp)

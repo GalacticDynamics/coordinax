@@ -62,8 +62,7 @@ class FourVector(AbstractPos4D):
 
     We can also create a 3D vector explicitly:
 
-    >>> q = cx.SphericalPos(theta=u.Q(1, "deg"), phi=u.Q(2, "deg"),
-    ...                     r=u.Q(3, "m"))
+    >>> q = cx.SphericalPos(theta=u.Q(1, "deg"), phi=u.Q(2, "deg"), r=u.Q(3, "m"))
     >>> w = cx.FourVector (t=u.Q(1, "s"), q=q)
     >>> print(w)
     <FourVector: (t[s], q=(r[m], theta[deg], phi[deg]))

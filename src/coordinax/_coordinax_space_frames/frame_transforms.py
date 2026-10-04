@@ -288,8 +288,7 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
     ...     ra=279.23473479 * u.unit("deg"), dec=38.78368896 * u.unit("deg"),
     ...     distance=25 * u.unit("pc"),
     ...     pm_ra_cosdec=200 * u.unit("mas / yr"), pm_dec=-286 * u.unit("mas / yr"),
-    ...     radial_velocity=-13.9 * u.unit("km / s")
-    ... ).transform_to(apy_gcf)
+    ...     radial_velocity=-13.9 * u.unit("km / s")).transform_to(apy_gcf)
     >>> print(vega)
     <SkyCoord (Galactocentric: ...): (x, y, z) in pc
         (-8112.89970167, 21.79911216, 29.01384942)

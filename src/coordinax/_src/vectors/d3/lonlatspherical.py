@@ -49,8 +49,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"),
-    ...                                  lat=u.Q(0, "deg"),
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(0, "deg"),
     ...                                  distance=u.Q(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
@@ -60,8 +59,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(365, "deg"),
-    ...                                  lat=u.Q(90, "deg"),
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(365, "deg"), lat=u.Q(90, "deg"),
     ...                                  distance=u.Q(3, "km"))
     >>> vec.lon
     Angle(Array(5, dtype=int32, ...), unit='deg')
@@ -119,8 +117,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"),
-        ...                                lat=u.Q(90, "deg"),
+        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(90, "deg"),
         ...                                distance=u.Q(3, "km"))
         >>> s.norm()
         Distance(Array(3, dtype=int32, ...), unit='km')

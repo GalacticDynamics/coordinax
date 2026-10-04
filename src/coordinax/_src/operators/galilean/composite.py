@@ -58,8 +58,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanOperator(
-    ...     translation=u.Q([0., 2., 3., 4.], "km"),
+    >>> op = cx.ops.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"),
     ...     velocity=u.Q([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
@@ -72,15 +71,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     `coordinax.ops.GalileanBoost` with a `coordinax.vecs.AbstractVel` velocity.
     We can also construct them directly, which allows for other vector types.
 
-    >>> op = cx.ops.GalileanOperator(
-    ...     translation=cx.ops.GalileanTranslation(
-    ...         delta_t=u.Q(2.5, "Gyr"),
-    ...         delta_q=cx.SphericalPos(r=u.Q(1, "km"),
-    ...                                 theta=u.Q(90, "deg"),
-    ...                                 phi=u.Q(0, "rad") ) ),
-    ...     velocity=cx.ops.GalileanBoost(
-    ...         cx.CartesianVel3D.from_([1, 2, 3], "km/s") )
-    ... )
+    >>> op = cx.ops.GalileanOperator(translation=cx.ops.GalileanTranslation(
+    ...         delta_t=u.Q(2.5, "Gyr"), delta_q=cx.SphericalPos(r=u.Q(1, "km"),
+    ...                                 theta=u.Q(90, "deg"), phi=u.Q(0, "rad") ) ),
+    ...     velocity=cx.ops.GalileanBoost(cx.CartesianVel3D.from_([1, 2, 3], "km/s") ))
     >>> op
     GalileanOperator(
       translation=GalileanTranslation( delta_t=..., delta_q=SphericalPos( ... ) ),
@@ -164,8 +158,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Q([0., 2., 3., 4.], "km"),
+        >>> op = cx.ops.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"),
         ...     velocity=u.Q([1., 2., 3.], "km/s"))
 
         >>> op[0]
@@ -204,11 +197,8 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
 
     This Galilean operator cannot be simplified:
 
-    >>> op = cxo.GalileanOperator(
-    ...     translation=u.Q([0., 2., 3., 4.], "km"),
-    ...     velocity=u.Q([1., 2., 3.], "km/s"),
-    ...     rotation=jnp.eye(3).at[0, 2].set(1),
-    ... )
+    >>> op = cxo.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"),
+    ...     velocity=u.Q([1., 2., 3.], "km/s"), rotation=jnp.eye(3).at[0, 2].set(1))
     >>> op
     GalileanOperator(
       rotation=GalileanRotation(rotation=f32[3,3]),

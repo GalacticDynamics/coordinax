@@ -43,15 +43,13 @@ def vector(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVect
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"),
-    ...       "z": u.Q(3, "m")}
+    >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> vec = cx.CartesianPos3D.from_(xs)
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
-    >>> xs = {"x": u.Q([1, 2], "m"), "y": u.Q([3, 4], "m"),
-    ...       "z": u.Q([5, 6], "m")}
+    >>> xs = {"x": u.Q([1, 2], "m"), "y": u.Q([3, 4], "m"), "z": u.Q([5, 6], "m")}
     >>> vec = cx.CartesianPos3D.from_(xs)
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
