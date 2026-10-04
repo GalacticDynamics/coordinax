@@ -7,8 +7,7 @@ __all__ = (
 )
 
 import functools as ft
-from typing import final
-from typing_extensions import override
+from typing import final, override
 
 import equinox as eqx
 
@@ -19,6 +18,7 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import BatchableAngle
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import AbstractDistance, BBtLength, Distance
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -41,7 +41,7 @@ class CylindricalPos(AbstractPos3D):
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
-    z: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    z: BBtLength = eqx.field(converter=DimQuantity["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
     @override
@@ -81,13 +81,13 @@ class CylindricalVel(AbstractVel3D):
 
     """
 
-    rho: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    rho: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    z: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    z: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
 
@@ -109,13 +109,13 @@ class CylindricalAcc(AbstractAcc3D):
 
     """
 
-    rho: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    rho: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
     phi: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
+        converter=DimQuantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
-    z: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    z: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""

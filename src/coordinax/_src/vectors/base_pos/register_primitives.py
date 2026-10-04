@@ -15,7 +15,6 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
-from unxt.quantity import BareQuantity
 
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
@@ -58,7 +57,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
         f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
-    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)  # type: ignore[operator]
+    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)
     return cast("AbstractPos", add.vconvert(type(lhs), **lhs._auxiliary_data))
 
 
@@ -90,7 +89,7 @@ def dot_p_general_poss(
 
     """
     cart_cls = lhs.cartesian_type
-    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)  # type: ignore[arg-type]
+    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)
 
 
 # ------------------------------------------------
@@ -255,7 +254,7 @@ def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /, **kw: Any) -> Abstr
 
 
 @register(jax.lax.mul_p)
-def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> BareQuantity:
+def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> u.Quantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -272,16 +271,16 @@ def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> BareQuantity
     ...     z=u.Quantity([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
-    BareQuantity(Array([[ 1, 16, 49],
+    Quantity(Array([[ 1, 16, 49],
                         [ 4, 25, 64],
                         [ 9, 36, 81]], dtype=int32), unit='m2')
 
     >>> jnp.linalg.vector_norm(vec, axis=-1)
-    BareQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
+    Quantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """
-    lq: BareQuantity = convert(lhs.vconvert(lhs.cartesian_type), BareQuantity)
-    rq: BareQuantity = convert(rhs.vconvert(rhs.cartesian_type), BareQuantity)
+    lq: u.Quantity = convert(lhs.vconvert(lhs.cartesian_type), u.Quantity)
+    rq: u.Quantity = convert(rhs.vconvert(rhs.cartesian_type), u.Quantity)
     return mul_p_qbind(lq, rq, **kw)  # re-dispatch to Quantities
 
 
@@ -378,5 +377,5 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # singularities, ranges, or auxiliary data that need to be handled, so this
     # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
-    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)  # type: ignore[operator]
+    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)
     return cast("AbstractPos", diff.vconvert(type(lhs), **lhs._auxiliary_data))

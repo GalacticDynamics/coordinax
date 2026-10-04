@@ -15,6 +15,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -305,7 +306,7 @@ def call(
 
     >>> t = u.Quantity(1, "Gyr")
     >>> op(t, q)[1].x == newq.x
-    Array(True, dtype=bool)
+    Quantity(Array(True, dtype=bool), unit='')
 
     """
     return t, q + self.delta_q
@@ -409,7 +410,7 @@ def call(
 def call(
     self: GalileanSpatialTranslation,
     q: u.AbstractQuantity,
-    p: u.Quantity["speed"],
+    p: DimQuantity["speed"],
     /,
     **__: Any,
 ) -> tuple[u.AbstractQuantity, u.AbstractQuantity]:

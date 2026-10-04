@@ -5,8 +5,7 @@ __all__ = ("KinematicSpace",)
 import math
 from collections.abc import Callable, ItemsView, Iterable, KeysView, Mapping, ValuesView
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Generic, cast, final
-from typing_extensions import override
+from typing import TYPE_CHECKING, Any, Generic, cast, final, override
 
 import equinox as eqx
 import jax

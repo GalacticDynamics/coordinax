@@ -15,7 +15,7 @@ from quax import quaxify
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import BareQuantity as FastQ
+from unxt import Quantity as FastQ
 
 from coordinax._src.custom_types import BBtScalarQ
 from coordinax._src.utils import classproperty
@@ -102,10 +102,10 @@ class AbstractPos(
         # TODO: figure out how to do this without converting back to arrays.
         cart_cls = self.cartesian_type
         cartvec = self.vconvert(cart_cls)
-        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)  # type: ignore[union-attr]
+        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)
         newq = _vec_matmul(other, q)
         newvec = cart_cls.from_(newq)
-        return newvec.vconvert(type(self))  # type: ignore[union-attr]
+        return newvec.vconvert(type(self))  # type: ignore[attr-defined]
 
     def __abs__(self) -> u.AbstractQuantity:
         """Return the norm of the vector.
@@ -115,7 +115,7 @@ class AbstractPos(
         >>> import coordinax as cx
         >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
         >>> abs(vec)
-        BareQuantity(Array(5., dtype=float32), unit='m')
+        Quantity(Array(5., dtype=float32), unit='m')
 
         """
         return self.norm()  # type: ignore[misc]
@@ -139,11 +139,11 @@ class AbstractPos(
 
         >>> v = cx.vecs.CartesianPos1D.from_([-1], "km")
         >>> v.norm()
-        BareQuantity(Array(1., dtype=float32), unit='km')
+        Quantity(Array(1., dtype=float32), unit='km')
 
         >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "km")
         >>> v.norm()
-        BareQuantity(Array(5., dtype=float32), unit='km')
+        Quantity(Array(5., dtype=float32), unit='km')
 
         >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
@@ -151,7 +151,7 @@ class AbstractPos(
 
         >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()
-        BareQuantity(Array(3.7416575, dtype=float32), unit='m')
+        Quantity(Array(3.7416575, dtype=float32), unit='m')
 
         """
         return jnp.linalg.vector_norm(self, axis=-1)  # type: ignore[arg-type]

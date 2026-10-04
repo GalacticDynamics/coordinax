@@ -6,11 +6,11 @@ from typing import final
 
 import equinox as eqx
 
-import unxt as u
 from dataclassish.converters import Unless
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 
 
@@ -50,7 +50,7 @@ class RadialVel(AbstractVel1D):
 
     """
 
-    r: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    r: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
 
@@ -70,5 +70,5 @@ class RadialAcc(AbstractAcc1D):
 
     """
 
-    r: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    r: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in (-\infty,+\infty)`."""

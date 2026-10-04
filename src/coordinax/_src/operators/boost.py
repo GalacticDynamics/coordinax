@@ -17,6 +17,7 @@ from dataclassish.converters import Unless
 
 from .base import AbstractOperator
 from .identity import Identity
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d3 import CartesianVel3D
@@ -191,8 +192,8 @@ def call(
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: VelocityBoost, q: u.Quantity["length"], p: u.Quantity["speed"], /
-) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+    self: VelocityBoost, q: DimQuantity["length"], p: DimQuantity["speed"], /
+) -> tuple[DimQuantity["length"], DimQuantity["speed"]]:
     r"""Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.
@@ -238,8 +239,8 @@ def call(self: VelocityBoost, q: AbstractPos, /) -> AbstractPos:
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: VelocityBoost, t: u.Quantity["time"], q: AbstractPos, /
-) -> tuple[u.Quantity["time"], AbstractPos]:
+    self: VelocityBoost, t: DimQuantity["time"], q: AbstractPos, /
+) -> tuple[DimQuantity["time"], AbstractPos]:
     """Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.

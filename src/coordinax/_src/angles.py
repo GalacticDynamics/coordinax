@@ -7,8 +7,10 @@ from jaxtyping import Shaped
 
 import unxt as u
 
+from coordinax._src.custom_types import DimQuantity
+
 #: Batchable angular-type Quantity.
-BatchableAngularQuantity = Shaped[u.Quantity["angle"], "*#batch"]
+BatchableAngularQuantity = Shaped[DimQuantity["angle"], "*#batch"]
 
 #: Batchable Angle.
 BatchableAngle = Shaped[u.quantity.AbstractAngle, "*#batch"]

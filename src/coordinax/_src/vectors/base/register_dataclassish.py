@@ -186,7 +186,7 @@ def field_items(
 
     >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> [(f[0], type(f[1]).__name__) for f in field_items(cx.vecs.AttrFilter, w)]
-    [('t', "Quantity[PhysicalType('time')]"), ('q', 'CartesianPos3D')]
+    [('t', 'Quantity'), ('q', 'CartesianPos3D')]
 
     """
     obj_cls = type(obj)

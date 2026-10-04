@@ -228,7 +228,7 @@ def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /, **kw: Any) -> PolarPos:
         [ 1 90]>
 
     >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
-    BareQuantity(Array(1., dtype=float32), unit='m')
+    Quantity(Array(1., dtype=float32), unit='m')
 
     >>> nv = quaxed.lax.mul(2, v)
     >>> print(nv)

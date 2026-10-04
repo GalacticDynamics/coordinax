@@ -7,16 +7,15 @@ __all__ = (
 )
 
 import functools as ft
-from typing import final
-from typing_extensions import override
+from typing import final, override
 
 import equinox as eqx
 
 import quaxed.numpy as jnp
-import unxt as u
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
@@ -36,10 +35,10 @@ class CartesianPos2D(AbstractCartesian, AbstractPos2D):
 
     """
 
-    x: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    x: BBtLength = eqx.field(converter=DimQuantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    y: BBtLength = eqx.field(converter=DimQuantity["length"].from_)
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
 
@@ -58,10 +57,10 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
 
     """
 
-    x: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
-    y: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    y: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
     @override
@@ -94,10 +93,10 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
 
     """
 
-    x: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
     r"""X coordinate acceleration :math:`\frac{d^2 x}{dt^2} \in (-\infty,+\infty)`."""
 
-    y: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    y: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
 
     @override

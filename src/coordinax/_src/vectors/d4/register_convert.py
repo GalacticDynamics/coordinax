@@ -9,9 +9,9 @@ from plum import conversion_method, convert
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import BareQuantity
 
 from .spacetime import FourVector
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.vectors.d3 import (
     CartesianPos3D,
     CylindricalPos,
@@ -21,9 +21,9 @@ from coordinax._src.vectors.d3 import (
 )
 
 
-@conversion_method(type_from=FourVector, type_to=BareQuantity)
-def fourvec_to_quantity(obj: FourVector, /) -> Shaped[BareQuantity, "*batch 4"]:
-    """`coordinax.AbstractPos3D` -> `unxt.quantity.BareQuantity`.
+@conversion_method(type_from=FourVector, type_to=u.Quantity)
+def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity, "*batch 4"]:
+    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Convert the 4-vector to a Quantity array with the components as the last
     dimension.
@@ -37,21 +37,23 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[BareQuantity, "*batch 4"]:
     >>> w = cx.vecs.FourVector (t=u.Quantity([1, 2], "yr"),
     ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
 
-    >>> convert(w, u.quantity.BareQuantity).uconvert("pc")
-    BareQuantity(
+    >>> convert(w, u.Quantity).uconvert("pc")
+    Quantity(
         Array([[0.3066014, 1.       , 2.       , 3.       ],
                [0.6132028, 4.       , 4.9999995, 6.       ]],      dtype=float32, ...),
         unit='pc'
     )
 
     """
-    cart = convert(obj.q, BareQuantity)
-    ct = convert(obj.c * obj.t[..., None], BareQuantity)
+    cart = convert(obj.q, u.Quantity)
+    ct = convert(obj.c * obj.t[..., None], u.Quantity)
     return jnp.concat([ct, cart], axis=-1)
 
 
 @conversion_method(type_from=FourVector, type_to=u.Quantity)
-def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*batch 4"]:
+def fourvec_to_quantity(
+    obj: FourVector, /
+) -> Shaped[DimQuantity["length"], "*batch 4"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Convert the 4-vector to a Quantity array with the components as the last

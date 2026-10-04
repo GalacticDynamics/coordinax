@@ -130,7 +130,7 @@ def mul_p_vmsph(
     ...                              phi=u.Quantity(0, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
-    BareQuantity(Array(3., dtype=float32), unit='km')
+    Quantity(Array(3., dtype=float32), unit='km')
 
     >>> nv = jnp.multiply(2, v)
     >>> print(nv)

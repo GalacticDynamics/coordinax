@@ -19,6 +19,7 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import BatchableAngle
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -104,11 +105,11 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     """
 
-    mu: ct.BBtArea = eqx.field(converter=u.Quantity["area"].from_)
+    mu: ct.BBtArea = eqx.field(converter=DimQuantity["area"].from_)
     r"""Spheroidal mu coordinate :math:`\mu \in [0,+\infty)` (called :math:`\lambda` in
      some Galactic dynamics contexts)."""
 
-    nu: ct.BBtArea = eqx.field(converter=u.Quantity["area"].from_)
+    nu: ct.BBtArea = eqx.field(converter=DimQuantity["area"].from_)
     r"""Spheroidal nu coordinate :math:`\lambda \in [-\infty,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
@@ -119,7 +120,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     _: KW_ONLY
-    Delta: Shaped[u.Quantity["length"], ""] = VectorAttribute()
+    Delta: Shaped[DimQuantity["length"], ""] = VectorAttribute()
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:
@@ -167,13 +168,13 @@ class ProlateSpheroidalVel(AbstractVel3D):
 
     """
 
-    mu: ct.BBtKinematicFlux = eqx.field(converter=u.Quantity["diffusivity"].from_)
+    mu: ct.BBtKinematicFlux = eqx.field(converter=DimQuantity["diffusivity"].from_)
     r"""Prolate spheroidal mu speed $d\mu/dt \in [-\infty, \infty]$."""
 
-    nu: ct.BBtKinematicFlux = eqx.field(converter=u.Quantity["diffusivity"].from_)
+    nu: ct.BBtKinematicFlux = eqx.field(converter=DimQuantity["diffusivity"].from_)
     r"""Prolate spheroidal nu speed $d\nu/dt \in [-\infty, \infty]$."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
     r"""Azimuthal speed $d\phi/dt \in [-\infty, \infty]$."""
 
 
@@ -212,13 +213,13 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
 
     """
 
-    mu: ct.BBtSpecificEnergy = eqx.field(converter=u.Quantity["specific energy"].from_)
+    mu: ct.BBtSpecificEnergy = eqx.field(converter=DimQuantity["specific energy"].from_)
     r"""Prolate spheroidal mu acceleration $d^2\mu/dt^2 \in [-\infty, \infty]$."""
 
-    nu: ct.BBtSpecificEnergy = eqx.field(converter=u.Quantity["specific energy"].from_)
+    nu: ct.BBtSpecificEnergy = eqx.field(converter=DimQuantity["specific energy"].from_)
     r"""Prolate spheroidal nu acceleration $d^2\nu/dt^2 \in [-\infty, \infty]$."""
 
     phi: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
+        converter=DimQuantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration $d^2\phi/dt^2 \in [-\infty, \infty]$."""

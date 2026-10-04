@@ -12,7 +12,6 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -22,22 +21,22 @@ classifiers = [
 dependencies = [
   "astropy>=7.0.0",
   "beartype>=0.21.0",
-  "dataclassish>=0.8.0,<0.9.0; python_version == '3.11'",
-  "dataclassish>=0.9.0; python_version >= '3.12'",
+  "dataclassish>=0.9.0",
   "equinox>=0.13.8",
-  "jax>=0.6.0",
-  "jaxlib>=0.6.0",
-  "jaxtyping>=0.3.3",
+  "jax>=0.7.2",
+  "jaxlib>=0.7.2",
+  "jaxtyping>=0.3.9",
   "optional-dependencies>=0.3.2",
   "plum>=2.8.0; python_version < '3.14'",
   "plum>=2.9.0; python_version >= '3.14'",
-  "quax>=0.3.2",
-  "quax-blocks>=0.4.1",
+  "quax>=0.4.2",
+  "quax-blocks>=0.5.0",
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
-  "unxt>=1.11.2",
+  "unxt>=2.0.4",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
+  "zeroth>=1.0.0",
 ]
 description = "Coordinates in JAX"
 dynamic = ["version"]
@@ -45,7 +44,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 name = "coordinax"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
@@ -144,7 +143,7 @@ disallow_incomplete_defs = false
 disallow_untyped_defs = false
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 files = ["src", "tests"]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_return_any = false
 warn_unreachable = true
@@ -210,7 +209,7 @@ messages_control.disable = [
   "wrong-import-position",                     # handled by ruff
   "wrong-import-order",                        # handled by ruff
 ]
-py-version = "3.11"
+py-version = "3.12"
 reports.output-format = "colorized"
 similarities.ignore-imports = "yes"
 
@@ -274,6 +273,9 @@ ignore = [
   "TC001",   # Move into a type-checking block
   "TD002",   # Missing author in TODO
   "TD003",   # Missing issue link on the line following this TODO
+  "UP040",   # `type` aliases: plum & jaxtyping need plain runtime aliases
+  "UP046",   # PEP 695 generics: keep the maintenance branch's style
+  "UP047",   # PEP 695 generics: keep the maintenance branch's style
 ]
 
 [tool.ruff.lint.per-file-ignores]

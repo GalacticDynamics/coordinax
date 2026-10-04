@@ -13,6 +13,7 @@ import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors import api
@@ -84,7 +85,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     """
 
-    delta_t: u.Quantity["time"] = eqx.field(converter=u.Quantity.from_)
+    delta_t: DimQuantity["time"] = eqx.field(converter=u.Quantity.from_)
     """The time translation.
 
     This parameter uses :meth:`unxt.Quantity.from_` to enable a variety of more
@@ -141,7 +142,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         return GalileanTranslation(-self.delta_t, delta_q)
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
+@AbstractOperator.from_.dispatch
 def from_(
     cls: type[GalileanTranslation], delta: u.AbstractQuantity, /
 ) -> GalileanTranslation:
@@ -166,10 +167,10 @@ def from_(
 # -------------------------------------------
 
 
-@AbstractOperator.__call__.dispatch  # type: ignore[union-attr, untyped-decorator]
+@AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanTranslation, t: u.Quantity["time"], x: AbstractPos3D, /, **__: Any
-) -> tuple[u.Quantity["time"], AbstractPos3D]:
+    self: GalileanTranslation, t: DimQuantity["time"], x: AbstractPos3D, /, **__: Any
+) -> tuple[DimQuantity["time"], AbstractPos3D]:
     """Apply the translation to the coordinates.
 
     Examples

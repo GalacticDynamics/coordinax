@@ -10,7 +10,6 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import unxt as u
-from unxt.quantity import BareQuantity
 
 from .base import AbstractDistance
 from .measures import Distance
@@ -23,7 +22,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quantity:
     """Cube root of a distance.
 
     Examples
@@ -32,11 +31,11 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
-     BareQuantity(Array(2., dtype=float32, ...), unit='m(1/3)')
+     Quantity(Array(2., dtype=float32, ...), unit='m(1/3)')
 
     """
     value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
-    return BareQuantity(value, unit=x.unit ** (1 / 3))
+    return u.Quantity(value, unit=x.unit ** (1 / 3))
 
 
 # ==============================================================================
@@ -66,7 +65,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Qu
 @register(lax.dot_general_p)
 def dot_general_p_abstractdistances(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
-) -> BareQuantity:
+) -> u.Quantity:
     """Dot product of two Distances.
 
     Examples
@@ -80,9 +79,9 @@ def dot_general_p_abstractdistances(
     >>> q1 = Distance([1, 2, 3], "m")
     >>> q2 = Distance([4, 5, 6], "m")
     >>> jnp.vecdot(q1, q2)
-    BareQuantity(Array(32, dtype=int32), unit='m2')
+    Quantity(Array(32, dtype=int32), unit='m2')
     >>> q1 @ q2
-    BareQuantity(Array(32, dtype=int32), unit='m2')
+    Quantity(Array(32, dtype=int32), unit='m2')
 
     This rule is also used by `jnp.matmul` for quantities.
 
@@ -98,14 +97,14 @@ def dot_general_p_abstractdistances(
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
-    return BareQuantity(value, unit=lhs.unit * rhs.unit)
+    return u.Quantity(value, unit=lhs.unit * rhs.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.integer_pow_p)
-def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQuantity:
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> u.Quantity:
     """Integer power of a Distance.
 
     Examples
@@ -113,10 +112,10 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
-    BareQuantity(Array(8, dtype=int32, ...), unit='m3')
+    Quantity(Array(8, dtype=int32, ...), unit='m3')
 
     """
-    return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)
+    return u.Quantity(lax.integer_pow(x.value, y), unit=x.unit**y)
 
 
 # ==============================================================================
@@ -143,7 +142,7 @@ def neg_p_distance(x: Distance, /) -> u.Quantity:
 @register(lax.pow_p)
 def pow_p_abstractdistance_arraylike(
     x: AbstractDistance, y: ArrayLike, /
-) -> BareQuantity:
+) -> u.Quantity:
     """Power of a Distance by redispatching to Quantity.
 
     Examples
@@ -154,17 +153,17 @@ def pow_p_abstractdistance_arraylike(
     >>> q1 = Distance(10.0, "m")
     >>> y = 3.0
     >>> q1 ** y
-    BareQuantity(Array(1000., dtype=float32, ...), unit='m3')
+    Quantity(Array(1000., dtype=float32, ...), unit='m3')
 
     """
-    return BareQuantity(x.value, x.unit) ** y  # TODO: better call to power
+    return u.Quantity(x.value, x.unit) ** y  # TODO: better call to power
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quantity:
     """Square root of a quantity.
 
     Examples
@@ -174,17 +173,17 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> q = Distance(9, "m")
     >>> jnp.sqrt(q)
-    BareQuantity(Array(3., dtype=float32, ...), unit='m(1/2)')
+    Quantity(Array(3., dtype=float32, ...), unit='m(1/2)')
 
     >>> from coordinax.distance import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
-    BareQuantity(Array(3., dtype=float32, ...), unit='mas(1/2)')
+    Quantity(Array(3., dtype=float32, ...), unit='mas(1/2)')
 
     """
     # Promote to something that supports sqrt units.
     value = lax.sqrt_p.bind(x.value, accuracy=accuracy)
-    return BareQuantity(value, unit=x.unit ** (1 / 2))
+    return u.Quantity(value, unit=x.unit ** (1 / 2))
 
 
 # ==============================================================================
@@ -196,6 +195,6 @@ def to_value_rad_or_one(q: u.AbstractQuantity, /) -> ArrayLike:
 
 # TODO: figure out a promotion alternative that works in general
 @register(lax.tan_p)
-def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> u.Quantity:
     value = lax.tan_p.bind(to_value_rad_or_one(x), accuracy=accuracy)
-    return BareQuantity(value, unit=one)
+    return u.Quantity(value, unit=one)

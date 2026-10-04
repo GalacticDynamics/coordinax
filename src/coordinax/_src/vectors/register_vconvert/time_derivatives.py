@@ -13,7 +13,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import BareQuantity, is_any_quantity
+from unxt.quantity import is_any_quantity
 
 import coordinax._src.vectors.custom_types as ct
 from coordinax._src.vectors import api, d1, d2, d3
@@ -54,8 +54,7 @@ def compute_jac(
     # to  : ``{to_k: {from_k: Quantity(dto/dfrom, u_to/u_from)}}``.
     jac = {
         out_k: {
-            k: BareQuantity(v.value, out_v.unit / v.unit)
-            for k, v in out_v.value.items()
+            k: u.Quantity(v.value, out_v.unit / v.unit) for k, v in out_v.value.items()
         }
         for out_k, out_v in jac.items()
     }

@@ -14,6 +14,7 @@ import unxt as u
 from dataclassish import field_items
 
 from .core import AbstractAcc
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
@@ -23,10 +24,10 @@ mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 
 @register(jax.lax.mul_p)
-def mul_p_acc_time(
-    lhs: AbstractAcc, rhs: u.Quantity["time"], /, **kw: Any
-) -> AbstractVel:
-    """Multiply the vector by a `unxt.Quantity`.
+def mul_p_acc_q(
+    lhs: AbstractAcc, rhs: u.Quantity, /, **kw: Any
+) -> AbstractVel | AbstractPos:
+    """Multiply an acceleration by a time or time-squared `unxt.Quantity`.
 
     Examples
     --------
@@ -35,53 +36,11 @@ def mul_p_acc_time(
     >>> import coordinax as cx
 
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(d2r, u.Quantity(2, "s"))
-    >>> print(vec)
+    >>> print(lax.mul(d2r, u.Quantity(2, "s")))
     <RadialVel: (r) [m / s]
         [2]>
 
-    """
-    fs = {k: mul_p_qbind(v, rhs, **kw) for k, v in field_items(lhs)}
-    return cast("AbstractVel", lhs.time_antiderivative_cls.from_(fs))
-
-
-@register(jax.lax.mul_p)
-def mul_p_time_acc(
-    lhs: u.Quantity["time"], rhs: AbstractAcc, /, **kw: Any
-) -> AbstractVel:
-    """Multiply a scalar by an acceleration.
-
-    Examples
-    --------
-    >>> from quaxed import lax
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(u.Quantity(2, "s"), d2r)
-    >>> print(vec)
-    <RadialVel: (r) [m / s]
-        [2]>
-
-    """
-    return cast("AbstractVel", mul_p_qbind(rhs, lhs, **kw))  # pylint: disable=arguments-out-of-order
-
-
-@register(jax.lax.mul_p)
-def mul_p_acc_time2(
-    lhs: AbstractAcc, rhs: u.Quantity["s2"], /, **kw: Any
-) -> AbstractPos:
-    """Multiply an acceleration by a scalar.
-
-    Examples
-    --------
-    >>> from quaxed import lax
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(d2r, u.Quantity(2, "s2"))
-    >>> print(vec)
+    >>> print(lax.mul(d2r, u.Quantity(2, "s2")))
     <RadialPos: (r) [m]
         [2]>
 
@@ -90,16 +49,25 @@ def mul_p_acc_time2(
         [2]>
 
     """
-    pos_cls = lhs.time_nth_derivative_cls(-2)
+    # One rule branching on the unit, not one rule per dimension: quax caches
+    # the rule by argument *type*, and every dimension is `unxt.Quantity`.
+    out_cls: type[AbstractVector]
+    if u.is_unit_convertible("s", rhs):
+        out_cls = lhs.time_antiderivative_cls
+    elif u.is_unit_convertible("s2", rhs):
+        out_cls = lhs.time_nth_derivative_cls(-2)
+    else:
+        msg = f"Cannot multiply {type(lhs).__name__} by a quantity in {rhs.unit}."
+        raise ValueError(msg)
     fs = {k: mul_p_qbind(v, rhs, **kw) for k, v in field_items(lhs)}
-    return cast("AbstractPos", pos_cls.from_(fs))
+    return cast("AbstractVel | AbstractPos", out_cls.from_(fs))
 
 
 @register(jax.lax.mul_p)
-def mul_p_time2_acc(
-    lhs: u.Quantity["s2"], rhs: AbstractAcc, /, **kw: Any
-) -> AbstractPos:
-    """Multiply a scalar by an acceleration.
+def mul_p_q_acc(
+    lhs: u.Quantity, rhs: AbstractAcc, /, **kw: Any
+) -> AbstractVel | AbstractPos:
+    """Multiply a time or time-squared `unxt.Quantity` by an acceleration.
 
     Examples
     --------
@@ -108,13 +76,16 @@ def mul_p_time2_acc(
     >>> import coordinax as cx
 
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(u.Quantity(2, "s2"), d2r)
-    >>> print(vec)
+    >>> print(lax.mul(u.Quantity(2, "s"), d2r))
+    <RadialVel: (r) [m / s]
+        [2]>
+
+    >>> print(lax.mul(u.Quantity(2, "s2"), d2r))
     <RadialPos: (r) [m]
         [2]>
 
     """
-    return cast("AbstractPos", mul_p_qbind(rhs, lhs, **kw))  # pylint: disable=arguments-out-of-order
+    return mul_p_acc_q(rhs, lhs, **kw)  # pylint: disable=arguments-out-of-order
 
 
 # -----------------------------------------------

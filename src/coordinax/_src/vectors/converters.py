@@ -23,4 +23,4 @@ def converter_azimuth_to_range(phi: u.AbstractQuantity, /) -> u.AbstractQuantity
 
     """
     # TODO: have an integer-preserving version of this
-    return phi % _2pid
+    return phi % u.uconvert(phi.unit, _2pid)

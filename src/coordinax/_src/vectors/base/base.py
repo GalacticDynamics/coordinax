@@ -704,7 +704,7 @@ def is_vectorlike(obj: Any, /) -> TypeGuard[AbstractVectorLike]:
     return isinstance(obj, AbstractVectorLike)
 
 
-@AbstractVectorLike.vconvert.dispatch  # type: ignore[union-attr, untyped-decorator]
+@AbstractVectorLike.vconvert.dispatch
 def vconvert(
     self: AbstractVectorLike, target: type, *args: Any, **kwargs: Any
 ) -> AbstractVectorLike:

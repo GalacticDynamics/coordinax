@@ -13,7 +13,7 @@ from dataclassish import replace
 
 from .base import AbstractOperator
 from .pipe import Pipe
-from coordinax._src.custom_types import TimeBatchOrScalar
+from coordinax._src.custom_types import DimQuantity, TimeBatchOrScalar
 from coordinax._src.vectors.collection import KinematicSpace
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
@@ -235,10 +235,10 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
 @AbstractOperator.__call__.dispatch
 def call(
     self: AbstractOperator,
-    x: Shaped[u.Quantity["length"], "*batch 4"],
+    x: Shaped[DimQuantity["length"], "*batch 4"],
     /,
     **kwargs: Any,
-) -> Shaped[u.Quantity["length"], "*batch 4"]:
+) -> Shaped[DimQuantity["length"], "*batch 4"]:
     """Dispatch to the operator's `__call__` method.
 
     Examples

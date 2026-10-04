@@ -52,7 +52,7 @@ def check_polar_range(
     )
     return eqx.error_if(
         polar,
-        jnp.any(jnp.logical_or((polar < _l), (polar > _u))),
+        u.ustrip("", jnp.any(jnp.logical_or((polar < _l), (polar > _u)))),
         "The inclination angle must be in the range [0, pi].",
     )
 
@@ -80,7 +80,9 @@ def check_non_negative(
 
     """
     name = f" {name}" if name else name
-    return eqx.error_if(x, jnp.any(x < 0), f"The input{name} must be non-negative.")
+    return eqx.error_if(
+        x, u.ustrip("", jnp.any(x < 0)), f"The input{name} must be non-negative."
+    )
 
 
 def check_non_negative_non_zero(
@@ -111,7 +113,9 @@ def check_non_negative_non_zero(
     """
     name = f" {name}" if name else name
     return eqx.error_if(
-        x, jnp.any(x <= 0), f"The input{name} must be non-negative and non-zero."
+        x,
+        u.ustrip("", jnp.any(x <= 0)),
+        f"The input{name} must be non-negative and non-zero.",
     )
 
 
@@ -143,7 +147,7 @@ def check_less_than_equal(
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be less than or equal to {comparison_name}."
-    return eqx.error_if(x, jnp.any(x > max_val), msg)
+    return eqx.error_if(x, u.ustrip("", jnp.any(x > max_val)), msg)
 
 
 def check_greater_than_equal(
@@ -174,4 +178,4 @@ def check_greater_than_equal(
     """
     name = f" {name}" if name else name
     msg = f"The input{name} must be greater than or equal to {comparison_name}."
-    return eqx.error_if(x, jnp.any(x < min_val), msg)
+    return eqx.error_if(x, u.ustrip("", jnp.any(x < min_val)), msg)

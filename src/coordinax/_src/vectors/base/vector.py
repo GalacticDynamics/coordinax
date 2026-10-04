@@ -602,7 +602,7 @@ class AbstractVector(
 # Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[untyped-decorator, union-attr]
+@AbstractVector.from_.dispatch
 def from_(cls: type[AbstractVector], *args: Any, **kwargs: Any) -> AbstractVector:
     """Create a vector from arguments.
 

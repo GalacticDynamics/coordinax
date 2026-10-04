@@ -8,8 +8,7 @@ __all__ = (
 )
 
 import functools as ft
-from typing import final
-from typing_extensions import override
+from typing import final, override
 
 import equinox as eqx
 
@@ -23,6 +22,7 @@ from .base_spherical import (
     AbstractSphericalVel,
 )
 from coordinax._src.angles import BatchableAngle
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -134,13 +134,13 @@ class LonLatSphericalPos(AbstractSphericalPos):
 class LonLatSphericalVel(AbstractSphericalVel):
     """Spherical velocity."""
 
-    lon: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    lon: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
     r"""Longitude speed :math:`dlon/dt \in [-\infty, \infty]."""
 
-    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    lat: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    distance: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    distance: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
 
@@ -149,14 +149,14 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     lon_coslat: ct.BBtAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
+        converter=DimQuantity["angular speed"].from_
     )
     r"""Longitude * cos(Latitude) speed :math:`dlon/dt \in [-\infty, \infty]."""
 
-    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    lat: ct.BBtAngularSpeed = eqx.field(converter=DimQuantity["angular speed"].from_)
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    distance: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    distance: ct.BBtSpeed = eqx.field(converter=DimQuantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
 
@@ -165,14 +165,14 @@ class LonLatSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
     lon: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
+        converter=DimQuantity["angular acceleration"].from_
     )
     r"""Longitude acceleration :math:`d^2lon/dt^2 \in [-\infty, \infty]."""
 
     lat: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
+        converter=DimQuantity["angular acceleration"].from_
     )
     r"""Latitude acceleration :math:`d^2lat/dt^2 \in [-\infty, \infty]."""
 
-    distance: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    distance: ct.BBtAcc = eqx.field(converter=DimQuantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""

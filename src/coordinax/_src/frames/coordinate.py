@@ -3,8 +3,7 @@
 __all__ = ("AbstractCoordinate", "Coordinate")
 
 
-from typing import Any, ClassVar, Literal, assert_never, cast, final
-from typing_extensions import override
+from typing import Any, ClassVar, Literal, assert_never, cast, final, override
 
 import equinox as eqx
 import jax
@@ -73,7 +72,7 @@ class AbstractCoordinate(AbstractVector):
             return self
 
         # Otherwise, apply the transformation and return a new coordinate
-        new_data = op(self.data) if t is None else op(t, self.data)[1]  # type: ignore[index]
+        new_data = op(self.data) if t is None else op(t, self.data)[1]
         out = self.__class__.from_(new_data, toframe)
         return cast("AbstractCoordinate", out)
 

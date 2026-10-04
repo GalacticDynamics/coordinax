@@ -9,10 +9,10 @@ import quax
 from quax import register
 
 import quaxed.numpy as jnp
-import unxt as u
 from dataclassish import field_items
 
 from .core import AbstractVel
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.vectors.base_pos import AbstractPos
 
 mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
@@ -22,7 +22,7 @@ mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 @register(jax.lax.mul_p)
 def _mul_vel_q(
-    self: AbstractVel, other: u.Quantity["time"], /, **kw: Any
+    self: AbstractVel, other: DimQuantity["time"], /, **kw: Any
 ) -> AbstractPos:
     """Multiply the vector by a time `unxt.Quantity` to get a position.
 

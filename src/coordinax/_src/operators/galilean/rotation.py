@@ -18,6 +18,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import ToUnitsOptions
@@ -143,7 +144,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def from_euler(
         cls: "type[GalileanRotation]",
         seq: str,
-        angles: u.Quantity["angle"] | u.Angle,
+        angles: DimQuantity["angle"] | u.Angle,
         /,
     ) -> "GalileanRotation":
         """Initialize from Euler angles.
@@ -231,7 +232,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
+@AbstractOperator.from_.dispatch
 def from_(cls: type[GalileanRotation], obj: Rotation, /) -> GalileanRotation:
     """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 
@@ -258,10 +259,10 @@ def from_(cls: type[GalileanRotation], obj: Rotation, /) -> GalileanRotation:
 @AbstractOperator.__call__.dispatch(precedence=1)
 def call(
     self: GalileanRotation,
-    q: Shaped[u.Quantity["length"], "*batch 3"],
+    q: Shaped[DimQuantity["length"], "*batch 3"],
     /,
     **__: Any,
-) -> Shaped[u.Quantity["length"], "*batch 3"]:
+) -> Shaped[DimQuantity["length"], "*batch 3"]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -316,8 +317,8 @@ def call(self: GalileanRotation, q: AbstractPos3D, /, **__: Any) -> AbstractPos3
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation, t: u.Quantity["time"], q: AbstractPos3D, /
-) -> tuple[u.Quantity["time"], AbstractPos3D]:
+    self: GalileanRotation, t: DimQuantity["time"], q: AbstractPos3D, /
+) -> tuple[DimQuantity["time"], AbstractPos3D]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -386,11 +387,11 @@ def call(
 @AbstractOperator.__call__.dispatch
 def call(
     self: GalileanRotation,
-    q: u.Quantity["length"],
-    p: u.Quantity["speed"],
+    q: DimQuantity["length"],
+    p: DimQuantity["speed"],
     /,
     **__: Any,
-) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+) -> tuple[DimQuantity["length"], DimQuantity["speed"]]:
     r"""Apply the rotation to the coordinates and velocities.
 
     Examples
@@ -448,7 +449,7 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     return op
 
 
-@GalileanRotation.__matmul__.dispatch  # type: ignore[union-attr,untyped-decorator]
+@GalileanRotation.__matmul__.dispatch
 def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
     """Combine two Galilean rotations.
 

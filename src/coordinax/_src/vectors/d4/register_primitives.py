@@ -9,6 +9,7 @@ from jaxtyping import Array, Bool
 from quax import register
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import replace
 
 from .spacetime import FourVector
@@ -69,7 +70,9 @@ def _eq_4v_4v(lhs: FourVector, rhs: FourVector, /) -> Bool[Array, "..."]:
     Array([False, False], dtype=bool)
 
     """
-    return jnp.logical_and(jnp.equal(lhs.q, rhs.q), jnp.equal(lhs.t, rhs.t))
+    return jnp.logical_and(
+        jnp.equal(lhs.q, rhs.q), u.ustrip("", jnp.equal(lhs.t, rhs.t))
+    )
 
 
 @register(jax.lax.neg_p)

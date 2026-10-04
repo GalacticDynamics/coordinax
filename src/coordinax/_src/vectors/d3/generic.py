@@ -2,8 +2,7 @@
 
 __all__ = ("Cartesian3D",)
 
-from typing import TypeVar, final
-from typing_extensions import override
+from typing import TypeVar, final, override
 
 import equinox as eqx
 
@@ -66,7 +65,7 @@ class Cartesian3D(AvalMixin, AbstractVector):
         >>> import coordinax as cx
         >>> q = cx.vecs.Cartesian3D.from_([1, 2, 3], "km")
         >>> print(q.norm())
-        Quantity['length'](3.7416575, unit='km')
+        Quantity(3.7416575, unit='km')
 
         """
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)

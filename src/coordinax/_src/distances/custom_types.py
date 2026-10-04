@@ -5,9 +5,8 @@ __all__: tuple[str, ...] = ()
 
 from jaxtyping import Shaped
 
-import unxt as u
-
 from .base import AbstractDistance
+from coordinax._src.custom_types import DimQuantity
 
-BBtLength = Shaped[u.Quantity["length"], "*#batch"]
+BBtLength = Shaped[DimQuantity["length"], "*#batch"]
 BatchableDistance = Shaped[AbstractDistance, "*#batch"]

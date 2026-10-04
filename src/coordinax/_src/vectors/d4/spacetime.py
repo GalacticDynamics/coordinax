@@ -4,8 +4,7 @@ __all__ = ("FourVector",)
 
 import functools as ft
 from dataclasses import KW_ONLY
-from typing import Any, cast, final
-from typing_extensions import override
+from typing import Any, cast, final, override
 
 import equinox as eqx
 import jax
@@ -21,6 +20,7 @@ from dataclassish.converters import Unless
 
 import coordinax._src.custom_types as ct
 from .base import AbstractPos4D
+from coordinax._src.custom_types import DimQuantity
 from coordinax._src.distances import BBtLength
 from coordinax._src.vectors import dims
 from coordinax._src.vectors.base import AttrFilter, VectorAttribute
@@ -72,14 +72,14 @@ class FourVector(AbstractPos4D):
 
     """
 
-    t: ct.BBtTime | ct.ScalarTime = eqx.field(converter=u.Quantity["time"].from_)
+    t: ct.BBtTime | ct.ScalarTime = eqx.field(converter=DimQuantity["time"].from_)
     """Time coordinate."""
 
     q: AbstractPos3D = eqx.field(converter=Unless(AbstractPos3D, CartesianPos3D.from_))
     """Spatial coordinates."""
 
     _: KW_ONLY
-    c: Shaped[u.Quantity["speed"], ""] = eqx.field(
+    c: Shaped[DimQuantity["speed"], ""] = eqx.field(
         default=VectorAttribute(default=u.Quantity(299_792.458, "km/s")), repr=False
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
@@ -119,7 +119,7 @@ class FourVector(AbstractPos4D):
     # -------------------------------------------
 
     @ft.partial(eqx.filter_jit, inline=True)
-    def _norm2(self, /) -> Shaped[u.Quantity["area"], "*#batch"]:  # type: ignore[misc]
+    def _norm2(self, /) -> Shaped[DimQuantity["area"], "*#batch"]:  # type: ignore[misc]
         r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
 
         Examples
