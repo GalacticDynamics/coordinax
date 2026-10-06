@@ -7,11 +7,13 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Final
 
 import equinox as eqx
-import jax.numpy as jnp
 import wadler_lindig as wl
 from jaxtyping import ArrayLike
 from plum import dispatch
 
+# `quaxed`, not `jax.numpy`: comparing two quantities yields a dimensionless
+# quantity under unxt v2, and `jax.numpy.all` rejects one outright.
+import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, flags
 
