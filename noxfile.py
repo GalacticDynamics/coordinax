@@ -238,8 +238,9 @@ def test_oldest(s: nox.Session, /) -> None:
     # never did in CI, where the checkout is thrown away. Do not "fix" that
     # with `--frozen`: it leaves the lock alone by declining to re-resolve at
     # all, so the session installs the current pins and passes while testing
-    # nothing. Measured: with `--frozen`, unxt 2.0.3 and jax 0.10.0; without
-    # it, unxt 2.0.2 and jax 0.7.2, which is the floor this session guards.
+    # nothing. Measured (unxt>=2.0.5): with `--frozen`, jax 0.10.0; without it,
+    # jax 0.7.2, the floor this session guards. unxt is 2.0.5 either way, now
+    # that its floor and its lock pin coincide.
     lockfile = DIR / "uv.lock"
     saved = lockfile.read_bytes()
     try:
