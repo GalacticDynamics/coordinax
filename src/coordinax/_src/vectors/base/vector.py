@@ -644,7 +644,7 @@ def _declared_dimensions(cls: type[AbstractVector], /) -> dict[str, Any]:
     def dim(f: Any) -> Any:
         try:
             return u.dimension_of(f.type)
-        except Exception:  # noqa: BLE001  # e.g. a vector-valued field
+        except ValueError:  # e.g. a vector-valued field
             return None
 
     return {f.name: dim(f) for f in fields(AttrFilter, cls)}
