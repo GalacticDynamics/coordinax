@@ -24,7 +24,7 @@ dependencies = [
   "coordinaxs.api>=0.24",
   "dataclassish>=0.9.0",
   "equinox>=0.13.8",
-  # >=0.7.2 is unxt 2.0.2's own floor, not a preference; 0.6.x cannot resolve
+  # >=0.7.2 is unxt's own floor, not a preference; 0.6.x cannot resolve
   # alongside it. `jnp.asarray` only routes through `Quantity.__array__` from
   # jax 0.10, so between 0.7.2 and 0.9 it still rejects a Quantity outright --
   # strip explicitly rather than relying on the coercion in that range.
@@ -42,8 +42,9 @@ dependencies = [
   "zeroth>=1.2.0",
   # 2.0.2 makes `np.asarray(Quantity)` raise rather than silently drop the
   # unit. Relied upon: dropping a unit yields a number in the wrong dimension
-  # that looks entirely plausible.
-  "unxt>=2.0.2",
+  # that looks entirely plausible. 2.0.5 fixes dimensionless results of an
+  # `Angle` (unxt#945) and integer `%` across units (unxt#946).
+  "unxt>=2.0.5",
   "unxts.linalg>=2.0.6",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
