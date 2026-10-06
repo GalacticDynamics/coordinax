@@ -565,14 +565,7 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
             spherical.r,
             u.Q([0.31622776, 1.0954452, 1.5165752, 1.8439089], "kpc"),
         )
-        # unxt 2.0.4: `jnp.allclose(Angle, Angle)` raises (`isfinite` rebuilds an
-        # Angle with a dimensionless unit), so compare as plain quantities.
-        # https://github.com/GalacticDynamics/unxt/issues/945
-        assert jnp.allclose(
-            u.Q.from_(spherical.phi),
-            u.Q.from_(vector.phi),
-            atol=u.Q(1e-8, "rad"),
-        )
+        assert jnp.allclose(spherical.phi, vector.phi, atol=u.Q(1e-8, "rad"))
         assert jnp.allclose(
             spherical.theta,
             u.Q([0.0, 0.95531654, 0.89496875, 0.8148269], "rad"),
