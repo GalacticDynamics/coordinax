@@ -23,6 +23,4 @@ def converter_azimuth_to_range(phi: u.AbstractQuantity, /) -> u.AbstractQuantity
 
     """
     # TODO: have an integer-preserving version of this
-    # Same unit first: int % across units fails in unxt 2.0.4.
-    # https://github.com/GalacticDynamics/unxt/issues/946
-    return phi % u.uconvert(phi.unit, _2pid)
+    return phi % _2pid
