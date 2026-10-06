@@ -17,7 +17,8 @@ class TestCartesianPos2D:
     """Test `coordinax.vecs.CartesianPos2D`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.CartesianPos2D:
+    @staticmethod
+    def vector() -> cx.vecs.CartesianPos2D:
         """Return a vector."""
         return cx.vecs.CartesianPos2D(
             x=u.Q([1, 2, 3, 4], "kpc"), y=u.Q([5, 6, 7, 8], "kpc")
@@ -112,7 +113,8 @@ class TestPolarPos:
     """Test `coordinax.PolarPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         return cx.vecs.PolarPos(
             r=u.Q([1, 2, 3, 4], "kpc"), phi=u.Q([0, 1, 2, 3], "rad")
@@ -212,14 +214,16 @@ class TestCartesianVel2D(AbstractVel2DTest):
     """Test `coordinax.CartesianVel2D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.CartesianVel2D:
+    @staticmethod
+    def difntl() -> cx.vecs.CartesianVel2D:
         """Return a differential."""
         return cx.vecs.CartesianVel2D(
             x=u.Q([1, 2, 3, 4], "km/s"), y=u.Q([5, 6, 7, 8], "km/s")
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.CartesianPos2D:
+    @staticmethod
+    def vector() -> cx.vecs.CartesianPos2D:
         """Return a vector."""
         return cx.vecs.CartesianPos2D(
             x=u.Q([1, 2, 3, 4], "kpc"), y=u.Q([5, 6, 7, 8], "km")
@@ -313,7 +317,8 @@ class TestPolarVel(AbstractVel2DTest):
     """Test `coordinax.PolarVel`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.PolarVel:
+    @staticmethod
+    def difntl() -> cx.vecs.PolarVel:
         """Return a differential."""
         return cx.vecs.PolarVel(
             r=u.Q([1, 2, 3, 4], "km/s"),
@@ -321,7 +326,8 @@ class TestPolarVel(AbstractVel2DTest):
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.PolarPos:
+    @staticmethod
+    def vector() -> cx.vecs.PolarPos:
         """Return a vector."""
         return cx.vecs.PolarPos(
             r=u.Q([1, 2, 3, 4], "kpc"), phi=u.Q([0, 1, 2, 3], "rad")

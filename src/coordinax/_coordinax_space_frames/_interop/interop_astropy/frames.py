@@ -66,4 +66,7 @@ def from_(cls: type[Galactocentric], obj: apyc.Galactocentric, /) -> Galactocent
         lat=obj.galcen_coord.dec,
         distance=obj.galcen_distance,
     )
-    return cls(galcen, roll=obj.roll, z_sun=obj.z_sun, galcen_v_sun=obj.galcen_v_sun)
+    # astropy<8 stores a CartesianDifferential; astropy 8 a CartesianRepresentation.
+    v_sun = obj.galcen_v_sun
+    v_sun = v_sun.d_xyz if isinstance(v_sun, apyc.CartesianDifferential) else v_sun.xyz
+    return cls(galcen, roll=obj.roll, z_sun=obj.z_sun, galcen_v_sun=v_sun)

@@ -19,7 +19,8 @@ class TestCartesianPos1D(AbstractPos1DTest):
     """Test `coordinax.CartesianPos1D`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         return cx.vecs.CartesianPos1D(x=u.Q([1, 2, 3, 4], "kpc"))
 
@@ -103,7 +104,8 @@ class TestRadialPos(AbstractPos1DTest):
     """Test `coordinax.RadialPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    @staticmethod
+    def vector() -> cx.vecs.AbstractPos:
         """Return a vector."""
         return cx.vecs.RadialPos(r=u.Q([1, 2, 3, 4], "kpc"))
 
@@ -191,12 +193,14 @@ class TestCartesianVel1D(AbstractVel1DTest):
     """Test `coordinax.CartesianVel1D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.CartesianVel1D:
+    @staticmethod
+    def difntl() -> cx.vecs.CartesianVel1D:
         """Return a vector."""
         return cx.vecs.CartesianVel1D(x=u.Q([1.0, 2, 3, 4], "km/s"))
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.CartesianPos1D:
+    @staticmethod
+    def vector() -> cx.vecs.CartesianPos1D:
         """Return a vector."""
         return cx.vecs.CartesianPos1D(x=u.Q([1.0, 2, 3, 4], "kpc"))
 
@@ -297,12 +301,14 @@ class TestRadialVel(AbstractVel1DTest):
     """Test `coordinax.RadialVel`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.RadialVel:
+    @staticmethod
+    def difntl() -> cx.vecs.RadialVel:
         """Return a vector."""
         return cx.vecs.RadialVel(r=u.Q([1, 2, 3, 4], "km/s"))
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.RadialPos:
+    @staticmethod
+    def vector() -> cx.vecs.RadialPos:
         """Return a vector."""
         return cx.vecs.RadialPos(r=u.Q([1, 2, 3, 4], "kpc"))
 

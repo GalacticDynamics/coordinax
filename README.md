@@ -82,18 +82,18 @@ print(p)
 
 p2 = cx.vconvert(cx.SphericalVel, p, q)
 print(p2)
-# <SphericalVel: (r[km / s], theta[km rad / (km s)], phi[km rad / (km s)])
-#     [[ 1.118e+01 -3.886e-16  0.000e+00]
-#      [ 1.257e+01 -1.110e-16  0.000e+00]
+# <SphericalVel: (r[km / s], theta[km rad / (kpc s)], phi[km rad / (kpc s)])
+#     [[ 1.118e+01  2.980e-08  0.000e+00]
+#      [ 1.257e+01  1.192e-07  1.490e-08]
 #      ...
-#      [ 2.360e+01  0.000e+00  0.000e+00]
-#      [ 2.526e+01 -2.776e-16  0.000e+00]]>
+#      [ 2.360e+01  8.941e-08  0.000e+00]
+#      [ 2.526e+01  2.086e-07  2.980e-08]]>
 
 
 # Transforming between frames
 icrs_frame = cx.frames.ICRS()
 gc_frame = cx.frames.Galactocentric()
-op = cxf.frame_transform_op(icrs_frame, gc_frame)
+op = cx.frames.frame_transform_op(icrs_frame, gc_frame)
 q_gc, p_gc = op(q, p)
 print(q_gc, p_gc, sep="\n")
 # <CartesianPos3D: (x, y, z) [kpc]
@@ -108,32 +108,36 @@ print(q_gc, p_gc, sep="\n")
 coord = cx.Coordinate({"length": q, "speed": p}, frame=icrs_frame)
 print(coord)
 # Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>
-#     }),
-#     frame=ICRS()
+#   {
+#     'length':
+#     <CartesianPos3D: (x, y, z) [kpc]
+#         [[ 0.  5. 10.]
+#          ...
+#          [ 9. 14. 19.]]>,
+#     'speed':
+#     <CartesianVel3D: (x, y, z) [km / s]
+#         [[ 0.  5. 10.]
+#          ...
+#          [ 9. 14. 19.]]>
+#   },
+#   frame=ICRS()
 # )
 
 print(coord.to_frame(gc_frame))
 # Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[-1.732e+01  5.246e+00  3.614e+00]
-#              ...
-#              [-3.004e+01  1.241e+01 -1.841e+00]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[  3.704 250.846  11.373]
-#              ...
-#              [ -9.02  258.012   5.918]]>
-#     }),
-#     frame=Galactocentric( ... )
+#   {
+#     'length':
+#     <CartesianPos3D: (x, y, z) [kpc]
+#         [[-1.732e+01  5.246e+00  3.614e+00]
+#          ...
+#          [-3.004e+01  1.241e+01 -1.841e+00]]>,
+#     'speed':
+#     <CartesianVel3D: (x, y, z) [km / s]
+#         [[  3.704 250.846  11.373]
+#          ...
+#          [ -9.02  258.012   5.918]]>
+#   },
+#   frame=Galactocentric( ... )
 # )
 ```
 
