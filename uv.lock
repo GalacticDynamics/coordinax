@@ -639,7 +639,7 @@ requires-dist = [
     { name = "quax-blocks", specifier = ">=0.5.0" },
     { name = "quaxed", specifier = ">=0.10.5" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
-    { name = "unxt", specifier = ">=2.0.2" },
+    { name = "unxt", specifier = ">=2.0.5" },
     { name = "unxts-linalg", specifier = ">=2.0.6" },
     { name = "unxts-parametric", marker = "extra == 'parametric'", specifier = ">=2.0" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
@@ -877,7 +877,7 @@ requires-dist = [
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "plum", marker = "python_full_version < '3.14'", specifier = ">=2.8.0" },
     { name = "plum", marker = "python_full_version >= '3.14'", specifier = ">=2.9.0" },
-    { name = "unxt", specifier = ">=1.11.2" },
+    { name = "unxt", specifier = ">=2.0.5" },
 ]
 
 [package.metadata.requires-dev]
@@ -3459,7 +3459,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "2.0.4"
+version = "2.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -3480,9 +3480,9 @@ dependencies = [
     { name = "unxts-api" },
     { name = "wadler-lindig" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0a/df/c6809f0be3fef6793a68d5fd6ee0a5e5174dcc40f3961c39367d6de329a6/unxt-2.0.4.tar.gz", hash = "sha256:fb226465242c9465045dfee71f09757afafb312494a22cc2c9b82b28842bc572", size = 725427, upload-time = "2026-09-04T08:02:05.732Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/25/0c/3fb689976a32c81e6e6aa956ea629e6834f43a719a59b1b844d20636c540/unxt-2.0.5.tar.gz", hash = "sha256:90207e8d20caa8119e349886df226aa42793a12891bc13c8a407cc3c4fbf1565", size = 729062, upload-time = "2026-10-04T02:49:10.255Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/1a/33374c3793f6baf0534833a246820951aae2fa6873567586101e8af8067e/unxt-2.0.4-py3-none-any.whl", hash = "sha256:8443041705ca3a04ee78b9c6e48d4f817f1cc54d3a7862203b5da0ee79cf14fd", size = 119925, upload-time = "2026-09-04T08:02:02.654Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/5b/c812d96cabd06a222bf782dbd0edaaa33383aa51e2a199df5a9cbf774608/unxt-2.0.5-py3-none-any.whl", hash = "sha256:8e93841d5fd61d17f298d8aedf9ce5727b0bb96b87ab3032f1e2ef98846f5404", size = 120577, upload-time = "2026-10-04T02:49:08.649Z" },
 ]
 
 [[package]]
