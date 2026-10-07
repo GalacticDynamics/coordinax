@@ -57,7 +57,8 @@ def interval(
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    For a Riemannian metric it is the squared geodesic_distance:
+    On a flat manifold in Cartesian coordinates it is the squared
+    geodesic_distance:
 
     >>> a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
