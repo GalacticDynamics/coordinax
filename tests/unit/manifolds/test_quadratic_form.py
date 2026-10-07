@@ -15,6 +15,7 @@ import pytest
 
 import quaxed.numpy as qnp
 import unxt as u
+from unxt.quantity import AllowValue
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
@@ -28,15 +29,6 @@ from coordinax._src.manifolds.quadratic_form import (
 from coordinax._src.metric.matrix import DiagonalMetric
 
 ATOL = 1e-5
-
-
-def _dimensionless(x):
-    """Strip a dimensionless `Quantity` to a bare array, leaving arrays alone.
-
-    `jnp.asarray` would do this on current JAX but raises on the oldest
-    supported version, so the coercion is spelled out.
-    """
-    return u.ustrip("", x) if isinstance(x, u.AbstractQuantity) else jnp.asarray(x)
 
 
 class TestRelationToNorm:
@@ -236,8 +228,8 @@ class TestDiagonalFastPath:
 
         The two paths agree in *value* but not in *type*: the fast path unwraps
         a dimensionless diagonal and so returns bare inputs' bare array, while
-        the dense path returns a dimensionless `Quantity`. Each is stripped
-        explicitly rather than passed through `jnp.asarray`, which coerces a
+        the dense path returns a dimensionless `Quantity`. Both go through
+        `ustrip(AllowValue, "")` rather than `jnp.asarray`, which coerces a
         `Quantity` only on newer JAX -- the oldest supported version raises.
         """
         del label
@@ -248,7 +240,9 @@ class TestDiagonalFastPath:
 
         fast = _contract(mm, stacked, stacked)
         dense = _contract(mm.to_dense(), stacked, stacked)
-        assert jnp.allclose(_dimensionless(fast), _dimensionless(dense), atol=1e-8)
+        assert jnp.allclose(
+            u.ustrip(AllowValue, "", fast), u.ustrip(AllowValue, "", dense), atol=1e-8
+        )
 
     def test_batched_arrays_reduce_over_components_not_the_batch(self):
         """``sum(..., axis=-1)`` rather than ``@``, which would eat the batch axis."""
