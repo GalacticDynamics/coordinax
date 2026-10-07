@@ -13,8 +13,9 @@ time (timelike) or proper distance (spacelike).
 This is the quadratic form of the *coordinate difference*, with the metric
 evaluated **at the first point** ``a`` -- not a geodesic quantity, and not the
 square of `geodesic_distance`.  The two coincide only where the metric is
-constant along the path -- a flat manifold *in Cartesian coordinates*, the
-Minkowski case this module exists for.  Flatness alone is not enough: on the
+constant along the path -- flat Euclidean space *in Cartesian coordinates*.
+(Minkowski space, the case this module exists for, has a constant metric too,
+but there `geodesic_distance` is undefined.)  Flatness alone is not enough: on the
 plane in `~coordinax.charts.polar2d` the same pair gives 3.467 against a squared
 geodesic of 5.0.  On a curved manifold this is a first-order estimate, and it
 is asymmetric in ``a`` and ``b``; `geodesic_distance` is the symmetric,
@@ -57,7 +58,7 @@ def interval(
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    On a flat manifold in Cartesian coordinates it is the squared
+    In flat Euclidean space in Cartesian coordinates it is the squared
     `geodesic_distance` -- but not in general, since `geodesic_distance`
     measures along the manifold while this contracts the coordinate difference:
 
@@ -119,8 +120,9 @@ def interval(
     # Sharing it is what gives `interval` the unit handling it would otherwise
     # have to restate -- and makes `norm(diff)**2 == interval` hold by
     # construction rather than by the test that asserts it. The identity is
-    # with `norm`, not `geodesic_distance`: on a curved manifold the coordinate
-    # difference is not the geodesic, so the two disagree.
+    # with `norm`, not `geodesic_distance`: away from flat space in Cartesian
+    # coordinates the coordinate difference is not the geodesic, so the two
+    # disagree.
     return quadratic_form(diff, chart, at=a, usys=usys, fname="interval")
 
 
