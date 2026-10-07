@@ -27,6 +27,7 @@ import plum
 import quaxed.numpy as qnp
 import unxt as u
 import unxts.linalg as ul
+from unxt.quantity import AllowValue
 
 import coordinaxs.api.charts as cxcapi
 from .manifold import EmbeddedManifold
@@ -43,10 +44,10 @@ def _gram_values(g: AbstractMetricMatrix) -> jnp.ndarray:
     Cartesian ambient coordinates share a single unit, so the ambient metric in
     that chart is dimensionless and its bare values carry the whole content —
     which is what the caller's ``cart_unit^2 / (chart_unit_i * chart_unit_j)``
-    result unit assumes.
+    result unit assumes. ``AllowValue`` passes a bare matrix through and strips
+    a dimensionless one; a unitful one raises rather than losing its unit.
     """
-    m = g.to_dense().matrix
-    return m.value if isinstance(m, ul.QuantityMatrix) else m
+    return u.ustrip(AllowValue, "", g.to_dense().matrix)  # ty: ignore[invalid-return-type]
 
 
 # =====================================================================
