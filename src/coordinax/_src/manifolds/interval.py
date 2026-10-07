@@ -58,7 +58,8 @@ def interval(
     >>> import coordinax.manifolds as cxm
 
     On a flat manifold in Cartesian coordinates it is the squared
-    geodesic_distance:
+    `geodesic_distance` -- but not in general, since `geodesic_distance`
+    measures along the manifold while this contracts the coordinate difference:
 
     >>> a = {"x": u.Q(3.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> b = {"x": u.Q(0.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
