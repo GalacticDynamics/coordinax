@@ -3926,7 +3926,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Unit tracking:**
 
     Both types propagate units through `QuantityMatrix` fields.  For metrics
-    induced by Jacobian pullback, units are `cart_unit² / (intrinsic_unit_i × intrinsic_unit_j)`.
+    induced by Jacobian pullback, units are `cart_unit² / (point_unit_i × point_unit_j)`,
+    where `point_unit_i` is the unit of the point's *i*-th coordinate and every
+    Cartesian ambient component is first converted to one unit `cart_unit` (the
+    first component's).  Cartesian components of differing dimension raise
+    `ValueError`.  Separately, the embedding's Cartesian components must be all
+    Quantity or all bare: a Quantity next to a bare one raises `TypeError`, since
+    the bare one has no unit to convert from.  All-bare components are taken as
+    pure numbers, as from a unitless embedding such as `TwoSphereIn3D(radius=1.0)`;
+    the result's unit then comes from the point's coordinates alone.
 
     **Basis change integration:**
 

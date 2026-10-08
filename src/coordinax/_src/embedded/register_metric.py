@@ -8,10 +8,13 @@ $g = J^T G J$ where $J$ is the Jacobian of the composition
 ``chart → intrinsic → Cartesian ambient`` and $G$ is the ambient metric
 evaluated at the embedded point.  $G$ is the identity only when the ambient is
 Euclidean; for a Lorentzian ambient it is $\eta$, and dropping it would report
-a timelike direction as spacelike.  Routing through the Cartesian ambient makes
-every ambient output share the single unit ``cart_unit`` (column *i* of $J$ then
-has unit ``cart_unit / chart_unit_i``), which makes each summation term
-unit-compatible; $G$ in that chart is dimensionless.
+a timelike direction as spacelike.  Every Cartesian ambient output is converted
+to a single unit ``cart_unit`` (column *i* of $J$ then has unit
+``cart_unit / point_unit_i``), which makes each summation term
+unit-compatible; $G$ in that chart is dimensionless.  The embed map's output
+decides the units, so outputs of differing dimension are refused.  Separately,
+a Quantity output next to a bare one is refused, since the bare one has no unit
+to convert from.
 
 All results are wrapped in a :class:`~coordinax._src.metric.matrix.DenseMetric`
 because the induced metric is not guaranteed to be diagonal.
@@ -45,7 +48,7 @@ def _gram_values(g: AbstractMetricMatrix) -> jnp.ndarray:
 
     Cartesian ambient coordinates share a single unit, so the ambient metric in
     that chart is dimensionless and its bare values carry the whole content —
-    which is what the caller's ``cart_unit^2 / (chart_unit_i * chart_unit_j)``
+    which is what the caller's ``cart_unit^2 / (point_unit_i * point_unit_j)``
     result unit assumes. ``AllowValue`` passes a bare matrix through and strips
     a dimensionless one; a unitful one raises rather than losing its unit.
     """
@@ -100,11 +103,18 @@ def metric_matrix(
     Lorentzian ambient $G = \eta$ and the induced metric of a timelike
     direction is correctly negative.
 
-    Routing through Cartesian ambient coordinates makes every ambient output
-    share the single unit ``cart_unit`` (so column *i* of $J$ has unit
-    ``cart_unit / chart_unit_i``) and makes $G$ dimensionless; each ``g_{ij}``
-    term then has a consistent unit ``cart_unit^2 / (chart_unit_i *
-    chart_unit_j)`` and the result carries physically correct units.
+    Every Cartesian ambient output is converted to one unit ``cart_unit`` (the
+    first component's), so column *i* of $J$ has unit ``cart_unit /
+    point_unit_i`` and $G$ is dimensionless; each ``g_{ij}`` term then has a
+    consistent unit ``cart_unit^2 / (point_unit_i * point_unit_j)``, where
+    ``point_unit_i`` is the unit of the point's *i*-th coordinate.  Outputs
+    of differing dimension (e.g. a length and a time) have no consistent sum
+    and raise `ValueError`.  Separately, the outputs must be all Quantity or
+    all bare: a Quantity next to a bare one raises `TypeError`, since the bare
+    one has no unit to convert from.  All-bare outputs are taken as pure
+    numbers, as from ``TwoSphereIn3D(radius=1.0)``; the result's unit then
+    comes from the point's coordinates alone.  Bare point coordinates are passed
+    to the embed map bare.
 
     Parameters
     ----------
@@ -123,7 +133,7 @@ def metric_matrix(
     DenseMetric
         Induced metric matrix at ``point``, backed by a
         :class:`~unxts.linalg.QuantityMatrix` with units
-        ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.
+        ``cart_unit^2 / (point_unit_i * point_unit_j)``.
 
     Examples
     --------
@@ -171,36 +181,71 @@ def metric_matrix(
     """
     chart_keys = chart.components
     # Use Cartesian ambient so all outputs share cart_unit; column i of J then
-    # has unit cart_unit / chart_unit_i, making each g_ij term unit-consistent.
+    # has unit cart_unit / point_unit_i, making each g_ij term unit-consistent.
     cart_chart = M.embed_map.ambient.cartesian
     cart_keys = cart_chart.components
 
     _qm: ul.QM = cxcapi.carray(point, chart_keys)  # ty: ignore[invalid-assignment]
-    xat, ufrom = _qm.value, _qm.unit.to_tuple()
-    ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
+    # `carray` gives a bare component the dimensionless unit, so `ufrom_` has no
+    # `None`s. Keep which components were bare: they go back to the embed map
+    # bare, as the caller passed them, not as dimensionless Quantities.
+    xat, ufrom_ = _qm.value, _qm.unit.to_tuple()
+    point_qty = [isinstance(point[k], u.AbstractQuantity) for k in chart_keys]
 
     # `pt_embed` is the composition chart → intrinsic → ambient → Cartesian; it
     # also checks `chart` against the manifold's atlas.
     at_cart = pt_embed(point, chart, cart_chart, M)
-    uto_ = ul.cdict_units(at_cart, cart_keys)
-    uto_ = tuple(ut if ut is not None else DMLS for ut in uto_)
+    uto = ul.cdict_units(at_cart, cart_keys)
+    # The pullback sums the rows of J, so every Cartesian component must be in
+    # one unit. The embed map's output decides the units, not the chart, so
+    # enforce it. A bare value next to a Quantity has no unit to put it in;
+    # refuse rather than guess, as `quadratic_form` does.
+    bare = [ut is None for ut in uto]
+    if any(bare) and not all(bare):
+        got = ", ".join(
+            f"{k}: {'bare' if ut is None else ut}"
+            for k, ut in zip(cart_keys, uto, strict=True)
+        )
+        msg = (
+            "metric_matrix(): the embedding mixes Quantity and bare Cartesian "
+            f"components ({got}). All must be either Quantity or bare."
+        )
+        raise TypeError(msg)
+    uto_ = tuple(ut if ut is not None else DMLS for ut in uto)
+    # All Quantity: rescale same-dimension components (m vs km) to the first's
+    # unit, and refuse mixed dimensions, which have no consistent sum.
+    cart_unit = uto_[0]
+    cart_dim = u.dimension_of(cart_unit)
+    if any(u.dimension_of(ut) != cart_dim for ut in uto_[1:]):
+        got = ", ".join(
+            f"{k}: {str(ut) or 'dimensionless'}"
+            for k, ut in zip(cart_keys, uto_, strict=True)
+        )
+        msg = (
+            "metric_matrix(): the induced metric needs every Cartesian ambient "
+            f"component in one dimension, but the embedding gives {got}."
+        )
+        raise ValueError(msg)
 
     def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
-        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(chart_keys)}
+        q = {
+            k: u.Q(x_arr[i], ufrom_[i]) if point_qty[i] else x_arr[i]
+            for i, k in enumerate(chart_keys)
+        }
         # `M.embed_map`, not `M`: the atlas check already ran above, and this
         # runs under jacfwd/vmap.
         q_cart = pt_embed(q, chart, cart_chart, M.embed_map)
         vals = [
-            u.ustrip(uto_[j], q_cart[k])  # ty: ignore[not-subscriptable]
+            u.ustrip(cart_unit, q_cart[k])  # ty: ignore[not-subscriptable]
             if isinstance(q_cart[k], u.AbstractQuantity)  # ty: ignore[not-subscriptable]
             else qnp.asarray(q_cart[k])  # ty: ignore[not-subscriptable]
-            for j, k in enumerate(cart_keys)
+            for k in cart_keys
         ]
         return qnp.stack(vals)
 
     def _ambient_gram(y_arr: jnp.ndarray) -> jnp.ndarray:
         """Ambient metric G at the embedded point, as (n_cart, n_cart)."""
-        q = {k: u.Q(y_arr[j], uto_[j]) for j, k in enumerate(cart_keys)}
+        q = {k: u.Q(y_arr[j], cart_unit) for j, k in enumerate(cart_keys)}
         return _gram_values(metric_matrix(M.ambient, q, cart_chart))
 
     def _single_metric(x_vec: jnp.ndarray) -> jnp.ndarray:
@@ -215,11 +260,11 @@ def metric_matrix(
     result_vals = jax.vmap(_single_metric)(xat.reshape(-1, n))
     result_vals = result_vals.reshape(*xat.shape[:-1], n, n)
 
-    # g_{ij} unit = uto_[0]² / (ufrom_[i] × ufrom_[j])
-    # Valid because all Cartesian coordinates share the same unit.
+    # g_{ij} unit = cart_unit² / (ufrom_[i] × ufrom_[j]); valid because every
+    # Cartesian component was put in `cart_unit` above.
     result_unit = ul.UnitsMatrix(
         tuple(
-            tuple(uto_[0] ** 2 / (ufrom_[i] * ufrom_[j]) for j in range(n))  # ty: ignore[unsupported-operator]
+            tuple(cart_unit**2 / (ufrom_[i] * ufrom_[j]) for j in range(n))  # ty: ignore[unsupported-operator]
             for i in range(n)
         )
     )
