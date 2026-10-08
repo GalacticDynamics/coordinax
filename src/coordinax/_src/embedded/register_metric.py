@@ -12,7 +12,8 @@ a timelike direction as spacelike.  Every Cartesian ambient output is converted
 to a single unit ``cart_unit`` (column *i* of $J$ then has unit
 ``cart_unit / chart_unit_i``), which makes each summation term
 unit-compatible; $G$ in that chart is dimensionless.  The embed map's output
-decides the units, so outputs of differing dimension are refused.
+decides the units, so outputs of differing dimension are refused, as are
+Quantity outputs mixed with bare ones.
 
 All results are wrapped in a :class:`~coordinax._src.metric.matrix.DenseMetric`
 because the induced metric is not guaranteed to be diagonal.
@@ -106,7 +107,10 @@ def metric_matrix(
     chart_unit_i`` and $G$ is dimensionless; each ``g_{ij}`` term then has a
     consistent unit ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.  Outputs
     of differing dimension (e.g. a length and a time) have no consistent sum
-    and raise `ValueError`.
+    and raise `ValueError`.  The outputs must be all Quantity or all bare:
+    mixing them raises `TypeError`, since a bare value has no unit to convert
+    from and none is guessed.  All-bare outputs carry no unit, so the result's
+    unit comes from the chart's coordinates alone.
 
     Parameters
     ----------
@@ -184,16 +188,32 @@ def metric_matrix(
     # `pt_embed` is the composition chart → intrinsic → ambient → Cartesian; it
     # also checks `chart` against the manifold's atlas.
     at_cart = pt_embed(point, chart, cart_chart, M)
-    uto_ = ul.cdict_units(at_cart, cart_keys)
-    uto_ = tuple(ut if ut is not None else DMLS for ut in uto_)
+    uto = ul.cdict_units(at_cart, cart_keys)
     # The pullback sums the rows of J, so every Cartesian component must be in
     # one unit. The embed map's output decides the units, not the chart, so
-    # enforce it: rescale same-dimension components (m vs km) to the first's
+    # enforce it. A bare value next to a Quantity has no unit to put it in;
+    # refuse rather than guess, as `quadratic_form` does.
+    bare = [ut is None for ut in uto]
+    if any(bare) and not all(bare):
+        got = ", ".join(
+            f"{k}: {'bare' if ut is None else ut}"
+            for k, ut in zip(cart_keys, uto, strict=True)
+        )
+        msg = (
+            "metric_matrix(): the embedding mixes Quantity and bare Cartesian "
+            f"components ({got}). All must be either Quantity or bare."
+        )
+        raise TypeError(msg)
+    uto_ = tuple(ut if ut is not None else DMLS for ut in uto)
+    # All Quantity: rescale same-dimension components (m vs km) to the first's
     # unit, and refuse mixed dimensions, which have no consistent sum.
     cart_unit = uto_[0]
     cart_dim = u.dimension_of(cart_unit)
     if any(u.dimension_of(ut) != cart_dim for ut in uto_[1:]):
-        got = ", ".join(f"{k}: {ut}" for k, ut in zip(cart_keys, uto_, strict=True))
+        got = ", ".join(
+            f"{k}: {str(ut) or 'dimensionless'}"
+            for k, ut in zip(cart_keys, uto_, strict=True)
+        )
         msg = (
             "metric_matrix(): the induced metric needs every Cartesian ambient "
             f"component in one dimension, but the embedding gives {got}."

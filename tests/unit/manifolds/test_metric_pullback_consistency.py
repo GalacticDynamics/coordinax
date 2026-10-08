@@ -372,15 +372,17 @@ class TestAmbientGramValues:
             _gram_values(g)
 
 
-def _diagonal_line(y_of, ambient=cxm.R2, chart=cxc.cart2d, keys=("x", "y")):
-    """The line s -> (s, s), with the second output in ``y_of(s)``'s unit.
+def _diagonal_line(
+    y_of, x_of=lambda s: s, ambient=cxm.R2, chart=cxc.cart2d, keys=("x", "y")
+):
+    """The line s -> (s, s), each output written as ``x_of(s)`` / ``y_of(s)``.
 
     The induced metric is exactly 2 whatever unit each output is written in.
     """
 
     def embed(p, *, usys=None):
         del usys
-        return {keys[0]: p["x"], keys[1]: y_of(p["x"])}
+        return {keys[0]: x_of(p["x"]), keys[1]: y_of(p["x"])}
 
     def project(p, *, usys=None):
         del usys
@@ -418,6 +420,40 @@ class TestMixedUnitCartesianOutputs:
         )
         with pytest.raises(ValueError, match="one dimension"):
             cxmapi.metric_matrix(M, {"x": u.Q(3.0, "m")}, cxc.cart1d)
+
+    def test_result_is_in_the_first_components_unit(self):
+        M = _diagonal_line(lambda s: s, x_of=lambda s: u.uconvert("km", s))
+        g = cxmapi.metric_matrix(M, {"x": u.Q(3.0, "m")}, cxc.cart1d)
+        assert g.matrix.unit[0, 0] == u.unit("km2 / m2")
+        assert jnp.allclose(g.matrix.value, jnp.array([[2e-6]]))
+
+    def test_rescaling_survives_jit_and_batching(self):
+        M = _diagonal_line(lambda s: u.uconvert("km", s))
+        f = jax.jit(lambda x: cxmapi.metric_matrix(M, {"x": x}, cxc.cart1d).matrix)
+        g = f(u.Q(jnp.array([1.0, 2.0, 3.0]), "m"))
+        assert jnp.allclose(g.value, jnp.full((3, 1, 1), 2.0))
+
+    def test_lorentzian_ct_in_km(self):
+        M = _worldline(lambda s: u.uconvert("km", s), lambda s: s * 0)
+        g = cxmapi.metric_matrix(M, {"x": u.Q(1.0, "m")}, cxc.cart1d)
+        scale = g.matrix.unit[0, 0].to("")
+        assert jnp.allclose(g.matrix.value * scale, jnp.array([[-1.0]]))
+
+    @pytest.mark.parametrize(
+        ("x_of", "y_of"),
+        [(lambda s: s, lambda s: 0.0), (lambda s: 0.0, lambda s: s)],
+        ids=["bare-second", "bare-first"],
+    )
+    def test_quantity_mixed_with_bare_is_refused(self, x_of, y_of):
+        """No unit is guessed for a bare output sitting next to a Quantity."""
+        M = _diagonal_line(y_of, x_of=x_of)
+        with pytest.raises(TypeError, match="mixes Quantity and bare"):
+            cxmapi.metric_matrix(M, {"x": u.Q(3.0, "m")}, cxc.cart1d)
+
+    def test_all_bare_is_accepted(self):
+        M = _diagonal_line(lambda s: s)
+        g = cxmapi.metric_matrix(M, {"x": jnp.asarray(3.0)}, cxc.cart1d)
+        assert jnp.allclose(g.matrix.value, jnp.array([[2.0]]))
 
 
 _BATCH_CASES = [

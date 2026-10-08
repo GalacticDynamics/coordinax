@@ -3927,8 +3927,12 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     Both types propagate units through `QuantityMatrix` fields.  For metrics
     induced by Jacobian pullback, units are `cart_unit² / (intrinsic_unit_i × intrinsic_unit_j)`,
-    where every Cartesian ambient component is first converted to one unit `cart_unit`.
-    An embedding whose Cartesian components differ in dimension is refused.
+    where every Cartesian ambient component is first converted to one unit `cart_unit`
+    (the first component's).  An embedding's Cartesian components must be all
+    Quantity or all bare: components of differing dimension raise `ValueError`,
+    and Quantity components mixed with bare ones raise `TypeError` (no unit is
+    guessed for a bare value).  All-bare components carry no unit, so the result's
+    unit comes from the chart's coordinates alone.
 
     **Basis change integration:**
 
