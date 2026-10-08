@@ -16,13 +16,16 @@ import hypothesis.strategies as st
 import jax
 import jax.numpy as jnp
 import pytest
+from astropy.units import UnitConversionError
 from hypothesis import given, settings
 
 import unxt as u
+import unxts.linalg as ul
 
 import coordinax.charts as cxc
 import coordinax.manifolds as cxm
 import coordinaxs.api.manifolds as cxmapi
+from coordinax._src.embedded.register_metric import _gram_values
 from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
 
 # ---------------------------------------------------------------------------
@@ -342,6 +345,31 @@ class TestLorentzianAmbient:
 
     def test_riemannian_ambient_signature_unaffected(self, unit_sphere_embedded):
         assert unit_sphere_embedded.metric.signature == (1, 1)
+
+
+class TestAmbientGramValues:
+    """The ambient metric is stripped only if it really is dimensionless.
+
+    The pullback's result unit assumes G is a pure number, so a unitful G must
+    raise rather than have its unit dropped.
+    """
+
+    @pytest.mark.parametrize(
+        "matrix",
+        [jnp.eye(3), ul.QuantityMatrix(jnp.eye(3), ul.UnitsMatrix.full((3, 3), ""))],
+        ids=["bare", "dimensionless"],
+    )
+    def test_dimensionless_passes_through(self, matrix):
+        out = _gram_values(DenseMetric(matrix))
+        assert not isinstance(out, ul.QuantityMatrix)
+        assert jnp.array_equal(out, jnp.eye(3))
+
+    def test_unitful_raises(self):
+        g = DenseMetric(
+            ul.QuantityMatrix(jnp.eye(3), ul.UnitsMatrix.full((3, 3), "m2"))
+        )
+        with pytest.raises(UnitConversionError, match="not convertible"):
+            _gram_values(g)
 
 
 _BATCH_CASES = [
