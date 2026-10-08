@@ -20,6 +20,8 @@ because the induced metric is not guaranteed to be diagonal.
 
 __all__: tuple[str, ...] = ()
 
+from typing import cast
+
 import jax
 import jax.numpy as jnp
 import plum
@@ -47,7 +49,8 @@ def _gram_values(g: AbstractMetricMatrix) -> jnp.ndarray:
     result unit assumes. ``AllowValue`` passes a bare matrix through and strips
     a dimensionless one; a unitful one raises rather than losing its unit.
     """
-    return u.ustrip(AllowValue, "", g.to_dense().matrix)  # ty: ignore[invalid-return-type]
+    # `cast`: `ustrip` is typed to return `object`.
+    return cast("jnp.ndarray", u.ustrip(AllowValue, "", g.to_dense().matrix))
 
 
 # =====================================================================
