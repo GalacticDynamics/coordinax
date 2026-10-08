@@ -10,7 +10,7 @@ evaluated at the embedded point.  $G$ is the identity only when the ambient is
 Euclidean; for a Lorentzian ambient it is $\eta$, and dropping it would report
 a timelike direction as spacelike.  Every Cartesian ambient output is converted
 to a single unit ``cart_unit`` (column *i* of $J$ then has unit
-``cart_unit / chart_unit_i``), which makes each summation term
+``cart_unit / point_unit_i``), which makes each summation term
 unit-compatible; $G$ in that chart is dimensionless.  The embed map's output
 decides the units, so outputs of differing dimension are refused.  Separately,
 a Quantity output next to a bare one is refused, since the bare one has no unit
@@ -48,7 +48,7 @@ def _gram_values(g: AbstractMetricMatrix) -> jnp.ndarray:
 
     Cartesian ambient coordinates share a single unit, so the ambient metric in
     that chart is dimensionless and its bare values carry the whole content —
-    which is what the caller's ``cart_unit^2 / (chart_unit_i * chart_unit_j)``
+    which is what the caller's ``cart_unit^2 / (point_unit_i * point_unit_j)``
     result unit assumes. ``AllowValue`` passes a bare matrix through and strips
     a dimensionless one; a unitful one raises rather than losing its unit.
     """
@@ -105,8 +105,9 @@ def metric_matrix(
 
     Every Cartesian ambient output is converted to one unit ``cart_unit`` (the
     first component's), so column *i* of $J$ has unit ``cart_unit /
-    chart_unit_i`` and $G$ is dimensionless; each ``g_{ij}`` term then has a
-    consistent unit ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.  Outputs
+    point_unit_i`` and $G$ is dimensionless; each ``g_{ij}`` term then has a
+    consistent unit ``cart_unit^2 / (point_unit_i * point_unit_j)``, where
+    ``point_unit_i`` is the unit of the point's *i*-th coordinate.  Outputs
     of differing dimension (e.g. a length and a time) have no consistent sum
     and raise `ValueError`.  Separately, the outputs must be all Quantity or
     all bare: a Quantity next to a bare one raises `TypeError`, since the bare
@@ -132,7 +133,7 @@ def metric_matrix(
     DenseMetric
         Induced metric matrix at ``point``, backed by a
         :class:`~unxts.linalg.QuantityMatrix` with units
-        ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.
+        ``cart_unit^2 / (point_unit_i * point_unit_j)``.
 
     Examples
     --------
@@ -180,7 +181,7 @@ def metric_matrix(
     """
     chart_keys = chart.components
     # Use Cartesian ambient so all outputs share cart_unit; column i of J then
-    # has unit cart_unit / chart_unit_i, making each g_ij term unit-consistent.
+    # has unit cart_unit / point_unit_i, making each g_ij term unit-consistent.
     cart_chart = M.embed_map.ambient.cartesian
     cart_keys = cart_chart.components
 
