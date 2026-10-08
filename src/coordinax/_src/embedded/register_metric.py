@@ -12,8 +12,9 @@ a timelike direction as spacelike.  Every Cartesian ambient output is converted
 to a single unit ``cart_unit`` (column *i* of $J$ then has unit
 ``cart_unit / chart_unit_i``), which makes each summation term
 unit-compatible; $G$ in that chart is dimensionless.  The embed map's output
-decides the units, so outputs of differing dimension are refused, as are
-Quantity outputs mixed with bare ones.
+decides the units, so outputs of differing dimension are refused.  Separately,
+a Quantity output next to a bare one is refused, since the bare one has no unit
+to convert from.
 
 All results are wrapped in a :class:`~coordinax._src.metric.matrix.DenseMetric`
 because the induced metric is not guaranteed to be diagonal.
@@ -107,10 +108,12 @@ def metric_matrix(
     chart_unit_i`` and $G$ is dimensionless; each ``g_{ij}`` term then has a
     consistent unit ``cart_unit^2 / (chart_unit_i * chart_unit_j)``.  Outputs
     of differing dimension (e.g. a length and a time) have no consistent sum
-    and raise `ValueError`.  The outputs must be all Quantity or all bare:
-    mixing them raises `TypeError`, since a bare value has no unit to convert
-    from and none is guessed.  All-bare outputs carry no unit, so the result's
-    unit comes from the chart's coordinates alone.
+    and raise `ValueError`.  Separately, the outputs must be all Quantity or
+    all bare: a Quantity next to a bare one raises `TypeError`, since the bare
+    one has no unit to convert from.  All-bare outputs are taken as pure
+    numbers, as from ``TwoSphereIn3D(radius=1.0)``; the result's unit then
+    comes from the point's coordinates alone.  Bare point coordinates are passed
+    to the embed map bare.
 
     Parameters
     ----------
@@ -182,8 +185,11 @@ def metric_matrix(
     cart_keys = cart_chart.components
 
     _qm: ul.QM = cxcapi.carray(point, chart_keys)  # ty: ignore[invalid-assignment]
-    xat, ufrom = _qm.value, _qm.unit.to_tuple()
-    ufrom_ = tuple(uf if uf is not None else DMLS for uf in ufrom)
+    # `carray` gives a bare component the dimensionless unit, so `ufrom_` has no
+    # `None`s. Keep which components were bare: they go back to the embed map
+    # bare, as the caller passed them, not as dimensionless Quantities.
+    xat, ufrom_ = _qm.value, _qm.unit.to_tuple()
+    point_qty = [isinstance(point[k], u.AbstractQuantity) for k in chart_keys]
 
     # `pt_embed` is the composition chart → intrinsic → ambient → Cartesian; it
     # also checks `chart` against the manifold's atlas.
@@ -221,7 +227,10 @@ def metric_matrix(
         raise ValueError(msg)
 
     def _embed_cart(x_arr: jnp.ndarray) -> jnp.ndarray:
-        q = {k: u.Q(x_arr[i], ufrom_[i]) for i, k in enumerate(chart_keys)}
+        q = {
+            k: u.Q(x_arr[i], ufrom_[i]) if point_qty[i] else x_arr[i]
+            for i, k in enumerate(chart_keys)
+        }
         # `M.embed_map`, not `M`: the atlas check already ran above, and this
         # runs under jacfwd/vmap.
         q_cart = pt_embed(q, chart, cart_chart, M.embed_map)

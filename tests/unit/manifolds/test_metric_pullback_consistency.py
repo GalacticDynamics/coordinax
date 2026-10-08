@@ -434,10 +434,41 @@ class TestMixedUnitCartesianOutputs:
         assert jnp.allclose(g.value, jnp.full((3, 1, 1), 2.0))
 
     def test_lorentzian_ct_in_km(self):
-        M = _worldline(lambda s: u.uconvert("km", s), lambda s: s * 0)
+        """A boost with ct = 2s in km and x = s in m: g = -(2)^2 + 1 = -3.
+
+        x must be nonzero, or a mis-scaled ct row would go unnoticed.
+        """
+        M = _worldline(lambda s: u.uconvert("km", 2 * s), lambda s: s)
         g = cxmapi.metric_matrix(M, {"x": u.Q(1.0, "m")}, cxc.cart1d)
         scale = g.matrix.unit[0, 0].to("")
-        assert jnp.allclose(g.matrix.value * scale, jnp.array([[-1.0]]))
+        assert jnp.allclose(g.matrix.value * scale, jnp.array([[-3.0]]))
+
+    def test_product_ambient_same_dimension_is_rescaled(self):
+        """#1018's third case: all lengths, but one factor's output in km."""
+        P = cxm.CartesianProductManifold(
+            factors=(cxm.R1, cxm.R1), factor_names=("a", "b")
+        )
+        pchart = cxc.CartesianProductChart((cxc.cart1d, cxc.cart1d), ("a", "b"))
+        M = _diagonal_line(
+            lambda s: u.uconvert("km", s), ambient=P, chart=pchart, keys=("a.x", "b.x")
+        )
+        g = cxmapi.metric_matrix(M, {"x": u.Q(3.0, "m")}, cxc.cart1d)
+        assert jnp.allclose(g.matrix.value, jnp.array([[2.0]]))
+
+    def test_bare_point_reaches_the_embed_map_bare(self):
+        """A bare point is not turned into a dimensionless Quantity on the way in.
+
+        This embed map reads a bare input as metres; a dimensionless Quantity
+        would make it fail to convert.
+        """
+
+        def in_m(s):
+            return s if isinstance(s, u.AbstractQuantity) else u.Q(s, "m")
+
+        M = _diagonal_line(in_m, x_of=in_m)
+        g = cxmapi.metric_matrix(M, {"x": jnp.asarray(3.0)}, cxc.cart1d)
+        assert jnp.allclose(g.matrix.value, jnp.array([[2.0]]))
+        assert g.matrix.unit[0, 0] == u.unit("m2")
 
     @pytest.mark.parametrize(
         ("x_of", "y_of"),
