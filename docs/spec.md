@@ -3926,7 +3926,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Unit tracking:**
 
     Both types propagate units through `QuantityMatrix` fields.  For metrics
-    induced by Jacobian pullback, units are `cart_unit² / (intrinsic_unit_i × intrinsic_unit_j)`.
+    induced by Jacobian pullback, units are `cart_unit² / (intrinsic_unit_i × intrinsic_unit_j)`,
+    where every Cartesian ambient component is first converted to one unit `cart_unit`.
+    An embedding whose Cartesian components differ in dimension is refused.
 
     **Basis change integration:**
 

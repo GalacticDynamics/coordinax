@@ -372,6 +372,54 @@ class TestAmbientGramValues:
             _gram_values(g)
 
 
+def _diagonal_line(y_of, ambient=cxm.R2, chart=cxc.cart2d, keys=("x", "y")):
+    """The line s -> (s, s), with the second output in ``y_of(s)``'s unit.
+
+    The induced metric is exactly 2 whatever unit each output is written in.
+    """
+
+    def embed(p, *, usys=None):
+        del usys
+        return {keys[0]: p["x"], keys[1]: y_of(p["x"])}
+
+    def project(p, *, usys=None):
+        del usys
+        return {"x": p[keys[0]]}
+
+    return cxm.EmbeddedManifold(
+        intrinsic=cxm.Rn(1),
+        ambient=ambient,
+        embed_map=cxm.CustomEmbeddingMap(
+            intrinsic=cxc.cart1d, ambient=chart, embed_fn=embed, project_fn=project
+        ),
+    )
+
+
+class TestMixedUnitCartesianOutputs:
+    """The embed map, not the chart, decides the Cartesian output units (#1018)."""
+
+    @pytest.mark.parametrize("y_unit", ["m", "km", "cm"], ids=lambda s: f"y-in-{s}")
+    def test_same_dimension_is_rescaled(self, y_unit):
+        M = _diagonal_line(lambda s: u.uconvert(y_unit, s))
+        g = cxmapi.metric_matrix(M, {"x": u.Q(3.0, "m")}, cxc.cart1d)
+        assert jnp.allclose(g.matrix.value, jnp.array([[2.0]]))
+        assert g.matrix.unit[0, 0] == u.unit("")
+
+    def test_mixed_dimension_is_refused(self):
+        P = cxm.CartesianProductManifold(
+            factors=(cxm.R1, cxm.R1), factor_names=("a", "t")
+        )
+        pchart = cxc.CartesianProductChart((cxc.cart1d, cxc.Time1D()), ("a", "t"))
+        M = _diagonal_line(
+            lambda s: u.Q(u.ustrip("m", s), "s"),
+            ambient=P,
+            chart=pchart,
+            keys=("a.x", "t.t"),
+        )
+        with pytest.raises(ValueError, match="one dimension"):
+            cxmapi.metric_matrix(M, {"x": u.Q(3.0, "m")}, cxc.cart1d)
+
+
 _BATCH_CASES = [
     (cxc.lonlat_sph2, ("lon", "lat")),
     (cxc.math_sph2, ("theta", "phi")),
