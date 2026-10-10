@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 
 from collections.abc import Callable
+from types import UnionType
 from typing import TypeVar, Union
 
 import equinox as eqx
@@ -32,6 +33,21 @@ from coordinax._src.vectors.utils import full_shaped
 T = TypeVar("T")
 
 
+class _UnionTypesMeta(type):
+    def __instancecheck__(cls, obj: object, /) -> bool:
+        return isinstance(obj, (UnionType, type(Union[int, str])))  # noqa: UP007
+
+
+class _UnionTypes(metaclass=_UnionTypesMeta):
+    """Matches a union, either ``int | str`` or ``Union[int, str]``.
+
+    The two have different runtime classes before Python 3.14. Neither bare
+    ``typing.Union`` (an unsubscripted special form, which beartype>=0.23 reads
+    as an empty union) nor the class ``types.UnionType`` (which beartype reads
+    as a malformed union) works as a dispatch hint, so check at runtime.
+    """
+
+
 def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
     """Typed version of conversion method."""
     return _conversion_method(type_from, type_to)  # type: ignore[return-value]
@@ -50,7 +66,7 @@ def dimension_of(obj: _MetaAbstractArray, /) -> u.dims.AbstractDimension:
 # Precedence of -1 because astropy Unit aliases are unions over astropy Unit
 # base classes.
 @dispatch(precedence=-1)
-def dimension_of(obj: Union, /) -> u.dims.AbstractDimension:
+def dimension_of(obj: _UnionTypes, /) -> u.dims.AbstractDimension:
     # Call dimension_of on all the __args__ of the Union and make sure they are
     # all the same
     dims = {dimension_of(arg) for arg in obj.__args__}
