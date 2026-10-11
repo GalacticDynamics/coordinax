@@ -18,7 +18,7 @@ import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinaxs.hypothesis.vectors as cxvst
-from .conftest import wrong_dimension
+from .conftest import jit_constructible, wrong_dimension
 from coordinaxs.api.custom_types import CDict
 
 # ======================================================================
@@ -836,6 +836,9 @@ class TestUconvert:
             assert jnp.allclose(
                 u.ustrip("km/s", back.data[k]), u.ustrip("km/s", v.data[k])
             )
+
+
+# ======================================================================
 # `from_` checks coordinate-basis dimensions against the chart (gh#1026)
 
 
@@ -860,7 +863,7 @@ def test_from_checks_component_dimensions(point, semantic, use_jit):
     def build(data):
         return cx.Tangent.from_(data, chart, cxr.coord_basis, semantic).data
 
-    if use_jit:
+    if use_jit and jit_constructible(chart):
         build = jax.jit(build)
 
     assert set(build(data)) == set(chart.components)

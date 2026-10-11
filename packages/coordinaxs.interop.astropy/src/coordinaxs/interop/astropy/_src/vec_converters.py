@@ -558,7 +558,7 @@ def apysphdiff_to_tangent(obj: apyc.SphericalDifferential, /) -> cxv.Tangent:
         "lat": plum.convert(obj.d_lat, u.Q),  # ty: ignore[unresolved-attribute]
         "distance": plum.convert(obj.d_distance, u.Q),  # ty: ignore[unresolved-attribute]
     }
-    return cxv.Tangent(data, cxc.lonlat_sph3d, basis=cxr.coord_basis, semantic=cxr.vel)
+    return cxv.Tangent.from_(data, cxc.lonlat_sph3d, cxr.coord_basis, cxr.vel)  # ty: ignore[invalid-return-type]
 
 
 # =====================================
@@ -664,4 +664,4 @@ def apycartdiff_to_tangent(obj: apyc.CartesianDifferential, /) -> cxv.Tangent:
         "y": plum.convert(obj.d_y, u.Q),  # ty: ignore[unresolved-attribute]
         "z": plum.convert(obj.d_z, u.Q),  # ty: ignore[unresolved-attribute]
     }
-    return cxv.Tangent(data, cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel)
+    return cxv.Tangent.from_(data, cxc.cart3d, cxr.coord_basis, cxr.vel)  # ty: ignore[invalid-return-type]
