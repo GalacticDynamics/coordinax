@@ -141,7 +141,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         return GalileanTranslation(-self.delta_t, delta_q)
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
+@AbstractOperator.from_.dispatch
 def from_(
     cls: type[GalileanTranslation], delta: u.AbstractQuantity, /
 ) -> GalileanTranslation:
@@ -166,7 +166,7 @@ def from_(
 # -------------------------------------------
 
 
-@AbstractOperator.__call__.dispatch  # type: ignore[union-attr, untyped-decorator]
+@AbstractOperator.__call__.dispatch
 def call(
     self: GalileanTranslation, t: u.Quantity["time"], x: AbstractPos3D, /, **__: Any
 ) -> tuple[u.Quantity["time"], AbstractPos3D]:

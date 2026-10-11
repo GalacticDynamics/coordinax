@@ -80,6 +80,12 @@ repos:
       - id: mypy
         files: src
         additional_dependencies:
+          # Releases that need Python 3.12 ship stubs `python_version = "3.11"` can't parse.
+          - jax<0.11
+          - jaxlib<0.11
+          - numpy<2.5
+          - optype<0.18
+          - scipy<1.18
           - optional_dependencies
           - plum-dispatch
           - quaxed

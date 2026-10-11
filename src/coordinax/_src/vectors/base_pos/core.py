@@ -102,10 +102,10 @@ class AbstractPos(
         # TODO: figure out how to do this without converting back to arrays.
         cart_cls = self.cartesian_type
         cartvec = self.vconvert(cart_cls)
-        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)  # type: ignore[union-attr]
+        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)
         newq = _vec_matmul(other, q)
         newvec = cart_cls.from_(newq)
-        return newvec.vconvert(type(self))  # type: ignore[union-attr]
+        return newvec.vconvert(type(self))  # type: ignore[attr-defined]
 
     def __abs__(self) -> u.AbstractQuantity:
         """Return the norm of the vector.
