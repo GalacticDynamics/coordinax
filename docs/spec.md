@@ -2403,6 +2403,8 @@ Separating semantics from geometry provides two advantages:
     - ``reshape(*shape)``: return a reshaped vector
     - ``round(decimals)``: return a rounded vector.
     - ``to_device(device)``: move the vector to a new device
+    - ``ndim``: number of batch dimensions, always ``len(shape)``. Unlike ``aval().ndim``, it excludes the trailing component axis.
+    - ``size``: number of batch elements, always ``prod(shape)``. Unlike ``aval().size``, it excludes the trailing component axis.
     - ``__repr__()``: string representation through `wadler_lindig`.
     - ``__str__()``: string representation through `wadler_lindig`.
     - ``is_like()``: check if the object is a `AbstractVector` object.
