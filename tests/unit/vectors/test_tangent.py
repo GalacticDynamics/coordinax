@@ -7,6 +7,7 @@ from dataclasses import replace
 import jax
 import jax.numpy as jnp
 import pytest
+from hypothesis import given, strategies as st
 
 import unxt as u
 
@@ -756,3 +757,70 @@ class TestChangeBasisPointToDisplacement:
         disp = promote(pt)
         assert isinstance(disp, cx.Tangent)
         assert isinstance(disp.semantic, cxr.Displacement)
+
+
+# ======================================================================
+# uconvert (#1029)
+
+
+class TestUconvert:
+    """`unxt.uconvert` on a `Tangent`, per component."""
+
+    def test_component_mapping(self):
+        """A component-keyed mapping converts those components."""
+        v = _make_vel(1.0, 2.0, 3.0, unit="km/s")
+        out = u.uconvert({"x": "m/s", "y": "m/s", "z": "m/s"}, v)
+        assert isinstance(out, cx.Tangent)
+        assert out.rep == v.rep
+        for k, want in zip("xyz", (1e3, 2e3, 3e3), strict=True):
+            assert u.unit_of(out.data[k]) == u.unit("m/s")
+            assert jnp.allclose(u.ustrip("m/s", out.data[k]), want)
+
+    def test_method_form(self):
+        """`Tangent.uconvert` reverses the arguments and redispatches."""
+        v = _make_vel(1.0, 2.0, 3.0, unit="km/s")
+        out = v.uconvert({u.dimension("speed"): "m/s"})
+        assert jnp.allclose(u.ustrip("m/s", out.data["x"]), 1e3)
+
+    def test_unit_system_uses_component_dimension(self):
+        """Each component's target unit comes from its own dimension."""
+        v = _make_vel(1.0, 2.0, 3.0, unit="km/s")
+        out = u.uconvert("galactic", v)
+        assert u.unit_of(out.data["x"]) == u.unit("kpc/Myr")
+
+    def test_unit_system_angular_components(self):
+        """An angular rate converts to angle/time, not to the chart's angle."""
+        v = cx.Tangent.from_(
+            {
+                "r": u.Q(1.0, "km/s"),
+                "theta": u.Q(1.0, "deg/s"),
+                "phi": u.Q(2.0, "deg/s"),
+            },
+            cxc.sph3d,
+            cxr.coord_vel,
+        )
+        out = v.uconvert(u.unitsystem("m", "s", "kg", "rad"))
+        assert u.unit_of(out.data["r"]) == u.unit("m/s")
+        assert u.unit_of(out.data["theta"]) == u.unit("rad/s")
+        assert jnp.allclose(u.ustrip("rad/s", out.data["phi"]), jnp.deg2rad(2.0))
+
+    def test_consistent(self):
+        """`consistent` unifies components that share a dimension."""
+        v = _make_vel(1.0, 2.0, 3.0, unit="km/s")
+        v = replace(v, data={**v.data, "y": u.Q(2.0, "m/s")})
+        out = v.uconvert(cx.ToUnitsOptions.consistent)
+        assert u.unit_of(out.data["y"]) == u.unit("km/s")
+        assert jnp.allclose(u.ustrip("km/s", out.data["y"]), 2e-3)
+
+    @given(
+        xyz=st.lists(st.floats(-1e6, 1e6, allow_nan=False), min_size=3, max_size=3),
+        usys=st.sampled_from(["galactic", "solarsystem", "si"]),
+    )
+    def test_roundtrip(self, xyz, usys):
+        """Converting to a unit system and back is the identity."""
+        v = _make_vel(*xyz, unit="km/s")
+        back = u.uconvert({u.dimension("speed"): "km/s"}, u.uconvert(usys, v))
+        for k in "xyz":
+            assert jnp.allclose(
+                u.ustrip("km/s", back.data[k]), u.ustrip("km/s", v.data[k])
+            )
