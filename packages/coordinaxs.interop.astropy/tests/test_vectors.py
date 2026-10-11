@@ -420,3 +420,32 @@ class TestVelocityOnAstropyFramesAndSkyCoords:
         )
         with pytest.raises(ValueError, match="rate convention"):
             cx.Tangent.from_(sc)
+
+
+# ---------------------------------------------------------------------------
+# A bare astropy Quantity keeps its unit (#1024)
+
+
+@pytest.mark.parametrize(
+    "args", [(), (cx.cart3d,), (cx.point,)], ids=["no-chart", "chart", "rep"]
+)
+def test_point_from_astropy_quantity_keeps_its_unit(args) -> None:
+    """An astropy `Quantity` is an ndarray; it must not be read as a bare array."""
+    got = cx.Point.from_(apyu.Quantity([[1, 2, 3], [4, 5, 6]], "kpc"), *args)
+    want = cx.Point.from_(u.Q([[1, 2, 3], [4, 5, 6]], "kpc"), *args)
+    assert got.chart == want.chart
+    assert got.data.keys() == want.data.keys()
+    for k in want.data:
+        assert u.unit_of(got[k]) == u.unit("kpc")
+        assert np.array_equal(got[k].ustrip("kpc"), want[k].ustrip("kpc"))
+
+
+def test_tangent_from_astropy_quantity_keeps_its_unit() -> None:
+    v = cx.Tangent.from_(apyu.Quantity([1, 2, 3], "km/s"), cx.cart3d)
+    assert u.unit_of(v["x"]) == u.unit("km/s")
+
+
+def test_astropy_quantity_across_a_mixed_dimension_chart_is_refused() -> None:
+    """The unxt route's homogeneous-dimension check applies to astropy too."""
+    with pytest.raises(ValueError, match="different dimensions"):
+        cx.Point.from_(apyu.Quantity([1, 2, 3], "kpc"), cxc.sph3d)
