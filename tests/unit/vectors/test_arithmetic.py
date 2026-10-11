@@ -418,7 +418,9 @@ _SCALE_OPS = (
     lambda k, x: x / k,
     lambda k, x: k / x,
     lambda k, x: jnp.multiply(k, x),
+    lambda k, x: jnp.multiply(x, k),
     lambda k, x: jnp.divide(x, k),
+    lambda k, x: jnp.divide(k, x),
 )
 
 
@@ -439,7 +441,7 @@ def test_scaling_a_point_raises_under_jit() -> None:
 def test_scaling_a_coordinate_raises() -> None:
     """Scaling a Coordinate would scale its base point, so it is refused too."""
     c = cx.Coordinate(point=_cart_vec(1.0, 2.0, 3.0), velocity=_cart_tangent(1, 2, 3))
-    for op in _SCALE_OPS[:4]:
+    for op in _SCALE_OPS:
         with pytest.raises(TypeError, match="Coordinate by a scalar"):
             op(2.0, c)
 
