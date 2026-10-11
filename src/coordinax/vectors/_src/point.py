@@ -49,11 +49,13 @@ def refuse_point_scaling(kind: str, /) -> NoReturn:
         raise TypeError(msg)
     msg = (
         f"cannot multiply or divide a {kind} by a scalar: a point is affine, and "
-        "scaling it has no meaning without an origin. Work in Cartesian "
-        "components, `q = p.cconvert(cxc.cart3d)`, then either promote to a "
+        "scaling it has no meaning without an origin. With `import coordinax "
+        "as cx`, work in Cartesian components, "
+        "`q = p.cconvert(cx.charts.cart3d)`, then either promote to a "
         "displacement and scale that, "
-        "`k * cxr.change_basis(q, cxr.coord_basis, at=q)`, or scale the "
-        "position about the origin explicitly, "
+        "`k * cx.representations.change_basis(q, "
+        "cx.representations.coord_basis, at=q)`, or scale the position about "
+        "the origin explicitly, "
         "`cx.Point.from_({n: k * x for n, x in q.data.items()}, q.chart)`."
     )
     raise TypeError(msg)
