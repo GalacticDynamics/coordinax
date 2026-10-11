@@ -276,12 +276,13 @@ class AbstractVector(
 
         Examples
         --------
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.Point.from_([1, 2, 3], "km")
-        >>> print(vec.uconvert({"length": "km"}))
+        >>> vec = cx.Point.from_([1, 2, 3], "m")
+        >>> print(vec.uconvert({u.dimension("length"): "km"}))
         <Point: chart=Cart3D (x, y, z) [km]
-            [1 2 3]>
+            [0.001 0.002 0.003]>
 
         """
         return cast("AbstractVector", u.uconvert(*args, self, **kwargs))
