@@ -2510,10 +2510,11 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     - ``(obj, frame) -> Point``
     - ``(Array, unit, frame) -> Point``
 
-    **Dimension check.** Every ``from_`` route ends in ``(dict,C,R)``, which
-    raises ``ValueError`` naming the component, its dimension and the expected
+    **Dimension check.** Every ``from_`` route that builds a point from data
+    ends in ``(dict,C,R)``, which raises ``ValueError`` naming the component, its dimension and the expected
     one if a component's physical dimension is not the one
-    ``chart.coord_dimensions`` declares. It reads units only, never values, so it
+    ``chart.coord_dimensions`` declares. ``from_(Point)`` is an identity fast
+    path that returns its argument unchanged, without re-checking. The check reads units only, never values, so it
     holds under `jax.jit`. A bare-array component has no unit and is not checked;
     a ``None`` coordinate dimension is unconstrained. The raw ``Point(...)``
     constructor and ``dataclasses.replace`` do not run this check, and
@@ -2606,7 +2607,7 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     | `(Array, unit, chart)` | converts to `Quantity`, then `(Quantity, chart)` |
     | `(Array, unit, chart, basis, semantic)` | converts to `Quantity`, then full dispatch |
 
-    **Dimension check.** Every route ends in `(obj, chart, basis, semantic)`. In the `CoordinateBasis` it raises `ValueError`, naming the component, its dimension and the expected one, if a component's dimension is not `semantic.coord_dimensions(chart)`: the chart's coordinate dimension per time to the semantic kind's ladder order, so a `vel` in `sph3d` is `(length, angle, angle) / time`. As for `Point`, only units are read (it holds under `jax.jit`), bare-array components and `None` dimensions are not checked, and the raw constructor does not check. `PhysicalBasis` components are not checked: their dimensions carry the metric's scale factors, which the chart does not declare.
+    **Dimension check.** Every route that builds a tangent from data ends in `(obj, chart, basis, semantic)` (`from_(Tangent)` is an identity fast path that returns its argument unchanged, without re-checking). In the `CoordinateBasis` it raises `ValueError`, naming the component, its dimension and the expected one, if a component's dimension is not `semantic.coord_dimensions(chart)`: the chart's coordinate dimension per time to the semantic kind's ladder order, so a `vel` in `sph3d` is `(length, angle, angle) / time`. As for `Point`, only units are read (it holds under `jax.jit`), bare-array components and `None` dimensions are not checked, and the raw constructor does not check. `PhysicalBasis` components are not checked: their dimensions carry the metric's scale factors, which the chart does not declare.
 
     **`cconvert` dispatches** (registered in `coordinax.vectors`):
 
