@@ -1276,3 +1276,48 @@ def test_a_bundle_may_have_one_affine_leg_and_one_not() -> None:
             u.ustrip(unit, out["curved"].data[k]),
             u.ustrip(unit, ref["acceleration"].data[k]),
         )
+
+
+# ======================================================================
+# uconvert (#1029)
+
+
+class TestUconvert:
+    """`unxt.uconvert` on a `Coordinate` maps over the point and its fibres."""
+
+    @staticmethod
+    def _make() -> Coordinate:
+        return Coordinate(
+            point=cx.Point.from_([1.0, 2.0, 3.0], "kpc"),
+            velocity=Tangent.from_(u.Q([4.0, 5.0, 6.0], "km/s"), cxc.cart3d),
+        )
+
+    def test_unit_system(self):
+        """A unit system converts every member by its own dimension."""
+        out = u.uconvert("galactic", self._make())
+        assert isinstance(out, Coordinate)
+        assert u.unit_of(out.point.data["x"]) == u.unit("kpc")
+        assert u.unit_of(out["velocity"].data["x"]) == u.unit("kpc/Myr")
+
+    def test_dimension_mapping(self):
+        """Each member takes the entries for its own dimensions."""
+        pv = self._make()
+        out = pv.uconvert({u.dimension("length"): "pc", u.dimension("speed"): "m/s"})
+        assert jnp.allclose(u.ustrip("pc", out.point.data["x"]), 1e3)
+        assert jnp.allclose(u.ustrip("m/s", out["velocity"].data["z"]), 6e3)
+        # only the units changed
+        assert out.point.chart == pv.point.chart
+        assert out["velocity"].rep == pv["velocity"].rep
+
+    def test_component_mapping_matches_dimension(self):
+        """A component entry applies only to members whose dimension matches."""
+        out = self._make().uconvert({"x": "pc", "y": "m/s"})
+        assert u.unit_of(out.point.data["x"]) == u.unit("pc")
+        assert u.unit_of(out.point.data["y"]) == u.unit("kpc")
+        assert u.unit_of(out["velocity"].data["x"]) == u.unit("km/s")
+        assert u.unit_of(out["velocity"].data["y"]) == u.unit("m/s")
+
+    def test_consistent(self):
+        """`consistent` is applied to each member independently."""
+        out = self._make().uconvert(cx.ToUnitsOptions.consistent)
+        assert u.unit_of(out["velocity"].data["z"]) == u.unit("km/s")

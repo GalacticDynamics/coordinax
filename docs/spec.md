@@ -2680,6 +2680,10 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     Transforms the entire bundle (base point and all fibre fields) to `to_frame`.
 
+    **`uconvert(units) -> Coordinate`:**
+
+    Converts the base point and every fibre with the same `units` (see [`unxt.uconvert`](#software-spec-uconvert)). A unit system, a dimension-keyed mapping, or `ToUnitsOptions.consistent` is applied to each member by its own component dimensions. In a component-keyed mapping an entry applies to a member only where the unit's dimension matches that component's (the point's `x` is a length, a velocity's `x` a speed); elsewhere the component keeps its unit.
+
     **`from_` Constructor Dispatches:**
 
     | Signature | Behaviour |
@@ -2722,6 +2726,21 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     >>> pv_sph["velocity"].chart
     Spherical3D(M=Rn(3))
     ```
+
+(software-spec-uconvert)=
+
+!!! info `unxt.uconvert` on vectors
+
+    `Point` and `Tangent` convert **per component**; each component's target unit comes from that component's own dimension, never from the chart's `coord_dimensions` (a velocity's `x` is length/time, a spherical velocity's `theta` is angle/time). `Coordinate` applies the same `units` to its point and to each fibre.
+
+    | `units` | Behaviour |
+    |---------|-----------|
+    | `u.AbstractUnitSystem` or `str` (named system) | each component to `usys[dimension_of(component)]` |
+    | `Mapping[AbstractDimension, unit]` | components of a listed dimension convert; others keep their unit |
+    | `Mapping[str, unit]` | listed components convert; others keep their unit |
+    | `ToUnitsOptions.consistent` | components sharing a dimension take the unit of the first one |
+
+    The method form `vec.uconvert(units)` redispatches to `uconvert(units, vec)`.
 
 !!! info `ToUnitsOptions`
 
