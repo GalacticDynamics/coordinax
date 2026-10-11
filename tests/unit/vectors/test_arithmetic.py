@@ -3,7 +3,10 @@
 __all__: tuple[str, ...] = ()
 
 import jax
+import numpy as np
+import plum
 import pytest
+from hypothesis import assume, given, strategies as st
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
@@ -12,6 +15,9 @@ import unxt as u
 import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinaxs.hypothesis.charts as cxcst
+import coordinaxs.hypothesis.representations as cxrst
+import coordinaxs.hypothesis.vectors as cxvst
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -399,6 +405,83 @@ class TestTangentScalarDiv:
         f = jax.jit(lambda v, s: v / s)
         result = f(_cart_tangent(2, 4, 6), 2)
         assert result["x"] == u.Q(1, "m/s")
+
+
+# ===================================================================
+# Point / Coordinate scaling → error (gh#1025)
+# ===================================================================
+
+_scalars = st.floats(0.1, 10, allow_nan=False, allow_infinity=False)
+_SCALE_OPS = (
+    lambda k, x: k * x,
+    lambda k, x: x * k,
+    lambda k, x: x / k,
+    lambda k, x: k / x,
+    lambda k, x: jnp.multiply(k, x),
+    lambda k, x: jnp.divide(x, k),
+)
+
+
+@given(p=cxvst.vectors(), k=_scalars)
+def test_scaling_a_point_raises(p: cx.Point, k: float) -> None:
+    """A point is affine: ``k * p`` has no meaning, in any chart (gh#1025)."""
+    for op in _SCALE_OPS:
+        with pytest.raises(TypeError, match="a point is affine"):
+            op(k, p)
+
+
+def test_scaling_a_point_raises_under_jit() -> None:
+    p = _sph_vec(1.0, 0.5, 0.5)
+    with pytest.raises(TypeError, match="a point is affine"):
+        jax.jit(lambda q: 2 * q)(p)
+
+
+def test_scaling_a_coordinate_raises() -> None:
+    """Scaling a Coordinate would scale its base point, so it is refused too."""
+    c = cx.Coordinate(point=_cart_vec(1.0, 2.0, 3.0), velocity=_cart_tangent(1, 2, 3))
+    for op in _SCALE_OPS[:4]:
+        with pytest.raises(TypeError, match="Coordinate by a scalar"):
+            op(2.0, c)
+
+
+def test_point_scaling_error_fixes_work() -> None:
+    """Both fixes the error message suggests give the Cartesian ``2 * p``."""
+    p = _sph_vec(1.0, 0.5, 0.5)
+    q = p.cconvert(cxc.cart3d)
+    disp = 2 * cxr.change_basis(q, cxr.coord_basis, at=q)
+    pos = cx.Point.from_({n: 2 * x for n, x in q.data.items()}, q.chart)
+    for out in (disp, pos):
+        for n in ("x", "y", "z"):
+            np.testing.assert_allclose(
+                u.ustrip("km", out[n]), 2 * u.ustrip("km", q[n]), rtol=1e-12
+            )
+
+
+@given(
+    chart=cxcst.charts(exclude=(cxc.Abstract0D, cxc.Time1D)), k=_scalars, data=st.data()
+)
+def test_scaling_a_tangent_is_componentwise(
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    k: float,
+    data: st.DataObject,
+) -> None:
+    """``k * v`` scales every component, angles included, in any chart."""
+    try:
+        v = cx.Tangent.from_(
+            data.draw(cxrst.cdicts(chart, cxr.coord_vel)), chart, cxr.coord_vel
+        )
+    except (TypeError, ValueError, plum.NotFoundLookupError):
+        assume(False)  # noqa: FBT003
+    for out, expect in ((k * v, k), (v * k, k), (v / k, 1 / k)):
+        assert isinstance(out, cx.Tangent)
+        assert out.chart == v.chart
+        assert out.rep == v.rep
+        for n in v.data:
+            np.testing.assert_allclose(
+                u.ustrip(v[n].unit, out[n]),
+                expect * u.ustrip(v[n].unit, v[n]),
+                rtol=1e-5,  # float32 draws
+            )
 
 
 # ===================================================================

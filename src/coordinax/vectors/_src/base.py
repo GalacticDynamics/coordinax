@@ -170,9 +170,9 @@ class AbstractVector(
     Arithmetic works under ``jit`` and ``vmap``:
 
     >>> import jax
-    >>> print(jax.jit(lambda v: v * 2)(vec))
+    >>> print(jax.jit(lambda v: v - v)(vec))
     <Point: chart=Cart3D (x, y, z) [m]
-        [2 4 6]>
+        [0 0 0]>
 
     """
 
@@ -372,7 +372,7 @@ class AbstractVector(
         >>> ns
         <module 'quaxed.numpy' from ...>
 
-        >>> _ = ns.multiply(vec, 2)
+        >>> _ = ns.subtract(vec, vec)
 
         """
         return jnp

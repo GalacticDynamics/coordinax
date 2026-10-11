@@ -7,7 +7,7 @@ from dataclasses import replace
 
 from collections.abc import Callable
 from jaxtyping import Array, Bool
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 import jax
 import jax.tree as jtu
@@ -20,7 +20,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .bundle import Coordinate
 from .custom_types import Shape
-from .point import Point
+from .point import Point, refuse_point_scaling
 from .tangent import Tangent
 
 ##############################################################################
@@ -218,34 +218,82 @@ def sub_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
 # ===============================================
 
 
-@quax.register(jax.lax.mul_p)
-def mul_p_scalar_absvec(
-    lhs: int | float | Array, rhs: Point | Tangent, /, **kw: Any
-) -> Point | Tangent:
-    """Element-wise multiplication of a scalar and a vector."""
-    return _scale(rhs, lambda v: jnp.multiply(lhs, v))
+# Scaling. A `Tangent` lives in the vector space T_p M, so scaling it is
+# component-wise. A `Point` is affine: `k * p` has no meaning without an origin,
+# and scaling its stored components in a non-Cartesian chart scales its angles
+# too, which moves it somewhere else entirely (gh#1025). So it raises.
 
 
 @quax.register(jax.lax.mul_p)
-def mul_p_absvec_scalar(
-    lhs: Point | Tangent, rhs: int | float | Array, /, **kw: Any
-) -> Point | Tangent:
-    """Element-wise multiplication of a vector and a scalar."""
-    return _scale(lhs, lambda v: jnp.multiply(v, rhs))
+def mul_p_scalar_tangent(
+    lhs: int | float | Array, rhs: Tangent, /, **kw: Any
+) -> Tangent:
+    """Component-wise multiplication of a scalar and a tangent vector.
+
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import unxt as u
+
+    >>> v = cx.Tangent.from_(
+    ...     {"r": u.Q(1.0, "m/s"), "theta": u.Q(2.0, "rad/s"),
+    ...      "phi": u.Q(3.0, "rad/s")},
+    ...     cxc.sph3d, cxr.coord_vel,
+    ... )
+    >>> (2 * v)["theta"]
+    Q(4., 'rad / s')
+
+    """
+    return cast("Tangent", _scale(rhs, lambda v: jnp.multiply(lhs, v)))
+
+
+@quax.register(jax.lax.mul_p)
+def mul_p_tangent_scalar(
+    lhs: Tangent, rhs: int | float | Array, /, **kw: Any
+) -> Tangent:
+    """Component-wise multiplication of a tangent vector and a scalar."""
+    return cast("Tangent", _scale(lhs, lambda v: jnp.multiply(v, rhs)))
 
 
 @quax.register(jax.lax.div_p)
-def div_p_scalar_point(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> Point:
-    """Element-wise division of a scalar by a point."""
-    return _scale(rhs, lambda v: jnp.divide(lhs, v))
+def div_p_tangent_scalar(
+    lhs: Tangent, rhs: int | float | Array, /, **kw: Any
+) -> Tangent:
+    """Component-wise division of a tangent vector by a scalar."""
+    return cast("Tangent", _scale(lhs, lambda v: jnp.divide(v, rhs)))
+
+
+@quax.register(jax.lax.mul_p)
+def mul_p_scalar_point(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> NoReturn:
+    """Refuse to scale a point: a point is affine.
+
+    >>> import coordinax as cx
+    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "km")
+    >>> 2 * p
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot multiply or divide a Point by a scalar: a point is affine, ...
+
+    """
+    refuse_point_scaling("Point")
+
+
+@quax.register(jax.lax.mul_p)
+def mul_p_point_scalar(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> NoReturn:
+    """Refuse to scale a point: a point is affine."""
+    refuse_point_scaling("Point")
 
 
 @quax.register(jax.lax.div_p)
-def div_p_absvec_scalar(
-    lhs: Point | Tangent, rhs: int | float | Array, /, **kw: Any
-) -> Point | Tangent:
-    """Element-wise division of a vector by a scalar."""
-    return _scale(lhs, lambda v: jnp.divide(v, rhs))
+def div_p_scalar_point(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> NoReturn:
+    """Refuse to divide a scalar by a point: a point is affine."""
+    refuse_point_scaling("Point")
+
+
+@quax.register(jax.lax.div_p)
+def div_p_point_scalar(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> NoReturn:
+    """Refuse to divide a point by a scalar: a point is affine."""
+    refuse_point_scaling("Point")
 
 
 ##############################################################################
@@ -429,3 +477,39 @@ def eq_p_coordinates(lhs: Coordinate, rhs: Coordinate, /) -> Bool[Array, "..."]:
     # Check equality for every fibre tangent, matched by name
     fibre_eqs = [eq_p_tangents(lhs[name], rhs[name]) for name in lhs]
     return jax.tree.reduce(jnp.logical_and, [point_eq, *fibre_eqs])
+
+
+# Scaling a Coordinate would scale its base point, so it is refused like a
+# Point's (gh#1025). Scale the fibre Tangents individually instead.
+
+
+@quax.register(jax.lax.mul_p)
+def mul_p_scalar_coordinate(
+    lhs: int | float | Array, rhs: Coordinate, /, **kw: Any
+) -> NoReturn:
+    """Refuse to scale a Coordinate: its base point is affine."""
+    refuse_point_scaling("Coordinate")
+
+
+@quax.register(jax.lax.mul_p)
+def mul_p_coordinate_scalar(
+    lhs: Coordinate, rhs: int | float | Array, /, **kw: Any
+) -> NoReturn:
+    """Refuse to scale a Coordinate: its base point is affine."""
+    refuse_point_scaling("Coordinate")
+
+
+@quax.register(jax.lax.div_p)
+def div_p_scalar_coordinate(
+    lhs: int | float | Array, rhs: Coordinate, /, **kw: Any
+) -> NoReturn:
+    """Refuse to divide a scalar by a Coordinate: its base point is affine."""
+    refuse_point_scaling("Coordinate")
+
+
+@quax.register(jax.lax.div_p)
+def div_p_coordinate_scalar(
+    lhs: Coordinate, rhs: int | float | Array, /, **kw: Any
+) -> NoReturn:
+    """Refuse to divide a Coordinate by a scalar: its base point is affine."""
+    refuse_point_scaling("Coordinate")

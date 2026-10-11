@@ -338,6 +338,7 @@ Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so
 | `jax.jacfwd`/`grad` over a batch returns a dense `(N, k, N, k)` array | Applied directly to a function that already takes a batch — this does not error, it silently computes every output point's derivative with respect to every input point. Write the function scalar (single point) and use `jax.vmap(jax.jacfwd(fn))`; `jac_pt_map` does exactly this. |
 | `jnp.<f>` returns a bare `Array`, stripping the coordinax type | The quaxed fallback, not a coordinax defect. See the quaxed skill. |
 | `to_frame` in a loop is slow, or each operator triggers a fresh compile | `to_frame` rebuilds the transition every call. Build it once with `frame_transition` and pass the operator into the jitted function as an argument — not as a closure, which makes it static. |
+| `TypeError: cannot multiply or divide a Point by a scalar` | A point is affine, so `k * p` has no meaning without an origin (and in a curvilinear chart it used to scale the angles too). Scale a displacement instead: `q = p.cconvert(cxc.cart3d)`, then `k * cxr.change_basis(q, cxr.coord_basis, at=q)`; or scale the Cartesian components explicitly and rebuild a `Point`. A `Coordinate` refuses for the same reason; scale its `Tangent` fibres. `k * tangent` is unchanged. |
 | Astro frames missing (`cxf.ICRS` absent) | `coordinaxs.astro` not installed. `pip install "coordinax[astro]"`. |
 
 ## Version notes
@@ -355,5 +356,6 @@ Coordinax is pre-1.0 and moves; several recent renames are ones prior knowledge 
 | Causal verbs on `coordinax.manifolds` | `coordinax.manifolds.lorentzian` |
 | `AbstractAtlas.default_chart_for` | Removed |
 | `coordinax.quantity_matrix` | Removed — use `unxts.linalg` |
+| `k * point`, `point / k` (and on a `Coordinate`) | Raises `TypeError` (#1025) — scale a `Tangent`, or the Cartesian components |
 
 Requires unxt >=2.0.2 (plus `unxts.linalg`) and Python >=3.12. The distribution split matters when reading imports: `coordinax` is a regular package, while the optional sub-distributions (`coordinaxs.api`, `coordinaxs.astro`, `coordinaxs.curveframes`, `coordinaxs.hypothesis`, `coordinaxs.interop.astropy`) live in the separate `coordinaxs` PEP 420 namespace. Minimum supported dependencies follow [SPEC 0](https://scientific-python.org/specs/spec-0000/).

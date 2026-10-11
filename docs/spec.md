@@ -2017,6 +2017,24 @@ q_f = \tau(q_i) .$$ An important example is the **point geometry**.
 
     - Point data is location data: points do not add as vectors.
     - Any vector-space operations require a separate geometric kind (for example tangent/cotangent kinds), not `PointGeometry`.
+    - Scalar multiplication and division are vector-space operations, so `k * p`, `p * k`, `p / k` and `k / p` raise `TypeError` for a `Point`, and likewise for a `Coordinate`, whose base point is a `Point`. Scaling the stored components would be wrong as well as meaningless: in a curvilinear chart it scales the angles and moves the point. To scale a displacement, convert to a Cartesian chart, promote with `change_basis(..., at=)` (see Point-to-Displacement promotion), and scale the resulting `Tangent`, whose scaling is component-wise ([gh#1025](https://github.com/GalacticDynamics/coordinax/issues/1025)).
+
+    ```pycon
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "km").cconvert(cxc.sph3d)
+    >>> 2 * p
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot multiply or divide a Point by a scalar: a point is affine, ...
+
+    >>> q = p.cconvert(cxc.cart3d)
+    >>> print(2 * cxr.change_basis(q, cxr.coord_basis, at=q))
+    <Tangent: chart=Cart3D (x, y, z) [km]
+        [2. 4. 6.]>
+    ```
 
     API instance:
 
