@@ -17,3 +17,4 @@ from ._src import (
     convert_cx_cdict_to_astropy_sphrep,
     convert_cx_cdict_to_astropy_unitsphrep,
 )
+from ._version import version as __version__  # noqa: F401
