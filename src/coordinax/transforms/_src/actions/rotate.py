@@ -374,7 +374,7 @@ def simplify(op: Rotate, /, *, approx: bool = True, **kw: Any) -> AbstractTransf
     Identity()
 
     When two rotations are combined that cancel each other out, the result
-    simplifies to an {class}`coordinax.ops.Identity`:
+    simplifies to an {class}`coordinax.transforms.Identity`:
 
     >>> op = (  cxfm.Rotate.from_euler("z", u.Q(45, "deg"))
     ...       @ cxfm.Rotate.from_euler("z", u.Q(-45, "deg")))

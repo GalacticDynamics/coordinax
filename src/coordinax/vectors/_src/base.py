@@ -122,7 +122,7 @@ class AbstractVector(
     See Also
     --------
     coordinax.vectors.Point : Concrete default implementation.
-    coordinax.vectors.AbstractCoordinate : Vectors bound to a reference frame.
+    coordinax.vectors.Coordinate : A base point with fibre vectors anchored at it.
     coordinax.representations.cconvert : Chart/representation conversion.
     coordinax.charts.AbstractChart : Chart objects defining coordinate systems.
 
