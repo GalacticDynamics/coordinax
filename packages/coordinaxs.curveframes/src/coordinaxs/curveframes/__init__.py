@@ -63,6 +63,7 @@ __all__ = (
 )
 
 from ._setup_package import install_import_hook
+from ._version import version as __version__  # noqa: F401
 
 with install_import_hook("coordinaxs.curveframes"):
     from ._src import (

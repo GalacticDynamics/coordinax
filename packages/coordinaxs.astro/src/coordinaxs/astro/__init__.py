@@ -12,6 +12,7 @@ __all__ = (
 )
 
 from ._setup_package import install_import_hook
+from ._version import version as __version__  # noqa: F401
 
 # INVARIANT: this block binds all of astro's public symbols and MUST run before
 # the frames/interop re-invocation below. Those hooks complete registration that

@@ -96,6 +96,7 @@ __all__ = (  # distances
 from typing import Any, Final
 
 from coordinax._src.optional_exports import resolve_entrypoints_with_legacy
+from coordinax._version import version as __version__  # noqa: F401
 from coordinax.angles import Angle
 from coordinax.charts import (
     CartesianProductChart,
