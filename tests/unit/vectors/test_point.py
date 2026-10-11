@@ -331,3 +331,27 @@ class TestPointGeodesicDistance:
         p = cx.Point.from_({"x": 3.0, "y": 0.0, "z": 0.0}, cxc.cart3d)
         q = cx.Point.from_({"x": 0.0, "y": 4.0, "z": 0.0}, cxc.cart3d)
         assert bool(qnp.isclose(cx.geodesic_distance(p, q), 5.0))
+
+
+# #1028: N >= 4 components guess `cartnd`, whose one component ``q`` holds all
+# N values. Assert on the values, not `.shape` (tracked separately for CartND).
+@pytest.mark.parametrize(
+    ("batch", "n"), [((), 4), ((), 5), ((), 7), ((2,), 4), ((3, 2), 5)]
+)
+@pytest.mark.parametrize("explicit", [False, True])
+def test_point_and_tangent_from_nd_quantity_use_cartnd(batch, n, explicit) -> None:
+    """`Point.from_` / `Tangent.from_` on an N >= 4 Quantity build a cartnd vector."""
+    vals = qnp.arange(float(n)) * qnp.ones((*batch, n))
+    for cls, unit in ((cx.Point, "km"), (cx.Tangent, "km/s")):
+        q = u.Q(vals, unit)
+        vec = cls.from_(q, cxc.cartnd) if explicit else cls.from_(q)
+        assert isinstance(vec.chart, cxc.CartND)
+        assert set(vec.data) == {"q"}
+        assert qnp.array_equal(u.ustrip(unit, vec.data["q"]), vals)
+
+
+def test_point_from_nd_array_and_unit_uses_cartnd() -> None:
+    """The array + unit spelling reaches the same cartnd point."""
+    vec = cx.Point.from_(qnp.arange(5.0), "km")
+    assert isinstance(vec.chart, cxc.CartND)
+    assert qnp.array_equal(u.ustrip("km", vec.data["q"]), qnp.arange(5.0))
