@@ -32,7 +32,7 @@ from .base import (
     vector_values_str,
     vectorform_pdoc as _vec_vectorform_pdoc,
 )
-from .point import Point, refuse_point_scaling
+from .point import Point, refuse_scaling_unless_vector
 from .tangent import Tangent
 from coordinax.internal import OptUSys
 from coordinax.transforms._src.actions.prolong import prolong_point_map
@@ -354,16 +354,16 @@ class Coordinate(AbstractVector):
     # like a Point's (gh#1025); see `Point.__mul__` for why this is a dunder.
     def __mul__(self, other: Any) -> Any:
         """Refuse ``coord * k``: its base point is affine."""
-        refuse_point_scaling("Coordinate")
+        return refuse_scaling_unless_vector("Coordinate", other)
 
     def __rmul__(self, other: Any) -> Any:
-        refuse_point_scaling("Coordinate")
+        return refuse_scaling_unless_vector("Coordinate", other)
 
     def __truediv__(self, other: Any) -> Any:
-        refuse_point_scaling("Coordinate")
+        return refuse_scaling_unless_vector("Coordinate", other)
 
     def __rtruediv__(self, other: Any) -> Any:
-        refuse_point_scaling("Coordinate")
+        return refuse_scaling_unless_vector("Coordinate", other)
 
     # ===================================================================
     # Coordinate conversion

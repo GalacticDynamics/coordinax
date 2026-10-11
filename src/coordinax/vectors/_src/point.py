@@ -61,6 +61,17 @@ def refuse_point_scaling(kind: str, /) -> NoReturn:
     raise TypeError(msg)
 
 
+def refuse_scaling_unless_vector(kind: str, other: Any, /) -> Any:
+    """Refuse scaling ``kind`` by ``other``, unless ``other`` is itself a vector.
+
+    A vector operand is not a scaling: return `NotImplemented` so Python reports
+    the ordinary unsupported-operand error instead of the scalar explanation.
+    """
+    if isinstance(other, AbstractVector):
+        return NotImplemented
+    refuse_point_scaling(kind)
+
+
 def _frame_converter(v: Any, /) -> cxf.AbstractReferenceFrame:
     """Convert a value to an AbstractReferenceFrame, with None -> noframe."""
     if v is None:
@@ -193,16 +204,16 @@ class Point(
         TypeError: cannot multiply or divide a Point by a scalar: a point is affine, ...
 
         """
-        refuse_point_scaling("Point")
+        return refuse_scaling_unless_vector("Point", other)
 
     def __rmul__(self, other: Any) -> Any:
-        refuse_point_scaling("Point")
+        return refuse_scaling_unless_vector("Point", other)
 
     def __truediv__(self, other: Any) -> Any:
-        refuse_point_scaling("Point")
+        return refuse_scaling_unless_vector("Point", other)
 
     def __rtruediv__(self, other: Any) -> Any:
-        refuse_point_scaling("Point")
+        return refuse_scaling_unless_vector("Point", other)
 
 
 # ===================================================================

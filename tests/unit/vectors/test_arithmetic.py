@@ -2,6 +2,8 @@
 
 __all__: tuple[str, ...] = ()
 
+import operator
+
 import jax
 import numpy as np
 import plum
@@ -448,6 +450,16 @@ def test_scaling_a_coordinate_raises() -> None:
     # The fix the message suggests: scale the fibre tangents individually.
     scaled = 2.0 * c["velocity"]
     assert jnp.allclose(scaled["x"].value, 2.0 * c["velocity"]["x"].value)
+
+
+@pytest.mark.parametrize("op", [operator.mul, operator.truediv])
+def test_vector_operand_is_not_reported_as_scaling(op) -> None:
+    """A vector operand is not a scalar: defer, so Python reports it plainly."""
+    p = _cart_vec(1.0, 2.0, 3.0)
+    c = cx.Coordinate(point=p, velocity=_cart_tangent(1, 2, 3))
+    for lhs, rhs in [(p, p), (c, c), (c, p), (p, c)]:
+        with pytest.raises(TypeError, match="unsupported operand"):
+            op(lhs, rhs)
 
 
 def test_point_scaling_error_fixes_work() -> None:
