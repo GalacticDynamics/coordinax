@@ -119,7 +119,7 @@ class AbstractTransform(eqx.Module):
     def simplify(self) -> "AbstractTransform":
         """Simplify the operator.
 
-        This method calls `coordinax.ops.simplify` to simplify the
+        This method calls `coordinax.transforms.simplify` to simplify the
         operator.
 
         Examples

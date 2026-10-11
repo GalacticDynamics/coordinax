@@ -394,11 +394,12 @@ The `st.from_type()` integration works seamlessly with `st.builds()` for testing
 ```python
 from hypothesis import given, strategies as st
 import coordinax.distances as cxd
+from coordinaxs.astro import DistanceModulus
 
 
 def compute_absolute_magnitude(dist: cxd.Distance, apparent_mag: float) -> float:
     """Compute absolute magnitude from distance and apparent magnitude."""
-    dm = dist.distance_modulus
+    dm = DistanceModulus.from_(dist)
     return apparent_mag - dm.value.item()
 
 
