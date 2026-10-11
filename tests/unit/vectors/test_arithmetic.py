@@ -445,6 +445,10 @@ def test_scaling_a_coordinate_raises() -> None:
         with pytest.raises(TypeError, match="Coordinate by a scalar"):
             op(2.0, c)
 
+    # The fix the message suggests: scale the fibre tangents individually.
+    scaled = 2.0 * c["velocity"]
+    assert jnp.allclose(scaled["x"].value, 2.0 * c["velocity"]["x"].value)
+
 
 def test_point_scaling_error_fixes_work() -> None:
     """Both fixes the error message suggests give the Cartesian ``2 * p``."""

@@ -39,6 +39,14 @@ V = TypeVar("V", bound=HasShape, default=u.Q)
 
 def refuse_point_scaling(kind: str, /) -> NoReturn:
     """Raise the `TypeError` for scaling a point, which is affine (gh#1025)."""
+    if kind == "Coordinate":
+        msg = (
+            "cannot multiply or divide a Coordinate by a scalar: its base point "
+            "is affine, and scaling it has no meaning without an origin. Scale "
+            "the fibre tangents individually instead, e.g. "
+            "`k * coord['velocity']`."
+        )
+        raise TypeError(msg)
     msg = (
         f"cannot multiply or divide a {kind} by a scalar: a point is affine, and "
         "scaling it has no meaning without an origin. Work in Cartesian "
@@ -177,7 +185,7 @@ class Point(
         """Refuse ``point * k``: a point is affine.
 
         >>> import coordinax as cx
-        >>> 2 * cx.Point.from_([1.0, 2.0, 3.0], "km")
+        >>> cx.Point.from_([1.0, 2.0, 3.0], "km") * 2
         Traceback (most recent call last):
         ...
         TypeError: cannot multiply or divide a Point by a scalar: a point is affine, ...
