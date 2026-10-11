@@ -4,9 +4,14 @@ __all__: tuple[str, ...] = ()
 
 
 import astropy.coordinates as apyc
+import astropy.units as apyu
 import plum
 
+import unxt as u
+
 import coordinax.charts as cxc
+import coordinaxs.api.charts as cxcapi
+from coordinaxs.api.custom_types import CDict, CKeys
 
 
 @plum.dispatch
@@ -109,3 +114,54 @@ def guess_chart(obj: apyc.SphericalRepresentation) -> cxc.LonLatSpherical3D:
 
     """
     return cxc.lonlat_sph3d
+
+
+# ===================================================================
+# Astropy Quantity -> CDict
+#
+# An astropy `Quantity` is an `numpy.ndarray` subclass, so without these it
+# matches the bare `ArrayLike` methods, which drop its unit (#1024). Each one
+# converts to `unxt.Q` and re-dispatches, so it gets exactly the `unxt` result,
+# including the homogeneous-dimension check of ``cdict(Q, chart)``.
+
+
+@plum.dispatch
+def cdict(obj: apyu.Quantity, /) -> CDict:
+    """Split an astropy ``Quantity`` into a component dict, keeping its unit.
+
+    >>> import astropy.units as apyu
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(apyu.Quantity([1, 2, 3], "kpc"))
+    {'x': Q(1., 'kpc'), 'y': Q(2., 'kpc'), 'z': Q(3., 'kpc')}
+
+    """
+    return cxcapi.cdict(plum.convert(obj, u.Q))  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def cdict(obj: apyu.Quantity, keys: CKeys, /) -> CDict:
+    """Split an astropy ``Quantity`` along the given keys, keeping its unit.
+
+    >>> import astropy.units as apyu
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(apyu.Quantity([1, 2], "m"), ("a", "b"))
+    {'a': Q(1., 'm'), 'b': Q(2., 'm')}
+
+    """
+    return cxcapi.cdict(plum.convert(obj, u.Q), keys)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def cdict(obj: apyu.Quantity, chart: cxc.AbstractChart, /) -> CDict:  # type: ignore[type-arg]
+    """Split an astropy ``Quantity`` across a chart, keeping its unit.
+
+    >>> import astropy.units as apyu
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(apyu.Quantity([1, 2, 3], "kpc"), cxc.cart3d)
+    {'x': Q(1., 'kpc'), 'y': Q(2., 'kpc'), 'z': Q(3., 'kpc')}
+
+    """
+    return cxcapi.cdict(plum.convert(obj, u.Q), chart)  # ty: ignore[invalid-return-type]
