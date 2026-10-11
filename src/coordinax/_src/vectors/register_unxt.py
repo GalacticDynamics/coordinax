@@ -4,9 +4,8 @@ __all__: tuple[str, ...] = ()
 
 
 from collections.abc import Callable
-from typing import TypeVar, Union
+from typing import TypeVar
 
-import equinox as eqx
 from jaxtyping import Shaped
 from jaxtyping._array_types import _MetaAbstractArray
 from plum import conversion_method as _conversion_method, convert, dispatch
@@ -41,21 +40,10 @@ def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
 # TODO: move to unxt
 
 
-@dispatch(precedence=1)
+@dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def dimension_of(obj: _MetaAbstractArray, /) -> u.dims.AbstractDimension:
     """Get the dimension of a jaxtyping-annotated object."""
-    return u.dimension_of(obj.array_type)
-
-
-# Precedence of -1 because astropy Unit aliases are unions over astropy Unit
-# base classes.
-@dispatch(precedence=-1)
-def dimension_of(obj: Union, /) -> u.dims.AbstractDimension:
-    # Call dimension_of on all the __args__ of the Union and make sure they are
-    # all the same
-    dims = {dimension_of(arg) for arg in obj.__args__}
-    dims = eqx.error_if(dims, len(dims) != 1, "Cannot mix dimensions in a Union.")
-    return dims.pop()
+    return u.dimension_of(obj.array_type)  # type: ignore[attr-defined]
 
 
 #####################################################################
