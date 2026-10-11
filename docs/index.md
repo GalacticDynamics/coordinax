@@ -159,7 +159,8 @@ import coordinax.vectors
 
 >>> sorted(name.removeprefix("coordinax.")
 ...        for name in sys.modules
-...        if name.startswith("coordinax.") and name.count(".") == 1)[1:]
+...        if name.startswith("coordinax.") and name.count(".") == 1
+...        and not name.removeprefix("coordinax.").startswith("_"))
 ['angles', 'charts', 'distances', 'frames', 'internal', 'manifolds', 'representations', 'transforms', 'vectors']
 ```
 
