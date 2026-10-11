@@ -449,3 +449,43 @@ def test_astropy_quantity_across_a_mixed_dimension_chart_is_refused() -> None:
     """The unxt route's homogeneous-dimension check applies to astropy too."""
     with pytest.raises(ValueError, match="different dimensions"):
         cx.Point.from_(apyu.Quantity([1, 2, 3], "kpc"), cxc.sph3d)
+
+
+# =============================================================================
+# `from_` checks dimensions on the astropy routes too (gh#1026)
+#
+# Astropy does not tie a representation's units to position or velocity: a
+# `CartesianRepresentation` in km/s and a `CartesianDifferential` in km are
+# both well-formed. The coordinax chart does, so these must be refused.
+
+
+@pytest.mark.parametrize(
+    ("rep", "match"),
+    [
+        (apyc.CartesianRepresentation(1, 2, 3, unit="km/s"), "Cart3D component 'x'"),
+        (
+            apyc.CylindricalRepresentation(1 * apyu.s, 1 * apyu.deg, 1 * apyu.s),
+            "Cylindrical3D component 'rho'",
+        ),
+    ],
+)
+def test_point_from_astropy_rep_checks_dimensions(rep, match):
+    """A representation whose units contradict the chart is rejected."""
+    with pytest.raises(ValueError, match=f"{match} has dimension"):
+        cx.Point.from_(rep)
+
+
+def test_tangent_from_astropy_differential_checks_dimensions():
+    """A `CartesianDifferential` in a length is not a velocity."""
+    dif = apyc.CartesianDifferential(1, 2, 3, unit="km")
+    with pytest.raises(ValueError, match="Cart3D component 'x' has dimension length"):
+        plum.convert(dif, cx.Tangent)
+
+
+def test_from_astropy_valid_units_pass_the_check():
+    """Units that match the chart still build, through the checking route."""
+    p = cx.Point.from_(apyc.CartesianRepresentation(1, 2, 3, unit="km"))
+    assert p["x"].unit == u.unit("km")
+
+    v = plum.convert(apyc.CartesianDifferential(1, 2, 3, unit="km/s"), cx.Tangent)
+    assert v["x"].unit == u.unit("km/s")

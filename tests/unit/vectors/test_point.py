@@ -18,7 +18,7 @@ import coordinax.frames as cxf
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.hypothesis.vectors as cxvst
-from .conftest import wrong_dimension
+from .conftest import jit_constructible, wrong_dimension
 
 
 class TestPointFrame:
@@ -389,7 +389,7 @@ def test_from_checks_component_dimensions(vec, use_jit):
     def build(data):
         return cx.Point.from_(data, chart).data
 
-    if use_jit:
+    if use_jit and jit_constructible(chart):
         build = jax.jit(build)
 
     assert set(build(vec.data)) == set(chart.components)

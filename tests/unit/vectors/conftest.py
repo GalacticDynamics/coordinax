@@ -2,6 +2,18 @@
 
 import unxt as u
 
+import coordinax.charts as cxc
+
+
+def jit_constructible(chart, /):
+    """Whether a vector on ``chart`` can be built under `jax.jit` at all.
+
+    `ProlateSpheroidal3D.check_data` cannot: it `eqx.error_if`s on its static
+    ``Delta``, which has no array to thread onto, so even the raw constructor
+    raises under `jit`. That is unrelated to the dimension check.
+    """
+    return not isinstance(chart, cxc.ProlateSpheroidal3D)
+
 
 def wrong_dimension(data, chart, dims, /):
     """Swap the first unit-carrying component for one of another dimension.
