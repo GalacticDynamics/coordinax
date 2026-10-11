@@ -58,7 +58,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
         f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
-    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)  # type: ignore[operator]
+    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)
     return cast("AbstractPos", add.vconvert(type(lhs), **lhs._auxiliary_data))
 
 
@@ -90,7 +90,7 @@ def dot_p_general_poss(
 
     """
     cart_cls = lhs.cartesian_type
-    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)  # type: ignore[arg-type]
+    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)
 
 
 # ------------------------------------------------
@@ -378,5 +378,5 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # singularities, ranges, or auxiliary data that need to be handled, so this
     # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
-    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)  # type: ignore[operator]
+    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)
     return cast("AbstractPos", diff.vconvert(type(lhs), **lhs._auxiliary_data))

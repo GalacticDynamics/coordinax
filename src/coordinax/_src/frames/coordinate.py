@@ -73,7 +73,7 @@ class AbstractCoordinate(AbstractVector):
             return self
 
         # Otherwise, apply the transformation and return a new coordinate
-        new_data = op(self.data) if t is None else op(t, self.data)[1]  # type: ignore[index]
+        new_data = op(self.data) if t is None else op(t, self.data)[1]
         out = self.__class__.from_(new_data, toframe)
         return cast("AbstractCoordinate", out)
 

@@ -231,7 +231,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
+@AbstractOperator.from_.dispatch
 def from_(cls: type[GalileanRotation], obj: Rotation, /) -> GalileanRotation:
     """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 
@@ -448,7 +448,7 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     return op
 
 
-@GalileanRotation.__matmul__.dispatch  # type: ignore[union-attr,untyped-decorator]
+@GalileanRotation.__matmul__.dispatch
 def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
     """Combine two Galilean rotations.
 
