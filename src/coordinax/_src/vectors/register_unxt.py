@@ -4,10 +4,8 @@ __all__: tuple[str, ...] = ()
 
 
 from collections.abc import Callable
-from types import UnionType
-from typing import TypeVar, Union
+from typing import TypeVar
 
-import equinox as eqx
 from jaxtyping import Shaped
 from jaxtyping._array_types import _MetaAbstractArray
 from plum import conversion_method as _conversion_method, convert, dispatch
@@ -33,21 +31,6 @@ from coordinax._src.vectors.utils import full_shaped
 T = TypeVar("T")
 
 
-class _UnionTypesMeta(type):
-    def __instancecheck__(cls, obj: object, /) -> bool:
-        return isinstance(obj, (UnionType, type(Union[int, str])))  # noqa: UP007
-
-
-class _UnionTypes(metaclass=_UnionTypesMeta):
-    """Matches a union, either ``int | str`` or ``Union[int, str]``.
-
-    The two have different runtime classes before Python 3.14. Neither bare
-    ``typing.Union`` (an unsubscripted special form, which beartype>=0.23 reads
-    as an empty union) nor the class ``types.UnionType`` (which beartype reads
-    as a malformed union) works as a dispatch hint, so check at runtime.
-    """
-
-
 def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
     """Typed version of conversion method."""
     return _conversion_method(type_from, type_to)  # type: ignore[return-value]
@@ -57,21 +40,10 @@ def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
 # TODO: move to unxt
 
 
-@dispatch(precedence=1)
+@dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def dimension_of(obj: _MetaAbstractArray, /) -> u.dims.AbstractDimension:
     """Get the dimension of a jaxtyping-annotated object."""
-    return u.dimension_of(obj.array_type)
-
-
-# Precedence of -1 because astropy Unit aliases are unions over astropy Unit
-# base classes.
-@dispatch(precedence=-1)
-def dimension_of(obj: _UnionTypes, /) -> u.dims.AbstractDimension:
-    # Call dimension_of on all the __args__ of the Union and make sure they are
-    # all the same
-    dims = {dimension_of(arg) for arg in obj.__args__}
-    dims = eqx.error_if(dims, len(dims) != 1, "Cannot mix dimensions in a Union.")
-    return dims.pop()
+    return u.dimension_of(obj.array_type)  # type: ignore[attr-defined]
 
 
 #####################################################################

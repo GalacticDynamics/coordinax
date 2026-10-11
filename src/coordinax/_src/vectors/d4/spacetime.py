@@ -70,7 +70,7 @@ class FourVector(AbstractPos4D):
 
     """
 
-    t: ct.BBtTime | ct.ScalarTime = eqx.field(converter=u.Q.from_)
+    t: ct.BBtTime = eqx.field(converter=u.Q.from_)
     """Time coordinate."""
 
     q: AbstractPos3D = eqx.field(converter=Unless(AbstractPos3D, CartesianPos3D.from_))
