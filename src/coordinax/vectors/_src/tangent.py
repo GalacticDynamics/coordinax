@@ -17,7 +17,7 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.representations as cxr
-from .base import AbstractVector, broadcast_and_index_data
+from .base import AbstractVector, broadcast_and_index_data, check_dimensions
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
 from .point import _frame_converter
@@ -195,7 +195,13 @@ def from_(
 
     """
     data = cast("CDict", cxc.cdict(obj, chart))
-    return Tangent(data=data, chart=chart, basis=basis, semantic=semantic)
+    tangent = Tangent(data=data, chart=chart, basis=basis, semantic=semantic)
+    # Only the coordinate basis has dimensions the chart alone fixes: physical
+    # components carry the metric's scale factors, whose units the chart does
+    # not declare.
+    if isinstance(basis, cxr.CoordinateBasis):
+        check_dimensions(tangent.data, chart, semantic.coord_dimensions(chart))
+    return tangent
 
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]

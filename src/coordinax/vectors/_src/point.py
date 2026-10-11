@@ -17,7 +17,7 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.representations as cxr
-from .base import AbstractVector, broadcast_and_index_data
+from .base import AbstractVector, broadcast_and_index_data, check_dimensions
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
 
@@ -264,7 +264,9 @@ def from_(
     if rep != cxr.point:
         raise ValueError(f"Point construction needs point rep, got {rep}.")
     data = cast("CDict", cxc.cdict(obj, chart))
-    return cls(data=data, chart=chart)
+    point = cls(data=data, chart=chart)
+    check_dimensions(point.data, chart, cxr.loc.coord_dimensions(chart))
+    return point
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -296,8 +298,7 @@ def from_(cls: type[Point], obj: Any, chart: cxc.AbstractChart, /) -> Point:
          [4 5 6]]>
 
     """
-    data = cast("CDict", cxc.cdict(obj, chart))
-    return cls(data, chart=chart)
+    return cls.from_(obj, chart, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -330,8 +331,7 @@ def from_(cls: type[Point], obj: Any, rep: cxr.Representation, /) -> Point:
 
     """
     data = cast("CDict", cxc.cdict(obj))
-    chart = cxc.guess_chart(data)
-    return cls(data, chart=chart)
+    return cls.from_(data, cxc.guess_chart(data), rep)  # ty: ignore[invalid-return-type]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -359,10 +359,7 @@ def from_(cls: type[Point], obj: Any, /) -> Any:
     """
     # Infer the chart from the object
     chart = cxc.guess_chart(obj)
-    # Infer the data from the chart and object
-    data = cast("CDict", cxc.cdict(obj, chart))
-
-    return cls(data, chart=chart)
+    return cls.from_(obj, chart, cxr.point)
 
 
 # -------------------------------------

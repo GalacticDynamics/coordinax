@@ -6,7 +6,7 @@ import math
 
 import jax
 import pytest
-from hypothesis import given
+from hypothesis import assume, given, strategies as st
 from hypothesis.extra.numpy import array_shapes
 
 import quaxed.numpy as qnp
@@ -18,6 +18,7 @@ import coordinax.frames as cxf
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.hypothesis.vectors as cxvst
+from .conftest import wrong_dimension
 
 
 class TestPointFrame:
@@ -259,7 +260,9 @@ class TestPointEquivalence:
         a = cx.Point.from_(
             {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")}, cxc.cart3d
         )
-        b = cx.Point.from_(
+        # `from_` refuses this point; the raw constructor does not validate
+        # dimensions, so such a point can still reach `equivalent`.
+        b = cx.Point(
             {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "s"), "z": u.Q(0.0, "m")}, cxc.cart3d
         )
         assert not bool(qnp.all(cx.equivalent(a, b)))
@@ -373,3 +376,32 @@ def test_point_from_nd_array_and_unit_uses_cartnd() -> None:
     vec = cx.Point.from_(qnp.arange(5.0), "km")
     assert isinstance(vec.chart, cxc.CartND)
     assert qnp.array_equal(u.ustrip("km", vec.data["q"]), qnp.arange(5.0))
+
+# ===================================================================
+# `from_` checks component dimensions against the chart (gh#1026)
+
+
+@given(vec=cxvst.vectors(), use_jit=st.booleans())
+def test_from_checks_component_dimensions(vec, use_jit):
+    """`from_` accepts the chart's dimensions and names a component with another."""
+    chart = vec.chart
+
+    def build(data):
+        return cx.Point.from_(data, chart).data
+
+    if use_jit:
+        build = jax.jit(build)
+
+    assert set(build(vec.data)) == set(chart.components)
+
+    key, bad = wrong_dimension(vec.data, chart, cxr.loc.coord_dimensions(chart))
+    assume(key is not None)
+    with pytest.raises(ValueError, match=f"component '{key}' has dimension"):
+        build(bad)
+
+
+@pytest.mark.parametrize("unit", ["s", "km/s"])
+def test_from_rejects_non_length_cartesian(unit):
+    """The spellings from gh#1026: a Cartesian 'position' in seconds or km/s."""
+    with pytest.raises(ValueError, match="component 'x' has dimension"):
+        cx.Point.from_(u.Q([1.0, 2, 3], unit))

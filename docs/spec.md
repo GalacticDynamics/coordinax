@@ -2510,6 +2510,25 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     - ``(obj, frame) -> Point``
     - ``(Array, unit, frame) -> Point``
 
+    **Dimension check.** Every ``from_`` route ends in ``(dict,C,R)``, which
+    raises ``ValueError`` naming the component, its dimension and the expected
+    one if a component's physical dimension is not the one
+    ``chart.coord_dimensions`` declares. It reads units only, never values, so it
+    holds under `jax.jit`. A bare-array component has no unit and is not checked;
+    a ``None`` coordinate dimension is unconstrained. The raw ``Point(...)``
+    constructor and ``dataclasses.replace`` do not run this check, and
+    ``from_`` does not check value domains (e.g. the polar range), see
+    [gh#985](https://github.com/GalacticDynamics/coordinax/issues/985).
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> cx.Point.from_(u.Q([1.0, 2, 3], "s"))
+    Traceback (most recent call last):
+    ...
+    ValueError: Cart3D component 'x' has dimension time, expected length.
+    ```
+
 (software-spec-tangent)=
 
 !!! info `Tangent`
@@ -2586,6 +2605,8 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     | `(Array, unit)` | converts to `Quantity`, then cascades |
     | `(Array, unit, chart)` | converts to `Quantity`, then `(Quantity, chart)` |
     | `(Array, unit, chart, basis, semantic)` | converts to `Quantity`, then full dispatch |
+
+    **Dimension check.** Every route ends in `(obj, chart, basis, semantic)`. In the `CoordinateBasis` it raises `ValueError`, naming the component, its dimension and the expected one, if a component's dimension is not `semantic.coord_dimensions(chart)`: the chart's coordinate dimension per time to the semantic kind's ladder order, so a `vel` in `sph3d` is `(length, angle, angle) / time`. As for `Point`, only units are read (it holds under `jax.jit`), bare-array components and `None` dimensions are not checked, and the raw constructor does not check. `PhysicalBasis` components are not checked: their dimensions carry the metric's scale factors, which the chart does not declare.
 
     **`cconvert` dispatches** (registered in `coordinax.vectors`):
 
