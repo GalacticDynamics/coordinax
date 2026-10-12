@@ -331,6 +331,7 @@ def cdicts(
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
     elements: Elements = None,
     magnitude: float | tuple[float, float] | None = DEFAULT_MAGNITUDE,
+    dimensions: tuple[Any, ...] | None = None,
 ) -> CDict:
     """Generate a valid CDict matching chart components and role constraints.
 
@@ -357,6 +358,12 @@ def cdicts(
         points wants -- a Jacobian entry scaling like ``1/r`` is unusable at
         ``r = 1e-3``. The floor is ignored for coordinates that do not
         degenerate at zero. `None` removes the bound entirely.
+    dimensions
+        Per-component physical dimensions to draw instead of
+        ``chart.coord_dimensions``, e.g. ``semantic.coord_dimensions(chart)``
+        for a tangent. The chart's coordinate domains then do not apply (a
+        velocity ``dr/dt`` may be negative where ``r`` may not), so every
+        component is drawn unconstrained.
 
     Returns
     -------
@@ -378,10 +385,14 @@ def cdicts(
     # Draw shape if it's a strategy
     shape: Shape = draw_if_strategy(draw, shape)
 
-    domains = cast("dict[str, Interval]", component_domains(chart))
+    if dimensions is None:
+        dimensions = chart.coord_dimensions
+        domains = cast("dict[str, Interval]", component_domains(chart))
+    else:
+        domains = {}
     data: CDict = {}
 
-    for cname, cdim in zip(chart.components, chart.coord_dimensions, strict=True):
+    for cname, cdim in zip(chart.components, dimensions, strict=True):
         dim = u.dimension(cdim) if isinstance(cdim, str) else cdim
         interval = domains.get(cname, FREE)
 

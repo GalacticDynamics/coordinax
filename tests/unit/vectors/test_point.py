@@ -377,6 +377,7 @@ def test_point_from_nd_array_and_unit_uses_cartnd() -> None:
     assert isinstance(vec.chart, cxc.CartND)
     assert qnp.array_equal(u.ustrip("km", vec.data["q"]), qnp.arange(5.0))
 
+
 # ===================================================================
 # `from_` checks component dimensions against the chart (gh#1026)
 
