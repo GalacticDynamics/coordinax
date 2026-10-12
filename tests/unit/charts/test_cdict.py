@@ -182,3 +182,40 @@ def test_cdict_homogeneous_units_matrix_still_works() -> None:
     assert set(got.keys()) == set(cxc.cart3d.components)
     assert all(v.unit == u.unit("m") for v in got.values())
     assert float(u.ustrip("m", got["z"])) == 3.0
+
+
+# CartND keeps all N values in its one component ``q`` (#1028). Assert on the
+# values, not on a vector's `.shape`, which for CartND is tracked separately.
+_ND_CASES = pytest.mark.parametrize(
+    ("batch", "n"), [((), 4), ((), 5), ((), 7), ((2,), 4), ((3, 2), 5)]
+)
+
+
+@_ND_CASES
+def test_cdict_quantity_cartnd_keeps_the_last_axis_whole(batch, n) -> None:
+    """A Quantity with N >= 4 components maps to one ``q`` holding all of them."""
+    q = u.Q(jnp.arange(float(n)) * jnp.ones((*batch, n)), "km")
+    for got in (cxc.cdict(q), cxc.cdict(q, cxc.cartnd)):
+        assert set(got) == {"q"}
+        assert jnp.array_equal(u.ustrip("km", got["q"]), q.value)
+
+
+@_ND_CASES
+def test_cdict_array_cartnd_keeps_the_last_axis_whole(batch, n) -> None:
+    """Arrays, with or without a unit or unit system, fill ``q`` whole."""
+    a = jnp.arange(float(n)) * jnp.ones((*batch, n))
+    assert jnp.array_equal(cxc.cdict(a, cxc.cartnd)["q"], a)
+    assert jnp.array_equal(cxc.cdict(a, None, cxc.cartnd)["q"], a)
+    for got in (cxc.cdict(a, "km"), cxc.cdict(a, "km", cxc.cartnd)):
+        assert jnp.array_equal(u.ustrip("km", got["q"]), a)
+    got = cxc.cdict(a, u.unitsystems.si, cxc.cartnd)
+    assert jnp.array_equal(u.ustrip("m", got["q"]), a)
+
+
+def test_cdict_cartnd_refuses_a_quantity_matrix() -> None:
+    """CartND has one unit; per-component units have nowhere to go."""
+    import unxts.linalg as ul
+
+    q = ul.QuantityMatrix(jnp.ones(4), unit=("m", "m", "km", "m"))
+    with pytest.raises(ValueError, match="one array in one unit"):
+        cxc.cdict(q, cxc.cartnd)

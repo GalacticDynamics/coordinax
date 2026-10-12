@@ -1212,21 +1212,22 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     Dispatches:
 
     - Input `CDict` (dict with string keys): returned unchanged (identity).
-    - Input `unxt.AbstractQuantity` with last axis size 1, 2, or 3: call `guess_chart` on the quantity to infer chart dimensionality, then apply the chart-based dispatch.
+    - Input `unxt.AbstractQuantity` (or array-like with a unit): call `guess_chart` on the quantity to infer chart dimensionality — `cart1d`/`cart2d`/`cart3d` for a last axis of size 1, 2, or 3, `cartnd` otherwise — then apply the chart-based dispatch.
+    - Input with `CartND` chart context: `CartND` has the single component `q`, so the last axis is **not** split; the whole input becomes `{"q": obj}` (an array-like with a unit or unit system is first wrapped as a quantity in that unit, or in the system's length unit). A per-component-unit `QuantityMatrix` raises `ValueError`, since `q` carries one unit.
     - Input array-like with chart context: split last axis into named components using `chart.components`. Last axis length MUST match the chart's component count.
     - Input `unxt.AbstractQuantity` with chart context: split last axis into named quantities using `chart.components`. Requires last axis size to match chart, and requires the chart's components to share one physical dimension — a single unit is what every component receives.
     - Input `QuantityMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component. The matrix MUST be 1-D — one point, not a stack of them.
 
     Failure semantics:
 
-    - If last axis size does not match the number of chart components, raise `ValueError`.
+    - If last axis size does not match the number of chart components, raise `ValueError` (`CartND` excepted: its one component `q` takes any last-axis size).
     - If a `QuantityMatrix` input has more than one axis, raise `ValueError`. The chart names one row's components and nothing names a second axis.
-    - If a single-unit `unxt.AbstractQuantity` is given a chart whose `coord_dimensions` are not all the same, raise `ValueError`. One unit cannot describe components of different dimensions: splitting `u.Q([...], "kpc")` across `sph3d` would give an angle in `kpc`, and across `lonlat_sph3d` — where every component unit is nominally an angle — it would complete silently and return nonsense. Components whose declared dimension is `None` are unconstrained and never conflict. Callers with per-component units should use a `QuantityMatrix`, a `CDict`, or a `Point`, all of which work on every chart.
+    - If a single-unit `unxt.AbstractQuantity` is given a chart whose `coord_dimensions` are not all the same, raise `ValueError`. One unit cannot describe components of different dimensions: splitting `u.Q([...], "kpc")` across `sph3d` would give an angle in `kpc`, and across `lonlat_sph3d` — where every component unit is nominally an angle — it would complete silently and return nonsense. Components whose declared dimension is `None` are unconstrained and never conflict. Callers with per-component units should use a `QuantityMatrix`, a `CDict`, or a `Point`, which work on every chart but `CartND` (one unit for all of `q`).
     - If input type has no registered dispatch, `plum.NotFoundLookupError` is raised.
 
     Notes:
 
-    - When no chart is explicitly provided, `guess_chart` is used to infer Cartesian chart dimensionality from array/quantity shape. This works for arrays/quantities with trailing axis size 1, 2, or 3 only.
+    - When no chart is explicitly provided, `guess_chart` is used to infer Cartesian chart dimensionality from array/quantity shape: trailing axis size 1, 2, or 3 gives `cart1d`/`cart2d`/`cart3d`, and any other size gives `cartnd`.
     - Units are preserved: a quantity input returns a `CDict` of quantities. A single-unit quantity carries that one unit onto every component, which is why the chart must be dimensionally homogeneous; the dimension of the unit itself is not checked, so a velocity may be split across a Cartesian chart.
 
 (software-spec-pt_map)=
@@ -1606,6 +1607,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Components: `("q",)` with dimension `("length",)`, where `q` stores the N Cartesian components as a single length-valued array.
     - `cartnd` is its pre-defined `CartND()` instance.
     - `CartND` is already Cartesian: `cartesian_chart(CartND) -> cartnd`.
+    - A Quantity or array whose last axis is not 1, 2, or 3 guesses `cartnd` (see `guess_chart`), and `cdict` places the whole input in `q` rather than splitting its last axis, so `Point.from_(u.Q([1, 2, 3, 4], "km"))`, `Point.from_(q, cartnd)`, and the `Tangent.from_` equivalents build a `cartnd` vector.
 
 ### Cartesian Product Charts
 

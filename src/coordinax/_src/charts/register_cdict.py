@@ -14,6 +14,7 @@ import unxts.linalg as ul
 
 import coordinaxs.api.charts as cxcapi
 from .containers import canonical_containers
+from .dn import CartND
 from coordinax._src.base import AbstractChart
 from coordinaxs.api.custom_types import CDict, CKeys
 
@@ -408,3 +409,111 @@ def cdict(obj: ArrayLike, usys: u.AbstractUnitSystem, chart: AbstractChart, /) -
         },
         chart,
     )
+
+
+# ===================================================================
+# CartND
+#
+# `CartND` has a single component, ``q``, holding all N Cartesian values along
+# the last axis. Splitting that axis by `chart.components` -- what the generic
+# overloads above do -- would demand N == 1, so these keep it whole instead.
+
+
+@plum.dispatch
+def cdict(obj: u.AbstractQuantity, chart: CartND, /) -> CDict:
+    """Wrap a Quantity as the single ``q`` component of a `CartND` chart.
+
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> cxc.cdict(u.Q([1.0, 2.0, 3.0, 4.0], "m"), cxc.cartnd)
+    {'q': Q([1., 2., 3., 4.], 'm')}
+
+    Without a chart, a trailing axis of 4 or more guesses `cartnd`:
+
+    >>> cxc.cdict(u.Q([1.0, 2.0, 3.0, 4.0], "m"))
+    {'q': Q([1., 2., 3., 4.], 'm')}
+
+    """
+    del chart
+    return {"q": obj}
+
+
+@plum.dispatch
+def cdict(obj: ul.QuantityMatrix, chart: CartND, /) -> CDict:
+    """Refuse a per-component-unit ``QuantityMatrix`` for `CartND`.
+
+    `CartND` stores its N values as one array in one unit, so there is nowhere
+    to keep a unit per component.
+
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import unxts.linalg as ul
+
+    >>> q = ul.QuantityMatrix(jnp.array([1.0, 2.0, 3.0, 4.0]),
+    ...                       unit=("m", "m", "km", "m"))
+    >>> try:
+    ...     cxc.cdict(q, cxc.cartnd)
+    ... except ValueError as e:
+    ...     print(e)
+    CartND stores its components as one array in one unit; convert the
+    QuantityMatrix to a single-unit Quantity first.
+
+    """
+    del obj, chart
+    msg = (
+        "CartND stores its components as one array in one unit; convert the "
+        "QuantityMatrix to a single-unit Quantity first."
+    )
+    raise ValueError(msg)
+
+
+@plum.dispatch
+def cdict(obj: ArrayLike, chart: CartND, /) -> CDict:
+    """Wrap an array as the single ``q`` component of a `CartND` chart.
+
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(jnp.array([1.0, 2.0, 3.0, 4.0]), cxc.cartnd)
+    {'q': Array([1., 2., 3., 4.], dtype=float64)}
+
+    """
+    del chart
+    return {"q": jnp.asarray(obj)}
+
+
+@plum.dispatch
+def cdict(obj: ArrayLike, unit: u.AbstractUnit | str | None, chart: CartND, /) -> CDict:
+    """Wrap an array, in ``unit``, as the ``q`` component of a `CartND` chart.
+
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(jnp.array([1.0, 2.0, 3.0, 4.0]), "km", cxc.cartnd)
+    {'q': Q([1., 2., 3., 4.], 'km')}
+
+    Without a chart, a trailing axis of 4 or more guesses `cartnd`:
+
+    >>> cxc.cdict(jnp.array([1.0, 2.0, 3.0, 4.0]), "km")
+    {'q': Q([1., 2., 3., 4.], 'km')}
+
+    """
+    del chart
+    arr = jnp.asarray(obj)
+    return {"q": arr if unit is None else u.Q(arr, unit)}
+
+
+@plum.dispatch
+def cdict(obj: ArrayLike, usys: u.AbstractUnitSystem, chart: CartND, /) -> CDict:
+    """Wrap an array, in ``usys`` length, as the ``q`` component of `CartND`.
+
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(jnp.array([1.0, 2.0, 3.0, 4.0]), u.unitsystems.si, cxc.cartnd)
+    {'q': Q([1., 2., 3., 4.], 'm')}
+
+    """
+    return {"q": u.Q(jnp.asarray(obj), usys[chart.coord_dimensions[0]])}
