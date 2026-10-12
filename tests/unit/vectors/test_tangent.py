@@ -2,6 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
+import math
 from dataclasses import replace
 
 import jax
@@ -503,6 +504,15 @@ class TestVectorShape:
             data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         assert v.shape == (2,)
+
+    @pytest.mark.parametrize("shape", [(), (2,), (2, 3)])
+    def test_ndim_and_size_follow_batch_shape(self, shape):
+        """``ndim`` / ``size`` exclude the component axis (regression #1027)."""
+        data = {k: u.Q(jnp.ones(shape), "m/s") for k in ("x", "y", "z")}
+        v = cx.Tangent.from_(data, cxc.cart3d, cxr.coord_vel)
+        assert v.shape == shape
+        assert v.ndim == len(shape)
+        assert v.size == math.prod(shape)
 
     def test_slice_indexing(self):
         """Integer slice indexing returns a new Tangent."""

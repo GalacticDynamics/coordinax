@@ -2,9 +2,12 @@
 
 __all__: tuple[str, ...] = ()
 
+import math
 
 import jax
 import pytest
+from hypothesis import given
+from hypothesis.extra.numpy import array_shapes
 
 import quaxed.numpy as qnp
 import unxt as u
@@ -14,6 +17,7 @@ import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinaxs.hypothesis.vectors as cxvst
 
 
 class TestPointFrame:
@@ -117,6 +121,20 @@ class TestPointIndexing:
         p0 = p[0]
         assert p0.chart == cxc.cart3d
         assert p0.frame == cxf.alice
+
+
+@given(
+    p=cxvst.vectors(shape=array_shapes(min_dims=0, max_dims=3, min_side=0, max_side=3))
+)
+def test_ndim_and_size_follow_batch_shape(p: cx.Point) -> None:
+    """``ndim`` / ``size`` describe the batch ``shape``, not the components.
+
+    Regression (#1027): both came from ``aval()``, whose trailing component axis
+    made a scalar point ``ndim == 1`` and ``size == n_components``.
+    """
+    for vec in (p, cx.Coordinate(point=p)):
+        assert vec.ndim == len(vec.shape)
+        assert vec.size == math.prod(vec.shape)
 
 
 class TestPointJAXCompat:

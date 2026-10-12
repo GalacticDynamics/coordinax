@@ -4,6 +4,7 @@ __all__ = ("AbstractVector",)
 
 import abc
 import dataclasses
+import math
 
 from typing import TYPE_CHECKING, Any, Generic, NoReturn, cast, override
 from typing_extensions import TypeIs, TypeVar
@@ -354,6 +355,42 @@ class AbstractVector(
     def shape(self) -> tuple[int, ...]:
         """Return the batch shape of the vector."""
         return broadcast_shapes(*map(_leaf_shape, self.data.values()))
+
+    # `quax.ArrayValue` derives `ndim` / `size` from `aval()`, whose shape
+    # carries the trailing component axis; derive them from `shape` instead so
+    # `ndim == len(shape)` and `size == prod(shape)` hold (#1027).
+
+    @property
+    @override
+    def ndim(self) -> int:
+        """Return the number of batch dimensions, ``len(self.shape)``.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.Point.from_([1, 2, 3], "km").ndim
+        0
+        >>> cx.Point.from_([[1, 2, 3], [4, 5, 6]], "km").ndim
+        1
+
+        """
+        return len(self.shape)
+
+    @property
+    @override
+    def size(self) -> int:
+        """Return the number of batch elements, ``prod(self.shape)``.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.Point.from_([1, 2, 3], "km").size
+        1
+        >>> cx.Point.from_([[1, 2, 3], [4, 5, 6]], "km").size
+        2
+
+        """
+        return math.prod(self.shape)
 
     # ===============================================================
     # Array API
