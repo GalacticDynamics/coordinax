@@ -8,7 +8,7 @@ from dataclasses import replace
 import jax
 import jax.numpy as jnp
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import assume, given, strategies as st
 
 import unxt as u
 
@@ -17,6 +17,8 @@ import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
+import coordinaxs.hypothesis.vectors as cxvst
+from .conftest import jit_constructible, wrong_dimension
 from coordinaxs.api.custom_types import CDict
 
 # ======================================================================
@@ -834,3 +836,56 @@ class TestUconvert:
             assert jnp.allclose(
                 u.ustrip("km/s", back.data[k]), u.ustrip("km/s", v.data[k])
             )
+
+
+# ======================================================================
+# `from_` checks coordinate-basis dimensions against the chart (gh#1026)
+
+
+@given(
+    point=cxvst.vectors(),
+    semantic=st.sampled_from([cxr.dpl, cxr.vel, cxr.acc]),
+    use_jit=st.booleans(),
+)
+def test_from_checks_component_dimensions(point, semantic, use_jit):
+    """A coordinate-basis `from_` checks each component against its dimension.
+
+    That is the chart's dimension per time to the semantic kind's order: a
+    velocity in `sph3d` is ``(length, angle, angle) / time``.
+    """
+    chart = point.chart
+    per_time = u.Q(1.0, "s") ** semantic.order
+    data = {
+        k: v / per_time if isinstance(v, u.AbstractQuantity) else v
+        for k, v in point.data.items()
+    }
+
+    def build(data):
+        return cx.Tangent.from_(data, chart, cxr.coord_basis, semantic).data
+
+    if use_jit and jit_constructible(chart):
+        build = jax.jit(build)
+
+    assert set(build(data)) == set(chart.components)
+
+    key, bad = wrong_dimension(data, chart, semantic.coord_dimensions(chart))
+    assume(key is not None)
+    with pytest.raises(ValueError, match=f"component '{key}' has dimension"):
+        build(bad)
+
+
+def test_from_rejects_position_as_velocity():
+    """A length is not a velocity: `from_` names the component and both dimensions."""
+    with pytest.raises(ValueError, match="'x' has dimension length, expected speed"):
+        cx.Tangent.from_(u.Q([1.0, 2, 3], "m"), cxc.cart3d, cxr.coord_basis, cxr.vel)
+
+
+def test_from_does_not_check_physical_basis():
+    """Physical components carry the metric's scale factors, not the chart's dims."""
+    v = cx.Tangent.from_(
+        {"r": u.Q(1.0, "m/s"), "theta": u.Q(2.0, "m/s"), "phi": u.Q(3.0, "m/s")},
+        cxc.sph3d,
+        cxr.phys_basis,
+        cxr.vel,
+    )
+    assert v["theta"].unit == u.unit("m/s")

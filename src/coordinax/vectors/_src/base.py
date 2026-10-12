@@ -803,3 +803,31 @@ def vectorform_pdoc(vector: AbstractVector, **kwargs: Any) -> wl.AbstractDoc:
         header = f"{header} {unit_doc}"
 
     return wl.TextDoc(header + vector_values_str(vector, **kwargs) + ">")
+
+
+def check_dimensions(
+    data: CDict,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    dims: tuple[u.AbstractDimension | None, ...],
+    /,
+) -> None:
+    """Raise if a component's physical dimension is not the one ``dims`` declares.
+
+    ``dims`` is one entry per ``chart.components``; ``None`` leaves that
+    component unconstrained. A component with no unit (a bare array) is not
+    checked: it has no dimension to contradict.
+
+    Only units are read, never values, so the check is static -- it works the
+    same under `jax.jit` and costs nothing on device.
+    """
+    for k, want in zip(chart.components, dims, strict=True):
+        v = data[k]
+        if want is None or not isinstance(v, u.AbstractQuantity):
+            continue
+        got = u.dimension_of(v)
+        if got != want:
+            msg = (
+                f"{type(chart).__name__} component {k!r} has dimension {got}, "
+                f"expected {want}."
+            )
+            raise ValueError(msg)

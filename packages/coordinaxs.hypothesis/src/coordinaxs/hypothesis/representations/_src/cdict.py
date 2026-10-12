@@ -134,11 +134,15 @@ def cdicts(
     /,
     **kwargs: Any,
 ) -> CDict:
-    """Generate a tangent-geometry CDict following chart.coord_dimensions.
+    """Generate a tangent-geometry CDict with the semantic kind's dimensions.
 
-    Tangent vectors (with any basis and semantic kind) are generated as
-    chart-coordinate-dimensioned quantities. For hypothesis testing, this is
-    sufficient since invariants are checked separately.
+    In the coordinate basis each component has the dimension that
+    ``Tangent.from_`` checks, ``semantic_kind.coord_dimensions(chart)`` -- a
+    velocity in `sph3d` is ``(length, angle, angle) / time`` -- drawn without
+    the chart's coordinate domains. A physical basis's dimensions carry the
+    metric's scale factors, which the chart does not declare, so those are
+    drawn with the chart's coordinate dimensions (``from_`` does not check
+    them).
 
     >>> import coordinaxs.hypothesis.representations as cxrst
     >>> import coordinax.representations as cxr
@@ -160,5 +164,7 @@ def cdicts(
             "cdicts with TangentGeometry must have AbstractTangentSemanticKind"
         )
 
+    if isinstance(basis, cxr.CoordinateBasis):
+        kwargs.setdefault("dimensions", semantic_kind.coord_dimensions(chart))
     strategy = cdicts(chart, **kwargs)  # ty: ignore[missing-argument]
     return draw(cast("st.SearchStrategy[CDict]", strategy))

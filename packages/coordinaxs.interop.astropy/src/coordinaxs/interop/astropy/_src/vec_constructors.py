@@ -10,6 +10,7 @@ import plum
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
+import coordinax.representations as cxr
 import coordinax.vectors as cxv
 import coordinaxs.astro as cxastro
 from .frames import to_astropy_frame
@@ -33,7 +34,7 @@ def from_astropy_cartesian_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.cart3d, frame=cxf.noframe)
+    return cls.from_(data, cxc.cart3d, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -56,7 +57,7 @@ def from_astropy_cylindrical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.cyl3d, frame=cxf.noframe)
+    return cls.from_(data, cxc.cyl3d, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -79,7 +80,7 @@ def from_astropy_physics_spherical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.sph3d, frame=cxf.noframe)
+    return cls.from_(data, cxc.sph3d, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -102,7 +103,7 @@ def from_astropy_spherical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.lonlat_sph3d, frame=cxf.noframe)
+    return cls.from_(data, cxc.lonlat_sph3d, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -127,7 +128,7 @@ def from_astropy_unit_spherical_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.lonlat_sph2, frame=cxf.noframe)
+    return cls.from_(data, cxc.lonlat_sph2, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 @cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -145,7 +146,7 @@ def from_astropy_radial_representation(
 
     """
     data = cxc.cdict(obj)
-    return cls(data, cxc.radial1d, frame=cxf.noframe)
+    return cls.from_(data, cxc.radial1d, cxr.point)  # ty: ignore[invalid-return-type]
 
 
 ##############################################################################
@@ -208,7 +209,7 @@ def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     frame = plum.convert(apy_frame, cxastro.AbstractSpaceFrame)
 
     # Convert the data to a Point
-    return cxv.Point(data, chart, frame=frame)
+    return cxv.Point.from_(data, chart, frame)  # ty: ignore[invalid-return-type]
 
 
 @plum.conversion_method(type_from=apyc.BaseCoordinateFrame, type_to=cxv.Point)
@@ -483,4 +484,4 @@ def from_astropy_skycoord(cls: type[cxv.Point], obj: apyc.SkyCoord, /) -> cxv.Po
     frame = plum.convert(apy_frame, cxastro.AbstractSpaceFrame)
 
     # Convert the data to a Point
-    return cxv.Point(data, chart, frame)
+    return cxv.Point.from_(data, chart, frame)  # ty: ignore[invalid-return-type]
