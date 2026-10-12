@@ -84,6 +84,7 @@ The triple is (geometry kind, basis, semantic kind), and the three are orthogona
 
 - **A tangent operation needs an anchor.** Chart conversion and basis change are evaluated at a base point; a code path that drops `at=`, or evaluates it in the wrong chart, is #559 again (basis changes must be anchored in the destination chart).
 - **`coord_basis` vs `phys_basis` differ by the chart's scale factors**, which must come from the metric rather than being hand-written per chart (#633).
+- **A linear-space operation on a `Point` is a category error.** Points are affine: scaling one (`k * p`) is undefined without an origin, and doing it component-wise in a curvilinear chart scales the angles and moves the point (#1025). A rule annotated `Point | Tangent` for a vector-space operation (scale, linear combination) should be split, with the `Point` side refusing; internal code that needs to scale a position must go through Cartesian components or a displacement `Tangent`.
 - **Tangent arithmetic across charts is a category error**, not a conversion to perform silently — #652 was exactly this corruption.
 - A new semantic kind must not change any transformation law. If it does, it is a geometry kind or a basis, not a semantic kind.
 

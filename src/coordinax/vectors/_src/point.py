@@ -6,7 +6,7 @@ __all__ = ("Point",)
 from dataclasses import replace
 
 from jaxtyping import ArrayLike
-from typing import TYPE_CHECKING, Any, Generic, cast, final, override
+from typing import TYPE_CHECKING, Any, Generic, NoReturn, cast, final, override
 from typing_extensions import TypeVar
 
 import equinox as eqx
@@ -35,6 +35,41 @@ SemanticT = TypeVar(
     "SemanticT", bound=cxr.AbstractSemanticKind, default=cxr.AbstractSemanticKind
 )
 V = TypeVar("V", bound=HasShape, default=u.Q)
+
+
+def refuse_point_scaling(kind: str, /) -> NoReturn:
+    """Raise the `TypeError` for scaling a point, which is affine (gh#1025)."""
+    if kind == "Coordinate":
+        msg = (
+            "cannot multiply or divide a Coordinate by a scalar: its base point "
+            "is affine, and scaling it has no meaning without an origin. Scale "
+            "the fibre tangents individually instead, e.g. "
+            "`k * coord['velocity']`."
+        )
+        raise TypeError(msg)
+    msg = (
+        f"cannot multiply or divide a {kind} by a scalar: a point is affine, and "
+        "scaling it has no meaning without an origin. With `import coordinax "
+        "as cx`, work in Cartesian components, "
+        "`q = p.cconvert(cx.charts.cart3d)`, then either promote to a "
+        "displacement and scale that, "
+        "`k * cx.representations.change_basis(q, "
+        "cx.representations.coord_basis, at=q)`, or scale the position about "
+        "the origin explicitly, "
+        "`cx.Point.from_({n: k * x for n, x in q.data.items()}, q.chart)`."
+    )
+    raise TypeError(msg)
+
+
+def refuse_scaling_unless_vector(kind: str, other: Any, /) -> Any:
+    """Refuse scaling ``kind`` by ``other``, unless ``other`` is itself a vector.
+
+    A vector operand is not a scaling: return `NotImplemented` so Python reports
+    the ordinary unsupported-operand error instead of the scalar explanation.
+    """
+    if isinstance(other, AbstractVector):
+        return NotImplemented
+    refuse_point_scaling(kind)
 
 
 def _frame_converter(v: Any, /) -> cxf.AbstractReferenceFrame:
@@ -153,6 +188,32 @@ class Point(
             return self.data[key]
         data = broadcast_and_index_data(self.data, self.shape, key)
         return replace(self, data=data)  # ty: ignore[invalid-return-type]
+
+    # A point is affine, so scaling one is refused (gh#1025). The quax rules
+    # (`mul_p_scalar_point`, ...) raise the same error, but the quax-blocks
+    # operators turn a rule's `TypeError` into `NotImplemented`, and Python then
+    # reports a bare "unsupported operand" that drops the explanation. (`-> Any`,
+    # not `NoReturn`: jaxtyping's method wrapper rejects `NoReturn` there.)
+    def __mul__(self, other: Any) -> Any:
+        """Refuse ``point * k``: a point is affine.
+
+        >>> import coordinax as cx
+        >>> cx.Point.from_([1.0, 2.0, 3.0], "km") * 2
+        Traceback (most recent call last):
+        ...
+        TypeError: cannot multiply or divide a Point by a scalar: a point is affine, ...
+
+        """
+        return refuse_scaling_unless_vector("Point", other)
+
+    def __rmul__(self, other: Any) -> Any:
+        return refuse_scaling_unless_vector("Point", other)
+
+    def __truediv__(self, other: Any) -> Any:
+        return refuse_scaling_unless_vector("Point", other)
+
+    def __rtruediv__(self, other: Any) -> Any:
+        return refuse_scaling_unless_vector("Point", other)
 
 
 # ===================================================================

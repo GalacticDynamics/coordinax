@@ -144,7 +144,7 @@ class TestPointJAXCompat:
     def test_aval_under_eval_shape(self):
         """`jax.eval_shape` needs `.aval()`; must work for unitless components."""
         p = cx.Point.from_({"x": 1.0, "y": 2.0, "z": 3.0}, cxc.cart3d)
-        result = jax.eval_shape(lambda v: v * 2, p)
+        result = jax.eval_shape(lambda v: -v, p)
         assert isinstance(result, cx.Point)
 
 
