@@ -35,9 +35,10 @@ dependencies = [
   "quax-blocks>=0.4.1",
   "quaxed>=0.10.5",
   "typing-extensions>=4.13.2",
-  "unxt>=1.11.2",
+  "unxt>=1.11.2,<2",                                      # unxt 2 support is coordinax 0.24
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
+  "zeroth>=1.0.0",
 ]
 description = "Coordinates in JAX"
 dynamic = ["version"]
