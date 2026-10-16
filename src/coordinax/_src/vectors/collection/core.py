@@ -3,7 +3,15 @@
 __all__ = ("KinematicSpace",)
 
 import math
-from collections.abc import Callable, ItemsView, Iterable, KeysView, Mapping, ValuesView
+from collections.abc import (
+    Callable,
+    ItemsView,
+    Iterable,
+    Iterator,
+    KeysView,
+    Mapping,
+    ValuesView,
+)
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Generic, cast, final
 from typing_extensions import override
@@ -18,7 +26,6 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import replace
-from xmmutablemap import ImmutableMap
 
 from .utils import DimensionLike, _get_dimension_name, can_broadcast_shapes
 from coordinax._src.custom_types import Unit
@@ -32,12 +39,11 @@ if TYPE_CHECKING:
 
 
 # TODO: figure out how to make the keys into Dimension objects, not str. This is
-#       running afoul of Jax's tree flattening, where ImmutableMap and
-#       eqx.Module differ.
+#       running afoul of Jax's tree flattening.
 @final
 class KinematicSpace(
     AbstractVectorLike,
-    ImmutableMap[str, AbstractVector],  # type: ignore[misc]
+    Mapping[str, AbstractVector],
     Generic[PosT],
 ):
     """A collection of vectors that acts like the primary vector.
@@ -311,7 +317,16 @@ class KinematicSpace(
         if isinstance(key, Dimension):
             key = _get_dimension_name(key)
 
-        return ImmutableMap.__getitem__(self, key)
+        return self._data[key]
+
+    def __contains__(self, key: Any) -> bool:
+        return key in self._data
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._data)
+
+    def __len__(self) -> int:
+        return len(self._data)
 
     def keys(self) -> KeysView[str]:
         return self._data.keys()
