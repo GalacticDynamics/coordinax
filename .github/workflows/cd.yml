@@ -11,7 +11,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # The event name keeps a tag push and the release it backs from cancelling
+  # each other: both run on `refs/tags/vX.Y.Z`, and only `release` publishes.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
