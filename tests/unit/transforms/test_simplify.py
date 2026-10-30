@@ -209,7 +209,11 @@ class TestSimplifyDeclinesUnderTrace:
     #: name -> (build from one array, identity-valued operand, operator type)
     CASES: ClassVar = {
         "Rotate": (cxfm.Rotate, lambda: jnp.eye(3), cxfm.Rotate),
-        "Reflect": (cxfm.Reflect, lambda: jnp.eye(3), cxfm.Reflect),
+        # `Reflect` is absent deliberately: every case here is built from an
+        # identity-valued operand so an unfixed site cannot pass by accident,
+        # and a `Reflect` can no longer be identity-valued (the constructor
+        # requires `trace H == n - 2`). Its `simplify` rule lost its value
+        # inspection with that narrowing, so it is trace-safe by construction.
         "Shear": (cxfm.Shear, lambda: jnp.eye(3), cxfm.Shear),
         "Scale": (cxfm.Scale, lambda: jnp.eye(3), cxfm.Scale),
         "Linear": (cxfm.Linear, lambda: jnp.eye(3), cxfm.Linear),
@@ -500,20 +504,36 @@ class TestMalformedMatricesReportTheSharedMessage:
     def _nonsquare(self):
         return jnp.ones(self.NONSQUARE)
 
-    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
+    @pytest.mark.parametrize(
+        "op_type", [cxfm.Scale, cxfm.Linear, cxfm.Rotate, cxfm.Reflect]
+    )
     def test_matrix_reports_square(self, op_type):
         with pytest.raises(Exception, match="square"):
             _ = op_type(self._nonsquare()).matrix
 
-    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
-    def test_inverse_reports_square(self, op_type):
+    # `.inverse` and `simplify` are only reachable for an operator that can be
+    # *built* from a non-square matrix, and `Linear` is the only one: `Scale`,
+    # `Rotate` and `Reflect` reject it in `__init__`. Parametrising those here
+    # would pass on the constructor's raise without ever reaching the path
+    # under test -- pinned by `test_only_linear_survives_construction` below.
+    def test_inverse_reports_square(self):
         with pytest.raises(Exception, match="square"):
-            _ = op_type(self._nonsquare()).inverse.matrix
+            _ = cxfm.Linear(self._nonsquare()).inverse.matrix
 
-    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Linear])
-    def test_simplify_reports_square(self, op_type):
+    def test_simplify_reports_square(self):
         with pytest.raises(Exception, match="square"):
-            cxfm.simplify(op_type(self._nonsquare()))
+            cxfm.simplify(cxfm.Linear(self._nonsquare()))
+
+    @pytest.mark.parametrize("op_type", [cxfm.Scale, cxfm.Rotate, cxfm.Reflect])
+    def test_only_linear_survives_construction(self, op_type):
+        """The premise of the two tests above, asserted rather than assumed."""
+        with pytest.raises(Exception, match="square"):
+            op_type(self._nonsquare())
+
+    def test_linear_does_survive_construction(self):
+        """The other half: `Linear` really does reach `.inverse`/`simplify`."""
+        op = cxfm.Linear(self._nonsquare())
+        assert op.M.shape == self.NONSQUARE
 
     def test_a_malformed_scale_cannot_be_built_at_all(self):
         """Was a `_merge` test; a malformed `Scale` no longer survives `__init__`.
