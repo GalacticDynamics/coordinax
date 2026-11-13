@@ -184,12 +184,12 @@ def test_jit_tangent_addition_in_parameterized_chart():
 
 
 def test_jit_point_difference_in_parameterized_chart():
-    """`-` routes through `representations/core.py`'s ambient-Cartesian branch."""
+    """`p - q` maps both points through the chart's ambient Cartesian chart."""
 
     @jax.jit
     def f(d):
         c = _chart(d)
-        return (cx.Point(AT, chart=c) - cx.Point(AT, chart=c))["mu"].value
+        return (cx.Point(AT, chart=c) - cx.Point(AT, chart=c))["x"].value
 
     assert jnp.isfinite(f(DELTA))
 
