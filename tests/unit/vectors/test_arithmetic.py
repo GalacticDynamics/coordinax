@@ -406,6 +406,15 @@ class TestPointRefusals:
         m = cx.Point.from_(u.Q([0.0, 1.0, 2.0, 3.0], "km"), cxc.minkowskict)
         with pytest.raises(TypeError, match="different manifolds"):
             _cart_vec(1, 2, 3, unit="km") - m
+        d = cx.Tangent.from_(
+            u.Q([0.0, 1.0, 2.0, 3.0], "km"), cxc.minkowskict, cxr.coord_disp
+        )
+        with pytest.raises(TypeError, match="different manifold"):
+            _cart_vec(1, 2, 3, unit="km") + d
+
+    def test_non_vector_operand_is_unsupported(self) -> None:
+        with pytest.raises(TypeError, match="unsupported operand"):
+            _ = self.p + 1
 
     @pytest.mark.parametrize(
         "f",
@@ -414,9 +423,13 @@ class TestPointRefusals:
             lambda c: c + c,
             lambda c: -c,
             lambda c: c + c.point,
+            lambda c: c.point + c,
             lambda c: c.point - c,
+            jnp.negative,
+            lambda c: jnp.add(c, c),
+            lambda c: jnp.subtract(c, c),
         ],
-        ids=["c-c", "c+c", "-c", "c+p", "p-c"],
+        ids=["c-c", "c+c", "-c", "c+p", "p+c", "p-c", "jnp.neg", "jnp.add", "jnp.sub"],
     )
     def test_coordinate(self, f) -> None:
         c = cx.Coordinate(point=self.p, velocity=_cart_tangent(1, 2, 3))
