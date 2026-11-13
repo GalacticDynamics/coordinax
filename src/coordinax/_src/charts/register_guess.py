@@ -179,6 +179,24 @@ def guess_chart(obj: CDict, /) -> AbstractChart:
 
 @plum.dispatch
 def guess_chart(
+    _: Shaped[ArrayLike, ""] | Shaped[u.AbstractQuantity, ""], /
+) -> AbstractChart:
+    """Infer a 1D Cartesian chart from a 0-d value / quantity.
+
+    A value with no axes is a single component, so it is one Cartesian
+    coordinate -- the same chart as for a last axis of size 1.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> cxc.guess_chart(u.Q(1.0, "m"))
+    Cart1D(M=Rn(1))
+
+    """
+    return cart1d  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def guess_chart(
     _: Shaped[ArrayLike, "*batch 1"] | Shaped[u.AbstractQuantity, "*batch 1"], /
 ) -> AbstractChart:
     """Infer a 1D Cartesian chart from last dimension of a value / quantity.
