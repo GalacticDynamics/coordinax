@@ -4,7 +4,7 @@ __all__ = ("Abstract0D", "Cart0D", "cart0d")
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, Self, override  # noqa: N817
+from typing import Any, Final, Literal as L, override  # noqa: N817
 from typing_extensions import TypeVar
 
 from coordinax._src.base import (
@@ -65,7 +65,7 @@ class Cart0D(AbstractStaticFixedComponentsChart[MT, ZeroDKeys, ZeroDDims], Abstr
 
     @override
     @property
-    def cartesian(self) -> Self:
+    def cartesian(self) -> "Cart0D[MT]":
         """Return the canonical Cartesian chart for a 0D chart.
 
         >>> import coordinax.charts as cxc

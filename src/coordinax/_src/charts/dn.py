@@ -5,7 +5,7 @@ __all__ = ("AbstractND", "CartND", "cartnd")
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, Self, override  # noqa: N817
+from typing import Any, Final, Literal as L, override  # noqa: N817
 from typing_extensions import TypeVar
 
 from coordinax._src.base import (
@@ -79,7 +79,7 @@ class CartND(
 
     @override
     @property
-    def cartesian(self) -> Self:
+    def cartesian(self) -> "CartND[MT]":
         """Return the canonical Cartesian chart for an N-D chart.
 
         >>> import coordinax.charts as cxc

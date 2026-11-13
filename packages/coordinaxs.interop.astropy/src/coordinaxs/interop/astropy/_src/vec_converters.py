@@ -5,7 +5,6 @@
 __all__: tuple[str, ...] = ()
 
 
-from jaxtyping import Shaped
 from typing import Any, NoReturn, cast
 
 import astropy.coordinates as apyc
@@ -37,7 +36,7 @@ def check_semantics[V: cxv.AbstractVector](
 
 
 @plum.conversion_method(cxv.Point, apyu.Quantity)
-def vec_to_q(obj: cxv.Point, /) -> Shaped[apyu.Quantity, "*batch 3"]:
+def vec_to_q(obj: cxv.Point, /) -> apyu.Quantity:
     """`coordinax.Point` -> `astropy.units.Quantity`.
 
     >>> import unxt as u

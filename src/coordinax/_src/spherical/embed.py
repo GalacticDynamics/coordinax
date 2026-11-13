@@ -119,7 +119,7 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT], eqx.Module):
 
 
 def embedded_twosphere(
-    radius: float | u.AbstractQuantity,
+    radius: u.AbstractQuantity | float | int,
     ambient: cxc.AbstractChart[Any, Any, Any] = cxc.sph3d,
 ) -> EmbeddedManifold:
     """Create an `coordinax.manifolds.EmbeddedManifold` for the two-sphere.
