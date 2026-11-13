@@ -38,15 +38,11 @@ __all__ = (
     "Shape",
 )
 
-from ._src.setup_package import install_import_hook
 
-with install_import_hook("coordinax.internal"):
-    from coordinax._src.custom_types import OptUSys, Shape
-    from coordinax._src.internal import (
-        jax_scalar_handler,
-        pack_uniform_unit,
-        pos_named_objs,
-        tree_cast_int_bool_to_float,
-    )
-
-del install_import_hook
+from coordinax._src.custom_types import OptUSys, Shape
+from coordinax._src.internal import (
+    jax_scalar_handler,
+    pack_uniform_unit,
+    pos_named_objs,
+    tree_cast_int_bool_to_float,
+)

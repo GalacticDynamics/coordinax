@@ -17,7 +17,6 @@ from coordinax._src.optional_exports import (
     load_exports,
     resolve_entrypoints_with_legacy,
 )
-from coordinax._src.setup_package import install_import_hook
 
 __all__: tuple[str, ...] = (
     # API
@@ -49,29 +48,27 @@ __all__: tuple[str, ...] = (
     "groups",
 )
 
-with install_import_hook("coordinax.transforms"):
-    from . import builders, groups
-    from ._src.actions import (
-        AbstractTransform,
-        Affine,
-        Boost,
-        Composed,
-        Identity,
-        Linear,
-        LorentzBoost,
-        Reflect,
-        Rotate,
-        Scale,
-        Shear,
-        TimeDep,
-        Translate,
-        evaluate_at,
-        identity,
-        is_time_dependent,
-        tau_derivative,
-    )
-    from coordinaxs.api.transforms import act, act_jet, compose, pushforward, simplify
-
+from . import builders, groups
+from ._src.actions import (
+    AbstractTransform,
+    Affine,
+    Boost,
+    Composed,
+    Identity,
+    Linear,
+    LorentzBoost,
+    Reflect,
+    Rotate,
+    Scale,
+    Shear,
+    TimeDep,
+    Translate,
+    evaluate_at,
+    identity,
+    is_time_dependent,
+    tau_derivative,
+)
+from coordinaxs.api.transforms import act, act_jet, compose, pushforward, simplify
 
 # Extension point: distributions may register transform symbols under the
 # ``coordinaxs.transforms`` entry-point group. No in-tree distribution
@@ -108,4 +105,4 @@ def _load_optional_transform_exports() -> None:
 
 _load_optional_transform_exports()
 
-del (install_import_hook, Final)
+del Final
