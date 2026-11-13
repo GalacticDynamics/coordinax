@@ -554,7 +554,26 @@ class Coordinate(AbstractVector):
             velocity=Tangent: chart=Cart3D (x, y, z) [m / s]
                 [1. 0. 0.]>
 
+        ``include_data_name`` chose how v0.23 printed the bundle's ``data``
+        field. A `Coordinate` has no such field now, so it is refused rather
+        than ignored:
+
+        >>> try:
+        ...     wl.pformat(coord, include_data_name="map")
+        ... except TypeError as e:
+        ...     print(e)
+        Coordinate has no `data` field to name, so `include_data_name` has no
+        meaning. The point always prints first and the fibres by name; drop the
+        argument.
+
         """
+        if "include_data_name" in kwargs:
+            msg = (
+                "Coordinate has no `data` field to name, so `include_data_name` "
+                "has no meaning. The point always prints first and the fibres "
+                "by name; drop the argument."
+            )
+            raise TypeError(msg)
         if vector_form:
             return vectorform_pdoc(self, **kwargs)
 

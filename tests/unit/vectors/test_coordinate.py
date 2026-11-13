@@ -16,7 +16,9 @@ from typing import ClassVar
 import jax
 import jax.numpy as jnp
 import pytest
+import wadler_lindig as wl
 
+import dataclassish
 import unxt as u
 
 import coordinax as cx
@@ -679,6 +681,61 @@ class TestReprStr:
         vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         assert "velocity" in repr(pv)
+
+    @pytest.mark.parametrize("vector_form", [False, True])
+    @pytest.mark.parametrize("value", ["named", "vector", "map"])
+    def test_include_data_name_is_refused(self, value: str, vector_form: bool) -> None:
+        """v0.23's ``include_data_name`` has no meaning now; it must not be ignored."""
+        base = cxv.Point.from_([1, 2, 3], "m")
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
+        pv = Coordinate(point=base, velocity=vel)
+        with pytest.raises(TypeError, match="include_data_name"):
+            wl.pformat(pv, include_data_name=value, vector_form=vector_form)
+
+
+# ---------------------------------------------------------------------------
+# TestDataclassish
+# ---------------------------------------------------------------------------
+
+
+def _bundle(*names: str) -> Coordinate:
+    base = cxv.Point.from_([1, 2, 3], "m")
+    fibres = {
+        n: cxv.Tangent.from_([i, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
+        for i, n in enumerate(names)
+    }
+    return Coordinate(point=base, **fibres)
+
+
+_FIBRE_NAMES = [(), ("velocity",), ("velocity", "velocity_2")]
+
+
+class TestDataclassish:
+    """The dataclassish view is the point then the fibres, never ``_data``."""
+
+    @pytest.mark.parametrize("names", _FIBRE_NAMES)
+    def test_views_agree(self, names: tuple[str, ...]) -> None:
+        pv = _bundle(*names)
+        keys = ("point", *names)
+        vals = (pv.point, *(pv[n] for n in names))
+        assert tuple(dataclassish.field_keys(pv)) == keys
+        assert all(
+            a is b for a, b in zip(dataclassish.field_values(pv), vals, strict=True)
+        )
+        assert tuple(dataclassish.field_items(pv)) == tuple(
+            zip(keys, vals, strict=True)
+        )
+        assert tuple(f.name for f in dataclassish.fields(pv)) == keys
+        assert tuple(dataclassish.asdict(pv)) == keys
+
+    @pytest.mark.parametrize("names", _FIBRE_NAMES)
+    def test_field_items_round_trip(self, names: tuple[str, ...]) -> None:
+        """``replace`` and the constructor both accept what ``field_items`` gives."""
+        pv = _bundle(*names)
+        items = dict(dataclassish.field_items(pv))
+        assert bool(dataclassish.replace(pv, **items) == pv)
+        assert bool(Coordinate(**items) == pv)
+        assert bool(Coordinate(**dataclassish.asdict(pv)) == pv)
 
 
 # ---------------------------------------------------------------------------
