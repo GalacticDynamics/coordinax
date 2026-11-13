@@ -4,7 +4,7 @@ __all__ = ()
 
 
 from jaxtyping import Array, ArrayLike
-from typing import cast
+from typing import Any, cast
 
 import plum
 
@@ -36,6 +36,28 @@ def _check_homogeneous(obj: u.AbstractQuantity, chart: AbstractChart, /) -> None
             "dict, or a Point."
         )
         raise ValueError(msg)
+
+
+def _split_last_axis(obj: Any, keys: CKeys, what: str, /) -> CDict:
+    """Split ``obj``'s last axis into the components named by ``keys``.
+
+    A 0-d value has no axis to split. It is one component, so it fills a
+    single-component chart whole and is refused for any other. Shapes are
+    static under ``jax.jit``, so these checks are trace-safe.
+    """
+    n = len(keys)
+    if obj.ndim == 0:
+        if n == 1:
+            return {keys[0]: obj}
+        msg = (
+            f"A 0-d {what} is a single component, but {n} components "
+            f"{tuple(keys)} are expected. Give them along a last axis of size {n}."
+        )
+        raise ValueError(msg)
+    if obj.shape[-1] != n:
+        msg = f"{what} last dimension {obj.shape[-1]} does not match provided keys {n}."
+        raise ValueError(msg)
+    return {k: obj[..., i] for i, k in enumerate(keys)}
 
 
 # ===================================================================
@@ -120,14 +142,13 @@ def cdict(obj: u.AbstractQuantity, keys: CKeys, /) -> CDict:
     >>> cxc.cdict(q, ('x', 'y', 'z'))
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
-    """
-    if obj.shape[-1] != len(keys):
-        raise ValueError(
-            f"Quantity last dimension {obj.shape[-1]} does not match "
-            f"provided keys {len(keys)}."
-        )
+    A 0-d Quantity is one component:
 
-    return {k: obj[..., i] for i, k in enumerate(keys)}
+    >>> cxc.cdict(u.Q(1.0, "m"), ('x',))
+    {'x': Q(1., 'm')}
+
+    """
+    return _split_last_axis(obj, keys, "Quantity")
 
 
 @plum.dispatch
@@ -255,14 +276,7 @@ def cdict(obj: ArrayLike, keys: CKeys, /) -> CDict:
      'z': Array(3., dtype=float64)}
 
     """
-    obj = jnp.asarray(obj)
-    if obj.shape[-1] != len(keys):
-        msg = (
-            f"Array last dimension {obj.shape[-1]} does not match "
-            f"provided keys {len(keys)}."
-        )
-        raise ValueError(msg)
-    return {k: obj[..., i] for i, k in enumerate(keys)}
+    return _split_last_axis(jnp.asarray(obj), keys, "Array")
 
 
 @plum.dispatch
@@ -311,7 +325,7 @@ def cdict(
         return cast("CDict", cxcapi.cdict(qm, keys))
 
     vals = jnp.asarray(obj) if theunit is None else u.Q(jnp.asarray(obj), theunit)
-    return {k: vals[..., i] for i, k in enumerate(keys)}
+    return _split_last_axis(vals, keys, "Array")
 
 
 @plum.dispatch
@@ -393,19 +407,11 @@ def cdict(obj: ArrayLike, usys: u.AbstractUnitSystem, chart: AbstractChart, /) -
 
     """
     obj: Array = jnp.asarray(obj)  # TODO: asanyarray
-
-    if obj.shape[-1] != len(chart.components):
-        msg = (
-            f"Array last dimension {obj.shape[-1]} does not match "
-            f"chart with {len(chart.components)} components."
-        )
-        raise ValueError(msg)
+    parts = _split_last_axis(obj, chart.components, "Array")
     return canonical_containers(
         {
-            k: u.Q(obj[..., i], usys[d])
-            for i, (k, d) in enumerate(
-                zip(chart.components, chart.coord_dimensions, strict=False)
-            )
+            k: u.Q(parts[k], usys[d])
+            for k, d in zip(chart.components, chart.coord_dimensions, strict=True)
         },
         chart,
     )
