@@ -278,6 +278,41 @@ def chart_init_kwargs(
     return {"factors": factors, "factor_names": names}
 
 
+@plum.dispatch
+@ft.lru_cache(maxsize=128, typed=True)
+@strip_return_annotation
+@st.composite
+def chart_init_kwargs(
+    draw: st.DrawFn,
+    chart_class: type[cxc.GalileanCT],
+    /,
+    *,
+    ndim: int | None | st.SearchStrategy = None,
+) -> dict[str, Any]:
+    """Draw a `spatial_chart` that `GalileanCT` accepts.
+
+    `spatial_chart` is annotated `AbstractChart`, because a parameterized chart
+    with static parameters is a legal spatial factor. Drawing from that
+    annotation also gives charts `GalileanCT` rejects: one holding array
+    leaves (a `Quantity`-valued `ProlateSpheroidal3D.Delta`) or a
+    time-dependent `TubularChart`. As for `cartesian_product_factors`, the
+    static branch is the cheap way to draw only legal factors.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinaxs.hypothesis.main as cxst
+    >>> from hypothesis import given
+
+    >>> @given(kwargs=cxst.chart_init_kwargs(cxc.GalileanCT))
+    ... def test_spatial_chart_is_accepted(kwargs):
+    ...     cxc.GalileanCT(**kwargs)
+    >>> test_spatial_chart_is_accepted()
+
+    """
+    del chart_class, ndim
+    spatial = draw(charts(filter=cxc.AbstractStaticFixedComponentsChart))  # ty: ignore[missing-argument, unknown-argument]
+    return {"spatial_chart": spatial}
+
+
 ##############################################################################
 # General product chart strategy
 
