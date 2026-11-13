@@ -12,15 +12,19 @@ from typing_extensions import TypeVar
 import equinox as eqx
 import quax_blocks
 
+import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
+import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 from .base import AbstractVector, broadcast_and_index_data, check_dimensions
-from .custom_types import CKey, HasShape
+from .custom_types import CKey, HasShape, OptUSys
 from .mixins import AstropyRepresentationAPIMixin
 from .point import _frame_converter
+from coordinax._src.manifolds._utils import require_positive_definite
+from coordinax.internal import pack_uniform_unit
 
 if TYPE_CHECKING:
     from coordinaxs.api.custom_types import CDict
@@ -39,6 +43,10 @@ SemanticT = TypeVar(
     default=cxr.AbstractTangentSemanticKind,
 )
 V = TypeVar("V", bound=HasShape, default=u.Q)
+
+# Charts whose metric is the identity everywhere, so `norm` needs no base point.
+# ponytail: CartND is left out; `cxm.norm` has no at-free CDict path for it yet.
+_CARTESIAN = (cxc.Cart1D, cxc.Cart2D, cxc.Cart3D)
 
 
 @final
@@ -143,6 +151,77 @@ class Tangent(
             return self.data[key]
         data = broadcast_and_index_data(self.data, self.shape, key)
         return replace(self, data=data)  # ty: ignore[invalid-return-type]
+
+    def norm(self, *, at: Any = None, usys: OptUSys = None) -> Any:
+        r"""Riemannian norm $\sqrt{g_{ij}(p)\, v^i v^j}$ in the attached manifold.
+
+        The norm is taken over the components only; leading (batch) axes are
+        kept.
+
+        Parameters
+        ----------
+        at
+            Base point $p$, a `~coordinax.Point` (in any chart of the manifold)
+            or a component dict in this tangent's chart. Needed only for
+            coordinate-basis components on a non-Cartesian chart, where the
+            metric depends on $p$. In the physical (orthonormal) basis the
+            metric is the identity, and ``at`` is ignored.
+        usys
+            Unit system, needed only for bare-array components.
+
+        Raises
+        ------
+        ValueError
+            If ``at`` is needed but missing.
+        NotImplementedError
+            If the manifold's metric is not positive-definite (e.g.
+            Minkowski): there $g(v, v)$ can be negative and has no real root.
+            Use `~coordinax.manifolds.interval` instead.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinax as cx
+        >>> import coordinax.charts as cxc
+        >>> import coordinax.representations as cxr
+
+        Cartesian components need no base point:
+
+        >>> v = cx.Tangent.from_(
+        ...     {"x": u.Q(3.0, "m/s"), "y": u.Q(400.0, "cm/s"), "z": u.Q(0.0, "m/s")},
+        ...     cxc.cart3d, cxr.coord_basis, cxr.vel)
+        >>> v.norm()
+        Q(5., 'm / s')
+
+        Coordinate-basis components on a curvilinear chart do. At ``r = 2 m``
+        an angular rate of ``1 rad/s`` in ``phi`` (on the equator) is
+        ``2 m/s``:
+
+        >>> p = cx.Point.from_([0.0, 2.0, 0.0], "m")
+        >>> w = cx.Tangent.from_(
+        ...     {"r": u.Q(0.0, "m/s"), "theta": u.Q(0.0, "rad/s"),
+        ...      "phi": u.Q(1.0, "rad/s")},
+        ...     cxc.sph3d, cxr.coord_basis, cxr.vel)
+        >>> w.norm(at=p).round(6)
+        Q(2., 'm / s')
+
+        """
+        if isinstance(self.basis, cxr.PhysicalBasis):
+            # Orthonormal frame: g is the identity, so the norm is Euclidean.
+            require_positive_definite(self.M.metric, "Tangent.norm")
+            v, unit = pack_uniform_unit(self.data, self.chart.components)
+            out = jnp.linalg.norm(v, axis=-1)
+            return out if unit is None else u.Q(out, unit)
+        if at is None and not isinstance(self.chart, _CARTESIAN):
+            msg = (
+                f"Tangent.norm() of coordinate-basis components on "
+                f"{type(self.chart).__name__} needs the base point: the metric "
+                "depends on where the vector is attached. Pass `at=` (a Point "
+                "or a component dict), or use the physical basis."
+            )
+            raise ValueError(msg)
+        return cxm.norm(self.data, self.chart, at=at, usys=usys)
 
 
 # ===================================================================
