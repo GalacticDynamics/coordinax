@@ -21,6 +21,7 @@ import plum
 
 import coordinaxs.api.manifolds as cxmapi
 from .point import Point
+from coordinax.frames._src.base import frames_equal
 
 
 @plum.dispatch
@@ -68,7 +69,9 @@ def geodesic_distance(a: Point, b: Point, /) -> Any:
     Distance(5., 'm')
 
     """
-    if a.frame != b.frame:
+    # `is False`: under `jit` a frame with traced array fields cannot be
+    # compared, and the same frame type is accepted.
+    if frames_equal(a.frame, b.frame) is False:
         msg = "cannot measure geodesic_distance between vectors in different frames"
         raise ValueError(msg)
 

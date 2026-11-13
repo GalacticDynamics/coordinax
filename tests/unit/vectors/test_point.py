@@ -406,3 +406,47 @@ def test_from_rejects_non_length_cartesian(unit):
     """The spellings from gh#1026: a Cartesian 'position' in seconds or km/s."""
     with pytest.raises(ValueError, match="component 'x' has dimension"):
         cx.Point.from_(u.Q([1.0, 2, 3], unit))
+
+
+class TestFrameComparisonUnderJit:
+    """Comparing Points whose frame has array fields, under ``jit``.
+
+    ``a.frame != b.frame`` is a traced array for `Galactocentric`, and an ``if``
+    on it raised ``TracerBoolConversionError``.
+    """
+
+    @staticmethod
+    def _gc(**kw):
+        import coordinaxs.astro as cxastro
+
+        return cx.Point.from_([1.0, 2.0, 3.0], "kpc", cxastro.Galactocentric(**kw))
+
+    def test_eq(self) -> None:
+        p = self._gc()
+        assert bool(jax.jit(lambda a, b: a == b)(p, p))
+
+    def test_eq_traced_frames_differ(self) -> None:
+        p, q = self._gc(), self._gc(roll=u.Q(10, "deg"))
+        assert not bool(jax.jit(lambda a, b: a == b)(p, q))
+        assert not bool(p == q)
+
+    def test_eq_frame_types_differ(self) -> None:
+        p = self._gc()
+        q = cx.Point.from_([1.0, 2.0, 3.0], "kpc")
+        assert not bool(jax.jit(lambda a, b: a == b)(p, q))
+
+    def test_equivalent(self) -> None:
+        p, q = self._gc(), self._gc(roll=u.Q(10, "deg"))
+        assert bool(jax.jit(cx.equivalent)(p, p))
+        assert not bool(jax.jit(cx.equivalent)(p, q))
+
+    def test_geodesic_distance(self) -> None:
+        p = self._gc()
+        d = jax.jit(cx.geodesic_distance)(p, p)
+        assert float(d.ustrip("kpc")) == 0.0
+
+    def test_geodesic_distance_frame_types_differ(self) -> None:
+        p = self._gc()
+        q = cx.Point.from_([1.0, 2.0, 3.0], "kpc")
+        with pytest.raises(ValueError, match="different frames"):
+            jax.jit(cx.geodesic_distance)(p, q)
