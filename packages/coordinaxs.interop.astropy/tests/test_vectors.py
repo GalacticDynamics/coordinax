@@ -19,6 +19,7 @@ import unxt as u
 
 import coordinax as cx
 import coordinax.charts as cxc
+import coordinax.representations as cxr
 
 # ---------------------------------------------------------------------------
 # Source points, and their Astropy counterparts
@@ -272,6 +273,58 @@ class TestVelocityConversion:
         assert got.d_lon.to_value(apyu.mas / apyu.yr) == 1.5
         assert got.d_lat.to_value(apyu.mas / apyu.yr) == -2.5
         assert got.d_distance.to_value(apyu.km / apyu.s) == 30.0
+
+    def test_a_physical_basis_lonlat_tangent_round_trips_via_coord_basis(self):
+        """A `phys_vel` holds speeds, not the coordinate rates astropy holds.
+
+        Handing it over as-is put km/s into `d_lon`. It is refused instead, and
+        the advised route (`change_basis` at the base point) is checked against
+        astropy's own unit vectors.
+        """
+        at = cx.Point.from_(
+            {
+                "lon": u.Q(10.0, "deg"),
+                "lat": u.Q(60.0, "deg"),
+                "distance": u.Q(2.0, "kpc"),
+            },
+            cxc.lonlat_sph3d,
+        )
+        vhat = {"lon": 10.0, "lat": 20.0, "distance": 30.0}  # km/s
+        phys = cx.Tangent.from_(
+            {k: u.Q(v, "km/s") for k, v in vhat.items()},
+            cxc.lonlat_sph3d,
+            cxr.phys_basis,
+            cxr.vel,
+        )
+        with pytest.raises(ValueError, match="change_basis"):
+            plum.convert(phys, apyc.SphericalDifferential)
+
+        got = plum.convert(
+            cxr.change_basis(phys, cxr.coord_basis, at=at), apyc.SphericalDifferential
+        )
+
+        # Oracle: sum the physical components along astropy's unit vectors,
+        # then let astropy turn that Cartesian velocity into coordinate rates.
+        base = apyc.SphericalRepresentation(
+            lon=10.0 * apyu.deg, lat=60.0 * apyu.deg, distance=2.0 * apyu.kpc
+        )
+        e = base.unit_vectors()
+        kms = apyu.km / apyu.s
+        v = sum(
+            (e[k] * (vhat[k] * kms) for k in vhat),
+            start=apyc.CartesianRepresentation(0, 0, 0, unit=kms),
+        )
+        want = apyc.CartesianDifferential(v.xyz).represent_as(
+            apyc.SphericalDifferential, base=base
+        )
+        rate = apyu.mas / apyu.yr
+        assert np.isclose(got.d_lon.to_value(rate), want.d_lon.to_value(rate))
+        assert np.isclose(got.d_lat.to_value(rate), want.d_lat.to_value(rate))
+        assert np.isclose(got.d_distance.to_value(kms), want.d_distance.to_value(kms))
+
+        back = cxr.change_basis(plum.convert(got, cx.Tangent), cxr.phys_basis, at=at)
+        for k, want_k in vhat.items():
+            assert np.isclose(float(np.asarray(back[k].ustrip("km/s"))), want_k)
 
 
 class TestTheCosLatConventionIsNotTheCosLatChart:
