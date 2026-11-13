@@ -151,7 +151,22 @@ Reading `coord_vel` components as if they were physical velocities is a silent f
 
 ```
 
-The `theta` component went from `1 rad/s` to `2 m/s`: the scale factor $r = 2\,$m. `change_basis` also promotes a `Point` to a `Displacement` tangent when you pass it a point (the numbers are unchanged; only the geometric interpretation is).
+The `theta` component went from `1 rad/s` to `2 m/s`: the scale factor $r = 2\,$m.
+
+### Point arithmetic is affine
+
+A point is not a vector. `p - q` is the displacement between two points, a `dpl` `Tangent` in the Cartesian chart. `p + d` translates a point by a displacement and stays in `p.chart`. `p + q`, `-p` and `k * p` raise `TypeError`, and so does any of this on a manifold that is not an affine space (`sph2`). The operators need one frame; across frames use `p.subtract(q, tau=t)` or `p.add(d, tau=t)`. When you really mean the origin, `p.position_vector()` (equivalently `change_basis(p, basis)`) is `p - O` written at `p`, which in `sph3d` is `(r, 0, 0)`, not the coordinates.
+
+```pycon
+>>> p = cx.Point.from_([4.0, 5.0, 6.0], "m")
+>>> q = cx.Point.from_([1.0, 2.0, 3.0], "m").cconvert(cxc.sph3d)
+>>> print((p - q).round(3))
+<Tangent: chart=Cart3D (x, y, z) [m]
+    [3. 3. 3.]>
+>>> bool(cx.equivalent(q + (p - q), p))
+True
+
+```
 
 ## `==` is strict; `equivalent` is geometric
 
@@ -339,7 +354,12 @@ Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so
 | `jax.jacfwd`/`grad` over a batch returns a dense `(N, k, N, k)` array | Applied directly to a function that already takes a batch — this does not error, it silently computes every output point's derivative with respect to every input point. Write the function scalar (single point) and use `jax.vmap(jax.jacfwd(fn))`; `jac_pt_map` does exactly this. |
 | `jnp.<f>` returns a bare `Array`, stripping the coordinax type | The quaxed fallback, not a coordinax defect. See the quaxed skill. |
 | `to_frame` in a loop is slow, or each operator triggers a fresh compile | `to_frame` rebuilds the transition every call. Build it once with `frame_transition` and pass the operator into the jitted function as an argument — not as a closure, which makes it static. |
-| `TypeError: cannot multiply or divide a Point by a scalar` | A point is affine, so `k * p` has no meaning without an origin (and in a curvilinear chart it used to scale the angles too). Scale a displacement instead: `q = p.cconvert(cxc.cart3d)`, then `k * cxr.change_basis(q, cxr.coord_basis, at=q)`; or scale the Cartesian components explicitly and rebuild a `Point`. A `Coordinate` refuses for the same reason; scale its `Tangent` fibres. `k * tangent` is unchanged. |
+| `TypeError: cannot multiply or divide a Point by a scalar` | A point is affine, so `k * p` has no meaning without an origin (and in a curvilinear chart it used to scale the angles too). Scale a displacement instead, `k * (p - q)`, or the position vector, `k * p.position_vector()`; both work in any chart. A `Coordinate` refuses for the same reason; scale its `Tangent` fibres. `k * tangent` is unchanged. |
+| `TypeError: cannot add two Points` / `cannot negate a Point` / `cannot subtract a Point from a Tangent` | Each needs an origin. `p - q` is the displacement between two points and `p + d` translates a point by a displacement `d`. If you meant the origin, use `p.position_vector()`. |
+| `TypeError: cannot translate a Point by a vel tangent` | Only a displacement (`cxr.dpl`) moves a point. A velocity needs a time step first: `p + dt * v` with `dt * v` rebuilt as a `dpl` tangent. |
+| `ValueError: cannot combine a Point in <frame> with an operand in <frame>` | `p - q` and `p + d` need one frame, and an operator cannot take the time a frame transition needs. Use `p.subtract(q, tau=t)` or `p.add(d, tau=t)`; `tau` may be omitted when the transition is not time-dependent. |
+| `TypeError: cannot subtract points on <Manifold>: its points do not form an affine space` | `sph2`, an `EmbeddedChart`, or a custom manifold without a Cartesian chart on the same manifold. A difference of points there is the Riemannian log map, which is not provided. Measure with `geodesic_distance` or `chord_distance` instead. |
+| `TypeError: cannot subtract Coordinates` | A bundle's fibres live at different base points. Subtract the base points, `a.point - b.point`, and work with the fibres one by one. |
 | Astro frames missing (`cxf.ICRS` absent) | `coordinaxs.astro` not installed. `pip install "coordinax[astro]"`. |
 
 ## Version notes
@@ -358,5 +378,10 @@ Coordinax is pre-1.0 and moves; several recent renames are ones prior knowledge 
 | `AbstractAtlas.default_chart_for` | Removed |
 | `coordinax.quantity_matrix` | Removed — use `unxts.linalg` |
 | `k * point`, `point / k` (and on a `Coordinate`) | Raises `TypeError` (#1025) — scale a `Tangent`, or the Cartesian components |
+| `point + point`, `-point` | Raises `TypeError` — `p + d` with a displacement `d`, or `p.position_vector()` |
+| `point - point` returning a `Point` | Returns the displacement `Tangent` in the Cartesian chart; `.cconvert(chart, at=q)` re-expresses it |
+| `point - point` across frames (rhs frame ignored) | Raises `ValueError` — `p.subtract(q, tau=...)` |
+| `change_basis(point, basis)` keeping the coordinates as components | The true position vector `p - O` at `p` (`(r, 0, 0)` in `sph3d`); also `p.position_vector(basis)` |
+| `coordinax.representations.add` / `subtract` on component dicts | Removed — subtract `Point`s |
 
 Requires unxt >=2.0.2 (plus `unxts.linalg`) and Python >=3.12. The distribution split matters when reading imports: `coordinax` is a regular package, while the optional sub-distributions (`coordinaxs.api`, `coordinaxs.astro`, `coordinaxs.curveframes`, `coordinaxs.hypothesis`, `coordinaxs.interop.astropy`) live in the separate `coordinaxs` PEP 420 namespace. Minimum supported dependencies follow [SPEC 0](https://scientific-python.org/specs/spec-0000/).

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Generic, NoReturn, cast, final, override
 from typing_extensions import TypeVar
 
 import equinox as eqx
+import plum
 import quax_blocks
 
 import unxt as u
@@ -17,9 +18,11 @@ import unxt as u
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.representations as cxr
+import coordinax.transforms as cxfm
 from .base import AbstractVector, broadcast_and_index_data, check_dimensions
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
+from coordinax.frames._src.base import frames_equal
 
 if TYPE_CHECKING:
     from .custom_types import CDict
@@ -49,14 +52,27 @@ def refuse_point_scaling(kind: str, /) -> NoReturn:
         raise TypeError(msg)
     msg = (
         f"cannot multiply or divide a {kind} by a scalar: a point is affine, and "
-        "scaling it has no meaning without an origin. With `import coordinax "
-        "as cx`, work in Cartesian components, "
-        "`q = p.cconvert(cx.charts.cart3d)`, then either promote to a "
-        "displacement and scale that, "
-        "`k * cx.representations.change_basis(q, "
-        "cx.representations.coord_basis, at=q)`, or scale the position about "
-        "the origin explicitly, "
-        "`cx.Point.from_({n: k * x for n, x in q.data.items()}, q.chart)`."
+        "scaling it has no meaning without an origin. Scale a displacement "
+        "instead: `k * (p - q)`, or `k * p.position_vector()` to scale the "
+        "position vector about the origin."
+    )
+    raise TypeError(msg)
+
+
+def refuse_point_sum(op: str, /) -> NoReturn:
+    """Raise the `TypeError` for an origin-dependent sum of points."""
+    if op.endswith(("Coordinate", "Coordinates")):
+        msg = (
+            f"cannot {op}: its base point is affine, and its fibres live at "
+            "different base points. Work with the base points explicitly, "
+            "`a.point - b.point`, and with the fibres one by one."
+        )
+        raise TypeError(msg)
+    msg = (
+        f"cannot {op}: a point is affine, and this has no meaning without an "
+        "origin. `p - q` is the displacement from `q` to `p`, `p + d` "
+        "translates `p` by a displacement `d`, and `p.position_vector()` is "
+        "the displacement from the origin."
     )
     raise TypeError(msg)
 
@@ -214,6 +230,136 @@ class Point(
 
     def __rtruediv__(self, other: Any) -> Any:
         return refuse_scaling_unless_vector("Point", other)
+
+    # Same reason: call the rules directly so their `TypeError` reaches the
+    # user. An operand with no rule (a `Coordinate`) gets `NotImplemented`, so
+    # its reflected operator can explain itself.
+    def __add__(self, other: Any) -> Any:
+        """``p + d`` translates ``p`` by a displacement ``d``.
+
+        >>> import coordinax as cx
+        >>> p = cx.Point.from_([1.0, 2.0, 3.0], "km")
+        >>> p + p
+        Traceback (most recent call last):
+        ...
+        TypeError: cannot add two Points: a point is affine, ...
+
+        """
+        return _binop(cxr.add, self, other)
+
+    def __radd__(self, other: Any) -> Any:
+        return _binop(cxr.add, other, self)
+
+    def __sub__(self, other: Any) -> Any:
+        """``p - q`` is a displacement, ``p - d`` a point.
+
+        >>> import coordinax as cx
+        >>> p = cx.Point.from_([4.0, 5.0, 6.0], "km")
+        >>> q = cx.Point.from_([1.0, 2.0, 3.0], "km")
+        >>> print(p - q)
+        <Tangent: chart=Cart3D (x, y, z) [km]
+            [3. 3. 3.]>
+
+        """
+        return _binop(cxr.subtract, self, other)
+
+    def __rsub__(self, other: Any) -> Any:
+        return _binop(cxr.subtract, other, self)
+
+    def subtract(self, other: Any, /, *, tau: Any = None) -> Any:
+        """``self - other``, first transforming ``other`` into ``self.frame``.
+
+        ``other`` is a `Point` (the result is the displacement `Tangent`) or a
+        displacement `Tangent` (the result is a `Point`). When the frames
+        differ, ``other`` is moved into ``self.frame`` with
+        ``frame_transition(other.frame, self.frame)`` at ``tau``, which a
+        time-dependent transition requires. In one frame this is ``self -
+        other`` and ``tau`` is ignored.
+
+        >>> import coordinax as cx
+        >>> import coordinax.frames as cxf
+        >>> p = cx.Point.from_([10.0, 0.0, 0.0], "m", cxf.alex)
+        >>> q = cx.Point.from_([0.0, 0.0, 0.0], "m", cxf.alice)
+        >>> print(p.subtract(q))
+        <Tangent: chart=Cart3D (x, y, z) [m]
+            [ 10. -10.   0.]>
+
+        """
+        return cxr.subtract(self, _into_frame(other, self, tau))
+
+    def add(self, d: Any, /, *, tau: Any = None) -> "Point":
+        """``self + d``, first transforming the displacement ``d`` into ``self.frame``.
+
+        The frame handling is that of `Point.subtract`.
+
+        >>> import unxt as u
+        >>> import coordinax as cx
+        >>> import coordinax.frames as cxf
+        >>> import coordinax.representations as cxr
+        >>> p = cx.Point.from_([0.0, 0.0, 0.0], "m", cxf.alex)
+        >>> d = cx.Tangent(cx.cdict(u.Q([1.0, 0.0, 0.0], "m"), cx.cart3d), cx.cart3d,
+        ...                cxr.coord_basis, cxr.dpl, frame=cxf.alice)
+        >>> print(p.add(d).round(4))
+        <Point: chart=Cart3D (x, y, z) [m]
+            [0. 1. 0.]>
+
+        """
+        return cast("Point", cxr.add(self, _into_frame(d, self, tau)))
+
+    def position_vector(
+        self, basis: cxr.AbstractLinearBasis = cxr.coord_basis, /
+    ) -> Any:
+        """Return the displacement ``p - O`` from the origin, written at ``p``.
+
+        ``O`` is the origin of the Cartesian chart in this frame, so the
+        result depends on the frame and does not commute with a `Translate`.
+        It is a `Tangent` with `Displacement` semantics in ``self.chart`` and
+        ``basis``. The manifold must be an affine space.
+
+        >>> import coordinax as cx
+        >>> import coordinax.charts as cxc
+        >>> import coordinax.representations as cxr
+        >>> p = cx.Point.from_([3.0, 0.0, 4.0], "m").cconvert(cxc.cyl3d)
+        >>> print(p.position_vector(cxr.phys_basis).round(4))
+        <Tangent: chart=Cylindrical3D (rho, phi, z) [m]
+            [3. 0. 4.]>
+
+        """
+        return cxr.change_basis(self, basis)
+
+
+def _binop(f: Any, lhs: Any, rhs: Any, /) -> Any:
+    """Apply an add/subtract rule, or `NotImplemented` when there is none."""
+    if not (isinstance(lhs, AbstractVector) and isinstance(rhs, AbstractVector)):
+        return NotImplemented
+    try:
+        return f(lhs, rhs)
+    except plum.NotFoundLookupError:
+        return NotImplemented
+
+
+def _into_frame(x: Any, target: Point, tau: Any, /) -> Any:
+    """Move ``x`` (a `Point` or a `Tangent`) into ``target.frame`` at ``tau``.
+
+    A `Tangent` is moved with its base point ``target``, expressed in the
+    tangent's own frame and chart.
+    """
+    if frames_equal(x.frame, target.frame) is True:
+        return x
+    op = cxf.frame_transition(x.frame, target.frame)
+    if tau is None and cxfm.is_time_dependent(op):
+        msg = (
+            f"the transition from {x.frame!r} to {target.frame!r} is "
+            "time-dependent: pass the time at which to combine them, `tau=...`."
+        )
+        raise TypeError(msg)
+    if isinstance(x, Point):
+        moved = cxfm.act(op, tau, x)
+    else:
+        back = cxf.frame_transition(target.frame, x.frame)
+        at = cast("Point", cxfm.act(back, tau, target)).cconvert(x.chart)
+        moved = cxfm.act(op, tau, x, at=at)
+    return replace(moved, frame=target.frame)
 
 
 # ===================================================================

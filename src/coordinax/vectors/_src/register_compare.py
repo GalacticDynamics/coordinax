@@ -28,6 +28,7 @@ from unxt.quantity import is_any_quantity
 
 import coordinax.representations as cxr
 from .base import AbstractVector
+from coordinax.frames._src.base import frames_equal
 
 
 @plum.dispatch
@@ -85,10 +86,11 @@ def equivalent(
     ):
         return jnp.zeros((), dtype=bool)
 
-    # Coordinates in different frames describe different physical points.  Chart
-    # and frame are static metadata, so this is a plain Python bool -- safe under
-    # ``jit`` and mirroring the guard in ``AbstractVector.__eq__``.
-    if a.frame != b.frame:
+    # Coordinates in different frames describe different physical points.
+    # `frames_equal` is a plain bool unless a frame field is traced; then it is
+    # ANDed into the result, as in ``AbstractVector.__eq__``.
+    same_frame = frames_equal(a.frame, b.frame)
+    if same_frame is False:
         return jnp.zeros((), dtype=bool)
 
     # Compare as points in a common Cartesian chart.  This avoids the angle
@@ -125,4 +127,6 @@ def equivalent(
     # so the return type matches the scalar-``False`` guards above.
     checks = jtu.map(leaf_close, ac.data, bc.data, is_leaf=is_any_quantity)
     result = jtu.reduce(jnp.logical_and, checks, jnp.ones((), dtype=bool))
+    if same_frame is not True:
+        result = jnp.logical_and(same_frame, result)
     return u.ustrip("", result) if hasattr(result, "unit") else result

@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 import operator
+from dataclasses import replace
 
 import jax
 import numpy as np
@@ -16,7 +17,9 @@ import unxt as u
 
 import coordinax as cx
 import coordinax.charts as cxc
+import coordinax.frames as cxf
 import coordinax.representations as cxr
+import coordinax.transforms as cxfm
 import coordinaxs.hypothesis.charts as cxcst
 import coordinaxs.hypothesis.representations as cxrst
 import coordinaxs.hypothesis.vectors as cxvst
@@ -35,186 +38,6 @@ def _sph_vec(r: float, theta: float, phi: float) -> cx.Point:
         {"r": u.Q(r, "km"), "theta": u.Q(theta, "rad"), "phi": u.Q(phi, "rad")},
         cxc.sph3d,
     )
-
-
-# ===================================================================
-# Cartesian add / subtract
-# ===================================================================
-
-
-class TestCartesianAdd:
-    """Cartesian + Cartesian produces component-wise addition."""
-
-    def test_basic(self) -> None:
-        v1 = _cart_vec(1, 2, 3)
-        v2 = _cart_vec(4, 5, 6)
-        result = v1 + v2
-        assert result["x"] == u.Q(5, "m")
-        assert result["y"] == u.Q(7, "m")
-        assert result["z"] == u.Q(9, "m")
-
-    def test_chart_preserved(self) -> None:
-        result = _cart_vec(1, 2, 3) + _cart_vec(4, 5, 6)
-        assert result.chart == cxc.cart3d
-
-    def test_rep_preserved(self) -> None:
-        result = _cart_vec(1, 2, 3) + _cart_vec(4, 5, 6)
-        assert result.rep == cxr.point
-
-    def test_jit(self) -> None:
-        f = jax.jit(lambda a, b: a + b)
-        result = f(_cart_vec(1, 2, 3), _cart_vec(4, 5, 6))
-        assert result["x"] == u.Q(5, "m")
-
-    def test_cx_add(self) -> None:
-        result = cxr.add(_cart_vec(1, 2, 3), _cart_vec(4, 5, 6))
-        assert result["x"] == u.Q(5, "m")
-
-
-class TestCartesianSubtract:
-    """Cartesian - Cartesian produces component-wise subtraction."""
-
-    def test_basic(self) -> None:
-        v1 = _cart_vec(4, 5, 6)
-        v2 = _cart_vec(1, 2, 3)
-        result = v1 - v2
-        assert result["x"] == u.Q(3, "m")
-        assert result["y"] == u.Q(3, "m")
-        assert result["z"] == u.Q(3, "m")
-
-    def test_chart_preserved(self) -> None:
-        result = _cart_vec(4, 5, 6) - _cart_vec(1, 2, 3)
-        assert result.chart == cxc.cart3d
-
-    def test_rep_preserved(self) -> None:
-        result = _cart_vec(4, 5, 6) - _cart_vec(1, 2, 3)
-        assert result.rep == cxr.point
-
-    def test_subtract_self_is_zero(self) -> None:
-        v = _cart_vec(4, 5, 6)
-        result = v - v
-        assert result["x"] == u.Q(0, "m")
-        assert result["y"] == u.Q(0, "m")
-        assert result["z"] == u.Q(0, "m")
-
-    def test_jit(self) -> None:
-        f = jax.jit(lambda a, b: a - b)
-        result = f(_cart_vec(4, 5, 6), _cart_vec(1, 2, 3))
-        assert result["x"] == u.Q(3, "m")
-
-    def test_cx_subtract(self) -> None:
-        result = cxr.subtract(_cart_vec(4, 5, 6), _cart_vec(1, 2, 3))
-        assert result["x"] == u.Q(3, "m")
-
-
-# ===================================================================
-# Spherical add / subtract (Cartesian round-trip)
-# ===================================================================
-
-
-class TestSphericalAdd:
-    """Spherical + Spherical uses Cartesian round-trip."""
-
-    def test_chart_preserved(self) -> None:
-        result = _sph_vec(1, 0.3, 0.5) + _sph_vec(0.5, 0.1, 0.2)
-        assert result.chart == cxc.sph3d
-
-    def test_rep_preserved(self) -> None:
-        result = _sph_vec(1, 0.3, 0.5) + _sph_vec(0.5, 0.1, 0.2)
-        assert result.rep == cxr.point
-
-    def test_add_is_not_componentwise(self) -> None:
-        """Sph add must NOT be component-wise (it's a Cartesian round-trip)."""
-        s1 = _sph_vec(1, 0.3, 0.5)
-        s2 = _sph_vec(0.5, 0.1, 0.2)
-        result = s1 + s2
-
-        # Component-wise would give r=1.5 — verify it does not.
-        assert result["r"] != u.Q(1.5, "km")
-
-    def test_jit(self) -> None:
-        f = jax.jit(lambda a, b: a + b)
-        result = f(_sph_vec(1, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2))
-        assert result.chart == cxc.sph3d
-
-
-class TestSphericalSubtract:
-    """Spherical - Spherical uses Cartesian round-trip."""
-
-    def test_chart_preserved(self) -> None:
-        result = _sph_vec(1, 0.3, 0.5) - _sph_vec(0.5, 0.1, 0.2)
-        assert result.chart == cxc.sph3d
-
-    def test_rep_preserved(self) -> None:
-        result = _sph_vec(1, 0.3, 0.5) - _sph_vec(0.5, 0.1, 0.2)
-        assert result.rep == cxr.point
-
-    def test_subtract_self_is_near_zero(self) -> None:
-        """Sph subtract self should give r ≈ 0 (Cartesian round-trip)."""
-        s = _sph_vec(1, 0.5, 0.5)
-        result = s - s
-        # r should be ~0 after Cartesian round-trip
-        assert float(result["r"].value) == pytest.approx(0, abs=1e-6)
-
-    def test_subtract_is_not_componentwise(self) -> None:
-        """Sph subtract must NOT be component-wise."""
-        s1 = _sph_vec(1, 0.3, 0.5)
-        s2 = _sph_vec(0.5, 0.1, 0.2)
-        result = s1 - s2
-
-        # Component-wise would give r=0.5 — verify it does not.
-        assert result["r"] != u.Q(0.5, "km")
-
-    def test_jit(self) -> None:
-        f = jax.jit(lambda a, b: a - b)
-        result = f(_sph_vec(1, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2))
-        assert result.chart == cxc.sph3d
-
-
-# ===================================================================
-# Cross-chart operations
-# ===================================================================
-
-
-class TestCrossChart:
-    """Cross-chart arithmetic: result keeps lhs chart."""
-
-    def test_cart_minus_sph_keeps_cart(self) -> None:
-        c = _cart_vec(1, 2, 3)
-        s = _sph_vec(1, 0.3, 0.5)
-        result = c - s
-        assert result.chart == cxc.cart3d
-
-    def test_cart_plus_sph_keeps_cart(self) -> None:
-        c = _cart_vec(1, 2, 3)
-        s = _sph_vec(1, 0.3, 0.5)
-        result = c + s
-        assert result.chart == cxc.cart3d
-
-    def test_sph_minus_cart_keeps_sph(self) -> None:
-        c = _cart_vec(1, 2, 3)
-        s = _sph_vec(1, 0.3, 0.5)
-        result = s - c
-        assert result.chart == cxc.sph3d
-
-    def test_sph_plus_cart_keeps_sph(self) -> None:
-        c = _cart_vec(1, 2, 3)
-        s = _sph_vec(1, 0.3, 0.5)
-        result = s + c
-        assert result.chart == cxc.sph3d
-
-
-# ===================================================================
-# Mismatched rep → error
-# ===================================================================
-
-
-class TestMismatchedRep:
-    """Point with different reps cannot be added/subtracted."""
-
-    @pytest.mark.skip(reason="Only one rep type (point) currently exists")
-    def test_different_rep_raises(self) -> None:
-        pass
 
 
 # ===================================================================
@@ -410,6 +233,362 @@ class TestTangentScalarDiv:
 
 
 # ===================================================================
+# Point arithmetic: the affine operations
+# ===================================================================
+
+# 3-D Euclidean charts. Every point drawn below stays away from the z-axis,
+# where the curvilinear charts are singular.
+_E3_CHARTS = (
+    cxc.cart3d,
+    cxc.sph3d,
+    cxc.cyl3d,
+    cxc.lonlat_sph3d,
+    cxc.loncoslat_sph3d,
+    cxc.math_sph3d,
+)
+_charts = st.sampled_from(_E3_CHARTS)
+_coord = st.floats(-10, 10, allow_nan=False, allow_infinity=False)
+
+
+@st.composite
+def _xyz(draw: st.DrawFn) -> tuple[float, float, float]:
+    x, y, z = draw(_coord), draw(_coord), draw(_coord)
+    assume(x * x + y * y > 0.01)
+    return x, y, z
+
+
+def _pt(xyz, chart=cxc.cart3d, frame=None) -> cx.Point:
+    p = cx.Point.from_(list(xyz), "km")
+    if frame is not None:
+        p = cx.Point.from_(p, frame)
+    return p.cconvert(chart)
+
+
+def _dpl(*xyz: float, unit: str = "km") -> cx.Tangent:
+    return cx.Tangent.from_(u.Q(list(xyz), unit), cxc.cart3d, cxr.coord_basis, cxr.dpl)
+
+
+def _km(t: cx.Tangent) -> np.ndarray:
+    """Cartesian components of a Cartesian tangent, in km."""
+    assert t.chart == cxc.cart3d
+    return np.array([float(u.ustrip("km", t[k])) for k in ("x", "y", "z")])
+
+
+def _phys_basis_broken(chart, basis) -> bool:
+    # TODO: the physical basis of `loncoslat_sph3d` fails with a unit error
+    # (`km(3/2) / rad(1/2)`) on main too; drop this once that is fixed.
+    return chart == cxc.loncoslat_sph3d and basis == cxr.phys_basis
+
+
+def _close(a: cx.Point, b: cx.Point) -> bool:
+    return bool(cx.equivalent(a, b, atol=1e-8, rtol=1e-8))
+
+
+class TestPointDifference:
+    """``p - q`` is the displacement from ``q`` to ``p``."""
+
+    def test_is_a_cartesian_displacement(self) -> None:
+        p = _sph_vec(1, 0.3, 0.5)
+        q = _cart_vec(1, 2, 3, unit="km")
+        d = p - q
+        assert isinstance(d, cx.Tangent)
+        assert d.semantic == cxr.dpl
+        assert d.chart == cxc.cart3d
+        assert d.basis == cxr.coord_basis
+        assert d.frame == p.frame
+
+    def test_components(self) -> None:
+        d = _cart_vec(4, 5, 6) - _cart_vec(1, 2, 3)
+        assert d == _dpl(3, 3, 3, unit="m")
+
+    def test_is_not_componentwise_in_a_curvilinear_chart(self) -> None:
+        s = _sph_vec(1, 0.5, 0.5)
+        d = s - s
+        np.testing.assert_allclose(_km(d), 0.0, atol=1e-12)
+
+    def test_cx_subtract_and_jnp_subtract(self) -> None:
+        p, q = _cart_vec(4, 5, 6), _cart_vec(1, 2, 3)
+        assert cxr.subtract(p, q) == p - q
+        assert jnp.subtract(p, q) == p - q
+
+    def test_jit(self) -> None:
+        p, q = _sph_vec(1, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2)
+        out = jax.jit(lambda a, b: a - b)(p, q)
+        np.testing.assert_allclose(_km(out), _km(p - q), rtol=1e-12)
+
+    def test_batch_minus_scalar_broadcasts(self) -> None:
+        ps = cx.Point.from_(u.Q([[1.0, 2, 3], [4, 5, 6]], "km"))
+        q = _cart_vec(1, 1, 1, unit="km")
+        d = ps - q
+        assert d.shape == (2,)
+        np.testing.assert_allclose(u.ustrip("km", d["x"]), [0.0, 3.0])
+
+    def test_vmap_matches_eager(self) -> None:
+        ps = cx.Point.from_(u.Q([[1.0, 2, 3], [4, 5, 6]], "km")).cconvert(cxc.sph3d)
+        qs = cx.Point.from_(u.Q([[0.0, 1, 1], [2, 2, 2]], "km"))
+        out = jax.vmap(lambda a, b: a - b)(ps, qs)
+        np.testing.assert_allclose(
+            u.ustrip("km", out["y"]), u.ustrip("km", (ps - qs)["y"]), rtol=1e-12
+        )
+
+
+class TestPointTranslation:
+    """``p + d``, ``d + p`` and ``p - d`` translate ``p`` by a displacement."""
+
+    def test_add_keeps_the_point_chart(self) -> None:
+        p = _sph_vec(1, 0.3, 0.5)
+        out = p + _dpl(1, 0, 0)
+        assert isinstance(out, cx.Point)
+        assert out.chart == cxc.sph3d
+
+    def test_add_sub_and_reflected(self) -> None:
+        p = _cart_vec(1, 2, 3, unit="km")
+        d = _dpl(1, 1, 1)
+        assert p + d == _cart_vec(2, 3, 4, unit="km")
+        assert d + p == p + d
+        assert p - d == _cart_vec(0, 1, 2, unit="km")
+        assert cxr.add(p, d) == p + d
+        assert jnp.add(p, d) == p + d
+        assert jnp.subtract(p, d) == p - d
+
+    def test_jit(self) -> None:
+        p, d = _sph_vec(1, 0.3, 0.5), _dpl(1, 1, 1)
+        assert _close(jax.jit(lambda a, b: a + b)(p, d), p + d)
+
+
+class TestPointRefusals:
+    """The origin-dependent operations raise, with an explanation."""
+
+    p = _cart_vec(1, 2, 3)
+
+    @pytest.mark.parametrize(
+        "f",
+        [
+            lambda p: p + p,
+            lambda p: -p,
+            lambda p: (p - p) - p,
+            lambda p: cxr.add(p, p),
+            lambda p: jnp.add(p, p),
+            lambda p: jnp.negative(p),
+        ],
+        ids=["p+q", "-p", "d-p", "cxr.add", "jnp.add", "jnp.negative"],
+    )
+    def test_needs_an_origin(self, f) -> None:
+        with pytest.raises(TypeError, match="a point is affine"):
+            f(self.p)
+
+    def test_needs_an_origin_under_jit(self) -> None:
+        with pytest.raises(TypeError, match="a point is affine"):
+            jax.jit(lambda a: a + a)(self.p)
+
+    @pytest.mark.parametrize("semantic", [cxr.vel, cxr.acc])
+    def test_only_a_displacement_translates(self, semantic) -> None:
+        unit = {cxr.vel: "m/s", cxr.acc: "m/s2"}[semantic]
+        v = cx.Tangent.from_(
+            u.Q([1.0, 0, 0], unit), cxc.cart3d, cxr.coord_basis, semantic
+        )
+        for f in (lambda: self.p + v, lambda: v + self.p, lambda: self.p - v):
+            with pytest.raises(TypeError, match="only a displacement"):
+                f()
+
+    def test_non_affine_manifold(self) -> None:
+        s = cx.Point.from_(
+            {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.5, "rad")}, cxc.sph2
+        )
+        with pytest.raises(TypeError, match="affine space"):
+            _ = s - s
+        with pytest.raises(TypeError, match="a point is affine"):
+            _ = s + s
+        with pytest.raises(TypeError, match="a point is affine"):
+            _ = -s
+
+    def test_different_manifolds(self) -> None:
+        m = cx.Point.from_(u.Q([0.0, 1.0, 2.0, 3.0], "km"), cxc.minkowskict)
+        with pytest.raises(TypeError, match="different manifolds"):
+            _cart_vec(1, 2, 3, unit="km") - m
+        d = cx.Tangent.from_(
+            u.Q([0.0, 1.0, 2.0, 3.0], "km"), cxc.minkowskict, cxr.coord_disp
+        )
+        with pytest.raises(TypeError, match="different manifold"):
+            _cart_vec(1, 2, 3, unit="km") + d
+
+    def test_non_vector_operand_is_unsupported(self) -> None:
+        with pytest.raises(TypeError, match="unsupported operand"):
+            _ = self.p + 1
+
+    @pytest.mark.parametrize(
+        "f",
+        [
+            lambda c: c - c,
+            lambda c: c + c,
+            lambda c: -c,
+            lambda c: c + c.point,
+            lambda c: c.point + c,
+            lambda c: c.point - c,
+            jnp.negative,
+            lambda c: jnp.add(c, c),
+            lambda c: jnp.subtract(c, c),
+        ],
+        ids=["c-c", "c+c", "-c", "c+p", "p+c", "p-c", "jnp.neg", "jnp.add", "jnp.sub"],
+    )
+    def test_coordinate(self, f) -> None:
+        c = cx.Coordinate(point=self.p, velocity=_cart_tangent(1, 2, 3))
+        with pytest.raises(TypeError, match="Coordinate"):
+            f(c)
+
+
+class TestPointFrames:
+    """The operators need one frame; ``add``/``subtract`` transform first."""
+
+    @staticmethod
+    def _astro():
+        import coordinaxs.astro as cxastro
+
+        return cxastro
+
+    def test_operators_refuse_a_frame_mismatch(self) -> None:
+        cxastro = self._astro()
+        g = _pt((1, 2, 3), frame=cxastro.Galactocentric())
+        i = _pt((1, 2, 3), frame=cxastro.ICRS())
+        for f in (lambda: g - i, lambda: g + (i - i), lambda: g - (i - i)):
+            with pytest.raises(ValueError, match=r"p\.(subtract|add)\(other, tau"):
+                f()
+        with pytest.raises(ValueError, match="tau"):
+            jax.jit(lambda a, b: a - b)(g, i)
+
+    def test_same_parametrised_frame_under_jit(self) -> None:
+        g = _pt((1, 2, 3), frame=self._astro().Galactocentric())
+        out = jax.jit(lambda a, b: a - b)(g, g)
+        np.testing.assert_allclose(_km(out), 0.0)
+        assert type(out.frame) is type(g.frame)
+
+    def test_subtract_across_a_static_frame(self) -> None:
+        p = _pt((10, 0, 0), frame=cxf.alex)
+        q = _pt((1, 2, 3), frame=cxf.alice)
+        out = p.subtract(q)
+        assert out.frame == cxf.alex
+        np.testing.assert_allclose(_km(out), _km(p - q.to_frame(cxf.alex)))
+        assert p.subtract(p.to_frame(cxf.alex)) == p - p
+
+    def test_add_across_a_static_frame(self) -> None:
+        p = _pt((0, 0, 0), frame=cxf.alex)
+        d = replace(_dpl(1, 0, 0), frame=cxf.alice)
+        out = p.add(d)
+        assert out.frame == cxf.alex
+        assert _close(out, p + replace(_dpl(0, 1, 0), frame=cxf.alex))
+
+    @given(a=_xyz(), b=_xyz(), t=st.floats(-5, 5, allow_nan=False))
+    def test_subtract_across_a_time_dependent_frame(self, a, b, t) -> None:
+        """``p.subtract(q, tau=t)`` is transform-then-subtract at ``t``."""
+        tau = u.Q(t, "s")
+        p = _pt(a, frame=SPINNING)
+        q = _pt(b, frame=cxf.alice)
+        op = cxf.frame_transition(cxf.alice, SPINNING)
+        expected = p - replace(cx.act(op, tau, q), frame=SPINNING)
+        np.testing.assert_allclose(
+            _km(p.subtract(q, tau=tau)), _km(expected), atol=1e-12
+        )
+        # `add`: a displacement between two of Alice's points maps to the
+        # difference of their images.
+        q2 = _pt(a, frame=cxf.alice)
+        moved = cx.act(op, tau, q2) - cx.act(op, tau, q)
+        assert _close(p.add(q2 - q, tau=tau), p + replace(moved, frame=SPINNING))
+
+    def test_time_dependent_frame_needs_tau(self) -> None:
+        p = _pt((1, 2, 3), frame=SPINNING)
+        q = _pt((1, 2, 3), frame=cxf.alice)
+        with pytest.raises(TypeError, match="tau="):
+            p.subtract(q)
+        with pytest.raises(TypeError, match="tau="):
+            p.add(q - q)
+
+    def test_same_frame_ignores_tau(self) -> None:
+        p, q = _pt((1, 2, 3)), _pt((3, 2, 1))
+        assert p.subtract(q, tau=u.Q(1.0, "s")) == p - q
+        assert p.add(q - p, tau=u.Q(1.0, "s")) == p + (q - p)
+
+
+# A frame spinning about z relative to Alice's: its transition is time-dependent.
+SPINNING = cxf.TransformedReferenceFrame(
+    cxf.alice,
+    cxfm.TimeDep.from_(lambda t: cxfm.Rotate.from_euler("Z", u.Q(10.0, "deg/s") * t)),
+)
+
+
+@given(a=_xyz(), b=_xyz(), c1=_charts, c2=_charts)
+def test_difference_round_trip(a, b, c1, c2) -> None:
+    """``(p - q) + q == p``, whatever charts the two points use."""
+    p, q = _pt(a, c1), _pt(b, c2)
+    assert _close((p - q) + q, p)
+    assert _close(q + (p - q), p)
+
+
+@given(a=_xyz(), b=_xyz(), c1=_charts, c2=_charts)
+def test_difference_is_chart_invariant(a, b, c1, c2) -> None:
+    """Curvilinear charts give the Cartesian difference."""
+    expected = np.subtract(a, b)
+    np.testing.assert_allclose(_km(_pt(a, c1) - _pt(b, c2)), expected, atol=1e-9)
+
+
+@given(a=_xyz(), b=_xyz(), c=_charts)
+def test_difference_is_antisymmetric(a, b, c) -> None:
+    p, q = _pt(a, c), _pt(b, c)
+    np.testing.assert_allclose(_km(p - q), -_km(q - p), atol=1e-9)
+    np.testing.assert_allclose(_km(p - p), 0.0, atol=1e-9)
+
+
+@given(a=_xyz(), b=_xyz(), r=_xyz(), c=_charts)
+def test_differences_chain(a, b, r, c) -> None:
+    """``(p - q) + (q - r) == p - r``."""
+    p, q, s = _pt(a, c), _pt(b, c), _pt(r, c)
+    np.testing.assert_allclose(_km((p - q) + (q - s)), _km(p - s), atol=1e-9)
+
+
+@given(a=_xyz(), b=_xyz(), shift=_xyz(), c=_charts)
+def test_difference_is_translation_invariant(a, b, shift, c) -> None:
+    """A `Translate` moves both points and leaves their difference alone."""
+    T = cxfm.Translate.from_(list(shift), "km")
+    p, q = _pt(a, c), _pt(b, c)
+    np.testing.assert_allclose(
+        _km(cx.act(T, None, p) - cx.act(T, None, q)), _km(p - q), atol=1e-9
+    )
+
+
+@given(a=_xyz(), b=_xyz(), angle=st.floats(-180, 180), c=_charts)
+def test_difference_is_rotation_equivariant(a, b, angle, c) -> None:
+    """``R p - R q == R (p - q)``."""
+    R = cxfm.Rotate.from_euler("Z", u.Q(angle, "deg"))
+    p, q = _pt(a, c), _pt(b, c)
+    lhs = cx.act(R, None, p) - cx.act(R, None, q)
+    np.testing.assert_allclose(_km(lhs), _km(cx.act(R, None, p - q)), atol=1e-9)
+
+
+@given(
+    a=_xyz(),
+    d=_xyz(),
+    c=_charts,
+    basis=st.sampled_from([cxr.coord_basis, cxr.phys_basis]),
+)
+def test_curvilinear_displacement_is_read_at_p(a, d, c, basis) -> None:
+    """A displacement in ``c``, read at ``p``, moves ``p`` as its Cartesian form."""
+    assume(not _phys_basis_broken(c, basis))
+    p = _pt(a, c)
+    dc = _dpl(*d).cconvert(c, at=p.cconvert(cxc.cart3d))
+    dc = cxr.change_basis(dc, basis, at=p)
+    assert _close(p + dc, p + _dpl(*d))
+
+
+@given(a=_xyz(), c=_charts, basis=st.sampled_from([cxr.coord_basis, cxr.phys_basis]))
+def test_position_vector_is_p_minus_origin(a, c, basis) -> None:
+    """The position vector in any chart and basis is ``p - O`` in Cartesian."""
+    assume(not _phys_basis_broken(c, basis))
+    p = _pt(a, c)
+    pv = cxr.change_basis(p.position_vector(basis), cxr.coord_basis, at=p)
+    pv = pv.cconvert(cxc.cart3d, at=p)
+    np.testing.assert_allclose(_km(pv), a, atol=1e-9)
+
+
+# ===================================================================
 # Point / Coordinate scaling → error (gh#1025)
 # ===================================================================
 
@@ -463,15 +642,18 @@ def test_vector_operand_is_not_reported_as_scaling(op) -> None:
 
 
 def test_point_scaling_error_fixes_work() -> None:
-    """Both fixes the error message suggests give the Cartesian ``2 * p``."""
+    """The fixes the error message suggests work in a curvilinear chart."""
     p = _sph_vec(1.0, 0.5, 0.5)
     q = p.cconvert(cxc.cart3d)
-    disp = 2 * cxr.change_basis(q, cxr.coord_basis, at=q)
-    pos = cx.Point.from_({n: 2 * x for n, x in q.data.items()}, q.chart)
-    for out in (disp, pos):
+    # `k * p.position_vector()` scales the position about the origin.
+    pos = (2 * p.position_vector()).cconvert(cxc.cart3d, at=p)
+    # `k * (p - o)` scales a displacement.
+    o = cx.Point.from_([0.0, 0.0, 0.0], "km")
+    disp = 2 * (p - o)
+    for out in (pos, disp):
         for n in ("x", "y", "z"):
             np.testing.assert_allclose(
-                u.ustrip("km", out[n]), 2 * u.ustrip("km", q[n]), rtol=1e-12
+                u.ustrip("km", out[n]), 2 * u.ustrip("km", q[n]), rtol=1e-12, atol=1e-12
             )
 
 

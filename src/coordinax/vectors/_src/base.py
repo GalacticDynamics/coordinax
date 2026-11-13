@@ -31,6 +31,7 @@ import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .custom_types import HasShape, Shape
+from coordinax.frames._src.base import frames_equal
 from coordinax.internal import pos_named_objs
 from coordinaxs.api.custom_types import CDict
 
@@ -172,7 +173,7 @@ class AbstractVector(
 
     >>> import jax
     >>> print(jax.jit(lambda v: v - v)(vec))
-    <Point: chart=Cart3D (x, y, z) [m]
+    <Tangent: chart=Cart3D (x, y, z) [m]
         [0 0 0]>
 
     """
@@ -426,16 +427,19 @@ class AbstractVector(
         if type(other) is not type(self):
             return NotImplemented
 
-        # Vectors in different charts or frames are not equal. Chart and frame
-        # are static metadata, so this comparison is a plain Python bool (safe
-        # under jit); it also avoids the component-key mismatch that comparing
-        # different-chart data dicts would otherwise raise.
+        # Vectors in different charts or frames are not equal. The chart is
+        # static, so `!=` on it is a plain bool; this also avoids the
+        # component-key mismatch that comparing different-chart data dicts
+        # would raise. A frame with array fields is compared by
+        # `frames_equal`, which stays a bool unless those fields are traced.
         other_vec = cast("AbstractVector", other)
-        if self.chart != other_vec.chart or self.frame != other_vec.frame:
+        same_frame = frames_equal(self.frame, other_vec.frame)
+        if self.chart != other_vec.chart or same_frame is False:
             return jnp.zeros((), dtype=bool)
 
         # Delegate to `quax` primitives
-        return jnp.equal(self, other_vec)
+        out = jnp.equal(self, other_vec)
+        return out if same_frame is True else jnp.logical_and(same_frame, out)
 
     # ---------------------------------
     # methods

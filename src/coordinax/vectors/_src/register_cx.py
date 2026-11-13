@@ -5,7 +5,7 @@ __all__: tuple[str, ...] = ()
 from dataclasses import replace
 
 from collections.abc import Callable, Iterator
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 import jax.tree as jtu
 import plum
@@ -25,9 +25,10 @@ from .bundle import (
     _require_coordinate_basis,
     carry_fibre_across,
 )
-from .point import Point
+from .point import Point, refuse_point_sum
 from .tangent import Tangent
 from coordinax._src.custom_types import OptUSys
+from coordinax.frames._src.base import frames_equal
 from coordinax.transforms._src.actions.prolong import prolong_point_map
 from coordinax.transforms._src.actions.utils import (
     is_affine_in_chart,
@@ -339,102 +340,227 @@ def change_basis(
     return replace(v, data=new_data, basis=to_basis)
 
 
+def affine_cartesian(chart: Any, op: str, /) -> Any:
+    """Return ``chart``'s Cartesian chart if its manifold is an affine space.
+
+    The test is that ``chart.cartesian`` exists and lives on the same manifold.
+    It reads static chart metadata only, so it is a plain bool under ``jit``.
+    The intrinsic 2-sphere has no Cartesian chart, and an `EmbeddedChart`'s
+    ``cartesian`` is the ambient space's, so neither is affine.
+    """
+    try:
+        cart = chart.cartesian
+    except cxc.NoGlobalCartesianChartError:
+        cart = None
+    if cart is None or cart.M != chart.M:
+        msg = (
+            f"cannot {op} on {chart.M!r}: its points do not form an affine "
+            "space, so a difference of points is not a vector."
+        )
+        raise TypeError(msg)
+    return cart
+
+
+def check_same_frame(lhs: Any, rhs: Any, method: str, /) -> None:
+    """Raise `ValueError` if two operands are statically in different frames.
+
+    A frame with traced array fields cannot be compared under ``jit``, and the
+    same frame type is accepted there.
+    """
+    if frames_equal(lhs.frame, rhs.frame) is False:
+        msg = (
+            f"cannot combine a Point in {lhs.frame!r} with an operand in "
+            f"{rhs.frame!r}: the operators need one frame. Use "
+            f"`p.{method}(other, tau=...)`, which transforms `other` into "
+            "`p.frame` first."
+        )
+        raise ValueError(msg)
+
+
 @plum.dispatch
 def change_basis(
     v: Point, to_basis: cxr.AbstractLinearBasis, /, *, at: Any = None, usys: Any = None
 ) -> Tangent:
-    """Promote a `Point` to a `Tangent` with `Displacement` semantics.
+    """Return the position vector of a `Point`, written at the point in its chart.
 
-    The component data are unchanged; only the geometric interpretation is
-    recast from a manifold point (`PointGeometry`) to a tangent-space
-    displacement vector (`TangentGeometry`, `Displacement`).  The resulting
-    `Tangent` carries the same chart and frame as the input `Point`, and its
-    basis is ``to_basis``.
+    This is the displacement ``p - O`` from the origin ``O`` of the Cartesian
+    chart, as a `Tangent` with `Displacement` semantics in ``v.chart``, basis
+    ``to_basis`` and frame ``v.frame``. In a Cartesian chart its components
+    are the coordinates. In a curvilinear chart they are not. ``at`` is
+    ignored: the base point is ``v`` itself.
 
-    The ``at`` and ``usys`` parameters are accepted for API consistency but are
-    not used.
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
+    >>> print(cxr.change_basis(pt, cxr.coord_basis))
+    <Tangent: chart=Cart3D (x, y, z) [m]
+        [1. 2. 3.]>
+
+    In spherical coordinates the position vector at ``(r, theta, phi)`` is
+    ``(r, 0, 0)``:
+
+    >>> sph = pt.cconvert(cxc.sph3d)
+    >>> d = cxr.change_basis(sph, cxr.phys_basis)
+    >>> d.semantic, d.basis
+    (dpl, phys_basis)
+    >>> print(d.round(4))
+    <Tangent: chart=Spherical3D (r, theta, phi) [m]
+        [3.742 0.    0.   ]>
+
+    """
+    del at
+    cart = affine_cartesian(v.chart, "form a position vector")
+    x = cxc.pt_map(v.data, v.chart, cart)
+    d = Tangent(
+        data=x, chart=cart, basis=cxr.coord_basis, semantic=cxr.dpl, frame=v.frame
+    )
+    if v.chart != cart:
+        d = cast("Tangent", cxr.cconvert(d, v.chart, at=x))
+    return cast("Tangent", cxr.change_basis(d, to_basis, at=v, usys=usys))
+
+
+# ===================================================================
+# Add / Subtract: the affine operations
+
+
+@plum.dispatch
+def subtract(lhs: Point, rhs: Point, /) -> Tangent:
+    """``p - q``: the displacement from ``q`` to ``p``.
+
+    The result is a `Tangent` with `Displacement` semantics in the Cartesian
+    chart, coordinate basis, and frame ``p.frame``. Its components do not
+    depend on a base point. Both points must be in one frame and on a
+    manifold that is an affine space.
+
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> p = cx.Point.from_([4.0, 5.0, 6.0], "m")
+    >>> q = cx.Point.from_([1.0, 2.0, 3.0], "m").cconvert(cxc.sph3d)
+    >>> d = cxr.subtract(p, q)
+    >>> d.semantic
+    dpl
+    >>> print(d.round(4))
+    <Tangent: chart=Cart3D (x, y, z) [m]
+        [3. 3. 3.]>
+
+    """
+    check_same_frame(lhs, rhs, "subtract")
+    cart = affine_cartesian(lhs.chart, "subtract points")
+    if affine_cartesian(rhs.chart, "subtract points") != cart:
+        msg = f"cannot subtract points on different manifolds: {lhs.M!r}, {rhs.M!r}"
+        raise TypeError(msg)
+    a = cxc.pt_map(lhs.data, lhs.chart, cart)
+    b = cxc.pt_map(rhs.data, rhs.chart, cart)
+    data = jtu.map(jnp.subtract, a, b, is_leaf=uq.is_any_quantity)
+    return Tangent(
+        data=data, chart=cart, basis=cxr.coord_basis, semantic=cxr.dpl, frame=lhs.frame
+    )
+
+
+@plum.dispatch
+def add(lhs: Point, rhs: Tangent, /) -> Point:
+    """``p + d``: translate a point by a displacement.
+
+    The result is a `Point` in ``p.chart``. A displacement in a curvilinear
+    chart or the physical basis is read at ``p``. Only a `Displacement`
+    tangent can be added; a velocity or acceleration raises `TypeError`.
+
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> p = cx.Point.from_([1.0, 0.0, 0.0], "m").cconvert(cxc.sph3d)
+    >>> d = cx.Tangent.from_(u.Q([1.0, 0.0, 0.0], "m"), cxc.cart3d, cxr.coord_basis,
+    ...                      cxr.dpl)
+    >>> print((p + d).round(4))
+    <Point: chart=Spherical3D (r[m], theta[rad], phi[rad])
+        [2.    1.571 0.   ]>
+
+    """
+    if not isinstance(rhs.semantic, cxr.Displacement):
+        msg = (
+            f"cannot translate a Point by a {rhs.semantic!r} tangent: only a "
+            "displacement (`dpl`) translates a point."
+        )
+        raise TypeError(msg)
+    check_same_frame(lhs, rhs, "add")
+    op = "add a displacement to a point"
+    cart = affine_cartesian(lhs.chart, op)
+    if affine_cartesian(rhs.chart, op) != cart:
+        msg = f"cannot {op} on a different manifold: {lhs.M!r}, {rhs.M!r}"
+        raise TypeError(msg)
+    a = cxc.pt_map(lhs.data, lhs.chart, cart)
+    d = rhs
+    if d.chart != cart or d.basis != cxr.coord_basis:
+        # Read the displacement at `p`, in its own chart.
+        at = cxc.pt_map(a, cart, d.chart)
+        d = cast("Tangent", cxr.change_basis(d, cxr.coord_basis, at=at))
+        d = cast("Tangent", cxr.cconvert(d, cart, at=at))
+    data = jtu.map(jnp.add, a, d.data, is_leaf=uq.is_any_quantity)
+    return replace(lhs, data=cxc.pt_map(data, cart, lhs.chart))
+
+
+@plum.dispatch
+def add(lhs: Tangent, rhs: Point, /) -> Point:
+    """``d + p`` is ``p + d``.
 
     >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.representations as cxr
-
-    >>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
-    >>> disp = cxr.change_basis(pt, cxr.coord_basis)
-    >>> disp.semantic
-    dpl
-    >>> disp.basis
-    coord_basis
-    >>> disp.chart == pt.chart
-    True
+    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+    >>> d = cx.Tangent.from_(u.Q([1.0, 1.0, 1.0], "m"), cx.cart3d, cxr.coord_basis,
+    ...                      cxr.dpl)
+    >>> print(d + p)
+    <Point: chart=Cart3D (x, y, z) [m]
+        [2. 3. 4.]>
 
     """
-    return Tangent(
-        data=v.data, chart=v.chart, basis=to_basis, semantic=cxr.dpl, frame=v.frame
-    )
-
-
-# ===================================================================
-# Add / Subtract
+    return cast("Point", cxr.add(rhs, lhs))
 
 
 @plum.dispatch
-def add(lhs: Point, rhs: Point, /) -> Point:
-    """Add two points.
+def subtract(lhs: Point, rhs: Tangent, /) -> Point:
+    """``p - d`` is ``p + (-d)``.
 
-    For non-Cartesian charts the operation converts both operands to the ambient
-    Cartesian chart, adds there, and converts the result back to the ``lhs``
-    chart.  For Cartesian charts the addition is direct.
-
-    The result keeps the ``lhs`` chart and representation.
-
+    >>> import unxt as u
     >>> import coordinax as cx
-    >>> v1 = cx.Point.from_([1, 2, 3], "m")
-    >>> v2 = cx.Point.from_([4, 5, 6], "m")
-    >>> print(cxr.add(v1, v2))
+    >>> import coordinax.representations as cxr
+    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+    >>> d = cx.Tangent.from_(u.Q([1.0, 1.0, 1.0], "m"), cx.cart3d, cxr.coord_basis,
+    ...                      cxr.dpl)
+    >>> print(p - d)
     <Point: chart=Cart3D (x, y, z) [m]
-        [5 7 9]>
+        [0. 1. 2.]>
 
     """
-    if lhs.rep != rhs.rep:
-        msg = (
-            f"Cannot add vectors with different representations: "
-            f"{lhs.rep} vs {rhs.rep}."
-        )
-        raise TypeError(msg)
-
-    result_data = cxr.add(lhs.data, lhs.chart, lhs.rep, rhs.data, rhs.chart, rhs.rep)
-    return replace(lhs, data=result_data)
+    return cast("Point", cxr.add(lhs, -rhs))
 
 
 @plum.dispatch
-def subtract(lhs: Point, rhs: Point, /) -> Point:
-    """Subtract two vectors.
-
-    For non-Cartesian charts the operation converts both operands to the ambient
-    Cartesian chart, subtracts there, and converts the result back to the
-    ``lhs`` chart.  For Cartesian charts the subtraction is direct.
-
-    The result keeps the ``lhs`` chart and representation.
+def add(lhs: Point, rhs: Point, /) -> NoReturn:
+    """``p + q`` is refused: it depends on the choice of origin.
 
     >>> import coordinax as cx
-    >>> v1 = cx.Point.from_([4, 5, 6], "m")
-    >>> v2 = cx.Point.from_([1, 2, 3], "m")
-    >>> print(cxr.subtract(v1, v2))
-    <Point: chart=Cart3D (x, y, z) [m]
-        [3 3 3]>
+    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "m")
+    >>> p + p
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot add two Points: a point is affine, ...
 
     """
-    if lhs.rep != rhs.rep:
-        msg = (
-            f"Cannot subtract vectors with different representations: "
-            f"{lhs.rep} vs {rhs.rep}."
-        )
-        raise TypeError(msg)
+    refuse_point_sum("add two Points")
 
-    result_data = cxr.subtract(
-        lhs.data, lhs.chart, lhs.rep, rhs.data, rhs.chart, rhs.rep
-    )
-    return replace(lhs, data=result_data)
+
+@plum.dispatch
+def subtract(lhs: Tangent, rhs: Point, /) -> NoReturn:
+    """``d - p`` is refused: it depends on the choice of origin."""
+    refuse_point_sum("subtract a Point from a Tangent")
 
 
 def _check_same_tangent_space(lhs: Tangent, rhs: Tangent, op_name: str, /) -> None:

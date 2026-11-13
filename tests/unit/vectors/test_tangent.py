@@ -711,11 +711,51 @@ class TestChangeBasisPointToDisplacement:
         disp = cxr.change_basis(pt, cxr.coord_basis)
         assert disp.chart == pt.chart
 
-    def test_data_is_unchanged(self):
-        """Component data is identical (not a copy or transformation)."""
+    def test_cartesian_components_are_the_coordinates(self):
+        """In a Cartesian chart the position vector's components are the coordinates."""
         pt = self._make_point()
         disp = cxr.change_basis(pt, cxr.coord_basis)
-        assert disp.data is pt.data
+        for k in ("x", "y", "z"):
+            assert u.ustrip("m", disp[k]) == u.ustrip("m", pt[k])
+
+    @pytest.mark.parametrize("basis", [cxr.coord_basis, cxr.phys_basis])
+    def test_spherical_components_are_r_0_0(self, basis):
+        """In sph3d the position vector at (r, theta, phi) is (r, 0, 0)."""
+        pt = cx.Point.from_(
+            {"r": u.Q(2.0, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(1.0, "rad")},
+            cxc.sph3d,
+        )
+        disp = cxr.change_basis(pt, basis)
+        assert float(u.ustrip("m", disp["r"])) == pytest.approx(2.0)
+        assert float(disp["theta"].value) == pytest.approx(0.0, abs=1e-12)
+        assert float(disp["phi"].value) == pytest.approx(0.0, abs=1e-12)
+        # In the physical basis every component is a length.
+        if basis == cxr.phys_basis:
+            assert u.dimension_of(disp["theta"]) == u.dimension("length")
+
+    def test_cylindrical_phys_components_are_rho_0_z(self):
+        """In cyl3d, physical basis, the position vector is (rho, 0, z)."""
+        pt = cx.Point.from_([3.0, 4.0, 5.0], "m").cconvert(cxc.cyl3d)
+        disp = cxr.change_basis(pt, cxr.phys_basis)
+        assert float(u.ustrip("m", disp["rho"])) == pytest.approx(5.0)
+        assert float(u.ustrip("m", disp["phi"])) == pytest.approx(0.0, abs=1e-12)
+        assert float(u.ustrip("m", disp["z"])) == pytest.approx(5.0)
+
+    def test_position_vector_method(self):
+        """`Point.position_vector` is `change_basis(p, basis)`."""
+        pt = cx.Point.from_([3.0, 4.0, 5.0], "m").cconvert(cxc.cyl3d)
+        assert pt.position_vector() == cxr.change_basis(pt, cxr.coord_basis)
+        assert pt.position_vector(cxr.phys_basis) == cxr.change_basis(
+            pt, cxr.phys_basis
+        )
+
+    def test_non_affine_manifold_raises(self):
+        """The 2-sphere is not an affine space: there is no position vector."""
+        pt = cx.Point.from_(
+            {"theta": u.Q(0.5, "rad"), "phi": u.Q(0.0, "rad")}, cxc.sph2
+        )
+        with pytest.raises(TypeError, match="affine space"):
+            cxr.change_basis(pt, cxr.coord_basis)
 
     def test_frame_is_preserved(self):
         """Frame from the input Point is carried over."""
