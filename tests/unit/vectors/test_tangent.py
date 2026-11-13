@@ -889,3 +889,85 @@ def test_from_does_not_check_physical_basis():
         cxr.vel,
     )
     assert v["theta"].unit == u.unit("m/s")
+
+
+# ======================================================================
+# `Tangent.norm`
+
+_coord = st.floats(-10.0, 10.0, allow_nan=False)
+_xyz = st.tuples(_coord, _coord, _coord)
+
+
+@given(p_xyz=_xyz, v_xyz=_xyz, chart=st.sampled_from([cxc.sph3d, cxc.cyl3d]))
+def test_norm_is_chart_and_basis_invariant(p_xyz, v_xyz, chart):
+    """The norm of one vector is the same in every chart and in either basis.
+
+    The Cartesian norm is the reference. In ``chart`` the coordinate-basis
+    components go through the metric at ``p``; the physical-basis components
+    need no base point.
+    """
+    assume(math.hypot(p_xyz[0], p_xyz[1]) > 1e-2)  # off the polar axis
+    p = cx.Point.from_(list(p_xyz), "m")
+    v = _make_vel(*v_xyz)
+    want = u.ustrip("m/s", v.norm())
+    assert jnp.allclose(want, jnp.linalg.norm(jnp.array(v_xyz)))
+
+    w = v.cconvert(chart, at=p)
+    assert jnp.allclose(u.ustrip("m/s", w.norm(at=p)), want, atol=1e-8)
+    p_chart = p.cconvert(chart)
+    assert jnp.allclose(u.ustrip("m/s", w.norm(at=p_chart.data)), want, atol=1e-8)
+
+    w_phys = cxr.change_basis(w, cxr.phys_basis, at=p_chart)
+    assert jnp.allclose(u.ustrip("m/s", w_phys.norm()), want, atol=1e-8)
+
+
+def test_norm_needs_at_for_curvilinear_coord_basis():
+    """The metric depends on the base point, so ``at=`` is required."""
+    v = cx.Tangent.from_(
+        {"r": u.Q(1.0, "m/s"), "theta": u.Q(1.0, "rad/s"), "phi": u.Q(1.0, "rad/s")},
+        cxc.sph3d,
+        cxr.coord_basis,
+        cxr.vel,
+    )
+    with pytest.raises(ValueError, match="Pass `at=`"):
+        v.norm()
+
+
+@pytest.mark.parametrize("basis", [cxr.coord_basis, cxr.phys_basis])
+def test_norm_rejects_indefinite_metric(basis):
+    """Minkowski has no positive-definite norm, in either basis."""
+    data = {k: u.Q(1.0, "m/s") for k in ("ct", "x", "y", "z")}
+    v = cx.Tangent.from_(data, cxc.minkowskict, basis, cxr.vel)
+    with pytest.raises(NotImplementedError, match="positive-definite"):
+        v.norm(at={k: u.Q(0.0, "m") for k in ("ct", "x", "y", "z")})
+
+
+def test_norm_batched_and_jit():
+    """The norm reduces over components only, and traces under jit and vmap."""
+    ones = jnp.ones((4, 2))
+    p = cx.Point.from_(
+        {
+            "r": u.Q(2 * ones, "m"),
+            "theta": u.Angle(ones, "rad"),
+            "phi": u.Angle(ones, "rad"),
+        },
+        cxc.sph3d,
+    )
+    v = cx.Tangent.from_(
+        {
+            "r": u.Q(ones, "m/s"),
+            "theta": u.Q(0 * ones, "rad/s"),
+            "phi": u.Q(0 * ones, "rad/s"),
+        },
+        cxc.sph3d,
+        cxr.coord_basis,
+        cxr.vel,
+    )
+    out = v.norm(at=p)
+    assert out.shape == (4, 2)
+    assert jnp.allclose(u.ustrip("m/s", out), 1.0)
+
+    jitted = jax.jit(lambda v, p: v.norm(at=p))(v, p)
+    assert jnp.allclose(u.ustrip("m/s", jitted), u.ustrip("m/s", out))
+    vmapped = jax.vmap(lambda v, p: v.norm(at=p))(v, p)
+    assert jnp.allclose(u.ustrip("m/s", vmapped), u.ustrip("m/s", out))
