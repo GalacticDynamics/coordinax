@@ -325,28 +325,32 @@ Alice()
 Cart3D(M=Rn(3))
 ```
 
-## Promoting a Point to a Displacement
+## Arithmetic With Points
 
-Sometimes you have a `Point` whose component data you want to reinterpret as a tangent-space **displacement** rather than an absolute location — for example, when feeding a position offset into an operation that expects a `Tangent`.
-
-`change_basis` handles this in one call. The component data is **unchanged**; only the geometric type changes from `PointGeometry` to `TangentGeometry` with `Displacement` semantics:
+A point is a location, not a vector, so only some arithmetic makes sense. Subtracting two points gives the displacement between them, as a `Tangent` in the Cartesian chart:
 
 ```{code-block} python
->>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
->>> disp = cxr.change_basis(pt, cxr.coord_basis)
->>> disp
-Tangent( {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')},
+>>> a = cx.Point.from_([4.0, 5.0, 6.0], "m")
+>>> b = cx.Point.from_([1.0, 2.0, 3.0], "m")
+>>> d = a - b
+>>> d
+Tangent( {'x': Q(3., 'm'), 'y': Q(3., 'm'), 'z': Q(3., 'm')},
          chart=Cart3D(M=Rn(3)), basis=coord_basis, semantic=dpl )
 ```
 
-You can request the physical (orthonormal) basis instead:
+Adding that displacement back to `b` gives `a`:
 
 ```{code-block} python
->>> disp_phys = cxr.change_basis(pt, cxr.phys_basis)
->>> print(disp_phys.rep)
-Representation(
-    geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement()
-)
+>>> b + d == a
+Array(True, dtype=bool)
+```
+
+Adding two points, negating a point, or scaling one raises a `TypeError`. Each of those needs an origin, and a point does not carry one. When you do want to measure from the origin, ask for the position vector. It is written at the point, in the point's chart:
+
+```{code-block} python
+>>> a.position_vector()
+Tangent( {'x': Q(4., 'm'), 'y': Q(5., 'm'), 'z': Q(6., 'm')},
+         chart=Cart3D(M=Rn(3)), basis=coord_basis, semantic=dpl )
 ```
 
 See the [Tangent guide](../guides/tangents.md) for more on basis and semantic kinds.
@@ -364,7 +368,7 @@ If you need tangent fields (velocity, displacement, acceleration) bundled with t
 
 If you need standalone tangent quantities (without a base point), use `Tangent`. See the [Tangent tutorial](./tangent_objects.md).
 
-If you want to reinterpret a `Point`'s data as a displacement, use `cxr.change_basis(pt, cxr.coord_basis)` to promote it to a `Tangent` with `Displacement` semantics.
+If you want the offset between two points, subtract them: `a - b` is a `Tangent` with `Displacement` semantics. If you want the offset from the origin, use `a.position_vector()`.
 
 If you need frame tracking, attach a frame to a `Point`. See the [Coordinate tutorial](./coordinate_objects.md).
 

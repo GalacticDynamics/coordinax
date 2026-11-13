@@ -173,7 +173,7 @@ class AbstractVector(
 
     >>> import jax
     >>> print(jax.jit(lambda v: v - v)(vec))
-    <Point: chart=Cart3D (x, y, z) [m]
+    <Tangent: chart=Cart3D (x, y, z) [m]
         [0 0 0]>
 
     """
