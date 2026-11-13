@@ -191,7 +191,7 @@ assert cxfm.act(unshift, None, v_shifted).data == v.data or True  # data recover
 
 ## Simplification
 
-`simplify` collapses redundant structure: identity elements, cancelling inverse pairs, and consecutive compatible primitives (e.g. two translations merge into one).
+`simplify` collapses redundant structure: identity elements, cancelling inverse pairs, and consecutive compatible primitives (e.g. two translations in the same Cartesian chart merge into one). The result always acts like the original. Two translations in different charts, or in the same curvilinear chart, stay separate because adding their offsets would move points differently. A transform that `simplify` has no rule for, such as your own subclass of `AbstractTransform`, is returned unchanged.
 
 ```python
 import coordinax.frames as cxf
