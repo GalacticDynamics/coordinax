@@ -25,7 +25,7 @@ class AbstractChart(ABC):
 
 
 @final
-class Cartesian3D(AbstractChart):
+class Cart3D(AbstractChart):
     """Concrete chart implementation."""
 
     def components(self) -> tuple[str, ...]:
@@ -93,7 +93,7 @@ This design maximizes flexibility and performance.
 `coordinax` provides both functional and object-oriented APIs:
 
 - **Functional API** (primary): Pure functions taking arguments. Returns new objects; never mutates. Example: `pt_map(chart_from, chart_to, point)`.
-- **Object-Oriented API** (convenience): Methods on objects wrapping functional APIs. Example: `point.transition_to(chart_to)`.
+- **Object-Oriented API** (convenience): Methods on objects wrapping functional APIs. Example: `point.cconvert(chart_to)`, which calls `cconvert(point, chart_to)`.
 
 Both are equally powerful; OOP wraps functional. Choose based on readability.
 
@@ -141,16 +141,16 @@ See [Glossary: Functional API, OOP API, Module Organization](glossary.md).
 
 See [Glossary: Vector Transformation, cconvert](glossary.md); [spec.md § Transformations](spec.md).
 
-### Representation Conversion: `cconvert`
+### Unit Conversion: `uconvert`
 
-**`cconvert`**: Convert object representation without changing underlying data; enables different forms for same object.
+**`uconvert`**: Express the same quantity in other units.
 
-- **Input**: `cconvert(target_representation, current_object)`
-- **Output**: Semantically equivalent object in new form
-- **Example**: Convert between `Distance` units (meters → kilometers) or `Angle` representations (radians → degrees)
-- **Contrast with `cconvert`**: Same **object** (e.g., same distance), different **representation**
+- **Input**: `u.uconvert(target_unit, current_object)`
+- **Output**: The same quantity in the new units
+- **Example**: `u.uconvert("km", cx.Distance(10, "m"))` or `u.uconvert("deg", u.Angle(1, "rad"))`
+- **Contrast with `cconvert`**: `uconvert` keeps the components and changes their units; `cconvert` changes the chart and so the components themselves
 
-See [Glossary: Representation Conversion, cconvert](glossary.md); [spec.md § Representations](spec.md).
+See [Glossary: Unit Conversion](glossary.md).
 
 ---
 
@@ -258,14 +258,13 @@ See [Glossary: Multiple Dispatch, Promotion](glossary.md); [plum documentation](
 ### Class Name Prefixes
 
 - **`Abstract...`**: Abstract base class defining an interface (e.g., `AbstractChart`, `AbstractVector`, `AbstractDistance`). See [Abstract-Final Pattern](#abstract-final-pattern).
-- **`PhysDisp`**: Shorthand for "position", indicating a point/location vector (e.g., `CartesianPhysDisp3D`).
-- **`PhysVel`**: Shorthand for "velocity", indicating velocity vector (e.g., `CartesianPhysVel3D`).
-- **`PhysAcc`**: Shorthand for "acceleration", indicating acceleration vector (e.g., `CartesianPhysAcc3D`).
-- **`0D`, `1D`, `2D`, `3D`, `N-D`**: Chart dimension (e.g., `AbstractChart3D` for 3D manifold charts).
+- **`0D`, `1D`, `2D`, `3D`, `N-D`**: Chart dimension (e.g., `Abstract3D` for 3D charts, `Cart3D` for the 3D Cartesian chart).
+
+There are no per-role vector classes such as v0.23's `CartesianPos3D`. A `Point` or `Tangent` carries its role in its representation instead, e.g. `cxr.point`, `cxr.phys_disp`, `cxr.phys_vel` or `cxr.phys_acc`.
 
 ### Method Naming Patterns
 
-- **`from_(...)`**: Constructor method accepting diverse input types. Flexible alternative to overloading `__init__`. Example: `Distance.from_(10 * u.m)` or `Distance.from_((10, "m"))`.
+- **`from_(...)`**: Constructor method accepting diverse input types. Flexible alternative to overloading `__init__`. Example: `Distance.from_(u.Q(10, "m"))` or `Distance.from_(10, "m")`.
 
 ---
 
@@ -273,9 +272,9 @@ See [Glossary: Multiple Dispatch, Promotion](glossary.md); [plum documentation](
 
 For convenience, modules provide lowercase instances:
 
-- `cart3d`: Instance of `Cartesian3D`
+- `cart3d`: Instance of `Cart3D`
 - `sph3d`: Instance of `Spherical3D`
-- `lonlatsph3d`: Instance of `LonLatSpherical3D`
+- `lonlat_sph3d`: Instance of `LonLatSpherical3D`
 
 See [Glossary: Chart Instance, Chart Class](glossary.md).
 

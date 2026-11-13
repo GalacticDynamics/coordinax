@@ -322,23 +322,26 @@ v_in_alex = cxfm.act(transform_alice_to_alex, None, v_in_alice)
 
 ### Custom Frames
 
-Define domain-specific reference frames by subclassing:
+To define a new frame, subclass `AbstractReferenceFrame` and register a `frame_transition` for each pair of frames you want to connect. Here the new frame's origin sits 5 m along Alice's $x$ axis:
 
 ```python
-# Custom frame sketch (illustrative — fill in frame_transition logic):
-#
-# import coordinax.frames as cxf
-# from coordinax.frames import AbstractReferenceFrame, AbstractTransform
-#
-# class RotatingFrame(AbstractReferenceFrame):
-#     """A frame rotating at constant angular velocity."""
-#
-#     omega: float = 1.0  # rad/s
-#
-#     def frame_transition(self,
-#                          to_frame: AbstractReferenceFrame) -> AbstractTransform:
-#         """Compute transform to another frame."""
-#         ...
+from typing import final
+
+import plum
+
+
+@final
+class Dana(cxf.AbstractReferenceFrame):
+    """A frame whose origin sits 5 m along Alice's x axis."""
+
+
+@plum.dispatch
+def frame_transition(from_frame: cxf.Alice, to_frame: Dana, /) -> cxfm.Translate:
+    return cxfm.Translate.from_([-5, 0, 0], "m")
+
+
+p_alice = cx.Point.from_([1, 2, 3], "m", cxf.alice)
+print(p_alice.to_frame(Dana()))  # x is now 1 - 5 = -4 m
 ```
 
 For astronomical applications, `coordinaxs.astro` provides pre-built frames:

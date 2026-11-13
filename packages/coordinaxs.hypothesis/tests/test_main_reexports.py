@@ -20,9 +20,10 @@ import coordinaxs.hypothesis.distances as cxdst
 import coordinaxs.hypothesis.main as cxst
 import coordinaxs.hypothesis.manifolds as cxmst
 import coordinaxs.hypothesis.representations as cxrst
+import coordinaxs.hypothesis.vectors as cxvst
 
 #: Submodules whose public strategies `main` aggregates.
-SUBMODULES = (cxast, cxcst, cxdst, cxmst, cxrst)
+SUBMODULES = (cxast, cxcst, cxdst, cxmst, cxrst, cxvst)
 
 #: Submodule exports `main` deliberately does not re-export.
 #:

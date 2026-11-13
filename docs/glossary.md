@@ -10,7 +10,7 @@ Chart
   A local coordinate system assigning real-number coordinates to points on a manifold. Defines component names, ordering, dimensionality, and the mapping between geometric points and ℝⁿ. Example: Cartesian (x, y, z) or Spherical (r, θ, φ) charts on the same 3D manifold. See [spec.md § Charts](spec.md).
 
 Position
-  Synonym for a point on a manifold when emphasizing its role as a location. Often represented by position vectors in a given chart, e.g., `CartesianPos3D(x, y, z)`.
+  Synonym for a point on a manifold when emphasizing its role as a location. Often represented by position vectors in a given chart, e.g., `cx.Point.from_([1, 2, 3], "m")` in the `Cart3D` chart.
 
 Manifold
   A topological space that locally resembles ℝⁿ; the underlying geometric domain supporting coordinate systems. Most application domains use smooth manifolds (differentiable structure). See [spec.md § Manifolds](spec.md).
@@ -25,7 +25,7 @@ Transition Map
   A smooth, invertible function relating coordinates in two different charts on the same manifold. Enables smooth transformation between coordinate systems. Also called *chart transition function*. See [spec.md § Coordinate Transitions](spec.md).
 
 Representation
-  An abstract triple (GeometricKind, Basis, SemanticKind) describing what data means, independent of coordinate system. Different representations can encode the same geometric object. See [spec.md § Representations](spec.md) and [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
+  An abstract triple (GeometricKind, Basis, SemanticKind) describing what data means, independent of coordinate system. Different representations can encode the same geometric object. See [spec.md § Representations](spec.md).
 
 Geometric Kind
   The category of geometric object (position, velocity, acceleration, etc.); determines time-derivative relationships. Example: `Position` has time derivative `Velocity`.
@@ -46,8 +46,8 @@ Semantic Kind
 Vector Transformation
   Changing vector components under a coordinate change while preserving role semantics; implemented via `cconvert`. Positions and velocities transform differently due to their different roles. See [Conventions § Vector Transformation](conventions.md#vector-transformation-cconvert).
 
-Representation Conversion
-  Changing an object's representation (its form) without changing underlying data; implemented via `cconvert`. Example: converting `Distance` from meters to kilometers, or `Angle` from radians to degrees. See [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
+Unit Conversion
+  Expressing the same quantity in other units; implemented via `unxt.uconvert`. Example: converting `Distance` from meters to kilometers, or `Angle` from radians to degrees. See [Conventions § Unit Conversion](conventions.md#unit-conversion-uconvert).
 
 ```
 
@@ -92,7 +92,7 @@ Abstract-Final Pattern
   Design pattern separating interface (abstract classes) from implementation (final concrete classes). Abstract classes use `@abc.abstractmethod`; concrete classes use `@final`. One inheritance level only. Avoids fragile base class problem. See [Conventions § Abstract-Final Pattern](conventions.md#abstract-final-pattern) and [Equinox documentation](https://docs.kidger.site/equinox/pattern/).
 
 Final (Class)
-  Class marked with `@final` decorator indicating it shouldn't be subclassed further; paired with an abstract base class. Example: `@final class CartesianPos3D(AbstractChart)`.
+  Class marked with `@final` decorator indicating it shouldn't be subclassed further; paired with an abstract base class. Example: `@final class Cart3D(AbstractChart)`.
 
 Concrete Class
   Instantiable class implementing an abstract interface; marked with `@final` to prevent further subclassing. See [Abstract-Final Pattern](conventions.md#abstract-final-pattern).
@@ -104,10 +104,10 @@ Dispatch
   Runtime type-based routing of function calls; core mechanism in `coordinax` via plum-dispatch. Use `.methods` attribute on dispatched functions to discover all registered implementations. See [Conventions § Multiple Dispatch](conventions.md#multiple-dispatch).
 
 Functional API
-  Primary API design philosophy: pure functions taking arguments and returning new objects without mutations. Examples: `pt_map(chart_from, chart_to, point)`, `cconvert(chart, vector)`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
+  Primary API design philosophy: pure functions taking arguments and returning new objects without mutations. Examples: `pt_map(chart_from, chart_to, point)`, `cconvert(vector, chart)`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
 
 OOP API
-  Object-oriented convenience layer wrapping functional APIs; methods call underlying functions. Example: `point.transition_to(chart)` wraps `pt_map()`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
+  Object-oriented convenience layer wrapping functional APIs; methods call underlying functions. Example: `point.cconvert(chart)` wraps `cconvert(point, chart)`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
 
 Scalar-First Design
   Design philosophy where functions operate on scalar (0-dimensional) vectors; users apply `jax.vmap` for batching. Maximizes JIT performance and flexibility. See [Conventions § Scalar-First Design](conventions.md#scalar-first-design).
@@ -138,16 +138,16 @@ Distance Modulus
 
 ```{glossary}
 from_ Constructor
-  Flexible constructor method accepting diverse input types. Example: `Distance.from_(10 * u.m)`, `Distance.from_((10, "m"))`, `Distance.from_(parallax_value)`. More flexible than overloading `__init__`.
+  Flexible constructor method accepting diverse input types. Example: `Distance.from_(u.Q(10, "m"))`, `Distance.from_(10, "m")`, `Distance.from_(parallax)`. More flexible than overloading `__init__`.
 
 cconvert Function
-  API for converting object representation. Usage: `cconvert(target_representation, current_object)`. Returns semantically equivalent object in new form. See [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
+  API for changing an object's chart. Usage: `cconvert(current_object, target_chart)`. Returns the same geometric object with components in the new chart. See [Conventions § Vector Transformation](conventions.md#vector-transformation-cconvert).
 
 Chart Instance
-  Lowercase instance of a chart for convenience, e.g., `cart3d` (instance of `Cartesian3D`), `sph3d` (instance of `Spherical3D`). See [Conventions § Pre-Defined Chart Instances](conventions.md#pre-defined-chart-instances).
+  Lowercase instance of a chart for convenience, e.g., `cart3d` (instance of `Cart3D`), `sph3d` (instance of `Spherical3D`). See [Conventions § Pre-Defined Chart Instances](conventions.md#pre-defined-chart-instances).
 
 Chart Class
-  Uppercase class defining a coordinate system template, e.g., `Cartesian3D`, `Spherical3D`. Instantiate to create specific charts.
+  Uppercase class defining a coordinate system template, e.g., `Cart3D`, `Spherical3D`. Instantiate to create specific charts.
 
 Type Hint
   Runtime type annotation; used for multiple dispatch and runtime validation. Doesn't affect performance; aids readability and IDE support.
