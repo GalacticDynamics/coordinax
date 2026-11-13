@@ -165,3 +165,20 @@ def cdict(obj: apyu.Quantity, chart: cxc.AbstractChart, /) -> CDict:  # type: ig
 
     """
     return cxcapi.cdict(plum.convert(obj, u.Q), chart)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def cdict(obj: apyu.Quantity, chart: cxc.CartND, /) -> CDict:
+    """Wrap an astropy ``Quantity`` as the ``q`` component of `CartND`.
+
+    Without this, ``(apyu.Quantity, AbstractChart)`` and the core
+    ``(ArrayLike, CartND)`` are equally specific, and the lookup is ambiguous.
+
+    >>> import astropy.units as apyu
+    >>> import coordinax.charts as cxc
+
+    >>> cxc.cdict(apyu.Quantity([1, 2, 3, 4], "km"), cxc.cartnd)
+    {'q': Q([1., 2., 3., 4.], 'km')}
+
+    """
+    return cxcapi.cdict(plum.convert(obj, u.Q), chart)  # ty: ignore[invalid-return-type]
