@@ -25,6 +25,7 @@ import plum
 
 import coordinaxs.api.manifolds as cxmapi
 from .point import Point
+from coordinax.frames._src.base import frames_equal
 
 
 @plum.dispatch
@@ -67,7 +68,9 @@ def chord_distance(a: Point, b: Point, /) -> Any:
     chord_distance is a measurement through an ambie
 
     """
-    if a.frame != b.frame:
+    # `is False`: under `jit` a frame with traced array fields cannot be
+    # compared, and the same frame type is accepted.
+    if frames_equal(a.frame, b.frame) is False:
         msg = "cannot measure chord_distance between vectors in different frames"
         raise ValueError(msg)
 
