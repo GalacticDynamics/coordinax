@@ -1856,7 +1856,7 @@ A representation is therefore **not** the same thing as a chart: the chart deter
 
     Arguments:
 
-    - ``geom_kind``: ``AbstractGometry``
+    - ``geom_kind``: ``AbstractGeometry``
     - ``basis``: ``AbstractBasis``
     - ``semantic_kind``: ``AbstractSemanticKind``
 
@@ -2942,7 +2942,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     \|v\|_g = \sqrt{g_p(v, v)}
     $$
 
-    where $g$ is the metric tensor and $p$ is the base point at which the metric is evaluated. It dispatches on the type of `v` and on whether the metric is supplied implicitly (via a `chart`, using its attached `chart.M.metric`) or explicitly (via an `AbstractMetric`).
+    where $g$ is the metric tensor and $p$ is the base point at which the metric is evaluated. It dispatches on the type of `v` and on whether the metric is supplied implicitly (via a `chart`, using its attached `chart.M.metric`) or explicitly (via an `AbstractMetricField`).
 
     **Signatures:**
 
@@ -3029,7 +3029,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Notes:**
 
-    - `AbstractMetric.norm` and `AbstractManifold.norm` are thin wrappers that delegate to `cxm.norm`.
+    - `AbstractMetricField.norm` and `AbstractManifold.norm` are thin wrappers that delegate to `cxm.norm`.
     - Manifold-level calls resolve to `cxm.norm(v, manifold.metric, chart, at=at, usys=usys)`.
     - An optimized Euclidean fast-path using `jnp.linalg.norm` is registered for `FlatMetric` with `CartND` charts.
 
@@ -5284,7 +5284,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signature:**
 
     ```
-    cxm.embedded_twosphere(radius, ambient=cxc.spherical3d)
+    cxm.embedded_twosphere(radius, ambient=cxc.sph3d)
     ```
 
     **Arguments:**

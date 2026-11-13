@@ -123,6 +123,7 @@ The triple is (geometry kind, basis, semantic kind), and the three are orthogona
 ## Tests
 
 - **A changed repr or signature breaks doctests, and the fix belongs in the same PR.** Sybil runs the `.md` and `.py` examples — see [`AGENTS.md`](../../../AGENTS.md) for which paths are collected.
+- **A code fence with no language label never runs.** Sybil executes `python` and `pycon` fences and skips unlabelled ones, so a runnable example left unlabelled rots without CI noticing. The package READMEs and `docs/packages/coordinaxs.astro/index.md` carried a `TypeError`, a `NameError` and names that no longer exist this way (#1057). Label real code `python` or `pycon`; keep the bare fence for signatures and pseudo-code. A `python` block that only defines `@given` tests checks almost nothing, so call the tests at the end of the block.
 - **A strategy must generate only feasible values.** This package has its own long bug tail — #651, #657, #658, #660, #663, #664, #667, #677 — all strategies drawing values the library then rejects, which surfaces as a confusing failure in an unrelated test. A new chart or manifold type needs its strategy updated, and the strategy needs to respect the type's domain.
 - **Semantics changed ⇒ `coordinaxs.hypothesis` changed.** This is on the repo's own agent checklist.
 - Every test must assert something. A test that only calls a function is not a test.
