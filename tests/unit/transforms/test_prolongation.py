@@ -1099,7 +1099,7 @@ class TestCoordinateBundleEdges:
         coord_cart = self._bundle(vel=vel_cart)
         out_cart = cx.act(moving, tau, coord_cart, usys=usys)
 
-        vel_cyl = cxr.cconvert(vel_cart, cxc.cyl3d, at=coord_cart.point.data, usys=usys)
+        vel_cyl = cxr.cconvert(vel_cart, cxc.cyl3d, at=coord_cart.point.data)
         coord_cyl = self._bundle(vel=vel_cyl)
         out_cyl = cx.act(moving, tau, coord_cyl, usys=usys)
         # convert the cylindrical output fibre back to cartesian at the new point
@@ -1107,7 +1107,6 @@ class TestCoordinateBundleEdges:
             out_cyl._data["vel"],
             cxc.cart3d,
             at=cxr.cconvert(out_cyl.point, cxc.cyl3d).data,
-            usys=usys,
         )
         for k in "xyz":
             assert jnp.allclose(

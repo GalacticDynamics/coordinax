@@ -517,7 +517,7 @@ def test_galactocentric_spherical_velocity_fibre():
     out = cx.act(op, None, cxv.Coordinate(pt, vel=vel_sph), usys=usys)
 
     # reference: same input with a Cartesian velocity fibre
-    vel_cart = cx.cconvert(vel_sph, cx.cart3d, at=pt.data, usys=usys)
+    vel_cart = cx.cconvert(vel_sph, cx.cart3d, at=pt.data)
     out_ref = cx.act(
         op, None, cxv.Coordinate(cx.cconvert(pt, cx.cart3d), vel=vel_cart), usys=usys
     )
@@ -525,7 +525,6 @@ def test_galactocentric_spherical_velocity_fibre():
         out._data["vel"],
         cx.cart3d,
         at=cx.cconvert(out.point, out._data["vel"].chart).data,
-        usys=usys,
     )
     for k in "xyz":
         a = u.ustrip("km/s", out_v.data[k])
