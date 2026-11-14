@@ -831,3 +831,27 @@ def check_dimensions(
                 f"expected {want}."
             )
             raise ValueError(msg)
+
+
+def usys_for(vec: AbstractVector, usys: Any, /) -> Any:
+    """Return ``usys`` if it can act on ``vec``'s data, else `None`.
+
+    ``usys`` only says what units bare-array components are in, so on a
+    vector whose components are all quantities it does nothing. Internal
+    callers that forward one ``usys`` to many vectors drop it this way.
+    """
+    if usys is not None and all(uq.is_any_quantity(v) for v in vec.data.values()):
+        return None
+    return usys
+
+
+def refuse_usys_on_quantities(vec: AbstractVector, usys: Any, /) -> None:
+    """Raise `TypeError` when ``usys`` would be silently ignored on ``vec``."""
+    if usys is not None and usys_for(vec, usys) is None:
+        msg = (
+            f"usys={usys!r} has no effect on a {type(vec).__name__} with "
+            "Quantity components: usys only says what units bare-array "
+            "components are in. To set the output units, convert and then "
+            "call `.uconvert(usys)`."
+        )
+        raise TypeError(msg)
