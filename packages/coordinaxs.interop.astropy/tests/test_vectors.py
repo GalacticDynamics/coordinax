@@ -445,6 +445,58 @@ def test_tangent_from_astropy_quantity_keeps_its_unit() -> None:
     assert u.unit_of(v["x"]) == u.unit("km/s")
 
 
+@pytest.mark.parametrize("cls", [cx.Point, cx.Tangent])
+@pytest.mark.parametrize("args", [(), (cxc.cartnd,)], ids=["no-chart", "cartnd"])
+@pytest.mark.parametrize("n", [1, 2, 3, 4, 5])
+def test_from_astropy_quantity_matches_unxt(cls, args, n) -> None:
+    """An astropy `Quantity` of any length builds what the same `u.Q` builds.
+
+    From 4 components on, or with `cartnd`, this used to be an ambiguous lookup
+    between ``cdict(ArrayLike, CartND)`` and ``cdict(apyu.Quantity, AbstractChart)``.
+    """
+    if args and n < 4:  # cartnd is guessed from 4 components on; give it 4+
+        n += 3
+    unit = "km" if cls is cx.Point else "km/s"
+    got = cls.from_(apyu.Quantity(np.arange(n), unit), *args)
+    want = cls.from_(u.Q(np.arange(n), unit), *args)
+    assert got.chart == want.chart
+    assert got.data.keys() == want.data.keys()
+    for k in want.data:
+        assert u.unit_of(got[k]) == u.unit(unit)
+        assert np.array_equal(got[k].ustrip(unit), want[k].ustrip(unit))
+
+
+@pytest.mark.parametrize(
+    "dif",
+    [
+        apyc.CartesianDifferential(1, 2, 3, unit="km/s"),
+        apyc.SphericalDifferential(
+            1 * apyu.mas / apyu.yr, 2 * apyu.mas / apyu.yr, 3 * apyu.km / apyu.s
+        ),
+    ],
+    ids=lambda d: type(d).__name__,
+)
+def test_tangent_from_astropy_differential_is_convert(dif) -> None:
+    """`Tangent.from_(dif)` gives the same tangent as `plum.convert(dif, Tangent)`."""
+    got = cx.Tangent.from_(dif)
+    want = plum.convert(dif, cx.Tangent)
+    assert got.chart == want.chart
+    assert got.basis == want.basis
+    assert got.semantic == want.semantic
+    for k in want.data:
+        assert u.unit_of(got[k]) == u.unit_of(want[k])
+        assert np.array_equal(got[k].value, want[k].value)
+
+
+def test_tangent_from_coslat_differential_is_refused() -> None:
+    """`from_` keeps the converter's deliberate refusal of the cos(lat) convention."""
+    dif = apyc.SphericalCosLatDifferential(
+        1 * apyu.mas / apyu.yr, 2 * apyu.mas / apyu.yr, 3 * apyu.km / apyu.s
+    )
+    with pytest.raises(ValueError, match="rate convention"):
+        cx.Tangent.from_(dif)
+
+
 def test_astropy_quantity_across_a_mixed_dimension_chart_is_refused() -> None:
     """The unxt route's homogeneous-dimension check applies to astropy too."""
     with pytest.raises(ValueError, match="different dimensions"):

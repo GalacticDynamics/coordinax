@@ -150,6 +150,39 @@ def from_astropy_radial_representation(
 
 
 ##############################################################################
+# Differential -> Tangent
+
+
+@cxv.Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_astropy_differential(
+    cls: type[cxv.Tangent], obj: apyc.BaseDifferential, /
+) -> cxv.Tangent:
+    """Construct a Tangent from an Astropy differential.
+
+    This is ``plum.convert(obj, Tangent)``, so it supports exactly the
+    differentials that have a converter.
+
+    >>> import astropy.coordinates as apyc
+    >>> import astropy.units as apyu
+    >>> import coordinax.vectors as cxv
+
+    >>> dif = apyc.CartesianDifferential(1, 2, 3, unit="km/s")
+    >>> print(cxv.Tangent.from_(dif))
+    <Tangent: chart=Cart3D (x, y, z) [km / s]
+        [1. 2. 3.]>
+
+    >>> dif = apyc.SphericalDifferential(
+    ...     d_lon=1 * apyu.mas / apyu.yr, d_lat=2 * apyu.mas / apyu.yr,
+    ...     d_distance=3 * apyu.km / apyu.s)
+    >>> print(cxv.Tangent.from_(dif))
+    <Tangent: chart=LonLatSpherical3D (lon[mas / yr], lat[mas / yr], distance[km / s])
+        [1. 2. 3.]>
+
+    """
+    return plum.convert(obj, cls)
+
+
+##############################################################################
 # Astropy Data-ful Frames -> Coordinax Point
 
 
