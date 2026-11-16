@@ -489,6 +489,10 @@ def _require_chart(obj: cxv.Tangent, chart: object, target: str, /) -> cxv.Tange
     tangent cannot: pushing one between charts needs the base point it sits
     at, and a conversion method is handed only the vector. So this reports
     what to do rather than guessing a point.
+
+    The same holds for the basis. astropy differentials hold coordinate rates,
+    and in a curvilinear chart a physical-basis component differs from the
+    coordinate rate by a scale factor that depends on the base point.
     """
     obj = check_semantics(obj, need=cxr.Velocity)
     if obj.chart != chart:
@@ -498,6 +502,15 @@ def _require_chart(obj: cxv.Tangent, chart: object, target: str, /) -> cxv.Tange
             "first -- a tangent needs its base point to change chart."
         )
         raise ValueError(msg)
+    if isinstance(obj.rep.basis, cxr.PhysicalBasis):
+        msg = (
+            f"Tangent -> {target} conversion requires `coord_basis` "
+            f"components, since astropy holds coordinate rates; got "
+            f"{obj.rep.basis!r}. Convert with "
+            "`change_basis(v, coord_basis, at=point)` first -- the scale "
+            "factors depend on the base point."
+        )
+        raise ValueError(msg)  # noqa: TRY004  -- same refusal as the chart's
     return obj
 
 
