@@ -52,7 +52,6 @@ from coordinax._src.optional_exports import (
     load_exports,
     resolve_entrypoints_with_legacy,
 )
-from coordinax._src.setup_package import install_import_hook
 
 # Defined here b/c it's mutated by optional imports
 __all__: tuple[str, ...] = (
@@ -76,25 +75,23 @@ __all__: tuple[str, ...] = (
     "carol",
 )
 
-with install_import_hook("coordinax.frames"):
-    from ._src import (
-        AbstractReferenceFrame,
-        AbstractTransformedReferenceFrame,
-        Alex,
-        Alice,
-        Bob,
-        Carol,
-        FrameTransformError,
-        NoFrame,
-        TransformedReferenceFrame,
-        alex,
-        alice,
-        bob,
-        carol,
-        noframe,
-    )
-    from coordinaxs.api.frames import frame_transition
-
+from ._src import (
+    AbstractReferenceFrame,
+    AbstractTransformedReferenceFrame,
+    Alex,
+    Alice,
+    Bob,
+    Carol,
+    FrameTransformError,
+    NoFrame,
+    TransformedReferenceFrame,
+    alex,
+    alice,
+    bob,
+    carol,
+    noframe,
+)
+from coordinaxs.api.frames import frame_transition
 
 _FRAME_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinaxs.frames"
 #: Pre-rename group name. The group is a cross-distribution contract, so
@@ -141,4 +138,4 @@ _load_optional_frame_exports()
 
 
 # clean up namespace
-del (install_import_hook, Final)
+del Final

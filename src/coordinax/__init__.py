@@ -95,101 +95,112 @@ __all__ = (  # distances
 
 from typing import Any, Final
 
-from coordinax._src.optional_exports import resolve_entrypoints_with_legacy
-from coordinax._version import version as __version__  # noqa: F401
-from coordinax.angles import Angle
-from coordinax.charts import (
-    CartesianProductChart,
-    NoGlobalCartesianChartError,
-    carray,
-    cart1d,
-    cart2d,
-    cart3d,
-    cartesian_chart,
-    cartnd,
-    cdict,
-    cyl3d,
-    guess_chart,
-    jac_pt_map,
-    loncoslat_sph3d,
-    lonlat_sph3d,
-    math_sph3d,
-    polar2d,
-    pt_map,
-    radial1d,
-    sph3d,
-    time1d,
-)
-from coordinax.distances import Distance
-from coordinax.frames import frame_transition, noframe
-from coordinax.manifolds import (
-    R3,
-    S2,
-    CustomAtlas,
-    CustomManifold,
-    EmbeddedChart,
-    EmbeddedManifold,
-    EuclideanManifold,
-    FlatMetric,
-    Rn,
-    chord_distance,
-    embedded_twosphere,
-    geodesic_distance,
-)
-from coordinax.representations import (
-    AbstractLinearBasis,
-    AbstractTangentSemanticKind,
-    Acceleration,
-    CoordinateBasis,
-    Displacement,
-    Location,
-    NoBasis,
-    PhysicalBasis,
-    PointGeometry,
-    Representation,
-    TangentGeometry,
-    Velocity,
-    acc,
-    add,
-    cconvert,
-    change_basis,
-    coord_acc,
-    coord_basis,
-    coord_disp,
-    coord_vel,
-    dpl,
-    loc,
-    no_basis,
-    phys_acc,
-    phys_basis,
-    phys_disp,
-    phys_vel,
-    point,
-    point_geom,
-    subtract,
-    tangent_geom,
-    tangent_map,
-    vel,
-)
-from coordinax.transforms import (
-    Composed,
-    Rotate,
-    Scale,
-    Shear,
-    Translate,
-    act,
-    identity,
-    simplify,
-)
-from coordinax.vectors import (
-    Coordinate,
-    Point,
-    Tangent,
-    ToUnitsOptions,
-    chord_distance,
-    equivalent,
-    geodesic_distance,
-)
+# Install the runtime type-checking hook on the whole `coordinax` prefix before
+# anything under it is imported. The hook instruments a module only if its own
+# name matches when it is first imported, and the code lives in
+# `coordinax._src.*` and `coordinax.<subpackage>._src.*`, so a hook on a public
+# module name (e.g. `coordinax.charts`) misses it. A no-op unless
+# COORDINAX_ENABLE_RUNTIME_TYPECHECKING is set.
+from coordinax._src.setup_package import install_import_hook
+
+with install_import_hook("coordinax"):
+    from coordinax._src.optional_exports import resolve_entrypoints_with_legacy
+    from coordinax._version import version as __version__  # noqa: F401
+    from coordinax.angles import Angle
+    from coordinax.charts import (
+        CartesianProductChart,
+        NoGlobalCartesianChartError,
+        carray,
+        cart1d,
+        cart2d,
+        cart3d,
+        cartesian_chart,
+        cartnd,
+        cdict,
+        cyl3d,
+        guess_chart,
+        jac_pt_map,
+        loncoslat_sph3d,
+        lonlat_sph3d,
+        math_sph3d,
+        polar2d,
+        pt_map,
+        radial1d,
+        sph3d,
+        time1d,
+    )
+    from coordinax.distances import Distance
+    from coordinax.frames import frame_transition, noframe
+    from coordinax.manifolds import (
+        R3,
+        S2,
+        CustomAtlas,
+        CustomManifold,
+        EmbeddedChart,
+        EmbeddedManifold,
+        EuclideanManifold,
+        FlatMetric,
+        Rn,
+        chord_distance,
+        embedded_twosphere,
+        geodesic_distance,
+    )
+    from coordinax.representations import (
+        AbstractLinearBasis,
+        AbstractTangentSemanticKind,
+        Acceleration,
+        CoordinateBasis,
+        Displacement,
+        Location,
+        NoBasis,
+        PhysicalBasis,
+        PointGeometry,
+        Representation,
+        TangentGeometry,
+        Velocity,
+        acc,
+        add,
+        cconvert,
+        change_basis,
+        coord_acc,
+        coord_basis,
+        coord_disp,
+        coord_vel,
+        dpl,
+        loc,
+        no_basis,
+        phys_acc,
+        phys_basis,
+        phys_disp,
+        phys_vel,
+        point,
+        point_geom,
+        subtract,
+        tangent_geom,
+        tangent_map,
+        vel,
+    )
+    from coordinax.transforms import (
+        Composed,
+        Rotate,
+        Scale,
+        Shear,
+        Translate,
+        act,
+        identity,
+        simplify,
+    )
+    from coordinax.vectors import (
+        Coordinate,
+        Point,
+        Tangent,
+        ToUnitsOptions,
+        chord_distance,
+        equivalent,
+        geodesic_distance,
+    )
+
+del install_import_hook
 
 # ============================================================================
 # Optional interop registration

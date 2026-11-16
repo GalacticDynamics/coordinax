@@ -26,6 +26,7 @@ from typing import Any
 import plum
 
 import quaxed.numpy as jnp
+import unxt as u
 import unxts.linalg as ul
 from unxt.quantity import is_any_quantity
 
@@ -147,7 +148,7 @@ def bilinear_form(
 
 
 def quadratic_form(
-    v: CDict,
+    v: CDict | u.AbstractQuantity,
     chart: AbstractChart,
     /,
     *,

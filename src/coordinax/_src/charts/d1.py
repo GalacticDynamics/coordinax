@@ -10,7 +10,7 @@ __all__ = ("Abstract1D", "Cart1D", "cart1d", "Radial1D", "radial1d", "Time1D", "
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, Self, override  # noqa: N817
+from typing import Any, Final, Literal as L, override  # noqa: N817
 from typing_extensions import TypeVar
 
 from coordinax._src.base import (
@@ -81,7 +81,7 @@ class Cart1D(
 
     @override
     @property
-    def cartesian(self) -> Self:
+    def cartesian(self) -> "Cart1D[MT]":
         """Return the canonical Cartesian chart for a 1D chart.
 
         >>> import coordinax.charts as cxc

@@ -22,9 +22,7 @@ import dataclasses
 import functools as ft
 
 from jaxtyping import Real
-from typing import Annotated, Any, Final, Literal as L, Self, override  # noqa: N817
-
-from beartype.vale import Is
+from typing import Any, Final, Literal as L, override  # noqa: N817
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -102,7 +100,7 @@ class Cart3D(
 
     @override
     @property
-    def cartesian(self) -> Self:
+    def cartesian(self) -> "Cart3D[MT]":
         """Return the canonical Cartesian chart for a 3D chart.
 
         >>> import coordinax.charts as cxc
@@ -504,10 +502,10 @@ class ProlateSpheroidal3D(
     """
 
     _: dataclasses.KW_ONLY
-    Delta: Annotated[
-        Real[u.quantity.AbstractQuantity, ""],  # Quantity (dynamic) or StaticQuantity
-        Is[lambda x: x.value > 0],
-    ]
+    # Quantity (dynamic) or StaticQuantity. Positivity is checked in
+    # `check_data`, not here: a value check in the annotation would bool a
+    # tracer when the chart is built under `jit`.
+    Delta: Real[u.quantity.AbstractQuantity, ""]
     """Focal length of the coordinate system. Must have dimensions of length."""
 
     M: MT = R3  # ty: ignore[invalid-assignment]

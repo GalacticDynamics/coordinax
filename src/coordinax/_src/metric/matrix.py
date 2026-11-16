@@ -405,8 +405,8 @@ class DenseMetric(AbstractMetricMatrix):
         return self
 
     def __matmul__(
-        self, other: "Array | ul.QuantityMatrix", /
-    ) -> "Array | ul.QuantityMatrix":
+        self, other: "Array | ul.QuantityMatrix | u.AbstractQuantity", /
+    ) -> "Array | ul.QuantityMatrix | u.AbstractQuantity":
         """Apply this metric matrix to a vector via matrix-vector product.
 
         When the metric matrix is a :class:`~unxts.linalg.QuantityMatrix`,

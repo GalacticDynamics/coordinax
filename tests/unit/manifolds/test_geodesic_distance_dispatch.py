@@ -142,8 +142,8 @@ class TestEmbeddedSphere:
     def test_refuses_an_embedding_without_a_closed_form(self):
         """Only the two-sphere embedding has one; the rest must say so."""
         embed_map = cxm.CustomEmbeddingMap(
-            intrinsic=cxm.S2,
-            ambient=cxm.R3,
+            intrinsic=cxc.sph2,
+            ambient=cxc.cart3d,
             embed_fn=lambda p, **kw: p,
             project_fn=lambda p, **kw: p,
         )
