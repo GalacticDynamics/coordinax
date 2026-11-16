@@ -111,7 +111,9 @@ class Tangent(
 
     """
 
-    data: dict[CKey, V]
+    # `Any`, as on `Point`: `V` defaults to `u.Q`, and the runtime type check
+    # then rejects unitless data, e.g. `p - q` for unitless points.
+    data: dict[CKey, Any]  # TODO: data: dict[CKey, V]
     """The data for each component."""
 
     chart: ChartT = eqx.field(static=True)

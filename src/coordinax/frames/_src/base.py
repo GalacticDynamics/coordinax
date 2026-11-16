@@ -85,17 +85,49 @@ def frames_statically_equal(
     Array(False, dtype=bool)
 
     """
-    if from_frame is to_frame:
+    # A traced answer cannot be decided at trace time, so report "not the same"
+    # and let the caller build the general transform.
+    return frames_equal(from_frame, to_frame) is True
+
+
+def frames_equal(
+    a: "AbstractReferenceFrame", b: "AbstractReferenceFrame", /
+) -> bool | jax.Array:
+    """Frame equality that is safe under `jax.jit`.
+
+    ``a != b`` on two frames with array fields (`Galactocentric`) is a 0-d
+    array, and an ``if`` on it raises ``TracerBoolConversionError`` under
+    `jax.jit`. This returns a Python `bool` whenever the answer is known at
+    trace time: the same object, different types, or concrete fields. Only
+    when a field is traced does it return the traced 0-d boolean array, so
+    callers test ``is True`` / ``is False`` and handle the array case.
+
+    Examples
+    --------
+    >>> import jax
+    >>> import coordinaxs.astro as cxastro
+
+    >>> frames_equal(cxastro.Galactocentric(), cxastro.Galactocentric())
+    True
+    >>> frames_equal(cxastro.ICRS(), cxastro.Galactic())
+    False
+
+    Under tracing the fields are unknown, so the answer is an array:
+
+    >>> gc = cxastro.Galactocentric()
+    >>> jax.jit(frames_equal)(gc, gc)
+    Array(True, dtype=bool)
+
+    """
+    if a is b:
         return True
-    if type(from_frame) is not type(to_frame):
+    if type(a) is not type(b):
         return False
-    eq = eqx.tree_equal(from_frame, to_frame)
+    eq = eqx.tree_equal(a, b)
     # `tree_equal` is `True`/`False` only when every leaf is a non-array; with
-    # array leaves it is a 0-d array, concrete or traced. A traced one cannot be
-    # decided at trace time, so report "not the same" and let the caller build
-    # the general transform.
+    # array leaves it is a 0-d array, concrete or traced.
     if isinstance(eq, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
-        return False
+        return eq
     return bool(eq)
 
 

@@ -176,33 +176,41 @@ Representation(
 )
 ```
 
-## Promoting a Point to a Displacement
+## Differences of Points and Position Vectors
 
-`change_basis` has a second role: it can **promote a `Point` to a `Tangent` with `Displacement` semantics**. This is useful when you have a position vector that you want to reinterpret as a tangent-space displacement — for example, when computing offsets or feeding a position into an operation that expects a displacement.
-
-The component data is unchanged; only the geometric interpretation is recast from a manifold point (`PointGeometry`) to a tangent-space displacement (`TangentGeometry`, `Displacement`).
+A point is not a vector, so you cannot add two points or scale one. You can subtract them. `p - q` is the displacement from `q` to `p`, a `Tangent` with `Displacement` semantics. It is in the Cartesian chart and coordinate basis, because there its components are the same at every base point:
 
 ```{code-block} python
->>> pt = cx.Point.from_([1, 2, 3], "m")
-
->>> # Promote to a coordinate-basis displacement
->>> disp = cxr.change_basis(pt, cxr.coord_basis)
->>> print(disp)
+>>> p = cx.Point.from_([4.0, 5.0, 6.0], "m")
+>>> q = cx.Point.from_([1.0, 2.0, 3.0], "m").cconvert(cxc.sph3d)
+>>> d = p - q
+>>> print(d.round(3))
 <Tangent: chart=Cart3D (x, y, z) [m]
-    [1 2 3]>
+    [3. 3. 3.]>
 ```
 
-You can also request the physical basis directly:
+Adding a displacement to a point gives a point, in that point's chart. If the displacement is in a curvilinear chart or the physical basis, it is read at the point you add it to:
 
 ```{code-block} python
->>> disp_phys = cxr.change_basis(pt, cxr.phys_basis)
->>> print(disp_phys.rep)   # phys_disp
-Representation(
-    geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement()
-)
+>>> print((q + d).cconvert(cxc.cart3d).round(3))
+<Point: chart=Cart3D (x, y, z) [m]
+    [4. 5. 6.]>
+>>> d_sph = d.cconvert(cxc.sph3d, at=q.cconvert(cxc.cart3d))
+>>> bool(cx.equivalent(q + d_sph, p))
+True
 ```
 
-The `at` and `usys` keyword arguments are accepted for API consistency but have no effect (no numerical transformation is performed).
+`p + q`, `-p`, and `d - p` raise `TypeError`, because each of them needs an origin. So does adding a velocity or an acceleration to a point. The two operands also have to be in the same frame. If they are not, use `p.subtract(q, tau=...)` or `p.add(d, tau=...)`, which move `q` or `d` into `p.frame` first.
+
+Sometimes you do mean the origin. `p.position_vector()` is the displacement from the origin of the Cartesian chart to `p`, written at `p` in `p.chart`. It is the same as `cxr.change_basis(p, basis)`. In a curvilinear chart its components are not the coordinates. In `sph3d` the position vector at $(r, \theta, \phi)$ is $(r, 0, 0)$:
+
+```{code-block} python
+>>> print(q.position_vector(cxr.phys_basis).round(3))
+<Tangent: chart=Spherical3D (r, theta, phi) [m]
+    [3.742 0.    0.   ]>
+```
+
+The position vector depends on where the origin is, so it changes under a `Translate` and between frames. A difference of points does not.
 
 ### JIT
 
@@ -248,4 +256,5 @@ Use scalar-first design and batch with `vmap`:
 | Position only | `Point` — see [Point tutorial](../tutorials/point_objects.md) |
 | Velocity / displacement / acceleration only | `Tangent` (this guide) |
 | Position + tangent field(s) | `Coordinate` — see [Coordinate tutorial](../tutorials/coordinate_objects.md) |
-| Position to reinterpret as a displacement | `change_basis(pt, cxr.coord_basis)` → `Tangent[Displacement]` |
+| Two positions, and you want the offset between them | `p - q` → `Tangent[Displacement]` |
+| A position measured from the origin | `p.position_vector()` → `Tangent[Displacement]` |

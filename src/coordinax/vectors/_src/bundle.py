@@ -32,7 +32,7 @@ from .base import (
     vector_values_str,
     vectorform_pdoc as _vec_vectorform_pdoc,
 )
-from .point import Point, refuse_scaling_unless_vector
+from .point import Point, refuse_point_sum, refuse_scaling_unless_vector
 from .tangent import Tangent
 from coordinax.internal import OptUSys
 from coordinax.transforms._src.actions.prolong import prolong_point_map
@@ -364,6 +364,33 @@ class Coordinate(AbstractVector):
 
     def __rtruediv__(self, other: Any) -> Any:
         return refuse_scaling_unless_vector("Coordinate", other)
+
+    # `+`, `-` and unary `-` are refused for the same reason; subtract the base
+    # points explicitly.
+    def __add__(self, other: Any) -> Any:
+        """Refuse ``coord + other``: its base point is affine.
+
+        >>> import coordinax as cx
+        >>> c = cx.Coordinate(point=cx.Point.from_([1.0, 2.0, 3.0], "m"))
+        >>> c - c
+        Traceback (most recent call last):
+        ...
+        TypeError: cannot subtract Coordinates: its base point is affine, ...
+
+        """
+        refuse_point_sum("add Coordinates")
+
+    def __radd__(self, other: Any) -> Any:
+        refuse_point_sum("add Coordinates")
+
+    def __sub__(self, other: Any) -> Any:
+        refuse_point_sum("subtract Coordinates")
+
+    def __rsub__(self, other: Any) -> Any:
+        refuse_point_sum("subtract Coordinates")
+
+    def __neg__(self) -> Any:
+        refuse_point_sum("negate a Coordinate")
 
     # ===================================================================
     # Coordinate conversion

@@ -16,11 +16,10 @@ import quax
 import quaxed.numpy as jnp
 import unxt.quantity as uq
 
-import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .bundle import Coordinate
 from .custom_types import Shape
-from .point import Point, refuse_point_scaling
+from .point import Point, refuse_point_scaling, refuse_point_sum
 from .tangent import Tangent
 
 ##############################################################################
@@ -133,95 +132,68 @@ def eq_p_absvecs(lhs: Point, rhs: Point, /) -> Bool[Array, "..."]:
     return jax.tree.reduce(jnp.logical_and, comp_tree)
 
 
+# A point is affine: `p - q` is a displacement, `p + d` a point, and `p + q`
+# and `-p` are refused. The rules delegate to `cxr.add` / `cxr.subtract`.
+
+
 @quax.register(jax.lax.neg_p)
-def neg_p_absvec(operand: Point, /) -> Point:
-    """Element-wise negation of a Point.
+def neg_p_point(operand: Point, /) -> NoReturn:
+    """Refuse ``-p``: it depends on the choice of origin.
 
-    For non-Cartesian charts, convert to Cartesian, negate, then convert back.
-    This ensures correct negation semantics (e.g., negating a point in cylindrical
-    coordinates should negate its Cartesian representation and convert back).
+    >>> import coordinax as cx
+    >>> -cx.Point.from_([1.0, 2.0, 3.0], "m")
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot negate a Point: a point is affine, ...
+
     """
-    original_chart = operand.chart
-
-    try:
-        ambient_chart = original_chart.cartesian
-    except cxc.NoGlobalCartesianChartError:
-        ambient_chart = None
-
-    # If there is no global Cartesian chart (or already Cartesian),
-    # fall back to direct component-wise negation.
-    if ambient_chart is None or ambient_chart == original_chart:
-        return replace(
-            operand,
-            data=jtu.map(lambda v: -v, operand.data, is_leaf=uq.is_any_quantity),
-        )
-
-    # Convert to Cartesian, negate, convert back
-    cart_vec = cast("Point", cxr.cconvert(operand, ambient_chart))
-    neg_cart_vec = replace(
-        cart_vec, data=jtu.map(lambda v: -v, cart_vec.data, is_leaf=uq.is_any_quantity)
-    )
-    neg_vec = cxr.cconvert(neg_cart_vec, original_chart)
-    return cast("Point", neg_vec)
-
-
-# ===============================================
-# Add / Sub
+    refuse_point_sum("negate a Point")
 
 
 @quax.register(jax.lax.add_p)
-def add_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
-    r"""Element-wise addition of two points.
+def add_p_points(lhs: Point, rhs: Point, /, **kw: Any) -> NoReturn:
+    """Refuse ``p + q``: it depends on the choice of origin."""
+    refuse_point_sum("add two Points")
 
-    For non-Cartesian charts the operation converts both operands to the ambient
-    Cartesian chart, adds there, and converts the result back to the ``lhs``
-    chart.  For Cartesian charts the addition is direct.
+
+@quax.register(jax.lax.sub_p)
+def sub_p_points(lhs: Point, rhs: Point, /, **kw: Any) -> Tangent:
+    """``p - q`` is the displacement from ``q`` to ``p``.
 
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
-
-    >>> v1 = cx.Point.from_([1, 2, 3], "m")
-    >>> v2 = cx.Point.from_([4, 5, 6], "m")
-    >>> print(v1 + v2)
-    <Point: chart=Cart3D (x, y, z) [m]
-        [5 7 9]>
+    >>> p = cx.Point.from_([4.0, 5.0, 6.0], "m")
+    >>> q = cx.Point.from_([1.0, 2.0, 3.0], "m")
+    >>> print(jnp.subtract(p, q))
+    <Tangent: chart=Cart3D (x, y, z) [m]
+        [3. 3. 3.]>
 
     """
+    return cast("Tangent", cxr.subtract(lhs, rhs))
+
+
+@quax.register(jax.lax.add_p)
+def add_p_point_tangent(lhs: Point, rhs: Tangent, /, **kw: Any) -> Point:
+    """``p + d`` translates ``p`` by a displacement ``d``."""
+    return cast("Point", cxr.add(lhs, rhs))
+
+
+@quax.register(jax.lax.add_p)
+def add_p_tangent_point(lhs: Tangent, rhs: Point, /, **kw: Any) -> Point:
+    """``d + p`` translates ``p`` by a displacement ``d``."""
     return cast("Point", cxr.add(lhs, rhs))
 
 
 @quax.register(jax.lax.sub_p)
-def sub_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
-    r"""Element-wise subtraction of two points.
-
-    For non-Cartesian charts the operation converts both operands to the ambient
-    Cartesian chart, subtracts there, and converts the result back to the
-    ``lhs`` chart.  For Cartesian charts the subtraction is direct.
-
-    The result keeps the ``lhs`` chart and representation.
-
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    Same-chart subtraction:
-
-    >>> v1 = cx.Point.from_([4, 5, 6], "m")
-    >>> v2 = cx.Point.from_([1, 2, 3], "m")
-    >>> print(v1 - v2)
-    <Point: chart=Cart3D (x, y, z) [m]
-        [3 3 3]>
-
-    """
+def sub_p_point_tangent(lhs: Point, rhs: Tangent, /, **kw: Any) -> Point:
+    """``p - d`` translates ``p`` by ``-d``."""
     return cast("Point", cxr.subtract(lhs, rhs))
 
 
-# ===============================================
-
-
-# Scaling. A `Tangent` lives in the vector space T_p M, so scaling it is
-# component-wise. A `Point` is affine: `k * p` has no meaning without an origin,
-# and scaling its stored components in a non-Cartesian chart scales its angles
-# too, which moves it somewhere else entirely (gh#1025). So it raises.
+@quax.register(jax.lax.sub_p)
+def sub_p_tangent_point(lhs: Tangent, rhs: Point, /, **kw: Any) -> NoReturn:
+    """Refuse ``d - p``: it depends on the choice of origin."""
+    refuse_point_sum("subtract a Point from a Tangent")
 
 
 @quax.register(jax.lax.mul_p)
@@ -513,3 +485,21 @@ def div_p_coordinate_scalar(
 ) -> NoReturn:
     """Refuse to divide a Coordinate by a scalar: its base point is affine."""
     refuse_point_scaling("Coordinate")
+
+
+@quax.register(jax.lax.neg_p)
+def neg_p_coordinate(operand: Coordinate, /) -> NoReturn:
+    """Refuse ``-coord``: its base point is affine."""
+    refuse_point_sum("negate a Coordinate")
+
+
+@quax.register(jax.lax.add_p)
+def add_p_coordinates(lhs: Coordinate, rhs: Coordinate, /, **kw: Any) -> NoReturn:
+    """Refuse ``a + b`` on Coordinates: their base points are affine."""
+    refuse_point_sum("add Coordinates")
+
+
+@quax.register(jax.lax.sub_p)
+def sub_p_coordinates(lhs: Coordinate, rhs: Coordinate, /, **kw: Any) -> NoReturn:
+    """Refuse ``a - b`` on Coordinates: their base points are affine."""
+    refuse_point_sum("subtract Coordinates")

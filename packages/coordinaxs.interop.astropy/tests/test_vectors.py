@@ -123,31 +123,14 @@ def test_spherical_to_cylindrical_astropy() -> None:
 # Negation
 
 
-@pytest.mark.parametrize(
-    ("v", "apy_cls"),
-    [
-        (cart, apyc.CartesianRepresentation),
-        (cyl, apyc.CylindricalRepresentation),
-        (sph, apyc.PhysicsSphericalRepresentation),
-        (prolatesph, None),
-    ],
-)
-def test_negation_astropy_point_roundtrip(
-    v: cx.Point, apy_cls: type[apyc.BaseRepresentation] | None
-) -> None:
-    """Negation agrees with Astropy once both are taken to Cartesian."""
-    if apy_cls is None:
-        pytest.xfail("No corresponding Astropy representation class.")
+@pytest.mark.parametrize("v", [cart, cyl, sph, prolatesph])
+def test_negation_of_a_point_is_refused(v: cx.Point) -> None:
+    """A point is affine, so ``-p`` raises; Astropy negates the position vector.
 
-    # To negate, Point converts to Cartesian, negates, and converts back. That
-    # can yield equivalent-but-different angular coordinates than Astropy --
-    # AFAIK only at the poles -- so compare in Cartesian.
-    negcart = plum.convert(-v, apy_cls).represent_as(apyc.CartesianRepresentation)
-    negapycart = -plum.convert(v, apy_cls).represent_as(apyc.CartesianRepresentation)
-    assert np.allclose(negcart.x, negapycart.x, atol=1e-6)
-    assert np.allclose(negcart.y, negapycart.y, atol=1e-6)
-    assert np.allclose(negcart.z, negapycart.z, atol=5e-7)
-    # TODO: use representation_equal_up_to_angular_type
+    The Astropy behaviour is ``-p.position_vector()`` in Cartesian.
+    """
+    with pytest.raises(TypeError, match="cannot negate a Point"):
+        _ = -v
 
 
 # ---------------------------------------------------------------------------

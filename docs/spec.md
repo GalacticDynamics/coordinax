@@ -1970,7 +1970,18 @@ A representation is therefore **not** the same thing as a chart: the chart deter
     - **Cartesian charts** (`Cart0D` … `CartND`) with any manifold: always the identity map, returned at `precedence=1` (scale factors are all 1).
     - **`NoBasis` → `CoordinateBasis`** or **`NoBasis` → `PhysicalBasis`**: identity map (used for basis-agnostic data). The `NoBasis` → `PhysicalBasis` overload additionally checks that all components share the same physical dimension.
 
-    **Point-to-Displacement promotion:** `change_basis(v: Point, to_basis, /, *, at)` promotes a `Point` to a `Tangent` with `Displacement` semantics. The component data are unchanged; only the geometric interpretation is recast from a manifold point (affine, `PointGeometry`) to a tangent-space displacement vector (`TangentGeometry`, `Displacement`). The resulting `Tangent` carries the same chart as the input `Point`, and its basis is `to_basis`. This operation is the inverse of treating a displacement as an absolute position, and it respects the affine/tangent distinction enforced throughout the spec.
+    **Position vector:** `change_basis(p: Point, to_basis, /, *, at=None)` returns the position vector of `p`: the displacement $p - O$ from the origin $O$ of the Cartesian chart of `p.chart`'s manifold. It is a `Tangent` with `Displacement` semantics in `p.chart`, basis `to_basis` and frame `p.frame`, attached at `p`. `Point.position_vector(basis=coord_basis)` is the same thing. In a Cartesian chart its components are the point's coordinates. In a curvilinear chart they are not: in `sph3d` the position vector at $(r, \theta, \phi)$ is $(r, 0, 0)$ in both the coordinate and the physical basis, and in `cyl3d` it is $(\rho, 0, z)$ in the physical basis. The result depends on the origin, so it is frame-dependent and does not commute with a `Translate`. The manifold must be an affine space (see the [affine semantics of `PointGeometry`](#software-spec-point-geometry)); otherwise `TypeError`. `at` is accepted for signature compatibility and ignored, since the base point is `p`.
+
+    ```pycon
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> p = cx.Point.from_([1.0, 2.0, 2.0], "m").cconvert(cxc.sph3d)
+    >>> print(cxr.change_basis(p, cxr.phys_basis).round(3))
+    <Tangent: chart=Spherical3D (r, theta, phi) [m]
+        [3. 0. 0.]>
+    ```
 
 </br>
 
@@ -2007,6 +2018,8 @@ q_f = \tau(q_i) .$$ An important example is the **point geometry**.
     - `AbstractGeometry` is a static dispatch object category (no runtime numerical payload).
     - Concrete subclasses should represent immutable geometric categories.
 
+(software-spec-point-geometry)=
+
 !!! info `PointGeometry` and `point_geom`
 
     Concrete geometric kind for manifold points, and its canonical instance.
@@ -2017,25 +2030,58 @@ q_f = \tau(q_i) .$$ An important example is the **point geometry**.
 
     Affine semantics:
 
-    - Point data is location data: points do not add as vectors.
-    - Any vector-space operations require a separate geometric kind (for example tangent/cotangent kinds), not `PointGeometry`.
-    - Scalar multiplication and division are vector-space operations, so `k * p`, `p * k`, `p / k` and `k / p` raise `TypeError` for a `Point`, and likewise for a `Coordinate`, whose base point is a `Point`. Scaling the stored components would be wrong as well as meaningless: in a curvilinear chart it scales the angles and moves the point. To scale a displacement, convert to a Cartesian chart, promote with `change_basis(..., at=)` (see Point-to-Displacement promotion), and scale the resulting `Tangent`, whose scaling is component-wise ([gh#1025](https://github.com/GalacticDynamics/coordinax/issues/1025)).
+    - Point data is location data. A manifold is an affine space when it has a global Cartesian chart on the same manifold: `chart.cartesian` exists and `chart.cartesian.M == chart.M`. The Euclidean, Minkowski and Galilean charts pass. The test reads static chart metadata only, so it is a plain bool under `jit`. On an affine space the operations on points are the affine ones:
+      - `p - q` is the displacement from `q` to `p`: a `Tangent` with `Displacement` semantics in `p.chart.cartesian`, coordinate basis, and frame `p.frame`. Its components do not depend on a base point. Re-express it in another chart with `.cconvert(chart, at=q)`. The two points may use different charts on the same manifold.
+      - `p + d`, `d + p` and `p - d` translate `p` by a displacement `d` and return a `Point` in `p.chart`. A `d` in a curvilinear chart or the physical basis is read at `p`. A `Velocity` or `Acceleration` tangent raises `TypeError`.
+      - `p + q`, `-p` and `d - p` raise `TypeError`: they need an origin. Use the position vector `p.position_vector()` when an origin is what you mean.
+    - The operators need both operands in one frame. When the frames are known to differ they raise `ValueError`. Under `jit`, two frames of the same type with traced fields cannot be compared, and they are accepted. `Point.subtract(other, /, *, tau=None)` and `Point.add(d, /, *, tau=None)` first move `other` or `d` into `p.frame` with `frame_transition(other.frame, p.frame)` at `tau`, then do the same-frame operation. A displacement is moved with its base point `p`, expressed in the displacement's frame. `tau` may be `None` only when the transition is not time-dependent; otherwise they raise `TypeError`. In one frame they ignore `tau`.
+    - On a manifold that is not an affine space (`sph2`, an `EmbeddedChart`, a custom manifold without a Cartesian chart) all of these raise `TypeError`. The difference of two points there is the Riemannian log map, which `coordinax` does not provide.
+    - Scalar multiplication and division are vector-space operations, so `k * p`, `p * k`, `p / k` and `k / p` raise `TypeError` for a `Point`, and likewise for a `Coordinate`, whose base point is a `Point`. Scaling the stored components would be wrong as well as meaningless: in a curvilinear chart it scales the angles and moves the point. Scale a displacement instead, `k * (p - q)`, or the position vector, `k * p.position_vector()`. Tangent scaling is component-wise ([gh#1025](https://github.com/GalacticDynamics/coordinax/issues/1025)).
 
     ```pycon
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
+    >>> import coordinax.frames as cxf
 
-    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "km").cconvert(cxc.sph3d)
+    >>> p = cx.Point.from_([4.0, 5.0, 6.0], "km")
+    >>> q = cx.Point.from_([1.0, 2.0, 3.0], "km").cconvert(cxc.sph3d)
+    >>> d = p - q
+    >>> print(d.round(3))
+    <Tangent: chart=Cart3D (x, y, z) [km]
+        [3. 3. 3.]>
+    >>> bool(cx.equivalent(q + d, p))
+    True
+
+    >>> p + p
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot add two Points: a point is affine, ...
+
     >>> 2 * p
     Traceback (most recent call last):
     ...
     TypeError: cannot multiply or divide a Point by a scalar: a point is affine, ...
 
-    >>> q = p.cconvert(cxc.cart3d)
-    >>> print(2 * cxr.change_basis(q, cxr.coord_basis, at=q))
+    >>> print(2 * d.round(3))
     <Tangent: chart=Cart3D (x, y, z) [km]
-        [2. 4. 6.]>
+        [6. 6. 6.]>
+
+    >>> s = cx.Point.from_({"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}, cxc.sph2)
+    >>> s - s
+    Traceback (most recent call last):
+    ...
+    TypeError: cannot subtract points on HyperSphericalManifold(ndim=2): its points do not form an affine space, ...
+
+    >>> a = cx.Point.from_([0.0, 0.0, 0.0], "m", cxf.alice)
+    >>> b = cx.Point.from_([10.0, 0.0, 0.0], "m", cxf.alex)
+    >>> b - a
+    Traceback (most recent call last):
+    ...
+    ValueError: cannot combine a Point in Alex() with an operand in Alice(): ...
+    >>> print(b.subtract(a))
+    <Tangent: chart=Cart3D (x, y, z) [m]
+        [ 10. -10.   0.]>
     ```
 
     API instance:
@@ -2083,23 +2129,6 @@ q_f = \tau(q_i) .$$ An important example is the **point geometry**.
     - Multiple non-angle dimensions after discarding -> `ValueError`.
     - Unregistered dimension -> `ValueError`.
     - Prolate spheroidal: dimensions not `{area, angle}` -> `ValueError`.
-
-!!! info `PointGeometry` and `point_geom`
-
-    Concrete geometric kind for manifold points, and its canonical instance.
-
-    - `PointGeometry` is the final concrete subclass of `AbstractGeometry` for point-like data.
-    - It encodes that components represent a point $p \in M$ (an affine object), not a vector in a tangent/cotangent space.
-    - Point coordinates therefore transform by the ordinary chart transition map (`pt_map` / `pt_map` point behavior), with the represented geometric object unchanged.
-
-    Affine semantics:
-
-    - Point data is location data: points do not add as vectors.
-    - Any vector-space operations require a separate geometric kind (for example tangent/cotangent kinds), not `PointGeometry`.
-
-    API instance:
-
-    - `point_geom` is the pre-defined canonical `PointGeometry()` instance used by the default point representation `point = Representation(point_geom, no_basis, loc)`.
 
 </br>
 
@@ -2415,7 +2444,7 @@ Separating semantics from geometry provides two advantages:
       - ``(V, u.AbstractUnitSystem) -> uconvert(u.AbstractUnitSystem, V)`` redispatch
     - ``__array_namespace__``: the array API namespace -- `quax.numpy`. This delegates to `quax` primitives.
     - ``__eq__``: strict equality — requires the same type, chart, and frame, then compares component data via the `quax` equality primitive. See [Comparison and Equivalence](#software-spec-equivalence) for the strict-vs-relaxed relations.
-      - Chart and frame are static metadata, so they are compared with ordinary Python ``!=`` (safe under `jit`).
+      - The chart is static metadata, so it is compared with ordinary Python ``!=``. A frame can have array fields (`Galactocentric`), and ``!=`` on it is then a 0-d array, so frames are compared structurally: different types are unequal, and equal types compare their fields. Under `jit` with traced frame fields the field comparison is a traced boolean, which ``__eq__`` and ``equivalent`` AND into their result, and which ``geodesic_distance`` and ``chord_distance`` cannot check (they raise only when the frame types differ).
       - When they differ, ``__eq__`` short-circuits and returns a 0-d boolean array (``jnp.zeros((), dtype=bool)``) instead of comparing the component dicts, which also avoids raising on their differing keys.
     - ``copy()``: call `dataclass.replace`.
     - ``flatten()``: flatten the vector.
@@ -2487,7 +2516,9 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
       ``Point`` with the updated data and ``frame=toframe``.
     - ``aval()``
     - ``shape``
-    - ``norm()``
+    - ``__add__``, ``__radd__``, ``__sub__``, ``__rsub__`` — the affine operations: ``p - q`` is a displacement `Tangent`, ``p ± d`` and ``d + p`` are a ``Point``, and ``p + q``, ``-p`` and ``d - p`` raise `TypeError`. See the [affine semantics of `PointGeometry`](#software-spec-point-geometry).
+    - ``subtract(other, /, *, tau=None)``, ``add(d, /, *, tau=None)`` — the same operations, after moving ``other`` or ``d`` into ``self.frame`` at ``tau``.
+    - ``position_vector(basis=coord_basis, /) -> Tangent`` — the position vector ``p - O``, see `change_basis`.
 
     `from_` Constructor Dispatches:
 
@@ -2688,6 +2719,8 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     - All shapes (point + fields) must be broadcastable; otherwise `ValueError`.
     - Every fibre vector whose `frame` differs from `point.frame` is **automatically converted** to `point.frame` before storage.
     - Fibre charts are **not** altered on construction; each fibre retains its supplied chart.
+
+    **Arithmetic:** `+`, `-` and unary `-` on a `Coordinate` raise `TypeError`, as does mixing a `Coordinate` with a `Point`. Its fibres live at different base points, and comparing them would need parallel transport. Subtract the base points explicitly, `a.point - b.point`, and work with the fibres one by one.
 
     **Delegated properties** (forward to `self.point`):
 
