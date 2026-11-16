@@ -9,6 +9,7 @@ import unxt as u
 import unxts.hypothesis as ust
 
 import coordinax.charts as cxc
+import coordinax.representations as cxr
 import coordinaxs.hypothesis.main as cxst
 from .conftest import shapes_ending_in_123, xps
 from coordinaxs.api.custom_types import CDict
@@ -219,3 +220,53 @@ def test_cdict_cartnd_refuses_a_quantity_matrix() -> None:
     q = ul.QuantityMatrix(jnp.ones(4), unit=("m", "m", "km", "m"))
     with pytest.raises(ValueError, match="one array in one unit"):
         cxc.cdict(q, cxc.cartnd)
+
+
+# A 0-d value has no last axis to split: it is one component (V-17/V-18, #1032).
+
+
+@given(data=st.data(), chart=cxst.charts(ndim=1))
+def test_0d_value_fills_a_one_dimensional_chart(data, chart) -> None:
+    """A 0-d value given a 1-D chart is that chart's one component."""
+    import coordinax as cx
+
+    (key,) = chart.components
+    v = data.draw(cxst.cdicts(chart))[key]  # 0-d, in the chart's dimension
+
+    unit = u.unit_of(v)
+    want = u.ustrip(unit, cx.Point.from_({key: v}, chart)[key])
+    for got in (
+        cx.Point.from_(v, chart),
+        cx.Point.from_(u.ustrip(unit, v), unit, chart),
+    ):
+        assert got.chart == chart
+        assert jnp.array_equal(u.ustrip(unit, got[key]), want, equal_nan=True)
+
+    rate = v / u.Q(1.0, "s")
+    tan = cx.Tangent.from_(rate, chart, cxr.coord_vel)
+    assert tan.chart == chart
+    assert jnp.array_equal(tan[key].value, rate.value, equal_nan=True)
+
+
+@pytest.mark.parametrize("chart", [cxc.cart2d, cxc.cart3d])
+def test_0d_value_with_a_multi_component_chart_names_the_count(chart) -> None:
+    """A 0-d value cannot fill a chart with more than one component."""
+    n = len(chart.components)
+    msg = f"0-d .* single component, but {n} components"
+    with pytest.raises(ValueError, match=msg):
+        cxc.cdict(u.Q(1.0, "m"), chart)
+    with pytest.raises(ValueError, match=msg):
+        cxc.cdict(jnp.asarray(1.0), "m", chart)
+    with pytest.raises(ValueError, match=msg):
+        cxc.cdict(jnp.asarray(1.0), u.unitsystems.si, chart)
+
+
+def test_0d_value_without_a_chart_guesses_cart1d() -> None:
+    """With no chart, a 0-d value guesses `cart1d`, as a last axis of 1 does."""
+    import coordinax as cx
+
+    q = u.Q(2.0, "m")
+    assert cxc.guess_chart(q) == cxc.cart1d
+    p = cx.Point.from_(q)
+    assert p.chart == cxc.cart1d
+    assert p == cx.Point.from_(u.Q([2.0], "m"))

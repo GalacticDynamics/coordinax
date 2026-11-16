@@ -48,7 +48,7 @@ The house style is scalar-first — write for one point, let the user `vmap`. Th
 
 Treat as suspect, in metric/chart/vector code:
 
-- Indexing that assumes rank: `x[0]`, `x[..., 2]` mixed with `x[2]`, bare `len(...)`, `.shape[0]`.
+- Indexing that assumes rank: `x[0]`, `x[..., 2]` mixed with `x[2]`, bare `len(...)`, `.shape[0]`. `.shape[-1]` on a 0-d value is an `IndexError`: `cdict` raised it for `Point.from_(u.Q(1, "m"), cxc.cart1d)` until every overload went through one `_split_last_axis` (#1032 V-17). A 0-d input needs its own branch, and plain `x[..., i]` on a JAX array clamps an out-of-range `i` instead of raising, so the length check is not optional.
 - Matrix assembly — `jnp.diag`, `jnp.stack`, `jnp.eye`, `reshape` to a fixed `(n, n)` — where the batch dimensions must lead. #613, #618, #621, and #751 were all metric matrices built as if unbatched.
 - `jnp.where`/arithmetic between a batched component and a scalar constant without an explicit broadcast (#653).
 - `jax.jacfwd`/`jacrev` applied to a function that already takes a batch. It does not error: it returns the `(*batch, n_out, *batch, n_in)` Jacobian of the batch as one map, block-diagonal with structurally-zero off-diagonal blocks, `O(N^2)` to hold, and wrong for any consumer expecting per-point matrices (#776). Write the function for one point and map it.
