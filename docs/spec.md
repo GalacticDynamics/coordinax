@@ -2706,6 +2706,24 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     - `__len__()` — number of fibre fields.
     - `__iter__()` — iterates over field names.
 
+    **dataclassish view.** `_data` is storage, not a public field. `dataclassish.field_keys`, `field_values`, `field_items`, `fields` and `asdict` see `point` followed by the fibres in insertion order, which are the keywords `Coordinate(...)` and `dataclassish.replace` accept, so `Coordinate(**dict(field_items(c)))` and `replace(c, **dict(field_items(c)))` both rebuild `c`. `asdict` leaves the vectors as vectors. `replace` also takes `frame`, which it applies to the point and every fibre.
+
+    ```pycon
+    >>> import dataclassish
+    >>> import coordinax as cx
+    >>> c = cx.Coordinate(
+    ...     point=cx.Point.from_([1.0, 0.0, 0.0], "m"),
+    ...     velocity=cx.Tangent.from_([1.0, 0.0, 0.0], "m/s"),
+    ... )
+    >>> dataclassish.field_keys(c)
+    ('point', 'velocity')
+    >>> bool(dataclassish.replace(c, **dict(dataclassish.field_items(c))) == c)
+    True
+
+    ```
+
+    **Printing.** `__pdoc__` takes `vector_form` and passes every other keyword on to `wadler_lindig`. It raises `TypeError` for `include_data_name`, which v0.23 used to choose how the bundle's `data` field printed; a `Coordinate` has no `data` field now.
+
     **`__getitem__(key)`:**
 
     - `str` key → returns the named `Tangent` field.

@@ -358,5 +358,7 @@ Coordinax is pre-1.0 and moves; several recent renames are ones prior knowledge 
 | `AbstractAtlas.default_chart_for` | Removed |
 | `coordinax.quantity_matrix` | Removed — use `unxts.linalg` |
 | `k * point`, `point / k` (and on a `Coordinate`) | Raises `TypeError` (#1025) — scale a `Tangent`, or the Cartesian components |
+| `wl.pformat(coord, include_data_name=...)` | Raises `TypeError`: a `Coordinate` has no `data` field; drop the argument |
+| `dataclassish.field_keys(coord)` gave `('point', '_data')` | Gives `('point', <fibre names>...)`, the keywords `replace` and `Coordinate(...)` take |
 
 Requires unxt >=2.0.2 (plus `unxts.linalg`) and Python >=3.12. The distribution split matters when reading imports: `coordinax` is a regular package, while the optional sub-distributions (`coordinaxs.api`, `coordinaxs.astro`, `coordinaxs.curveframes`, `coordinaxs.hypothesis`, `coordinaxs.interop.astropy`) live in the separate `coordinaxs` PEP 420 namespace. Minimum supported dependencies follow [SPEC 0](https://scientific-python.org/specs/spec-0000/).
