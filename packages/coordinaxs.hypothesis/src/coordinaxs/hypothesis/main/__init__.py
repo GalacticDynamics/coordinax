@@ -28,6 +28,8 @@ __all__ = (
     "valid_basis_classes_for_geometry",
     "valid_semantic_classes_for_geometry",
     "representations",
+    # Vectors
+    "vectors",
 )
 
 from coordinaxs.hypothesis.angles import angles
@@ -58,3 +60,4 @@ from coordinaxs.hypothesis.representations import (
     valid_basis_classes_for_geometry,
     valid_semantic_classes_for_geometry,
 )
+from coordinaxs.hypothesis.vectors import vectors

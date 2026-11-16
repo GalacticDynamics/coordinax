@@ -38,7 +38,7 @@ uv add coordinaxs.hypothesis
 
 ## Quick Start
 
-```
+```python
 from hypothesis import given
 
 import coordinax as cx
@@ -56,6 +56,11 @@ def test_distance_property(dist):
     """Test that all distances are valid Distance objects."""
     assert isinstance(dist, cx.Distance)
     assert dist.value >= 0  # distances are non-negative by default
+
+
+# Calling a @given test runs it
+test_angle_property()
+test_distance_property()
 ```
 
 ## Strategies
@@ -70,16 +75,15 @@ This strategy builds on {func}`unxts.hypothesis.quantities` to generate angles w
 
 - `wrap_to` (`SearchStrategy[tuple[Quantity, Quantity]] | None`): Optional hypothesis strategy that generates a tuple of (min_bound, max_bound) for angle wrapping. If None, generates angles without wrapping (default: None).
 - `**kwargs`: Additional keyword arguments passed to {func}`~unxts.hypothesis.quantities`. Common options include:
-  - `units` (str): Unit for the angle (e.g., "rad", "deg")
-  - `min_value` (float): Minimum value for the angle
-  - `max_value` (float): Maximum value for the angle
+  - `unit` (str): Unit for the angle (e.g., "rad", "deg")
+  - `elements` (SearchStrategy): Strategy for generating array elements
   - `shape` (int | tuple | SearchStrategy): Shape of the generated angle array
 
 **Returns:** `SearchStrategy[unxt.Angle]`
 
 **Examples:**
 
-```
+```python
 from hypothesis import given, strategies as st
 
 import unxt as u
@@ -93,18 +97,15 @@ def test_basic_angle(angle):
 
 
 # Generate angles in degrees
-@given(angle=cxst.angles(units="deg"))
+@given(angle=cxst.angles(unit="deg"))
 def test_angle_degrees(angle):
     assert angle.unit == "deg"
 
 
-# Generate angles with wrapping bounds [0, 360) degrees
-@given(angle=cxst.angles(wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg")))))
+# Generate angles wrapped into [0, 360) degrees
+@given(angle=cxst.angles(unit="deg", wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg")))))
 def test_angle_with_wrapping(angle):
-    assert angle.wrap_to is not None
-    min_bound, max_bound = angle.wrap_to
-    assert min_bound.to("deg").value == 0
-    assert max_bound.to("deg").value == 360
+    assert 0 <= u.ustrip("deg", angle) <= 360
 
 
 # Generate angle arrays
@@ -117,6 +118,13 @@ def test_angle_array(angle):
 @given(angle=cxst.angles(shape=(5, 3)))
 def test_angle_2d(angle):
     assert angle.shape == (5, 3)
+
+
+test_basic_angle()
+test_angle_degrees()
+test_angle_with_wrapping()
+test_angle_array()
+test_angle_2d()
 ```
 
 ### `distances(check_negative=True, **kwargs)`
@@ -129,7 +137,7 @@ This strategy builds on `unxts.hypothesis.quantities` to generate distances with
 
 - `check_negative` (bool | SearchStrategy[bool]): Whether to enforce non-negative distances. If `True` (default), generated distances will be >= 0. Can be a hypothesis strategy to vary this behavior across test examples.
 - `**kwargs`: Additional keyword arguments passed to `unxts.hypothesis.quantities`. Common options include:
-  - `units` (str): Unit for the distance (e.g., "kpc", "m", "AU")
+  - `unit` (str): Unit for the distance (e.g., "kpc", "m", "AU")
   - `shape` (int | tuple | SearchStrategy): Shape of the generated distance array
   - `elements` (SearchStrategy): Strategy for generating array elements. When `check_negative=True`, the min_value will be automatically adjusted to 0 if needed.
 
@@ -137,10 +145,10 @@ This strategy builds on `unxts.hypothesis.quantities` to generate distances with
 
 **Examples:**
 
-```
+```python
 from hypothesis import given, strategies as st
 
-import coordinax.distances as cxd
+import coordinax as cx
 import coordinaxs.hypothesis.main as cxst
 
 
@@ -152,7 +160,7 @@ def test_basic_distance(dist):
 
 
 # Generate distances in specific units
-@given(dist=cxst.distances(units="kpc"))
+@given(dist=cxst.distances(unit="kpc"))
 def test_distance_kpc(dist):
     assert dist.unit == "kpc"
 
@@ -172,9 +180,16 @@ def test_distance_array(dist):
 
 
 # Control the value range
-@given(dist=cxst.distances(elements=st.floats(min_value=10.0, max_value=100.0)))
+@given(dist=cxst.distances(elements=st.floats(10.0, 100.0, width=32)))
 def test_distance_range(dist):
     assert 10.0 <= dist.value <= 100.0
+
+
+test_basic_distance()
+test_distance_kpc()
+test_signed_distance()
+test_distance_array()
+test_distance_range()
 ```
 
 ### `distance_moduli(**kwargs)`
@@ -191,7 +206,7 @@ Generate random `coordinaxs.astro.DistanceModulus` objects for testing. This str
 
 **Examples:**
 
-```
+```python
 from hypothesis import given, strategies as st
 
 import coordinaxs.astro as cxastro
@@ -213,9 +228,14 @@ def test_dm_array(dm):
 
 
 # Control the value range (e.g., typical values 0-30 mag)
-@given(dm=cxastrost.distance_moduli(elements=st.floats(min_value=0.0, max_value=30.0)))
+@given(dm=cxastrost.distance_moduli(elements=st.floats(0.0, 30.0, width=32)))
 def test_dm_range(dm):
     assert 0.0 <= dm.value <= 30.0
+
+
+test_basic_dm()
+test_dm_array()
+test_dm_range()
 ```
 
 ### `parallaxes(check_negative=True, **kwargs)`
@@ -228,7 +248,7 @@ This strategy builds on `unxts.hypothesis.quantities` to generate parallaxes wit
 
 - `check_negative` (bool | SearchStrategy[bool]): Whether to enforce non-negative parallaxes. If `True` (default), generated parallaxes will be >= 0. Can be a hypothesis strategy to vary this behavior across test examples. Set to `False` when testing handling of noisy measurements.
 - `**kwargs`: Additional keyword arguments passed to {func}`unxts.hypothesis.quantities`. Common options include:
-  - `units` (str): Unit for the parallax (e.g., "mas", "arcsec", "deg")
+  - `unit` (str): Unit for the parallax (e.g., "mas", "arcsec", "deg")
   - `shape` (int | tuple | SearchStrategy): Shape of the generated parallax array
   - `elements` (SearchStrategy): Strategy for generating array elements. When `check_negative=True`, the min_value will be automatically adjusted to 0 if needed.
 
@@ -236,8 +256,10 @@ This strategy builds on `unxts.hypothesis.quantities` to generate parallaxes wit
 
 **Examples:**
 
-```
+```python
 from hypothesis import given, strategies as st
+
+import unxt as u
 
 import coordinaxs.astro as cxastro
 import coordinaxs.hypothesis.astro as cxastrost
@@ -251,7 +273,7 @@ def test_basic_parallax(plx):
 
 
 # Generate parallaxes in milliarcseconds
-@given(plx=cxastrost.parallaxes(units="mas"))
+@given(plx=cxastrost.parallaxes(unit="mas"))
 def test_parallax_mas(plx):
     assert plx.unit == "mas"
 
@@ -271,11 +293,16 @@ def test_parallax_array(plx):
 
 
 # Control the value range (e.g., nearby stars with large parallax)
-@given(
-    plx=cxastrost.parallaxes(units="mas", elements=st.floats(min_value=1.0, max_value=100.0))
-)
+@given(plx=cxastrost.parallaxes(unit="mas", elements=st.floats(1.0, 100.0, width=32)))
 def test_nearby_parallax(plx):
-    assert 1.0 <= plx.to("mas").value <= 100.0
+    assert 1.0 <= u.ustrip("mas", plx) <= 100.0
+
+
+test_basic_parallax()
+test_parallax_mas()
+test_noisy_parallax()
+test_parallax_array()
+test_nearby_parallax()
 ```
 
 ## Integration with `unxts.hypothesis`

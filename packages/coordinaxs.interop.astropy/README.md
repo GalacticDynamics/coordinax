@@ -27,7 +27,7 @@ uv add coordinaxs.interop.astropy
 
 ### Point Conversions
 
-```
+```python
 import plum
 import coordinax as cx
 from astropy.coordinates import CartesianRepresentation
@@ -43,9 +43,9 @@ apy_vec = plum.convert(vec, CartesianRepresentation)
 
 ### Distance Conversions
 
-```
-import coordinax as cx
+```python
 import coordinax.distances as cxd
+import coordinaxs.astro as cxa
 import astropy.units as u
 from plum import convert
 
@@ -54,18 +54,20 @@ q = 10 * u.kpc
 dist = convert(q, cxd.Distance)
 
 # Convert coordinax Distance to Astropy Quantity
-apy_q = convert(dist, u.Q)
+apy_q = convert(dist, u.Quantity)
 
 # Works with Parallax and DistanceModulus too
-parallax = cxd.Parallax.from_(5 * u.mas)
-dist_mod = cxd.DistanceModulus.from_(15 * u.mag)
+parallax = cxa.Parallax.from_(5 * u.mas)
+dist_mod = cxa.DistanceModulus.from_(15 * u.mag)
 ```
 
 ### Frame Conversions
 
-```
+```python
 import astropy.coordinates as apyc
 import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.representations as cxr
 import coordinaxs.astro as cxa
 from plum import convert
 import unxt as u

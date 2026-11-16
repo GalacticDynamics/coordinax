@@ -36,14 +36,16 @@ uv add coordinax --extra astro
 
 ## Quick Start
 
-```
+```python
 import coordinax as cx
 import coordinaxs.astro as cxastro
 import unxt as u
 
 # Create a position in ICRS frame
-pnt = cx.Point.from_({"r": u.Q(10, "kpc"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")})
-crd_icrs = cx.Point({"base": pnt}, frame=cxastro.ICRS())
+crd_icrs = cx.Point.from_(
+    {"r": u.Q(10, "kpc"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")},
+    cxastro.ICRS(),
+)
 
 # Transform to Galactocentric frame
 crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())
@@ -55,7 +57,7 @@ crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())
 
 The International Celestial Reference System (ICRS) is the standard celestial reference frame.
 
-```
+```python
 frame = cxastro.ICRS()
 ```
 
@@ -63,7 +65,7 @@ frame = cxastro.ICRS()
 
 The (heliocentric) IAU 1958 Galactic coordinate frame, related to ICRS by a fixed rotation (matching Astropy's Galactic frame, including the ICRS/FK5 frame bias). Parameter-free.
 
-```
+```python
 frame = cxastro.Galactic()
 ```
 
@@ -71,10 +73,13 @@ frame = cxastro.Galactic()
 
 A reference frame centered on the Galactic center with configurable parameters.
 
-```
+```python
 frame = cxastro.Galactocentric(
-    galcen={"lon": u.Q(266, "deg"), "lat": u.Q(-29, "deg"),
-            "distance": u.Q(8.122, "kpc")},
+    galcen={
+        "lon": u.Q(266, "deg"),
+        "lat": u.Q(-29, "deg"),
+        "distance": u.Q(8.122, "kpc"),
+    },
     z_sun=u.Q(20.8, "pc"),
 )
 ```
@@ -83,9 +88,9 @@ frame = cxastro.Galactocentric(
 
 The package provides frame transformation functions that work with coordinax's coordinate system:
 
-```
-# Create a coordinate in one frame
-crd_icrs = cx.Point({"base": pnt}, frame=cxastro.ICRS())
+```python
+# Create a point in one frame
+crd_icrs = cx.Point.from_([1.0, 2.0, 3.0], "kpc", cxastro.ICRS())
 
 # Transform to another frame
 crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())
