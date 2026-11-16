@@ -1905,6 +1905,33 @@ A representation is therefore **not** the same thing as a chart: the chart deter
     - $(C_{f}, R_{f}, C_{i}, R_{i})$ -> $(C_{f}, K_{f}, R_{f}, C_{i}, K_{i}, R_{i})$ general redispatch to use the geometric type in the transformation selection.
     - $(C_{f}, \text{PointGeometry}, R_{f}, C_{i}, \text{PointGeometry}, R_{i})$ redispatch to use the transition map $\varphi_{C_{f}} \circ \varphi_{C_{i}}^{-1}$. $R_{i,f}$ are checked that [B=NoBasis()](#software-spec-no_basis), [S=Location()](#software-spec-location)
 
+    **`usys` on vectors.** `cconvert` on a `Point`, `Tangent` or `Coordinate` takes `usys=`, as `pt_map` does. It says what units bare-array components are in, and it does not set the output units. A vector whose components are all quantities has no use for it, so passing `usys` there raises `TypeError` instead of being ignored. For a `Coordinate` this holds for the point and for each field. To change output units, convert and then call `uconvert`:
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+
+    >>> usys = u.unitsystem("pc", "deg")
+    >>> p = cx.Point.from_([1.0, 2.0, 3.0], "km")
+    >>> try:
+    ...     p.cconvert(cxc.sph3d, usys=usys)
+    ... except TypeError as e:
+    ...     print("TypeError")
+    ...
+    TypeError
+    >>> print(p.cconvert(cxc.sph3d).uconvert(usys))
+    <Point: chart=Spherical3D (r[pc], theta[deg], phi[deg])
+        [1.213e-13 3.670e+01 6.343e+01]>
+
+    >>> bare = cx.Point.from_(
+    ...     {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}, cxc.cart3d
+    ... )
+    >>> bare.cconvert(cxc.sph3d, usys=usys)["theta"]  # the angle comes out in deg
+    Array(36.6992252, dtype=float64, weak_type=True)
+    ```
+
 (software-spec-guess_rep)=
 
 !!! info `guess_rep`
@@ -2481,7 +2508,7 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     - ``__getitem__()``
     - ``__pdoc__()``
-    - ``cconvert()`` — chart conversion; preserves ``frame``.
+    - ``cconvert(to_chart, *, usys=None)`` — chart conversion; preserves ``frame``. ``usys`` is for bare-array data only and raises `TypeError` on quantity data (see `cconvert`).
     - ``to_frame(toframe, t=None) -> Point`` — frame transform; applies the
       frame transition ``self.frame -> toframe`` to the data and returns a new
       ``Point`` with the updated data and ``frame=toframe``.
@@ -2576,7 +2603,7 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
       - integer/slice key → returns a batch-indexed `Tangent` with all components sliced at `key`.
     - `shape` — broadcast shape of all component leaves.
     - `aval()` — Quax API; returns `jax.core.ShapedArray` for JAX tracing.
-    - `cconvert(to_chart, *, at, usys)` — chart conversion via Jacobian pushforward at base point `at`.
+    - `cconvert(to_chart, *, at, usys)` — chart conversion via Jacobian pushforward at base point `at`. `usys` is for bare-array data only and raises `TypeError` on quantity data (see `cconvert`).
     - `to_frame(to_frame, t=None)` — frame transform; returns a new `Tangent` in `to_frame`.
     - `uconvert(usys_or_units)` — unit conversion.
     - `norm()` — Riemannian norm in the attached manifold.
@@ -2719,6 +2746,8 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     2. Each fibre field: Jacobian pushforward at `self.point`.
 
     `field_charts` allows per-field target chart overrides (`dict[name, AbstractChart]`).
+
+    `usys` says what units bare-array components are in. It raises `TypeError` if the point or any field has only quantity components, where it would have no effect.
 
     **`to_frame(to_frame, t=None) -> Coordinate`:**
 

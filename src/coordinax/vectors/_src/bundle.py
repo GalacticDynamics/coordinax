@@ -28,6 +28,8 @@ import coordinax.transforms as cxfm
 from .base import (
     AbstractVector,
     broadcast_and_index_data,
+    refuse_usys_on_quantities,
+    usys_for,
     vector_comps_unit_docs,
     vector_values_str,
     vectorform_pdoc as _vec_vectorform_pdoc,
@@ -391,7 +393,9 @@ class Coordinate(AbstractVector):
         field_charts : Mapping[str, AbstractChart], optional
             Per-field target chart overrides.
         usys : UnitSystem, optional
-            Unit system for the conversion.
+            The units of bare-array components. Raises `TypeError` if the
+            point or a field has only Quantity components, where it would
+            have no effect; use `uconvert` to set output units.
 
         Examples
         --------
@@ -412,6 +416,9 @@ class Coordinate(AbstractVector):
         Spherical3D(M=Rn(3))
 
         """
+        refuse_usys_on_quantities(self.point, usys)
+        for vec in self._data.values():
+            refuse_usys_on_quantities(vec, usys)
         if field_charts is None:
             field_charts = {}
 
@@ -832,7 +839,9 @@ def _point_in(coord: "Coordinate", chart: cxc.AbstractChart, usys: OptUSys, /) -
     """Return the base point expressed in ``chart`` (a no-op if it matches)."""
     if coord.point.chart == chart:
         return coord.point
-    return cast("Point", cxr.cconvert(coord.point, chart, usys=usys))
+    return cast(
+        "Point", cxr.cconvert(coord.point, chart, usys=usys_for(coord.point, usys))
+    )
 
 
 def fibre_jet_across(
@@ -915,7 +924,9 @@ def fibre_jet_across(
         # `at` anchors the Jacobian in the tangent's *source* chart.
         vel = cast(
             "Tangent",
-            cxr.cconvert(vel, src, at=_point_in(coord, vel.chart, usys), usys=usys),
+            cxr.cconvert(
+                vel, src, at=_point_in(coord, vel.chart, usys), usys=usys_for(vel, usys)
+            ),
         )
 
     jet = {0: _point_in(coord, src, usys).data, 1: vel.data, order: fibre.data}

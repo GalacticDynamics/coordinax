@@ -19,6 +19,7 @@ import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinaxs.api.representations as cxrapi
 import coordinaxs.api.transforms as cxfmapi
+from .base import refuse_usys_on_quantities, usys_for
 from .bundle import (
     Coordinate,
     _ladder_fibres,
@@ -61,6 +62,7 @@ def cconvert(
         [1.732 0.955 0.785]>
 
     """
+    refuse_usys_on_quantities(from_vec, usys)
     # Call the `cconvert` function on the data from the vector's kind
     p = cxr.cconvert(from_vec.data, from_vec.chart, from_vec.rep, to_chart, usys=usys)
     # Return a new vector
@@ -212,6 +214,7 @@ def cconvert(
     Spherical3D(M=Rn(3))
 
     """
+    refuse_usys_on_quantities(from_vec, usys)
     if from_vec.chart != to_chart:
         if at is None:
             msg = (
@@ -871,7 +874,10 @@ def _return_ladder_fibre(
         return cast("Tangent", replace(f, chart=orig_chart, data=out[order]))
 
     nf = replace(f, data=out_jet[order])
-    return cast("Tangent", cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys))
+    return cast(
+        "Tangent",
+        cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys_for(nf, usys)),
+    )
 
 
 def _act_coordinate_jet(
@@ -910,7 +916,10 @@ def _act_coordinate_jet(
                 )
             else:
                 at_f = point_data_in(orig_chart)
-                f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
+                f = cast(
+                    "Tangent",
+                    cxrapi.cconvert(f, point_chart, at=at_f, usys=usys_for(f, usys)),
+                )
         if order in jet:
             msg = (
                 f"Coordinate has multiple fibres at ladder order {order}; "
