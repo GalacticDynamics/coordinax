@@ -2579,7 +2579,7 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
     - `cconvert(to_chart, *, at, usys)` — chart conversion via Jacobian pushforward at base point `at`.
     - `to_frame(to_frame, t=None)` — frame transform; returns a new `Tangent` in `to_frame`.
     - `uconvert(usys_or_units)` — unit conversion.
-    - `norm()` — Riemannian norm in the attached manifold.
+    - `norm(*, at=None, usys=None)` — Riemannian norm $\sqrt{g_{ij}(p)\, v^i v^j}$ in the attached manifold, reduced over the components only (batch axes are kept). In the `PhysicalBasis` the metric is the identity, so the norm is the Euclidean norm of the components and `at` is ignored. In the `CoordinateBasis` it is `cxm.norm(data, chart, at=at, usys=usys)`; on a Cartesian chart (`Cart1D`–`Cart3D`) `at` is optional, and on any other chart a missing `at` raises `ValueError`. `at` is a `Point` (in any chart of the manifold; it is converted to `chart`) or a `CDict` in `chart`. An indefinite metric (e.g. Minkowski) raises `NotImplementedError` in either basis; use `cxm.interval` for the signed square.
     - `__pdoc__()` — Wadler-Lindig repr.
 
     **Coordinate transformation law:**
@@ -2638,6 +2638,29 @@ Vectors support two comparison relations — a strict one and a coordinate-free 
 
     >>> v["x"]
     Q(1., 'm / s')
+    ```
+
+    The norm of the same velocity is the same in every chart and basis. In the
+    coordinate basis of `sph3d` the metric needs the base point:
+
+    ```pycon
+    >>> v.norm().round(6)
+    Q(3.741657, 'm / s')
+
+    >>> p = cx.Point.from_([1.0, 1.0, 1.0], "m")
+    >>> w = v.cconvert(cxc.sph3d, at=p)
+    >>> w.norm(at=p).round(6)
+    Q(3.741657, 'm / s')
+
+    >>> cxr.change_basis(w, cxr.phys_basis, at=p.cconvert(cxc.sph3d)).norm().round(6)
+    Q(3.741657, 'm / s')
+
+    >>> try:
+    ...     w.norm()
+    ... except ValueError as e:
+    ...     print("Pass `at=`" in str(e))
+    ...
+    True
     ```
 
 (software-spec-coordinate)=
@@ -2967,7 +2990,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
       - `CDict` of bare `jax.Array` values: requires `usys`.
       - `CDict` of `unxt.AbstractQuantity` values: `usys` is optional.
     - `chart`: the coordinate chart in which `v` is expressed. The chart carries its associated metric (`chart.M.metric`), so no separate metric argument is needed at the chart level.
-    - `at` (keyword, optional): the base point $p$ in chart coordinates at which the metric is evaluated. Optional for flat metrics (`FlatMetric` / `CartND`); required for curved metrics.
+    - `at` (keyword, optional): the base point $p$ at which the metric is evaluated, as a `CDict` in chart coordinates or a `Point` (in any chart of the manifold; `metric_matrix` converts it to `chart`). Optional for flat metrics (`FlatMetric` / `CartND`); required for curved metrics.
     - `usys` (keyword, optional): unit system; required when `v` contains bare arrays.
 
     **Return:**

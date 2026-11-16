@@ -274,7 +274,7 @@ Angle(1.57079633, 'rad')
 
 ```
 
-Note the argument orders differ: `angle_between(chart, u, v, at=...)` but `norm(v, chart, at=...)`. Check the signature rather than assuming.
+Note the argument orders differ: `angle_between(chart, u, v, at=...)` but `norm(v, chart, at=...)`. Check the signature rather than assuming. On a `Tangent`, `v.norm(at=p)` does the same thing; `at` can be a `Point` there and in `cxm.norm`.
 
 Distance between two points comes in two flavours, and picking the wrong one is a real error rather than a rounding difference:
 
@@ -332,6 +332,7 @@ Extend the dispatch API, not the internals. `coordinaxs.api` exists precisely so
 | A `Distance`/`Angle` came back as a plain `Q` | Deliberate degradation: the operation could not preserve the constraint. Reconstruct explicitly if you need the constrained type back. |
 | Velocity components are off by a factor of `r` or `r*sin(theta)` | `coord_basis` vs `phys_basis`. Convert with `change_basis(..., at=point)`. |
 | `TypeError: ... would be silently ignored` from `act` given `at_jet=` | `act` anchors on jet slot 0 alone — it is the frozen-$\tau$ pushforward on a static transform, and the base point itself on a point action — so an `at_jet` slot $\geq 1$ is dead there. It raises rather than discarding it, because dropping the slot costs the $\partial_{xx}\phi(v,v)$ term and returns a quietly first-order answer in any curvilinear chart. Use `act_jet(op, tau, {0: q, 1: v, ...}, chart)`, which reads every slot, or drop the slot. |
+| `Tangent.norm() ... needs the base point` | Coordinate-basis components on a curvilinear chart: the metric depends on where the vector sits. Pass `at=` (a `Point` in any chart, or a component dict), or `change_basis` to `phys_basis` first, where the norm is Euclidean. |
 | `tangent_map() needs the base point` | A chart change evaluates the Jacobian somewhere, so `at=` is required unless source and target charts are the same. Pass the point the vector sits at. |
 | Shape/broadcast error inside a metric or chart function | Scalar-first code given batched input. `vmap` the call; if it is a library function, that is a batch-safety bug worth reporting. |
 | Correct but ~100x slower than expected | A chart/representation is crossing the jit boundary as a traced arg, or pytrees are crossing per call. Close over the static objects. |
