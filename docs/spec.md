@@ -2415,7 +2415,7 @@ Separating semantics from geometry provides two advantages:
       - ``(V, u.AbstractUnitSystem) -> uconvert(u.AbstractUnitSystem, V)`` redispatch
     - ``__array_namespace__``: the array API namespace -- `quax.numpy`. This delegates to `quax` primitives.
     - ``__eq__``: strict equality — requires the same type, chart, and frame, then compares component data via the `quax` equality primitive. See [Comparison and Equivalence](#software-spec-equivalence) for the strict-vs-relaxed relations.
-      - Chart and frame are static metadata, so they are compared with ordinary Python ``!=`` (safe under `jit`).
+      - The chart is static metadata, so it is compared with ordinary Python ``!=``. A frame can have array fields (`Galactocentric`), and ``!=`` on it is then a 0-d array, so frames are compared structurally: different types are unequal, and equal types compare their fields. Under `jit` with traced frame fields the field comparison is a traced boolean, which ``__eq__`` and ``equivalent`` AND into their result, and which ``geodesic_distance`` and ``chord_distance`` cannot check (they raise only when the frame types differ).
       - When they differ, ``__eq__`` short-circuits and returns a 0-d boolean array (``jnp.zeros((), dtype=bool)``) instead of comparing the component dicts, which also avoids raising on their differing keys.
     - ``copy()``: call `dataclass.replace`.
     - ``flatten()``: flatten the vector.
