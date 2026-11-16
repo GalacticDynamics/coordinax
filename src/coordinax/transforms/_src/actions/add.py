@@ -755,10 +755,18 @@ def _merge(a: AbstractAdd, b: AbstractAdd, /) -> AbstractTransform | None:
     """Merge two adjacent additive operators of the same type and role.
 
     Offsets of the same operator type and ``semantic_kind`` combine into one
-    (their deltas add); anything else is left un-merged.
+    (their deltas add) when adding the deltas is exactly the two steps in a
+    row. That needs both deltas in the same chart, and the offset to be a
+    constant vector field there (`offset_is_parallel_in_chart`). A point
+    offset in a curvilinear chart is pushed through the chart Jacobian at the
+    point it moves, and the first step moves the point the second one sees, so
+    ``d1 + d2`` is not the pair. Anything else is left un-merged.
     """
-    if type(a) is not type(b) or getattr(a, "semantic_kind", None) != getattr(
-        b, "semantic_kind", None
+    if (
+        type(a) is not type(b)
+        or getattr(a, "semantic_kind", None) != getattr(b, "semantic_kind", None)
+        or a.chart != b.chart
+        or not offset_is_parallel_in_chart(a, a.chart)
     ):
         return None
     combined = a + b

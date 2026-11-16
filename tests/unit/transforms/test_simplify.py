@@ -6,11 +6,13 @@ __all__: tuple[str, ...] = ()
 import inspect
 import itertools
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import jax
 import numpy as np
+import plum
 import pytest
+from hypothesis import given, settings, strategies as st
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -20,6 +22,7 @@ import coordinax as cx
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinaxs.hypothesis.main as cxst
 from .conftest import ZHAT
 
 
@@ -599,3 +602,143 @@ def test_rotate_simplify_does_not_promote_an_integer_matrix() -> None:
     """The identity is built at the operand's dtype (#943)."""
     op = cxfm.Rotate(jnp.eye(3, dtype=int))
     assert cxfm.simplify(op) is cxfm.identity
+
+
+# ===================================================================
+# A transform with no simplification rule, and offsets that do not merge
+
+
+class _FlipX(cxfm.AbstractTransform):
+    """A user-defined transform that ``simplify`` has no rule for.
+
+    Defined at module level, never inside a test (xdist).
+    """
+
+    @property
+    def inverse(self) -> "_FlipX":
+        return self
+
+    def groups(self) -> frozenset[type]:
+        return frozenset()
+
+
+# Registered for `Cart3D` only: `test_prolongation` pins which modules serve
+# `act` on spherical point data, and this rule must not join that set.
+@plum.dispatch
+def act(
+    op: _FlipX,
+    tau: Any,
+    x: dict,
+    chart: cxc.Cart3D,
+    rep: cxr.Representation,
+    /,
+    **kw: Any,
+) -> dict:
+    """Negate ``x`` of a Cartesian point."""
+    del op, tau, chart, kw
+    assert rep == cxr.point
+    return {**x, "x": -x["x"]}
+
+
+def _sph_translate(r: float, theta: float, phi: float) -> cxfm.Translate:
+    delta = {"r": u.Q(r, "m"), "theta": u.Q(theta, "rad"), "phi": u.Q(phi, "rad")}
+    return cxfm.Translate(delta, chart=cxc.sph3d)
+
+
+def _act_xyz(op, p):
+    return _xyz(cxfm.act(op, None, p, cxc.cart3d, cxr.point))
+
+
+class TestSimplifyFallback:
+    """`simplify` returns a transform it has no rule for unchanged (#1032, O15)."""
+
+    def test_unknown_transform_is_returned_unchanged(self) -> None:
+        op = _FlipX()
+        assert cxfm.simplify(op) is op
+        assert op.simplify() is op
+
+    def test_unknown_member_stays_and_neighbours_merge(self) -> None:
+        T1 = cxfm.Translate.from_([1, 2, 3], "m")
+        T2 = cxfm.Translate.from_([4, 5, 6], "m")
+        f = _FlipX()
+        pipe = cxfm.Composed((T1, T2, cxfm.Identity(), f, T1, T2))
+        out = cxfm.simplify(pipe)
+        assert isinstance(out, cxfm.Composed)
+        assert [type(t) for t in out.transforms] == [
+            cxfm.Translate,
+            _FlipX,
+            cxfm.Translate,
+        ]
+        np.testing.assert_allclose(
+            _act_xyz(out, _point()), _act_xyz(pipe, _point()), atol=1e-12
+        )
+
+
+class TestTranslatesThatDoNotMerge:
+    """Two `Translate`s merge only where adding the deltas is the pair (#1032, O16)."""
+
+    def test_different_charts_are_left_unmerged(self) -> None:
+        Tc = cxfm.Translate.from_([1, 2, 3], "m")
+        Ts = _sph_translate(1.0, 0.1, 0.2)
+        pipe = cxfm.Composed((Tc, Ts))
+        out = cxfm.simplify(pipe)
+        assert isinstance(out, cxfm.Composed)
+        assert len(out.transforms) == 2
+        np.testing.assert_allclose(
+            _act_xyz(out, _point()), _act_xyz(pipe, _point()), atol=1e-12
+        )
+
+    def test_same_curvilinear_chart_is_left_unmerged(self) -> None:
+        """A spherical offset moves the point, so the second step sees a new one."""
+        Ts = _sph_translate(1.0, 0.1, 0.2)
+        pipe = cxfm.Composed((Ts, Ts))
+        out = cxfm.simplify(pipe)
+        assert isinstance(out, cxfm.Composed)
+        np.testing.assert_allclose(
+            _act_xyz(out, _point()), _act_xyz(pipe, _point()), atol=1e-12
+        )
+
+    def test_same_curvilinear_chart_velocity_kicks_merge(self) -> None:
+        """A kick moves no point, so in its own chart the deltas add."""
+        a = replace(_sph_translate(1.0, 0.1, 0.2), semantic_kind=cxr.vel)
+        out = cxfm.simplify(cxfm.Composed((a, a)))
+        assert isinstance(out, cxfm.Translate)
+
+
+_ANGLE = st.floats(-np.pi, np.pi)
+_OFFSET = st.floats(-5.0, 5.0)
+
+
+@st.composite
+def _transforms(draw: st.DrawFn) -> cxfm.AbstractTransform:
+    """A Cartesian or spherical translation, a rotation, `_FlipX` or Identity."""
+    kind = draw(st.sampled_from(["cart", "sph", "rot", "flip", "id"]))
+    if kind == "cart":
+        return cxfm.Translate.from_([draw(_OFFSET) for _ in range(3)], "m")
+    if kind == "sph":
+        return _sph_translate(
+            draw(st.floats(0.0, 2.0)), draw(st.floats(-0.3, 0.3)), draw(_ANGLE)
+        )
+    if kind == "rot":
+        return cxfm.Rotate.from_euler("z", u.Q(draw(_ANGLE), "rad"))
+    if kind == "flip":
+        return _FlipX()
+    return cxfm.Identity()
+
+
+@settings(deadline=None, max_examples=40)
+@given(
+    ops=st.lists(_transforms(), min_size=1, max_size=5),
+    p=cxst.cdicts(cxc.cart3d, magnitude=(0.5, 8.0), dtype=np.float64),
+)
+def test_simplify_acts_like_the_unsimplified_chain(ops, p) -> None:
+    """For any chain, ``simplify(op)`` moves a point as ``op`` does.
+
+    The tolerance allows for ``approx=True`` collapsing an offset within
+    `jnp.allclose` of zero (``atol=1e-8``) to `Identity`.
+    """
+    p = {k: u.uconvert("m", v) for k, v in p.items()}
+    pipe = cxfm.Composed(tuple(ops))
+    np.testing.assert_allclose(
+        _act_xyz(cxfm.simplify(pipe), p), _act_xyz(pipe, p), rtol=1e-9, atol=1e-6
+    )

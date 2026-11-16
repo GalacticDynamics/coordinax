@@ -526,6 +526,29 @@ def pushforward(
 # Simplification
 
 
+@plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
+def simplify(op: AbstractTransform, /, **__: Any) -> AbstractTransform:
+    """Return a transform with no simplification rule unchanged.
+
+    This is the fallback for any transform type without its own rule,
+    including user-defined ones. Inside a `Composed` such a transform stays in
+    place and its known neighbours still merge.
+
+    >>> import coordinax.transforms as cxfm
+
+    >>> class Flip(cxfm.AbstractTransform):
+    ...     @property
+    ...     def inverse(self): return self
+    ...     def groups(self): return frozenset()
+
+    >>> op = Flip()
+    >>> cxfm.simplify(op) is op
+    True
+
+    """
+    return op
+
+
 @plum.dispatch
 def simplify(op: Composed, /, *, approx: bool = True, **kw: Any) -> AbstractTransform:
     """Simplify a Composed transform.

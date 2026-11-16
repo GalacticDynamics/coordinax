@@ -5371,6 +5371,8 @@ The canonical transformation API is exposed by `coordinax.transforms`, which is 
 
 Frame objects in `coordinax.frames` depend on `coordinax.transforms` for operator definitions; frame transitions are constructed in `coordinax.frames` and returned as `cxfm.AbstractTransform` instances.
 
+`simplify(op)` returns a transform that acts on every input exactly as `op` does. Each transform type registers its own rules. A type with no rule, including a user-defined subclass of `AbstractTransform`, is returned unchanged. Inside a `Composed` such a transform stays where it is, and its neighbours still merge.
+
 ### Transformation Groups
 
 Transformation groups classify families of coordinate transformations that preserve particular geometric structures. In _coordinax_, these are represented by subclasses of `AbstractTransformGroup`, which live in the `coordinax.transforms.groups` sub-namespace and are reached as `cxfm.groups.<Name>`.
@@ -5633,6 +5635,8 @@ Each group corresponds to a set of transformations preserving a particular geome
     ```text
     Translate(delta1) + Translate(delta2) == Translate(delta1 + delta2)
     ```
+
+    `simplify` uses this sum for two adjacent `Translate`s in a `Composed` only when it acts exactly like the pair: the same chart and `semantic_kind`, and either a fibre offset ($k \ge 1$, which moves no point) or a $k=0$ offset in a flat chart. A $k=0$ offset in a curvilinear chart is pushed through the chart Jacobian at the point, and the first step moves the point the second one sees, so two of those stay a pair. Offsets in different charts also stay a pair.
 
 (software-spec-transforms-rotate)=
 
