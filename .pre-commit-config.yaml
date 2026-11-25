@@ -20,12 +20,14 @@ repos:
     rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
+        exclude: ^graphify-out/graph\.json$
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-yaml
       - id: debug-statements
       - id: end-of-file-fixer
+        exclude: ^graphify-out/graph\.json$
       - id: mixed-line-ending
       - id: name-tests-test
         args: ["--pytest-test-first"]
@@ -78,6 +80,7 @@ repos:
       - id: prettier
         name: prettier-other
         types_or: [yaml, html, css, scss, javascript, json]
+        exclude: ^graphify-out/graph\.json$
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.1"
@@ -85,6 +88,7 @@ repos:
       - id: codespell
         args: ["--toml", "pyproject.toml"]
         additional_dependencies: ["tomli"]
+        exclude: ^graphify-out/graph\.json$
 
   - repo: https://github.com/ComPWA/taplo-pre-commit
     rev: v0.9.3
@@ -104,3 +108,25 @@ repos:
         entry: uv run ty check .
         language: system
         pass_filenames: false
+
+      # Keeps the committed code graph (graphify-out/graph.json) in step with the code. Like a
+      # formatter: if the graph changed, the commit stops -- stage the graph and commit again.
+      # Skip once with `SKIP=graphify-update git commit ...`.
+      #
+      # This `graphifyy==` pin is the graph's only one: .github/workflows/graphify.yml reads the
+      # version back out of this file, and `nox -s precommit` skips this hook, since a rebuild
+      # over all files would fail for anyone whose platform differs from the one that built the
+      # committed graph.
+      - id: graphify-update
+        name: graphify update
+        language: python
+        additional_dependencies: ["graphifyy==0.9.119"]
+        entry: env PYTHONHASHSEED=0 graphify update . --force
+        pass_filenames: false
+        # Fires even on a commit that only deletes files -- otherwise the runner finds no
+        # existing files to check, skips, and the deleted code stays in the graph. This also
+        # makes any `exclude:` here inert, so there is none.
+        always_run: true
+        # `default_stages` above includes pre-push: without this the hook runs a second full
+        # rebuild on every push, which can only repeat what the commit hook already enforced.
+        stages: [pre-commit]

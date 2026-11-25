@@ -1,0 +1,40 @@
+# Scope of the committed code graph (graphify-out/graph.json). Committed, and honoured by both
+# `graphify extract` and `graphify update`, so a fresh clone indexes exactly what this checkout
+# does -- the scope `extract --code-only` uses lives in an untracked cache and does not travel.
+#
+# The scope is "the library an agent asks questions about", and nothing else. Measured from a
+# plain clone, each row adding to the one above it:
+#
+#   nothing excluded (survey, --code-only)     13095 nodes            13.6 MB
+#   + the globs below                          12534 / 24454 edges    13.7 MB
+#   + tests/                                    4183 /  10004          5.1 MB
+#   + the tooling and strategies below          3659 /   8907          4.4 MB
+#
+# Narrowing past this would mean dropping `packages/*/src`, which is library code people import
+# and ask about, for about a megabyte. The remaining weight is irreducible by scope: three
+# quarters of the file is edge payload, and half the node payload is docstrings. graphify has no
+# flag for either.
+
+# YAML is pure mapping keys, not structure: the survey had 629 nodes from `.github/`, 16 from
+# `.pre-commit-config.yaml` and 12 from `.readthedocs.yaml`. The globs beat a `.github/` entry,
+# which misses the root-level files.
+*.yml
+*.yaml
+*.md
+*.svg
+*.png
+
+# The test suite was 7913 of the 13095 survey nodes -- 60% of the graph, and 8.6 MB of the file
+# every clone would then carry. `tests/` mirrors the source layout (see AGENTS.md), so the tests
+# for a symbol are where the symbol is, and grep finds them.
+tests/
+
+# Repository tooling. Nobody queries the code graph to find out what the noxfile does.
+noxfile.py
+conftest.py
+scripts/
+docs/
+.github/
+
+# Hypothesis strategies: test infrastructure whose only consumer is the suite excluded above.
+packages/coordinaxs.hypothesis/

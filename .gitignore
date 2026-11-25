@@ -169,3 +169,7 @@ coverage.xml
 .coverage
 .coverage.*
 htmlcov/
+
+# graphify: track the graph itself; everything else here is rebuilt locally
+graphify-out/*
+!graphify-out/graph.json

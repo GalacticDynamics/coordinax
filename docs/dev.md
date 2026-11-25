@@ -71,6 +71,22 @@ uv run nox -s docs
 
 If your change affects multiple packages or shared semantics, run the broader checks earlier rather than relying on a narrow path-only test run.
 
+## Code Graph
+
+`graphify-out/graph.json` is a committed [graphify](https://github.com/Graphify-Labs/graphify) map of the library's symbols and the relationships between them — the architectural hubs, and which subsystem each symbol belongs to. Extraction is local tree-sitter parsing: no model call, and nothing leaves your machine. It covers the library rather than the whole tree; `.graphifyignore` excludes `tests/` (60% of the nodes on its own), the repository tooling, the `coordinaxs.hypothesis` strategies, and YAML, Markdown and images.
+
+Query it instead of grepping:
+
+```bash
+graphify query "how are vectors converted between representations"   # a scoped subgraph
+graphify explain "AbstractChart"                                     # one symbol and its neighbours
+graphify path "AbstractVector" "AbstractChart"                       # how two things connect
+```
+
+The commit checks rebuild the graph, and like a formatter the hook stops the commit rather than staging for you: `git add graphify-out/graph.json` and commit again. A rebuild that rewrites the graph in a working checkout is expected — graphify's output depends on which files are on disk, so an installed package's generated `_version.py` is enough to move community numbering even though no symbol comes from it.
+
+Every clone needs the pinned tool and the graph's merge driver registered once, which git will not accept from a tracked file. Those two steps, the escapes (`SKIP=graphify-update`, `GRAPHIFY_FORCE=1`) and what to do when the graph conflicts in a merge are in [CONTRIBUTING.md](https://github.com/GalacticDynamics/coordinax/blob/main/.github/CONTRIBUTING.md#the-code-graph).
+
 ## Nox Sessions
 
 The authoritative session definitions live in the repository root `noxfile.py`. The most useful sessions are:
