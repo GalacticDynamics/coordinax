@@ -183,6 +183,8 @@ We welcome contributions!
 
 For the local development workflow, see `docs/dev.md`. For pull request expectations, see `docs/contributing.md`.
 
+Contributors and AI assistants: this repository ships a queryable code graph — see [CONTRIBUTING.md](.github/CONTRIBUTING.md#the-code-graph).
+
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/GalacticDynamics/coordinax/workflows/CI/badge.svg
 [actions-link]:             https://github.com/GalacticDynamics/coordinax/actions
